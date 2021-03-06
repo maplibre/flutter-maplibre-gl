@@ -1,3 +1,5 @@
+## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
+
 ## 0.10.0, February 12, 2020
 * Merge offline regions [#532](https://github.com/tobrun/flutter-mapbox-gl/pull/532)
 * Update offline region metadata [#530](https://github.com/tobrun/flutter-mapbox-gl/pull/530)
