@@ -1,7 +1,8 @@
 # Flutter Maplibre GL
 
-> **Please note that this project is a fork of [https://github.com/tobrun/flutter-maplibre-gl](https://github.com/tobrun/flutter-maplibre-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.
-> This change is not (fully) done, yet, and this project is currently not functional and shouldn't be used.
+**Please note that this project is a fork of [https://github.com/tobrun/flutter-maplibre-gl](https://github.com/tobrun/flutter-maplibre-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
+
+**This change is not (fully) done, yet, and this project is currently not functional and shouldn't be used.**
 
 > **Please note that this project is community driven and is not affiliated with the company Mapbox, besides using some of their amazing open source libraries/tools.** We welcome [feedback](https://github.com/m0nac0/flutter-maplibre-gl/issues) and contributions.
 
