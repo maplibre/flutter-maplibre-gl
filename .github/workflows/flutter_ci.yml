@@ -13,6 +13,8 @@ jobs:
       with:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
+      with:
+        flutter-version: '1.26.0'
     - run: flutter pub get
     - name: Lint analysis
       run: cd example && flutter analyze
@@ -27,6 +29,8 @@ jobs:
       with:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
+      with:
+        flutter-version: '1.26.0'
     - run: flutter pub get
     - name: Build example APK
       run: cd example && flutter build apk
@@ -42,6 +46,8 @@ jobs:
         with:
           java-version: '12.x'
       - uses: subosito/flutter-action@v1
+        with:
+         flutter-version: '1.26.0'
       - run: flutter pub get
       - name: build iOS package
         run: |
