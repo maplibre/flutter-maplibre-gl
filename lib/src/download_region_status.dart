@@ -1,4 +1,4 @@
-part of mapbox_gl;
+part of maplibre_gl;
 
 abstract class DownloadRegionStatus {}
 

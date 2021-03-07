@@ -1,6 +1,6 @@
-# mapbox_gl_example
+# maplibre_gl_example
 
-Demonstrates how to use the mapbox_gl plugin.
+Demonstrates how to use the maplibre_gl plugin.
 
 ## Getting Started
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of mapbox_gl;
+part of maplibre_gl;
 
 enum AnnotationType { fill, line, circle, symbol }
 
@@ -193,7 +193,7 @@ class _MapboxMapState extends State<MapboxMap> {
       Completer<MapboxMapController>();
 
   _MapboxMapOptions _mapboxMapOptions;
-  final MapboxGlPlatform _mapboxGlPlatform = MapboxGlPlatform.createInstance();
+  final MapLibreGlPlatform _mapboxGlPlatform = MapLibreGlPlatform.createInstance();
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +234,7 @@ class _MapboxMapState extends State<MapboxMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
-    MapboxGlPlatform.addInstance(id, _mapboxGlPlatform);
+    MapLibreGlPlatform.addInstance(id, _mapboxGlPlatform);
     final MapboxMapController controller = MapboxMapController.init(
       id,
       widget.initialCameraPosition,

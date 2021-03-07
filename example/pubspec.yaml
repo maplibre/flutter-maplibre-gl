@@ -1,5 +1,5 @@
-name: mapbox_gl_example
-description: Demonstrates how to use the mapbox_gl plugin.
+name: maplibre_gl_example
+description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -18,16 +18,16 @@ dependencies:
   http:
 
 dependency_overrides:
-  mapbox_gl_platform_interface:
-    path: ../mapbox_gl_platform_interface
-  mapbox_gl_web:
-    path: ../mapbox_gl_web
+  maplibre_gl_platform_interface:
+    path: ../maplibre_gl_platform_interface
+  maplibre_gl_web:
+    path: ../maplibre_gl_web
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  mapbox_gl:
+  maplibre_gl:
     path: ../
 
 # For information on the generic Dart part of this file, see the

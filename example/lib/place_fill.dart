@@ -7,9 +7,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:mapbox_gl_example/main.dart';
+import 'package:maplibre_gl/mapbox_gl.dart';
 
+import 'main.dart';
 import 'page.dart';
 
 class PlaceFillPage extends ExamplePage {

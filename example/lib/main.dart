@@ -5,8 +5,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
-import 'package:mapbox_gl_example/full_map.dart';
-import 'package:mapbox_gl_example/offline_regions.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -21,6 +19,7 @@ import 'place_source.dart';
 import 'place_symbol.dart';
 import 'place_fill.dart';
 import 'scrolling_map.dart';
+import 'offline_regions.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
