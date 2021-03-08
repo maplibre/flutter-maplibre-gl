@@ -1,8 +1,8 @@
 
 Pod::Spec.new do |s|
-    s.name             = 'mapbox_gl_web'
+    s.name             = 'maplibre_gl_web'
     s.version          = '0.1.0'
-    s.summary          = 'No-op implementation of mapbox_gl_web web plugin to avoid build issues on iOS'
+    s.summary          = 'No-op implementation of maplibre_gl_web web plugin to avoid build issues on iOS'
     s.description      = <<-DESC
   temp fake mapbox_gl_web plugin
                          DESC
