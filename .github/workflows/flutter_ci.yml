@@ -16,7 +16,8 @@ jobs:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
-        flutter-version: '1.22.6'
+        flutter-version: '1.26.0-17.5.pre'
+        channel: beta
     - run: flutter pub get
     - name: Lint analysis
       run: cd example && flutter analyze
