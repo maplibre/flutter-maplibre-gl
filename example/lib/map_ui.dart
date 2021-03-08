@@ -86,7 +86,7 @@ class MapUiBodyState extends State<MapUiBody> {
   Widget _myLocationTrackingModeCycler() {
     final MyLocationTrackingMode nextType =
         MyLocationTrackingMode.values[(_myLocationTrackingMode.index + 1) % MyLocationTrackingMode.values.length];
-    return FlatButton(
+    return TextButton(
       child: Text('change to $nextType'),
       onPressed: () {
         setState(() {
@@ -97,7 +97,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _queryFilterToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('filter zoo on click ${ _featureQueryFilter == null ? 'disabled' : 'enabled'}'),
       onPressed: () {
         setState(() {
@@ -112,7 +112,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _compassToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_compassEnabled ? 'disable' : 'enable'} compasss'),
       onPressed: () {
         setState(() {
@@ -123,7 +123,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _latLngBoundsToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text(
         _cameraTargetBounds.bounds == null
             ? 'bound camera target'
@@ -140,7 +140,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _zoomBoundsToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text(_minMaxZoomPreference.minZoom == null
           ? 'bound zoom'
           : 'release zoom'),
@@ -155,7 +155,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _setStyleToSatellite() {
-    return FlatButton(
+    return TextButton(
       child: Text('change map style to ${_styleStringLabels[(_styleStringIndex + 1) % _styleStringLabels.length]}'),
       onPressed: () {
         setState(() {
@@ -166,7 +166,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _rotateToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_rotateGesturesEnabled ? 'disable' : 'enable'} rotate'),
       onPressed: () {
         setState(() {
@@ -177,7 +177,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _scrollToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_scrollGesturesEnabled ? 'disable' : 'enable'} scroll'),
       onPressed: () {
         setState(() {
@@ -188,7 +188,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _tiltToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_tiltGesturesEnabled ? 'disable' : 'enable'} tilt'),
       onPressed: () {
         setState(() {
@@ -199,7 +199,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _zoomToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_zoomGesturesEnabled ? 'disable' : 'enable'} zoom'),
       onPressed: () {
         setState(() {
@@ -210,7 +210,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _myLocationToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_myLocationEnabled ? 'disable' : 'enable'} my location'),
       onPressed: () {
         setState(() {
@@ -221,7 +221,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _telemetryToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_telemetryEnabled ? 'disable' : 'enable'} telemetry'),
       onPressed: () {
         setState(() {
@@ -233,11 +233,11 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _visibleRegionGetter(){
-    return FlatButton(
+    return TextButton(
       child: Text('get currently visible region'),
       onPressed: () async{
         var result = await mapController.getVisibleRegion();
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text("SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),));
       },
     );
   }
@@ -299,7 +299,7 @@ class MapUiBodyState extends State<MapUiBody> {
         print('# features: ${features.length}');
         _clearFill();
         if (features.length == 0 && _featureQueryFilter != null) {
-          Scaffold.of(context).showSnackBar(SnackBar(content: Text('QueryRenderedFeatures: No features found!')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('QueryRenderedFeatures: No features found!')));
         } else {
           _drawFill(features);
         } 

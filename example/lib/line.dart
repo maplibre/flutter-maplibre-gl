@@ -164,11 +164,11 @@ class LineBodyState extends State<LineBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('add'),
                           onPressed: (_lineCount == 12) ? null : _add,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('remove'),
                           onPressed: (_selectedLine == null) ? null : _remove,
                         ),
@@ -176,17 +176,17 @@ class LineBodyState extends State<LineBody> {
                     ),
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('change alpha'),
                           onPressed:
                               (_selectedLine == null) ? null : _changeAlpha,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('toggle visible'),
                           onPressed:
                               (_selectedLine == null) ? null : _toggleVisible,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('print current LatLng'),
                           onPressed:
                               (_selectedLine == null) ? null : () async{
