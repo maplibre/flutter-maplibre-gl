@@ -40,7 +40,7 @@ class MapUiBodyState extends State<MapUiBody> {
     zoom: 11.0,
   );
 
-  MapboxMapController mapController;
+  MaplibreMapController mapController;
   CameraPosition _position = _kInitialPosition;
   bool _isMoving = false;
   bool _compassEnabled = true;
@@ -276,7 +276,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   Widget build(BuildContext context) {
-    final MapboxMap mapboxMap = MapboxMap(
+    final MaplibreMap mapboxMap = MaplibreMap(
       accessToken: MapsDemo.ACCESS_TOKEN,
       onMapCreated: onMapCreated,
       initialCameraPosition: _kInitialPosition,
@@ -379,7 +379,7 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  void onMapCreated(MapboxMapController controller) {
+  void onMapCreated(MaplibreMapController controller) {
     mapController = controller;
     mapController.addListener(_onMapChanged);
     _extractMapInfo();
