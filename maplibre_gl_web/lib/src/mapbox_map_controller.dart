@@ -4,7 +4,8 @@ class MaplibreMapController extends MapLibreGlPlatform
     implements MapboxMapOptionsSink {
   DivElement _mapElement;
 
-  final _mapboxGlCssUrl = 'https://api.tiles.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.css';
+  //TODO Url taken from the Maptiler tutorial; use official and stable release once available
+  final _maplibreGlCssUrl = 'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
 
   Map<String, dynamic> _creationParams;
   MapboxMap _map;
@@ -67,7 +68,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   Future<void> _addStylesheetToShadowRoot(HtmlElement e) async {
     LinkElement link = LinkElement()
-      ..href = _mapboxGlCssUrl
+      ..href = _maplibreGlCssUrl
       ..rel = 'stylesheet';
     e.append(link);
 
