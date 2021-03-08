@@ -34,11 +34,11 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   static final LatLng center = const LatLng(-33.86711, 151.1947171);
   final String _fillPatternImage = "assets/fill/cat_silhouette_pattern.png";
 
-  MapboxMapController controller;
+  MaplibreMapController controller;
   int _fillCount = 0;
   Fill _selectedFill;
 
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
     controller.onFillTapped.add(_onFillTapped);
   }
@@ -170,7 +170,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MapboxMap(
+            child: MaplibreMap(
               accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoaded,

@@ -21,16 +21,16 @@ class FullMap extends StatefulWidget {
 }
 
 class FullMapState extends State<FullMap> {
-  MapboxMapController mapController;
+  MaplibreMapController mapController;
 
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     mapController = controller;
   }
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        body: MapboxMap(
+        body: MaplibreMap(
       accessToken: MapsDemo.ACCESS_TOKEN,
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),

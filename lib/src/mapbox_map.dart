@@ -6,10 +6,10 @@ part of maplibre_gl;
 
 enum AnnotationType { fill, line, circle, symbol }
 
-typedef void MapCreatedCallback(MapboxMapController controller);
+typedef void MapCreatedCallback(MaplibreMapController controller);
 
-class MapboxMap extends StatefulWidget {
-  const MapboxMap({
+class MaplibreMap extends StatefulWidget {
+  const MaplibreMap({
     Key key,
     @required this.initialCameraPosition,
     this.accessToken,
@@ -185,12 +185,12 @@ class MapboxMap extends StatefulWidget {
   final OnMapIdleCallback onMapIdle;
 
   @override
-  State createState() => _MapboxMapState();
+  State createState() => _MaplibreMapState();
 }
 
-class _MapboxMapState extends State<MapboxMap> {
-  final Completer<MapboxMapController> _controller =
-      Completer<MapboxMapController>();
+class _MaplibreMapState extends State<MaplibreMap> {
+  final Completer<MaplibreMapController> _controller =
+      Completer<MaplibreMapController>();
 
   _MapboxMapOptions _mapboxMapOptions;
   final MapLibreGlPlatform _mapboxGlPlatform = MapLibreGlPlatform.createInstance();
@@ -216,7 +216,7 @@ class _MapboxMapState extends State<MapboxMap> {
   }
 
   @override
-  void didUpdateWidget(MapboxMap oldWidget) {
+  void didUpdateWidget(MaplibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
     final Map<String, dynamic> updates =
@@ -229,13 +229,13 @@ class _MapboxMapState extends State<MapboxMap> {
     if (updates.isEmpty) {
       return;
     }
-    final MapboxMapController controller = await _controller.future;
+    final MaplibreMapController controller = await _controller.future;
     controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
     MapLibreGlPlatform.addInstance(id, _mapboxGlPlatform);
-    final MapboxMapController controller = MapboxMapController.init(
+    final MaplibreMapController controller = MaplibreMapController.init(
       id,
       widget.initialCameraPosition,
       onStyleLoadedCallback: () {
@@ -253,7 +253,7 @@ class _MapboxMapState extends State<MapboxMap> {
         onCameraIdle: widget.onCameraIdle,
         onMapIdle: widget.onMapIdle
     );
-    await MapboxMapController.initPlatform(id);
+    await MaplibreMapController.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated(controller);
@@ -285,7 +285,7 @@ class _MapboxMapOptions {
     this.attributionButtonMargins,
   });
 
-  static _MapboxMapOptions fromWidget(MapboxMap map) {
+  static _MapboxMapOptions fromWidget(MaplibreMap map) {
     return _MapboxMapOptions(
       compassEnabled: map.compassEnabled,
       cameraTargetBounds: map.cameraTargetBounds,

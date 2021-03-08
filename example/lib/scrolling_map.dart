@@ -28,8 +28,8 @@ class ScrollingMapBody extends StatefulWidget {
 }
 
 class _ScrollingMapBodyState extends State<ScrollingMapBody> {
-  MapboxMapController controllerOne;
-  MapboxMapController controllerTwo;
+  MaplibreMapController controllerOne;
+  MaplibreMapController controllerTwo;
 
   final LatLng center = const LatLng(32.080664, 34.9563837);
 
@@ -50,7 +50,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                   child: SizedBox(
                     width: 300.0,
                     height: 300.0,
-                    child: MapboxMap(
+                    child: MaplibreMap(
                       accessToken: MapsDemo.ACCESS_TOKEN,
                       onMapCreated: onMapCreatedOne,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
@@ -86,7 +86,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                   child: SizedBox(
                     width: 300.0,
                     height: 300.0,
-                    child: MapboxMap(
+                    child: MaplibreMap(
                       accessToken: MapsDemo.ACCESS_TOKEN,
                       onMapCreated: onMapCreatedTwo,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
@@ -111,15 +111,15 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
     );
   }
 
-  void onMapCreatedOne(MapboxMapController controller) {
+  void onMapCreatedOne(MaplibreMapController controller) {
     this.controllerOne = controller;
   }
 
-  void onMapCreatedTwo(MapboxMapController controller) {
+  void onMapCreatedTwo(MaplibreMapController controller) {
     this.controllerTwo = controller;
   }
 
-  void onStyleLoaded(MapboxMapController controller) {
+  void onStyleLoaded(MaplibreMapController controller) {
     controller.addSymbol(SymbolOptions(
         geometry: LatLng(
           center.latitude,

@@ -25,7 +25,7 @@ class LocalStyle extends StatefulWidget {
 }
 
 class LocalStyleState extends State<LocalStyle> {
-  MapboxMapController mapController;
+  MaplibreMapController mapController;
   String styleAbsoluteFilePath;
 
   @override
@@ -50,7 +50,7 @@ class LocalStyleState extends State<LocalStyle> {
   }
 
 
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     mapController = controller;
   }
 
@@ -63,7 +63,7 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return new Scaffold(
-      body: MapboxMap(
+      body: MaplibreMap(
         accessToken: MapsDemo.ACCESS_TOKEN,
         styleString: styleAbsoluteFilePath,
         onMapCreated: _onMapCreated,

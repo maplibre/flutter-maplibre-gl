@@ -19,7 +19,7 @@ class _OfflineRegionMapState extends State<OfflineRegionMap> {
       appBar: AppBar(
         title: Text('Offline Region: ${widget.item.name}'),
       ),
-      body: MapboxMap(
+      body: MaplibreMap(
         initialCameraPosition: CameraPosition(
           target: _center,
           zoom: widget.item.offlineRegionDefinition.minZoom,

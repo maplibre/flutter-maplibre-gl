@@ -33,8 +33,8 @@ typedef void OnMapIdleCallback();
 /// Symbol tap events can be received by adding callbacks to [onSymbolTapped].
 /// Line tap events can be received by adding callbacks to [onLineTapped].
 /// Circle tap events can be received by adding callbacks to [onCircleTapped].
-class MapboxMapController extends ChangeNotifier {
-  MapboxMapController._(this._id, CameraPosition initialCameraPosition,
+class MaplibreMapController extends ChangeNotifier {
+  MaplibreMapController._(this._id, CameraPosition initialCameraPosition,
       {this.onStyleLoadedCallback,
       this.onMapClick,
       this.onMapLongClick,
@@ -154,7 +154,7 @@ class MapboxMapController extends ChangeNotifier {
     });
   }
 
-  static MapboxMapController init(int id, CameraPosition initialCameraPosition,
+  static MaplibreMapController init(int id, CameraPosition initialCameraPosition,
       {OnStyleLoadedCallback onStyleLoadedCallback,
       OnMapClickCallback onMapClick,
       OnUserLocationUpdated onUserLocationUpdated,
@@ -164,7 +164,7 @@ class MapboxMapController extends ChangeNotifier {
       OnCameraIdleCallback onCameraIdle,
       OnMapIdleCallback onMapIdle}) {
     assert(id != null);
-    return MapboxMapController._(id, initialCameraPosition,
+    return MaplibreMapController._(id, initialCameraPosition,
         onStyleLoadedCallback: onStyleLoadedCallback,
         onMapClick: onMapClick,
         onUserLocationUpdated: onUserLocationUpdated,
@@ -239,7 +239,7 @@ class MapboxMapController extends ChangeNotifier {
   bool _isCameraMoving = false;
 
   /// Returns the most recent camera position reported by the platform side.
-  /// Will be null, if [MapboxMap.trackCameraPosition] is false.
+  /// Will be null, if [MaplibreMap.trackCameraPosition] is false.
   CameraPosition get cameraPosition => _cameraPosition;
   CameraPosition _cameraPosition;
 

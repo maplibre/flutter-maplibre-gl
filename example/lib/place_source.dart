@@ -35,9 +35,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   static const LAYER_ID = 'sydney_layer';
 
   bool sourceAdded = false;
-  MapboxMapController controller;
+  MaplibreMapController controller;
 
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
   }
 
@@ -88,7 +88,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MapboxMap(
+            child: MaplibreMap(
               accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
               initialCameraPosition: const CameraPosition(
