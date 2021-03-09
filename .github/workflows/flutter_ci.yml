@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: main
+        ref: ${{ github.ref }}
     - uses: actions/setup-java@v1
       with:
         java-version: '12.x'
@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: main
+        ref: ${{ github.ref }}
     - uses: actions/setup-java@v1
       with:
         java-version: '12.x'
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: main
+          ref: ${{ github.ref }}
       - uses: actions/setup-java@v1
         with:
           java-version: '12.x'
@@ -70,7 +70,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: main
+        ref: ${{ github.ref }}
     - uses: actions/setup-java@v1
       with:
         java-version: '12.x'
