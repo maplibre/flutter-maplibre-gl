@@ -4,7 +4,9 @@
 
 **This change isn't fully done, yet, and the project shouldn't be used at this time.**
 
-> **Please note that this project is community driven and is not affiliated with the company Mapbox, besides using some of their amazing open source libraries/tools.** We welcome [feedback](https://github.com/m0nac0/flutter-maplibre-gl/issues) and contributions.
+**Please note that this project is community driven and is not affiliated with the company Mapbox.** <br>
+It does use some of their amazing open source libraries/tools, though. Thank you, Mapbox, for all the open-source work you do!
+
 
 This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
 
@@ -106,4 +108,5 @@ This README file currently houses all of the documentation for this Flutter proj
 
 ## Contributing
 
-We welcome contributions to this repository! 
+
+[Feedback](https://github.com/m0nac0/flutter-maplibre-gl/issues) and contributions are very welcome!
