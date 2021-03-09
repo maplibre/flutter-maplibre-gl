@@ -12,7 +12,7 @@ This Flutter plugin allows to show embedded interactive and customizable vector 
 
 | Android | iOS | Web |
 | ------ | ------ | ----- |
-| ✅ Using Maplibre; works fine (functionality provided by Android plugins is not tested, yet) | Compiles, but still uses Mapbox GL | ✅ Using Maplibre GL JS; works fine |
+| ✅ Using Maplibre; works fine <br>(Features provided by Android plugins aren't tested, yet) | Compiles, but still uses Mapbox GL.<br>**[Help wanted](https://github.com/m0nac0/flutter-maplibre-gl/issues/2)** | ✅ Using Maplibre GL JS; works fine |
 
 
 ## Using the SDK in your project
