@@ -1,12 +1,30 @@
 # Flutter Maplibre GL
 
-**Please note that this project is a fork of [https://github.com/tobrun/flutter-maplibre-gl](https://github.com/tobrun/flutter-maplibre-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
+**This project is a fork of [https://github.com/tobrun/flutter-maplibre-gl](https://github.com/tobrun/flutter-maplibre-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
 
-**This change is not (fully) done, yet, and this project is currently not functional and shouldn't be used.**
+**This change isn't fully done, yet, and the project shouldn't be used at this time.**
 
 > **Please note that this project is community driven and is not affiliated with the company Mapbox, besides using some of their amazing open source libraries/tools.** We welcome [feedback](https://github.com/m0nac0/flutter-maplibre-gl/issues) and contributions.
 
-This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we plan to use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we will rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
+This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
+
+## Current migration status
+
+| Android | iOS | Web |
+| ------ | ------ | ----- |
+| ✅ Using Maplibre; works fine (functionality provided by Android plugins is not tested, yet) | Compiles, but still uses Mapbox GL | ✅ Using Maplibre GL JS; works fine |
+
+
+## Using the SDK in your project
+
+This project is not yet available on [pub.dev](https://pub.dev/).
+You can use it by referencing it in your pubspec.yaml like this:
+```yaml
+dependencies:
+    ...
+    maplibre_gl:
+        git: https://github.com/m0nac0/flutter-maplibre-gl.git
+```
 
 ## Running the example app
 
@@ -31,9 +49,6 @@ buildTypes {
 }
 ```
 
-## Using the SDK in your project
-
-This project is not yet available on [pub.dev](https://pub.dev/).
 
 ## Supported API
 
@@ -81,7 +96,8 @@ This README file currently houses all of the documentation for this Flutter proj
 
 ## Getting Help
 
-- **Need help with your code?**: Look for previous questions on the [#maplibre tag](https://stackoverflow.com/questions/tagged/maplibre) — or [ask a new question](https://stackoverflow.com/questions/tagged/maplibre).
+- **Need help with your code?**: Check the [discussions](https://github.com/m0nac0/flutter-maplibre-gl/discussions) on this repo or open a new one. 
+ Or look for previous questions on the [#maplibre tag](https://stackoverflow.com/questions/tagged/maplibre) — or [ask a new question](https://stackoverflow.com/questions/tagged/maplibre).
 - **Have a bug to report?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). If possible, include a full log and information which shows the issue.
 - **Have a feature request?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
