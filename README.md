@@ -25,7 +25,9 @@ dependencies:
     maplibre_gl:
         git: https://github.com/m0nac0/flutter-maplibre-gl.git
 ```
-
+If you are switching from flutter-mapbox-gl, the only breaking API changes are: 
+- `MapboxMap` --> `MaplibreMap`
+- `MapboxMapController` --> `MaplibreMapController`
 ## Running the example app
 
 - Install [Flutter](https://flutter.io/get-started/) and validate its installation with `flutter doctor`
