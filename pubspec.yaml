@@ -35,6 +35,6 @@ flutter:
         default_package: mapbox_gl_web
 
 environment:
-  sdk: ">=2.1.0 <2.12.0"
+  sdk: ">=2.1.0"
   # Flutter versions prior to 1.10 did not support the flutter.plugin.platforms map.
   flutter: ">=1.10.0"
