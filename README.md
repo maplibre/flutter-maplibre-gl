@@ -25,7 +25,8 @@ You can use it by referencing it in your pubspec.yaml like this:
 dependencies:
     ...
     maplibre_gl:
-        git: https://github.com/m0nac0/flutter-maplibre-gl.git
+      git:
+        url: https://github.com/m0nac0/flutter-maplibre-gl.git
         ref: main
 ```
 Compared to flutter-mapbox-gl, the only breaking API changes are: 
