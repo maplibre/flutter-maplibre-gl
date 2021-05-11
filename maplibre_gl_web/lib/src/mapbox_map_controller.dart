@@ -196,7 +196,12 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<Circle> addCircle(CircleOptions options, [Map data]) async {
+  Future<void> removeLines(Iterable<String> ids) async {
+    lineManager.removeAll(ids);
+  }
+
+  @override
+  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
     String circleId = circleManager.add(Feature(
       geometry: Geometry(
         type: 'Point',
@@ -223,7 +228,12 @@ class MaplibreMapController extends MapLibreGlPlatform
     circleManager.remove(circleId);
   }
 
-  Future<Fill> addFill(FillOptions options, [Map data]) async {
+  @override
+  Future<void> removeCircles(Iterable<String> ids) async {
+    circleManager.removeAll(ids);
+  }
+
+  Future<Fill> addFill(FillOptions options, [Map? data]) async {
     String fillId = fillManager.add(Feature(
       geometry: Geometry(
         type: 'Polygon',
@@ -241,6 +251,11 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   Future<void> removeFill(String fillId) async {
     fillManager.remove(fillId);
+  }
+
+  @override
+  Future<void> removeFills(Iterable<String> ids) async {
+    fillManager.removeAll(ids);
   }
 
   @override
