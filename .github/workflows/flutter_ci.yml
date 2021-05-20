@@ -16,7 +16,7 @@ jobs:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
-        flutter-version: '1.26.0-17.5.pre'
+    
         channel: beta
     - run: flutter pub get
     - name: Lint analysis
@@ -35,7 +35,6 @@ jobs:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
-        flutter-version: '1.26.0-17.5.pre'
         channel: beta
     - run: flutter pub get
     - name: Build example APK
@@ -55,7 +54,6 @@ jobs:
           java-version: '12.x'
       - uses: subosito/flutter-action@v1
         with:
-          flutter-version: '1.26.0-17.5.pre'
           channel: beta
       - run: flutter pub get
       - name: build iOS package
@@ -76,7 +74,6 @@ jobs:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
-        flutter-version: '1.26.0-17.5.pre'
         channel: beta
     - run: flutter config --enable-web
     - run: flutter pub get

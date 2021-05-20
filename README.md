@@ -1,6 +1,6 @@
 # Flutter Maplibre GL
 
-**This project is a fork of [https://github.com/tobrun/flutter-maplibre-gl](https://github.com/tobrun/flutter-maplibre-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
+**This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
 
 **This change isn't fully done, yet, and the project shouldn't be used at this time.**
 
@@ -19,13 +19,15 @@ This Flutter plugin allows to show embedded interactive and customizable vector 
 
 ## Using the SDK in your project
 
-This project is not yet available on [pub.dev](https://pub.dev/).
+This project is not yet available on pub.dev.
 You can use it by referencing it in your pubspec.yaml like this:
 ```yaml
 dependencies:
     ...
     maplibre_gl:
-        git: https://github.com/m0nac0/flutter-maplibre-gl.git
+      git:
+        url: https://github.com/m0nac0/flutter-maplibre-gl.git
+        ref: main
 ```
 Compared to flutter-mapbox-gl, the only breaking API changes are: 
 - `MapboxMap` <--> `MaplibreMap`
