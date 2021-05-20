@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import Mapbox
-import MapboxAnnotationExtension
+import MapLibreAnnotationExtension
 
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink, MGLAnnotationControllerDelegate {
     
