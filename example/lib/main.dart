@@ -21,7 +21,7 @@ import 'place_fill.dart';
 import 'scrolling_map.dart';
 import 'offline_regions.dart';
 import 'custom_marker.dart';
-import 'full_map.dart';
+import 'place_batch.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
@@ -38,6 +38,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   OfflineRegionsPage(),
   AnnotationOrderPage(),
   CustomMarkerPage(),
+  BatchAddPage(),
 ];
 
 class MapsDemo extends StatelessWidget {

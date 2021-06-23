@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:4.1.1'
     }
 }
 
@@ -17,9 +17,6 @@ rootProject.allprojects {
         google()
         jcenter()
         mavenCentral()
-        maven {
-            url = "https://dl.bintray.com/maplibre/maplibre-gl-native"
-        }
     }
 }
 
