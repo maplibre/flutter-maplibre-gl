@@ -23,6 +23,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     private var fillAnnotationController: MGLPolygonAnnotationController?
 
     private var annotationOrder = [String]()
+    private var annotationConsumeTapEvents = [String]()
 
     func view() -> UIView {
         return mapView
@@ -67,6 +68,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
             if let annotationOrderArg = args["annotationOrder"] as? [String] {
                 annotationOrder = annotationOrderArg
+            }
+            if let annotationConsumeTapEventsArg = args["annotationConsumeTapEvents"] as? [String] {
+                annotationConsumeTapEvents = annotationConsumeTapEventsArg
             }
         }
     }
@@ -181,6 +185,25 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             reply["x"] = returnVal.x as NSObject
             reply["y"] = returnVal.y as NSObject
             result(reply)
+        case "map#toScreenLocationBatch":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let data = arguments["coordinates"] as? FlutterStandardTypedData else { return }
+            let latLngs = data.data.withUnsafeBytes {
+                Array(
+                    UnsafeBufferPointer(
+                        start: $0.baseAddress!.assumingMemoryBound(to: Double.self),
+                        count:Int(data.elementCount))
+                )
+            }
+            var reply: [Double] = Array(repeating: 0.0, count: latLngs.count)
+            for i in stride(from: 0, to: latLngs.count, by: 2) {
+                let coordinate = CLLocationCoordinate2DMake(latLngs[i], latLngs[i + 1])
+                let returnVal = mapView.convert(coordinate, toPointTo: mapView)
+                reply[i] = Double(returnVal.x)
+                reply[i + 1] = Double(returnVal.y)
+            }
+            result(FlutterStandardTypedData(
+                    float64: Data(bytes: &reply, count: reply.count * 8) ))
         case "map#getMetersPerPixelAtLatitude":
              guard let arguments = methodCall.arguments as? [String: Any] else { return }
              var reply = [String: NSObject]()
@@ -230,6 +253,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 }
                 if !symbols.isEmpty {
                     symbolAnnotationController.addStyleAnnotations(symbols)
+                    symbolAnnotationController.annotationsInteractionEnabled = annotationConsumeTapEvents.contains("AnnotationType.symbol")
                 }
 
                 result(symbols.map { $0.identifier })
@@ -317,6 +341,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 let circle = MGLCircleStyleAnnotation(center: coordinate)
                 Convert.interpretCircleOptions(options: arguments["options"], delegate: circle)
                 circleAnnotationController.addStyleAnnotation(circle)
+                circleAnnotationController.annotationsInteractionEnabled = annotationConsumeTapEvents.contains("AnnotationType.circle")
                 result(circle.identifier)
             } else {
                 result(nil)
@@ -360,6 +385,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 let line = MGLLineStyleAnnotation(coordinates: lineCoordinates, count: UInt(lineCoordinates.count))
                 Convert.interpretLineOptions(options: arguments["options"], delegate: line)
                 lineAnnotationController.addStyleAnnotation(line)
+                lineAnnotationController.annotationsInteractionEnabled = annotationConsumeTapEvents.contains("AnnotationType.line")
                 result(line.identifier)
             } else {
                 result(nil)
@@ -422,6 +448,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 let fill = MGLPolygonStyleAnnotation(coordinates: fillCoordinates, count: UInt(fillCoordinates.count), interiorPolygons: polygons)
                 Convert.interpretFillOptions(options: arguments["options"], delegate: fill)
                 fillAnnotationController.addStyleAnnotation(fill)
+                fillAnnotationController.annotationsInteractionEnabled = annotationConsumeTapEvents.contains("AnnotationType.fill")
                 identifier = fill.identifier
             }
             result(identifier)

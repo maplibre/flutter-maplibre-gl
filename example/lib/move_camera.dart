@@ -43,7 +43,7 @@ class MoveCameraState extends State<MoveCamera> {
             child: MaplibreMap(
               accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
-              onCameraIdle: ()=>print("onCameraIdle"),
+              onCameraIdle: () => print("onCameraIdle"),
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
             ),
