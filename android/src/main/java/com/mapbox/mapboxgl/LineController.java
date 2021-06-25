@@ -59,7 +59,7 @@ class LineController implements LineOptionsSink {
   
   @Override
   public void setLineColor(String lineColor) {
-    line.setLineColor(ColorUtils.rgbaToColor(lineColor));
+    line.setLineColor(lineColor);
   }
 
   @Override
