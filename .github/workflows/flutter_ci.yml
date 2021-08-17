@@ -60,7 +60,7 @@ jobs:
         run: |
           cd ./example/ios
           pod update
-          cd ./example
+          cd ./..
           flutter build ios --release --no-codesign --verbose
           
   build-web:
