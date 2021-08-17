@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import Mapbox
-import MapboxAnnotationExtension
+import MapLibreAnnotationExtension
 
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink, MGLAnnotationControllerDelegate {
     
@@ -30,8 +30,8 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     
     init(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, registrar: FlutterPluginRegistrar) {
         if let args = args as? [String: Any] {
-            if let token = args["accessToken"] as? NSString{
-                MGLAccountManager.accessToken = token
+            if let token = args["accessToken"]{
+                MGLAccountManager.accessToken = token as? String
             }
         }
         mapView = MGLMapView(frame: frame)

@@ -59,7 +59,7 @@ jobs:
       - name: build iOS package
         run: |
           cd ./example
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign --verbose
           
   build-web:
     name: "Build web"
