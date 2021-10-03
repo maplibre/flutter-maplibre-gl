@@ -58,8 +58,10 @@ jobs:
       - run: flutter pub get
       - name: build iOS package
         run: |
-          cd ./example
-          flutter build ios --release --no-codesign
+          cd ./example/ios
+          pod update
+          cd ./..
+          flutter build ios --release --no-codesign --verbose
           
   build-web:
     name: "Build web"
