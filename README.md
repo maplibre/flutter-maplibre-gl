@@ -1,26 +1,26 @@
 # Flutter Maplibre GL
 
-**This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), aiming to replace its usage of Mapbox GL libraries with [Maplibre GL](https://github.com/maplibre) libraries.**
 
-**This change isn't fully done, yet, and the project shouldn't be used at this time.**
+This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
+
+
+This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), replacing its usage of Mapbox GL libraries with the open source [Maplibre GL](https://github.com/maplibre) libraries.
 
 **Please note that this project is community driven and is not affiliated with the company Mapbox.** <br>
 It does use some of their amazing open source libraries/tools, though. Thank you, Mapbox, for all the open-source work you do!
 
 
-This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
-
 ## Current migration status
 
 | Android | iOS | Web |
 | ------ | ------ | ----- |
-| ✅ Using Maplibre; works fine <br>(Features provided by Android plugins aren't tested, yet) | Compiles, but still uses Mapbox GL.<br>**[Help wanted](https://github.com/m0nac0/flutter-maplibre-gl/issues/2)** | ✅ Using Maplibre GL JS; works fine |
+| ✅ Using Maplibre; works fine <br>(Features provided by Android plugins aren't tested, yet) | ✅ Using Maplibre | ✅ Using Maplibre GL JS; works fine |
 
 
 ## Using the SDK in your project
 
 This project is not yet available on pub.dev.
-You can use it by referencing it in your pubspec.yaml like this:
+You can use it by referencing it in your `pubspec.yaml` like this:
 ```yaml
 dependencies:
     ...
@@ -37,23 +37,7 @@ Compared to flutter-mapbox-gl, the only breaking API changes are:
 - Install [Flutter](https://flutter.io/get-started/) and validate its installation with `flutter doctor`
 - Clone the repository with `git clone git@github.com:m0nac0/flutter-maplibre-gl.git`
 - Connect a mobile device or start an emulator, simulator or chrome
-- Locate the id of a the device with `flutter devices`
-- Run the app with `cd flutter_mapbox/example && flutter packages get && flutter run -d {device_id}`
-
-## Avoid Android UnsatisfiedLinkError
-
-Update buildTypes in `android\app\build.gradle`
-
-```gradle
-buildTypes {
-    release {
-        // other configs
-        ndk {
-            abiFilters 'armeabi-v7a','arm64-v8a','x86_64', 'x86'
-        }
-    }
-}
-```
+- Run the app with `cd flutter-maplibre-gl/example && flutter packages get && flutter run`
 
 
 ## Supported API
@@ -81,11 +65,11 @@ Map styles can be supplied by setting the `styleString` in the `MapOptions`. The
 
 
 ## Location features
-To enable location features in an **Android** application:
+#### To enable location features in an **Android** application:
 
 You need to declare the `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION` permission in the AndroidManifest.xml and starting from Android API level 23 also request it at runtime. The plugin does not handle this for you. The example app uses the flutter ['location' plugin](https://pub.dev/packages/location) for this. 
 
-To enable location features in an **iOS** application:
+#### To enable location features in an **iOS** application:
 
 If you access your users' location, you should also add the following key to your Info.plist to explain why you need access to their location data:
 
@@ -94,11 +78,27 @@ If you access your users' location, you should also add the following key to you
 <string>[Your explanation here]</string>
 ```
 
-Mapbox [recommends](https://docs.mapbox.com/help/tutorials/first-steps-ios-sdk/#display-the-users-location) the explanation "Shows your location on the map and helps improve the map".
+A possible explanation could be: "Shows your location on the map".
 
 ## Documentation
 
 This README file currently houses all of the documentation for this Flutter project. Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
+
+
+## Avoid Android UnsatisfiedLinkError
+
+Update buildTypes in `android\app\build.gradle`
+
+```gradle
+buildTypes {
+    release {
+        // other configs
+        ndk {
+            abiFilters 'armeabi-v7a','arm64-v8a','x86_64', 'x86'
+        }
+    }
+}
+```
 
 ## Getting Help
 
