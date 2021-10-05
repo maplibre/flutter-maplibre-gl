@@ -1,15 +1,16 @@
 part of maplibre_gl_web;
 
+//TODO Url taken from the Maptiler tutorial; use official and stable release once available
+final _maplibreGlCssUrl = 'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
+
 class MaplibreMapController extends MapLibreGlPlatform
     implements MapboxMapOptionsSink {
   DivElement _mapElement;
 
-  //TODO Url taken from the Maptiler tutorial; use official and stable release once available
-  final _maplibreGlCssUrl = 'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
-
   Map<String, dynamic> _creationParams;
   MapboxMap _map;
 
+  List<String> annotationOrder = [];
   SymbolManager symbolManager;
   LineManager lineManager;
   CircleManager circleManager;
@@ -64,6 +65,10 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map.on('load', _onStyleLoaded);
     }
     Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+
+    if (_creationParams.containsKey('annotationOrder')) {
+      annotationOrder = _creationParams['annotationOrder'];
+    }
   }
 
   Future<void> _addStylesheetToShadowRoot(HtmlElement e) async {
@@ -75,8 +80,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     await link.onLoad.first;
   }
 
-
-    @override
+  @override
   Future<CameraPosition> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
     // FIX: why is called indefinitely? (map_ui page)
@@ -344,10 +348,28 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   void _onStyleLoaded(_) {
-    symbolManager = SymbolManager(map: _map, onTap: onSymbolTappedPlatform);
-    lineManager = LineManager(map: _map, onTap: onLineTappedPlatform);
-    circleManager = CircleManager(map: _map, onTap: onCircleTappedPlatform);
-    fillManager = FillManager(map: _map, onTap: onFillTappedPlatform);
+    for (final annotationType in annotationOrder) {
+      switch (annotationType) {
+        case 'AnnotationType.symbol':
+          symbolManager =
+              SymbolManager(map: _map, onTap: onSymbolTappedPlatform);
+          break;
+        case 'AnnotationType.line':
+          lineManager = LineManager(map: _map, onTap: onLineTappedPlatform);
+          break;
+        case 'AnnotationType.circle':
+          circleManager =
+              CircleManager(map: _map, onTap: onCircleTappedPlatform);
+          break;
+        case 'AnnotationType.fill':
+          fillManager = FillManager(map: _map, onTap: onFillTappedPlatform);
+          break;
+        default:
+          print(
+              "Unknown annotation type: \(annotationType), must be either 'fill', 'line', 'circle' or 'symbol'");
+      }
+    }
+
     onMapStyleLoadedPlatform(null);
     _map.on('click', _onMapClick);
     // long click not available in web, so it is mapped to double click
@@ -434,7 +456,15 @@ class MaplibreMapController extends MapLibreGlPlatform
     );
     _geolocateControl.on('geolocate', (e) {
       _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
-      onUserLocationUpdatedPlatform(UserLocation(position: LatLng(e.coords.latitude, e.coords.longitude), altitude: e.coords.altitude, bearing: e.coords.heading, speed: e.coords.speed, horizontalAccuracy: e.coords.accuracy, verticalAccuracy: e.coords.altitudeAccuracy, heading: null, timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
+      onUserLocationUpdatedPlatform(UserLocation(
+          position: LatLng(e.coords.latitude, e.coords.longitude),
+          altitude: e.coords.altitude,
+          bearing: e.coords.heading,
+          speed: e.coords.speed,
+          horizontalAccuracy: e.coords.accuracy,
+          verticalAccuracy: e.coords.altitudeAccuracy,
+          heading: null,
+          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
     });
     _geolocateControl.on('trackuserlocationstart', (_) {
       _onCameraTrackingChanged(true);
@@ -656,6 +686,15 @@ class MaplibreMapController extends MapLibreGlPlatform
     var screenPosition =
         _map.project(LngLat(latLng.longitude, latLng.latitude));
     return Point(screenPosition.x.round(), screenPosition.y.round());
+  }
+
+  @override
+  Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+    return latLngs.map((latLng) {
+      var screenPosition =
+          _map.project(LngLat(latLng.longitude, latLng.latitude));
+      return Point(screenPosition.x.round(), screenPosition.y.round());
+    }).toList(growable: false);
   }
 
   @override

@@ -15,7 +15,6 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -29,11 +28,6 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineResult;
-import com.mapbox.android.telemetry.TelemetryEnabler;
 import com.mapbox.geojson.Feature;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -45,6 +39,10 @@ import com.mapbox.mapboxsdk.geometry.VisibleRegion;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentOptions;
 import com.mapbox.mapboxsdk.location.OnCameraTrackingChangedListener;
+import com.mapbox.mapboxsdk.location.engine.LocationEngine;
+import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback;
+import com.mapbox.mapboxsdk.location.engine.LocationEngineProvider;
+import com.mapbox.mapboxsdk.location.engine.LocationEngineResult;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
 import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -56,10 +54,13 @@ import com.mapbox.mapboxsdk.offline.OfflineManager;
 import com.mapbox.mapboxsdk.plugins.annotation.Annotation;
 import com.mapbox.mapboxsdk.plugins.annotation.Circle;
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager;
+import com.mapbox.mapboxsdk.plugins.annotation.CircleOptions;
 import com.mapbox.mapboxsdk.plugins.annotation.Fill;
 import com.mapbox.mapboxsdk.plugins.annotation.FillManager;
+import com.mapbox.mapboxsdk.plugins.annotation.FillOptions;
 import com.mapbox.mapboxsdk.plugins.annotation.Line;
 import com.mapbox.mapboxsdk.plugins.annotation.LineManager;
+import com.mapbox.mapboxsdk.plugins.annotation.LineOptions;
 import com.mapbox.mapboxsdk.plugins.annotation.OnAnnotationClickListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
@@ -71,10 +72,11 @@ import com.mapbox.mapboxsdk.style.sources.ImageSource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -130,7 +132,8 @@ final class MapboxMapController
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
   private LocalizationPlugin localizationPlugin;
   private Style style;
-  private List<String> annotationOrder = new ArrayList();
+  private List<String> annotationOrder;
+  private List<String> annotationConsumeTapEvents;
 
   MapboxMapController(
     int id,
@@ -140,7 +143,8 @@ final class MapboxMapController
     MapboxMapOptions options,
     String accessToken,
     String styleStringInitial,
-    List<String> annotationOrder) {
+    List<String> annotationOrder,
+    List<String> annotationConsumeTapEvents) {
     MapBoxUtils.getMapbox(context, accessToken);
     this.id = id;
     this.context = context;
@@ -155,6 +159,7 @@ final class MapboxMapController
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/mapbox_maps_" + id);
     methodChannel.setMethodCallHandler(this);
     this.annotationOrder = annotationOrder;
+    this.annotationConsumeTapEvents = annotationConsumeTapEvents;
   }
 
   @Override
@@ -380,8 +385,6 @@ final class MapboxMapController
     }
   }
 
-
-
   private void enableLineManager(@NonNull Style style) {
     if (lineManager == null) {
       lineManager = new LineManager(mapView, mapboxMap, style);
@@ -458,6 +461,19 @@ final class MapboxMapController
         PointF pointf = mapboxMap.getProjection().toScreenLocation(new LatLng(call.argument("latitude"),call.argument("longitude")));
         reply.put("x", pointf.x);
         reply.put("y", pointf.y);
+        result.success(reply);
+        break;
+      }
+      case "map#toScreenLocationBatch": {
+        double[] param = (double[])call.argument("coordinates");
+        double[] reply = new double[param.length];
+
+        for (int i = 0; i < param.length; i += 2) {
+          PointF pointf = mapboxMap.getProjection().toScreenLocation(new LatLng(param[i], param[i + 1]));
+          reply[i] = pointf.x;
+          reply[i + 1] = pointf.y;
+        }
+
         result.success(reply);
         break;
       }
@@ -563,14 +579,11 @@ final class MapboxMapController
         break;
       }
       case "map#setTelemetryEnabled": {
-        final boolean enabled = call.argument("enabled");
-        Mapbox.getTelemetry().setUserTelemetryRequestState(enabled);
         result.success(null);
         break;
       }
       case "map#getTelemetryEnabled": {
-        final TelemetryEnabler.State telemetryState = TelemetryEnabler.retrieveTelemetryStateFromPreferences();
-        result.success(telemetryState == TelemetryEnabler.State.ENABLED);
+        result.success(false);
         break;
       }
       case "map#invalidateAmbientCache": {
@@ -606,7 +619,7 @@ final class MapboxMapController
             for (Symbol symbol : newSymbols) {
               symbolId = String.valueOf(symbol.getId());
               newSymbolIds.add(symbolId);
-              symbols.put(symbolId, new SymbolController(symbol, true, this));
+              symbols.put(symbolId, new SymbolController(symbol, annotationConsumeTapEvents.contains("AnnotationType.symbol"), this));
             }
           }
         }
@@ -614,7 +627,7 @@ final class MapboxMapController
         break;
       }
       case "symbols#removeAll": {
-        final ArrayList<String> symbolIds = call.argument("symbols");
+        final ArrayList<String> symbolIds = call.argument("ids");
         SymbolController symbolController;
 
         List<Symbol> symbolList = new ArrayList<Symbol>();
@@ -676,13 +689,54 @@ final class MapboxMapController
         Convert.interpretLineOptions(call.argument("options"), lineBuilder);
         final Line line = lineBuilder.build();
         final String lineId = String.valueOf(line.getId());
-        lines.put(lineId, new LineController(line, true, this));
+        lines.put(lineId, new LineController(line,  annotationConsumeTapEvents.contains("AnnotationType.line"), this));
         result.success(lineId);
         break;
       }
       case "line#remove": {
         final String lineId = call.argument("line");
         removeLine(lineId);
+        result.success(null);
+        break;
+      }
+      case "line#addAll": { 
+        List<String> newIds = new ArrayList<String>();
+        final List<Object> options = call.argument("options");
+        List<LineOptions> optionList = new ArrayList<LineOptions>();
+        if (options != null) {
+          LineBuilder builder;
+          for (Object o : options) {
+            builder = newLineBuilder();
+            Convert.interpretLineOptions(o, builder);
+            optionList.add(builder.getLineOptions());
+          }
+          if (!optionList.isEmpty()) {
+            List<Line> newLines = lineManager.create(optionList);
+            String id;
+            for (Line line : newLines) {
+              id = String.valueOf(line.getId());
+              newIds.add(id);
+              lines.put(id, new LineController(line, true, this));
+            }
+          }
+        }
+        result.success(newIds);
+        break;
+      }
+      case "line#removeAll": {
+        final ArrayList<String> ids = call.argument("ids");
+        LineController lineController;
+
+        List<Line> toBeRemoved = new ArrayList<Line>();
+        for(String id : ids){
+            lineController = lines.remove(id);
+            if (lineController != null) {
+              toBeRemoved.add(lineController.getLine());
+            }
+        }
+        if(!toBeRemoved.isEmpty()) {
+          lineManager.delete(toBeRemoved);
+        }
         result.success(null);
         break;
       }
@@ -713,8 +767,49 @@ final class MapboxMapController
         Convert.interpretCircleOptions(call.argument("options"), circleBuilder);
         final Circle circle = circleBuilder.build();
         final String circleId = String.valueOf(circle.getId());
-        circles.put(circleId, new CircleController(circle, true, this));
+        circles.put(circleId, new CircleController(circle,  annotationConsumeTapEvents.contains("AnnotationType.circle"), this));
         result.success(circleId);
+        break;
+      }
+      case "circle#addAll": { 
+        List<String> newIds = new ArrayList<String>();
+        final List<Object> options = call.argument("options");
+        List<CircleOptions> optionList = new ArrayList<CircleOptions>();
+        if (options != null) {
+          CircleBuilder builder;
+          for (Object o : options) {
+            builder = newCircleBuilder();
+            Convert.interpretCircleOptions(o, builder);
+            optionList.add(builder.getCircleOptions());
+          }
+          if (!optionList.isEmpty()) {
+            List<Circle> newCircles = circleManager.create(optionList);
+            String id;
+            for (Circle circle : newCircles) {
+              id = String.valueOf(circle.getId());
+              newIds.add(id);
+              circles.put(id, new CircleController(circle, true, this));
+            }
+          }
+        }
+        result.success(newIds);
+        break;
+      }
+      case "circle#removeAll": {
+        final ArrayList<String> ids = call.argument("ids");
+        CircleController circleController;
+
+        List<Circle> toBeRemoved = new ArrayList<Circle>();
+        for(String id : ids){
+            circleController = circles.remove(id);
+            if (circleController != null) {
+              toBeRemoved.add(circleController.getCircle());
+            }
+        }
+        if(!toBeRemoved.isEmpty()) {
+          circleManager.delete(toBeRemoved);
+        }
+        result.success(null);
         break;
       }
       case "circle#remove": {
@@ -747,8 +842,50 @@ final class MapboxMapController
         Convert.interpretFillOptions(call.argument("options"), fillBuilder);
         final Fill fill = fillBuilder.build();
         final String fillId = String.valueOf(fill.getId());
-        fills.put(fillId, new FillController(fill, true, this));
+        fills.put(fillId, new FillController(fill,  annotationConsumeTapEvents.contains("AnnotationType.fill"), this));
         result.success(fillId);
+        break;
+      }
+
+      case "fill#addAll": { 
+        List<String> newIds = new ArrayList<String>();
+        final List<Object> options = call.argument("options");
+        List<FillOptions> optionList = new ArrayList<FillOptions>();
+        if (options != null) {
+          FillBuilder builder;
+          for (Object o : options) {
+            builder = newFillBuilder();
+            Convert.interpretFillOptions(o, builder);
+            optionList.add(builder.getFillOptions());
+          }
+          if (!optionList.isEmpty()) {
+            List<Fill> newFills = fillManager.create(optionList);
+            String id;
+            for (Fill fill : newFills) {
+              id = String.valueOf(fill.getId());
+              newIds.add(id);
+              fills.put(id, new FillController(fill, true, this));
+            }
+          }
+        }
+        result.success(newIds);
+        break;
+      }
+      case "fill#removeAll": {
+        final ArrayList<String> ids = call.argument("ids");
+        FillController fillController;
+
+        List<Fill> toBeRemoved = new ArrayList<Fill>();
+        for(String id : ids){
+            fillController = fills.remove(id);
+            if (fillController != null) {
+              toBeRemoved.add(fillController.getFill());
+            }
+        }
+        if(!toBeRemoved.isEmpty()) {
+          fillManager.delete(toBeRemoved);
+        }
+        result.success(null);
         break;
       }
       case "fill#remove": {
@@ -891,31 +1028,27 @@ final class MapboxMapController
     if (annotation instanceof Symbol) {
       final SymbolController symbolController = symbols.get(String.valueOf(annotation.getId()));
       if (symbolController != null) {
-        symbolController.onTap();
-        return true;
+        return symbolController.onTap();
       }
     }
 
     if (annotation instanceof Line) {
       final LineController lineController = lines.get(String.valueOf(annotation.getId()));
       if (lineController != null) {
-        lineController.onTap();
-        return true;
+        return lineController.onTap();
       }
     }
 
     if (annotation instanceof Circle) {
       final CircleController circleController = circles.get(String.valueOf(annotation.getId()));
       if (circleController != null) {
-        circleController.onTap();
-        return true;
+        return circleController.onTap();
       }
     }
     if (annotation instanceof Fill) {
       final FillController fillController = fills.get(String.valueOf(annotation.getId()));
       if (fillController != null) {
-        fillController.onTap();
-        return true;
+        return fillController.onTap();
       }
     }
     return false;

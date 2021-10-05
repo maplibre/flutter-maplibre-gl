@@ -56,26 +56,32 @@ class AnimateCameraState extends State<AnimateCamera> {
               children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
-                      CameraUpdate.newCameraPosition(
-                        const CameraPosition(
-                          bearing: 270.0,
-                          target: LatLng(51.5160895, -0.1294527),
-                          tilt: 30.0,
-                          zoom: 17.0,
-                        ),
-                      ),
-                    ).then((result)=>print("mapController.animateCamera() returned $result"));
+                    mapController
+                        .animateCamera(
+                          CameraUpdate.newCameraPosition(
+                            const CameraPosition(
+                              bearing: 270.0,
+                              target: LatLng(51.5160895, -0.1294527),
+                              tilt: 30.0,
+                              zoom: 17.0,
+                            ),
+                          ),
+                        )
+                        .then((result) => print(
+                            "mapController.animateCamera() returned $result"));
                   },
                   child: const Text('newCameraPosition'),
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
-                      CameraUpdate.newLatLng(
-                        const LatLng(56.1725505, 10.1850512),
-                      ),
-                    ).then((result)=>print("mapController.animateCamera() returned $result"));
+                    mapController
+                        .animateCamera(
+                          CameraUpdate.newLatLng(
+                            const LatLng(56.1725505, 10.1850512),
+                          ),
+                        )
+                        .then((result) => print(
+                            "mapController.animateCamera() returned $result"));
                   },
                   child: const Text('newLatLng'),
                 ),

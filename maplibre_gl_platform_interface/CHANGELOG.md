@@ -1,3 +1,12 @@
+## 0.12.0, Oct 5, 2021
+### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
+* Batch creation/removal for circles, fills and lines [#576](https://github.com/tobrun/flutter-mapbox-gl/pull/576)
+
+## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
+
+## 0.11.0, March 30, 2020
+* Add batch mode of screen locations [#554](https://github.com/tobrun/flutter-mapbox-gl/pull/554)
+
 ## 0.10.0, February 12, 2020
 * Added web support for fills [#501](https://github.com/tobrun/flutter-mapbox-gl/pull/501)
 * Add heading to UserLocation and expose UserLocation type [#522](https://github.com/tobrun/flutter-mapbox-gl/pull/522)

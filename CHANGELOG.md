@@ -1,4 +1,29 @@
+## 0.12.0, Oct 5, 2021
+* Update to Maplibre-Android-SDK 9.4.2
+* Update to MapLibre-iOS-SDK 5.12.0
+
+### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
+* Batch creation/removal for circles, fills and lines [#576](https://github.com/tobrun/flutter-mapbox-gl/pull/576)
+* Dependencies: updated image package [#598](https://github.com/tobrun/flutter-mapbox-gl/pull/598)
+* Improve description to enable location features [#596](https://github.com/tobrun/flutter-mapbox-gl/pull/596)
+* Fix feature manager on release build [#593](https://github.com/tobrun/flutter-mapbox-gl/pull/593)
+* Emit onTap only for the feature above the others [#589](https://github.com/tobrun/flutter-mapbox-gl/pull/589)
+* Add annotationOrder to web [#588](https://github.com/tobrun/flutter-mapbox-gl/pull/588)
+
 ## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
+
+## 0.11.0, March 30, 2020
+* Fixed issues caused by new android API [#544](https://github.com/tobrun/flutter-mapbox-gl/pull/544)
+* Add option to set maximum offline tile count [#549](https://github.com/tobrun/flutter-mapbox-gl/pull/549)
+* Fixed web build failure due to http package upgrade [#550](https://github.com/tobrun/flutter-mapbox-gl/pull/550)
+* Update OfflineRegion/OfflineRegionDefinition interfaces, synchronize with iOS and Android [#545](https://github.com/tobrun/flutter-mapbox-gl/pull/545)
+* Fix Mapbox GL JS CSS embedding on web [#551](https://github.com/tobrun/flutter-mapbox-gl/pull/551)
+* Update Podfile to fix iOS CI [#565](https://github.com/tobrun/flutter-mapbox-gl/pull/565)
+* Update deprecated patterns to fix CI static analysis [#568](https://github.com/tobrun/flutter-mapbox-gl/pull/568)
+* Add setOffline method on Android [#537](https://github.com/tobrun/flutter-mapbox-gl/pull/537)
+* Add batch mode of screen locations [#554](https://github.com/tobrun/flutter-mapbox-gl/pull/554)
+* Define which annotations consume the tap events [#575](https://github.com/tobrun/flutter-mapbox-gl/pull/575)
+* Remove failed offline region downloads [#583](https://github.com/tobrun/flutter-mapbox-gl/pull/583)
 
 ## 0.10.0, February 12, 2020
 * Merge offline regions [#532](https://github.com/tobrun/flutter-mapbox-gl/pull/532)
