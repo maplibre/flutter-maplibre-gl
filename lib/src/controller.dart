@@ -18,7 +18,7 @@ typedef void OnCameraIdleCallback();
 
 typedef void OnMapIdleCallback();
 
-/// Controller for a single MapboxMap instance running on the host platform.
+/// Controller for a single MaplibreMap instance running on the host platform.
 ///
 /// Change listeners are notified upon changes to any of
 ///
