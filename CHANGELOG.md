@@ -1,14 +1,16 @@
-## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
+## 0.12.0, Oct 5, 2021
+* Update to Maplibre-Android-SDK 9.4.2
+* Update to MapLibre-iOS-SDK 5.12.0
 
-## 0.12.0, April 12, 2020
-* Update to Mapbox-Android-SDK 9.6.0 [#489](https://github.com/tobrun/flutter-mapbox-gl/pull/489)
-* Update to Mapbox-iOS-SDK 6.3.0 [#513](https://github.com/tobrun/flutter-mapbox-gl/pull/513)
+### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
 * Batch creation/removal for circles, fills and lines [#576](https://github.com/tobrun/flutter-mapbox-gl/pull/576)
 * Dependencies: updated image package [#598](https://github.com/tobrun/flutter-mapbox-gl/pull/598)
 * Improve description to enable location features [#596](https://github.com/tobrun/flutter-mapbox-gl/pull/596)
 * Fix feature manager on release build [#593](https://github.com/tobrun/flutter-mapbox-gl/pull/593)
 * Emit onTap only for the feature above the others [#589](https://github.com/tobrun/flutter-mapbox-gl/pull/589)
 * Add annotationOrder to web [#588](https://github.com/tobrun/flutter-mapbox-gl/pull/588)
+
+## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
 
 ## 0.11.0, March 30, 2020
 * Fixed issues caused by new android API [#544](https://github.com/tobrun/flutter-mapbox-gl/pull/544)
