@@ -1,6 +1,6 @@
 name: Flutter CI
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   lint:
@@ -58,7 +58,9 @@ jobs:
       - run: flutter pub get
       - name: build iOS package
         run: |
-          cd ./example
+          cd ./example/ios
+          pod update
+          cd ./..
           flutter build ios --release --no-codesign --verbose
           
   build-web:
