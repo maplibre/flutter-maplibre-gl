@@ -357,6 +357,7 @@ final class MapboxMapController
     userLocation.put("position", new double[]{location.getLatitude(), location.getLongitude()});
     userLocation.put("altitude", location.getAltitude());
     userLocation.put("bearing", location.getBearing());
+    userLocation.put("speed", location.getSpeed());
     userLocation.put("horizontalAccuracy", location.getAccuracy());
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       userLocation.put("verticalAccuracy", (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
