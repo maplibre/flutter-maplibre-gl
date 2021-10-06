@@ -17,9 +17,8 @@ Further improvements:
 * Emit onTap only for the feature above the others [#589](https://github.com/tobrun/flutter-mapbox-gl/pull/589)
 * Add annotationOrder to web [#588](https://github.com/tobrun/flutter-mapbox-gl/pull/588)
 
-## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
 
-## 0.11.0, March 30, 2020
+### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.11.0
 * Fixed issues caused by new android API [#544](https://github.com/tobrun/flutter-mapbox-gl/pull/544)
 * Add option to set maximum offline tile count [#549](https://github.com/tobrun/flutter-mapbox-gl/pull/549)
 * Fixed web build failure due to http package upgrade [#550](https://github.com/tobrun/flutter-mapbox-gl/pull/550)
@@ -31,6 +30,9 @@ Further improvements:
 * Add batch mode of screen locations [#554](https://github.com/tobrun/flutter-mapbox-gl/pull/554)
 * Define which annotations consume the tap events [#575](https://github.com/tobrun/flutter-mapbox-gl/pull/575)
 * Remove failed offline region downloads [#583](https://github.com/tobrun/flutter-mapbox-gl/pull/583)
+
+## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
+
 
 ## 0.10.0, February 12, 2020
 * Merge offline regions [#532](https://github.com/tobrun/flutter-mapbox-gl/pull/532)

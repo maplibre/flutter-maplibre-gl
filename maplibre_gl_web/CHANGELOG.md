@@ -7,11 +7,11 @@
 * Emit onTap only for the feature above the others [#589](https://github.com/tobrun/flutter-mapbox-gl/pull/589)
 * Add annotationOrder to web [#588](https://github.com/tobrun/flutter-mapbox-gl/pull/588)
 
-## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
-
-## 0.11.0, March 30, 2020
+### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.11.0
 * Fix Mapbox GL JS CSS embedding on web [#551](https://github.com/tobrun/flutter-mapbox-gl/pull/551)
 * Add batch mode of screen locations [#554](https://github.com/tobrun/flutter-mapbox-gl/pull/554)
+
+## Below is the original changelog of the tobrun/flutter-mapbox-gl project, before the fork.
 
 ## 0.10.0, February 12, 2020
 * Added web support for fills [#501](https://github.com/tobrun/flutter-mapbox-gl/pull/501)
