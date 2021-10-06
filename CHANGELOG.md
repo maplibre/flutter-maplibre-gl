@@ -1,6 +1,13 @@
-## 0.12.0, Oct 5, 2021
+## 0.13.0, Oct 6, 2021
+🎉 The first release of flutter-maplibre-gl with the complete transition to Maplibre libraries. 🎉
+
+Further improvements: 
 * Update to Maplibre-Android-SDK 9.4.2
 * Update to MapLibre-iOS-SDK 5.12.0
+* Fix onUserLocationUpdated not firing on android [#14](https://github.com/m0nac0/flutter-maplibre-gl/pull/14)
+* Add speed to UserLocation [#11](https://github.com/m0nac0/flutter-maplibre-gl/pull/11)
+* Fix queryRenderedFeaturesInRect for iOS [#10](https://github.com/m0nac0/flutter-maplibre-gl/pull/10)
+
 
 ### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
 * Batch creation/removal for circles, fills and lines [#576](https://github.com/tobrun/flutter-mapbox-gl/pull/576)

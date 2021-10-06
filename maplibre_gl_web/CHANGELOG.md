@@ -1,4 +1,6 @@
-## 0.12.0, Oct 5, 2021
+## 0.13.0, Oct 6, 2021
+🎉 The first release of flutter-maplibre-gl with the complete transition to Maplibre libraries. 🎉
+
 ### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
 * Dependencies: updated image package [#598](https://github.com/tobrun/flutter-mapbox-gl/pull/598)
 * Fix feature manager on release build [#593](https://github.com/tobrun/flutter-mapbox-gl/pull/593)

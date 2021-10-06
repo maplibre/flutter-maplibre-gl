@@ -1,4 +1,6 @@
-## 0.12.0, Oct 5, 2021
+## 0.13.0, Oct 6, 2021
+🎉 The first release of flutter-maplibre-gl with the complete transition to Maplibre libraries. 🎉
+
 ### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
 * Batch creation/removal for circles, fills and lines [#576](https://github.com/tobrun/flutter-mapbox-gl/pull/576)
 
