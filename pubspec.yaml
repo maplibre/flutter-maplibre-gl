@@ -10,18 +10,18 @@ dependencies:
     git:
       url: https://github.com/m0nac0/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
-      ref: main
+      ref: release-0.13
   maplibre_gl_web:
     git:
       url: https://github.com/m0nac0/flutter-maplibre-gl.git
       path: maplibre_gl_web
-      ref: main
+      ref: release-0.13
 
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ./maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ./maplibre_gl_web
+# dependency_overrides:
+#   maplibre_gl_platform_interface:
+#     path: ./maplibre_gl_platform_interface
+#   maplibre_gl_web:
+#     path: ./maplibre_gl_web
 
 flutter:
   plugin:

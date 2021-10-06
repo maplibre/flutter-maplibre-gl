@@ -20,13 +20,13 @@ dependencies:
     git:
       url: https://github.com/m0nac0/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
-      ref: main
+      ref: release-0.13
   mapbox_gl_dart: ^0.1.5
   image: ^3.0.2
 
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
+# dependency_overrides:
+#   maplibre_gl_platform_interface:
+#     path: ../maplibre_gl_platform_interface
 
 dev_dependencies:
   flutter_test:
