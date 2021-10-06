@@ -61,7 +61,13 @@ jobs:
           cd ./example/ios
           pod update
           cd ./..
-          flutter build ios --release --no-codesign --verbose
+          flutter build ios --release --no-codesign --simulator
+      - name: Upload Runner.app as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Runner.app
+          path: example/build/ios/iphonesimulator/Runner.app
+      
           
   build-web:
     name: "Build web"
