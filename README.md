@@ -1,7 +1,9 @@
 # Flutter Maplibre GL
 
 
-This Flutter plugin allows to show embedded interactive and customizable vector maps inside a Flutter widget. For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
+This Flutter plugin allows to show **embedded interactive and customizable vector maps** as a Flutter widget. 
+
+For the Android and iOS integration, we use [maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native). For web, we rely on [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js). This project only supports a subset of the API exposed by these libraries. 
 
 
 This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), replacing its usage of Mapbox GL libraries with the open source [Maplibre GL](https://github.com/maplibre) libraries.
@@ -10,14 +12,7 @@ This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://
 It does use some of their amazing open source libraries/tools, though. Thank you, Mapbox, for all the open-source work you do!
 
 
-## Current migration status
-
-| Android | iOS | Web |
-| ------ | ------ | ----- |
-| ✅ Using Maplibre; works fine <br>(Features provided by Android plugins aren't tested, yet) | ✅ Using Maplibre | ✅ Using Maplibre GL JS; works fine |
-
-
-## Using the SDK in your project
+## Using the plugin in your project
 
 This project is not yet available on pub.dev.
 You can use it by referencing it in your `pubspec.yaml` like this:
@@ -29,16 +24,14 @@ dependencies:
         url: https://github.com/m0nac0/flutter-maplibre-gl.git
         ref: main
 ```
+This will get you the very latest changes from the main branch.
+You can replace `main` with the name of the [latest release](https://github.com/m0nac0/flutter-maplibre-gl/releases)
+to get a well-tested version.
+
+
 Compared to flutter-mapbox-gl, the only breaking API changes are: 
 - `MapboxMap` <--> `MaplibreMap`
 - `MapboxMapController` <--> `MaplibreMapController`
-## Running the example app
-
-- Install [Flutter](https://flutter.io/get-started/) and validate its installation with `flutter doctor`
-- Clone the repository with `git clone git@github.com:m0nac0/flutter-maplibre-gl.git`
-- Connect a mobile device or start an emulator, simulator or chrome
-- Run the app with `cd flutter-maplibre-gl/example && flutter packages get && flutter run`
-
 
 ## Supported API
 
@@ -52,6 +45,14 @@ Compared to flutter-mapbox-gl, the only breaking API changes are:
 | Circle | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
+
+## Running the example app
+
+- Install [Flutter](https://flutter.io/get-started/) and validate its installation with `flutter doctor`
+- Clone the repository with `git clone git@github.com:m0nac0/flutter-maplibre-gl.git`
+- Connect a mobile device or start an emulator, simulator or chrome
+- Run the app with `cd flutter-maplibre-gl/example && flutter packages get && flutter run`
+
 
 ## Map Styles
 
@@ -90,8 +91,14 @@ A possible explanation could be: "Shows your location on the map".
 
 ## Documentation
 
-This README file currently houses all of the documentation for this Flutter project. Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
+This README file currently houses most of the documentation for this Flutter project. Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
+## Getting Help
+
+- **Need help with your code?**: Check the [discussions](https://github.com/m0nac0/flutter-maplibre-gl/discussions) on this repo or open a new one. 
+ Or look for previous questions on the [#maplibre tag](https://stackoverflow.com/questions/tagged/maplibre) — or [ask a new question](https://stackoverflow.com/questions/tagged/maplibre).
+- **Have a bug to report?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). If possible, include a full log and information which shows the issue.
+- **Have a feature request?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
 ## Avoid Android UnsatisfiedLinkError
 
@@ -108,12 +115,7 @@ buildTypes {
 }
 ```
 
-## Getting Help
 
-- **Need help with your code?**: Check the [discussions](https://github.com/m0nac0/flutter-maplibre-gl/discussions) on this repo or open a new one. 
- Or look for previous questions on the [#maplibre tag](https://stackoverflow.com/questions/tagged/maplibre) — or [ask a new question](https://stackoverflow.com/questions/tagged/maplibre).
-- **Have a bug to report?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). If possible, include a full log and information which shows the issue.
-- **Have a feature request?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
 
 ## Contributing
