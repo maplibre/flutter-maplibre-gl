@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Runner.app
-          path: example/build/ios/iphonesimulator/Runner.app
+          path: example/build/ios/iphonesimulator
       
           
   build-web:
