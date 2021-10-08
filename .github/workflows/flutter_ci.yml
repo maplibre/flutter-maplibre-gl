@@ -61,7 +61,7 @@ jobs:
           cd ./example/ios
           pod update
           cd ./..
-          flutter build ios --no-codesign --simulator
+          flutter build ios --simulator
       - name: Upload Runner.app as artifact
         uses: actions/upload-artifact@v2
         with:
