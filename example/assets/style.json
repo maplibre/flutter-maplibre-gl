@@ -1,35 +1,36 @@
 {
 	"version": 8,
-	"name": "Example taken from https://docs.mapbox.com/ios/maps/examples/source-custom-vector/",
+	"name": "Demo style",
+	"center": [
+		50,
+		10
+	],
+	"zoom": 4,
 	"sources": {
-		"mapillary": {
+		"demotiles": {
 			"type": "vector",
-			"tiles": [
-				"https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt"
-			],
-			"attribution": "<a href=\"https://www.mapillary.com\" target=\"_blank\">© Mapillary, CC BY</a>",
-			"maxzoom": 14
+			"url": "https://demotiles.maplibre.org/tiles/tiles.json"
 		}
 	},
-	"layers": [{
+	"sprite": "",
+	"glyphs": "https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf",
+	"layers": [
+		{
 			"id": "background",
 			"type": "background",
 			"paint": {
-				"background-color": "#485E77"
+				"background-color": "rgba(255, 255, 255, 1)"
 			}
 		},
 		{
-			"id": "mapillary-sequences",
+			"id": "countries",
 			"type": "line",
-			"source": "mapillary",
-			"source-layer": "mapillary-sequences",
-			"filter": [
-				"==",
-				"$type",
-				"LineString"
-			],
+			"source": "demotiles",
+			"source-layer": "countries",
 			"paint": {
-				"line-color": "#F56745"
+				"line-color": "rgba(0, 0, 0, 1)",
+				"line-width": 1,
+				"line-opacity": 1
 			}
 		}
 	]
