@@ -1,5 +1,5 @@
 # Flutter Maplibre GL
-
+[![Flutter CI](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/flutter_ci.yml)
 
 This Flutter plugin allows to show **embedded interactive and customizable vector maps** as a Flutter widget. 
 
