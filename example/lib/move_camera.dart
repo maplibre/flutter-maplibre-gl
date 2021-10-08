@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class MoveCameraPage extends ExamplePage {
@@ -41,7 +40,6 @@ class MoveCameraState extends State<MoveCamera> {
             width: 300.0,
             height: 200.0,
             child: MaplibreMap(
-              accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
               onCameraIdle: () => print("onCameraIdle"),
               initialCameraPosition:

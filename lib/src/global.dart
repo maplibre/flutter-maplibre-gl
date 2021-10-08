@@ -19,37 +19,30 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
 }
 
 Future<dynamic> setOffline(
-  bool offline, {
-  String accessToken,
-}) =>
+  bool offline) =>
     _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{
         'offline': offline,
-        'accessToken': accessToken,
       },
     );
 
 Future<List<OfflineRegion>> mergeOfflineRegions(
-  String path, {
-  String accessToken,
-}) async {
+  String path) async {
   String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
       'path': path,
-      'accessToken': accessToken,
     },
   );
   Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
-Future<List<OfflineRegion>> getListOfRegions({String accessToken}) async {
+Future<List<OfflineRegion>> getListOfRegions() async {
   String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
     <String, dynamic>{
-      'accessToken': accessToken,
     },
   );
   Iterable regions = json.decode(regionsJson);
@@ -58,14 +51,11 @@ Future<List<OfflineRegion>> getListOfRegions({String accessToken}) async {
 
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
-  Map<String, dynamic> metadata, {
-  String accessToken,
-}) async {
+  Map<String, dynamic> metadata) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{
       'id': id,
-      'accessToken': accessToken,
       'metadata': metadata,
     },
   );
@@ -73,28 +63,25 @@ Future<OfflineRegion> updateOfflineRegionMetadata(
   return OfflineRegion.fromMap(json.decode(regionJson));
 }
 
-Future<dynamic> setOfflineTileCountLimit(int limit, {String accessToken}) =>
+Future<dynamic> setOfflineTileCountLimit(int limit) =>
     _globalChannel.invokeMethod(
       'setOfflineTileCountLimit',
       <String, dynamic>{
         'limit': limit,
-        'accessToken': accessToken,
       },
     );
 
-Future<dynamic> deleteOfflineRegion(int id, {String accessToken}) =>
+Future<dynamic> deleteOfflineRegion(int id) =>
     _globalChannel.invokeMethod(
       'deleteOfflineRegion',
       <String, dynamic>{
         'id': id,
-        'accessToken': accessToken,
       },
     );
 
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
-  String accessToken,
   Function(DownloadRegionStatus event) onEvent,
 }) async {
   String channelName =
@@ -102,7 +89,6 @@ Future<OfflineRegion> downloadOfflineRegion(
 
   final result =
       _globalChannel.invokeMethod('downloadOfflineRegion', <String, dynamic>{
-    'accessToken': accessToken,
     'channelName': channelName,
     'definition': definition.toMap(),
     'metadata': metadata,

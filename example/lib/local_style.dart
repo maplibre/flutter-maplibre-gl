@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class LocalStylePage extends ExamplePage {
@@ -64,7 +63,6 @@ class LocalStyleState extends State<LocalStyle> {
 
     return new Scaffold(
       body: MaplibreMap(
-        accessToken: MapsDemo.ACCESS_TOKEN,
         styleString: styleAbsoluteFilePath,
         onMapCreated: _onMapCreated,
         initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),

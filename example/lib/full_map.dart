@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class FullMapPage extends ExamplePage {
@@ -31,7 +30,6 @@ class FullMapState extends State<FullMap> {
   Widget build(BuildContext context) {
     return new Scaffold(
         body: MaplibreMap(
-      accessToken: MapsDemo.ACCESS_TOKEN,
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
       onStyleLoadedCallback: onStyleLoadedCallback,

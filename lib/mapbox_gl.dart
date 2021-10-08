@@ -30,7 +30,6 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         SymbolOptions,
         CameraTargetBounds,
         MinMaxZoomPreference,
-        MapboxStyles,
         MyLocationTrackingMode,
         MyLocationRenderMode,
         CompassViewPosition,

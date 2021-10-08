@@ -7,7 +7,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class LinePage extends ExamplePage {
@@ -140,7 +139,6 @@ class LineBodyState extends State<LineBody> {
             width: 300.0,
             height: 200.0,
             child: MaplibreMap(
-              accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: onStyleLoadedCallback,
               initialCameraPosition: const CameraPosition(

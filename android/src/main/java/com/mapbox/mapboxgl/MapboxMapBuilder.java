@@ -30,15 +30,15 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
   private boolean myLocationEnabled = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
-  private String styleString = Style.MAPBOX_STREETS;
+  private String styleString = "https://demotiles.maplibre.org/style.json";
   private List<String> annotationOrder = new ArrayList();
   private List<String> annotationConsumeTapEvents = new ArrayList();
 
 
   MapboxMapController build(
-    int id, Context context, BinaryMessenger messenger, MapboxMapsPlugin.LifecycleProvider lifecycleProvider, String accessToken) {
+    int id, Context context, BinaryMessenger messenger, MapboxMapsPlugin.LifecycleProvider lifecycleProvider) {
     final MapboxMapController controller =
-      new MapboxMapController(id, context,  messenger, lifecycleProvider, options, accessToken, styleString, annotationOrder, annotationConsumeTapEvents);
+      new MapboxMapController(id, context,  messenger, lifecycleProvider, options, styleString, annotationOrder, annotationConsumeTapEvents);
     controller.init();
     controller.setMyLocationEnabled(myLocationEnabled);
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
