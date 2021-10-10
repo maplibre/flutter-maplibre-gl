@@ -65,12 +65,16 @@ class MapsDemo extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Maplibre examples')),
       body: ListView.builder(
-        itemCount: _allPages.length,
-        itemBuilder: (_, int index) => ListTile(
-          leading: _allPages[index].leading,
-          title: Text(_allPages[index].title),
-          onTap: () => _pushPage(context, _allPages[index]),
-        ),
+        itemCount: _allPages.length + 1,
+        itemBuilder: (_, int index) => index == _allPages.length
+            ? AboutListTile(
+                applicationName: "flutter-maplibre-gl example",
+              )
+            : ListTile(
+                leading: _allPages[index].leading,
+                title: Text(_allPages[index].title),
+                onTap: () => _pushPage(context, _allPages[index]),
+              ),
       ),
     );
   }
