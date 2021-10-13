@@ -63,6 +63,9 @@ jobs:
         with:
           channel: beta
       - run: flutter pub get
+      - name: Update pods
+        working-directory: example/ios
+        run: pod update
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
