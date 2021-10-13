@@ -79,17 +79,10 @@ class SymbolManager extends FeatureManager<SymbolOptions> {
     updateAll({lineId: changes});
   }
 
-  
   void updateAll(Map<String, SymbolOptions> changesById) {
     List<Feature> featuresWithUpdatedOptions = [];
-    changesById.forEach(
-      (id, options) => featuresWithUpdatedOptions.add(
-        Convert.interpretSymbolOptions(
-          options,
-          getFeature(id)
-        )
-      )
-    );
+    changesById.forEach((id, options) => featuresWithUpdatedOptions
+        .add(Convert.interpretSymbolOptions(options, getFeature(id))));
     updateFeatures(featuresWithUpdatedOptions);
   }
 

@@ -42,7 +42,6 @@ final List<ExamplePage> _allPages = <ExamplePage>[
 ];
 
 class MapsDemo extends StatelessWidget {
-
   void _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb) {
       final location = Location();

@@ -4,7 +4,6 @@
 
 part of maplibre_gl_platform_interface;
 
-
 /// The camera mode, which determines how the map camera will track the rendered location.
 enum MyLocationTrackingMode {
   None,

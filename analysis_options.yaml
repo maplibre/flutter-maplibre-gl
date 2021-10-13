@@ -1,0 +1,4 @@
+analyzer:
+  errors:
+    # remove once git dependencies have been removed
+    invalid_dependency: ignore

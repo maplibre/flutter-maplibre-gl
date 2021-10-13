@@ -18,17 +18,14 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
   );
 }
 
-Future<dynamic> setOffline(
-  bool offline) =>
-    _globalChannel.invokeMethod(
+Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{
         'offline': offline,
       },
     );
 
-Future<List<OfflineRegion>> mergeOfflineRegions(
-  String path) async {
+Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
@@ -42,16 +39,14 @@ Future<List<OfflineRegion>> mergeOfflineRegions(
 Future<List<OfflineRegion>> getListOfRegions() async {
   String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
-    <String, dynamic>{
-    },
+    <String, dynamic>{},
   );
   Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(
-  int id,
-  Map<String, dynamic> metadata) async {
+    int id, Map<String, dynamic> metadata) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{
@@ -71,8 +66,7 @@ Future<dynamic> setOfflineTileCountLimit(int limit) =>
       },
     );
 
-Future<dynamic> deleteOfflineRegion(int id) =>
-    _globalChannel.invokeMethod(
+Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
       'deleteOfflineRegion',
       <String, dynamic>{
         'id': id,

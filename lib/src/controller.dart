@@ -154,7 +154,8 @@ class MaplibreMapController extends ChangeNotifier {
     });
   }
 
-  static MaplibreMapController init(int id, CameraPosition initialCameraPosition,
+  static MaplibreMapController init(
+      int id, CameraPosition initialCameraPosition,
       {OnStyleLoadedCallback onStyleLoadedCallback,
       OnMapClickCallback onMapClick,
       OnUserLocationUpdated onUserLocationUpdated,
@@ -261,8 +262,8 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
     assert(optionsUpdate != null);
-    _cameraPosition =
-        await MapLibreGlPlatform.getInstance(_id).updateMapOptions(optionsUpdate);
+    _cameraPosition = await MapLibreGlPlatform.getInstance(_id)
+        .updateMapOptions(optionsUpdate);
     notifyListeners();
   }
 
@@ -472,8 +473,8 @@ class MaplibreMapController extends ChangeNotifier {
   Future<Line> addLine(LineOptions options, [Map data]) async {
     final LineOptions effectiveOptions =
         LineOptions.defaultOptions.copyWith(options);
-    final line =
-        await MapLibreGlPlatform.getInstance(_id).addLine(effectiveOptions, data);
+    final line = await MapLibreGlPlatform.getInstance(_id)
+        .addLine(effectiveOptions, data);
     _lines[line.id] = line;
     notifyListeners();
     return line;
@@ -689,8 +690,8 @@ class MaplibreMapController extends ChangeNotifier {
   Future<Fill> addFill(FillOptions options, [Map data]) async {
     final FillOptions effectiveOptions =
         FillOptions.defaultOptions.copyWith(options);
-    final fill =
-        await MapLibreGlPlatform.getInstance(_id).addFill(effectiveOptions, data);
+    final fill = await MapLibreGlPlatform.getInstance(_id)
+        .addFill(effectiveOptions, data);
     _fills[fill.id] = fill;
     notifyListeners();
     return fill;
