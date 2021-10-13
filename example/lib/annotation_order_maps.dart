@@ -44,7 +44,6 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                     width: 250.0,
                     height: 250.0,
                     child: MaplibreMap(
-                      
                       onMapCreated: onMapCreatedOne,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
                       initialCameraPosition: CameraPosition(
@@ -79,7 +78,6 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                     width: 250.0,
                     height: 250.0,
                     child: MaplibreMap(
-                      
                       onMapCreated: onMapCreatedTwo,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
                       initialCameraPosition: CameraPosition(

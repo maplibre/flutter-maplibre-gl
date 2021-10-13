@@ -179,8 +179,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
   }
 
   void _updateListOfRegions() async {
-    List<OfflineRegion> offlineRegions =
-        await getListOfRegions();
+    List<OfflineRegion> offlineRegions = await getListOfRegions();
     List<OfflineRegionListItem> regionItems = [];
     for (var item in allRegions) {
       final offlineRegion = offlineRegions.firstWhere(

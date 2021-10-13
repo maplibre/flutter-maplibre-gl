@@ -630,10 +630,12 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   @override
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
     try {
-      var coordinates = Float64List.fromList(
-          latLngs.map((e) => [e.latitude, e.longitude]).expand((e) => e).toList());
-      Float64List result = await _channel
-          .invokeMethod('map#toScreenLocationBatch', {"coordinates": coordinates});
+      var coordinates = Float64List.fromList(latLngs
+          .map((e) => [e.latitude, e.longitude])
+          .expand((e) => e)
+          .toList());
+      Float64List result = await _channel.invokeMethod(
+          'map#toScreenLocationBatch', {"coordinates": coordinates});
 
       var points = <Point>[];
       for (int i = 0; i < result.length; i += 2) {

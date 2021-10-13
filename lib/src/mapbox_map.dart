@@ -65,7 +65,6 @@ class MaplibreMap extends StatefulWidget {
   /// (must contain at least 1 annotation type, 4 items max)
   final List<AnnotationType> annotationConsumeTapEvents;
 
-
   /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
   final MapCreatedCallback onMapCreated;
 
@@ -198,7 +197,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
       Completer<MaplibreMapController>();
 
   _MapboxMapOptions _mapboxMapOptions;
-  final MapLibreGlPlatform _mapboxGlPlatform = MapLibreGlPlatform.createInstance();
+  final MapLibreGlPlatform _mapboxGlPlatform =
+      MapLibreGlPlatform.createInstance();
 
   @override
   Widget build(BuildContext context) {

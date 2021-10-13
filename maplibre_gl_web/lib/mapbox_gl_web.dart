@@ -1,4 +1,3 @@
-
 library maplibre_gl_web;
 
 import 'dart:async';

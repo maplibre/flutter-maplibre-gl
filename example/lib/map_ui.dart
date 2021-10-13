@@ -52,9 +52,7 @@ class MapUiBodyState extends State<MapUiBody> {
     "https://demotiles.maplibre.org/style.json",
     "assets/style.json"
   ];
-  List<String> _styleStringLabels = [
-    "Maplibre demo style", "Local style file"
-  ];
+  List<String> _styleStringLabels = ["Maplibre demo style", "Local style file"];
   bool _rotateGesturesEnabled = true;
   bool _scrollGesturesEnabled = true;
   bool _tiltGesturesEnabled = true;
