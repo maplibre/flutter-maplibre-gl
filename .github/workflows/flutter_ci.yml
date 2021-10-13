@@ -27,12 +27,6 @@ jobs:
     - run: flutter pub get
     - name: Lint analysis
       run: flutter analyze
-    - name: Lint analysis gl_platform_interface
-      working-directory: maplibre_gl_platform_interface
-      run: flutter analyze
-    - name: Lint analysis gl_web
-      working-directory: maplibre_gl_web
-      run: flutter analyze
 
   build-android:
     name: "Build Android apk"
