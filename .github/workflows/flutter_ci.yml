@@ -3,65 +3,74 @@ name: Flutter CI
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+  format:
+    name: "Check formatting"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: beta
+      - name: Lint analysis
+        run: flutter format --set-exit-if-changed .
+
   lint:
     name: "Static code analysis"
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.ref }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
-    
         channel: beta
     - run: flutter pub get
     - name: Lint analysis
-      run: cd example && flutter analyze
+      run: flutter analyze
+    - name: Lint analysis gl_platform_interface
+      working-directory: maplibre_gl_platform_interface
+      run: flutter analyze
+    - name: Lint analysis gl_web
+      working-directory: maplibre_gl_web
+      run: flutter analyze
 
   build-android:
     name: "Build Android apk"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-java@v2
       with:
-        ref: ${{ github.ref }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.x'
+        java-version: '12'
+        distribution: 'adopt'
+        cache: 'gradle'
     - uses: subosito/flutter-action@v1
       with:
         channel: beta
     - run: flutter pub get
     - name: Build example APK
-      run: cd example && flutter build apk
+      run: flutter build apk
       # We might want to add a flutter test step in the future, when there actually are tests for this plugin
         
   build-iOS:
     name: Build iOS package
     runs-on: macos-latest
-    
+    defaults:
+      run:
+        working-directory: example
+
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
-      - uses: actions/setup-java@v1
-        with:
-          java-version: '12.x'
       - uses: subosito/flutter-action@v1
         with:
           channel: beta
       - run: flutter pub get
-      - name: build iOS package
-        run: |
-          cd ./example/ios
-          pod update
-          cd ./..
-          flutter build ios --simulator
+      - name: Build iOS package
+        run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
         uses: actions/upload-artifact@v2
         with:
@@ -72,18 +81,15 @@ jobs:
   build-web:
     name: "Build web"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.ref }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.x'
     - uses: subosito/flutter-action@v1
       with:
         channel: beta
-    - run: flutter config --enable-web
     - run: flutter pub get
     - name: Build web
-      run: cd example && flutter build web
+      run: flutter build web
