@@ -55,8 +55,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
 
     @Override
     public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
-        String accessToken = methodCall.argument("accessToken");
-        MapBoxUtils.getMapbox(context, accessToken);
+        MapBoxUtils.getMapbox(context);
 
         switch (methodCall.method) {
             case "installOfflineMapTiles":

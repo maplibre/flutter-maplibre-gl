@@ -141,11 +141,10 @@ final class MapboxMapController
     BinaryMessenger messenger,
     MapboxMapsPlugin.LifecycleProvider lifecycleProvider,
     MapboxMapOptions options,
-    String accessToken,
     String styleStringInitial,
     List<String> annotationOrder,
     List<String> annotationConsumeTapEvents) {
-    MapBoxUtils.getMapbox(context, accessToken);
+    MapBoxUtils.getMapbox(context);
     this.id = id;
     this.context = context;
     this.styleStringInitial = styleStringInitial;

@@ -49,13 +49,10 @@ class MaplibreMapController extends MapLibreGlPlatform
     await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
-      if (_creationParams.containsKey('accessToken')) {
-        Mapbox.accessToken = _creationParams['accessToken'];
-      }
       _map = MapboxMap(
         MapOptions(
           container: _mapElement,
-          style: 'mapbox://styles/mapbox/streets-v11',
+          style: 'https://demotiles.maplibre.org/style.json',
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],

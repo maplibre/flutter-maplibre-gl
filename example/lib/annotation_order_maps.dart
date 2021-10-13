@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class AnnotationOrderPage extends ExamplePage {
@@ -45,7 +44,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                     width: 250.0,
                     height: 250.0,
                     child: MaplibreMap(
-                      accessToken: MapsDemo.ACCESS_TOKEN,
+                      
                       onMapCreated: onMapCreatedOne,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
                       initialCameraPosition: CameraPosition(
@@ -80,7 +79,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                     width: 250.0,
                     height: 250.0,
                     child: MaplibreMap(
-                      accessToken: MapsDemo.ACCESS_TOKEN,
+                      
                       onMapCreated: onMapCreatedTwo,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
                       initialCameraPosition: CameraPosition(

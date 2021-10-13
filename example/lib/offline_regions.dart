@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:maplibre_gl_example/main.dart';
 
 import 'offline_region_map.dart';
 import 'page.dart';
@@ -25,19 +24,19 @@ final List<OfflineRegionDefinition> regionDefinitions = [
     bounds: hawaiiBounds,
     minZoom: 3.0,
     maxZoom: 8.0,
-    mapStyleUrl: MapboxStyles.MAPBOX_STREETS,
+    mapStyleUrl: "https://demotiles.maplibre.org/style.json",
   ),
   OfflineRegionDefinition(
     bounds: santiagoBounds,
     minZoom: 10.0,
     maxZoom: 16.0,
-    mapStyleUrl: MapboxStyles.MAPBOX_STREETS,
+    mapStyleUrl: "https://demotiles.maplibre.org/style.json",
   ),
   OfflineRegionDefinition(
     bounds: aucklandBounds,
     minZoom: 13.0,
     maxZoom: 16.0,
-    mapStyleUrl: MapboxStyles.MAPBOX_STREETS,
+    mapStyleUrl: "https://demotiles.maplibre.org/style.json",
   ),
 ];
 
@@ -181,7 +180,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
 
   void _updateListOfRegions() async {
     List<OfflineRegion> offlineRegions =
-        await getListOfRegions(accessToken: MapsDemo.ACCESS_TOKEN);
+        await getListOfRegions();
     List<OfflineRegionListItem> regionItems = [];
     for (var item in allRegions) {
       final offlineRegion = offlineRegions.firstWhere(
@@ -211,7 +210,6 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
         metadata: {
           'name': regionNames[index],
         },
-        accessToken: MapsDemo.ACCESS_TOKEN,
       );
       setState(() {
         _items.removeAt(index);
@@ -244,7 +242,6 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
 
     await deleteOfflineRegion(
       item.downloadedId,
-      accessToken: MapsDemo.ACCESS_TOKEN,
     );
 
     setState(() {

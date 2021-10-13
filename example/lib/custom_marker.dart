@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 const randomMarkerNum = 100;
@@ -85,7 +84,6 @@ class CustomMarkerState extends State<CustomMarker> {
       body: Stack(
           children: [
             MaplibreMap(
-              accessToken: MapsDemo.ACCESS_TOKEN,
               trackCameraPosition: true,
               onMapCreated: _onMapCreated,
               onMapLongClick: _onMapLongClickCallback,

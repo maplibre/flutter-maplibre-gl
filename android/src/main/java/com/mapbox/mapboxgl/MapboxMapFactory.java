@@ -43,6 +43,6 @@ public class MapboxMapFactory extends PlatformViewFactory {
       List<String> annotations = Convert.toAnnotationConsumeTapEvents(params.get("annotationConsumeTapEvents"));
       builder.setAnnotationConsumeTapEvents(annotations);
     }
-    return builder.build(id, context, messenger, lifecycleProvider, (String) params.get("accessToken"));
+    return builder.build(id, context, messenger, lifecycleProvider);
   }
 }

@@ -63,6 +63,12 @@ Map styles can be supplied by setting the `styleString` in the `MapOptions`. The
 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
 4. Passing the raw JSON of the map style. This is only supported on Android.  
 
+### Tile sources requiring an API key
+If your tile source requires an API key, we recomend directly specifying a source url with the API key included.
+For example:
+
+ `https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key={your_key}`
+
 
 
 ## Location features

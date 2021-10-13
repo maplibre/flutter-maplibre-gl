@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import 'main.dart';
 import 'page.dart';
 
 class ScrollingMapPage extends ExamplePage {
@@ -51,8 +50,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                     width: 300.0,
                     height: 300.0,
                     child: MaplibreMap(
-                      accessToken: MapsDemo.ACCESS_TOKEN,
-                      onMapCreated: onMapCreatedOne,
+                     onMapCreated: onMapCreatedOne,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
                       initialCameraPosition: CameraPosition(
                         target: center,
@@ -87,8 +85,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                     width: 300.0,
                     height: 300.0,
                     child: MaplibreMap(
-                      accessToken: MapsDemo.ACCESS_TOKEN,
-                      onMapCreated: onMapCreatedTwo,
+                     onMapCreated: onMapCreatedTwo,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
                       initialCameraPosition: CameraPosition(
                         target: center,
