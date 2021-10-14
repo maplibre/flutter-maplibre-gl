@@ -1,3 +1,5 @@
+## 0.14.0, Oct 14, 2021
+
 ## 0.13.0, Oct 6, 2021
 🎉 The first release of flutter-maplibre-gl with the complete transition to Maplibre libraries. 🎉
 
