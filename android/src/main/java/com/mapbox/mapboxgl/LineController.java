@@ -9,6 +9,7 @@ package com.mapbox.mapboxgl;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.util.Log;
 
@@ -59,7 +60,7 @@ class LineController implements LineOptionsSink {
   
   @Override
   public void setLineColor(String lineColor) {
-    line.setLineColor(ColorUtils.rgbaToColor(lineColor));
+    line.setLineColor(Color.parseColor(lineColor));
   }
 
   @Override
