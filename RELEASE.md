@@ -1,36 +1,27 @@
 ## Release
 
+Current process: for each release we also create a separate branch (`release-x.y.z`), tag (`x.y.z.`) and Github release (`x.y.z.`).
+
 This document describes the steps needed to make a release:
 
 For each supported library:
- - `mapbox_gl_platform_interface`
- - `mapbox_gl_web`
- - `flutter-mapbox-gl`
+ - `maplibre_gl_platform_interface`
+ - `maplibre_gl_web`
+ - `flutter-maplibre-gl`
 
-Perform the following actions:
+Perform the following actions (these changes should also be on `main`):
  - Update `CHANGELOG.md` with the commits associated since previous release.
  - Update library version in `pubspec.yaml`
 
-Publish `mapbox_gl_platform_interface`, `mapbox_gl_web` and `flutter-mapbox-gl` after eachother with:
- - `flutter pub publish`
 
-Before publishgin in `mapbox_gl_web` update the version of the `mapbox_gl_platform_interface`
-Repeat this action for `flutter-mapbox-gl` for both dependencies:
+**Only on the release branch:** Repeat this action for `flutter-maplibre-gl` and `maplibre_gl_web` for the dependency_overrides:
 
 ```
-Replace:
-mapbox_gl_platform_interface:
-  git:
-    url: https://github.com/tobrun/flutter-mapbox-gl.git
-    path: mapbox_gl_platform_interface
-
-With:
-mapbox_gl_platform_interface: ^0.10.0
-
-Remove:
+Comment out:
 dependency_overrides:
   mapbox_gl_platform_interface:
     path: ../mapbox_gl_platform_interface
 ```
+Finally, create a Github release and git tag from the release branch.
 
-Before being able to publish `flutter-mapbox-gl`, you will have to PR and merge changelog changes.
+The only difference between the release branch and `main` directly after the release are the `dependency_overrides` (these are useful for development and should therefore only be removed in the release branches)
