@@ -108,7 +108,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
-    setMapLanguage(ui.window.locale!.languageCode);
+    setMapLanguage(ui.window.locale.languageCode);
   }
 
   @override
