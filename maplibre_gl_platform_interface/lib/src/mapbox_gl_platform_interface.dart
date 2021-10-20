@@ -2,12 +2,10 @@
 
 part of maplibre_gl_platform_interface;
 
-  /// The default instance of [MapLibreGlPlatform] to use.
+/// The default instance of [MapLibreGlPlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibreGlPlatform {
-
-
   /// The default instance of [MapboxGlPlatform] to use.
   ///
   /// Defaults to [MethodChannelMaplibreGl].

@@ -112,7 +112,8 @@ class CustomMarkerState extends State<CustomMarker> {
 
           _mapController.toScreenLocationBatch(param).then((value) {
             for (var i = 0; i < randomMarkerNum; i++) {
-              var point = Point<double>(value[i].x as double, value[i].y as double);
+              var point =
+                  Point<double>(value[i].x as double, value[i].y as double);
               _addMarker(point, param[i]);
             }
           });
