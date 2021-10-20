@@ -23,8 +23,8 @@ class LocalStyle extends StatefulWidget {
 }
 
 class LocalStyleState extends State<LocalStyle> {
-  MaplibreMapController mapController;
-  String styleAbsoluteFilePath;
+  MaplibreMapController? mapController;
+  String? styleAbsoluteFilePath;
 
   @override
   initState() {

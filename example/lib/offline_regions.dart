@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
@@ -44,22 +45,22 @@ final List<String> regionNames = ['Hawaii', 'Santiago', 'Auckland'];
 
 class OfflineRegionListItem {
   OfflineRegionListItem({
-    @required this.offlineRegionDefinition,
-    @required this.downloadedId,
-    @required this.isDownloading,
-    @required this.name,
-    @required this.estimatedTiles,
+    required this.offlineRegionDefinition,
+    required this.downloadedId,
+    required this.isDownloading,
+    required this.name,
+    required this.estimatedTiles,
   });
 
   final OfflineRegionDefinition offlineRegionDefinition;
-  final int downloadedId;
+  final int? downloadedId;
   final bool isDownloading;
   final String name;
   final int estimatedTiles;
 
   OfflineRegionListItem copyWith({
-    int downloadedId,
-    bool isDownloading,
+    int? downloadedId,
+    bool? isDownloading,
   }) =>
       OfflineRegionListItem(
         offlineRegionDefinition: offlineRegionDefinition,
@@ -182,9 +183,8 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     List<OfflineRegion> offlineRegions = await getListOfRegions();
     List<OfflineRegionListItem> regionItems = [];
     for (var item in allRegions) {
-      final offlineRegion = offlineRegions.firstWhere(
-          (offlineRegion) => offlineRegion.metadata['name'] == item.name,
-          orElse: () => null);
+      final offlineRegion = offlineRegions.firstWhereOrNull(
+          (offlineRegion) => offlineRegion.metadata['name'] == item.name);
       if (offlineRegion != null) {
         regionItems.add(item.copyWith(downloadedId: offlineRegion.id));
       } else {
@@ -240,7 +240,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     });
 
     await deleteOfflineRegion(
-      item.downloadedId,
+      item.downloadedId!,
     );
 
     setState(() {

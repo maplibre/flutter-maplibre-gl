@@ -20,8 +20,8 @@ class AnnotationOrderBody extends StatefulWidget {
 }
 
 class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
-  MaplibreMapController controllerOne;
-  MaplibreMapController controllerTwo;
+  late MaplibreMapController controllerOne;
+  late MaplibreMapController controllerTwo;
 
   final LatLng center = const LatLng(36.580664, 32.5563837);
 

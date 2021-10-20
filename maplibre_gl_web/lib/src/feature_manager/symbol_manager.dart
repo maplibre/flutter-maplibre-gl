@@ -1,15 +1,9 @@
 part of maplibre_gl_web;
 
-/// Signature for when a tap has occurred.
-typedef SymbolTapCallback = void Function(String id);
-
 class SymbolManager extends FeatureManager<SymbolOptions> {
-  final MapboxMap map;
-  final SymbolTapCallback onTap;
-
   SymbolManager({
-    @required this.map,
-    this.onTap,
+    required MapboxMap map,
+    ArgumentCallbacks<String>? onTap,
   }) : super(
           sourceId: 'symbol_source',
           layerId: 'symbol_layer',
@@ -82,7 +76,7 @@ class SymbolManager extends FeatureManager<SymbolOptions> {
   void updateAll(Map<String, SymbolOptions> changesById) {
     List<Feature> featuresWithUpdatedOptions = [];
     changesById.forEach((id, options) => featuresWithUpdatedOptions
-        .add(Convert.interpretSymbolOptions(options, getFeature(id))));
+        .add(Convert.interpretSymbolOptions(options, getFeature(id)!)));
     updateFeatures(featuresWithUpdatedOptions);
   }
 

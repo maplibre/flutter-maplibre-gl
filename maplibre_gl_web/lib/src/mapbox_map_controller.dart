@@ -6,29 +6,29 @@ final _maplibreGlCssUrl =
 
 class MaplibreMapController extends MapLibreGlPlatform
     implements MapboxMapOptionsSink {
-  DivElement _mapElement;
+  late DivElement _mapElement;
 
-  Map<String, dynamic> _creationParams;
-  MapboxMap _map;
+  late Map<String, dynamic> _creationParams;
+  late MapboxMap _map;
 
   List<String> annotationOrder = [];
-  SymbolManager symbolManager;
-  LineManager lineManager;
-  CircleManager circleManager;
-  FillManager fillManager;
+  late SymbolManager symbolManager;
+  late LineManager lineManager;
+  late CircleManager circleManager;
+  late FillManager fillManager;
 
   bool _trackCameraPosition = false;
-  GeolocateControl _geolocateControl;
-  LatLng _myLastLocation;
+  GeolocateControl? _geolocateControl;
+  LatLng? _myLastLocation;
 
-  String _navigationControlPosition;
-  NavigationControl _navigationControl;
+  String? _navigationControlPosition;
+  NavigationControl? _navigationControl;
 
   @override
   Widget buildView(
       Map<String, dynamic> creationParams,
-      Function onPlatformViewCreated,
-      Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
+      OnPlatformViewCreatedCallback onPlatformViewCreated,
+      Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, this.hashCode);
     return HtmlElementView(
@@ -79,7 +79,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<CameraPosition> updateMapOptions(
+  Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
     // FIX: why is called indefinitely? (map_ui page)
     Convert.interpretMapboxMapOptions(optionsUpdate, this);
@@ -87,20 +87,16 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<bool> animateCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
-    if (cameraOptions != null) {
-      _map.flyTo(cameraOptions);
-    }
+    _map.flyTo(cameraOptions);
     return true;
   }
 
   @override
-  Future<bool> moveCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
-    if (cameraOptions != null) {
-      _map.jumpTo(cameraOptions);
-    }
+    _map.jumpTo(cameraOptions);
     return true;
   }
 
@@ -112,7 +108,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
-    setMapLanguage(ui.window.locale.languageCode);
+    setMapLanguage(ui.window.locale!.languageCode);
   }
 
   @override
@@ -138,21 +134,22 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
-      [List<Map> data]) async {
-    Map<String, SymbolOptions> optionsById = Map.fromIterable(options,
-        key: (o) => symbolManager.add(Feature(
-              geometry: Geometry(
-                type: 'Point',
-                coordinates: [o.geometry.longitude, o.geometry.latitude],
-              ),
-            )),
-        value: (o) => o);
+      [List<Map>? data]) async {
+    Map<String, SymbolOptions> optionsById = {
+      for (final o in options)
+        symbolManager.add(Feature(
+          geometry: Geometry(
+            type: 'Point',
+            coordinates: [o.geometry!.longitude, o.geometry!.latitude],
+          ),
+        )): o,
+    };
     symbolManager.updateAll(optionsById);
 
     return optionsById
         .map((id, singleOptions) {
           int dataIndex = options.indexOf(singleOptions);
-          Map singleData = data != null && data.length >= dataIndex + 1
+          Map? singleData = data != null && data.length >= dataIndex + 1
               ? data[dataIndex]
               : null;
           return MapEntry(id, Symbol(id, singleOptions, singleData));
@@ -172,11 +169,11 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<Line> addLine(LineOptions options, [Map data]) async {
+  Future<Line> addLine(LineOptions options, [Map? data]) async {
     String lineId = lineManager.add(Feature(
       geometry: Geometry(
         type: 'LineString',
-        coordinates: options.geometry
+        coordinates: options.geometry!
             .map((latLng) => [latLng.longitude, latLng.latitude])
             .toList(),
       ),
@@ -196,11 +193,11 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<Circle> addCircle(CircleOptions options, [Map data]) async {
+  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
     String circleId = circleManager.add(Feature(
       geometry: Geometry(
         type: 'Point',
-        coordinates: [options.geometry.longitude, options.geometry.latitude],
+        coordinates: [options.geometry!.longitude, options.geometry!.latitude],
       ),
     ));
     circleManager.update(circleId, options);
@@ -214,7 +211,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<LatLng> getCircleLatLng(Circle circle) async {
-    var coordinates = circleManager.getFeature(circle.id).geometry.coordinates;
+    var coordinates = circleManager.getFeature(circle.id)!.geometry.coordinates;
     return LatLng(coordinates[1], coordinates[0]);
   }
 
@@ -223,11 +220,11 @@ class MaplibreMapController extends MapLibreGlPlatform
     circleManager.remove(circleId);
   }
 
-  Future<Fill> addFill(FillOptions options, [Map data]) async {
+  Future<Fill> addFill(FillOptions options, [Map? data]) async {
     String fillId = fillManager.add(Feature(
       geometry: Geometry(
         type: 'Polygon',
-        coordinates: Convert.fillGeometryToFeatureGeometry(options.geometry),
+        coordinates: Convert.fillGeometryToFeatureGeometry(options.geometry!),
       ),
     ));
 
@@ -245,7 +242,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<List> queryRenderedFeatures(
-      Point<double> point, List<String> layerIds, List<Object> filter) async {
+      Point<double> point, List<String> layerIds, List<Object>? filter) async {
     Map<String, dynamic> options = {};
     if (layerIds.length > 0) {
       options['layers'] = layerIds;
@@ -253,12 +250,24 @@ class MaplibreMapController extends MapLibreGlPlatform
     if (filter != null) {
       options['filter'] = filter;
     }
-    return _map.queryRenderedFeatures([point, point], options);
+    return _map
+        .queryRenderedFeatures([point, point], options)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id as int?,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
   }
 
   @override
   Future<List> queryRenderedFeaturesInRect(
-      Rect rect, List<String> layerIds, String filter) async {
+      Rect rect, List<String> layerIds, String? filter) async {
     Map<String, dynamic> options = {};
     if (layerIds.length > 0) {
       options['layers'] = layerIds;
@@ -266,10 +275,22 @@ class MaplibreMapController extends MapLibreGlPlatform
     if (filter != null) {
       options['filter'] = filter;
     }
-    return _map.queryRenderedFeatures([
-      Point(rect.left, rect.bottom),
-      Point(rect.right, rect.top),
-    ], options);
+    return _map
+        .queryRenderedFeatures([
+          Point(rect.left, rect.bottom),
+          Point(rect.right, rect.top),
+        ], options)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id as int?,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
   }
 
   @override
@@ -278,7 +299,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<LatLng> requestMyLocationLatLng() async {
+  Future<LatLng?> requestMyLocationLatLng() async {
     return _myLastLocation;
   }
 
@@ -286,15 +307,21 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<LatLngBounds> getVisibleRegion() async {
     final bounds = _map.getBounds();
     return LatLngBounds(
-      southwest: LatLng(bounds.getSouthWest().lat, bounds.getSouthWest().lng),
-      northeast: LatLng(bounds.getNorthEast().lat, bounds.getNorthEast().lng),
+      southwest: LatLng(
+        bounds.getSouthWest().lat as double,
+        bounds.getSouthWest().lng as double,
+      ),
+      northeast: LatLng(
+        bounds.getNorthEast().lat as double,
+        bounds.getNorthEast().lng as double,
+      ),
     );
   }
 
   @override
   Future<void> addImage(String name, Uint8List bytes,
       [bool sdf = false]) async {
-    final photo = decodeImage(bytes);
+    final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
       _map.addImage(
         name,
@@ -332,14 +359,14 @@ class MaplibreMapController extends MapLibreGlPlatform
     print('setSymbolTextIgnorePlacement not implemented yet');
   }
 
-  CameraPosition _getCameraPosition() {
+  CameraPosition? _getCameraPosition() {
     if (_trackCameraPosition) {
       final center = _map.getCenter();
       return CameraPosition(
-        bearing: _map.getBearing(),
-        target: LatLng(center.lat, center.lng),
-        tilt: _map.getPitch(),
-        zoom: _map.getZoom(),
+        bearing: _map.getBearing() as double,
+        target: LatLng(center.lat as double, center.lng as double),
+        tilt: _map.getPitch() as double,
+        zoom: _map.getZoom() as double,
       );
     }
     return null;
@@ -411,10 +438,10 @@ class MaplibreMapController extends MapLibreGlPlatform
   void _onCameraMove(_) {
     final center = _map.getCenter();
     var camera = CameraPosition(
-      bearing: _map.getBearing(),
-      target: LatLng(center.lat, center.lng),
-      tilt: _map.getPitch(),
-      zoom: _map.getZoom(),
+      bearing: _map.getBearing() as double,
+      target: LatLng(center.lat as double, center.lng as double),
+      tilt: _map.getPitch() as double,
+      zoom: _map.getZoom() as double,
     );
     onCameraMovePlatform(camera);
   }
@@ -422,10 +449,10 @@ class MaplibreMapController extends MapLibreGlPlatform
   void _onCameraIdle(_) {
     final center = _map.getCenter();
     var camera = CameraPosition(
-      bearing: _map.getBearing(),
-      target: LatLng(center.lat, center.lng),
-      tilt: _map.getPitch(),
-      zoom: _map.getZoom(),
+      bearing: _map.getBearing() as double,
+      target: LatLng(center.lat as double, center.lng as double),
+      tilt: _map.getPitch() as double,
+      zoom: _map.getZoom() as double,
     );
     onCameraIdlePlatform(camera);
   }
@@ -442,17 +469,17 @@ class MaplibreMapController extends MapLibreGlPlatform
     onCameraTrackingDismissedPlatform(null);
   }
 
-  void _addGeolocateControl({bool trackUserLocation}) {
+  void _addGeolocateControl({bool trackUserLocation = false}) {
     _removeGeolocateControl();
     _geolocateControl = GeolocateControl(
       GeolocateControlOptions(
         positionOptions: PositionOptions(enableHighAccuracy: true),
-        trackUserLocation: trackUserLocation ?? false,
+        trackUserLocation: trackUserLocation,
         showAccuracyCircle: true,
         showUserLocation: true,
       ),
     );
-    _geolocateControl.on('geolocate', (e) {
+    _geolocateControl!.on('geolocate', (e) {
       _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
       onUserLocationUpdatedPlatform(UserLocation(
           position: LatLng(e.coords.latitude, e.coords.longitude),
@@ -464,10 +491,10 @@ class MaplibreMapController extends MapLibreGlPlatform
           heading: null,
           timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
     });
-    _geolocateControl.on('trackuserlocationstart', (_) {
+    _geolocateControl!.on('trackuserlocationstart', (_) {
       _onCameraTrackingChanged(true);
     });
-    _geolocateControl.on('trackuserlocationend', (_) {
+    _geolocateControl!.on('trackuserlocationend', (_) {
       _onCameraTrackingChanged(false);
       _onCameraTrackingDismissed();
     });
@@ -482,16 +509,16 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   void _updateNavigationControl({
-    bool compassEnabled,
-    CompassViewPosition position,
+    bool? compassEnabled,
+    CompassViewPosition? position,
   }) {
-    bool prevShowCompass;
+    bool? prevShowCompass;
     if (_navigationControl != null) {
-      prevShowCompass = _navigationControl.options.showCompass;
+      prevShowCompass = _navigationControl!.options.showCompass;
     }
-    String prevPosition = _navigationControlPosition;
+    String? prevPosition = _navigationControlPosition;
 
-    String positionString;
+    String? positionString;
     switch (position) {
       case CompassViewPosition.TopRight:
         positionString = 'top-right';
@@ -510,7 +537,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     }
 
     bool newShowComapss = compassEnabled ?? prevShowCompass ?? false;
-    String newPosition = positionString ?? prevPosition ?? null;
+    String? newPosition = positionString ?? prevPosition ?? null;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(
@@ -543,7 +570,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  void setCameraTargetBounds(LatLngBounds bounds) {
+  void setCameraTargetBounds(LatLngBounds? bounds) {
     if (bounds == null) {
       _map.setMaxBounds(null);
     } else {
@@ -583,7 +610,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  void setMinMaxZoomPreference(num min, num max) {
+  void setMinMaxZoomPreference(num? min, num? max) {
     // FIX: why is called indefinitely? (map_ui page)
     _map.setMinZoom(min);
     _map.setMaxZoom(max);
@@ -642,7 +669,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  void setStyleString(String styleString) {
+  void setStyleString(String? styleString) {
     _map.setStyle(styleString);
   }
 
@@ -699,7 +726,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<LatLng> toLatLng(Point screenLocation) async {
     var lngLat =
         _map.unproject(mapbox.Point(screenLocation.x, screenLocation.y));
-    return LatLng(lngLat.lat, lngLat.lng);
+    return LatLng(lngLat.lat as double, lngLat.lng as double);
   }
 
   @override
