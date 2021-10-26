@@ -1,6 +1,6 @@
 ## Release
 
-Current process: for each release we also create a separate branch (`release-x.y.z`), tag (`x.y.z.`) and Github release (`x.y.z.`).
+Current process: for each release we also create a separate branch (`release-x.y.z`), tag (`x.y.z`) and Github release (`x.y.z`).
 
 This document describes the steps needed to make a release:
 
