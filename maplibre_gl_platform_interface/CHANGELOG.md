@@ -1,3 +1,7 @@
+## 0.15.0, Oct 26, 2021
+
+see top-level CHANGELOG.md
+
 ## 0.14.0, Oct 14, 2021
 ### Breaking changes:
 * Replace example styles [#25](https://github.com/m0nac0/flutter-maplibre-gl/pull/25) (also see [#21](https://github.com/m0nac0/flutter-maplibre-gl/issues/21))
