@@ -20,7 +20,7 @@ class FullMap extends StatefulWidget {
 }
 
 class FullMapState extends State<FullMap> {
-  MaplibreMapController mapController;
+  MaplibreMapController? mapController;
 
   void _onMapCreated(MaplibreMapController controller) {
     mapController = controller;

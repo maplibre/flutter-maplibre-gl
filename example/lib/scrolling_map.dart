@@ -26,8 +26,8 @@ class ScrollingMapBody extends StatefulWidget {
 }
 
 class _ScrollingMapBodyState extends State<ScrollingMapBody> {
-  MaplibreMapController controllerOne;
-  MaplibreMapController controllerTwo;
+  late MaplibreMapController controllerOne;
+  late MaplibreMapController controllerTwo;
 
   final LatLng center = const LatLng(32.080664, 34.9563837);
 
