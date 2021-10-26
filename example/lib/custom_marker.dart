@@ -28,7 +28,7 @@ class CustomMarker extends StatefulWidget {
 class CustomMarkerState extends State<CustomMarker> {
   final Random _rnd = new Random();
 
-  MaplibreMapController _mapController;
+  late MaplibreMapController _mapController;
   List<Marker> _markers = [];
   List<_MarkerState> _markerStates = [];
 
@@ -111,7 +111,8 @@ class CustomMarkerState extends State<CustomMarker> {
 
           _mapController.toScreenLocationBatch(param).then((value) {
             for (var i = 0; i < randomMarkerNum; i++) {
-              var point = Point<double>(value[i].x, value[i].y);
+              var point =
+                  Point<double>(value[i].x as double, value[i].y as double);
               _addMarker(point, param[i]);
             }
           });
@@ -147,7 +148,7 @@ class CustomMarkerState extends State<CustomMarker> {
         }
         Future.wait(list);
         sw.stop();
-        results[batch][0] += sw.elapsedMilliseconds;
+        results[batch]![0] += sw.elapsedMilliseconds;
         sw.reset();
       }
 
@@ -162,12 +163,12 @@ class CustomMarkerState extends State<CustomMarker> {
         }
         Future.wait([_mapController.toScreenLocationBatch(param)]);
         sw.stop();
-        results[batch][1] += sw.elapsedMilliseconds;
+        results[batch]![1] += sw.elapsedMilliseconds;
         sw.reset();
       }
 
       print(
-          'batch=$batch,primitive=${results[batch][0] / trial}ms, batch=${results[batch][1] / trial}ms');
+          'batch=$batch,primitive=${results[batch]![0] / trial}ms, batch=${results[batch]![1] / trial}ms');
     }
   }
 }
@@ -194,8 +195,8 @@ class _MarkerState extends State with TickerProviderStateMixin {
 
   Point _position;
 
-  AnimationController _controller;
-  Animation<double> _animation;
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   _MarkerState(this._position);
 
