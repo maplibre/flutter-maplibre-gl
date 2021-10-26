@@ -34,7 +34,7 @@ class LocalStyleState extends State<LocalStyle> {
       String documentDir = dir.path;
       String stylesDir = '$documentDir/styles';
       String styleJSON =
-          '{"version":8,"name":"Basic","constants":{},"sources":{"mapillary":{"type":"vector","tiles":["https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt"],"attribution":"<a href=\\"https://www.mapillary.com\\" target=\\"_blank\\">© Mapillary, CC BY</a>","maxzoom":14}},"sprite":"","glyphs":"","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(135, 149, 154, 1)"}},{"id":"water","type":"fill","source":"mapbox","source-layer":"water","paint":{"fill-color":"rgba(108, 148, 120, 1)"}}]}';
+          '{"version":8,"name":"Demo style","center":[50,10],"zoom":4,"sources":{"demotiles":{"type":"vector","url":"https://demotiles.maplibre.org/tiles/tiles.json"}},"sprite":"","glyphs":"https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255, 255, 255, 1)"}},{"id":"countries","type":"line","source":"demotiles","source-layer":"countries","paint":{"line-color":"rgba(0, 0, 0, 1)","line-width":1,"line-opacity":1}}]}';
 
       await new Directory(stylesDir).create(recursive: true);
 
