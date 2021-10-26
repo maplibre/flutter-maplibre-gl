@@ -13,6 +13,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 ------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------
 This project was forked from (and therefore contains a lot of modified and unmodified code from) https://github.com/tobrun/flutter-mapbox-gl which at the time of the fork (March 6th, 2021) contained the following LICENSE file:
+(Additionally more changes / code was later cherry-picked / ported from that repository (https://github.com/tobrun/flutter-mapbox-gl), while the license continued to be the same as at the time of the fork, which is:)
 ------------------------------------------------------------------------------------------------------
 
 flutter-mapbox-gl copyright (c) 2018, Mapbox.

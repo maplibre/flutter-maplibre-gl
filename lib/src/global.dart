@@ -76,7 +76,7 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
-  Function(DownloadRegionStatus event) onEvent,
+  Function(DownloadRegionStatus event)? onEvent,
 }) async {
   String channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
@@ -106,7 +106,7 @@ Future<OfflineRegion> downloadOfflineRegion(
       return unknownError;
     }).listen((data) {
       final Map<String, dynamic> jsonData = json.decode(data);
-      DownloadRegionStatus status;
+      DownloadRegionStatus? status;
       switch (jsonData['status']) {
         case 'start':
           status = InProgress(0.0);

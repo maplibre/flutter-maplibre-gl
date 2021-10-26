@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'page.dart';
@@ -20,8 +19,8 @@ class AnnotationOrderBody extends StatefulWidget {
 }
 
 class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
-  MaplibreMapController controllerOne;
-  MaplibreMapController controllerTwo;
+  late MaplibreMapController controllerOne;
+  late MaplibreMapController controllerTwo;
 
   final LatLng center = const LatLng(36.580664, 32.5563837);
 

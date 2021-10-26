@@ -68,7 +68,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
 
   static final LatLng center = const LatLng(-33.86711, 151.1947171);
 
-  MaplibreMapController controller;
+  late MaplibreMapController controller;
 
   void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
@@ -78,7 +78,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
       Iterable<FillOptions> options) {
     final listOptions = <LineOptions>[];
     for (final option in options) {
-      for (final geom in option.geometry) {
+      for (final geom in option.geometry!) {
         listOptions.add(LineOptions(geometry: geom, lineColor: "#00FF00"));
       }
     }
@@ -90,7 +90,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
     final circleOptions = <CircleOptions>[];
     for (final option in options) {
       // put circles only on the outside
-      for (final latLng in option.geometry.first) {
+      for (final latLng in option.geometry!.first) {
         circleOptions
             .add(CircleOptions(geometry: latLng, circleColor: "#00FF00"));
       }
@@ -103,8 +103,8 @@ class BatchAddBodyState extends State<BatchAddBody> {
     final symbolOptions = <SymbolOptions>[];
     for (final option in options) {
       // put symbols only on the inner most ring if it exists
-      if (option.geometry.length > 1)
-        for (final latLng in option.geometry.last) {
+      if (option.geometry!.length > 1)
+        for (final latLng in option.geometry!.last) {
           symbolOptions
               .add(SymbolOptions(iconImage: 'hospital-11', geometry: latLng));
         }

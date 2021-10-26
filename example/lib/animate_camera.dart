@@ -24,7 +24,7 @@ class AnimateCamera extends StatefulWidget {
 }
 
 class AnimateCameraState extends State<AnimateCamera> {
-  MaplibreMapController mapController;
+  late MaplibreMapController mapController;
 
   void _onMapCreated(MaplibreMapController controller) {
     mapController = controller;
