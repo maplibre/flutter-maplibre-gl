@@ -1,6 +1,6 @@
 name: maplibre_gl_web
 description: Web platform implementation of maplibre_gl
-version: 0.14.0
+version: 0.15.0
 homepage: https://github.com/m0nac0/flutter-maplibre-gl
 
 flutter:
@@ -24,9 +24,9 @@ dependencies:
   mapbox_gl_dart: ^0.2.0-nullsafety
   image: ^3.0.2
 
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
+# dependency_overrides:
+#   maplibre_gl_platform_interface:
+#     path: ../maplibre_gl_platform_interface
 
 dev_dependencies:
   flutter_test:

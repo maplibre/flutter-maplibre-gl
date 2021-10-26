@@ -1,3 +1,14 @@
+## 0.15.0, Oct 26, 2021
+
+* Fix bug when changing line color (see #448) by @vberthet in https://github.com/m0nac0/flutter-maplibre-gl/pull/15
+* Remove unnecessary imports by @m0nac0 in https://github.com/m0nac0/flutter-maplibre-gl/pull/34
+* Update example with Flutter 2.5.3 by @kuhnroyal in https://github.com/m0nac0/flutter-maplibre-gl/pull/35
+* CI: Use separate scheduled pipeline for Flutter beta builds by @kuhnroyal in https://github.com/m0nac0/flutter-maplibre-gl/pull/28
+* Null safety (cherry-pick from upstream) by @m0nac0 in https://github.com/m0nac0/flutter-maplibre-gl/pull/31
+* [web] add missing removeLines, removeCircles and removeFills (cherry-pick tobrun#622) by @m0nac0 in https://github.com/m0nac0/flutter-maplibre-gl/pull/32
+* Replace style string in local style example by @m0nac0 in https://github.com/m0nac0/flutter-maplibre-gl/pull/33
+* [web] add getSymbolLatLng and getLineLatLngs by @m0nac0 in https://github.com/m0nac0/flutter-maplibre-gl/pull/37
+
 ## 0.14.0
 ### Breaking changes:
 * Remove access token, update libraries, replace example styles [#25](https://github.com/m0nac0/flutter-maplibre-gl/pull/25) (also see [#21](https://github.com/m0nac0/flutter-maplibre-gl/issues/21))
