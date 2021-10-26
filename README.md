@@ -36,7 +36,7 @@ Compared to flutter-mapbox-gl, the only breaking API changes are:
 ## Supported API
 
 | Feature | Android | iOS | Web |
-| ------ | ------ | ----- | ----- |
+| ------ |:-:|:-:|:-:|
 | Style | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Camera | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Gesture | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
