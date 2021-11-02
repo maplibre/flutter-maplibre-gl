@@ -93,6 +93,7 @@ final class MapboxMapController
   MapboxMap.OnCameraIdleListener,
   MapboxMap.OnCameraMoveListener,
   MapboxMap.OnCameraMoveStartedListener,
+  MapView.OnDidBecomeIdleListener,
   OnAnnotationClickListener,
   MapboxMap.OnMapClickListener,
   MapboxMap.OnMapLongClickListener,
@@ -267,6 +268,8 @@ final class MapboxMapController
         mapboxMap.getStyle().addImage(id, bitmap);
       }
     });
+
+    mapView.addOnDidBecomeIdleListener(this);
 
     setStyleString(styleStringInitial);
     // updateMyLocationEnabled();
@@ -1023,6 +1026,11 @@ final class MapboxMapController
   public void onCameraTrackingDismissed() {
     this.myLocationTrackingMode = 0;
     methodChannel.invokeMethod("map#onCameraTrackingDismissed", new HashMap<>());
+  }
+
+  @Override
+  public void onDidBecomeIdle() {
+    methodChannel.invokeMethod("map#onIdle", new HashMap<>());
   }
 
   @Override
