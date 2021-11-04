@@ -1042,4 +1042,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     func setAttributionButtonMargins(x: Double, y: Double) {
         mapView.attributionButtonMargins = CGPoint(x: x, y: y)
     }
+    func setAttributionButtonPosition(position: MGLOrnamentPosition) {
+        mapView.attributionButtonPosition = position
+    }
 }
