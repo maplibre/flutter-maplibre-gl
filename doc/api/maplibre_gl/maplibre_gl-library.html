@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="maplibre_gl library API docs, for the Dart programming language.">
+  <title>maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../"
+      data-using-base-href="false">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li class="self-crumb">maplibre_gl library</li>
+  </ol>
+  <div class="self-name">maplibre_gl</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<main>
+
+
+  <div id="dartdoc-main-content" class="main-content">
+      <div>
+<h1><span class="kind-library">maplibre_gl</span> library 
+    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
+ 
+</h1></div>
+
+    
+
+
+    <section class="summary offset-anchor" id="classes">
+      <h2>Classes</h2>
+
+      <dl>
+        <dt id="ArgumentCallbacks">
+  <span class="name "><a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> 
+
+</dt>
+<dd>
+  Mutable collection of <code>ArgumentCallback</code> instances, itself an <code>ArgumentCallback</code>. <a href="../maplibre_gl/ArgumentCallbacks-class.html">[...]</a>
+</dd>
+
+        <dt id="CameraPosition">
+  <span class="name "><a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></span> 
+
+</dt>
+<dd>
+  The position of the map "camera", the view point from which the world is
+shown in the map view. Aggregates the camera's <a href="../maplibre_gl/CameraPosition/target.html">target</a> geographical
+location, its <a href="../maplibre_gl/CameraPosition/zoom.html">zoom</a> level, <a href="../maplibre_gl/CameraPosition/tilt.html">tilt</a> angle, and <a href="../maplibre_gl/CameraPosition/bearing.html">bearing</a>. 
+</dd>
+
+        <dt id="CameraTargetBounds">
+  <span class="name "><a href="../maplibre_gl/CameraTargetBounds-class.html">CameraTargetBounds</a></span> 
+
+</dt>
+<dd>
+  Bounds for the map camera target. 
+</dd>
+
+        <dt id="CameraUpdate">
+  <span class="name "><a href="../maplibre_gl/CameraUpdate-class.html">CameraUpdate</a></span> 
+
+</dt>
+<dd>
+  Defines a camera move, supporting absolute moves as well as moves relative
+the current position. 
+</dd>
+
+        <dt id="Circle">
+  <span class="name "><a href="../maplibre_gl/Circle-class.html">Circle</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="CircleOptions">
+  <span class="name "><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></span> 
+
+</dt>
+<dd>
+  Configuration options for <a href="../maplibre_gl/Circle-class.html">Circle</a> instances. <a href="../maplibre_gl/CircleOptions-class.html">[...]</a>
+</dd>
+
+        <dt id="DownloadRegionStatus">
+  <span class="name "><a href="../maplibre_gl/DownloadRegionStatus-class.html">DownloadRegionStatus</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="Error">
+  <span class="name "><a href="../maplibre_gl/Error-class.html">Error</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="Fill">
+  <span class="name "><a href="../maplibre_gl/Fill-class.html">Fill</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="FillOptions">
+  <span class="name "><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></span> 
+
+</dt>
+<dd>
+  Configuration options for <a href="../maplibre_gl/Fill-class.html">Fill</a> instances. <a href="../maplibre_gl/FillOptions-class.html">[...]</a>
+</dd>
+
+        <dt id="InProgress">
+  <span class="name "><a href="../maplibre_gl/InProgress-class.html">InProgress</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="LatLng">
+  <span class="name "><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span> 
+
+</dt>
+<dd>
+  A pair of latitude and longitude coordinates, stored as degrees. 
+</dd>
+
+        <dt id="LatLngBounds">
+  <span class="name "><a href="../maplibre_gl/LatLngBounds-class.html">LatLngBounds</a></span> 
+
+</dt>
+<dd>
+  A latitude/longitude aligned rectangle. <a href="../maplibre_gl/LatLngBounds-class.html">[...]</a>
+</dd>
+
+        <dt id="LatLngQuad">
+  <span class="name "><a href="../maplibre_gl/LatLngQuad-class.html">LatLngQuad</a></span> 
+
+</dt>
+<dd>
+  A geographical area representing a non-aligned quadrilateral
+This class does not wrap values to the world bounds 
+</dd>
+
+        <dt id="Line">
+  <span class="name "><a href="../maplibre_gl/Line-class.html">Line</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="LineOptions">
+  <span class="name "><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></span> 
+
+</dt>
+<dd>
+  Configuration options for <a href="../maplibre_gl/Line-class.html">Line</a> instances. <a href="../maplibre_gl/LineOptions-class.html">[...]</a>
+</dd>
+
+        <dt id="MaplibreMap">
+  <span class="name "><a href="../maplibre_gl/MaplibreMap-class.html">MaplibreMap</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="MaplibreMapController">
+  <span class="name "><a href="../maplibre_gl/MaplibreMapController-class.html">MaplibreMapController</a></span> 
+
+</dt>
+<dd>
+  Controller for a single MaplibreMap instance running on the host platform. <a href="../maplibre_gl/MaplibreMapController-class.html">[...]</a>
+</dd>
+
+        <dt id="MinMaxZoomPreference">
+  <span class="name "><a href="../maplibre_gl/MinMaxZoomPreference-class.html">MinMaxZoomPreference</a></span> 
+
+</dt>
+<dd>
+  Preferred bounds for map camera zoom level. 
+</dd>
+
+        <dt id="OfflineRegion">
+  <span class="name "><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></span> 
+
+</dt>
+<dd>
+  Description of a downloaded region including its identifier. 
+</dd>
+
+        <dt id="OfflineRegionDefinition">
+  <span class="name "><a href="../maplibre_gl/OfflineRegionDefinition-class.html">OfflineRegionDefinition</a></span> 
+
+</dt>
+<dd>
+  Description of region to be downloaded. Identifier will be generated when
+the download is initiated. 
+</dd>
+
+        <dt id="Success">
+  <span class="name "><a href="../maplibre_gl/Success-class.html">Success</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="Symbol">
+  <span class="name "><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="SymbolOptions">
+  <span class="name "><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></span> 
+
+</dt>
+<dd>
+  Configuration options for <a href="../maplibre_gl/Symbol-class.html">Symbol</a> instances. <a href="../maplibre_gl/SymbolOptions-class.html">[...]</a>
+</dd>
+
+        <dt id="UserHeading">
+  <span class="name "><a href="../maplibre_gl/UserHeading-class.html">UserHeading</a></span> 
+
+</dt>
+<dd>
+  Type represents a geomagnetic value, measured in microteslas, relative to a
+device axis in three dimensional space. 
+</dd>
+
+        <dt id="UserLocation">
+  <span class="name "><a href="../maplibre_gl/UserLocation-class.html">UserLocation</a></span> 
+
+</dt>
+<dd>
+  User's observed location 
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+
+    <section class="summary offset-anchor" id="functions">
+      <h2>Functions</h2>
+
+      <dl class="callables">
+        <dt id="deleteOfflineRegion" class="callable">
+  <span class="name"><a href="../maplibre_gl/deleteOfflineRegion.html">deleteOfflineRegion</a></span><span class="signature">(<wbr><span class="parameter" id="deleteOfflineRegion-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">id</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="downloadOfflineRegion" class="callable">
+  <span class="name"><a href="../maplibre_gl/downloadOfflineRegion.html">downloadOfflineRegion</a></span><span class="signature">(<wbr><span class="parameter" id="downloadOfflineRegion-param-definition"><span class="type-annotation"><a href="../maplibre_gl/OfflineRegionDefinition-class.html">OfflineRegionDefinition</a></span> <span class="parameter-name">definition</span>, </span><span class="parameter" id="downloadOfflineRegion-param-metadata">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">metadata</span> = <span class="default-value">const {}</span>, </span><span class="parameter" id="downloadOfflineRegion-param-onEvent"><span class="type-annotation">dynamic</span> <span class="parameter-name">onEvent</span>(<span class="parameter" id="param-event"><span class="type-annotation"><a href="../maplibre_gl/DownloadRegionStatus-class.html">DownloadRegionStatus</a></span> <span class="parameter-name">event</span></span>)?}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="getListOfRegions" class="callable">
+  <span class="name"><a href="../maplibre_gl/getListOfRegions.html">getListOfRegions</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="installOfflineMapTiles" class="callable">
+  <span class="name"><a href="../maplibre_gl/installOfflineMapTiles.html">installOfflineMapTiles</a></span><span class="signature">(<wbr><span class="parameter" id="installOfflineMapTiles-param-tilesDb"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">tilesDb</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Copy tiles db file passed in to the tiles cache directory (sideloaded) to
+make tiles available offline. 
+  
+
+</dd>
+
+        <dt id="mergeOfflineRegions" class="callable">
+  <span class="name"><a href="../maplibre_gl/mergeOfflineRegions.html">mergeOfflineRegions</a></span><span class="signature">(<wbr><span class="parameter" id="mergeOfflineRegions-param-path"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">path</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="setOffline" class="callable">
+  <span class="name"><a href="../maplibre_gl/setOffline.html">setOffline</a></span><span class="signature">(<wbr><span class="parameter" id="setOffline-param-offline"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">offline</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="setOfflineTileCountLimit" class="callable">
+  <span class="name"><a href="../maplibre_gl/setOfflineTileCountLimit.html">setOfflineTileCountLimit</a></span><span class="signature">(<wbr><span class="parameter" id="setOfflineTileCountLimit-param-limit"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">limit</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+        <dt id="updateOfflineRegionMetadata" class="callable">
+  <span class="name"><a href="../maplibre_gl/updateOfflineRegionMetadata.html">updateOfflineRegionMetadata</a></span><span class="signature">(<wbr><span class="parameter" id="updateOfflineRegionMetadata-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">id</span>, </span><span class="parameter" id="updateOfflineRegionMetadata-param-metadata"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">metadata</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+   
+  
+
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="enums">
+      <h2>Enums</h2>
+
+      <dl>
+        <dt id="AnnotationType">
+  <span class="name "><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span> 
+
+</dt>
+<dd>
+   
+</dd>
+
+        <dt id="CompassViewPosition">
+  <span class="name "><a href="../maplibre_gl/CompassViewPosition.html">CompassViewPosition</a></span> 
+
+</dt>
+<dd>
+  Compass View Position 
+</dd>
+
+        <dt id="MyLocationRenderMode">
+  <span class="name "><a href="../maplibre_gl/MyLocationRenderMode.html">MyLocationRenderMode</a></span> 
+
+</dt>
+<dd>
+  Render mode 
+</dd>
+
+        <dt id="MyLocationTrackingMode">
+  <span class="name "><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></span> 
+
+</dt>
+<dd>
+  The camera mode, which determines how the map camera will track the rendered location. 
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="typedefs">
+      <h2>Typedefs</h2>
+
+      <dl>
+          
+  <dt id="MapCreatedCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/MapCreatedCallback.html">MapCreatedCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="MapCreatedCallback-param-controller"><span class="type-annotation"><a href="../maplibre_gl/MaplibreMapController-class.html">MaplibreMapController</a></span> <span class="parameter-name">controller</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnCameraIdleCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">()</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnCameraTrackingChangedCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="OnCameraTrackingChangedCallback-param-mode"><span class="type-annotation"><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></span> <span class="parameter-name">mode</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnCameraTrackingDismissedCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">()</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnMapClickCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="OnMapClickCallback-param-point"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span>&gt;</span></span> <span class="parameter-name">point</span>, </span><span class="parameter" id="OnMapClickCallback-param-coordinates"><span class="type-annotation"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span> <span class="parameter-name">coordinates</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnMapIdleCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">()</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnMapLongClickCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnMapLongClickCallback.html">OnMapLongClickCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="OnMapLongClickCallback-param-point"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span>&gt;</span></span> <span class="parameter-name">point</span>, </span><span class="parameter" id="OnMapLongClickCallback-param-coordinates"><span class="type-annotation"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span> <span class="parameter-name">coordinates</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnStyleLoadedCallback" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">()</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+          
+  <dt id="OnUserLocationUpdated" class="callable">
+    <span class="name"><a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="OnUserLocationUpdated-param-location"><span class="type-annotation"><a href="../maplibre_gl/UserLocation-class.html">UserLocation</a></span> <span class="parameter-name">location</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+     
+    
+
+  </dd>
+
+      </dl>
+    </section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li><a href="../index.html">maplibre_gl</a></li>
+  <li class="self-crumb">maplibre_gl library</li>
+</ol>
+
+
+    <h5><span class="package-name">maplibre_gl</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+</ol>
+
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <h5>maplibre_gl library</h5>
+    <ol>
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#classes">Classes</a></li>
+  <li><a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a></li>
+  <li><a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></li>
+  <li><a href="../maplibre_gl/CameraTargetBounds-class.html">CameraTargetBounds</a></li>
+  <li><a href="../maplibre_gl/CameraUpdate-class.html">CameraUpdate</a></li>
+  <li><a href="../maplibre_gl/Circle-class.html">Circle</a></li>
+  <li><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></li>
+  <li><a href="../maplibre_gl/DownloadRegionStatus-class.html">DownloadRegionStatus</a></li>
+  <li><a href="../maplibre_gl/Error-class.html">Error</a></li>
+  <li><a href="../maplibre_gl/Fill-class.html">Fill</a></li>
+  <li><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></li>
+  <li><a href="../maplibre_gl/InProgress-class.html">InProgress</a></li>
+  <li><a href="../maplibre_gl/LatLng-class.html">LatLng</a></li>
+  <li><a href="../maplibre_gl/LatLngBounds-class.html">LatLngBounds</a></li>
+  <li><a href="../maplibre_gl/LatLngQuad-class.html">LatLngQuad</a></li>
+  <li><a href="../maplibre_gl/Line-class.html">Line</a></li>
+  <li><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></li>
+  <li><a href="../maplibre_gl/MaplibreMap-class.html">MaplibreMap</a></li>
+  <li><a href="../maplibre_gl/MaplibreMapController-class.html">MaplibreMapController</a></li>
+  <li><a href="../maplibre_gl/MinMaxZoomPreference-class.html">MinMaxZoomPreference</a></li>
+  <li><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></li>
+  <li><a href="../maplibre_gl/OfflineRegionDefinition-class.html">OfflineRegionDefinition</a></li>
+  <li><a href="../maplibre_gl/Success-class.html">Success</a></li>
+  <li><a href="../maplibre_gl/Symbol-class.html">Symbol</a></li>
+  <li><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></li>
+  <li><a href="../maplibre_gl/UserHeading-class.html">UserHeading</a></li>
+  <li><a href="../maplibre_gl/UserLocation-class.html">UserLocation</a></li>
+
+
+
+
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#functions">Functions</a></li>
+  <li><a href="../maplibre_gl/deleteOfflineRegion.html">deleteOfflineRegion</a></li>
+  <li><a href="../maplibre_gl/downloadOfflineRegion.html">downloadOfflineRegion</a></li>
+  <li><a href="../maplibre_gl/getListOfRegions.html">getListOfRegions</a></li>
+  <li><a href="../maplibre_gl/installOfflineMapTiles.html">installOfflineMapTiles</a></li>
+  <li><a href="../maplibre_gl/mergeOfflineRegions.html">mergeOfflineRegions</a></li>
+  <li><a href="../maplibre_gl/setOffline.html">setOffline</a></li>
+  <li><a href="../maplibre_gl/setOfflineTileCountLimit.html">setOfflineTileCountLimit</a></li>
+  <li><a href="../maplibre_gl/updateOfflineRegionMetadata.html">updateOfflineRegionMetadata</a></li>
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#enums">Enums</a></li>
+  <li><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></li>
+  <li><a href="../maplibre_gl/CompassViewPosition.html">CompassViewPosition</a></li>
+  <li><a href="../maplibre_gl/MyLocationRenderMode.html">MyLocationRenderMode</a></li>
+  <li><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></li>
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#typedefs">Typedefs</a></li>
+  <li><a href="../maplibre_gl/MapCreatedCallback.html">MapCreatedCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapLongClickCallback.html">OnMapLongClickCallback</a></li>
+  <li><a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a></li>
+  <li><a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a></li>
+
+</ol>
+
+  </div><!--/sidebar-offcanvas-right-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.15.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/script.js?v1"></script>
+
+
+
+</body>
+
+</html>
+

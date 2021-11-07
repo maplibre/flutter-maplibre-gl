@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the MaplibreMap class from the maplibre_gl library, for the Dart programming language.">
+  <title>MaplibreMap class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../"
+      data-using-base-href="false">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li class="self-crumb">MaplibreMap class</li>
+  </ol>
+  <div class="self-name">MaplibreMap</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<main>
+
+
+  <div id="dartdoc-main-content" class="main-content">
+      <div>
+<h1><span class="kind-class">MaplibreMap</span> class 
+    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
+ 
+</h1></div>
+
+    
+
+
+    <section>
+      <dl class="dl-horizontal">
+        <dt>Inheritance</dt>
+        <dd><ul class="gt-separated dark clazz-relationships">
+          <li><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></li>
+          <li><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree-class.html">DiagnosticableTree</a></li>
+          <li><a href="https://api.flutter.dev/flutter/widgets/Widget-class.html">Widget</a></li>
+          <li><a href="https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html">StatefulWidget</a></li>
+          <li>MaplibreMap</li>
+        </ul></dd>
+
+
+
+
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="constructors">
+      <h2>Constructors</h2>
+
+      <dl class="constructor-summary-list">
+        <dt id="MaplibreMap" class="callable">
+          <span class="name"><a href="../maplibre_gl/MaplibreMap/MaplibreMap.html">MaplibreMap</a></span><span class="signature">(<span class="parameter" id="-param-key">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/Key-class.html">Key</a>?</span> <span class="parameter-name">key</span>, </span><span class="parameter" id="-param-initialCameraPosition"><span>required</span> <span class="type-annotation"><a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></span> <span class="parameter-name">initialCameraPosition</span>, </span><span class="parameter" id="-param-onMapCreated"><span class="type-annotation"><a href="../maplibre_gl/MapCreatedCallback.html">MapCreatedCallback</a>?</span> <span class="parameter-name">onMapCreated</span>, </span><span class="parameter" id="-param-onStyleLoadedCallback"><span class="type-annotation"><a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a>?</span> <span class="parameter-name">onStyleLoadedCallback</span>, </span><span class="parameter" id="-param-gestureRecognizers"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/foundation/Factory-class.html">Factory</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/gestures/OneSequenceGestureRecognizer-class.html">OneSequenceGestureRecognizer</a></span>&gt;</span></span>&gt;</span>?</span> <span class="parameter-name">gestureRecognizers</span>, </span><span class="parameter" id="-param-compassEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">compassEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-cameraTargetBounds"><span class="type-annotation"><a href="../maplibre_gl/CameraTargetBounds-class.html">CameraTargetBounds</a></span> <span class="parameter-name">cameraTargetBounds</span> = <span class="default-value">CameraTargetBounds.unbounded</span>, </span><span class="parameter" id="-param-styleString"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">styleString</span>, </span><span class="parameter" id="-param-minMaxZoomPreference"><span class="type-annotation"><a href="../maplibre_gl/MinMaxZoomPreference-class.html">MinMaxZoomPreference</a></span> <span class="parameter-name">minMaxZoomPreference</span> = <span class="default-value">MinMaxZoomPreference.unbounded</span>, </span><span class="parameter" id="-param-rotateGesturesEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">rotateGesturesEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-scrollGesturesEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">scrollGesturesEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-zoomGesturesEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">zoomGesturesEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-tiltGesturesEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">tiltGesturesEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-trackCameraPosition"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">trackCameraPosition</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-myLocationEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">myLocationEnabled</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-myLocationTrackingMode"><span class="type-annotation"><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></span> <span class="parameter-name">myLocationTrackingMode</span> = <span class="default-value">MyLocationTrackingMode.None</span>, </span><span class="parameter" id="-param-myLocationRenderMode"><span class="type-annotation"><a href="../maplibre_gl/MyLocationRenderMode.html">MyLocationRenderMode</a></span> <span class="parameter-name">myLocationRenderMode</span> = <span class="default-value">MyLocationRenderMode.COMPASS</span>, </span><span class="parameter" id="-param-logoViewMargins"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> <span class="parameter-name">logoViewMargins</span>, </span><span class="parameter" id="-param-compassViewPosition"><span class="type-annotation"><a href="../maplibre_gl/CompassViewPosition.html">CompassViewPosition</a>?</span> <span class="parameter-name">compassViewPosition</span>, </span><span class="parameter" id="-param-compassViewMargins"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> <span class="parameter-name">compassViewMargins</span>, </span><span class="parameter" id="-param-attributionButtonMargins"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> <span class="parameter-name">attributionButtonMargins</span>, </span><span class="parameter" id="-param-onMapClick"><span class="type-annotation"><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span> <span class="parameter-name">onMapClick</span>, </span><span class="parameter" id="-param-onUserLocationUpdated"><span class="type-annotation"><a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a>?</span> <span class="parameter-name">onUserLocationUpdated</span>, </span><span class="parameter" id="-param-onMapLongClick"><span class="type-annotation"><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span> <span class="parameter-name">onMapLongClick</span>, </span><span class="parameter" id="-param-onCameraTrackingDismissed"><span class="type-annotation"><a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a>?</span> <span class="parameter-name">onCameraTrackingDismissed</span>, </span><span class="parameter" id="-param-onCameraTrackingChanged"><span class="type-annotation"><a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a>?</span> <span class="parameter-name">onCameraTrackingChanged</span>, </span><span class="parameter" id="-param-onCameraIdle"><span class="type-annotation"><a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a>?</span> <span class="parameter-name">onCameraIdle</span>, </span><span class="parameter" id="-param-onMapIdle"><span class="type-annotation"><a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a>?</span> <span class="parameter-name">onMapIdle</span>, </span><span class="parameter" id="-param-annotationOrder"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> <span class="parameter-name">annotationOrder</span> = <span class="default-value">const [AnnotationType.line, AnnotationType.symbol, AnnotationType.circle, AnnotationType.fill]</span>, </span><span class="parameter" id="-param-annotationConsumeTapEvents"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> <span class="parameter-name">annotationConsumeTapEvents</span> = <span class="default-value">const [AnnotationType.symbol, AnnotationType.fill, AnnotationType.line, AnnotationType.circle]</span>}</span>)</span>
+        </dt>
+        <dd>
+           
+          <div class="constructor-modifier features">const</div>
+        </dd>
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="instance-properties">
+      <h2>Properties</h2>
+
+      <dl class="properties">
+        <dt id="annotationConsumeTapEvents" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/annotationConsumeTapEvents.html">annotationConsumeTapEvents</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> 
+
+</dt>
+<dd>
+  Defined the layer order of click annotations
+(must contain at least 1 annotation type, 4 items max) 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="annotationOrder" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/annotationOrder.html">annotationOrder</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> 
+
+</dt>
+<dd>
+  Defined the layer order of annotations displayed on map
+(must contain all annotation types, 4 items) 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="attributionButtonMargins" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/attributionButtonMargins.html">attributionButtonMargins</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> 
+
+</dt>
+<dd>
+  Set the layout margins for the Mapbox Attribution Buttons 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="cameraTargetBounds" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/cameraTargetBounds.html">cameraTargetBounds</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/CameraTargetBounds-class.html">CameraTargetBounds</a></span> 
+
+</dt>
+<dd>
+  Geographical bounding box for the camera target. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="compassEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/compassEnabled.html">compassEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if the map should show a compass when rotated. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="compassViewMargins" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/compassViewMargins.html">compassViewMargins</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> 
+
+</dt>
+<dd>
+  Set the layout margins for the Mapbox Compass 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="compassViewPosition" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/compassViewPosition.html">compassViewPosition</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/CompassViewPosition.html">CompassViewPosition</a>?</span> 
+
+</dt>
+<dd>
+  Set the position for the Mapbox Compass 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="gestureRecognizers" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/gestureRecognizers.html">gestureRecognizers</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/foundation/Factory-class.html">Factory</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/gestures/OneSequenceGestureRecognizer-class.html">OneSequenceGestureRecognizer</a></span>&gt;</span></span>&gt;</span>?</span> 
+
+</dt>
+<dd>
+  Which gestures should be consumed by the map. <a href="../maplibre_gl/MaplibreMap/gestureRecognizers.html">[...]</a>
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/Widget/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> 
+
+</dt>
+<dd class="inherited">
+  The hash code for this object. <a href="https://api.flutter.dev/flutter/widgets/Widget/hashCode.html">[...]</a>
+  <div class="features">@<a href="https://pub.dev/documentation/meta/1.7.0/meta/nonVirtual-constant.html">nonVirtual</a>, read-only, inherited</div>
+
+</dd>
+
+        <dt id="initialCameraPosition" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/initialCameraPosition.html">initialCameraPosition</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></span> 
+
+</dt>
+<dd>
+  The initial position of the map's camera. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="key" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/Widget/key.html">key</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/foundation/Key-class.html">Key</a>?</span> 
+
+</dt>
+<dd class="inherited">
+  Controls how one widget replaces another widget in the tree. <a href="https://api.flutter.dev/flutter/widgets/Widget/key.html">[...]</a>
+  <div class="features">final, inherited</div>
+
+</dd>
+
+        <dt id="logoViewMargins" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/logoViewMargins.html">logoViewMargins</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span>?</span> 
+
+</dt>
+<dd>
+  Set the layout margins for the Mapbox Logo 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="minMaxZoomPreference" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/minMaxZoomPreference.html">minMaxZoomPreference</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/MinMaxZoomPreference-class.html">MinMaxZoomPreference</a></span> 
+
+</dt>
+<dd>
+  Preferred bounds for the camera zoom level. <a href="../maplibre_gl/MaplibreMap/minMaxZoomPreference.html">[...]</a>
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="myLocationEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/myLocationEnabled.html">myLocationEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if a "My Location" layer should be shown on the map. <a href="../maplibre_gl/MaplibreMap/myLocationEnabled.html">[...]</a>
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="myLocationRenderMode" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/myLocationRenderMode.html">myLocationRenderMode</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/MyLocationRenderMode.html">MyLocationRenderMode</a></span> 
+
+</dt>
+<dd>
+  The mode to render the user location symbol 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="myLocationTrackingMode" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/myLocationTrackingMode.html">myLocationTrackingMode</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></span> 
+
+</dt>
+<dd>
+  The mode used to let the map's camera follow the device's physical location.
+<code>myLocationEnabled</code> needs to be true for values other than <code>MyLocationTrackingMode.None</code> to work. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onCameraIdle" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onCameraIdle.html">onCameraIdle</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a>?</span> 
+
+</dt>
+<dd>
+   
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onCameraTrackingChanged" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onCameraTrackingChanged.html">onCameraTrackingChanged</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a>?</span> 
+
+</dt>
+<dd>
+  Called when the location tracking mode changes 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onCameraTrackingDismissed" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onCameraTrackingDismissed.html">onCameraTrackingDismissed</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a>?</span> 
+
+</dt>
+<dd>
+  Called when the map's camera no longer follows the physical device location, e.g. because the user moved the map 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onMapClick" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onMapClick.html">onMapClick</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span> 
+
+</dt>
+<dd>
+   
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onMapCreated" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onMapCreated.html">onMapCreated</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/MapCreatedCallback.html">MapCreatedCallback</a>?</span> 
+
+</dt>
+<dd>
+  Please note: you should only add annotations (e.g. symbols or circles) after <code>onStyleLoadedCallback</code> has been called. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onMapIdle" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onMapIdle.html">onMapIdle</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a>?</span> 
+
+</dt>
+<dd>
+  Called when map view is entering an idle state, and no more drawing will
+be necessary until new data is loaded or there is some interaction with
+the map. <a href="../maplibre_gl/MaplibreMap/onMapIdle.html">[...]</a>
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onMapLongClick" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onMapLongClick.html">onMapLongClick</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span> 
+
+</dt>
+<dd>
+   
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onStyleLoadedCallback" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onStyleLoadedCallback.html">onStyleLoadedCallback</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a>?</span> 
+
+</dt>
+<dd>
+  Called when the map style has been successfully loaded and the annotation managers have been enabled.
+Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="onUserLocationUpdated" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/onUserLocationUpdated.html">onUserLocationUpdated</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a>?</span> 
+
+</dt>
+<dd>
+  While the <code>myLocationEnabled</code> property is set to <code>true</code>, this method is
+called whenever a new location update is received by the map view. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="rotateGesturesEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/rotateGesturesEnabled.html">rotateGesturesEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if the map view should respond to rotate gestures. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span> 
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object. 
+  <div class="features">read-only, inherited</div>
+
+</dd>
+
+        <dt id="scrollGesturesEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/scrollGesturesEnabled.html">scrollGesturesEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if the map view should respond to scroll gestures. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="styleString" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/styleString.html">styleString</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> 
+
+</dt>
+<dd>
+  Style URL or Style JSON
+Can be a MapboxStyle constant, any Mapbox Style URL,
+or a StyleJSON (<a href="https://docs.mapbox.com/mapbox-gl-js/style-spec/">https://docs.mapbox.com/mapbox-gl-js/style-spec/</a>) 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="tiltGesturesEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/tiltGesturesEnabled.html">tiltGesturesEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if the map view should respond to tilt gestures. 
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="trackCameraPosition" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/trackCameraPosition.html">trackCameraPosition</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if you want to be notified of map camera movements by the MapboxMapController. Default is false. <a href="../maplibre_gl/MaplibreMap/trackCameraPosition.html">[...]</a>
+  <div class="features">final</div>
+
+</dd>
+
+        <dt id="zoomGesturesEnabled" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/zoomGesturesEnabled.html">zoomGesturesEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> 
+
+</dt>
+<dd>
+  True if the map view should respond to zoom gestures. 
+  <div class="features">final</div>
+
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="instance-methods">
+      <h2>Methods</h2>
+      <dl class="callables">
+        <dt id="createElement" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/StatefulWidget/createElement.html">createElement</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/widgets/StatefulElement-class.html">StatefulElement</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Creates a <a href="https://api.flutter.dev/flutter/widgets/StatefulElement-class.html">StatefulElement</a> to manage this widget's location in the tree. <a href="https://api.flutter.dev/flutter/widgets/StatefulWidget/createElement.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="createState" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMap/createState.html">createState</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/widgets/State-class.html">State</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html">StatefulWidget</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates the mutable state for this widget at a given location in the tree. <a href="../maplibre_gl/MaplibreMap/createState.html">[...]</a>
+  <div class="features">override</div>
+
+</dd>
+
+        <dt id="debugDescribeChildren" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/debugDescribeChildren.html">debugDescribeChildren</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticsNode-class.html">DiagnosticsNode</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a list of <code>DiagnosticsNode</code> objects describing this node's
+children. <a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/debugDescribeChildren.html">[...]</a>
+  <div class="features">@<a href="https://pub.dev/documentation/meta/1.7.0/meta/protected-constant.html">protected</a>, inherited</div>
+
+</dd>
+
+        <dt id="debugFillProperties" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/Widget/debugFillProperties.html">debugFillProperties</a></span><span class="signature">(<wbr><span class="parameter" id="debugFillProperties-param-properties"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticPropertiesBuilder-class.html">DiagnosticPropertiesBuilder</a></span> <span class="parameter-name">properties</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Add additional properties associated with the node. <a href="https://api.flutter.dev/flutter/widgets/Widget/debugFillProperties.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a non-existent method or property is accessed. <a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="toDiagnosticsNode" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toDiagnosticsNode.html">toDiagnosticsNode</a></span><span class="signature">(<wbr><span class="parameter" id="toDiagnosticsNode-param-name">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="toDiagnosticsNode-param-style"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticsTreeStyle.html">DiagnosticsTreeStyle</a>?</span> <span class="parameter-name">style</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/foundation/DiagnosticsNode-class.html">DiagnosticsNode</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a debug representation of the object that is used by debugging
+tools and by <a href="https://api.flutter.dev/flutter/foundation/DiagnosticsNode/toStringDeep.html">DiagnosticsNode.toStringDeep</a>. <a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toDiagnosticsNode.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/Diagnosticable/toString.html">toString</a></span><span class="signature">(<wbr><span class="parameter" id="toString-param-minLevel">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticLevel.html">DiagnosticLevel</a></span> <span class="parameter-name">minLevel</span> = <span class="default-value">DiagnosticLevel.info</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object. <a href="https://api.flutter.dev/flutter/foundation/Diagnosticable/toString.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="toStringDeep" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringDeep.html">toStringDeep</a></span><span class="signature">(<wbr><span class="parameter" id="toStringDeep-param-prefixLineOne">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">prefixLineOne</span> = <span class="default-value">&#39;&#39;</span>, </span><span class="parameter" id="toStringDeep-param-prefixOtherLines"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">prefixOtherLines</span>, </span><span class="parameter" id="toStringDeep-param-minLevel"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticLevel.html">DiagnosticLevel</a></span> <span class="parameter-name">minLevel</span> = <span class="default-value">DiagnosticLevel.debug</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a string representation of this node and its descendants. <a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringDeep.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="toStringShallow" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringShallow.html">toStringShallow</a></span><span class="signature">(<wbr><span class="parameter" id="toStringShallow-param-joiner">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">joiner</span> = <span class="default-value">&#39;, &#39;</span>, </span><span class="parameter" id="toStringShallow-param-minLevel"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticLevel.html">DiagnosticLevel</a></span> <span class="parameter-name">minLevel</span> = <span class="default-value">DiagnosticLevel.debug</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a one-line detailed description of the object. <a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringShallow.html">[...]</a>
+  <div class="features">inherited</div>
+
+</dd>
+
+        <dt id="toStringShort" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/Widget/toStringShort.html">toStringShort</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A short, textual description of this widget. 
+  <div class="features">inherited</div>
+
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor inherited" id="operators">
+      <h2>Operators</h2>
+      <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/widgets/Widget/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator. <a href="https://api.flutter.dev/flutter/widgets/Widget/operator_equals.html">[...]</a>
+  <div class="features">@<a href="https://pub.dev/documentation/meta/1.7.0/meta/nonVirtual-constant.html">nonVirtual</a>, inherited</div>
+
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li><a href="../index.html">maplibre_gl</a></li>
+  <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+  <li class="self-crumb">MaplibreMap class</li>
+</ol>
+
+
+    <h5>maplibre_gl library</h5>
+    <ol>
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#classes">Classes</a></li>
+  <li><a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a></li>
+  <li><a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></li>
+  <li><a href="../maplibre_gl/CameraTargetBounds-class.html">CameraTargetBounds</a></li>
+  <li><a href="../maplibre_gl/CameraUpdate-class.html">CameraUpdate</a></li>
+  <li><a href="../maplibre_gl/Circle-class.html">Circle</a></li>
+  <li><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></li>
+  <li><a href="../maplibre_gl/DownloadRegionStatus-class.html">DownloadRegionStatus</a></li>
+  <li><a href="../maplibre_gl/Error-class.html">Error</a></li>
+  <li><a href="../maplibre_gl/Fill-class.html">Fill</a></li>
+  <li><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></li>
+  <li><a href="../maplibre_gl/InProgress-class.html">InProgress</a></li>
+  <li><a href="../maplibre_gl/LatLng-class.html">LatLng</a></li>
+  <li><a href="../maplibre_gl/LatLngBounds-class.html">LatLngBounds</a></li>
+  <li><a href="../maplibre_gl/LatLngQuad-class.html">LatLngQuad</a></li>
+  <li><a href="../maplibre_gl/Line-class.html">Line</a></li>
+  <li><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></li>
+  <li><a href="../maplibre_gl/MaplibreMap-class.html">MaplibreMap</a></li>
+  <li><a href="../maplibre_gl/MaplibreMapController-class.html">MaplibreMapController</a></li>
+  <li><a href="../maplibre_gl/MinMaxZoomPreference-class.html">MinMaxZoomPreference</a></li>
+  <li><a href="../maplibre_gl/OfflineRegion-class.html">OfflineRegion</a></li>
+  <li><a href="../maplibre_gl/OfflineRegionDefinition-class.html">OfflineRegionDefinition</a></li>
+  <li><a href="../maplibre_gl/Success-class.html">Success</a></li>
+  <li><a href="../maplibre_gl/Symbol-class.html">Symbol</a></li>
+  <li><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></li>
+  <li><a href="../maplibre_gl/UserHeading-class.html">UserHeading</a></li>
+  <li><a href="../maplibre_gl/UserLocation-class.html">UserLocation</a></li>
+
+
+
+
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#functions">Functions</a></li>
+  <li><a href="../maplibre_gl/deleteOfflineRegion.html">deleteOfflineRegion</a></li>
+  <li><a href="../maplibre_gl/downloadOfflineRegion.html">downloadOfflineRegion</a></li>
+  <li><a href="../maplibre_gl/getListOfRegions.html">getListOfRegions</a></li>
+  <li><a href="../maplibre_gl/installOfflineMapTiles.html">installOfflineMapTiles</a></li>
+  <li><a href="../maplibre_gl/mergeOfflineRegions.html">mergeOfflineRegions</a></li>
+  <li><a href="../maplibre_gl/setOffline.html">setOffline</a></li>
+  <li><a href="../maplibre_gl/setOfflineTileCountLimit.html">setOfflineTileCountLimit</a></li>
+  <li><a href="../maplibre_gl/updateOfflineRegionMetadata.html">updateOfflineRegionMetadata</a></li>
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#enums">Enums</a></li>
+  <li><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></li>
+  <li><a href="../maplibre_gl/CompassViewPosition.html">CompassViewPosition</a></li>
+  <li><a href="../maplibre_gl/MyLocationRenderMode.html">MyLocationRenderMode</a></li>
+  <li><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></li>
+
+  <li class="section-title"><a href="../maplibre_gl/maplibre_gl-library.html#typedefs">Typedefs</a></li>
+  <li><a href="../maplibre_gl/MapCreatedCallback.html">MapCreatedCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a></li>
+  <li><a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a></li>
+  <li><a href="../maplibre_gl/OnMapLongClickCallback.html">OnMapLongClickCallback</a></li>
+  <li><a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a></li>
+  <li><a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a></li>
+
+</ol>
+
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <ol>
+
+    <li class="section-title"><a href="../maplibre_gl/MaplibreMap-class.html#constructors">Constructors</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/MaplibreMap.html">MaplibreMap</a></li>
+
+
+    <li class="section-title">
+      <a href="../maplibre_gl/MaplibreMap-class.html#instance-properties">Properties</a>
+    </li>
+    <li><a href="../maplibre_gl/MaplibreMap/annotationConsumeTapEvents.html">annotationConsumeTapEvents</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/annotationOrder.html">annotationOrder</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/attributionButtonMargins.html">attributionButtonMargins</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/cameraTargetBounds.html">cameraTargetBounds</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/compassEnabled.html">compassEnabled</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/compassViewMargins.html">compassViewMargins</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/compassViewPosition.html">compassViewPosition</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/gestureRecognizers.html">gestureRecognizers</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/Widget/hashCode.html">hashCode</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/initialCameraPosition.html">initialCameraPosition</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/Widget/key.html">key</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/logoViewMargins.html">logoViewMargins</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/minMaxZoomPreference.html">minMaxZoomPreference</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/myLocationEnabled.html">myLocationEnabled</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/myLocationRenderMode.html">myLocationRenderMode</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/myLocationTrackingMode.html">myLocationTrackingMode</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onCameraIdle.html">onCameraIdle</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onCameraTrackingChanged.html">onCameraTrackingChanged</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onCameraTrackingDismissed.html">onCameraTrackingDismissed</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onMapClick.html">onMapClick</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onMapCreated.html">onMapCreated</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onMapIdle.html">onMapIdle</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onMapLongClick.html">onMapLongClick</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onStyleLoadedCallback.html">onStyleLoadedCallback</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/onUserLocationUpdated.html">onUserLocationUpdated</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/rotateGesturesEnabled.html">rotateGesturesEnabled</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/scrollGesturesEnabled.html">scrollGesturesEnabled</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/styleString.html">styleString</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/tiltGesturesEnabled.html">tiltGesturesEnabled</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/trackCameraPosition.html">trackCameraPosition</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/zoomGesturesEnabled.html">zoomGesturesEnabled</a></li>
+
+    <li class="section-title"><a href="../maplibre_gl/MaplibreMap-class.html#instance-methods">Methods</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/StatefulWidget/createElement.html">createElement</a></li>
+    <li><a href="../maplibre_gl/MaplibreMap/createState.html">createState</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/debugDescribeChildren.html">debugDescribeChildren</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/Widget/debugFillProperties.html">debugFillProperties</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toDiagnosticsNode.html">toDiagnosticsNode</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/foundation/Diagnosticable/toString.html">toString</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringDeep.html">toStringDeep</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/foundation/DiagnosticableTree/toStringShallow.html">toStringShallow</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/Widget/toStringShort.html">toStringShort</a></li>
+
+    <li class="section-title inherited"><a href="../maplibre_gl/MaplibreMap-class.html#operators">Operators</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/widgets/Widget/operator_equals.html">operator ==</a></li>
+
+
+
+
+</ol>
+
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.15.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/script.js?v1"></script>
+
+
+
+</body>
+
+</html>
+

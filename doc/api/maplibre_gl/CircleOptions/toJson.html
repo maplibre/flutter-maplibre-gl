@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the toJson method from the CircleOptions class, for the Dart programming language.">
+  <title>toJson method - CircleOptions class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../../"
+      data-using-base-href="false">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions-class.html">CircleOptions</a></li>
+    <li class="self-crumb">toJson method</li>
+  </ol>
+  <div class="self-name">toJson</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<main>
+
+
+  <div id="dartdoc-main-content" class="main-content">
+      <div>
+<h1><span class="kind-method">toJson</span> method 
+    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+
+<span class="returntype">dynamic</span>
+<span class="name ">toJson</span>(<wbr>)
+
+      
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">dynamic toJson() {
+  final Map&lt;String, dynamic&gt; json = &lt;String, dynamic&gt;{};
+
+  void addIfPresent(String fieldName, dynamic value) {
+    if (value != null) {
+      json[fieldName] = value;
+    }
+  }
+
+  addIfPresent(&#39;circleRadius&#39;, circleRadius);
+  addIfPresent(&#39;circleColor&#39;, circleColor);
+  addIfPresent(&#39;circleBlur&#39;, circleBlur);
+  addIfPresent(&#39;circleOpacity&#39;, circleOpacity);
+  addIfPresent(&#39;circleStrokeWidth&#39;, circleStrokeWidth);
+  addIfPresent(&#39;circleStrokeColor&#39;, circleStrokeColor);
+  addIfPresent(&#39;circleStrokeOpacity&#39;, circleStrokeOpacity);
+  addIfPresent(&#39;geometry&#39;, geometry?.toJson());
+  addIfPresent(&#39;draggable&#39;, draggable);
+  return json;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li><a href="../../index.html">maplibre_gl</a></li>
+  <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+  <li><a href="../../maplibre_gl/CircleOptions-class.html">CircleOptions</a></li>
+  <li class="self-crumb">toJson method</li>
+</ol>
+
+
+    <h5>CircleOptions class</h5>
+    <ol>
+
+    <li class="section-title"><a href="../../maplibre_gl/CircleOptions-class.html#constructors">Constructors</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/CircleOptions.html">CircleOptions</a></li>
+
+
+    <li class="section-title">
+      <a href="../../maplibre_gl/CircleOptions-class.html#instance-properties">Properties</a>
+    </li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleBlur.html">circleBlur</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleColor.html">circleColor</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleOpacity.html">circleOpacity</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleRadius.html">circleRadius</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleStrokeColor.html">circleStrokeColor</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleStrokeOpacity.html">circleStrokeOpacity</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/circleStrokeWidth.html">circleStrokeWidth</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/draggable.html">draggable</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/geometry.html">geometry</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
+
+    <li class="section-title"><a href="../../maplibre_gl/CircleOptions-class.html#instance-methods">Methods</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/copyWith.html">copyWith</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/toJson.html">toJson</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
+
+    <li class="section-title inherited"><a href="../../maplibre_gl/CircleOptions-class.html#operators">Operators</a></li>
+    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></li>
+
+
+
+
+    <li class="section-title"><a href="../../maplibre_gl/CircleOptions-class.html#constants">Constants</a></li>
+    <li><a href="../../maplibre_gl/CircleOptions/defaultOptions-constant.html">defaultOptions</a></li>
+</ol>
+
+  </div><!--/.sidebar-offcanvas-->
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.15.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/script.js?v1"></script>
+
+
+
+</body>
+
+</html>
+
