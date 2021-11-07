@@ -11,13 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v1
 
       - name: Install dartdoc
-        run: pub global activate dartdoc
+        run: flutter pub global activate dartdoc
       
       - name: Generate docs
-        run: dartdoc
+        run: flutter pub global run dartdoc
 
       - name: Push docs
         uses: actions-x/commit@v2
