@@ -2,10 +2,10 @@ name: Generate docs
 
 on:
   push:
-    # branches: [ main ]
+     # branches: [ main ]
 
 jobs:
-  build:
+  generate-docs:
     permissions: 
       contents: write
     runs-on: ubuntu-latest
@@ -22,8 +22,10 @@ jobs:
         run: flutter pub global run dartdoc
 
       - name: Push docs
-        uses: actions-x/commit@v2
-        with:
-          name: Docs Bot
-          message: "docs: ${{ github.event.commits[0].message }}"
-          files: doc
+        run: |
+          git config --global user.name "Docs Bot"
+          git config --global user.email "docs-bot-flutter-maplibre-gl@localhost"
+          git add doc
+          git commit -m docs - ${{ github.event.commits[0].message }}
+          git push
+
