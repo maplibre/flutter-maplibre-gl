@@ -28,6 +28,8 @@ This will get you the very latest changes from the main branch.
 You can replace `main` with the name of the [latest release](https://github.com/m0nac0/flutter-maplibre-gl/releases)
 to get a well-tested version.
 
+Documentation is available in the doc/api folder and automatically generated on each push to the main branch. You can easily view the [documentation / API reference here.](https://htmlpreview.github.io/?https://github.com/m0nac0/flutter-maplibre-gl/blob/main/doc/api/index.html)
+
 
 Compared to flutter-mapbox-gl, the only breaking API changes are: 
 - `MapboxMap` <--> `MaplibreMap`
