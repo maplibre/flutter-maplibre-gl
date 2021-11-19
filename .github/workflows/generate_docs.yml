@@ -27,5 +27,5 @@ jobs:
           git config --global user.email "docs-bot-flutter-maplibre-gl@localhost"
           git add -f doc
           git commit -m "docs: ${{ github.event.commits[0].message }}"
-          git push origin main:docs
+          git push --force origin main:docs
 

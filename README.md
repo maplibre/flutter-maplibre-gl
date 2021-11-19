@@ -1,6 +1,6 @@
 # Flutter Maplibre GL
 [![Flutter CI](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/flutter_ci.yml)
-[![Generate docs](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/dart.yml/badge.svg)](https://htmlpreview.github.io/?https://github.com/m0nac0/flutter-maplibre-gl/blob/docs/doc/api/index.html)
+[![Generate docs](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/generate_docs.yml/badge.svg)](https://github.com/m0nac0/flutter-maplibre-gl/actions/workflows/generate_docs.yml)
 
 This Flutter plugin allows to show **embedded interactive and customizable vector maps** as a Flutter widget. 
 
