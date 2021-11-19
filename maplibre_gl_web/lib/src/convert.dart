@@ -56,7 +56,8 @@ class Convert {
           options['logoViewMargins'][0], options['logoViewMargins'][1]);
     }
     if (options.containsKey('compassViewPosition')) {
-      final position = CompassViewPosition.values[options['compassViewPosition']];
+      final position =
+          CompassViewPosition.values[options['compassViewPosition']];
       sink.setCompassAlignment(position);
     }
     if (options.containsKey('compassViewMargins')) {
@@ -64,7 +65,8 @@ class Convert {
           options['compassViewMargins'][0], options['compassViewMargins'][1]);
     }
     if (options.containsKey('attributionButtonPosition')) {
-      final position = AttributionButtonPosition.values[options['attributionButtonPosition']];
+      final position = AttributionButtonPosition
+          .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
     }
     if (options.containsKey('attributionButtonMargins')) {
