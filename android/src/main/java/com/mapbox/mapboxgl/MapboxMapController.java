@@ -93,6 +93,7 @@ final class MapboxMapController
   MapboxMap.OnCameraIdleListener,
   MapboxMap.OnCameraMoveListener,
   MapboxMap.OnCameraMoveStartedListener,
+  MapView.OnDidBecomeIdleListener,
   OnAnnotationClickListener,
   MapboxMap.OnMapClickListener,
   MapboxMap.OnMapLongClickListener,
@@ -267,6 +268,8 @@ final class MapboxMapController
         mapboxMap.getStyle().addImage(id, bitmap);
       }
     });
+
+    mapView.addOnDidBecomeIdleListener(this);
 
     setStyleString(styleStringInitial);
     // updateMyLocationEnabled();
@@ -1026,6 +1029,11 @@ final class MapboxMapController
   }
 
   @Override
+  public void onDidBecomeIdle() {
+    methodChannel.invokeMethod("map#onIdle", new HashMap<>());
+  }
+
+  @Override
   public boolean onAnnotationClick(Annotation annotation) {
     if (annotation instanceof Symbol) {
       final SymbolController symbolController = symbols.get(String.valueOf(annotation.getId()));
@@ -1321,7 +1329,7 @@ final class MapboxMapController
 
   @Override
   public void setAttributionButtonMargins(int x, int y) {
-    mapboxMap.getUiSettings().setAttributionMargins(0, 0, x, y);
+    mapboxMap.getUiSettings().setAttributionMargins(x, 0, 0, y);
   }
 
   private void updateMyLocationEnabled() {
