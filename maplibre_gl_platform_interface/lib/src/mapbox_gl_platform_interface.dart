@@ -133,5 +133,23 @@ abstract class MapLibreGlPlatform {
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
-  void dispose() {}
+  @mustCallSuper
+  void dispose() {
+    // clear all callbacks to avoid cyclic refs
+    onInfoWindowTappedPlatform.clear();
+    onFeatureTappedPlatform.clear();
+    onFeatureDraggedPlatform.clear();
+    onCameraMoveStartedPlatform.clear();
+    onCameraMovePlatform.clear();
+    onCameraIdlePlatform.clear();
+    onMapStyleLoadedPlatform.clear();
+
+    onMapClickPlatform.clear();
+    onMapLongClickPlatform.clear();
+    onAttributionClickPlatform.clear();
+    onCameraTrackingChangedPlatform.clear();
+    onCameraTrackingDismissedPlatform.clear();
+    onMapIdlePlatform.clear();
+    onUserLocationUpdatedPlatform.clear();
+  }
 }
