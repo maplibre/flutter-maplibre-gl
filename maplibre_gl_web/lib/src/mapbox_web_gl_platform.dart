@@ -304,7 +304,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onStyleLoaded(_) {
     _mapReady = true;
-
+    _map.resize();
     onMapStyleLoadedPlatform(null);
   }
 
