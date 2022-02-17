@@ -193,7 +193,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             result(nil)
         case "map#queryRenderedFeatures":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            let layerIds = arguments["layerIds"] as? Set<String>
+            var styleLayerIdentifiers: Set<String>?
+            if let layerIds = arguments["layerIds"] as? [String] {
+                styleLayerIdentifiers = Set<String>(layerIds)
+            }
             var filterExpression: NSPredicate?
             if let filter = arguments["filter"] as? [Any] {
                 filterExpression = NSPredicate(mglJSONObject: filter)
@@ -203,7 +206,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             if let x = arguments["x"] as? Double, let y = arguments["y"] as? Double {
                 features = mapView.visibleFeatures(
                     at: CGPoint(x: x, y: y),
-                    styleLayerIdentifiers: layerIds,
+                    styleLayerIdentifiers: styleLayerIdentifiers,
                     predicate: filterExpression
                 )
             }
@@ -214,7 +217,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             {
                 features = mapView.visibleFeatures(
                     in: CGRect(x: left, y: top, width: right, height: bottom),
-                    styleLayerIdentifiers: layerIds,
+                    styleLayerIdentifiers: styleLayerIdentifiers,
                     predicate: filterExpression
                 )
             }
