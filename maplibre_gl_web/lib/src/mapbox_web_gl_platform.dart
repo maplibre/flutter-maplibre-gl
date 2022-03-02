@@ -75,12 +75,19 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map.on('move', _onCameraMove);
       _map.on('moveend', _onCameraIdle);
       _map.on('resize', _onMapResize);
+      _map.on('styleimagemissing', _loadFromAssets);
       if (_dragEnabled) {
         _map.on('mouseup', _onMouseUp);
         _map.on('mousemove', _onMouseMove);
       }
     }
     Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+  }
+
+  void _loadFromAssets(Event event) async {
+    final imagePath = event.id;
+    final ByteData bytes = await rootBundle.load(imagePath);
+    await addImage(imagePath, bytes.buffer.asUint8List());
   }
 
   _onMouseDown(Event e) {
