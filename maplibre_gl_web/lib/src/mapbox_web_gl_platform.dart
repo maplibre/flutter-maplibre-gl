@@ -667,10 +667,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "circle",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: enableInteraction);
   }
 
@@ -679,10 +683,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "fill",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: enableInteraction);
   }
 
@@ -691,10 +699,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "line",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: enableInteraction);
   }
 
@@ -703,30 +715,44 @@ class MaplibreMapController extends MapLibreGlPlatform
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "symbol",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: enableInteraction);
   }
 
   @override
   Future<void> addHillshadeLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId, String? sourceLayer}) async {
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
     return _addLayer(sourceId, layerId, properties, "hillshade",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: false);
   }
 
   @override
   Future<void> addRasterLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId, String? sourceLayer}) async {
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
     await _addLayer(sourceId, layerId, properties, "raster",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
         enableInteraction: false);
   }
 
@@ -734,6 +760,8 @@ class MaplibreMapController extends MapLibreGlPlatform
       Map<String, dynamic> properties, String layerType,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction}) async {
     final layout = Map.fromEntries(
         properties.entries.where((entry) => isLayoutProperty(entry.key)));
@@ -746,7 +774,9 @@ class MaplibreMapController extends MapLibreGlPlatform
       'source': sourceId,
       'layout': layout,
       'paint': paint,
-      if (sourceLayer != null) 'source-layer': sourceLayer
+      if (sourceLayer != null) 'source-layer': sourceLayer,
+      if (minzoom != null) 'minzoom': minzoom,
+      if (maxzoom != null) 'maxzoom': maxzoom,
     }, belowLayerId);
 
     if (enableInteraction) {
@@ -837,14 +867,15 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<void> addLayer(String imageLayerId, String imageSourceId) {
+  Future<void> addLayer(String imageLayerId, String imageSourceId,
+      double? minzoom, double? maxzoom) {
     // TODO: implement addLayer
     throw UnimplementedError();
   }
 
   @override
-  Future<void> addLayerBelow(
-      String imageLayerId, String imageSourceId, String belowLayerId) {
+  Future<void> addLayerBelow(String imageLayerId, String imageSourceId,
+      String belowLayerId, double? minzoom, double? maxzoom) {
     // TODO: implement addLayerBelow
     throw UnimplementedError();
   }

@@ -75,9 +75,11 @@ abstract class MapLibreGlPlatform {
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates);
 
-  Future<void> addLayer(String imageLayerId, String imageSourceId);
-  Future<void> addLayerBelow(
-      String imageLayerId, String imageSourceId, String belowLayerId);
+  Future<void> addLayer(String imageLayerId, String imageSourceId,
+      double? minzoom, double? maxzoom);
+
+  Future<void> addLayerBelow(String imageLayerId, String imageSourceId,
+      String belowLayerId, double? minzoom, double? maxzoom);
 
   Future<void> removeLayer(String imageLayerId);
 
@@ -103,33 +105,47 @@ abstract class MapLibreGlPlatform {
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction});
 
   Future<void> addLineLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction});
 
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction});
 
   Future<void> addFillLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
       String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
       required bool enableInteraction});
 
   Future<void> addRasterLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId, String? sourceLayer});
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom});
 
   Future<void> addHillshadeLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId, String? sourceLayer});
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom});
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
