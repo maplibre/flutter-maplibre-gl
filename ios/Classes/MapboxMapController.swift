@@ -1321,6 +1321,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                         if let id = $0.identifier as? String,
                            let featureId = feature.identifier as? String
                         { return id == featureId }
+
+                        if let id = $0.identifier as? NSNumber,
+                           let featureId = feature.identifier as? NSNumber
+                        { return id == featureId }
                         return false
                     })
                 {
