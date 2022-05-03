@@ -330,13 +330,18 @@ class MaplibreMapController extends ChangeNotifier {
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
   /// events. [sourceLayer] is used to selected a specific source layer from
-  /// Vector source
+  /// Vector source.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
   Future<void> addSymbolLayer(
       String sourceId, String layerId, SymbolLayerProperties properties,
       {String? belowLayerId,
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       bool enableInteraction = true}) async {
     await _mapboxGlPlatform.addSymbolLayer(
       sourceId,
@@ -346,6 +351,7 @@ class MaplibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
       enableInteraction: enableInteraction,
     );
   }
@@ -360,13 +366,18 @@ class MaplibreMapController extends ChangeNotifier {
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
   /// events. [sourceLayer] is used to selected a specific source layer from
-  /// Vector source
+  /// Vector source.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
   Future<void> addLineLayer(
       String sourceId, String layerId, LineLayerProperties properties,
       {String? belowLayerId,
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       bool enableInteraction = true}) async {
     await _mapboxGlPlatform.addLineLayer(
       sourceId,
@@ -376,6 +387,7 @@ class MaplibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
       enableInteraction: enableInteraction,
     );
   }
@@ -390,13 +402,18 @@ class MaplibreMapController extends ChangeNotifier {
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
   /// events. [sourceLayer] is used to selected a specific source layer from
-  /// Vector source
+  /// Vector source.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
   Future<void> addFillLayer(
       String sourceId, String layerId, FillLayerProperties properties,
       {String? belowLayerId,
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       bool enableInteraction = true}) async {
     await _mapboxGlPlatform.addFillLayer(
       sourceId,
@@ -406,6 +423,7 @@ class MaplibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
       enableInteraction: enableInteraction,
     );
   }
@@ -420,13 +438,18 @@ class MaplibreMapController extends ChangeNotifier {
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
   /// events. [sourceLayer] is used to selected a specific source layer from
-  /// Vector source
+  /// Vector source.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
   Future<void> addCircleLayer(
       String sourceId, String layerId, CircleLayerProperties properties,
       {String? belowLayerId,
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       bool enableInteraction = true}) async {
     await _mapboxGlPlatform.addCircleLayer(
       sourceId,
@@ -436,6 +459,7 @@ class MaplibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
       enableInteraction: enableInteraction,
     );
   }
@@ -1096,48 +1120,64 @@ class MaplibreMapController extends ChangeNotifier {
   /// [HillshadeLayerProperties].
   /// [sourceLayer] is used to selected a specific source layer from Vector
   /// source.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  /// [filter] is not supported by RasterLayer and HillshadeLayer.
+  ///
+  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
   Future<void> addLayer(
       String sourceId, String layerId, LayerProperties properties,
       {String? belowLayerId,
       bool enableInteraction = true,
       String? sourceLayer,
       double? minzoom,
-      double? maxzoom}) async {
+      double? maxzoom,
+      dynamic filter}) async {
     if (properties is FillLayerProperties) {
       addFillLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
-          maxzoom: maxzoom);
+          maxzoom: maxzoom,
+          filter: filter);
     } else if (properties is LineLayerProperties) {
       addLineLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
-          maxzoom: maxzoom);
+          maxzoom: maxzoom,
+          filter: filter);
     } else if (properties is SymbolLayerProperties) {
       addSymbolLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
-          maxzoom: maxzoom);
+          maxzoom: maxzoom,
+          filter: filter);
     } else if (properties is CircleLayerProperties) {
       addCircleLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
-          maxzoom: maxzoom);
+          maxzoom: maxzoom,
+          filter: filter);
     } else if (properties is RasterLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("RasterLayer does not support filter");
+      }
       addRasterLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else if (properties is HillshadeLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("HillShadeLayer does not support filter");
+      }
       addHillshadeLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,

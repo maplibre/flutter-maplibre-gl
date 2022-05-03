@@ -109,6 +109,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addLineLayer(
@@ -117,6 +118,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addCircleLayer(
@@ -125,6 +127,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addFillLayer(
@@ -133,6 +136,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addRasterLayer(

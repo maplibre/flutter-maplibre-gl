@@ -533,6 +533,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('symbolLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -541,6 +542,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -554,6 +556,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('lineLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -562,6 +565,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -575,6 +579,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('circleLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -583,6 +588,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -596,6 +602,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('fillLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -604,6 +611,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
