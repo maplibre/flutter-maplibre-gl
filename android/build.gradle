@@ -4,7 +4,7 @@ version '1.0-SNAPSHOT'
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -15,7 +15,6 @@ buildscript {
 rootProject.allprojects {
     repositories {
         google()
-        jcenter()
         mavenCentral()
     }
 }
@@ -23,7 +22,9 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
+
+    compileSdkVersion 31
+    ndkVersion "20.1.5948944"
 
     defaultConfig {
         minSdkVersion 20

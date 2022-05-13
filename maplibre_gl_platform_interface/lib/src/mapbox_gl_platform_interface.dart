@@ -15,16 +15,6 @@ abstract class MapLibreGlPlatform {
   static MapLibreGlPlatform Function() createInstance =
       () => MethodChannelMaplibreGl();
 
-  static Map<int, MapLibreGlPlatform> _instances = {};
-
-  static void addInstance(int id, MapLibreGlPlatform platform) {
-    _instances[id] = platform;
-  }
-
-  static MapLibreGlPlatform getInstance(int id) {
-    return _instances[id]!;
-  }
-
   final onInfoWindowTappedPlatform = ArgumentCallbacks<String>();
 
   final onSymbolTappedPlatform = ArgumentCallbacks<String>();
