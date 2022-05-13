@@ -246,9 +246,9 @@ class _MaplibreMapState extends State<MaplibreMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
-    MapLibreGlPlatform.addInstance(id, _mapboxGlPlatform);
-    final MaplibreMapController controller = MaplibreMapController.init(
-        id, widget.initialCameraPosition, onStyleLoadedCallback: () {
+
+    final MaplibreMapController controller = MaplibreMapController(
+        mapboxGlPlatform: _mapboxGlPlatform, initialCameraPosition: widget.initialCameraPosition, onStyleLoadedCallback: () {
       if (_controller.isCompleted) {
         widget.onStyleLoadedCallback!();
       } else {
@@ -262,7 +262,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
         onCameraTrackingChanged: widget.onCameraTrackingChanged,
         onCameraIdle: widget.onCameraIdle,
         onMapIdle: widget.onMapIdle);
-    await MaplibreMapController.initPlatform(id);
+    await _mapboxGlPlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated!(controller);
