@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
-      - uses: subosito/flutter-action@v2.2.1
+      - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -30,13 +30,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
-      - uses: subosito/flutter-action@v2.2.1
+      - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -52,18 +52,18 @@ jobs:
         working-directory: example
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
           cache: 'gradle'
       - name: Cache Flutter
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
-      - uses: subosito/flutter-action@v2.2.1
+      - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -80,13 +80,13 @@ jobs:
         working-directory: example
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: /Users/runner/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
-      - uses: subosito/flutter-action@v2.2.1
+      - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -97,7 +97,7 @@ jobs:
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Runner.app
           path: example/build/ios/iphonesimulator
@@ -110,13 +110,13 @@ jobs:
         working-directory: example
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
-      - uses: subosito/flutter-action@v2.2.1
+      - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
