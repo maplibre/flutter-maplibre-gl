@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:maplibre_gl_example/main.dart';
 import 'package:maplibre_gl_example/page.dart';
 
 class LayerPage extends ExamplePage {
