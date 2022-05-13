@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:mapbox_gl_example/main.dart';
-import 'package:mapbox_gl_example/page.dart';
+import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class LayerPage extends ExamplePage {
   LayerPage() : super(const Icon(Icons.share), 'Layer');
@@ -21,13 +21,12 @@ class LayerBody extends StatefulWidget {
 class LayerState extends State {
   static final LatLng center = const LatLng(-33.86711, 151.1947171);
 
-  late MapboxMapController controller;
+  late MaplibreMapController controller;
   Timer? timer;
 
   @override
   Widget build(BuildContext context) {
-    return MapboxMap(
-      accessToken: MapsDemo.ACCESS_TOKEN,
+    return MaplibreMap(
       onMapCreated: _onMapCreated,
       onMapClick: (point, latLong) =>
           print(point.toString() + latLong.toString()),
@@ -39,7 +38,7 @@ class LayerState extends State {
     );
   }
 
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
 
     controller.onFeatureTapped.add(onFeatureTap);
