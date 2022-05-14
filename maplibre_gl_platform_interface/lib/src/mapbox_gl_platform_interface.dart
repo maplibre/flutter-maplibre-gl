@@ -311,4 +311,6 @@ abstract class MapLibreGlPlatform {
       {String? belowLayerId}) async {
     throw UnimplementedError('addFillLayer() has not been implemented.');
   }
+
+  void dispose() {}
 }
