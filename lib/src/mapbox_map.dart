@@ -228,6 +228,15 @@ class _MaplibreMapState extends State<MaplibreMap> {
   }
 
   @override
+  void dispose() async {
+    super.dispose();
+    if (_controller.isCompleted) {
+        final controller = await _controller.future;
+        controller.dispose();
+    }
+  }
+
+  @override
   void didUpdateWidget(MaplibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
