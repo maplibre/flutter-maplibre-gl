@@ -22,6 +22,7 @@ import 'scrolling_map.dart';
 import 'offline_regions.dart';
 import 'custom_marker.dart';
 import 'place_batch.dart';
+import 'layer.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
@@ -32,6 +33,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   PlaceSourcePage(),
   LinePage(),
   LocalStylePage(),
+  LayerPage(),
   PlaceCirclePage(),
   PlaceFillPage(),
   ScrollingMapPage(),

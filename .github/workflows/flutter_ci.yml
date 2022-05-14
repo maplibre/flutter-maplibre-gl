@@ -41,6 +41,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
       - run: flutter pub get
+      - run: |
+         cd scripts
+         flutter pub get 
+         cd ..
       - name: Lint analysis
         run: flutter analyze
 

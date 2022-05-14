@@ -18,6 +18,7 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 import 'package:mapbox_gl_dart/mapbox_gl_dart.dart' hide Point;
 import 'package:mapbox_gl_dart/mapbox_gl_dart.dart' as mapbox show Point;
 import 'package:image/image.dart' hide Point;
+import 'package:maplibre_gl_web/src/layer_tools.dart';
 
 part 'src/convert.dart';
 part 'src/mapbox_map_plugin.dart';
