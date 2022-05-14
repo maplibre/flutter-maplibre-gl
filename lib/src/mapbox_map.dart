@@ -231,8 +231,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
   void dispose() async {
     super.dispose();
     if (_controller.isCompleted) {
-        final controller = await _controller.future;
-        controller.dispose();
+      final controller = await _controller.future;
+      controller.dispose();
     }
   }
 

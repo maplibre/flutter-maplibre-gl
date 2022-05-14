@@ -273,7 +273,7 @@ abstract class MapLibreGlPlatform {
     throw UnimplementedError(
         'getMetersPerPixelAtLatitude() has not been implemented.');
   }
-  
+
   Future<void> addGeoJsonSource(
       String sourceId, Map<String, dynamic> geojson) async {
     throw UnimplementedError('addGeoJsonSource() has not been implemented.');
@@ -311,8 +311,6 @@ abstract class MapLibreGlPlatform {
       {String? belowLayerId}) async {
     throw UnimplementedError('addFillLayer() has not been implemented.');
   }
-  
-  void dispose() {
-  
-  }
+
+  void dispose() {}
 }

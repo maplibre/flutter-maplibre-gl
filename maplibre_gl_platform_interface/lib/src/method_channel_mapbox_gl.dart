@@ -794,7 +794,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
-  
+
   @override
   void dispose() {
     super.dispose();
