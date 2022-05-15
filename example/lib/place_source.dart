@@ -34,6 +34,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   static const LAYER_ID = 'sydney_layer';
 
   bool sourceAdded = false;
+  bool layerAdded = false;
   late MaplibreMapController controller;
 
   void _onMapCreated(MaplibreMapController controller) {
@@ -67,16 +68,25 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> addLayer(String imageLayerId, String imageSourceId) {
+    if (layerAdded) {
+      removeLayer(imageLayerId);
+    }
+    setState(() => layerAdded = true);
     return controller.addImageLayer(imageLayerId, imageSourceId);
   }
 
   Future<void> addLayerBelow(
       String imageLayerId, String imageSourceId, String belowLayerId) {
+    if (layerAdded) {
+      removeLayer(imageLayerId);
+    }
+    setState(() => layerAdded = true);
     return controller.addImageLayerBelow(
         imageLayerId, imageSourceId, belowLayerId);
   }
 
   Future<void> removeLayer(String imageLayerId) {
+    setState(() => layerAdded = false);
     return controller.removeLayer(imageLayerId);
   }
 
@@ -104,55 +114,50 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                Row(
+                Column(
                   children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        TextButton(
-                          child: const Text('Add source (asset image)'),
-                          onPressed: sourceAdded
-                              ? null
-                              : () {
-                                  addImageSourceFromAsset(
-                                          SOURCE_ID, 'assets/sydney.png')
-                                      .then((value) {
-                                    setState(() => sourceAdded = true);
-                                  });
-                                },
-                        ),
-                        TextButton(
-                          child: const Text('Remove source (asset image)'),
-                          onPressed: sourceAdded
-                              ? () async {
-                                  await removeLayer(LAYER_ID);
-                                  removeImageSource(SOURCE_ID).then((value) {
-                                    setState(() => sourceAdded = false);
-                                  });
-                                }
-                              : null,
-                        ),
-                        TextButton(
-                          child: const Text('Show layer'),
-                          onPressed: sourceAdded
-                              ? () => addLayer(LAYER_ID, SOURCE_ID)
-                              : null,
-                        ),
-                        TextButton(
-                          child: const Text('Show layer below water'),
-                          onPressed: sourceAdded
-                              ? () =>
-                                  addLayerBelow(LAYER_ID, SOURCE_ID, 'water')
-                              : null,
-                        ),
-                        TextButton(
-                          child: const Text('Hide layer'),
-                          onPressed:
-                              sourceAdded ? () => removeLayer(LAYER_ID) : null,
-                        ),
-                      ],
+                    TextButton(
+                      child: const Text('Add source (asset image)'),
+                      onPressed: sourceAdded
+                          ? null
+                          : () {
+                              addImageSourceFromAsset(
+                                      SOURCE_ID, 'assets/sydney.png')
+                                  .then((value) {
+                                setState(() => sourceAdded = true);
+                              });
+                            },
+                    ),
+                    TextButton(
+                      child: const Text('Remove source (asset image)'),
+                      onPressed: sourceAdded
+                          ? () async {
+                              await removeLayer(LAYER_ID);
+                              removeImageSource(SOURCE_ID).then((value) {
+                                setState(() => sourceAdded = false);
+                              });
+                            }
+                          : null,
+                    ),
+                    TextButton(
+                      child: const Text('Show layer'),
+                      onPressed: sourceAdded
+                          ? () => addLayer(LAYER_ID, SOURCE_ID)
+                          : null,
+                    ),
+                    TextButton(
+                      child: const Text('Show layer below water'),
+                      onPressed: sourceAdded
+                          ? () => addLayerBelow(LAYER_ID, SOURCE_ID, 'water')
+                          : null,
+                    ),
+                    TextButton(
+                      child: const Text('Hide layer'),
+                      onPressed:
+                          sourceAdded ? () => removeLayer(LAYER_ID) : null,
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
