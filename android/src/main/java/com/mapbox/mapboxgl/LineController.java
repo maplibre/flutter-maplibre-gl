@@ -17,7 +17,7 @@ import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.plugins.annotation.Line;
 import com.mapbox.mapboxsdk.plugins.annotation.LineManager;
-import com.mapbox.mapboxsdk.utils.ColorUtils;
+import android.graphics.Color;
 
 /**
  * Controller of a single Line on the map.
