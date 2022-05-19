@@ -975,11 +975,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
 
         if let feature = firstFeatureOnLayers(at: point), let id = feature.identifier {
             channel?.invokeMethod("feature#onTap", arguments: [
-                "id": id,
-                "x": point.x,
-                "y": point.y,
-                "lng": coordinate.longitude,
-                "lat": coordinate.latitude,
+                        "id": id,
+                        "x": point.x,
+                        "y": point.y,
+                        "lng": coordinate.longitude,
+                        "lat": coordinate.latitude,
             ])
         } else {
             channel?.invokeMethod("map#onMapClick", arguments: [
