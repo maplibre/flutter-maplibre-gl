@@ -1050,7 +1050,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     /*
      *  MGLMapViewDelegate
      */
-    func mapView(_ mapView: MGLMapView, didFinishLoading _: MGLStyle) {
+    func mapView(_ mapView: MGLMapView, didFinishLoading style: MGLStyle) {
         onStyleLoadedCalled = false
         isMapReady = true
         updateMyLocationEnabled()
