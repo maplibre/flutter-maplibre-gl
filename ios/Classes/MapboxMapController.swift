@@ -110,7 +110,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 // only call map#onStyleLoaded here if isMapReady has happend and isFirstStyleLoad is true
                 if isFirstStyleLoad {
                     isFirstStyleLoad = false
-
                     if let channel = channel {
                         onStyleLoadedCalled = true
                         channel.invokeMethod("map#onStyleLoaded", arguments: nil)
@@ -1098,6 +1097,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         // On first launch we only call map#onStyleLoaded if map#waitForMap has already been called
         if !isFirstStyleLoad || mapReadyResult != nil {
             isFirstStyleLoad = false
+
 
             if let channel = channel {
                 channel.invokeMethod("map#onStyleLoaded", arguments: nil)
