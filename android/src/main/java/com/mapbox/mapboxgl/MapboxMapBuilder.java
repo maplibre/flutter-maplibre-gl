@@ -33,7 +33,7 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
   private String styleString = "https://demotiles.maplibre.org/style.json";
   private List<String> annotationOrder = new ArrayList();
   private List<String> annotationConsumeTapEvents = new ArrayList();
-
+  private LatLngBounds bounds = null;
 
   MapboxMapController build(
     int id, Context context, BinaryMessenger messenger, MapboxMapsPlugin.LifecycleProvider lifecycleProvider) {
@@ -44,6 +44,11 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
     controller.setTrackCameraPosition(trackCameraPosition);
+
+    if (null != bounds) {
+      controller.setCameraTargetBounds(bounds);
+    }
+
     return controller;
   }
 
@@ -58,9 +63,7 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
 
   @Override
   public void setCameraTargetBounds(LatLngBounds bounds) {
-    Log.e(TAG, "setCameraTargetBounds is supported only after map initiated.");
-    //throw new UnsupportedOperationException("setCameraTargetBounds is supported only after map initiated.");
-    //options.latLngBoundsForCameraTarget(bounds);
+    this.bounds = bounds;
   }
 
   @Override

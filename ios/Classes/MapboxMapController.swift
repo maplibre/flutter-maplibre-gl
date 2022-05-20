@@ -1099,6 +1099,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             isFirstStyleLoad = false
 
 
+
             if let channel = channel {
                 channel.invokeMethod("map#onStyleLoaded", arguments: nil)
             }
