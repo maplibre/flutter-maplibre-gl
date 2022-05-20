@@ -157,6 +157,8 @@ final class MapboxMapController
   private List<String> annotationConsumeTapEvents;
   private Set<String> featureLayerIdentifiers;
   private LatLngBounds bounds = null;
+  private static final String annotationManagerNotCreatedErrorCode = "NO ANNOTATION MANAGER";
+  private static final String annotationManagerNotCreatedErrorMessage = "To use %ss please add it to the annotation list";
 
   MapboxMapController(
     int id,
@@ -559,6 +561,7 @@ final class MapboxMapController
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+
     switch (call.method) {
       case "map#waitForMap":
         if (mapboxMap != null) {
@@ -754,6 +757,10 @@ final class MapboxMapController
         break;
       }
       case "symbols#addAll": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         List<String> newSymbolIds = new ArrayList<String>();
         final List<Object> options = call.argument("options");
         List<SymbolOptions> symbolOptionsList = new ArrayList<SymbolOptions>();
@@ -778,6 +785,10 @@ final class MapboxMapController
         break;
       }
       case "symbols#removeAll": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final ArrayList<String> symbolIds = call.argument("ids");
         SymbolController symbolController;
 
@@ -795,6 +806,10 @@ final class MapboxMapController
         break;
       }
       case "symbol#update": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final String symbolId = call.argument("symbol");
         final SymbolController symbol = symbol(symbolId);
         Convert.interpretSymbolOptions(call.argument("options"), symbol);
@@ -803,6 +818,10 @@ final class MapboxMapController
         break;
       }
       case "symbol#getGeometry": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final String symbolId = call.argument("symbol");
         final SymbolController symbol = symbol(symbolId);
         final LatLng symbolLatLng = symbol.getGeometry();
@@ -812,30 +831,50 @@ final class MapboxMapController
         result.success(hashMapLatLng);
       }
       case "symbolManager#iconAllowOverlap": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final Boolean value = call.argument("iconAllowOverlap");
         symbolManager.setIconAllowOverlap(value);
         result.success(null);
         break;
       }
       case "symbolManager#iconIgnorePlacement": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final Boolean value = call.argument("iconIgnorePlacement");
         symbolManager.setIconIgnorePlacement(value);
         result.success(null);
         break;
       }
       case "symbolManager#textAllowOverlap": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final Boolean value = call.argument("textAllowOverlap");
         symbolManager.setTextAllowOverlap(value);
         result.success(null);
         break;
       }
       case "symbolManager#textIgnorePlacement": {
+        if(symbolManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "symbol"), null);
+          return;
+        }
         final Boolean iconAllowOverlap = call.argument("textIgnorePlacement");
         symbolManager.setTextIgnorePlacement(iconAllowOverlap);
         result.success(null);
         break;
       }
       case "line#add": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         final LineBuilder lineBuilder = newLineBuilder();
         Convert.interpretLineOptions(call.argument("options"), lineBuilder);
         final Line line = lineBuilder.build();
@@ -845,12 +884,20 @@ final class MapboxMapController
         break;
       }
       case "line#remove": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         final String lineId = call.argument("line");
         removeLine(lineId);
         result.success(null);
         break;
       }
       case "line#addAll": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         List<String> newIds = new ArrayList<String>();
         final List<Object> options = call.argument("options");
         List<LineOptions> optionList = new ArrayList<LineOptions>();
@@ -875,6 +922,10 @@ final class MapboxMapController
         break;
       }
       case "line#removeAll": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         final ArrayList<String> ids = call.argument("ids");
         LineController lineController;
 
@@ -892,6 +943,10 @@ final class MapboxMapController
         break;
       }
       case "line#update": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         final String lineId = call.argument("line");
         final LineController line = line(lineId);
         Convert.interpretLineOptions(call.argument("options"), line);
@@ -900,6 +955,10 @@ final class MapboxMapController
         break;
       }
       case "line#getGeometry": {
+        if(lineManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "line"), null);
+          return;
+        }
         final String lineId = call.argument("line");
         final LineController line = line(lineId);
         final List<LatLng> lineLatLngs = line.getGeometry();
@@ -914,6 +973,10 @@ final class MapboxMapController
         break;
       }
       case "circle#add": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         final CircleBuilder circleBuilder = newCircleBuilder();
         Convert.interpretCircleOptions(call.argument("options"), circleBuilder);
         final Circle circle = circleBuilder.build();
@@ -923,6 +986,10 @@ final class MapboxMapController
         break;
       }
       case "circle#addAll": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         List<String> newIds = new ArrayList<String>();
         final List<Object> options = call.argument("options");
         List<CircleOptions> optionList = new ArrayList<CircleOptions>();
@@ -947,6 +1014,10 @@ final class MapboxMapController
         break;
       }
       case "circle#removeAll": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         final ArrayList<String> ids = call.argument("ids");
         CircleController circleController;
 
@@ -964,12 +1035,20 @@ final class MapboxMapController
         break;
       }
       case "circle#remove": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         final String circleId = call.argument("circle");
         removeCircle(circleId);
         result.success(null);
         break;
       }
       case "circle#update": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         Log.e(TAG, "update circle");
         final String circleId = call.argument("circle");
         final CircleController circle = circle(circleId);
@@ -979,6 +1058,10 @@ final class MapboxMapController
         break;
       }
       case "circle#getGeometry": {
+        if(circleManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "circle"), null);
+          return;
+        }
         final String circleId = call.argument("circle");
         final CircleController circle = circle(circleId);
         final LatLng circleLatLng = circle.getGeometry();
@@ -989,6 +1072,10 @@ final class MapboxMapController
         break;
       }
       case "fill#add": {
+        if(fillManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "fill"), null);
+          return;
+        }
         final FillBuilder fillBuilder = newFillBuilder();
         Convert.interpretFillOptions(call.argument("options"), fillBuilder);
         final Fill fill = fillBuilder.build();
@@ -999,6 +1086,10 @@ final class MapboxMapController
       }
 
       case "fill#addAll": {
+        if(fillManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "fill"), null);
+          return;
+        }
         List<String> newIds = new ArrayList<String>();
         final List<Object> options = call.argument("options");
         List<FillOptions> optionList = new ArrayList<FillOptions>();
@@ -1023,6 +1114,10 @@ final class MapboxMapController
         break;
       }
       case "fill#removeAll": {
+        if(fillManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "fill"), null);
+          return;
+        }
         final ArrayList<String> ids = call.argument("ids");
         FillController fillController;
 
@@ -1040,12 +1135,20 @@ final class MapboxMapController
         break;
       }
       case "fill#remove": {
+        if(fillManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "fill"), null);
+          return;
+        }
         final String fillId = call.argument("fill");
         removeFill(fillId);
         result.success(null);
         break;
       }
       case "fill#update": {
+        if(fillManager == null){
+          result.error(annotationManagerNotCreatedErrorCode, String.format(annotationManagerNotCreatedErrorCode, "fill"), null);
+          return;
+        }
         final String fillId = call.argument("fill");
         final FillController fill = fill(fillId);
         Convert.interpretFillOptions(call.argument("options"), fill);

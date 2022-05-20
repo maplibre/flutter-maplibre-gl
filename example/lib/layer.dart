@@ -34,6 +34,7 @@ class LayerState extends State {
         target: center,
         zoom: 11.0,
       ),
+      annotationOrder: const [],
     );
   }
 
