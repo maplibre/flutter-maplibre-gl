@@ -2,7 +2,7 @@
 platform :ios, '9.0'
 use_frameworks!
 
-pod 'MapLibre', :git =>  'https://github.com/m0nac0/maplibre-cocoapods.git'
+pod 'MapLibre', :git =>  'https://github.com/m0nac0/maplibre-cocoapods.git', :branch => 'v5.12.2'
 pod 'MapLibreAnnotationExtension', :git => 'https://github.com/m0nac0/maplibre-annotation-extension.git'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
