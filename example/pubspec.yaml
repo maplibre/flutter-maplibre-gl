@@ -57,6 +57,7 @@ flutter:
     - assets/symbols/custom-icon.png
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png
+    - assets/symbols/custom-marker.png
     - assets/style.json
     - assets/sydney.png
 
