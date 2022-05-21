@@ -59,7 +59,8 @@ class LayerState extends State {
   }
 
   void _onStyleLoadedCallback() async {
-    await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+    await addImageFromAsset(
+        "custom-marker", "assets/symbols/custom-marker.png");
     await controller.addGeoJsonSource("fills", _fills);
     await controller.addGeoJsonSource("points", _points);
     await controller.addGeoJsonSource("moving", _movingFeature(0));
