@@ -59,7 +59,8 @@ class FullMapState extends State<FullMap> {
         "watercolor", "watercolor", RasterLayerProperties());
   }
 
-  static Future<void> addGeojsonCluster(MaplibreMapController controller) async {
+  static Future<void> addGeojsonCluster(
+      MaplibreMapController controller) async {
     await controller.addSource(
         "earthquakes",
         GeojsonSourceProperties(
@@ -185,19 +186,21 @@ class FullMapState extends State<FullMap> {
       // Using the raw github file version of MaplibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
       // otherwise the map will not update
-      baseStyle: "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+      baseStyle:
+          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
       addDetails: addDem,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 8),
     ),
     StyleInfo(
       name: "Geojson cluster",
-      baseStyle:  MaplibreStyles.DEMO,
+      baseStyle: MaplibreStyles.DEMO,
       addDetails: addGeojsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
     StyleInfo(
       name: "Raster",
-      baseStyle: "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+      baseStyle:
+          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
       addDetails: addRaster,
       position: CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
@@ -211,7 +214,8 @@ class FullMapState extends State<FullMap> {
     if (kIsWeb)
       StyleInfo(
         name: "Video",
-        baseStyle: "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+        baseStyle:
+            "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
         addDetails: addVideo,
         position: CameraPosition(
             target: LatLng(37.562984, -122.514426), zoom: 17, bearing: -96),
