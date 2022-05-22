@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'page.dart';
@@ -33,6 +35,7 @@ class LineBodyState extends State<LineBody> {
   MaplibreMapController? controller;
   int _lineCount = 0;
   Line? _selectedLine;
+  final String _linePatternImage = "assets/fill/cat_silhouette_pattern.png";
 
   void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
@@ -43,6 +46,13 @@ class LineBodyState extends State<LineBody> {
   void dispose() {
     controller?.onLineTapped.remove(_onLineTapped);
     super.dispose();
+  }
+
+  /// Adds an asset image to the currently displayed style
+  Future<void> addImageFromAsset(String name, String assetName) async {
+    final ByteData bytes = await rootBundle.load(assetName);
+    final Uint8List list = bytes.buffer.asUint8List();
+    return controller!.addImage(name, list);
   }
 
   _onLineTapped(Line line) async {
@@ -99,6 +109,14 @@ class LineBodyState extends State<LineBody> {
     });
   }
 
+  Future<void> _changeLinePattern() async {
+    String? current =
+        _selectedLine!.options.linePattern == null ? "assetImage" : null;
+    await _updateSelectedLine(
+      LineOptions(linePattern: current),
+    );
+  }
+
   Future<void> _changeAlpha() async {
     double? current = _selectedLine!.options.lineOpacity;
     if (current == null) {
@@ -123,6 +141,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   _onStyleLoadedCallback() async {
+    addImageFromAsset("assetImage", _linePatternImage);
     await controller!.addLine(
       LineOptions(
         geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],
@@ -176,6 +195,12 @@ class LineBodyState extends State<LineBody> {
                               : () async {
                                   await _move();
                                 },
+                        ),
+                        TextButton(
+                          child: const Text('change line-pattern'),
+                          onPressed: (_selectedLine == null)
+                              ? null
+                              : _changeLinePattern,
                         ),
                       ],
                     ),
