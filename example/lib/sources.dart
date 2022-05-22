@@ -206,7 +206,8 @@ class FullMapState extends State<FullMap> {
     ),
     StyleInfo(
       name: "Image",
-      baseStyle: MaplibreStyles.DEMO,
+      baseStyle:
+          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json?",
       addDetails: addImage,
       position: CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
