@@ -24,6 +24,7 @@ import 'offline_regions.dart';
 import 'custom_marker.dart';
 import 'place_batch.dart';
 import 'layer.dart';
+import 'sources.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
@@ -42,7 +43,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   AnnotationOrderPage(),
   CustomMarkerPage(),
   BatchAddPage(),
-  ClickAnnotationPage()
+  ClickAnnotationPage(),
+  Sources()
 ];
 
 class MapsDemo extends StatelessWidget {
