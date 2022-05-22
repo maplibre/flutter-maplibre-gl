@@ -159,18 +159,19 @@ class FullMapState extends State<FullMap> {
   }
 
   static Future<void> addDem(MaplibreMapController controller) async {
-    await controller.addSource(
-        "dem",
-        RasterDemSourceProperties(
-            url: "mapbox://mapbox.mapbox-terrain-dem-v1"));
+    // TODO: adapt example?
+    // await controller.addSource(
+    //     "dem",
+    //     RasterDemSourceProperties(
+    //         url: "mapbox://mapbox.mapbox-terrain-dem-v1"));
 
-    await controller.addLayer(
-      "dem",
-      "hillshade",
-      HillshadeLayerProperties(
-          hillshadeExaggeration: 1,
-          hillshadeShadowColor: Colors.blue.toHexStringRGB()),
-    );
+    // await controller.addLayer(
+    //   "dem",
+    //   "hillshade",
+    //   HillshadeLayerProperties(
+    //       hillshadeExaggeration: 1,
+    //       hillshadeShadowColor: Colors.blue.toHexStringRGB()),
+    // );
   }
 
   static const _stylesAndLoaders = [
@@ -181,7 +182,7 @@ class FullMapState extends State<FullMap> {
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
     StyleInfo(
-      name: "Dem",
+      name: "Default style",
       // Using the raw github file version of MaplibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
       // otherwise the map will not update
