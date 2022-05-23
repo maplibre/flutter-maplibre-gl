@@ -19,6 +19,8 @@ jobs:
 
       - name: Install dartdoc
         run: flutter pub global activate dartdoc
+        
+      - run: flutter pub get
       
       - name: Generate docs
         run: flutter pub global run dartdoc
