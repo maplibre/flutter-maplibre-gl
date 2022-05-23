@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl_example/util.dart';
 
 import 'page.dart';
 
@@ -116,13 +117,15 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
     this.controllerTwo = controller;
   }
 
-  void onStyleLoaded(MaplibreMapController controller) {
+  void onStyleLoaded(MaplibreMapController controller) async {
+    await addImageFromAsset(
+        controller, "custom-marker", "assets/symbols/custom-marker.png");
     controller.addSymbol(SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "airport-15"));
+        iconImage: "custom-marker"));
     controller.addLine(
       LineOptions(
         geometry: [

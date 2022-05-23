@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'page.dart';
+import 'util.dart';
 
 class ClickAnnotationPage extends ExamplePage {
   ClickAnnotationPage()
@@ -72,7 +73,9 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     _showSnackBar('symbol', symbol.id);
   }
 
-  void _onStyleLoaded() {
+  void _onStyleLoaded() async {
+    await addImageFromAsset(
+        controller!, "custom-marker", "assets/symbols/custom-marker.png");
     controller!.addCircle(
       CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
@@ -92,7 +95,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     controller!.addSymbol(
       SymbolOptions(
           geometry: LatLng(-33.894372606072309, 151.17576679759523),
-          iconImage: "fast-food-15",
+          iconImage: "custom-marker", //"fast-food-15",
           iconSize: 2),
     );
     controller!.addLine(

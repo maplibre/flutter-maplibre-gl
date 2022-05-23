@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'page.dart';
+import 'util.dart';
 
 const fillOptions = [
   FillOptions(
@@ -106,7 +107,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
       if (option.geometry!.length > 1)
         for (final latLng in option.geometry!.last) {
           symbolOptions
-              .add(SymbolOptions(iconImage: 'hospital-11', geometry: latLng));
+              .add(SymbolOptions(iconImage: 'custom-marker', geometry: latLng));
         }
     }
     return symbolOptions;
@@ -146,6 +147,8 @@ class BatchAddBodyState extends State<BatchAddBody> {
             height: 200.0,
             child: MaplibreMap(
               onMapCreated: _onMapCreated,
+              onStyleLoadedCallback: () => addImageFromAsset(controller,
+                  "custom-marker", "assets/symbols/custom-marker.png"),
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-33.8, 151.511),
                 zoom: 8.2,

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:maplibre_gl_example/page.dart';
 
+import 'util.dart';
+
 class LayerPage extends ExamplePage {
   LayerPage() : super(const Icon(Icons.share), 'Layer');
 
@@ -57,6 +59,8 @@ class LayerState extends State {
   }
 
   void _onStyleLoadedCallback() async {
+    await addImageFromAsset(
+        controller, "custom-marker", "assets/symbols/custom-marker.png");
     await controller.addGeoJsonSource("points", _points);
     await controller.addGeoJsonSource("moving", _movingFeature(0));
 
@@ -107,7 +111,7 @@ class LayerState extends State {
       "points",
       "symbols",
       SymbolLayerProperties(
-        iconImage: "{type}-15",
+        iconImage: "custom-marker", //  "{type}-15",
         iconSize: 2,
         iconAllowOverlap: true,
       ),
@@ -125,7 +129,7 @@ class LayerState extends State {
             Expressions.literal,
             [0, 2]
           ],
-          iconImage: "bicycle-15",
+          iconImage: "custom-marker", // "bicycle-15",
           iconSize: 2,
           iconAllowOverlap: true,
           textAllowOverlap: true,
