@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'page.dart';
+import 'util.dart';
 
 class AnnotationOrderPage extends ExamplePage {
   AnnotationOrderPage()
@@ -109,14 +110,16 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     this.controllerTwo = controller;
   }
 
-  void onStyleLoaded(MaplibreMapController controller) {
+  void onStyleLoaded(MaplibreMapController controller) async {
+    await addImageFromAsset(
+        controller, "custom-marker", "assets/symbols/custom-marker.png");
     controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "airport-15",
+        iconImage: "custom-marker", // "airport-15",
       ),
     );
     controller.addLine(

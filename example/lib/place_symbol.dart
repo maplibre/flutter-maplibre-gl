@@ -46,6 +46,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _onStyleLoaded() {
+    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
     addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
     addImageFromUrl(
         "networkImage", Uri.parse("https://via.placeholder.com/50"));
@@ -112,7 +113,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return iconImage == 'customFont'
         ? SymbolOptions(
             geometry: geometry,
-            iconImage: 'airport-15',
+            iconImage: 'custom-marker', //'airport-15',
             fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
             textField: 'Airport',
             textSize: 12.5,
@@ -306,14 +307,15 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       children: <Widget>[
                         TextButton(
                           child: const Text('add'),
-                          onPressed: () =>
-                              (_symbolCount == 12) ? null : _add("airport-15"),
+                          onPressed: () => (_symbolCount == 12)
+                              ? null
+                              : _add("custom-marker"),
                         ),
                         TextButton(
                           child: const Text('add all'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _addAll("airport-15"),
+                              : _addAll("custom-marker"),
                         ),
                         TextButton(
                           child: const Text('add (custom icon)'),

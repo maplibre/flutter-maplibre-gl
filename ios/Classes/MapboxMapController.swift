@@ -571,10 +571,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: String] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             addSymbolLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
                 properties: properties
             )
             result(nil)
@@ -585,10 +587,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: String] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             addLineLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
                 properties: properties
             )
             result(nil)
@@ -599,10 +603,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: String] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             addFillLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
                 properties: properties
             )
             result(nil)
@@ -613,7 +619,37 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: String] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             addCircleLayer(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
+                properties: properties
+            )
+            result(nil)
+
+        case "hillshadeLayer#add":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: String] else { return }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            addHillshadeLayer(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                properties: properties
+            )
+            result(nil)
+
+        case "rasterLayer#add":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: String] else { return }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            addRasterLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
@@ -882,7 +918,14 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let geojson = arguments["geojson"] as? String else { return }
-            addSource(sourceId: sourceId, geojson: geojson)
+            addSourceGeojson(sourceId: sourceId, geojson: geojson)
+            result(nil)
+
+        case "style#addSource":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
+            addSource(sourceId: sourceId, properties: properties)
             result(nil)
 
         case "source#setGeoJson":
@@ -1196,6 +1239,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         properties: [String: String]
     ) {
         if let style = mapView.style {
@@ -1205,6 +1249,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                     symbolLayer: layer,
                     properties: properties
                 )
+                if let sourceLayerIdentifier = sourceLayerIdentifier {
+                    layer.sourceLayerIdentifier = sourceLayerIdentifier
+                }
                 if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
                     style.insertLayer(layer, below: belowLayer)
                 } else {
@@ -1219,12 +1266,16 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         properties: [String: String]
     ) {
         if let style = mapView.style {
             if let source = style.source(withIdentifier: sourceId) {
                 let layer = MGLLineStyleLayer(identifier: layerId, source: source)
                 LayerPropertyConverter.addLineProperties(lineLayer: layer, properties: properties)
+                if let sourceLayerIdentifier = sourceLayerIdentifier {
+                    layer.sourceLayerIdentifier = sourceLayerIdentifier
+                }
                 if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
                     style.insertLayer(layer, below: belowLayer)
                 } else {
@@ -1239,12 +1290,16 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         properties: [String: String]
     ) {
         if let style = mapView.style {
             if let source = style.source(withIdentifier: sourceId) {
                 let layer = MGLFillStyleLayer(identifier: layerId, source: source)
                 LayerPropertyConverter.addFillProperties(fillLayer: layer, properties: properties)
+                if let sourceLayerIdentifier = sourceLayerIdentifier {
+                    layer.sourceLayerIdentifier = sourceLayerIdentifier
+                }
                 if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
                     style.insertLayer(layer, below: belowLayer)
                 } else {
@@ -1259,6 +1314,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         properties: [String: String]
     ) {
         if let style = mapView.style {
@@ -1268,12 +1324,101 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                     circleLayer: layer,
                     properties: properties
                 )
+                if let sourceLayerIdentifier = sourceLayerIdentifier {
+                    layer.sourceLayerIdentifier = sourceLayerIdentifier
+                }
                 if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
                     style.insertLayer(layer, below: belowLayer)
                 } else {
                     style.addLayer(layer)
                 }
                 featureLayerIdentifiers.insert(layerId)
+            }
+        }
+    }
+
+    func addHillshadeLayer(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        properties: [String: String]
+    ) {
+        if let style = mapView.style {
+            if let source = style.source(withIdentifier: sourceId) {
+                let layer = MGLHillshadeStyleLayer(identifier: layerId, source: source)
+                LayerPropertyConverter.addHillshadeProperties(
+                    hillshadeLayer: layer,
+                    properties: properties
+                )
+                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                    style.insertLayer(layer, below: belowLayer)
+                } else {
+                    style.addLayer(layer)
+                }
+                featureLayerIdentifiers.insert(layerId)
+            }
+        }
+    }
+
+    func addRasterLayer(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        properties: [String: String]
+    ) {
+        if let style = mapView.style {
+            if let source = style.source(withIdentifier: sourceId) {
+                let layer = MGLRasterStyleLayer(identifier: layerId, source: source)
+                LayerPropertyConverter.addRasterProperties(
+                    rasterLayer: layer,
+                    properties: properties
+                )
+                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                    style.insertLayer(layer, below: belowLayer)
+                } else {
+                    style.addLayer(layer)
+                }
+                featureLayerIdentifiers.insert(layerId)
+            }
+        }
+    }
+
+    func addSource(sourceId: String, properties: [String: Any]) {
+        if let style = mapView.style, let type = properties["type"] as? String {
+            var source: MGLSource?
+
+            switch type {
+            case "vector":
+                source = SourcePropertyConverter.buildVectorTileSource(
+                    identifier: sourceId,
+                    properties: properties
+                )
+            case "raster":
+                source = SourcePropertyConverter.buildRasterTileSource(
+                    identifier: sourceId,
+                    properties: properties
+                )
+            case "raster-dem":
+                source = SourcePropertyConverter.buildRasterDemSource(
+                    identifier: sourceId,
+                    properties: properties
+                )
+            case "image":
+                source = SourcePropertyConverter.buildImageSource(
+                    identifier: sourceId,
+                    properties: properties
+                )
+            case "geojson":
+                source = SourcePropertyConverter.buildShapeSource(
+                    identifier: sourceId,
+                    properties: properties
+                )
+            default:
+                // unsupported source type
+                source = nil
+            }
+            if let source = source {
+                style.addSource(source)
             }
         }
     }
@@ -1308,7 +1453,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         }
     }
 
-    func addSource(sourceId: String, geojson: String) {
+    func addSourceGeojson(sourceId: String, geojson: String) {
         do {
             let parsed = try MGLShape(
                 data: geojson.data(using: .utf8)!,

@@ -302,12 +302,13 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: [belowLayerId] is currently ignored on the web
   Future<void> addSymbolLayer(
       String sourceId, String layerId, SymbolLayerProperties properties,
-      {String? belowLayerId}) async {
+      {String? belowLayerId, String? sourceLayer}) async {
     await _mapboxGlPlatform.addSymbolLayer(
       sourceId,
       layerId,
       properties.toJson(),
       belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
     );
   }
 
@@ -319,12 +320,13 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: [belowLayerId] is currently ignored on the web
   Future<void> addLineLayer(
       String sourceId, String layerId, LineLayerProperties properties,
-      {String? belowLayerId}) async {
+      {String? belowLayerId, String? sourceLayer}) async {
     await _mapboxGlPlatform.addLineLayer(
       sourceId,
       layerId,
       properties.toJson(),
       belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
     );
   }
 
@@ -336,12 +338,13 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: [belowLayerId] is currently ignored on the web
   Future<void> addFillLayer(
       String sourceId, String layerId, FillLayerProperties properties,
-      {String? belowLayerId}) async {
+      {String? belowLayerId, String? sourceLayer}) async {
     await _mapboxGlPlatform.addFillLayer(
       sourceId,
       layerId,
       properties.toJson(),
       belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
     );
   }
 
@@ -353,12 +356,43 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: [belowLayerId] is currently ignored on the web
   Future<void> addCircleLayer(
       String sourceId, String layerId, CircleLayerProperties properties,
-      {String? belowLayerId}) async {
+      {String? belowLayerId, String? sourceLayer}) async {
     await _mapboxGlPlatform.addCircleLayer(
       sourceId,
       layerId,
       properties.toJson(),
       belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  /// Add a circle layer to the map with the given properties
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Note: [belowLayerId] is currently ignored on the web
+  Future<void> addRasterLayer(
+      String sourceId, String layerId, RasterLayerProperties properties,
+      {String? belowLayerId, String? sourceLayer}) async {
+    await _mapboxGlPlatform.addRasterLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  Future<void> addHillshadeLayer(
+      String sourceId, String layerId, HillshadeLayerProperties properties,
+      {String? belowLayerId, String? sourceLayer}) async {
+    await _mapboxGlPlatform.addHillshadeLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
     );
   }
 
@@ -934,12 +968,6 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.addLayerBelow(layerId, sourceId, imageSourceId);
   }
 
-  /// Adds a Mapbox image layer to the map's style at render time. Only works for image sources!
-  @Deprecated("This method was renamed to addImageLayer for clarity.")
-  Future<void> addLayer(String imageLayerId, String imageSourceId) {
-    return _mapboxGlPlatform.addLayer(imageLayerId, imageSourceId);
-  }
-
   /// Adds a Mapbox image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
   @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
   Future<void> addLayerBelow(
@@ -975,6 +1003,39 @@ class MaplibreMapController extends ChangeNotifier {
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     return _mapboxGlPlatform.getMetersPerPixelAtLatitude(latitude);
+  }
+
+  /// Add a new source to the map
+  Future<void> addSource(String sourceid, SourceProperties properties) async {
+    return _mapboxGlPlatform.addSource(sourceid, properties);
+  }
+
+  Future<void> addLayer(
+      String sourceId, String layerId, LayerProperties properties,
+      {String? belowLayerId,
+      bool enableInteraction = true,
+      String? sourceLayer}) async {
+    if (properties is FillLayerProperties) {
+      addFillLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else if (properties is LineLayerProperties) {
+      addLineLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else if (properties is SymbolLayerProperties) {
+      addSymbolLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else if (properties is CircleLayerProperties) {
+      addCircleLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else if (properties is RasterLayerProperties) {
+      addRasterLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else if (properties is HillshadeLayerProperties) {
+      addHillshadeLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId, sourceLayer: sourceLayer);
+    } else {
+      throw UnimplementedError("Unknown layer type $properties");
+    }
   }
 
   @override

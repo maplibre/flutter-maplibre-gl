@@ -39,7 +39,14 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         Line,
         LineOptions,
         Fill,
-        FillOptions;
+        FillOptions,
+        SourceProperties,
+        RasterSourceProperties,
+        VectorSourceProperties,
+        RasterDemSourceProperties,
+        GeojsonSourceProperties,
+        VideoSourceProperties,
+        ImageSourceProperties;
 
 part 'src/controller.dart';
 part 'src/mapbox_map.dart';
