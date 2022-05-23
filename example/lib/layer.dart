@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:maplibre_gl_example/page.dart';
 
+import 'util.dart';
+
 class LayerPage extends ExamplePage {
   LayerPage() : super(const Icon(Icons.share), 'Layer');
 
@@ -60,7 +62,7 @@ class LayerState extends State {
 
   void _onStyleLoadedCallback() async {
     await addImageFromAsset(
-        "custom-marker", "assets/symbols/custom-marker.png");
+        controller, "custom-marker", "assets/symbols/custom-marker.png");
     await controller.addGeoJsonSource("points", _points);
     await controller.addGeoJsonSource("moving", _movingFeature(0));
 
@@ -144,13 +146,6 @@ class LayerState extends State {
   void dispose() {
     timer?.cancel();
     super.dispose();
-  }
-
-  /// Adds an asset image to the currently displayed style
-  Future<void> addImageFromAsset(String name, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
-    return controller.addImage(name, list);
   }
 }
 
