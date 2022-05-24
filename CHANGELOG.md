@@ -1,3 +1,10 @@
+## 0.15.1, May 24, 2022
+
+* cherry-picked all commits from upstream up to [upstream release 0.15.0](https://github.com/flutter-mapbox-gl/maps/releases/tag/0.15.0)
+* improved documentation
+* betted adapted the example app to MapLibre
+* hide logo on Android/iOS to match web
+
 ## 0.15.0, Oct 26, 2021
 
 * Fix bug when changing line color (see #448) by @vberthet in https://github.com/m0nac0/flutter-maplibre-gl/pull/15
