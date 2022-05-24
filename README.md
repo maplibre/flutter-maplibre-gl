@@ -38,6 +38,7 @@ Compared to flutter-mapbox-gl, the only breaking API changes are:
 
 ### iOS
 To use this plugin with iOS, you may need to add two lines to your Podfile, as shown in the example app: https://github.com/m0nac0/flutter-maplibre-gl/blob/d23b2297f775ed6e686c31ee2e2318cc28c73a5e/example/ios/Podfile#L5-L6
+... and run `pod update`
 
 ## Supported API
 
