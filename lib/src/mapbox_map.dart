@@ -30,7 +30,7 @@ class MaplibreMap extends StatefulWidget {
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
-    this.attributionButtonPosition,
+    this.attributionButtonPosition = AttributionButtonPosition.BottomRight,
     this.attributionButtonMargins,
     this.onMapClick,
     this.onUserLocationUpdated,
