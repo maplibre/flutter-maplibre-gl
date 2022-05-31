@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
@@ -63,7 +63,7 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
       - name: Cache Flutter
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: /Users/runner/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
@@ -116,7 +116,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Flutter
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.3
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
