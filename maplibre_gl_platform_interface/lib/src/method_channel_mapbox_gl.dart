@@ -208,9 +208,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
-  Future<bool?> animateCamera(cameraUpdate) async {
+  Future<bool?> animateCamera(cameraUpdate, {Duration? duration}) async {
     return await _channel.invokeMethod('camera#animate', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
+      'duration': duration?.inMilliseconds,
     });
   }
 
