@@ -56,24 +56,26 @@ packages:
   mapbox_gl_dart:
     dependency: transitive
     description:
-      name: mapbox_gl_dart
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.2.0-nullsafety.0"
+      path: "."
+      ref: main
+      resolved-ref: ee7f888577bcac03a03f16596616229141ffec98
+      url: "https://github.com/m0nac0/maplibre-gl-dart.git"
+    source: git
+    version: "0.2.1"
   maplibre_gl_platform_interface:
     dependency: "direct main"
     description:
       path: maplibre_gl_platform_interface
       relative: true
     source: path
-    version: "0.15.0"
+    version: "0.15.1"
   maplibre_gl_web:
     dependency: "direct main"
     description:
       path: maplibre_gl_web
       relative: true
     source: path
-    version: "0.15.0"
+    version: "0.15.1"
   material_color_utilities:
     dependency: transitive
     description:
