@@ -28,17 +28,16 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
     .logoEnabled(false);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+  private boolean dragEnabled = true;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private String styleString = "https://demotiles.maplibre.org/style.json";
-  private List<String> annotationOrder = new ArrayList();
-  private List<String> annotationConsumeTapEvents = new ArrayList();
   private LatLngBounds bounds = null;
 
   MapboxMapController build(
     int id, Context context, BinaryMessenger messenger, MapboxMapsPlugin.LifecycleProvider lifecycleProvider) {
     final MapboxMapController controller =
-      new MapboxMapController(id, context,  messenger, lifecycleProvider, options, styleString, annotationOrder, annotationConsumeTapEvents);
+      new MapboxMapController(id, context,  messenger, lifecycleProvider, options, styleString, dragEnabled);
     controller.init();
     controller.setMyLocationEnabled(myLocationEnabled);
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
@@ -211,12 +210,7 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
     }
   }
 
-  public void setAnnotationOrder(List<String> annotations) {
-    this.annotationOrder = annotations;
+  public void setDragEnabled(boolean enabled){
+    this.dragEnabled = enabled; 
   }
-
-  public void setAnnotationConsumeTapEvents(List<String> annotations) {
-    this.annotationConsumeTapEvents = annotations;
-  }
-
 }

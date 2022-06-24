@@ -24,6 +24,7 @@ class MaplibreMap extends StatefulWidget {
     this.zoomGesturesEnabled = true,
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
+    this.dragEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.None,
@@ -81,6 +82,12 @@ class MaplibreMap extends StatefulWidget {
 
   /// True if the map should show a compass when rotated.
   final bool compassEnabled;
+
+  /// True if drag functionality should be enabled.
+  ///
+  /// Disable to avoid performance issues that from the drag event listeners.
+  /// Biggest impact in android
+  final bool dragEnabled;
 
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
@@ -218,18 +225,14 @@ class _MaplibreMapState extends State<MaplibreMap> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> annotationOrder =
-        widget.annotationOrder.map((e) => e.toString()).toList();
-    assert(annotationOrder.toSet().length == annotationOrder.length,
+    assert(
+        widget.annotationOrder.toSet().length == widget.annotationOrder.length,
         "annotationOrder must not have duplicate types");
-    final List<String> annotationConsumeTapEvents =
-        widget.annotationConsumeTapEvents.map((e) => e.toString()).toList();
-
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'options': _MapboxMapOptions.fromWidget(widget).toMap(),
-      'annotationOrder': annotationOrder,
-      'annotationConsumeTapEvents': annotationConsumeTapEvents,
+      //'onAttributionClickOverride': widget.onAttributionClick != null,
+      'dragEnabled': widget.dragEnabled
     };
     return _mapboxGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
@@ -285,7 +288,9 @@ class _MaplibreMapState extends State<MaplibreMap> {
         onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
         onCameraTrackingChanged: widget.onCameraTrackingChanged,
         onCameraIdle: widget.onCameraIdle,
-        onMapIdle: widget.onMapIdle);
+        onMapIdle: widget.onMapIdle,
+        annotationOrder: widget.annotationOrder,
+        annotationConsumeTapEvents: widget.annotationConsumeTapEvents,);
     await _mapboxGlPlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {

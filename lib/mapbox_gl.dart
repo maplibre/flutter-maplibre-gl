@@ -34,6 +34,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         MyLocationRenderMode,
         CompassViewPosition,
         AttributionButtonPosition,
+        Annotation,
         Circle,
         CircleOptions,
         Line,
@@ -56,3 +57,5 @@ part 'src/download_region_status.dart';
 part 'src/layer_expressions.dart';
 part 'src/layer_properties.dart';
 part 'src/color_tools.dart';
+part 'src/annotation_manager.dart';
+part 'src/util.dart';

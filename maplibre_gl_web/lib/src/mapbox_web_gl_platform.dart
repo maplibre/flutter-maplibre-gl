@@ -1,14 +1,10 @@
-/* part of maplibre_gl_web;
+part of maplibre_gl_web;
 
 //TODO Url taken from the Maptiler tutorial; use official and stable release once available
 final _maplibreGlCssUrl =
     'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
 
-<<<<<<< HEAD:maplibre_gl_web/lib/src/mapbox_map_controller.dart
 class MaplibreMapController extends MapLibreGlPlatform
-=======
-class MapboxWebGlPlatform extends MapboxGlPlatform
->>>>>>> 3aaa705... Annotation manager moved to dart (#779):maplibre_gl_web/lib/src/mapbox_web_gl_platform.dart
     implements MapboxMapOptionsSink {
   late DivElement _mapElement;
 
@@ -58,15 +54,10 @@ class MapboxWebGlPlatform extends MapboxGlPlatform
     await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
-<<<<<<< HEAD:maplibre_gl_web/lib/src/mapbox_map_controller.dart
-=======
 
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-      if (_creationParams.containsKey('accessToken')) {
-        Mapbox.accessToken = _creationParams['accessToken'];
-      }
->>>>>>> 3aaa705... Annotation manager moved to dart (#779):maplibre_gl_web/lib/src/mapbox_web_gl_platform.dart
+ 
       _map = MapboxMap(
         MapOptions(
           container: _mapElement,
@@ -872,4 +863,3 @@ class MapboxWebGlPlatform extends MapboxGlPlatform
     }
   }
 }
- */
