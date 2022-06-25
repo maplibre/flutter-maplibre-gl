@@ -57,7 +57,6 @@ class MaplibreMapController extends MapLibreGlPlatform
 
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
- 
       _map = MapboxMap(
         MapOptions(
           container: _mapElement,
