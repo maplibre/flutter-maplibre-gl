@@ -53,15 +53,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.3"
-  mapbox_gl_dart:
+  maplibre_gl_dart:
     dependency: transitive
     description:
       path: "."
-      ref: main
-      resolved-ref: ee7f888577bcac03a03f16596616229141ffec98
+      ref: "0.2.2"
+      resolved-ref: "24a48ecec0d07e02a0c51ced68a05f543d871583"
       url: "https://github.com/m0nac0/maplibre-gl-dart.git"
     source: git
-    version: "0.2.1"
+    version: "0.2.2"
   maplibre_gl_platform_interface:
     dependency: "direct main"
     description:
