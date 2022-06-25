@@ -235,7 +235,7 @@ class MapboxWebGlPlatform extends MapboxGlPlatform
         ], options)
         .map((feature) => {
               'type': 'Feature',
-              'id': feature.id as int?,
+              'id': feature.id,
               'geometry': {
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
