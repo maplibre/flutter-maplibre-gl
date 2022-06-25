@@ -2,7 +2,7 @@
 
 //TODO Url taken from the Maptiler tutorial; use official and stable release once available
 final _maplibreGlCssUrl =
-    'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
+    'https://cdn.maptiler.com/maplibre-gl-js/v2.2.0-pre.2/maplibre-gl.css';
 
 <<<<<<< HEAD:maplibre_gl_web/lib/src/mapbox_map_controller.dart
 class MaplibreMapController extends MapLibreGlPlatform
