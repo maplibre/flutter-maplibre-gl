@@ -233,14 +233,6 @@ class MaplibreMapController extends ChangeNotifier {
 
   final MapLibreGlPlatform _mapboxGlPlatform; //ignore: unused_field
 
-  Widget buildView(
-      Map<String, dynamic> creationParams,
-      OnPlatformViewCreatedCallback onPlatformViewCreated,
-      Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
-    return _mapboxGlPlatform.buildView(
-        creationParams, onPlatformViewCreated, gestureRecognizers);
-  }
-
   /// Updates configuration options of the map user interface.
   ///
   /// Change listeners are notified once the update has been made on the
