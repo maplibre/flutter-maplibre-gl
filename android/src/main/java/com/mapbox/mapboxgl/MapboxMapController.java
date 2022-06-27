@@ -222,6 +222,9 @@ final class MapboxMapController
 
   @Override
   public void setStyleString(String styleString) {
+    // clear old layer id from the location Component
+    clearLocationComponentLayer();
+
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
       Log.e(TAG, "setStyleString - string empty or null");
@@ -248,11 +251,13 @@ final class MapboxMapController
         public void onStyleLoaded(@NonNull Style style) {
           MapboxMapController.this.style = style;
 
-          if (myLocationEnabled) {
-            if (hasLocationPermission()) {
-              updateMyLocationEnabled();
-            }
-          }
+          // commented out while cherry-picking upstream956
+          // if (myLocationEnabled) {
+          //   if (hasLocationPermission()) {
+          //     updateMyLocationEnabled();
+          //   }
+          // }
+          updateMyLocationEnabled();
 
           if (null != bounds) {
             mapboxMap.setLatLngBoundsForCameraTarget(bounds);
@@ -270,22 +275,46 @@ final class MapboxMapController
   private void enableLocationComponent(@NonNull Style style) {
     if (hasLocationPermission()) {
       locationEngine = LocationEngineProvider.getBestLocationEngine(context);
-      LocationComponentOptions locationComponentOptions =
-          LocationComponentOptions.builder(context).trackingGesturesManagement(true).build();
       locationComponent = mapboxMap.getLocationComponent();
-      locationComponent.activateLocationComponent(context, style, locationComponentOptions);
+      locationComponent.activateLocationComponent(
+          context, style, buildLocationComponentOptions(style));
       locationComponent.setLocationComponentEnabled(true);
       // locationComponent.setRenderMode(RenderMode.COMPASS); // remove or keep default?
       locationComponent.setLocationEngine(locationEngine);
       locationComponent.setMaxAnimationFps(30);
       updateMyLocationTrackingMode();
-      setMyLocationTrackingMode(this.myLocationTrackingMode);
       updateMyLocationRenderMode();
-      setMyLocationRenderMode(this.myLocationRenderMode);
       locationComponent.addOnCameraTrackingChangedListener(this);
     } else {
       Log.e(TAG, "missing location permissions");
     }
+  }
+
+  private void updateLocationLocationComponentLayer() {
+    if (locationComponent != null && style != null) {
+      locationComponent.applyStyle(buildLocationComponentOptions(style));
+    }
+  }
+
+  private void clearLocationComponentLayer() {
+    if (locationComponent != null) {
+      locationComponent.applyStyle(buildLocationComponentOptions(null));
+    }
+  }
+
+  private LocationComponentOptions buildLocationComponentOptions(Style style) {
+    final LocationComponentOptions.Builder optionsBuilder =
+        LocationComponentOptions.builder(context);
+    optionsBuilder.trackingGesturesManagement(true);
+
+    if (style != null) {
+      final List<Layer> layers = style.getLayers();
+      if (layers.size() > 0) {
+        optionsBuilder.layerAbove(layers.get(layers.size() - 1).getId());
+        Log.i(TAG, layers.get(layers.size() - 1).getId());
+      }
+    }
+    return optionsBuilder.build();
   }
 
   private void onUserLocationUpdate(Location location) {
@@ -842,6 +871,8 @@ final class MapboxMapController
               properties,
               enableInteraction,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }
@@ -866,6 +897,8 @@ final class MapboxMapController
               properties,
               enableInteraction,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }
@@ -890,6 +923,8 @@ final class MapboxMapController
               properties,
               enableInteraction,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }
@@ -914,6 +949,8 @@ final class MapboxMapController
               properties,
               enableInteraction,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }
@@ -934,6 +971,8 @@ final class MapboxMapController
               belowLayerId,
               properties,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }
@@ -954,6 +993,8 @@ final class MapboxMapController
               belowLayerId,
               properties,
               null);
+          updateLocationLocationComponentLayer();
+
           result.success(null);
           break;
         }

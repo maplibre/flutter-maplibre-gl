@@ -53,7 +53,6 @@ final List<ExamplePage> _allPages = <ExamplePage>[
 ];
 
 class MapsDemo extends StatefulWidget {
-
   @override
   State<MapsDemo> createState() => _MapsDemoState();
 }
