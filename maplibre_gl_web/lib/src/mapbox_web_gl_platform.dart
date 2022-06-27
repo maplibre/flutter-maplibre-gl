@@ -628,6 +628,11 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
+  Future<void> setFilter(String layerId, dynamic filter) async {
+    _map.setFilter(layerId, filter);
+  }
+
+  @override
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId}) async {
     final data = _makeFeatureCollection(geojson);

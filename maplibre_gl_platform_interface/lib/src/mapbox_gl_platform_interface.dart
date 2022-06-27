@@ -83,6 +83,8 @@ abstract class MapLibreGlPlatform {
 
   Future<void> removeLayer(String imageLayerId);
 
+  Future<void> setFilter(String layerId, dynamic filter);
+
   Future<Point> toScreenLocation(LatLng latLng);
 
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs);
