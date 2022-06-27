@@ -38,6 +38,7 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
@@ -528,6 +529,23 @@ final class MapboxMapController
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
             result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+          }
+          break;
+        }
+      case "map#updateContentInsets":
+        {
+          HashMap<String, Object> insets = call.argument("bounds");
+          final CameraUpdate cameraUpdate =
+              CameraUpdateFactory.paddingTo(
+                  Convert.toPixels(insets.get("left"), density),
+                  Convert.toPixels(insets.get("top"), density),
+                  Convert.toPixels(insets.get("right"), density),
+                  Convert.toPixels(insets.get("bottom"), density));
+
+          if (call.argument("animated")) {
+            animateCamera(cameraUpdate, null, result);
+          } else {
+            moveCamera(cameraUpdate, result);
           }
           break;
         }
@@ -1059,6 +1077,58 @@ final class MapboxMapController
     Lifecycle lifecycle = lifecycleProvider.getLifecycle();
     if (lifecycle != null) {
       lifecycle.removeObserver(this);
+    }
+  }
+
+  private void moveCamera(CameraUpdate cameraUpdate, MethodChannel.Result result) {
+    if (cameraUpdate != null) {
+      // camera transformation not handled yet
+      mapboxMap.moveCamera(
+          cameraUpdate,
+          new OnCameraMoveFinishedListener() {
+            @Override
+            public void onFinish() {
+              super.onFinish();
+              result.success(true);
+            }
+
+            @Override
+            public void onCancel() {
+              super.onCancel();
+              result.success(false);
+            }
+          });
+
+      // moveCamera(cameraUpdate);
+    } else {
+      result.success(false);
+    }
+  }
+
+  private void animateCamera(
+      CameraUpdate cameraUpdate, Integer duration, MethodChannel.Result result) {
+    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+        new OnCameraMoveFinishedListener() {
+          @Override
+          public void onFinish() {
+            super.onFinish();
+            result.success(true);
+          }
+
+          @Override
+          public void onCancel() {
+            super.onCancel();
+            result.success(false);
+          }
+        };
+    if (cameraUpdate != null && duration != null) {
+      // camera transformation not handled yet
+      mapboxMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
+    } else if (cameraUpdate != null) {
+      // camera transformation not handled yet
+      mapboxMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
+    } else {
+      result.success(false);
     }
   }
 
