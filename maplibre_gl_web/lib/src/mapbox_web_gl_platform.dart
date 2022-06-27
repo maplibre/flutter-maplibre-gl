@@ -37,12 +37,6 @@ class MaplibreMapController extends MapLibreGlPlatform
         viewType: 'plugins.flutter.io/mapbox_gl_${this.hashCode}');
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _map.remove();
-  }
-
   void _registerViewFactory(Function(int) callback, int identifier) {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
@@ -304,7 +298,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onStyleLoaded(_) {
     _mapReady = true;
-    _map.resize();
+
     onMapStyleLoadedPlatform(null);
   }
 
