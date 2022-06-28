@@ -1,3 +1,7 @@
+## 0.16.0, Jun 28, 2022
+* cherry-picked all commits from upstream up to [https://github.com/flutter-mapbox-gl/maps/commit/3496907955cd4b442e4eb905d67e8d46692174f1), including up to release 0.16.0 from upstream
+* updated Maplibre GL JS for web
+
 ## 0.15.1, May 24, 2022
 
 * cherry-picked all commits from upstream up to [upstream release 0.15.0](https://github.com/flutter-mapbox-gl/maps/releases/tag/0.15.0)
