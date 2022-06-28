@@ -53,13 +53,6 @@ To use this plugin with iOS, you may need to add two lines to your Podfile, as s
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 
-## Running the example app
-
-- Install [Flutter](https://flutter.io/get-started/) and validate its installation with `flutter doctor`
-- Clone the repository with `git clone git@github.com:m0nac0/flutter-maplibre-gl.git`
-- Connect a mobile device or start an emulator, simulator or chrome
-- Run the app with `cd flutter-maplibre-gl/example && flutter packages get && flutter run`
-
 
 ## Map Styles
 
@@ -71,7 +64,7 @@ Map styles can be supplied by setting the `styleString` in the `MapOptions`. The
 4. Passing the raw JSON of the map style. This is only supported on Android.  
 
 ### Tile sources requiring an API key
-If your tile source requires an API key, we recomend directly specifying a source url with the API key included.
+If your tile source requires an API key, we recommend directly specifying a source url with the API key included.
 For example:
 
  `https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key={your_key}`
