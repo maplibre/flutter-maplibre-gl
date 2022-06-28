@@ -675,4 +675,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'geojsonFeature': jsonEncode(geojsonFeature)
     });
   }
+
+  @override
+  void forceResizeWebMap() {}
+
+  @override
+  void resizeWebMap() {}
 }

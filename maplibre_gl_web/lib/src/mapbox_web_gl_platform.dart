@@ -25,6 +25,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
+  Timer? lastResizeObserverTimer;
 
   @override
   Widget buildView(
@@ -48,8 +49,10 @@ class MaplibreMapController extends MapLibreGlPlatform
     ui.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/mapbox_gl_$identifier', (int viewId) {
       _mapElement = DivElement()
-        ..style.width = '100%'
-        ..style.height = '100%';
+        ..style.position = 'absolute'
+        ..style.top = '0'
+        ..style.bottom = '0'
+        ..style.width = '100%';
       callback(viewId);
       return _mapElement;
     });
@@ -60,7 +63,6 @@ class MaplibreMapController extends MapLibreGlPlatform
     await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
-
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
       _map = MapboxMap(
@@ -80,14 +82,29 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map.on('movestart', _onCameraMoveStarted);
       _map.on('move', _onCameraMove);
       _map.on('moveend', _onCameraIdle);
-      _map.on('resize', _onMapResize);
+      _map.on('resize', (_) => _onMapResize());
       _map.on('styleimagemissing', _loadFromAssets);
       if (_dragEnabled) {
         _map.on('mouseup', _onMouseUp);
         _map.on('mousemove', _onMouseMove);
       }
+
+      _initResizeObserver();
     }
     Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+  }
+
+  void _initResizeObserver() {
+    final resizeObserver = ResizeObserver((entries, observer) {
+      // The resize observer might be called a lot of times when the user resizes the browser window with the mouse for example.
+      // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
+      // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
+      lastResizeObserverTimer?.cancel();
+      lastResizeObserverTimer = Timer(Duration(milliseconds: 50), () {
+        _onMapResize();
+      });
+    });
+    resizeObserver.observe(document.body as Element);
   }
 
   void _loadFromAssets(Event event) async {
@@ -338,12 +355,12 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onStyleLoaded(_) {
     _mapReady = true;
-    _map.resize();
+    _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
 
-  void _onMapResize(Event e) {
-    Timer(Duration(microseconds: 10), () {
+  void _onMapResize() {
+    Timer(Duration(), () {
       var container = _map.getContainer();
       var canvas = _map.getCanvas();
       var widthMismatch = canvas.clientWidth != container.clientWidth;
@@ -946,5 +963,15 @@ class MaplibreMapController extends MapLibreGlPlatform
         source.setData(newData);
       }
     }
+  }
+
+  @override
+  void resizeWebMap() {
+    _onMapResize();
+  }
+
+  @override
+  void forceResizeWebMap() {
+    _map.resize();
   }
 }
