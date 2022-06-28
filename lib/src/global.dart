@@ -25,6 +25,15 @@ Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       },
     );
 
+Future<void> setHttpHeaders(Map<String, String> headers) {
+  return _globalChannel.invokeMethod(
+    'setHttpHeaders',
+    <String, dynamic>{
+      'headers': headers,
+    },
+  );
+}
+
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',

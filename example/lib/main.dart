@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -25,6 +28,8 @@ import 'custom_marker.dart';
 import 'place_batch.dart';
 import 'layer.dart';
 import 'sources.dart';
+
+import 'package:maplibre_gl/mapbox_gl.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
@@ -47,7 +52,33 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   Sources()
 ];
 
-class MapsDemo extends StatelessWidget {
+class MapsDemo extends StatefulWidget {
+  @override
+  State<MapsDemo> createState() => _MapsDemoState();
+}
+
+class _MapsDemoState extends State<MapsDemo> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  /// Determine the android version of the phone and turn off HybridComposition
+  /// on older sdk versions to improve performance for these
+  ///
+  /// !!! Hybrid composition is currently broken do no use !!!
+  Future<void> initHybridComposition() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkVersion = androidInfo.version.sdkInt;
+      if (sdkVersion != null && sdkVersion >= 29) {
+        MaplibreMap.useHybridComposition = true;
+      } else {
+        MaplibreMap.useHybridComposition = false;
+      }
+    }
+  }
+
   void _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb) {
       final location = Location();
