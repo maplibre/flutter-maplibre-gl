@@ -37,6 +37,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
         final double deltaLat = call.arguments['deltaLat'];
         final double deltaLng = call.arguments['deltaLng'];
+        final String eventType = call.arguments['eventType'];
 
         onFeatureDraggedPlatform({
           'id': id,
@@ -44,6 +45,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
           'origin': LatLng(originLat, originLng),
           'current': LatLng(currentLat, currentLng),
           'delta': LatLng(deltaLat, deltaLng),
+          'eventType': eventType,
         });
         break;
 
@@ -206,9 +208,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
-  Future<bool?> animateCamera(cameraUpdate) async {
+  Future<bool?> animateCamera(cameraUpdate, {Duration? duration}) async {
     return await _channel.invokeMethod('camera#animate', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
+      'duration': duration?.inMilliseconds,
     });
   }
 
@@ -531,6 +534,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('symbolLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -539,6 +543,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -552,6 +557,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('lineLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -560,6 +566,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -573,6 +580,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('circleLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -581,6 +589,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -594,6 +603,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     await _channel.invokeMethod('fillLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -602,6 +612,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
@@ -665,4 +676,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'geojsonFeature': jsonEncode(geojsonFeature)
     });
   }
+
+  @override
+  void forceResizeWebMap() {}
+
+  @override
+  void resizeWebMap() {}
 }

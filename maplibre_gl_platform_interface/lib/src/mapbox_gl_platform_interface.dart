@@ -48,12 +48,15 @@ abstract class MapLibreGlPlatform {
       OnPlatformViewCreatedCallback onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers);
   Future<CameraPosition?> updateMapOptions(Map<String, dynamic> optionsUpdate);
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate);
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration});
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode);
 
   Future<void> matchMapLanguageWithDeviceDefault();
+
+  void resizeWebMap();
+  void forceResizeWebMap();
 
   Future<void> updateContentInsets(EdgeInsets insets, bool animated);
   Future<void> setMapLanguage(String language);
@@ -109,6 +112,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addLineLayer(
@@ -117,6 +121,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addCircleLayer(
@@ -125,6 +130,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addFillLayer(
@@ -133,6 +139,7 @@ abstract class MapLibreGlPlatform {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction});
 
   Future<void> addRasterLayer(

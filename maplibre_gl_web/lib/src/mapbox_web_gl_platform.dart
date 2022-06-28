@@ -25,6 +25,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
+  Timer? lastResizeObserverTimer;
 
   @override
   Widget buildView(
@@ -48,8 +49,10 @@ class MaplibreMapController extends MapLibreGlPlatform
     ui.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/mapbox_gl_$identifier', (int viewId) {
       _mapElement = DivElement()
-        ..style.width = '100%'
-        ..style.height = '100%';
+        ..style.position = 'absolute'
+        ..style.top = '0'
+        ..style.bottom = '0'
+        ..style.width = '100%';
       callback(viewId);
       return _mapElement;
     });
@@ -60,7 +63,6 @@ class MaplibreMapController extends MapLibreGlPlatform
     await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
-
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
       _map = MapboxMap(
@@ -80,14 +82,29 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map.on('movestart', _onCameraMoveStarted);
       _map.on('move', _onCameraMove);
       _map.on('moveend', _onCameraIdle);
-      _map.on('resize', _onMapResize);
+      _map.on('resize', (_) => _onMapResize());
       _map.on('styleimagemissing', _loadFromAssets);
       if (_dragEnabled) {
         _map.on('mouseup', _onMouseUp);
         _map.on('mousemove', _onMouseMove);
       }
+
+      _initResizeObserver();
     }
     Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+  }
+
+  void _initResizeObserver() {
+    final resizeObserver = ResizeObserver((entries, observer) {
+      // The resize observer might be called a lot of times when the user resizes the browser window with the mouse for example.
+      // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
+      // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
+      lastResizeObserverTimer?.cancel();
+      lastResizeObserverTimer = Timer(Duration(milliseconds: 50), () {
+        _onMapResize();
+      });
+    });
+    resizeObserver.observe(document.body as Element);
   }
 
   void _loadFromAssets(Event event) async {
@@ -105,10 +122,36 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map.getCanvas().style.cursor = 'grabbing';
       var coords = e.lngLat;
       _dragOrigin = LatLng(coords.lat as double, coords.lng as double);
+
+      if (_draggedFeatureId != null) {
+        final current =
+            LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
+        final payload = {
+          'id': _draggedFeatureId,
+          'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+          'origin': _dragOrigin,
+          'current': current,
+          'delta': LatLng(0, 0),
+          'eventType': 'start'
+        };
+        onFeatureDraggedPlatform(payload);
+      }
     }
   }
 
   _onMouseUp(Event e) {
+    if (_draggedFeatureId != null) {
+      final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
+      final payload = {
+        'id': _draggedFeatureId,
+        'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+        'origin': _dragOrigin,
+        'current': current,
+        'delta': current - (_dragPrevious ?? _dragOrigin!),
+        'eventType': 'end'
+      };
+      onFeatureDraggedPlatform(payload);
+    }
     _draggedFeatureId = null;
     _dragPrevious = null;
     _dragOrigin = null;
@@ -124,6 +167,7 @@ class MaplibreMapController extends MapLibreGlPlatform
         'origin': _dragOrigin,
         'current': current,
         'delta': current - (_dragPrevious ?? _dragOrigin!),
+        'eventType': 'drag'
       };
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
@@ -148,9 +192,25 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate,
+      {Duration? duration}) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
-    _map.flyTo(cameraOptions);
+
+    final around = getProperty(cameraOptions, 'around');
+    final bearing = getProperty(cameraOptions, 'bearing');
+    final center = getProperty(cameraOptions, 'center');
+    final pitch = getProperty(cameraOptions, 'pitch');
+    final zoom = getProperty(cameraOptions, 'zoom');
+
+    _map.flyTo({
+      if (around.jsObject != null) 'around': around,
+      if (bearing != null) 'bearing': bearing,
+      if (center.jsObject != null) 'center': center,
+      if (pitch != null) 'pitch': pitch,
+      if (zoom != null) 'zoom': zoom,
+      if (duration != null) 'duration': duration.inMilliseconds,
+    });
+
     return true;
   }
 
@@ -311,12 +371,12 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onStyleLoaded(_) {
     _mapReady = true;
-    _map.resize();
+    _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
 
-  void _onMapResize(Event e) {
-    Timer(Duration(microseconds: 10), () {
+  void _onMapResize() {
+    Timer(Duration(), () {
       var container = _map.getContainer();
       var canvas = _map.getCanvas();
       var widthMismatch = canvas.clientWidth != container.clientWidth;
@@ -674,12 +734,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "circle",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
         enableInteraction: enableInteraction);
   }
 
@@ -690,12 +752,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "fill",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
         enableInteraction: enableInteraction);
   }
 
@@ -706,12 +770,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "line",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
         enableInteraction: enableInteraction);
   }
 
@@ -722,12 +788,14 @@ class MaplibreMapController extends MapLibreGlPlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     return _addLayer(sourceId, layerId, properties, "symbol",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
         enableInteraction: enableInteraction);
   }
 
@@ -767,6 +835,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom,
+      dynamic filter,
       required bool enableInteraction}) async {
     final layout = Map.fromEntries(
         properties.entries.where((entry) => isLayoutProperty(entry.key)));
@@ -782,6 +851,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       if (sourceLayer != null) 'source-layer': sourceLayer,
       if (minzoom != null) 'minzoom': minzoom,
       if (maxzoom != null) 'maxzoom': maxzoom,
+      if (filter != null) 'filter': filter,
     }, belowLayerId);
 
     if (enableInteraction) {
@@ -909,5 +979,15 @@ class MaplibreMapController extends MapLibreGlPlatform
         source.setData(newData);
       }
     }
+  }
+
+  @override
+  void resizeWebMap() {
+    _onMapResize();
+  }
+
+  @override
+  void forceResizeWebMap() {
+    _map.resize();
   }
 }
