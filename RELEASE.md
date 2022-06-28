@@ -22,6 +22,9 @@ dependency_overrides:
   mapbox_gl_platform_interface:
     path: ../mapbox_gl_platform_interface
 ```
+
+and for the maplibre git dependencies, change ref from `main` to `release-x.y.z`.
+
 Finally, create a Github release and git tag from the release branch.
 
-The only difference between the release branch and `main` directly after the release are the `dependency_overrides` (these are useful for development and should therefore only be removed in the release branches)
+The only difference between the release branch and `main` directly after the release are the `dependency_overrides` (these are useful for development and should therefore only be removed in the release branches) and the git ref for the intra-package dependencies.
