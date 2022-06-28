@@ -66,15 +66,19 @@ packages:
     dependency: "direct main"
     description:
       path: maplibre_gl_platform_interface
-      relative: true
-    source: path
+      ref: main
+      resolved-ref: "8a4d55c9c84e6182e27cd5248a98ace6656ec7b2"
+      url: "https://github.com/m0nac0/flutter-maplibre-gl.git"
+    source: git
     version: "0.15.1"
   maplibre_gl_web:
     dependency: "direct main"
     description:
       path: maplibre_gl_web
-      relative: true
-    source: path
+      ref: main
+      resolved-ref: "8a4d55c9c84e6182e27cd5248a98ace6656ec7b2"
+      url: "https://github.com/m0nac0/flutter-maplibre-gl.git"
+    source: git
     version: "0.15.1"
   material_color_utilities:
     dependency: transitive
@@ -132,4 +136,4 @@ packages:
     version: "5.1.0"
 sdks:
   dart: ">=2.14.0 <3.0.0"
-  flutter: ">=2.0.0"
+  flutter: ">=2.10.0"

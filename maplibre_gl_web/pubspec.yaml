@@ -27,9 +27,9 @@ dependencies:
       ref: 0.2.2
   image: ^3.0.2
 
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
+# dependency_overrides:
+  # maplibre_gl_platform_interface:
+  #   path: ../maplibre_gl_platform_interface
   #maplibre_gl_dart:
   #  path: ../../maplibre-gl-dart
 
