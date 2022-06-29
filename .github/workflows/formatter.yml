@@ -21,7 +21,7 @@ jobs:
           channel: ${{ env.FLUTTER_CHANNEL }}
       - name: format
         run: |
-          flutter format
+          flutter format .
           git config --global user.name "Format Bot"
           git config --global user.email "format-bot-flutter-maplibre-gl@localhost"
           git add 
