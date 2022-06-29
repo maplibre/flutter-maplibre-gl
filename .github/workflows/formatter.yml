@@ -20,11 +20,11 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
       - name: format
-        run:
+        run: |
           flutter format
           git config --global user.name "Format Bot"
           git config --global user.email "format-bot-flutter-maplibre-gl@localhost"
-          git add .
+          git add 
           git commit -m "format: ${{ github.event.commits[0].id }}"
           git push
           
