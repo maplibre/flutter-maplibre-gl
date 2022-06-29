@@ -27,14 +27,19 @@ dependencies:
 ```
 This will get you the very latest changes from the main branch.
 You can replace `main` with the name of the [latest release](https://github.com/m0nac0/flutter-maplibre-gl/releases)
-to get a well-tested version.
+to get a more stable version.
 
-Documentation is available on the docs branch in the doc/api folder and automatically updated on each push to the main branch. You can easily view the [documentation / API reference here.](https://htmlpreview.github.io/?https://github.com/m0nac0/flutter-maplibre-gl/blob/docs/doc/api/index.html)
 
 
 Compared to flutter-mapbox-gl, the only breaking API changes are: 
 - `MapboxMap` <--> `MaplibreMap`
 - `MapboxMapController` <--> `MaplibreMapController`
+
+
+### Documentation
+Documentation is available on the docs branch in the doc/api folder and automatically updated on each push to the main branch. You can easily preview the [documentation / API reference here.](https://htmlpreview.github.io/?https://github.com/m0nac0/flutter-maplibre-gl/blob/docs/doc/api/index.html)
+
+Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
 ### iOS
 To use this plugin with iOS, you may need to add two lines to your Podfile, as shown in the example app: https://github.com/m0nac0/flutter-maplibre-gl/blob/d23b2297f775ed6e686c31ee2e2318cc28c73a5e/example/ios/Podfile#L5-L6
@@ -95,10 +100,6 @@ xml ...
 
 A possible explanation could be: "Shows your location on the map".
 
-## Documentation
-
-This README file currently houses most of the documentation for this Flutter project. Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
-
 ## Getting Help
 
 - **Need help with your code?**: Check the [discussions](https://github.com/m0nac0/flutter-maplibre-gl/discussions) on this repo or open a new one. 
@@ -106,7 +107,8 @@ This README file currently houses most of the documentation for this Flutter pro
 - **Have a bug to report?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). If possible, include a full log and information which shows the issue.
 - **Have a feature request?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
-## Avoid Android UnsatisfiedLinkError
+## Fixing common issues
+### Avoid Android UnsatisfiedLinkError
 
 Update buildTypes in `android\app\build.gradle`
 
@@ -121,7 +123,9 @@ buildTypes {
 }
 ```
 
+### iOS app crashes on startup
 
+Please include the `NSLocationWhenInUseUsageDescription` as described [here](#location-features)
 
 
 ## Contributing
