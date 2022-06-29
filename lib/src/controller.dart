@@ -70,8 +70,9 @@ class MaplibreMapController extends ChangeNotifier {
     });
 
     _mapboxGlPlatform.onFeatureDraggedPlatform.add((payload) {
-      for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
-        final DragEventType enmDragEventType = DragEventType.values
+            for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
+        final DragEventType enmDragEventType = 
+                DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
         fun(payload["id"],
             point: payload["point"],
