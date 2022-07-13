@@ -17,6 +17,7 @@ jobs:
       - uses: subosito/flutter-action@v2.4.0
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - name: Lint analysis
         run: flutter format --set-exit-if-changed .
 
@@ -29,6 +30,7 @@ jobs:
     - uses: subosito/flutter-action@v2.4.0
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
+        cache: true
     - run: flutter pub get
     - name: Lint analysis
       run: flutter analyze
@@ -50,6 +52,7 @@ jobs:
     - uses: subosito/flutter-action@v2.4.0
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
+        cache: true
     - run: flutter pub get
     - name: Build example APK
       run: flutter build apk
@@ -67,6 +70,7 @@ jobs:
       - uses: subosito/flutter-action@v2.4.0
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - run: flutter pub get
       - name: Update pods
         working-directory: example/ios
@@ -91,6 +95,7 @@ jobs:
     - uses: subosito/flutter-action@v2.4.0
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
+        cache: true
     - run: flutter pub get
     - name: Build web
       run: flutter build web
