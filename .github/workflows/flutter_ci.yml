@@ -13,15 +13,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Cache Flutter
-        uses: actions/cache@v3.0.5
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
       - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - name: Lint analysis
         run: flutter format --set-exit-if-changed .
 
@@ -31,15 +27,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Cache Flutter
-        uses: actions/cache@v3.0.5
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
       - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - run: flutter pub get
       - run: |
          cd scripts
@@ -62,15 +54,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: 'gradle'
-      - name: Cache Flutter
-        uses: actions/cache@v3.0.5
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
       - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - run: flutter pub get
       - name: Build example APK
         run: flutter build apk
@@ -85,15 +73,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Cache Flutter
-        uses: actions/cache@v3.0.5
-        with:
-          path: /Users/runner/hostedtoolcache/flutter
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
       - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - run: flutter pub get
       - name: Update pods
         working-directory: example/ios
@@ -115,15 +99,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Cache Flutter
-        uses: actions/cache@v3.0.5
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_CHANNEL }}-${{ env.FLUTTER_VERSION }} 
       - uses: subosito/flutter-action@v2.4.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
       - run: flutter pub get
       - name: Build web
         run: flutter build web
