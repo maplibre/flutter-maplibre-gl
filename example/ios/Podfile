@@ -3,7 +3,6 @@ source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 
 # Uncomment this line to define a global platform for your project
 platform :ios, '9.0'
-use_frameworks!
 
 pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
