@@ -22,7 +22,7 @@ dependencies:
     ...
     maplibre_gl:
       git:
-        url: https://github.com/m0nac0/flutter-maplibre-podspecs.git
+        url: https://github.com/m0nac0/flutter-maplibre-gl.git
         ref: main
 ```
 This will get you the very latest changes from the main branch.
@@ -46,7 +46,7 @@ To use this plugin with iOS, you need to add the source repository and 2 additio
 
 ```ruby
 source 'https://cdn.cocoapods.org/'
-source 'https://github.com/m0nac0/flutter-maplibre-gl.git'
+source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 
 pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
