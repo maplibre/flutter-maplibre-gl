@@ -77,7 +77,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
+          cache: false
       - run: flutter pub get
       - name: Build iOS package
         run: flutter build ios --simulator
