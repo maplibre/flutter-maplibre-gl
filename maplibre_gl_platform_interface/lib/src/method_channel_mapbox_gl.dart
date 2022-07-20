@@ -678,6 +678,14 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
+      'layerId': layerId,
+      'visible': visible,
+    });
+  }
+
+  @override
   void forceResizeWebMap() {}
 
   @override
