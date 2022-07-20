@@ -699,9 +699,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 result(nil)
                 return
             }
-            layer.visible = visible
+            layer.isVisible = visible
             result(nil)
-            
+
         default:
             result(FlutterMethodNotImplemented)
         }
