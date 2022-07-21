@@ -310,6 +310,33 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
+  Future<List> querySourceFeatures(String sourceId, String sourceLayerId, List<Object>? filter) async {
+    Map<String, dynamic> parameters = {};
+    
+    parameters['sourceLayer'] = sourceLayerId;
+
+    if (filter != null) {
+      parameters['filter'] = filter;
+    }
+        print(parameters);
+
+   
+    return _map
+        .querySourceFeatures(sourceId, parameters)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     print('Offline storage not available in web');
   }

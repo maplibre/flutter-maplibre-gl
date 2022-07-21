@@ -309,6 +309,23 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<List> querySourceFeatures(String sourceId, String sourceLayerId, List<Object>? filter) async {
+    try {
+      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
+        'map#querySourceFeatures',
+        <String, Object?>{
+          'sourceId': sourceId,
+          'sourceLayerId': sourceLayerId,
+          'filter': filter,
+        },
+      );
+      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');

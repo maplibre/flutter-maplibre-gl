@@ -997,6 +997,13 @@ class MaplibreMapController extends ChangeNotifier {
         rect, layerIds, filter);
   }
 
+  /// Query rendered features at a point in screen cooridnates
+  Future<List> querySourceFeatures(
+      String sourceId, String sourceLayerId, List<Object>? filter) async {
+    return _mapboxGlPlatform.querySourceFeatures(
+        sourceId, sourceLayerId, filter);
+  }
+
   Future invalidateAmbientCache() async {
     return _mapboxGlPlatform.invalidateAmbientCache();
   }
