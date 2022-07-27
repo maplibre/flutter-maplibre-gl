@@ -650,6 +650,21 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             mapView.style?.removeLayer(layer)
             result(nil)
 
+        case "map#setCameraBounds":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let west = arguments["west"] as? Double else { return }
+            guard let north = arguments["north"] as? Double else { return }
+            guard let south = arguments["south"] as? Double else { return }
+            guard let east = arguments["east"] as? Double else { return }
+            guard let padding = arguments["padding"] as? CGFloat else { return }
+
+            let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
+            let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
+            let bounds = MGLCoordinateBounds(sw: southwest, ne: northeast)
+            mapView.setVisibleCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: padding,
+                left: padding, bottom: padding, right: padding) , animated: true)
+            result(nil)
+
         case "style#setFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }

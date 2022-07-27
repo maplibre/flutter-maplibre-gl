@@ -1151,6 +1151,22 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.addSource(sourceid, properties);
   }
 
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    return _mapboxGlPlatform.setCameraBounds(
+      west: west,
+      north: north,
+      south: south,
+      east: east,
+      padding: padding,
+    );
+  }
+
   /// Add a layer to the map with the given properties
   ///
   /// The returned [Future] completes after the change has been made on the

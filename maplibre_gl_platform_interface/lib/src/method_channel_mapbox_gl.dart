@@ -527,6 +527,26 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     });
   }
 
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    try {
+      await _channel.invokeMethod('map#setCameraBounds', <String, dynamic>{
+        'west': west,
+        'north': north,
+        'south': south,
+        'east': east,
+        'padding': padding,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
   @override
   Future<void> addSymbolLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
