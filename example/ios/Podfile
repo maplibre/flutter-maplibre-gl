@@ -39,7 +39,7 @@ target 'Runner' do
   
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
-
+# commit 2c5aa27d7f039327306d1ecf80976778fd3ffcab from upstream#797 undone in PR #128
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
