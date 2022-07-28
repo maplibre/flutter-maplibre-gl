@@ -935,6 +935,12 @@ class MaplibreMapController extends MapLibreGlPlatform
     _map.addSource(sourceId, source.toJson());
   }
 
+  @override
+  Future<void> setLayerVisibility(List<String> layerIds, bool visibility) {
+    // TODO: implement setLayerVisibility
+    throw UnimplementedError();
+  }
+
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     // TODO: implement addImageSource

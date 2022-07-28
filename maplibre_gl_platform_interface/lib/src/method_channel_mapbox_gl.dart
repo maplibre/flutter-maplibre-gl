@@ -473,6 +473,19 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<void> setLayerVisibility(List<String> layerIds, bool visibility) async {
+    try {
+      return await _channel.invokeMethod(
+          'style#layerVisibility', <String, Object>{
+        'layerIds': layerIds,
+        'visibility': visibility,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     try {
       return await _channel.invokeMethod('style#setFilter',

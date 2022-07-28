@@ -1117,6 +1117,11 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.removeLayer(layerId);
   }
 
+  /// Removes a Mapbox style layer
+  Future<void> setLayerVisibility(List<String> layerIds, bool visibility) {
+    return _mapboxGlPlatform.setLayerVisibility(layerIds, visibility);
+  }
+
   Future<void> setFilter(String layerId, dynamic filter) {
     return _mapboxGlPlatform.setFilter(layerId, filter);
   }

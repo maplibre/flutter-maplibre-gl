@@ -68,6 +68,8 @@ import com.mapbox.mapboxsdk.style.layers.FillLayer;
 import com.mapbox.mapboxsdk.style.layers.HeatmapLayer;
 import com.mapbox.mapboxsdk.style.layers.HillshadeLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
+import com.mapbox.mapboxsdk.style.layers.Property;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
@@ -1232,6 +1234,21 @@ final class MapboxMapController
             break;
           }
 
+          result.success(null);
+          break;
+        }
+      case "style#layerVisibility":
+        {
+          if (style == null) {
+            result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
+          }
+          boolean visibility = call.argument("visibility");
+          List<String> affectedLayers = call.argument("layerIds");
+          List<Layer> layers= style.getLayers();
+          for(Layer layer : layers) {
+            if(!affectedLayers.contains(layer.getId())) continue;
+            layer.setProperties(PropertyFactory.visibility(visibility ? Property.VISIBLE : Property.NONE));
+          }
           result.success(null);
           break;
         }
