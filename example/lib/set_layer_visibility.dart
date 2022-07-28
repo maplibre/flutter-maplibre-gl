@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:maplibre_gl_example/util.dart';
 
 import 'page.dart';
 
@@ -45,9 +44,9 @@ class SetLayerVisibleState extends State<SetLayerVisible> {
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoadedCallback,
               initialCameraPosition: CameraPosition(
-              target: center,
-              zoom: 11.0,
-            ),
+                target: center,
+                zoom: 11.0,
+              ),
             ),
           ),
         ),
@@ -68,7 +67,8 @@ class SetLayerVisibleState extends State<SetLayerVisible> {
   }
 
   void _onStyleLoadedCallback() async {
-    await mapController.addSource('fills', GeojsonSourceProperties(data: _fills));
+    await mapController.addSource(
+        'fills', GeojsonSourceProperties(data: _fills));
     await mapController.addCircleLayer(
       'fills',
       'circles',
@@ -77,7 +77,6 @@ class SetLayerVisibleState extends State<SetLayerVisible> {
         circleColor: Colors.red.toHexStringRGB(),
       ),
     );
-
   }
 }
 
