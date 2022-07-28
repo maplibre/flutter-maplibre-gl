@@ -528,6 +528,17 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future setGeoJson(String sketch) async {
+    try {
+      await _channel.invokeMethod('map#setGeoJson', <String, dynamic>{
+        'sketch': sketch,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<void> addSymbolLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,

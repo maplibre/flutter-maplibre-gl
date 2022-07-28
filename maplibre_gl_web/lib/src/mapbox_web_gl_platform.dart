@@ -935,6 +935,12 @@ class MaplibreMapController extends MapLibreGlPlatform
     _map.addSource(sourceId, source.toJson());
   }
 
+  @override
+  Future setGeoJson(String sketch) async {
+    // TODO: implement setGeoJson
+    throw UnimplementedError();
+  }
+
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     // TODO: implement addImageSource

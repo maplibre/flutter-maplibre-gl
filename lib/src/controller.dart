@@ -1146,6 +1146,10 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.getMetersPerPixelAtLatitude(latitude);
   }
 
+  Future setGeoJson(String sketch) async {
+    return _mapboxGlPlatform.setGeoJson(sketch);
+  }
+
   /// Add a new source to the map
   Future<void> addSource(String sourceid, SourceProperties properties) async {
     return _mapboxGlPlatform.addSource(sourceid, properties);

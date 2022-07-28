@@ -690,6 +690,22 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let geojson = arguments["geojsonFeature"] as? String else { return }
             setFeature(sourceId: sourceId, geojsonFeature: geojson)
             result(nil)
+
+        case "map#setGeoJson":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sketch = arguments["sketch"] as? String else { return }
+
+            if sketch.isEmpty {
+              NSLog("setGeoJson - string empty")
+              return
+            }
+
+            guard let source = mapView.style?.source(withIdentifier: "composite") as? MGLShapeSource else { return }
+            let data = sketch.data(using: .utf8)
+            let shape = try! MGLShape(data: data!, encoding: String.Encoding.utf8.rawValue) as! MGLShapeCollectionFeature
+            source.shape = shape
+            result(nil)
+
         default:
             result(FlutterMethodNotImplemented)
         }

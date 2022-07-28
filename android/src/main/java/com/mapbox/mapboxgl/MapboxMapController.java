@@ -272,7 +272,16 @@ final class MapboxMapController
     }
   }
 
-  
+  public void setGeoJson(String sketch) {
+    // Check if json, url, absolute path or asset path:
+    if (sketch == null || sketch.isEmpty()) {
+      Log.e(TAG, "setGeoJson - string empty or null");
+    } else {
+      Style style = mapboxMap.getStyle();
+      GeoJsonSource source = style.getSourceAs("composite");
+      source.setGeoJson(sketch);
+    }
+  }
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
@@ -1232,6 +1241,13 @@ final class MapboxMapController
             break;
           }
 
+          result.success(null);
+          break;
+        }
+      case "map#setGeoJson":
+        {
+          String sketch = call.argument("sketch");
+          setGeoJson(sketch);
           result.success(null);
           break;
         }
