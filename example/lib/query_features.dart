@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:maplibre_gl_example/util.dart';
 
 import 'page.dart';
 
