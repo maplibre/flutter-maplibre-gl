@@ -734,7 +734,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     required double east,
     required int padding,
   }) async {
-    // TODO: implement addImageSource
+    // TODO: implement setCameraBounds
     throw UnimplementedError();
   }
 
