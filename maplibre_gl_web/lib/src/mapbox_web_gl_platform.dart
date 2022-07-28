@@ -936,7 +936,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future setGeoJson(String sketch) async {
+  Future setGeoJson(String geojson) async {
     // TODO: implement setGeoJson
     throw UnimplementedError();
   }

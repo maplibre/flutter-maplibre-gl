@@ -693,15 +693,15 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
 
         case "map#setGeoJson":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sketch = arguments["sketch"] as? String else { return }
+            guard let geojson = arguments["geojson"] as? String else { return }
 
-            if sketch.isEmpty {
+            if geojson.isEmpty {
               NSLog("setGeoJson - string empty")
               return
             }
 
             guard let source = mapView.style?.source(withIdentifier: "composite") as? MGLShapeSource else { return }
-            let data = sketch.data(using: .utf8)
+            let data = geojson.data(using: .utf8)
             let shape = try! MGLShape(data: data!, encoding: String.Encoding.utf8.rawValue) as! MGLShapeCollectionFeature
             source.shape = shape
             result(nil)

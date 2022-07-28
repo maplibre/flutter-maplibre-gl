@@ -101,7 +101,7 @@ abstract class MapLibreGlPlatform {
 
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson);
 
-  Future<void> setGeoJson(String sketch);
+  Future<void> setGeoJson(String geojson);
 
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature);
