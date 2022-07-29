@@ -62,6 +62,11 @@ jobs:
       - run: flutter pub get
       - name: Build example APK
         run: flutter build apk
+      - name: Upload apk as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: maplibre.apk
+          path: example/build/app/outputs/flutter-apk/app-release.apk
           # We might want to add a flutter test step in the future, when there actually are tests for this plugin
 
   build-iOS:
