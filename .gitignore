@@ -1,6 +1,5 @@
 # Miscellaneous
 *.class
-*.lock
 *.log
 *.pyc
 *.swp
@@ -48,6 +47,7 @@ version
 .packages
 .pub-cache/
 .pub/
+**/pubspec.lock
 build/
 flutter_*.png
 linked_*.ds

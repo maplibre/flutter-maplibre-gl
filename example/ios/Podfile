@@ -1,9 +1,11 @@
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
+
 # Uncomment this line to define a global platform for your project
 platform :ios, '9.0'
-use_frameworks!
 
-pod 'MapLibre', :git =>  'https://github.com/m0nac0/maplibre-cocoapods.git'
-pod 'MapLibreAnnotationExtension', :git => 'https://github.com/m0nac0/maplibre-annotation-extension.git'
+pod 'MapLibre'
+pod 'MapLibreAnnotationExtension'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -37,15 +39,9 @@ target 'Runner' do
   
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
-
+# commit 2c5aa27d7f039327306d1ecf80976778fd3ffcab from upstream#797 undone in PR #128
 post_install do |installer|
-  installer.pods_project.build_configurations.each do |config|
-    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
-  end
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
-    end
   end
 end
