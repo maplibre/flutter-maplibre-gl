@@ -158,6 +158,8 @@ abstract class MapLibreGlPlatform {
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
+  Future<void> setLayerVisibility(String layerId, bool visible);
+
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
