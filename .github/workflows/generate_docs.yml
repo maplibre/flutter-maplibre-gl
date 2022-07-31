@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2.4.0
+      - uses: subosito/flutter-action@v2.6.1
         with:
           channel: 'stable'
           cache: true
