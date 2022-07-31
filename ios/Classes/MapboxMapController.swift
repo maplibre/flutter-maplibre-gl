@@ -224,11 +224,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                let left = arguments["left"] as? Double,
                let right = arguments["right"] as? Double
             {
-                features = mapView.visibleFeatures(
-                    in: CGRect(x: left, y: top, width: right, height: bottom),
-                    styleLayerIdentifiers: styleLayerIdentifiers,
-                    predicate: filterExpression
-                )
+                var width = right - left
+                var height = bottom - top
+                features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
             }
             var featuresJson = [String]()
             for feature in features {
@@ -1404,6 +1402,13 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             let assetPath = registrar.lookupKey(forAsset: styleString)
             mapView.styleURL = URL(string: assetPath, relativeTo: Bundle.main.resourceURL)
 
+        } else if (styleString.hasPrefix("file://")) {
+            if let path = Bundle.main.path(forResource: styleString.deletingPrefix("file://"), ofType: "json") {
+                let url = URL(fileURLWithPath: path)
+                mapView.styleURL = url
+            } else {
+                NSLog("setStyleString - Path not found")
+            }
         } else {
             mapView.styleURL = URL(string: styleString)
         }
@@ -1471,5 +1476,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
 
     func setAttributionButtonPosition(position: MGLOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+}
+
+extension String {
+    func deletingPrefix(_ prefix: String) -> String {
+        guard self.hasPrefix(prefix) else { return self }
+        return String(self.dropFirst(prefix.count))
     }
 }

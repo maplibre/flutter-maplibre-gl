@@ -42,8 +42,15 @@ Documentation is available on the docs branch in the doc/api folder and automati
 Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
 ### iOS
-To use this plugin with iOS, you may need to add two lines to your Podfile, as shown in the example app: https://github.com/m0nac0/flutter-maplibre-gl/blob/d23b2297f775ed6e686c31ee2e2318cc28c73a5e/example/ios/Podfile#L5-L6
-... and run `pod update`
+To use this plugin with iOS, you need to add the source repository and 2 additional pods to your Podfile, as shown in the example app: https://github.com/m0nac0/flutter-maplibre-gl/blob/main/example/ios/Podfile
+
+```ruby
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
+
+pod 'MapLibre'
+pod 'MapLibreAnnotationExtension'
+```
 
 ## Supported API
 
