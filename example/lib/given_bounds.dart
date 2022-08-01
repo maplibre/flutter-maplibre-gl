@@ -57,7 +57,7 @@ class GivenBoundsState extends State<GivenBounds> {
               padding: 25,
             );
           },
-          child: const Text('Set Bounds to Germanny'),
+          child: const Text('Set bounds to Germany'),
         ),
         TextButton(
           onPressed: () async {
@@ -69,7 +69,7 @@ class GivenBoundsState extends State<GivenBounds> {
               padding: 25,
             );
           },
-          child: const Text('Set Bounds to Afrika'),
+          child: const Text('Set bounds to Africa'),
         ),
       ],
     );
