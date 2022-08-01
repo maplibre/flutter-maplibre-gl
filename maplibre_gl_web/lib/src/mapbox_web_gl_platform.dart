@@ -1001,4 +1001,9 @@ class MaplibreMapController extends MapLibreGlPlatform
   void forceResizeWebMap() {
     _map.resize();
   }
+
+  @override
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+  }
 }

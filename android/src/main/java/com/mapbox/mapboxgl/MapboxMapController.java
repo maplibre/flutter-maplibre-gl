@@ -73,6 +73,7 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -1256,6 +1257,26 @@ final class MapboxMapController
 
           result.success(null);
           break;
+        }
+        case "layer#setVisibility":
+        {
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+          String layerId = call.argument("layerId");
+          boolean visible = call.argument("visible");
+
+          Layer layer = style.getLayer(layerId);
+
+          layer.setProperties(PropertyFactory.visibility(visible ? "visible" : "none"));
+          
+          result.success(null);
+          break;
+
         }
       default:
         result.notImplemented();

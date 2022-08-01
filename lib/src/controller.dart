@@ -1250,6 +1250,10 @@ class MaplibreMapController extends ChangeNotifier {
     }
   }
 
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    return _mapboxGlPlatform.setLayerVisibility(layerId, visible);
+  }
+
   @override
   void dispose() {
     super.dispose();

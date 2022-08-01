@@ -224,11 +224,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                let left = arguments["left"] as? Double,
                let right = arguments["right"] as? Double
             {
-                features = mapView.visibleFeatures(
-                    in: CGRect(x: left, y: top, width: right, height: bottom),
-                    styleLayerIdentifiers: styleLayerIdentifiers,
-                    predicate: filterExpression
-                )
+                var width = right - left
+                var height = bottom - top
+                features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
             }
             var featuresJson = [String]()
             for feature in features {
@@ -705,6 +703,18 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let geojson = arguments["geojsonFeature"] as? String else { return }
             setFeature(sourceId: sourceId, geojsonFeature: geojson)
             result(nil)
+
+        case "layer#setVisibility":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let visible = arguments["visible"] as? Bool else { return }
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                result(nil)
+                return
+            }
+            layer.isVisible = visible
+            result(nil)
+
         default:
             result(FlutterMethodNotImplemented)
         }

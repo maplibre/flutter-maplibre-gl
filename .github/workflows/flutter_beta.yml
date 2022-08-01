@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.4.0
+      - uses: subosito/flutter-action@v2.6.1
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
@@ -27,7 +27,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2.4.0
+    - uses: subosito/flutter-action@v2.6.1
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
         cache: true
@@ -49,7 +49,7 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'gradle'
-    - uses: subosito/flutter-action@v2.4.0
+    - uses: subosito/flutter-action@v2.6.1
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
         cache: true
@@ -67,14 +67,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.4.0
+      - uses: subosito/flutter-action@v2.6.1
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
+      - uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          podfile-path: example/ios/Podfile.lock
       - run: flutter pub get
-      - name: Update pods
-        working-directory: example/ios
-        run: pod update
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
@@ -92,7 +92,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2.4.0
+    - uses: subosito/flutter-action@v2.6.1
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
         cache: true
