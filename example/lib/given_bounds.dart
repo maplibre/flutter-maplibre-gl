@@ -9,7 +9,7 @@ import 'page.dart';
 
 class GivenBoundsPage extends ExamplePage {
   GivenBoundsPage()
-      : super(const Icon(Icons.map_sharp), 'Changing given Bounds');
+      : super(const Icon(Icons.map_sharp), 'Changing given bounds');
 
   @override
   Widget build(BuildContext context) {
