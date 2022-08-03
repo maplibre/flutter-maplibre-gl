@@ -727,6 +727,17 @@ class MaplibreMapController extends MapLibreGlPlatform
     source.setData(data);
   }
 
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    // TODO: implement setCameraBounds
+    throw UnimplementedError();
+  }
+
   @override
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,

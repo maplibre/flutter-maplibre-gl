@@ -37,6 +37,7 @@ import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.BoundingBox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -89,6 +90,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 /** Controller of a single MapboxMaps MapView instance. */
 @SuppressLint("MissingPermission")
@@ -1194,6 +1196,26 @@ final class MapboxMapController
           interactiveFeatureLayerIds.remove(layerId);
 
           result.success(null);
+          break;
+        }
+      case "map#setCameraBounds":
+        {
+          double west = call.argument("west");
+          double north = call.argument("north");
+          double south = call.argument("south");
+          double east = call.argument("east");
+
+          int padding = call.argument("padding");
+
+          LatLng locationOne = new LatLng(north, east);
+          LatLng locationTwo = new LatLng(south, west);
+          LatLngBounds latLngBounds = new LatLngBounds.Builder()
+                  .include(locationOne) // Northeast
+                  .include(locationTwo) // Southwest
+                  .build();
+          mapboxMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
+                  padding), 200);
+
           break;
         }
       case "style#setFilter":
