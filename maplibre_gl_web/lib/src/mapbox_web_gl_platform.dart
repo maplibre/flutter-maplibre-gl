@@ -737,7 +737,6 @@ class MaplibreMapController extends MapLibreGlPlatform
     _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)),
         {'padding': padding});
   }
-  
 
   @override
   Future<void> addCircleLayer(
