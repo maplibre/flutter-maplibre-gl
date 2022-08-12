@@ -734,8 +734,8 @@ class MaplibreMapController extends MapLibreGlPlatform
     required double east,
     required int padding,
   }) async {
-    // TODO: implement setCameraBounds
-    throw UnimplementedError();
+    _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)),
+        {'padding': padding});
   }
 
   @override
