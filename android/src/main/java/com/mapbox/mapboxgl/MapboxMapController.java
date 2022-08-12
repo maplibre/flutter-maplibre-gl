@@ -37,6 +37,7 @@ import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.BoundingBox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -72,6 +73,7 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -88,6 +90,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 /** Controller of a single MapboxMaps MapView instance. */
 @SuppressLint("MissingPermission")
@@ -1195,6 +1198,26 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+      case "map#setCameraBounds":
+        {
+          double west = call.argument("west");
+          double north = call.argument("north");
+          double south = call.argument("south");
+          double east = call.argument("east");
+
+          int padding = call.argument("padding");
+
+          LatLng locationOne = new LatLng(north, east);
+          LatLng locationTwo = new LatLng(south, west);
+          LatLngBounds latLngBounds = new LatLngBounds.Builder()
+                  .include(locationOne) // Northeast
+                  .include(locationTwo) // Southwest
+                  .build();
+          mapboxMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
+                  padding), 200);
+
+          break;
+        }
       case "style#setFilter":
         {
           if (style == null) {
@@ -1234,6 +1257,26 @@ final class MapboxMapController
 
           result.success(null);
           break;
+        }
+        case "layer#setVisibility":
+        {
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+          String layerId = call.argument("layerId");
+          boolean visible = call.argument("visible");
+
+          Layer layer = style.getLayer(layerId);
+
+          layer.setProperties(PropertyFactory.visibility(visible ? "visible" : "none"));
+          
+          result.success(null);
+          break;
+
         }
       default:
         result.notImplemented();

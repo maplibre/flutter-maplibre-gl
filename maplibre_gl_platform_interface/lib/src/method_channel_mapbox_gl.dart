@@ -544,6 +544,26 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     });
   }
 
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    try {
+      await _channel.invokeMethod('map#setCameraBounds', <String, dynamic>{
+        'west': west,
+        'north': north,
+        'south': south,
+        'east': east,
+        'padding': padding,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
   @override
   Future<void> addSymbolLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
@@ -691,6 +711,14 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     await _channel.invokeMethod('source#setFeature', <String, dynamic>{
       'sourceId': sourceId,
       'geojsonFeature': jsonEncode(geojsonFeature)
+    });
+  }
+
+  @override
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
+      'layerId': layerId,
+      'visible': visible,
     });
   }
 

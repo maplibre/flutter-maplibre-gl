@@ -224,11 +224,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                let left = arguments["left"] as? Double,
                let right = arguments["right"] as? Double
             {
-                features = mapView.visibleFeatures(
-                    in: CGRect(x: left, y: top, width: right, height: bottom),
-                    styleLayerIdentifiers: styleLayerIdentifiers,
-                    predicate: filterExpression
-                )
+                var width = right - left
+                var height = bottom - top
+                features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
             }
             var featuresJson = [String]()
             for feature in features {
@@ -237,7 +235,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                     withJSONObject: dictionary,
                     options: []
                 ),
-                    let theJSONText = String(data: theJSONData, encoding: .ascii)
+                    let theJSONText = String(data: theJSONData, encoding: .utf8)
                 {
                     featuresJson.append(theJSONText)
                 }
@@ -650,6 +648,21 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             mapView.style?.removeLayer(layer)
             result(nil)
 
+        case "map#setCameraBounds":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let west = arguments["west"] as? Double else { return }
+            guard let north = arguments["north"] as? Double else { return }
+            guard let south = arguments["south"] as? Double else { return }
+            guard let east = arguments["east"] as? Double else { return }
+            guard let padding = arguments["padding"] as? CGFloat else { return }
+
+            let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
+            let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
+            let bounds = MGLCoordinateBounds(sw: southwest, ne: northeast)
+            mapView.setVisibleCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: padding,
+                left: padding, bottom: padding, right: padding) , animated: true)
+            result(nil)
+
         case "style#setFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
@@ -690,6 +703,18 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let geojson = arguments["geojsonFeature"] as? String else { return }
             setFeature(sourceId: sourceId, geojsonFeature: geojson)
             result(nil)
+
+        case "layer#setVisibility":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let visible = arguments["visible"] as? Bool else { return }
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                result(nil)
+                return
+            }
+            layer.isVisible = visible
+            result(nil)
+
         default:
             result(FlutterMethodNotImplemented)
         }

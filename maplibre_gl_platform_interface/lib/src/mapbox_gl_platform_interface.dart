@@ -104,6 +104,14 @@ abstract class MapLibreGlPlatform {
 
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson);
 
+  Future<void> setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  });
+
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature);
 
@@ -160,6 +168,8 @@ abstract class MapLibreGlPlatform {
       double? maxzoom});
 
   Future<void> addSource(String sourceId, SourceProperties properties);
+
+  Future<void> setLayerVisibility(String layerId, bool visible);
 
   @mustCallSuper
   void dispose() {
