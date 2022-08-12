@@ -999,7 +999,7 @@ class MaplibreMapController extends ChangeNotifier {
 
   /// Query rendered features at a point in screen cooridnates
   Future<List> querySourceFeatures(
-      String sourceId, String sourceLayerId, List<Object>? filter) async {
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
     return _mapboxGlPlatform.querySourceFeatures(
         sourceId, sourceLayerId, filter);
   }

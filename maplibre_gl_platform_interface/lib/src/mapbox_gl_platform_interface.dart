@@ -70,7 +70,7 @@ abstract class MapLibreGlPlatform {
       Rect rect, List<String> layerIds, String? filter);
 
   Future<List> querySourceFeatures(
-      String sourceId, String sourceLayerId, List<Object>? filter);
+      String sourceId, String? sourceLayerId, List<Object>? filter);
   Future invalidateAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 

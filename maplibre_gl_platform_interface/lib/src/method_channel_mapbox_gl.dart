@@ -309,7 +309,8 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
-  Future<List> querySourceFeatures(String sourceId, String sourceLayerId, List<Object>? filter) async {
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
         'map#querySourceFeatures',

@@ -74,8 +74,12 @@ import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -1277,6 +1281,43 @@ final class MapboxMapController
           result.success(null);
           break;
 
+        }
+        case "map#querySourceFeatures":
+        {
+          Map<String, Object> reply = new HashMap<>();
+          List<Feature> features;
+
+          String sourceId = (String) call.argument("sourceId");
+
+          String sourceLayerId = (String) call.argument("sourceLayerId");
+
+          List<Object> filter = call.argument("filter");
+          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          JsonArray jsonArray = null;
+          if (jsonElement != null && jsonElement.isJsonArray()) {
+            jsonArray = jsonElement.getAsJsonArray();
+          }
+          Expression filterExpression =
+                  jsonArray == null ? null : Expression.Converter.convert(jsonArray);
+
+          Source source = style.getSource(sourceId);
+          if (source instanceof GeoJsonSource) {
+            features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof CustomGeometrySource) {
+            features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof VectorSource && sourceLayerId != null) {
+            features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
+          } else {
+            features = Collections.emptyList();
+          }
+
+          List<String> featuresJson = new ArrayList<>();
+          for (Feature feature : features) {
+            featuresJson.add(feature.toJson());
+          }
+          reply.put("features", featuresJson);
+          result.success(reply);
+          break;
         }
       default:
         result.notImplemented();

@@ -310,17 +310,19 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<List> querySourceFeatures(String sourceId, String sourceLayerId, List<Object>? filter) async {
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
     Map<String, dynamic> parameters = {};
-    
-    parameters['sourceLayer'] = sourceLayerId;
+
+    if (sourceLayerId != null) {
+      parameters['sourceLayer'] = sourceLayerId;
+    }
 
     if (filter != null) {
       parameters['filter'] = filter;
     }
-        print(parameters);
+    print(parameters);
 
-   
     return _map
         .querySourceFeatures(sourceId, parameters)
         .map((feature) => {
