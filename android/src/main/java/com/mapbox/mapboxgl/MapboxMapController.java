@@ -1301,20 +1301,13 @@ final class MapboxMapController
                   jsonArray == null ? null : Expression.Converter.convert(jsonArray);
 
           Source source = style.getSource(sourceId);
-          if (source == null) {
-            reply.put("sourceType", "NullSource");
-            features = Collections.emptyList();
-          } else if (source instanceof GeoJsonSource) {
-            reply.put("sourceType", "GeoJsonSource");
+          if (source instanceof GeoJsonSource) {
             features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
           } else if (source instanceof CustomGeometrySource) {
-            reply.put("sourceType", "CustomGeometrySource");
             features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
           } else if (source instanceof VectorSource && sourceLayerId != null) {
-            reply.put("sourceType", "VectorSource");
             features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
           } else {
-            reply.put("sourceType", "UnsupportedSource");
             features = Collections.emptyList();
           }
 
