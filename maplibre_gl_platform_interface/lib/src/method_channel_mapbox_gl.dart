@@ -501,6 +501,20 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<dynamic> getFilter(String layerId) async {
+    try {
+      Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getFilter', <String, dynamic>{
+        'layerId': layerId,
+      });
+      final filter = reply["filter"];
+      return filter != null ? jsonDecode(filter) : null;
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<LatLng> toLatLng(Point screenLocation) async {
     try {
       var latLngMap =
@@ -728,4 +742,15 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
   @override
   void resizeWebMap() {}
+
+  @override
+  Future<List> getLayerIds() async {
+    try {
+      final Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getLayerIds');
+      return reply['layers'].map((it) => it.toString()).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
 }
