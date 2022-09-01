@@ -1035,4 +1035,14 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
   }
+
+  @override
+  Future getFilter(String layerId) async {
+    return jsonEncode(await _map.getFilter(layerId));
+  }
+
+  @override
+  Future<List> getLayerIds() async {
+    throw UnimplementedError();
+  }
 }
