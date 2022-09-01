@@ -1038,7 +1038,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future getFilter(String layerId) async {
-    return jsonEncode(await _map.getFilter(layerId));
+    return _map.getFilter(layerId);
   }
 
   @override
