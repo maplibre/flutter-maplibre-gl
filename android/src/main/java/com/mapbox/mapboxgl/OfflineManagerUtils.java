@@ -270,13 +270,15 @@ abstract class OfflineManagerUtils {
 
   static void clearAmbientCache(MethodChannel.Result result, Context context) {
        OfflineManager.getInstance(context).clearAmbientCache(new OfflineManager.FileSourceCallback() {
+
            @Override
            public void onSuccess() {
                result.success(null);
            }
+
            @Override
            public void onError(String error) {
-               result.error(error);
+               result.error("ClearAmbientCacheError", error, null);;
            }
        });
 
