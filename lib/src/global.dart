@@ -84,6 +84,10 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
       },
     );
 
+Future<dynamic> clearAmbientCache() => _globalChannel.invokeMethod(
+  'clearAmbientCache'
+);
+
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
