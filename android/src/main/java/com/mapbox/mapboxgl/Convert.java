@@ -24,6 +24,7 @@ import java.util.Map;
 class Convert {
 
   private static final String TAG = "Convert";
+  private static double[] CURRENT_CAMERA_PADDING = new double[]{0.0, 0, 0.0, 0.0};
 
   static boolean toBoolean(Object o) {
     return (Boolean) o;
@@ -40,7 +41,10 @@ class Convert {
     if(paddingObject != null) {
       List<?> paddingList = toList(paddingObject);
       double[] padding = new double[]{toDouble(paddingList.get(0)), toDouble(paddingList.get(1)), toDouble(paddingList.get(2)), toDouble(paddingList.get(3))};
-      builder.padding();
+      CURRENT_CAMERA_PADDING = padding;
+      builder.padding(padding);
+    }else {
+      builder.padding(CURRENT_CAMERA_PADDING);
     }
     return builder.build();
   }

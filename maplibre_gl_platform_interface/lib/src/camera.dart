@@ -13,7 +13,7 @@ class CameraPosition {
     required this.target,
     this.tilt = 0.0,
     this.zoom = 0.0,
-    this.padding = const [0.0, 0.0, 0.0, 0.0]
+    this.padding
   });
 
   /// The camera's bearing in degrees, measured clockwise from north.
@@ -53,7 +53,7 @@ class CameraPosition {
   /// Applied padding is going to persist and impact following camera
   /// transformations.
   /// Specified in left, top, right, bottom order.
-  final List<double> padding;
+  final List<double>? padding;
 
   dynamic toMap() => <String, dynamic>{
         'bearing': bearing,
@@ -73,7 +73,7 @@ class CameraPosition {
       target: LatLng._fromJson(json['target']),
       tilt: json['tilt'],
       zoom: json['zoom'],
-      padding: List.from(json['padding']),
+      padding: (json['padding'] != null ? List.from(json['padding']) : null),
     );
   }
 
