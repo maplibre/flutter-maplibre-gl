@@ -13,6 +13,7 @@ class CameraPosition {
     required this.target,
     this.tilt = 0.0,
     this.zoom = 0.0,
+    this.padding = const [0.0, 0.0, 0.0, 0.0]
   });
 
   /// The camera's bearing in degrees, measured clockwise from north.
@@ -48,11 +49,18 @@ class CameraPosition {
   /// will be silently clamped to the supported range.
   final double zoom;
 
+  /// Padding in pixels that shifts the viewport by the specified amount.
+  /// Applied padding is going to persist and impact following camera
+  /// transformations.
+  /// Specified in left, top, right, bottom order.
+  final List<double> padding;
+
   dynamic toMap() => <String, dynamic>{
         'bearing': bearing,
         'target': target.toJson(),
         'tilt': tilt,
         'zoom': zoom,
+        'padding' : padding,
       };
 
   @visibleForTesting
@@ -65,6 +73,7 @@ class CameraPosition {
       target: LatLng._fromJson(json['target']),
       tilt: json['tilt'],
       zoom: json['zoom'],
+      padding: List.from(json['padding']),
     );
   }
 
@@ -76,15 +85,16 @@ class CameraPosition {
     return bearing == typedOther.bearing &&
         target == typedOther.target &&
         tilt == typedOther.tilt &&
-        zoom == typedOther.zoom;
+        zoom == typedOther.zoom &&
+        padding == typedOther.padding;
   }
 
   @override
-  int get hashCode => hashValues(bearing, target, tilt, zoom);
+  int get hashCode => hashValues(bearing, target, tilt, zoom, padding);
 
   @override
   String toString() =>
-      'CameraPosition(bearing: $bearing, target: $target, tilt: $tilt, zoom: $zoom)';
+      'CameraPosition(bearing: $bearing, target: $target, tilt: $tilt, zoom: $zoom, padding: $padding)';
 }
 
 /// Defines a camera move, supporting absolute moves as well as moves relative

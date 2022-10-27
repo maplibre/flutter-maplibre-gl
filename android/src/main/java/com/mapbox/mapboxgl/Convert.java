@@ -36,6 +36,12 @@ class Convert {
     builder.target(toLatLng(data.get("target")));
     builder.tilt(toFloat(data.get("tilt")));
     builder.zoom(toFloat(data.get("zoom")));
+    Object paddingObject = data.get("padding");
+    if(paddingObject != null) {
+      List<?> paddingList = toList(paddingObject);
+      double[] padding = new double[]{toDouble(paddingList.get(0)), toDouble(paddingList.get(1)), toDouble(paddingList.get(2)), toDouble(paddingList.get(3))};
+      builder.padding();
+    }
     return builder.build();
   }
 
