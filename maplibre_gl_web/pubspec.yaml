@@ -18,7 +18,7 @@ dependencies:
   meta: ^1.3.0
   maplibre_gl_platform_interface:
     git:
-      url: https://github.com/m0nac0/flutter-maplibre-gl.git
+      url: https://github.com/JanikoNaber/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
       ref: main
   maplibre_gl_dart:
