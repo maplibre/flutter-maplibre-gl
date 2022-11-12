@@ -161,16 +161,28 @@ class SourcePropertyConverter {
 
   static RasterSource buildRasterSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
+    final Object tileSizeObj = properties.get("tileSize");
     if (url != null) {
-      try {
-        final URI uri = new URI(Convert.toString(url));
+      final String uri = Convert.toString(url);
+      if (tileSizeObj != null) {
+        final int tileSize = Convert.toInt(tileSizeObj);
+        return new RasterSource(id, uri, tileSize);
+      } else {
         return new RasterSource(id, uri);
-      } catch (URISyntaxException e) {
       }
     }
 
     final TileSet tileSet = buildTileset(properties);
-    return tileSet != null ? new RasterSource(id, tileSet) : null;
+    if (tileSet != null) {
+      if (tileSizeObj != null) {
+        final int tileSize = Convert.toInt(tileSizeObj);
+        return new RasterSource(id, tileSet, tileSize);
+      } else {
+        return new RasterSource(id, tileSet);
+      }
+    } else {
+      return null;
+    }
   }
 
   static RasterDemSource buildRasterDemSource(String id, Map<String, Object> properties) {
