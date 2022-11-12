@@ -52,6 +52,14 @@ pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
 ```
 
+### Web
+Include the following JavaScript and CSS files in the `<head>` of the `web/index.html` file.
+
+```html
+<script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+<link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
+```
+
 ## Supported API
 
 | Feature | Android | iOS | Web |
