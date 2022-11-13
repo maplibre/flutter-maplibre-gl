@@ -127,6 +127,9 @@ When you open this project in GitHub Codespaces, you can run the example app on 
 
 Codespaces should automatically take care of the necessary port forwarding, so that you can view the running web app on your local device or in a new tab.
 
+**Please note:** the Docker image used to setup the Codespace is from CirrusCI and sets the Git username and email to CirrusCI default values. You should set these correctly, 
+if you plan on committing from the Codespace.
+
 
 ## Fixing common issues
 ### Avoid Android UnsatisfiedLinkError
