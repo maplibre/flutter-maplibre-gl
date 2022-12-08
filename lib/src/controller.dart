@@ -997,7 +997,8 @@ class MaplibreMapController extends ChangeNotifier {
         rect, layerIds, filter);
   }
 
-  /// Query rendered features at a point in screen cooridnates
+  /// Query rendered features at a point in screen coordinates
+  /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
     return _mapboxGlPlatform.querySourceFeatures(
