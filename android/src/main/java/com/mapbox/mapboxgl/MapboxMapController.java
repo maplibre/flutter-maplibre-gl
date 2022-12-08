@@ -74,8 +74,12 @@ import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -1258,6 +1262,43 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+        case "style#getFilter":
+        {
+          if (style == null) {
+            result.error(
+                    "STYLE IS NULL",
+                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    null);
+          }
+          Map<String, Object> reply = new HashMap<>();
+          String layerId = call.argument("layerId");
+          Layer layer = style.getLayer(layerId);
+
+          Expression filter;
+          if (layer instanceof CircleLayer) {
+            filter = ((CircleLayer) layer).getFilter();
+          } else if (layer instanceof FillExtrusionLayer) {
+            filter = ((FillExtrusionLayer) layer).getFilter();
+          } else if (layer instanceof FillLayer) {
+            filter = ((FillLayer) layer).getFilter();
+          } else if (layer instanceof HeatmapLayer) {
+            filter = ((HeatmapLayer) layer).getFilter();
+          } else if (layer instanceof LineLayer) {
+            filter = ((LineLayer) layer).getFilter();
+          } else if (layer instanceof SymbolLayer) {
+            filter = ((SymbolLayer) layer).getFilter();
+          } else {
+            result.error(
+                    "INVALID LAYER TYPE",
+                    String.format("Layer '%s' does not support filtering.", layerId),
+                    null);
+            break;
+          }
+
+          reply.put("filter", filter.toString());
+          result.success(reply);
+          break;
+        }
         case "layer#setVisibility":
         {
 
@@ -1273,10 +1314,67 @@ final class MapboxMapController
           Layer layer = style.getLayer(layerId);
 
           layer.setProperties(PropertyFactory.visibility(visible ? "visible" : "none"));
-          
+
           result.success(null);
           break;
 
+        }
+        case "map#querySourceFeatures":
+        {
+          Map<String, Object> reply = new HashMap<>();
+          List<Feature> features;
+
+          String sourceId = (String) call.argument("sourceId");
+
+          String sourceLayerId = (String) call.argument("sourceLayerId");
+
+          List<Object> filter = call.argument("filter");
+          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          JsonArray jsonArray = null;
+          if (jsonElement != null && jsonElement.isJsonArray()) {
+            jsonArray = jsonElement.getAsJsonArray();
+          }
+          Expression filterExpression =
+                  jsonArray == null ? null : Expression.Converter.convert(jsonArray);
+
+
+          Source source = style.getSource(sourceId);
+          if (source instanceof GeoJsonSource) {
+            features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof CustomGeometrySource) {
+            features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof VectorSource && sourceLayerId != null) {
+            features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
+          } else {
+            features = Collections.emptyList();
+          }
+
+          List<String> featuresJson = new ArrayList<>();
+          for (Feature feature : features) {
+            featuresJson.add(feature.toJson());
+          }
+          reply.put("features", featuresJson);
+          result.success(reply);
+          break;
+        }
+        case "style#getLayerIds":
+        {
+          if (style == null) {
+            result.error(
+                    "STYLE IS NULL",
+                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    null);
+          }
+          Map<String, Object> reply = new HashMap<>();
+
+          List<String> layerIds = new ArrayList<>();
+          for (Layer layer : style.getLayers()) {
+            layerIds.add(layer.getId());
+          }
+
+          reply.put("layers", layerIds);
+          result.success(reply);
+          break;
         }
       default:
         result.notImplemented();
