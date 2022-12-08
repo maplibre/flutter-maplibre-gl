@@ -68,6 +68,9 @@ abstract class MapLibreGlPlatform {
 
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter);
+
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter);
   Future invalidateAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 
@@ -86,7 +89,11 @@ abstract class MapLibreGlPlatform {
 
   Future<void> removeLayer(String imageLayerId);
 
+  Future<List> getLayerIds();
+
   Future<void> setFilter(String layerId, dynamic filter);
+
+  Future<dynamic> getFilter(String layerId);
 
   Future<Point> toScreenLocation(LatLng latLng);
 

@@ -309,6 +309,24 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    try {
+      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
+        'map#querySourceFeatures',
+        <String, Object?>{
+          'sourceId': sourceId,
+          'sourceLayerId': sourceLayerId,
+          'filter': filter,
+        },
+      );
+      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');
@@ -477,6 +495,20 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     try {
       return await _channel.invokeMethod('style#setFilter',
           <String, Object>{'layerId': layerId, 'filter': jsonEncode(filter)});
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
+  Future<dynamic> getFilter(String layerId) async {
+    try {
+      Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getFilter', <String, dynamic>{
+        'layerId': layerId,
+      });
+      final filter = reply["filter"];
+      return filter != null ? jsonDecode(filter) : null;
     } on PlatformException catch (e) {
       return new Future.error(e);
     }
@@ -710,4 +742,15 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
   @override
   void resizeWebMap() {}
+
+  @override
+  Future<List> getLayerIds() async {
+    try {
+      final Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getLayerIds');
+      return reply['layers'].map((it) => it.toString()).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
 }

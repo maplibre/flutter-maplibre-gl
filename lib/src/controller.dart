@@ -997,6 +997,14 @@ class MaplibreMapController extends ChangeNotifier {
         rect, layerIds, filter);
   }
 
+  /// Query rendered features at a point in screen coordinates
+  /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    return _mapboxGlPlatform.querySourceFeatures(
+        sourceId, sourceLayerId, filter);
+  }
+
   Future invalidateAmbientCache() async {
     return _mapboxGlPlatform.invalidateAmbientCache();
   }
@@ -1119,6 +1127,10 @@ class MaplibreMapController extends ChangeNotifier {
 
   Future<void> setFilter(String layerId, dynamic filter) {
     return _mapboxGlPlatform.setFilter(layerId, filter);
+  }
+
+  Future<dynamic> getFilter(String layerId) {
+    return _mapboxGlPlatform.getFilter(layerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
@@ -1252,6 +1264,10 @@ class MaplibreMapController extends ChangeNotifier {
 
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     return _mapboxGlPlatform.setLayerVisibility(layerId, visible);
+  }
+
+  Future<List> getLayerIds() {
+    return _mapboxGlPlatform.getLayerIds();
   }
 
   @override

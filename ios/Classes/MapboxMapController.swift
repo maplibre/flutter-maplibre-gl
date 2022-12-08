@@ -714,7 +714,85 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
             layer.isVisible = visible
             result(nil)
+            
+        case "map#querySourceFeatures":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            
+            var sourceLayerId = Set<String>()
+            if let layerId = arguments["sourceLayerId"] as? String {
+                sourceLayerId.insert(layerId)
+            }
+            var filterExpression: NSPredicate?
+            if let filter = arguments["filter"] as? [Any] {
+                filterExpression = NSPredicate(mglJSONObject: filter)
+            }
+            
+            var reply = [String: NSObject]()
+            var features: [MGLFeature] = []
+            
+            guard let style = mapView.style else { return }
+            if let source = style.source(withIdentifier: sourceId) {
+                if let vectorSource = source as? MGLVectorTileSource {
+                    features = vectorSource.features(sourceLayerIdentifiers: sourceLayerId, predicate: filterExpression)
+                } else if let shapeSource = source as? MGLShapeSource {
+                    features = shapeSource.features(matching: filterExpression)
+                }
+            }
+            
+            var featuresJson = [String]()
+            for feature in features {
+                let dictionary = feature.geoJSONDictionary()
+                if let theJSONData = try? JSONSerialization.data(
+                    withJSONObject: dictionary,
+                    options: []
+                ),
+                    let theJSONText = String(data: theJSONData, encoding: .utf8)
+                {
+                    featuresJson.append(theJSONText)
+                }
+            }
+            reply["features"] = featuresJson as NSObject
+            result(reply)
 
+        case "style#getLayerIds":
+            var layerIds = [String]()
+            
+            guard let style = mapView.style else { return }
+            
+            style.layers.forEach { layer in layerIds.append(layer.identifier) }
+            
+            var reply = [String: NSObject]()
+            reply["layers"] = layerIds as NSObject
+            result(reply)
+            
+        case "style#getFilter":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            
+            guard let style = mapView.style else { return }
+            guard let layer = style.layer(withIdentifier: layerId) else { return }
+            
+            var currentLayerFilter : String = ""
+            if let vectorLayer = layer as? MGLVectorStyleLayer {
+                if let layerFilter = vectorLayer.predicate {
+                    
+                    let jsonExpression = layerFilter.mgl_jsonExpressionObject
+                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
+                        currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                    }
+                }
+            } else {
+                result(MethodCallError.invalidLayerType(
+                    details: "Layer '\(layer.identifier)' does not support filtering."
+                ).flutterError)
+                return;
+            }
+            
+            var reply = [String: NSObject]()
+            reply["filter"] = currentLayerFilter as NSObject
+            result(reply)
+            
         default:
             result(FlutterMethodNotImplemented)
         }
