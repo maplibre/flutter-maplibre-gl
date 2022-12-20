@@ -680,11 +680,12 @@ final class MapboxMapController
           reply.put(
               "sw",
               Arrays.asList(
-                  visibleRegion.nearLeft.getLatitude(), visibleRegion.nearLeft.getLongitude()));
+                  visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
           reply.put(
               "ne",
               Arrays.asList(
-                  visibleRegion.farRight.getLatitude(), visibleRegion.farRight.getLongitude()));
+                    visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
+
           result.success(reply);
           break;
         }
