@@ -1270,8 +1270,8 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.getLayerIds();
   }
 
-  Future<List> getSourceIds() {
-    return _mapboxGlPlatform.getSourceIds();
+  Future<List<String>> getSourceIds() async {
+    return (await _mapboxGlPlatform.getSourceIds()).whereType<String>().toList();
   }
 
   @override
