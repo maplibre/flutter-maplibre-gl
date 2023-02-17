@@ -1045,4 +1045,9 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<List> getLayerIds() async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<List> getSourceIds() async {
+    throw UnimplementedError();
+  }
 }

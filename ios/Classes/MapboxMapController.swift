@@ -765,6 +765,17 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             var reply = [String: NSObject]()
             reply["layers"] = layerIds as NSObject
             result(reply)
+
+        case "style#getSrouceIds":
+            var sourceIds = [String]()
+
+            guard let style = mapView.style else { return }
+
+            style.sources.forEach { source in sourceIds.append(source.identifier) }
+
+            var reply = [String: NSObject]()
+            reply["sources"] = sourceIds as NSObject
+            result(reply)
             
         case "style#getFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
