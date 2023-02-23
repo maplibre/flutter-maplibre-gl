@@ -766,7 +766,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             reply["layers"] = layerIds as NSObject
             result(reply)
 
-        case "style#getSrouceIds":
+        case "style#getSourceIds":
             var sourceIds = [String]()
 
             guard let style = mapView.style else { return }
