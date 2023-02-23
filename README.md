@@ -151,6 +151,18 @@ buildTypes {
 
 Please include the `NSLocationWhenInUseUsageDescription` as described [here](#location-features)
 
+### Layer is not displayed on IOS, but no error
+
+Have a look in your `LayerProperties` object, if you supply a `lineColor` argument, (or any color argument) the issue might comes from here.
+Android support the following format : `'rgba(192, 192, 255, 1.0)'`,  but on IOS, this **DOES NOT WORK !!** 
+
+You have to have the color in the following format : `#C0C0FF` 
+
+### IOS crash with error : `'NSInvalidArgumentException', reason: 'Invalid filter value: filter property must be a string'`
+Check if one of your expression is : `["!has", "value"]`. Android support this format, but IOS does not.
+You can replace your expression with :   `["!",["has", "value"] ]` which works both in android and IOS.
+
+Note : ios will display the error : `NSPredicate: Use of 'mgl_does:have:' as an NSExpression function is forbidden`, but it seems to be just a print, and the expression still works well.
 
 ## Contributing
 
