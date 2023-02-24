@@ -92,13 +92,6 @@ Future<OfflineRegion> downloadOfflineRegion(
   String channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
-  final result = await _globalChannel
-      .invokeMethod('downloadOfflineRegion', <String, dynamic>{
-    'channelName': channelName,
-    'definition': definition.toMap(),
-    'metadata': metadata,
-  });
-
   if (onEvent != null) {
     EventChannel(channelName).receiveBroadcastStream().handleError((error) {
       if (error is PlatformException) {
@@ -109,7 +102,7 @@ Future<OfflineRegion> downloadOfflineRegion(
         PlatformException(
           code: 'UnknowException',
           message:
-              'This error is unhandled by plugin. Please contact us if needed.',
+          'This error is unhandled by plugin. Please contact us if needed.',
           details: error,
         ),
       );
@@ -143,6 +136,13 @@ Future<OfflineRegion> downloadOfflineRegion(
       onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
     });
   }
+
+  final result = await _globalChannel
+      .invokeMethod('downloadOfflineRegion', <String, dynamic>{
+    'channelName': channelName,
+    'definition': definition.toMap(),
+    'metadata': metadata,
+  });
 
   return OfflineRegion.fromMap(json.decode(result));
 }
