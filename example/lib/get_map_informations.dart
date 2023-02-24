@@ -26,7 +26,6 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
   void onMapCreated(MaplibreMapController controller) {
     setState(() {
       this.controller = controller;
-      print('controller set');
     });
   }
 
