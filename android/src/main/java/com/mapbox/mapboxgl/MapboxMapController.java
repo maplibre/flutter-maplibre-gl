@@ -37,6 +37,7 @@ import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.BoundingBox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -72,8 +73,13 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -88,6 +94,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 /** Controller of a single MapboxMaps MapView instance. */
 @SuppressLint("MissingPermission")
@@ -251,6 +258,7 @@ final class MapboxMapController
   public void setStyleString(String styleString) {
     // clear old layer id from the location Component
     clearLocationComponentLayer();
+    styleString = styleString.trim();
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -673,11 +681,12 @@ final class MapboxMapController
           reply.put(
               "sw",
               Arrays.asList(
-                  visibleRegion.nearLeft.getLatitude(), visibleRegion.nearLeft.getLongitude()));
+                  visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
           reply.put(
               "ne",
               Arrays.asList(
-                  visibleRegion.farRight.getLatitude(), visibleRegion.farRight.getLongitude()));
+                    visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
+
           result.success(reply);
           break;
         }
@@ -1195,6 +1204,26 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+      case "map#setCameraBounds":
+        {
+          double west = call.argument("west");
+          double north = call.argument("north");
+          double south = call.argument("south");
+          double east = call.argument("east");
+
+          int padding = call.argument("padding");
+
+          LatLng locationOne = new LatLng(north, east);
+          LatLng locationTwo = new LatLng(south, west);
+          LatLngBounds latLngBounds = new LatLngBounds.Builder()
+                  .include(locationOne) // Northeast
+                  .include(locationTwo) // Southwest
+                  .build();
+          mapboxMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
+                  padding), 200);
+
+          break;
+        }
       case "style#setFilter":
         {
           if (style == null) {
@@ -1233,6 +1262,120 @@ final class MapboxMapController
           }
 
           result.success(null);
+          break;
+        }
+        case "style#getFilter":
+        {
+          if (style == null) {
+            result.error(
+                    "STYLE IS NULL",
+                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    null);
+          }
+          Map<String, Object> reply = new HashMap<>();
+          String layerId = call.argument("layerId");
+          Layer layer = style.getLayer(layerId);
+
+          Expression filter;
+          if (layer instanceof CircleLayer) {
+            filter = ((CircleLayer) layer).getFilter();
+          } else if (layer instanceof FillExtrusionLayer) {
+            filter = ((FillExtrusionLayer) layer).getFilter();
+          } else if (layer instanceof FillLayer) {
+            filter = ((FillLayer) layer).getFilter();
+          } else if (layer instanceof HeatmapLayer) {
+            filter = ((HeatmapLayer) layer).getFilter();
+          } else if (layer instanceof LineLayer) {
+            filter = ((LineLayer) layer).getFilter();
+          } else if (layer instanceof SymbolLayer) {
+            filter = ((SymbolLayer) layer).getFilter();
+          } else {
+            result.error(
+                    "INVALID LAYER TYPE",
+                    String.format("Layer '%s' does not support filtering.", layerId),
+                    null);
+            break;
+          }
+
+          reply.put("filter", filter.toString());
+          result.success(reply);
+          break;
+        }
+        case "layer#setVisibility":
+        {
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+          String layerId = call.argument("layerId");
+          boolean visible = call.argument("visible");
+
+          Layer layer = style.getLayer(layerId);
+
+          layer.setProperties(PropertyFactory.visibility(visible ? "visible" : "none"));
+
+          result.success(null);
+          break;
+
+        }
+        case "map#querySourceFeatures":
+        {
+          Map<String, Object> reply = new HashMap<>();
+          List<Feature> features;
+
+          String sourceId = (String) call.argument("sourceId");
+
+          String sourceLayerId = (String) call.argument("sourceLayerId");
+
+          List<Object> filter = call.argument("filter");
+          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          JsonArray jsonArray = null;
+          if (jsonElement != null && jsonElement.isJsonArray()) {
+            jsonArray = jsonElement.getAsJsonArray();
+          }
+          Expression filterExpression =
+                  jsonArray == null ? null : Expression.Converter.convert(jsonArray);
+
+
+          Source source = style.getSource(sourceId);
+          if (source instanceof GeoJsonSource) {
+            features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof CustomGeometrySource) {
+            features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
+          } else if (source instanceof VectorSource && sourceLayerId != null) {
+            features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
+          } else {
+            features = Collections.emptyList();
+          }
+
+          List<String> featuresJson = new ArrayList<>();
+          for (Feature feature : features) {
+            featuresJson.add(feature.toJson());
+          }
+          reply.put("features", featuresJson);
+          result.success(reply);
+          break;
+        }
+        case "style#getLayerIds":
+        {
+          if (style == null) {
+            result.error(
+                    "STYLE IS NULL",
+                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    null);
+          }
+          Map<String, Object> reply = new HashMap<>();
+
+          List<String> layerIds = new ArrayList<>();
+          for (Layer layer : style.getLayers()) {
+            layerIds.add(layer.getId());
+          }
+
+          reply.put("layers", layerIds);
+          result.success(reply);
           break;
         }
       default:

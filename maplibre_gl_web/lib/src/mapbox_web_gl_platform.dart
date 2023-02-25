@@ -310,6 +310,35 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    Map<String, dynamic> parameters = {};
+
+    if (sourceLayerId != null) {
+      parameters['sourceLayer'] = sourceLayerId;
+    }
+
+    if (filter != null) {
+      parameters['filter'] = filter;
+    }
+    print(parameters);
+
+    return _map
+        .querySourceFeatures(sourceId, parameters)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     print('Offline storage not available in web');
   }
@@ -727,6 +756,17 @@ class MaplibreMapController extends MapLibreGlPlatform
     source.setData(data);
   }
 
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)),
+        {'padding': padding});
+  }
+
   @override
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
@@ -989,5 +1029,20 @@ class MaplibreMapController extends MapLibreGlPlatform
   @override
   void forceResizeWebMap() {
     _map.resize();
+  }
+
+  @override
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+  }
+
+  @override
+  Future getFilter(String layerId) async {
+    return _map.getFilter(layerId);
+  }
+
+  @override
+  Future<List> getLayerIds() async {
+    throw UnimplementedError();
   }
 }

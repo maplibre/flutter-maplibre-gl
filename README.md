@@ -52,6 +52,14 @@ pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
 ```
 
+### Web
+Include the following JavaScript and CSS files in the `<head>` of the `web/index.html` file.
+
+```html
+<script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+<link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
+```
+
 ## Supported API
 
 | Feature | Android | iOS | Web |
@@ -114,6 +122,15 @@ A possible explanation could be: "Shows your location on the map".
 - **Have a bug to report?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). If possible, include a full log and information which shows the issue.
 - **Have a feature request?** [Open an issue](https://github.com/m0nac0/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
+## Running in GitHub Codespaces
+When you open this project in GitHub Codespaces, you can run the example app on web with the command `flutter run -d web-server --web-hostname=0.0.0.0`
+
+Codespaces should automatically take care of the necessary port forwarding, so that you can view the running web app on your local device or in a new tab.
+
+**Please note:** the Docker image used to setup the Codespace is from CirrusCI and sets the Git username and email to CirrusCI default values. You should set these correctly, 
+if you plan on committing from the Codespace.
+
+
 ## Fixing common issues
 ### Avoid Android UnsatisfiedLinkError
 
@@ -134,6 +151,18 @@ buildTypes {
 
 Please include the `NSLocationWhenInUseUsageDescription` as described [here](#location-features)
 
+### Layer is not displayed on IOS, but no error
+
+Have a look in your `LayerProperties` object, if you supply a `lineColor` argument, (or any color argument) the issue might come from here.
+Android supports the following format : `'rgba(192, 192, 255, 1.0)'`,  but on iOS, this doesn't work! 
+
+You have to have the color in the following format : `#C0C0FF` 
+
+### iOS crashes with error: `'NSInvalidArgumentException', reason: 'Invalid filter value: filter property must be a string'`
+Check if one of your expression is : `["!has", "value"]`. Android support this format, but iOS does not.
+You can replace your expression with :   `["!",["has", "value"] ]` which works both in Android and iOS.
+
+Note : iOS will display the error : `NSPredicate: Use of 'mgl_does:have:' as an NSExpression function is forbidden`, but it seems like the expression still works well.
 
 ## Contributing
 

@@ -309,6 +309,24 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    try {
+      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
+        'map#querySourceFeatures',
+        <String, Object?>{
+          'sourceId': sourceId,
+          'sourceLayerId': sourceLayerId,
+          'filter': filter,
+        },
+      );
+      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');
@@ -483,6 +501,20 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<dynamic> getFilter(String layerId) async {
+    try {
+      Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getFilter', <String, dynamic>{
+        'layerId': layerId,
+      });
+      final filter = reply["filter"];
+      return filter != null ? jsonDecode(filter) : null;
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<LatLng> toLatLng(Point screenLocation) async {
     try {
       var latLngMap =
@@ -525,6 +557,26 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       'sourceId': sourceId,
       'geojson': jsonEncode(geojson),
     });
+  }
+
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    try {
+      await _channel.invokeMethod('map#setCameraBounds', <String, dynamic>{
+        'west': west,
+        'north': north,
+        'south': south,
+        'east': east,
+        'padding': padding,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
   }
 
   @override
@@ -678,8 +730,27 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
+      'layerId': layerId,
+      'visible': visible,
+    });
+  }
+
+  @override
   void forceResizeWebMap() {}
 
   @override
   void resizeWebMap() {}
+
+  @override
+  Future<List> getLayerIds() async {
+    try {
+      final Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getLayerIds');
+      return reply['layers'].map((it) => it.toString()).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
 }

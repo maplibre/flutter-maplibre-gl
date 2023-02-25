@@ -997,6 +997,14 @@ class MaplibreMapController extends ChangeNotifier {
         rect, layerIds, filter);
   }
 
+  /// Query rendered features at a point in screen coordinates
+  /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
+  Future<List> querySourceFeatures(
+      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    return _mapboxGlPlatform.querySourceFeatures(
+        sourceId, sourceLayerId, filter);
+  }
+
   Future invalidateAmbientCache() async {
     return _mapboxGlPlatform.invalidateAmbientCache();
   }
@@ -1121,6 +1129,10 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.setFilter(layerId, filter);
   }
 
+  Future<dynamic> getFilter(String layerId) {
+    return _mapboxGlPlatform.getFilter(layerId);
+  }
+
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
   ///
   /// Note: The resulting x and y coordinates are rounded to [int] on web, on other platforms they may differ very slightly (in the range of about 10^-10) from the actual nearest screen coordinate.
@@ -1149,6 +1161,22 @@ class MaplibreMapController extends ChangeNotifier {
   /// Add a new source to the map
   Future<void> addSource(String sourceid, SourceProperties properties) async {
     return _mapboxGlPlatform.addSource(sourceid, properties);
+  }
+
+  Future setCameraBounds({
+    required double west,
+    required double north,
+    required double south,
+    required double east,
+    required int padding,
+  }) async {
+    return _mapboxGlPlatform.setCameraBounds(
+      west: west,
+      north: north,
+      south: south,
+      east: east,
+      padding: padding,
+    );
   }
 
   /// Add a layer to the map with the given properties
@@ -1232,6 +1260,14 @@ class MaplibreMapController extends ChangeNotifier {
     } else {
       throw UnimplementedError("Unknown layer type $properties");
     }
+  }
+
+  Future<void> setLayerVisibility(String layerId, bool visible) async {
+    return _mapboxGlPlatform.setLayerVisibility(layerId, visible);
+  }
+
+  Future<List> getLayerIds() {
+    return _mapboxGlPlatform.getLayerIds();
   }
 
   @override

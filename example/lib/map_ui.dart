@@ -61,6 +61,7 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _zoomGesturesEnabled = true;
   bool _myLocationEnabled = true;
   bool _telemetryEnabled = true;
+  bool _countriesVisible = true;
   MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
@@ -290,6 +291,27 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
+  Widget _sourceFeaturesGetter() {
+    return TextButton(
+      child: Text('get source features (maplibre)'),
+      onPressed: () async {
+        var result = await mapController!
+            .querySourceFeatures("maplibre", "centroids", null);
+        print(result);
+      },
+    );
+  }
+
+  Widget _layerVisibilityToggler() {
+    return TextButton(
+      child: Text('toggle layer visibility'),
+      onPressed: () async {
+        _countriesVisible = !_countriesVisible;
+        mapController?.setLayerVisibility('countries-fill', _countriesVisible);
+      },
+    );
+  }
+
   _clearFill() {
     if (_selectedFill != null) {
       mapController!.removeFill(_selectedFill!);
@@ -410,6 +432,8 @@ class MapUiBodyState extends State<MapUiBody> {
           _myLocationToggler(),
           _telemetryToggler(),
           _visibleRegionGetter(),
+          _layerVisibilityToggler(),
+          _sourceFeaturesGetter(),
         ],
       );
     }
