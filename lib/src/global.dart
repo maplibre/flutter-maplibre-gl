@@ -107,7 +107,7 @@ Future<OfflineRegion> downloadOfflineRegion(
         PlatformException(
           code: 'UnknowException',
           message:
-          'This error is unhandled by plugin. Please contact us if needed.',
+              'This error is unhandled by plugin. Please contact us if needed.',
           details: error,
         ),
       );
