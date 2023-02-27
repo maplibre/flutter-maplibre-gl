@@ -98,6 +98,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         String channelName = methodCall.argument("channelName");
         // Prepare args
         downloadOfflineRegionChannelHandler = new OfflineChannelHandlerImpl(messenger, channelName);
+        result.success(null);
         break;
       case "downloadOfflineRegion":
         // Get args from caller
