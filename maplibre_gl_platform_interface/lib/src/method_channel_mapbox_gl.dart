@@ -753,4 +753,15 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       return new Future.error(e);
     }
   }
+
+  @override
+  Future<List> getSourceIds() async {
+    try {
+      final Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('style#getSourceIds');
+      return reply['sources'].map((it) => it.toString()).toList();
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
 }
