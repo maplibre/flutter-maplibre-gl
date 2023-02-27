@@ -76,9 +76,6 @@ abstract class OfflineManagerUtils {
                 result.success(new Gson().toJson(regionData));
 
                 _offlineRegion = offlineRegion;
-                // Start downloading region
-                _offlineRegion.setDownloadState(OfflineRegion.STATE_ACTIVE);
-                channelHandler.onStart();
                 // Observe downloading state
                 OfflineRegion.OfflineRegionObserver observer =
                     new OfflineRegion.OfflineRegionObserver() {
@@ -140,7 +137,12 @@ abstract class OfflineManagerUtils {
                         deleteRegion(null, context, _offlineRegion.getID());
                       }
                     };
+
                 _offlineRegion.setObserver(observer);
+
+                // Start downloading region
+                _offlineRegion.setDownloadState(OfflineRegion.STATE_ACTIVE);
+                channelHandler.onStart();
               }
 
               /**
