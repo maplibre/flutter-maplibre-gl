@@ -1,5 +1,5 @@
 
-
+part of maplibre_gl_platform_interface;
 /// This file wrapps AndroidViewController classes in order to delay disposal process.
 /// It is an workaround for flutter 3, where resourses get disposed quicker than before, while Mapbox behaves badly
 /// and tries to access those resources after they had been disposed, resulting in a native crash.
