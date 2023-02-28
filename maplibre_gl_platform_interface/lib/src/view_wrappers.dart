@@ -1,5 +1,5 @@
-
 part of maplibre_gl_platform_interface;
+
 /// This file wrapps AndroidViewController classes in order to delay disposal process.
 /// It is an workaround for flutter 3, where resourses get disposed quicker than before, while Mapbox behaves badly
 /// and tries to access those resources after they had been disposed, resulting in a native crash.
@@ -33,6 +33,7 @@ class TextureAndroidViewControllerWrapper
 
   // @override
   PointTransformer get pointTransformer => _controller.pointTransformer;
+
   set pointTransformer(PointTransformer transformer) =>
       _controller.pointTransformer = transformer;
 
@@ -135,7 +136,8 @@ class AndroidViewWithWrappedController extends StatefulWidget {
     this.creationParams,
     this.creationParamsCodec,
     this.clipBehavior = Clip.hardEdge,
-  })  : assert(viewType != null),
+  })
+      : assert(viewType != null),
         assert(hitTestBehavior != null),
         assert(creationParams == null || creationParamsCodec != null),
         assert(clipBehavior != null),
@@ -296,7 +298,8 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
     required this.hitTestBehavior,
     required this.gestureRecognizers,
     this.clipBehavior = Clip.hardEdge,
-  })  : assert(controller != null),
+  })
+      : assert(controller != null),
         assert(hitTestBehavior != null),
         assert(gestureRecognizers != null),
         assert(clipBehavior != null);
@@ -307,16 +310,17 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
   final Clip clipBehavior;
 
   @override
-  RenderObject createRenderObject(BuildContext context) => RenderAndroidView(
-    viewController: controller,
-    hitTestBehavior: hitTestBehavior,
-    gestureRecognizers: gestureRecognizers,
-    clipBehavior: clipBehavior,
-  );
+  RenderObject createRenderObject(BuildContext context) =>
+      RenderAndroidView(
+        viewController: controller,
+        hitTestBehavior: hitTestBehavior,
+        gestureRecognizers: gestureRecognizers,
+        clipBehavior: clipBehavior,
+      );
 
   @override
-  void updateRenderObject(
-      BuildContext context, RenderAndroidView renderObject) {
+  void updateRenderObject(BuildContext context,
+      RenderAndroidView renderObject) {
     //renderObject.controller = controller;
     renderObject.hitTestBehavior = hitTestBehavior;
     renderObject.updateGestureRecognizers(gestureRecognizers);
