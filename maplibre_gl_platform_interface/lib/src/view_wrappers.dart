@@ -33,7 +33,6 @@ class TextureAndroidViewControllerWrapper
 
   // @override
   PointTransformer get pointTransformer => _controller.pointTransformer;
-
   set pointTransformer(PointTransformer transformer) =>
       _controller.pointTransformer = transformer;
 
@@ -57,7 +56,7 @@ class TextureAndroidViewControllerWrapper
   /// size is the view's initial size in logical pixel. size can be omitted
   /// if the concrete implementation doesn't require an initial size to create
   /// the platform view.
-  Future<void> create({Size? size}) async {
+  Future<void> create({Offset? position,Size? size}) async {
     await _controller.create();
     awaitingCreation = false;
     if (size != null) {
@@ -93,7 +92,7 @@ class TextureAndroidViewControllerWrapper
 
   // @override
   void removeOnPlatformViewCreatedListener(
-          PlatformViewCreatedCallback listener) =>
+      PlatformViewCreatedCallback listener) =>
       _controller.removeOnPlatformViewCreatedListener(listener);
 
   // @override
@@ -123,6 +122,10 @@ class TextureAndroidViewControllerWrapper
 
   // @override
   int get viewId => _controller.viewId;
+
+  @override
+  // TODO: implement requiresViewComposition
+  bool get requiresViewComposition => throw UnimplementedError();
 }
 
 class AndroidViewWithWrappedController extends StatefulWidget {
@@ -165,7 +168,7 @@ class _AndroidViewWithWrappedControllerState
   FocusNode? _focusNode;
 
   static final Set<Factory<OneSequenceGestureRecognizer>> _emptyRecognizersSet =
-      <Factory<OneSequenceGestureRecognizer>>{};
+  <Factory<OneSequenceGestureRecognizer>>{};
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +231,7 @@ class _AndroidViewWithWrappedControllerState
 
   TextDirection _findLayoutDirection() {
     assert(
-        widget.layoutDirection != null || debugCheckHasDirectionality(context));
+    widget.layoutDirection != null || debugCheckHasDirectionality(context));
     return widget.layoutDirection ?? Directionality.of(context);
   }
 
@@ -309,11 +312,11 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) => RenderAndroidView(
-        viewController: controller,
-        hitTestBehavior: hitTestBehavior,
-        gestureRecognizers: gestureRecognizers,
-        clipBehavior: clipBehavior,
-      );
+    viewController: controller,
+    hitTestBehavior: hitTestBehavior,
+    gestureRecognizers: gestureRecognizers,
+    clipBehavior: clipBehavior,
+  );
 
   @override
   void updateRenderObject(
