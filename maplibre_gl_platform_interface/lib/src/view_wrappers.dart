@@ -20,9 +20,7 @@ class WrappedPlatformViewsService {
       creationParamsCodec: creationParamsCodec,
       onFocus: onFocus,
     );
-    TextureAndroidViewController viewTexture =
-        view as TextureAndroidViewController;
-    return TextureAndroidViewControllerWrapper(viewTexture);
+    return view ;
   }
 }
 
