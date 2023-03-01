@@ -94,9 +94,9 @@ class LineBodyState extends State<LineBody> {
     final currentStart = _selectedLine!.options.geometry![0];
     final currentEnd = _selectedLine!.options.geometry![1];
     final end =
-        LatLng(currentEnd.latitude + 0.001, currentEnd.longitude + 0.001);
+    LatLng(currentEnd.latitude + 0.001, currentEnd.longitude + 0.001);
     final start =
-        LatLng(currentStart.latitude - 0.001, currentStart.longitude - 0.001);
+    LatLng(currentStart.latitude - 0.001, currentStart.longitude - 0.001);
     await controller!
         .updateLine(_selectedLine!, LineOptions(geometry: [start, end]));
   }
@@ -111,7 +111,7 @@ class LineBodyState extends State<LineBody> {
 
   Future<void> _changeLinePattern() async {
     String? current =
-        _selectedLine!.options.linePattern == null ? "assetImage" : null;
+    _selectedLine!.options.linePattern == null ? "assetImage" : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
     );
@@ -193,8 +193,8 @@ class LineBodyState extends State<LineBody> {
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  await _move();
-                                },
+                            await _move();
+                          },
                         ),
                         TextButton(
                           child: const Text('change line-pattern'),
@@ -209,24 +209,24 @@ class LineBodyState extends State<LineBody> {
                         TextButton(
                           child: const Text('change alpha'),
                           onPressed:
-                              (_selectedLine == null) ? null : _changeAlpha,
+                          (_selectedLine == null) ? null : _changeAlpha,
                         ),
                         TextButton(
                           child: const Text('toggle visible'),
                           onPressed:
-                              (_selectedLine == null) ? null : _toggleVisible,
+                          (_selectedLine == null) ? null : _toggleVisible,
                         ),
                         TextButton(
                           child: const Text('print current LatLng'),
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  var latLngs = await controller!
-                                      .getLineLatLngs(_selectedLine!);
-                                  for (var latLng in latLngs) {
-                                    print(latLng.toString());
-                                  }
-                                },
+                            var latLngs = await controller!
+                                .getLineLatLngs(_selectedLine!);
+                            for (var latLng in latLngs) {
+                              print(latLng.toString());
+                            }
+                          },
                         ),
                       ],
                     ),
