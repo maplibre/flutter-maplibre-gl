@@ -139,10 +139,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final useDelayedDisposalParam =
-      (creationParams['useDelayedDisposal'] ?? false) as bool;
+          (creationParams['useDelayedDisposal'] ?? false) as bool;
       final useHybridCompositionParam =
-      (creationParams['useHybridCompositionOverride'] ??
-          useHybridComposition) as bool;
+          (creationParams['useHybridCompositionOverride'] ??
+              useHybridComposition) as bool;
       if (useHybridCompositionParam) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/mapbox_gl',

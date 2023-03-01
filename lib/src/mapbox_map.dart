@@ -218,11 +218,13 @@ class MaplibreMap extends StatefulWidget {
 
   /// Override hybrid mode per map instance
   final bool? useHybridCompositionOverride;
+
   /// Set `MapboxMap.useHybridComposition` to `false` in order use Virtual-Display
   /// (better for Android 9 and below but may result in errors on Android 12)
   /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
   static bool get useHybridComposition =>
       MethodChannelMaplibreGl.useHybridComposition;
+
   static set useHybridComposition(bool useHybridComposition) =>
       MethodChannelMaplibreGl.useHybridComposition = useHybridComposition;
 
@@ -246,7 +248,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'options': _MapboxMapOptions.fromWidget(widget).toMap(),
-      'onAttributionClickOverride': widget.onAttributionClick != null,
+      //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
       'useDelayedDisposal': widget.useDelayedDisposal,
       'useHybridCompositionOverride': widget.useHybridCompositionOverride,
