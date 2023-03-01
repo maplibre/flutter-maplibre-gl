@@ -20,7 +20,7 @@ class WrappedPlatformViewsService {
       creationParamsCodec: creationParamsCodec,
       onFocus: onFocus,
     );
-    return view ;
+    return view;
   }
 }
 
