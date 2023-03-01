@@ -93,7 +93,7 @@ class TextureAndroidViewControllerWrapper
 
   // @override
   void removeOnPlatformViewCreatedListener(
-      PlatformViewCreatedCallback listener) =>
+          PlatformViewCreatedCallback listener) =>
       _controller.removeOnPlatformViewCreatedListener(listener);
 
   // @override
@@ -136,8 +136,7 @@ class AndroidViewWithWrappedController extends StatefulWidget {
     this.creationParams,
     this.creationParamsCodec,
     this.clipBehavior = Clip.hardEdge,
-  })
-      : assert(viewType != null),
+  })  : assert(viewType != null),
         assert(hitTestBehavior != null),
         assert(creationParams == null || creationParamsCodec != null),
         assert(clipBehavior != null),
@@ -166,7 +165,7 @@ class _AndroidViewWithWrappedControllerState
   FocusNode? _focusNode;
 
   static final Set<Factory<OneSequenceGestureRecognizer>> _emptyRecognizersSet =
-  <Factory<OneSequenceGestureRecognizer>>{};
+      <Factory<OneSequenceGestureRecognizer>>{};
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +228,7 @@ class _AndroidViewWithWrappedControllerState
 
   TextDirection _findLayoutDirection() {
     assert(
-    widget.layoutDirection != null || debugCheckHasDirectionality(context));
+        widget.layoutDirection != null || debugCheckHasDirectionality(context));
     return widget.layoutDirection ?? Directionality.of(context);
   }
 
@@ -298,8 +297,7 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
     required this.hitTestBehavior,
     required this.gestureRecognizers,
     this.clipBehavior = Clip.hardEdge,
-  })
-      : assert(controller != null),
+  })  : assert(controller != null),
         assert(hitTestBehavior != null),
         assert(gestureRecognizers != null),
         assert(clipBehavior != null);
@@ -310,8 +308,7 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
   final Clip clipBehavior;
 
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      RenderAndroidView(
+  RenderObject createRenderObject(BuildContext context) => RenderAndroidView(
         viewController: controller,
         hitTestBehavior: hitTestBehavior,
         gestureRecognizers: gestureRecognizers,
@@ -319,8 +316,8 @@ class _CopyPastedAndroidPlatformView extends LeafRenderObjectWidget {
       );
 
   @override
-  void updateRenderObject(BuildContext context,
-      RenderAndroidView renderObject) {
+  void updateRenderObject(
+      BuildContext context, RenderAndroidView renderObject) {
     //renderObject.controller = controller;
     renderObject.hitTestBehavior = hitTestBehavior;
     renderObject.updateGestureRecognizers(gestureRecognizers);
