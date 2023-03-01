@@ -337,12 +337,7 @@ class LayerPropertyConverter {
                 if offset.count == 2, offset.first is String, offset.first as? String == "literal" {
                     if let vector = offset.last as? [Any] {
                         if vector.count == 2 {
-                            if let x = vector.first as? Double, let y = vector.last as? Double {
-                                return NSExpression(
-                                    forConstantValue: NSValue(cgVector: CGVector(dx: x,
-                                                                                 dy: y))
-                                )
-                            }
+                            return NSExpression(forConstantValue: vector)
                         }
                     }
                 }
