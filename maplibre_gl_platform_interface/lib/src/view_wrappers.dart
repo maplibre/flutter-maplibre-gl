@@ -124,8 +124,7 @@ class TextureAndroidViewControllerWrapper
   // @override
   int get viewId => _controller.viewId;
 
-  @override
-  // TODO: implement requiresViewComposition
+  //@override
   bool get requiresViewComposition => throw UnimplementedError();
 }
 
