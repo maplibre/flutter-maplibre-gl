@@ -1378,6 +1378,25 @@ final class MapboxMapController
           result.success(reply);
           break;
         }
+      case "style#getSourceIds":
+      {
+        if (style == null) {
+          result.error(
+                  "STYLE IS NULL",
+                  "The style is null. Has onStyleLoaded() already been invoked?",
+                  null);
+        }
+        Map<String, Object> reply = new HashMap<>();
+
+        List<String> sourceIds = new ArrayList<>();
+        for (Source source : style.getSources()) {
+          sourceIds.add(source.getId());
+        }
+
+        reply.put("sources", sourceIds);
+        result.success(reply);
+        break;
+      }
       default:
         result.notImplemented();
     }

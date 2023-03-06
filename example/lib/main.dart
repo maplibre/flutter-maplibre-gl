@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
 
 import 'animate_camera.dart';
@@ -52,6 +53,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   ClickAnnotationPage(),
   Sources(),
   GivenBoundsPage(),
+  GetMapInfoPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
