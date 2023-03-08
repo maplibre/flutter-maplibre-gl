@@ -61,6 +61,9 @@ class TextureAndroidViewControllerWrapper
     awaitingCreation = false;
     if (size != null) {
       await _controller.setSize(size);
+      if (position != null) {
+        await _controller.setOffset(position);
+      }
     }
   }
 
@@ -107,7 +110,7 @@ class TextureAndroidViewControllerWrapper
   ///
   /// off is the view's new offset in logical pixel.
   /// On Android, this allows the Android native view to draw the a11y highlights
-  /// in the same location on the screen as the platform view widget in the Flutter framework.
+  /// in the same location on the screen as the platform view widget in the Flutter framework.L
   // @override
   Future<void> setOffset(Offset off) => Future(() => {});
 
@@ -124,7 +127,7 @@ class TextureAndroidViewControllerWrapper
   int get viewId => _controller.viewId;
 
   //@override
-  bool get requiresViewComposition => throw UnimplementedError();
+  bool get requiresViewComposition => _controller.requiresViewComposition;
 }
 
 class AndroidViewWithWrappedController extends StatefulWidget {
