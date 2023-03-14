@@ -8,7 +8,6 @@ import 'dart:html';
 import 'dart:js';
 import 'dart:js_util';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 
