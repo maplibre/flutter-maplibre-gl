@@ -92,11 +92,9 @@ Future<OfflineRegion> downloadOfflineRegion(
   String channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
-  final result = await _globalChannel
-      .invokeMethod('downloadOfflineRegion', <String, dynamic>{
+  await _globalChannel
+      .invokeMethod('downloadOfflineRegion#setup', <String, dynamic>{
     'channelName': channelName,
-    'definition': definition.toMap(),
-    'metadata': metadata,
   });
 
   if (onEvent != null) {
@@ -143,6 +141,12 @@ Future<OfflineRegion> downloadOfflineRegion(
       onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
     });
   }
+
+  final result = await _globalChannel
+      .invokeMethod('downloadOfflineRegion', <String, dynamic>{
+    'definition': definition.toMap(),
+    'metadata': metadata,
+  });
 
   return OfflineRegion.fromMap(json.decode(result));
 }
