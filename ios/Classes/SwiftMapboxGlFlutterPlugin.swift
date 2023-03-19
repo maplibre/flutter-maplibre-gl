@@ -4,6 +4,8 @@ import Mapbox
 import UIKit
 
 public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
+    static var downloadOfflineRegionChannelHandler: OfflineChannelHandler? = nil
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = MapboxMapFactory(withRegistrar: registrar)
         registrar.register(instance, withId: "plugins.flutter.io/mapbox_gl")
@@ -36,13 +38,29 @@ public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
                 let tilesdb = arguments["tilesdb"]
                 installOfflineMapTiles(registrar: registrar, tilesdb: tilesdb!)
                 result(nil)
+            case "downloadOfflineRegion#setup":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let channelName = args["channelName"] as? String
+                else {
+                    print(
+                        "downloadOfflineRegion#setup unexpected arguments: \(String(describing: methodCall.arguments))"
+                    )
+                    result(nil)
+                    return
+                }
+
+                downloadOfflineRegionChannelHandler = OfflineChannelHandler(
+                    messenger: registrar.messenger(),
+                    channelName: channelName
+                )
+
+                result(nil)
             case "downloadOfflineRegion":
                 // Get download region arguments from caller
                 guard let args = methodCall.arguments as? [String: Any],
                       let definitionDictionary = args["definition"] as? [String: Any],
                       let metadata = args["metadata"] as? [String: Any],
-                      let defintion = OfflineRegionDefinition.fromDictionary(definitionDictionary),
-                      let channelName = args["channelName"] as? String
+                      let defintion = OfflineRegionDefinition.fromDictionary(definitionDictionary)
                 else {
                     print(
                         "downloadOfflineRegion unexpected arguments: \(String(describing: methodCall.arguments))"
@@ -50,18 +68,24 @@ public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
                     result(nil)
                     return
                 }
-                // Prepare channel
-                let channelHandler = OfflineChannelHandler(
-                    messenger: registrar.messenger(),
-                    channelName: channelName
-                )
+
+                if (downloadOfflineRegionChannelHandler == nil) {
+                    result(FlutterError(
+                        code: "downloadOfflineRegion#setup NOT CALLED",
+                        message: "The setup has not been called, please call downloadOfflineRegion#setup before",
+                        details: nil
+                    ))
+                    return
+                }
+
                 OfflineManagerUtils.downloadRegion(
                     definition: defintion,
                     metadata: metadata,
                     result: result,
                     registrar: registrar,
-                    channelHandler: channelHandler
+                    channelHandler: downloadOfflineRegionChannelHandler!
                 )
+                downloadOfflineRegionChannelHandler = nil;
             case "setOfflineTileCountLimit":
                 guard let arguments = methodCall.arguments as? [String: Any],
                       let limit = arguments["limit"] as? UInt64
