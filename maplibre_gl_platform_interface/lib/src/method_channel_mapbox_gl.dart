@@ -675,11 +675,11 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   Future<void> addFillExtrusionLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
-        String? sourceLayer,
-        double? minzoom,
-        double? maxzoom,
-        dynamic filter,
-        required bool enableInteraction}) async {
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
+      dynamic filter,
+      required bool enableInteraction}) async {
     await _channel.invokeMethod('fillExtrusionLayer#add', <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,

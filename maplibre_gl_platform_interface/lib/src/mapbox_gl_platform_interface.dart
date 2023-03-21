@@ -162,11 +162,11 @@ abstract class MapLibreGlPlatform {
   Future<void> addFillExtrusionLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
-        String? sourceLayer,
-        double? minzoom,
-        double? maxzoom,
-        dynamic filter,
-        required bool enableInteraction});
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
+      dynamic filter,
+      required bool enableInteraction});
 
   Future<void> addRasterLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,

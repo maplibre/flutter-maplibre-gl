@@ -1879,14 +1879,14 @@ class FillExtrusionLayerProperties implements LayerProperties {
   FillExtrusionLayerProperties copyWith(FillExtrusionLayerProperties changes) {
     return FillExtrusionLayerProperties(
       fillExtrusionOpacity:
-      changes.fillExtrusionOpacity ?? fillExtrusionOpacity,
+          changes.fillExtrusionOpacity ?? fillExtrusionOpacity,
       fillExtrusionColor: changes.fillExtrusionColor ?? fillExtrusionColor,
       fillExtrusionTranslate:
-      changes.fillExtrusionTranslate ?? fillExtrusionTranslate,
+          changes.fillExtrusionTranslate ?? fillExtrusionTranslate,
       fillExtrusionTranslateAnchor:
-      changes.fillExtrusionTranslateAnchor ?? fillExtrusionTranslateAnchor,
+          changes.fillExtrusionTranslateAnchor ?? fillExtrusionTranslateAnchor,
       fillExtrusionPattern:
-      changes.fillExtrusionPattern ?? fillExtrusionPattern,
+          changes.fillExtrusionPattern ?? fillExtrusionPattern,
       fillExtrusionHeight: changes.fillExtrusionHeight ?? fillExtrusionHeight,
       fillExtrusionBase: changes.fillExtrusionBase ?? fillExtrusionBase,
       fillExtrusionVerticalGradient: changes.fillExtrusionVerticalGradient ??
