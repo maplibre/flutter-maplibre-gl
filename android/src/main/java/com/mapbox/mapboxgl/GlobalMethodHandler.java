@@ -28,6 +28,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   @NonNull private final BinaryMessenger messenger;
   @Nullable private PluginRegistry.Registrar registrar;
   @Nullable private FlutterPlugin.FlutterAssets flutterAssets;
+  @Nullable private OfflineChannelHandlerImpl downloadOfflineRegionChannelHandler;
 
   GlobalMethodHandler(@NonNull PluginRegistry.Registrar registrar) {
     this.registrar = registrar;
@@ -93,19 +94,29 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         Map<String, String> headers = (Map<String, String>) methodCall.argument("headers");
         MapboxHttpRequestUtil.setHttpHeaders(headers, result);
         break;
+      case "downloadOfflineRegion#setup":
+        String channelName = methodCall.argument("channelName");
+        // Prepare args
+        downloadOfflineRegionChannelHandler = new OfflineChannelHandlerImpl(messenger, channelName);
+        result.success(null);
+        break;
       case "downloadOfflineRegion":
         // Get args from caller
         Map<String, Object> definitionMap = (Map<String, Object>) methodCall.argument("definition");
         Map<String, Object> metadataMap = (Map<String, Object>) methodCall.argument("metadata");
-        String channelName = methodCall.argument("channelName");
 
-        // Prepare args
-        OfflineChannelHandlerImpl channelHandler =
-            new OfflineChannelHandlerImpl(messenger, channelName);
+        if (downloadOfflineRegionChannelHandler == null) {
+          result.error(
+                  "downloadOfflineRegion#setup NOT CALLED",
+                  "The setup has not been called, please call downloadOfflineRegion#setup before",
+                  null);
+          break;
+        }
 
         // Start downloading
         OfflineManagerUtils.downloadRegion(
-            result, context, definitionMap, metadataMap, channelHandler);
+            result, context, definitionMap, metadataMap, downloadOfflineRegionChannelHandler);
+        downloadOfflineRegionChannelHandler = null;
         break;
       case "getListOfRegions":
         OfflineManagerUtils.regionsList(result, context);
