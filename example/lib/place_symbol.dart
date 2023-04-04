@@ -5,7 +5,6 @@
 import 'dart:async'; // ignore: unnecessary_import
 import 'dart:core';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -113,7 +112,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return iconImage == 'customFont'
         ? SymbolOptions(
             geometry: geometry,
-            iconImage: 'custom-marker', //'airport-15',
+            iconImage: 'custom-marker',
+            //'airport-15',
             fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
             textField: 'Airport',
             textSize: 12.5,

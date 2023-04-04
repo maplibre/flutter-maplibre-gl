@@ -149,6 +149,11 @@ buildTypes {
 }
 ```
 
+## Flutter 3.x.x issues
+Since Flutter 3.x.x was introduced, it exposed some race conditions resulting in occasional crashes upon map disposal. The parameter `useDelayedDisposal` was introduced as a workaround for this issue until Flutter and/or Maplibre fix this issue properly. Use with caution.
+
+
+
 ### iOS app crashes on startup
 
 Please include the `NSLocationWhenInUseUsageDescription` as described [here](#location-features)
