@@ -17,6 +17,7 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
       new MapboxMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+  private boolean showAttributionButton = true;
   private boolean dragEnabled = true;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
@@ -36,6 +37,7 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
     controller.setTrackCameraPosition(trackCameraPosition);
+    controller.setShowAttributionButton(showAttributionButton);
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
@@ -46,6 +48,10 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
 
   public void setInitialCameraPosition(CameraPosition position) {
     options.camera(position);
+  }
+
+  public void setShowAttributionButton(boolean showAttributionButton) {
+    this.showAttributionButton = showAttributionButton;
   }
 
   @Override

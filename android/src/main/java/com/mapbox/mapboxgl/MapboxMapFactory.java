@@ -30,6 +30,9 @@ public class MapboxMapFactory extends PlatformViewFactory {
       CameraPosition position = Convert.toCameraPosition(params.get("initialCameraPosition"));
       builder.setInitialCameraPosition(position);
     }
+    if(params.containsKey("showAttributionButton")) {
+      builder.setShowAttributionButton(Convert.toBoolean(params.get("showAttributionButton")));
+    }
     if (params.containsKey("dragEnabled")) {
       boolean dragEnabled = Convert.toBoolean(params.get("dragEnabled"));
       builder.setDragEnabled(dragEnabled);

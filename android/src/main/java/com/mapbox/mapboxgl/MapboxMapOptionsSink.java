@@ -26,6 +26,8 @@ interface MapboxMapOptionsSink {
 
   void setTrackCameraPosition(boolean trackCameraPosition);
 
+  void setShowAttributionButton(boolean showAttributionButton);
+
   void setZoomGesturesEnabled(boolean zoomGesturesEnabled);
 
   void setMyLocationEnabled(boolean myLocationEnabled);

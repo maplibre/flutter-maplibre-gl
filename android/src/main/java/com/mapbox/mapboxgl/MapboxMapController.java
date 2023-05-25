@@ -126,6 +126,7 @@ final class MapboxMapController
   private int myLocationRenderMode = 0;
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean showAttributionButton = true;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngine locationEngine = null;
@@ -219,6 +220,7 @@ final class MapboxMapController
   @Override
   public void onMapReady(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
+    this.mapboxMap.getUiSettings().setAttributionEnabled(showAttributionButton);
     if (mapReadyResult != null) {
       mapReadyResult.success(null);
       mapReadyResult = null;
@@ -280,7 +282,7 @@ final class MapboxMapController
     }
   }
 
-  
+
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
@@ -1625,6 +1627,13 @@ final class MapboxMapController
   @Override
   public void setTrackCameraPosition(boolean trackCameraPosition) {
     this.trackCameraPosition = trackCameraPosition;
+  }
+
+  @Override
+  public void setShowAttributionButton(boolean showAttributionButton) {
+    // Set this as member variable and later on apply it when the map is ready, otherwise
+    // we crash here because "mapboxMap" is not initialized.
+    this.showAttributionButton = showAttributionButton;
   }
 
   @Override
