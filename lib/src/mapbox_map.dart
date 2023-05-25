@@ -28,7 +28,7 @@ class MaplibreMap extends StatefulWidget {
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.None,
-    this.myLocationRenderMode = MyLocationRenderMode.COMPASS,
+    this.myLocationRenderMode = MyLocationRenderMode.NORMAL,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
@@ -55,7 +55,13 @@ class MaplibreMap extends StatefulWidget {
     ],
     this.useDelayedDisposal,
     this.useHybridCompositionOverride,
-  })  : assert(annotationOrder.length <= 4),
+  })  : assert(
+          myLocationRenderMode != MyLocationRenderMode.NORMAL
+              ? myLocationEnabled
+              : true,
+          "$myLocationRenderMode requires [myLocationEnabled] set to true.",
+        ),
+        assert(annotationOrder.length <= 4),
         assert(annotationConsumeTapEvents.length > 0),
         super(key: key);
 

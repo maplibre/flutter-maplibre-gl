@@ -47,6 +47,7 @@ class MapUiBodyState extends State<MapUiBody> {
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
   int _styleStringIndex = 0;
+
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
   List<String> _styleStrings = [
@@ -65,11 +66,6 @@ class MapUiBodyState extends State<MapUiBody> {
   MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   void _onMapChanged() {
     setState(() {
