@@ -55,6 +55,7 @@ class MaplibreMap extends StatefulWidget {
     ],
     this.useDelayedDisposal,
     this.useHybridCompositionOverride,
+    this.showAttributionButton = true,
   })  : assert(annotationOrder.length <= 4),
         assert(annotationConsumeTapEvents.length > 0),
         super(key: key);
@@ -63,7 +64,7 @@ class MaplibreMap extends StatefulWidget {
   ///
   /// Any annotation type can only be contained once, so 0 to 4 types
   ///
-  /// Note that setting this to be empty gives a big perfomance boost for
+  /// Note that setting this to be empty gives a big performance boost for
   /// android. However if you do so annotations will not work.
   final List<AnnotationType> annotationOrder;
 
@@ -87,8 +88,8 @@ class MaplibreMap extends StatefulWidget {
 
   /// True if drag functionality should be enabled.
   ///
-  /// Disable to avoid performance issues that from the drag event listeners.
-  /// Biggest impact in android
+  /// Disable to avoid performance issues that are caused by drag event listeners.
+  /// Biggest impact on android.
   final bool dragEnabled;
 
   /// Geographical bounding box for the camera target.
@@ -219,6 +220,12 @@ class MaplibreMap extends StatefulWidget {
   /// Override hybrid mode per map instance
   final bool? useHybridCompositionOverride;
 
+  /// This will show an info button at the bottom right of the map that
+  /// shows information about the map sdk.
+  /// This value is only set initially and changing this after the initial creation
+  /// will have no effect.
+  final bool showAttributionButton;
+
   /// Set `MapboxMap.useHybridComposition` to `false` in order use Virtual-Display
   /// (better for Android 9 and below but may result in errors on Android 12)
   /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
@@ -252,6 +259,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
       'dragEnabled': widget.dragEnabled,
       'useDelayedDisposal': widget.useDelayedDisposal,
       'useHybridCompositionOverride': widget.useHybridCompositionOverride,
+      'showAttributionButton': widget.showAttributionButton,
     };
     return _mapboxGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);

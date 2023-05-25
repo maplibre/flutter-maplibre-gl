@@ -74,6 +74,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         mapView.addGestureRecognizer(longPress)
         
         if let args = args as? [String: Any] {
+            if let showAttributionButton = args["showAttributionButton"] as? Bool {
+                mapView.attributionButton.isHidden = !showAttributionButton
+            }
             Convert.interpretMapboxMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
                let camera = MGLMapCamera.fromDict(initialCameraPosition, mapView: mapView),

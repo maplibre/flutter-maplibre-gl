@@ -47,6 +47,7 @@ class MapUiBodyState extends State<MapUiBody> {
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
   int _styleStringIndex = 0;
+
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
   List<String> _styleStrings = [
@@ -361,6 +362,7 @@ class MapUiBodyState extends State<MapUiBody> {
       myLocationEnabled: _myLocationEnabled,
       myLocationTrackingMode: _myLocationTrackingMode,
       myLocationRenderMode: MyLocationRenderMode.GPS,
+      showAttributionButton: false,
       onMapClick: (point, latLng) async {
         print(
             "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
