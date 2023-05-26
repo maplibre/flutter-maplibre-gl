@@ -157,7 +157,9 @@ class MaplibreMap extends StatefulWidget {
   /// `myLocationEnabled` needs to be true for values other than `MyLocationTrackingMode.None` to work.
   final MyLocationTrackingMode myLocationTrackingMode;
 
-  /// The mode to render the user location symbol
+  /// Specifies if and how the user's heading/bearing is rendered in the user location indicator.
+  /// See the documentation of [MyLocationRenderMode] for details.
+  /// If this is set to a value other than [MyLocationRenderMode.NORMAL], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
   /// Set the layout margins for the Mapbox Logo

@@ -19,10 +19,12 @@ enum MyLocationTrackingMode {
 
 /// Specifies if and how the user's heading/bearing is rendered in the user location indicator.
 enum MyLocationRenderMode {
-  /// Do not show the user's heading/bearing
+  /// Do not show the user's heading/bearing.
   NORMAL,
-  /// Show the user's heading/bearing as determined by the device's compass. On iOS, this causes the user location to be shown on the map.
+
+  /// Show the user's heading/bearing as determined by the device's compass. On iOS, this causes the user's location to be shown on the map.
   COMPASS,
+
   /// Show the user's heading/bearing as determined by the device's GPS sensor. Not supported on iOS.
   GPS,
 }
