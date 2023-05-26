@@ -73,6 +73,7 @@ class MaplibreMapController extends MapLibreGlPlatform
           zoom: camera['zoom'],
           bearing: camera['bearing'],
           pitch: camera['tilt'],
+          attributionControl: _creationParams['showAttributionButton'] as bool?,
         ),
       );
       _map.on('load', _onStyleLoaded);
