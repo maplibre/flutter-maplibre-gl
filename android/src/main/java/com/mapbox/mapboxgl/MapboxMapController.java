@@ -20,6 +20,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
@@ -118,6 +120,8 @@ final class MapboxMapController
   private final float density;
   private final Context context;
   private final String styleStringInitial;
+
+  private FrameLayout mapViewContainer;
   private MapView mapView;
   private MapboxMap mapboxMap;
   private boolean trackCameraPosition = false;
@@ -181,6 +185,7 @@ final class MapboxMapController
     this.context = context;
     this.dragEnabled = dragEnabled;
     this.styleStringInitial = styleStringInitial;
+    this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
     this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
@@ -190,13 +195,14 @@ final class MapboxMapController
       this.androidGesturesManager = new AndroidGesturesManager(this.mapView.getContext(), false);
     }
 
+    mapViewContainer.addView(mapView);
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/mapbox_maps_" + id);
     methodChannel.setMethodCallHandler(this);
   }
 
   @Override
   public View getView() {
-    return mapView;
+    return mapViewContainer;
   }
 
   void init() {
@@ -1554,6 +1560,7 @@ final class MapboxMapController
     }
     stopListeningForLocationUpdates();
 
+    mapViewContainer.removeView(mapView);
     mapView.onDestroy();
     mapView = null;
   }
