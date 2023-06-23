@@ -19,6 +19,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -120,7 +121,10 @@ final class MapboxMapController
   private final float density;
   private final Context context;
   private final String styleStringInitial;
-
+  /**
+   * This container is returned as the final platform view instead of returning `mapView`.
+   * See {@link MapboxMapController#destroyMapViewIfNecessary()} for details.
+   */
   private FrameLayout mapViewContainer;
   private MapView mapView;
   private MapboxMap mapboxMap;
@@ -1550,6 +1554,20 @@ final class MapboxMapController
     }
   }
 
+  /**
+   * Destroy the MapView and cleans up listeners.
+   * It's very important to call mapViewContainer.removeView(mapView) to make sure
+   * that {@link TextureView#onDetachedFromWindowInternal()} is called which releases the
+   * underlying surface.
+   * This is required due to an FlutterEngine change that was introduce when updating from
+   * Flutter 2.10.5 to Flutter 3.10.0.
+   * This FlutterEngine change is not calling `removeView` on a PlatformView which causes the issue.
+   * <p>
+   * For more information check out:
+   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>
+   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter Engine commit that introduced the issue</a>
+   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the MapLibre repo</a>
+   */
   private void destroyMapViewIfNecessary() {
     if (mapView == null) {
       return;
