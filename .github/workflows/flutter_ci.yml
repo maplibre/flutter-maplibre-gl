@@ -19,7 +19,7 @@ jobs:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - name: Lint analysis
-        run: flutter format --set-exit-if-changed .
+        run: dart format --set-exit-if-changed .
 
   lint:
     name: "Static code analysis"

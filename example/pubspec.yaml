@@ -15,6 +15,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.5
 
+  maplibre_gl_platform_interface:
+    path: ../
+
+  maplibre_gl:
+    path: ../
+
   # Workaround for this issue:
   # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
   location:
@@ -36,11 +42,9 @@ dependency_overrides:
     path: ../maplibre_gl_web
 
 dev_dependencies:
+  flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
-
-  maplibre_gl:
-    path: ../
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
