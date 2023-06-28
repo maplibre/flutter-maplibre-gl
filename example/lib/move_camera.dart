@@ -8,7 +8,8 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class MoveCameraPage extends ExamplePage {
-  MoveCameraPage() : super(const Icon(Icons.map), 'Camera control');
+  const MoveCameraPage({super.key})
+      : super(const Icon(Icons.map), 'Camera control');
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,8 @@ class MoveCameraPage extends ExamplePage {
 }
 
 class MoveCamera extends StatefulWidget {
-  const MoveCamera();
+  const MoveCamera({super.key});
+
   @override
   State createState() => MoveCameraState();
 }
@@ -41,7 +43,7 @@ class MoveCameraState extends State<MoveCamera> {
             height: 200.0,
             child: MaplibreMap(
               onMapCreated: _onMapCreated,
-              onCameraIdle: () => print("onCameraIdle"),
+              onCameraIdle: () => debugPrint("onCameraIdle"),
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
             ),

@@ -4,7 +4,8 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class FullMapPage extends ExamplePage {
-  FullMapPage() : super(const Icon(Icons.map), 'Full screen map');
+  const FullMapPage({super.key})
+      : super(const Icon(Icons.map), 'Full screen map');
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +14,7 @@ class FullMapPage extends ExamplePage {
 }
 
 class FullMap extends StatefulWidget {
-  const FullMap();
+  const FullMap({super.key});
 
   @override
   State createState() => FullMapState();
@@ -28,16 +29,18 @@ class FullMapState extends State<FullMap> {
   }
 
   _onStyleLoadedCallback() {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text("Style loaded :)"),
-      backgroundColor: Theme.of(context).primaryColor,
-      duration: Duration(seconds: 1),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Style loaded :)"),
+        backgroundColor: Theme.of(context).primaryColor,
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
+    return Scaffold(
         // TODO: commented out when cherry-picking https://github.com/flutter-mapbox-gl/maps/pull/775
         // needs different dark and light styles in this repo
         // floatingActionButton: Padding(
