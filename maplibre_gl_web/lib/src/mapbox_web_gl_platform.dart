@@ -203,7 +203,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     final zoom = getProperty(cameraOptions, 'zoom');
 
     _map.flyTo({
-      if (around!= null) 'around': around,
+      if (around != null) 'around': around,
       if (bearing != null) 'bearing': bearing,
       if (center != null) 'center': center,
       if (pitch != null) 'pitch': pitch,
