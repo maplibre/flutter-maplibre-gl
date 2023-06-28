@@ -4,7 +4,7 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class NoLocationPermissionPage extends ExamplePage {
-  NoLocationPermissionPage()
+  const NoLocationPermissionPage({super.key})
       : super(
           const Icon(Icons.gps_off),
           'Using a map without user location/permission',
@@ -13,12 +13,12 @@ class NoLocationPermissionPage extends ExamplePage {
 
   @override
   Widget build(BuildContext context) {
-    return NoLocationPermissionBody();
+    return const NoLocationPermissionBody();
   }
 }
 
 class NoLocationPermissionBody extends StatefulWidget {
-  const NoLocationPermissionBody();
+  const NoLocationPermissionBody({super.key});
 
   @override
   State<NoLocationPermissionBody> createState() =>
