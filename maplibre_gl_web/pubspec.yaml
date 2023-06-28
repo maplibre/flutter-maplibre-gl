@@ -25,7 +25,7 @@ dependencies:
     git:
       url: https://github.com/m0nac0/maplibre-gl-dart.git
       ref: 0.2.2
-  image: ^3.0.2
+  image: ^4.0.17
 
 dependency_overrides:
   maplibre_gl_platform_interface:
