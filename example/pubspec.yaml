@@ -4,7 +4,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
 
 dependencies:
   flutter:
@@ -13,6 +14,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.5
+
+  # Workaround for this issue:
   # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
   location:
     git:
@@ -20,8 +23,8 @@ dependencies:
       ref: V4
       path: packages/location
   path_provider: ^2.0.15
-  http: ^1.0.0
-  collection: ^1.1.0
+  http: ^1.1.0
+  collection: ^1.17.1
   # temporary fix:
   platform: ^3.1.0
   device_info_plus: ^9.0.2
