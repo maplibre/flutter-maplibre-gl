@@ -11,29 +11,30 @@ import 'page.dart';
 const randomMarkerNum = 100;
 
 class CustomMarkerPage extends ExamplePage {
-  CustomMarkerPage() : super(const Icon(Icons.place), 'Custom marker');
+  const CustomMarkerPage({super.key})
+      : super(const Icon(Icons.place), 'Custom marker');
 
   @override
   Widget build(BuildContext context) {
-    return CustomMarker();
+    return const CustomMarker();
   }
 }
 
 class CustomMarker extends StatefulWidget {
-  const CustomMarker();
+  const CustomMarker({super.key});
 
   @override
   State createState() => CustomMarkerState();
 }
 
 class CustomMarkerState extends State<CustomMarker> {
-  final Random _rnd = new Random();
+  final _rnd = Random();
 
   late MaplibreMapController _mapController;
-  List<Marker> _markers = [];
-  List<_MarkerState> _markerStates = [];
+  final _markers = <Marker>[];
+  final _markerStates = <MarkerState>[];
 
-  void _addMarkerStates(_MarkerState markerState) {
+  void _addMarkerStates(MarkerState markerState) {
     _markerStates.add(markerState);
   }
 
@@ -47,7 +48,7 @@ class CustomMarkerState extends State<CustomMarker> {
   }
 
   void _onStyleLoadedCallback() {
-    print('onStyleLoadedCallback');
+    debugPrint('onStyleLoadedCallback');
   }
 
   void _onMapLongClickCallback(Point<double> point, LatLng coordinates) {
@@ -74,14 +75,20 @@ class CustomMarkerState extends State<CustomMarker> {
 
   void _addMarker(Point<double> point, LatLng coordinates) {
     setState(() {
-      _markers.add(Marker(_rnd.nextInt(100000).toString(), coordinates, point,
-          _addMarkerStates));
+      _markers.add(
+        Marker(
+          _rnd.nextInt(100000).toString(),
+          coordinates,
+          point,
+          _addMarkerStates,
+        ),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
+    return Scaffold(
       body: Stack(children: [
         MaplibreMap(
           trackCameraPosition: true,
@@ -118,21 +125,21 @@ class CustomMarkerState extends State<CustomMarker> {
             }
           });
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   // ignore: unused_element
   void _measurePerformance() {
-    final trial = 10;
+    const trial = 10;
     final batches = [500, 1000, 1500, 2000, 2500, 3000];
-    var results = Map<int, List<double>>();
+    final results = <int, List<double>>{};
     for (final batch in batches) {
       results[batch] = [0.0, 0.0];
     }
 
-    _mapController.toScreenLocation(LatLng(0, 0));
+    _mapController.toScreenLocation(const LatLng(0, 0));
     Stopwatch sw = Stopwatch();
 
     for (final batch in batches) {
@@ -168,42 +175,47 @@ class CustomMarkerState extends State<CustomMarker> {
         sw.reset();
       }
 
-      print(
-          'batch=$batch,primitive=${results[batch]![0] / trial}ms, batch=${results[batch]![1] / trial}ms');
+      debugPrint(
+        'batch=$batch,primitive=${results[batch]![0] / trial}ms, batch=${results[batch]![1] / trial}ms',
+      );
     }
   }
 }
 
 class Marker extends StatefulWidget {
-  final Point _initialPosition;
+  final Point initialPosition;
   final LatLng _coordinate;
-  final void Function(_MarkerState) _addMarkerState;
+  final void Function(MarkerState) addMarkerState;
 
   Marker(
-      String key, this._coordinate, this._initialPosition, this._addMarkerState)
-      : super(key: Key(key));
+    String key,
+    this._coordinate,
+    this.initialPosition,
+    this.addMarkerState,
+  ) : super(key: Key(key));
 
   @override
   State<StatefulWidget> createState() {
-    final state = _MarkerState(_initialPosition);
-    _addMarkerState(state);
-    return state;
+    return MarkerState();
   }
 }
 
-class _MarkerState extends State with TickerProviderStateMixin {
+class MarkerState extends State<Marker> with TickerProviderStateMixin {
   final _iconSize = 20.0;
 
-  Point _position;
+  late Point _position;
 
   late AnimationController _controller;
   late Animation<double> _animation;
 
-  _MarkerState(this._position);
+  MarkerState();
 
   @override
   void initState() {
     super.initState();
+    _position = widget.initialPosition;
+    widget.addMarkerState(this);
+
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -246,6 +258,6 @@ class _MarkerState extends State with TickerProviderStateMixin {
   }
 
   LatLng getCoordinate() {
-    return (widget as Marker)._coordinate;
+    return widget._coordinate;
   }
 }
