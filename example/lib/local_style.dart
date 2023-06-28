@@ -7,7 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'page.dart';
 
 class LocalStylePage extends ExamplePage {
-  LocalStylePage() : super(const Icon(Icons.map), 'Local style');
+  const LocalStylePage({super.key})
+      : super(const Icon(Icons.map), 'Local style');
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class LocalStylePage extends ExamplePage {
 }
 
 class LocalStyle extends StatefulWidget {
-  const LocalStyle();
+  const LocalStyle({super.key});
 
   @override
   State createState() => LocalStyleState();
@@ -36,9 +37,9 @@ class LocalStyleState extends State<LocalStyle> {
       String styleJSON =
           '{"version":8,"name":"Demo style","center":[50,10],"zoom":4,"sources":{"demotiles":{"type":"vector","url":"https://demotiles.maplibre.org/tiles/tiles.json"}},"sprite":"","glyphs":"https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255, 255, 255, 1)"}},{"id":"countries","type":"line","source":"demotiles","source-layer":"countries","paint":{"line-color":"rgba(0, 0, 0, 1)","line-width":1,"line-opacity":1}}]}';
 
-      await new Directory(stylesDir).create(recursive: true);
+      await Directory(stylesDir).create(recursive: true);
 
-      File styleFile = new File('$stylesDir/style.json');
+      File styleFile = File('$stylesDir/style.json');
 
       await styleFile.writeAsString(styleJSON);
 
@@ -55,12 +56,12 @@ class LocalStyleState extends State<LocalStyle> {
   @override
   Widget build(BuildContext context) {
     if (styleAbsoluteFilePath == null) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(child: Text('Creating local style file...')),
       );
     }
 
-    return new Scaffold(
+    return Scaffold(
         body: MaplibreMap(
       styleString: styleAbsoluteFilePath,
       onMapCreated: _onMapCreated,
