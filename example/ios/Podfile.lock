@@ -22,7 +22,7 @@ DEPENDENCIES:
   - MapLibre
   - maplibre_gl (from `.symlinks/plugins/maplibre_gl/ios`)
   - MapLibreAnnotationExtension
-  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 SPEC REPOS:
   https://github.com/m0nac0/flutter-maplibre-podspecs.git:
@@ -39,10 +39,10 @@ EXTERNAL SOURCES:
   maplibre_gl:
     :path: ".symlinks/plugins/maplibre_gl/ios"
   path_provider_foundation:
-    :path: ".symlinks/plugins/path_provider_foundation/ios"
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
-  device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
+  device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   MapLibre: 5aa820115d91293a4d09e681e7470f88bd34b672
@@ -52,4 +52,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: a908f6081c2697d922d17bcdb852cad068049f2e
 
-COCOAPODS: 1.12.0
+COCOAPODS: 1.12.1

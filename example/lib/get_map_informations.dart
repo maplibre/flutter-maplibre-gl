@@ -4,16 +4,17 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class GetMapInfoPage extends ExamplePage {
-  GetMapInfoPage() : super(const Icon(Icons.info), 'Get map state');
+  const GetMapInfoPage({super.key})
+      : super(const Icon(Icons.info), 'Get map state');
 
   @override
   Widget build(BuildContext context) {
-    return GetMapInfoBody();
+    return const GetMapInfoBody();
   }
 }
 
 class GetMapInfoBody extends StatefulWidget {
-  const GetMapInfoBody();
+  const GetMapInfoBody({super.key});
 
   @override
   State<GetMapInfoBody> createState() => _GetMapInfoBodyState();
@@ -66,7 +67,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
               ),
               onMapCreated: onMapCreated,
               compassEnabled: false,
-              annotationOrder: [],
+              annotationOrder: const [],
               myLocationEnabled: false,
               styleString: '''{
                 "version": 8,
@@ -94,16 +95,14 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
             ),
           ),
         ),
-        Center(
-          child: const Text('© OpenStreetMap contributors'),
-        ),
+        const Center(child: Text('© OpenStreetMap contributors')),
         Expanded(
             child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Center(child: Text(data)),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: controller == null ? null : displayLayers,
                 child: const Text('Get map layers'),

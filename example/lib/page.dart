@@ -9,6 +9,7 @@ abstract class ExamplePage extends StatelessWidget {
     this.leading,
     this.title, {
     this.needsLocationPermission = true,
+    super.key,
   });
 
   final Widget leading;
