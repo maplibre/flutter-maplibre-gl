@@ -3,7 +3,7 @@ on: [workflow_dispatch]
 
 env:
   FLUTTER_CHANNEL: 'stable'
-  FLUTTER_VERSION: '2.10.5'
+  FLUTTER_VERSION: '3.10.5'
   
 jobs:
   format:
