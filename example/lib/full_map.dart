@@ -4,7 +4,8 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class FullMapPage extends ExamplePage {
-  const FullMapPage({super.key}) : super(const Icon(Icons.map), 'Full screen map');
+  const FullMapPage({super.key})
+      : super(const Icon(Icons.map), 'Full screen map');
 
   @override
   Widget build(BuildContext context) {

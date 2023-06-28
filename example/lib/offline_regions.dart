@@ -98,7 +98,8 @@ final List<OfflineRegionListItem> allRegions = [
 ];
 
 class OfflineRegionsPage extends ExamplePage {
-  const OfflineRegionsPage({super.key}) : super(const Icon(Icons.map), 'Offline Regions');
+  const OfflineRegionsPage({super.key})
+      : super(const Icon(Icons.map), 'Offline Regions');
 
   @override
   Widget build(BuildContext context) {

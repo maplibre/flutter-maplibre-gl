@@ -11,7 +11,8 @@ import 'page.dart';
 const randomMarkerNum = 100;
 
 class CustomMarkerPage extends ExamplePage {
-  const CustomMarkerPage({super.key}) : super(const Icon(Icons.place), 'Custom marker');
+  const CustomMarkerPage({super.key})
+      : super(const Icon(Icons.place), 'Custom marker');
 
   @override
   Widget build(BuildContext context) {

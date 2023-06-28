@@ -4,7 +4,8 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class GetMapInfoPage extends ExamplePage {
-  const GetMapInfoPage({super.key}) : super(const Icon(Icons.info), 'Get map state');
+  const GetMapInfoPage({super.key})
+      : super(const Icon(Icons.info), 'Get map state');
 
   @override
   Widget build(BuildContext context) {
