@@ -19,7 +19,7 @@ class StyleInfo {
 }
 
 class Sources extends ExamplePage {
-  Sources() : super(const Icon(Icons.map), 'Various Sources');
+  const Sources({super.key}) : super(const Icon(Icons.map), 'Various Sources');
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class Sources extends ExamplePage {
 }
 
 class FullMap extends StatefulWidget {
-  const FullMap();
+  const FullMap({super.key});
 
   @override
   State createState() => FullMapState();
@@ -46,7 +46,7 @@ class FullMapState extends State<FullMap> {
   static Future<void> addRaster(MaplibreMapController controller) async {
     await controller.addSource(
       "watercolor",
-      RasterSourceProperties(
+      const RasterSourceProperties(
           tiles: [
             'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'
           ],
@@ -55,14 +55,14 @@ class FullMapState extends State<FullMap> {
               'Map tiles by <a target="_top" rel="noopener" href="http://stamen.com">Stamen Design</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_top" rel="noopener" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'),
     );
     await controller.addLayer(
-        "watercolor", "watercolor", RasterLayerProperties());
+        "watercolor", "watercolor", const RasterLayerProperties());
   }
 
   static Future<void> addGeojsonCluster(
       MaplibreMapController controller) async {
     await controller.addSource(
         "earthquakes",
-        GeojsonSourceProperties(
+        const GeojsonSourceProperties(
             data:
                 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
             cluster: true,
@@ -73,7 +73,7 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
         "earthquakes",
         "earthquakes-circles",
-        CircleLayerProperties(circleColor: [
+        const CircleLayerProperties(circleColor: [
           Expressions.step,
           [Expressions.get, 'point_count'],
           '#51bbd6',
@@ -93,7 +93,7 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
         "earthquakes",
         "earthquakes-count",
-        SymbolLayerProperties(
+        const SymbolLayerProperties(
           textField: [Expressions.get, 'point_count_abbreviated'],
           textFont: ['Open Sans Semibold'],
           textSize: 12,
@@ -103,14 +103,14 @@ class FullMapState extends State<FullMap> {
   static Future<void> addVector(MaplibreMapController controller) async {
     await controller.addSource(
         "terrain",
-        VectorSourceProperties(
+        const VectorSourceProperties(
           url: "https://demotiles.maplibre.org/tiles/tiles.json",
         ));
 
     await controller.addLayer(
         "terrain",
         "contour",
-        LineLayerProperties(
+        const LineLayerProperties(
           lineColor: "#ff69b4",
           lineWidth: 1,
           lineCap: "round",
@@ -122,7 +122,7 @@ class FullMapState extends State<FullMap> {
   static Future<void> addImage(MaplibreMapController controller) async {
     await controller.addSource(
         "radar",
-        ImageSourceProperties(
+        const ImageSourceProperties(
             url: "https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif",
             coordinates: [
               [-80.425, 46.437],
@@ -134,14 +134,14 @@ class FullMapState extends State<FullMap> {
     await controller.addRasterLayer(
       "radar",
       "radar",
-      RasterLayerProperties(rasterFadeDuration: 0),
+      const RasterLayerProperties(rasterFadeDuration: 0),
     );
   }
 
   static Future<void> addVideo(MaplibreMapController controller) async {
     await controller.addSource(
         "video",
-        VideoSourceProperties(urls: [
+        const VideoSourceProperties(urls: [
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4',
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm'
         ], coordinates: [
@@ -154,7 +154,7 @@ class FullMapState extends State<FullMap> {
     await controller.addRasterLayer(
       "video",
       "video",
-      RasterLayerProperties(),
+      const RasterLayerProperties(),
     );
   }
 
@@ -236,11 +236,11 @@ class FullMapState extends State<FullMap> {
     final nextName =
         _stylesAndLoaders[(selectedStyleId + 1) % _stylesAndLoaders.length]
             .name;
-    return new Scaffold(
+    return Scaffold(
         floatingActionButton: Padding(
           padding: const EdgeInsets.all(32.0),
           child: FloatingActionButton.extended(
-            icon: Icon(Icons.swap_horiz),
+            icon: const Icon(Icons.swap_horiz),
             label: SizedBox(
                 width: 120, child: Center(child: Text("To $nextName"))),
             onPressed: () => setState(
@@ -258,7 +258,7 @@ class FullMapState extends State<FullMap> {
               onStyleLoadedCallback: _onStyleLoadedCallback,
             ),
             Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               alignment: Alignment.topCenter,
               child: Card(
                 child: Padding(

@@ -12,19 +12,20 @@ import 'package:maplibre_gl_example/util.dart';
 import 'page.dart';
 
 class ScrollingMapPage extends ExamplePage {
-  ScrollingMapPage() : super(const Icon(Icons.map), 'Scrolling map');
+  const ScrollingMapPage({super.key})
+      : super(const Icon(Icons.map), 'Scrolling map');
 
   @override
   Widget build(BuildContext context) {
-    return ScrollingMapBody();
+    return const ScrollingMapBody();
   }
 }
 
 class ScrollingMapBody extends StatefulWidget {
-  ScrollingMapBody();
+  const ScrollingMapBody({super.key});
 
   @override
-  _ScrollingMapBodyState createState() => _ScrollingMapBodyState();
+  State<ScrollingMapBody> createState() => _ScrollingMapBodyState();
 }
 
 class _ScrollingMapBodyState extends State<ScrollingMapBody> {
@@ -57,12 +58,12 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         target: center,
                         zoom: 11.0,
                       ),
-                      gestureRecognizers:
-                          <Factory<OneSequenceGestureRecognizer>>[
+                      gestureRecognizers: <Factory<
+                          OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
                           () => EagerGestureRecognizer(),
                         ),
-                      ].toSet(),
+                      },
                     ),
                   ),
                 ),
@@ -92,12 +93,12 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         target: center,
                         zoom: 11.0,
                       ),
-                      gestureRecognizers:
-                          <Factory<OneSequenceGestureRecognizer>>[
+                      gestureRecognizers: <Factory<
+                          OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
                           () => ScaleGestureRecognizer(),
                         ),
-                      ].toSet(),
+                      },
                     ),
                   ),
                 ),
@@ -110,11 +111,11 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
   }
 
   void onMapCreatedOne(MaplibreMapController controller) {
-    this.controllerOne = controller;
+    controllerOne = controller;
   }
 
   void onMapCreatedTwo(MaplibreMapController controller) {
-    this.controllerTwo = controller;
+    controllerTwo = controller;
   }
 
   void onStyleLoaded(MaplibreMapController controller) async {
@@ -127,7 +128,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
         ),
         iconImage: "custom-marker"));
     controller.addLine(
-      LineOptions(
+      const LineOptions(
         geometry: [
           LatLng(-33.86711, 151.1947171),
           LatLng(-33.86711, 151.1947171),
