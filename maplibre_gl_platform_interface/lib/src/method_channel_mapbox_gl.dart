@@ -241,6 +241,17 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<bool?> setPadding(
+      {int? left, int? top, int? right, int? bottom}) async {
+    return await _channel.invokeMethod('map#setPadding', <String, dynamic>{
+      'left': left,
+      'right': right,
+      'top': top,
+      'bottome': bottom,
+    });
+  }
+
+  @override
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     return await _channel.invokeMethod('camera#move', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),

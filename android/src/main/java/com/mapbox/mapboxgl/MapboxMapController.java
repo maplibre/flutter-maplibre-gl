@@ -803,6 +803,17 @@ final class MapboxMapController
           }
           break;
         }
+      case "map#setPadding":
+      {
+        final Integer left = call.argument("left");
+        final Integer right = call.argument("right");
+        final Integer top = call.argument("top");
+        final Integer bottom = call.argument("bottom");
+
+        mapboxMap.setPadding(left,right,top,bottom);
+        result.success(true);
+        break;
+      }
       case "map#queryRenderedFeatures":
         {
           Map<String, Object> reply = new HashMap<>();

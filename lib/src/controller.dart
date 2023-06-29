@@ -276,6 +276,12 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.animateCamera(cameraUpdate, duration: duration);
   }
 
+  Future<bool?> setPadding(
+      {int? left, int? top, int? right, int? bottom}) async {
+    return _mapboxGlPlatform.setPadding(
+        left: left, top: top, right: right, bottom: bottom);
+  }
+
   /// Instantaneously re-position the camera.
   /// Note: moveCamera() quickly moves the camera, which can be visually jarring for a user. Strongly consider using the animateCamera() methods instead because it's less abrupt.
   ///
