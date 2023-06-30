@@ -70,11 +70,6 @@ class MapUiBodyState extends State<MapUiBody> {
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   void _onMapChanged() {
     setState(() {
       _extractMapInfo();
