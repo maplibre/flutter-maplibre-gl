@@ -10,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/no_location_permission_page.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -54,6 +55,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const Sources(),
   const GivenBoundsPage(),
   const GetMapInfoPage(),
+  const NoLocationPermissionPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
@@ -64,11 +66,6 @@ class MapsDemo extends StatefulWidget {
 }
 
 class _MapsDemoState extends State<MapsDemo> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   /// Determine the android version of the phone and turn off HybridComposition
   /// on older sdk versions to improve performance for these
   ///
@@ -86,7 +83,7 @@ class _MapsDemoState extends State<MapsDemo> {
   }
 
   void _pushPage(BuildContext context, ExamplePage page) async {
-    if (!kIsWeb) {
+    if (!kIsWeb && page.needsLocationPermission) {
       final location = Location();
       final hasPermissions = await location.hasPermission();
       if (hasPermissions != PermissionStatus.granted) {
