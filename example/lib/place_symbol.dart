@@ -89,15 +89,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
-  void _add(String iconImage) {
+  void _add(String iconImage) async {
     List<int> availableNumbers = Iterable<int>.generate(12).toList();
     for (var s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
     if (availableNumbers.isNotEmpty) {
-      controller!.addSymbol(
-          _getSymbolOptions(iconImage, availableNumbers.first),
-          {'count': availableNumbers.first});
+      //TODO undo and move to example page
+      var symbol = _getSymbolOptions(iconImage, availableNumbers.first);
+      await controller!.addSymbol(symbol, {'count': availableNumbers.first});
+      if (symbol.geometry != null) {
+        await controller!.moveCamera(CameraUpdate.newLatLng(symbol.geometry!));
+      }
+
       setState(() {
         _symbolCount += 1;
       });
@@ -269,19 +273,30 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MaplibreMap(
-              onMapCreated: _onMapCreated,
-              onStyleLoadedCallback: _onStyleLoaded,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
+          child: Stack(
+            children: [
+              SizedBox(
+                height: 200.0,
+                child: MaplibreMap(
+                  onMapCreated: _onMapCreated,
+                  onStyleLoadedCallback: _onStyleLoaded,
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(-33.852, 151.211),
+                    zoom: 11.0,
+                  ),
+                ),
               ),
-            ),
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  height: 200,
+                  width: 100,
+                  color: Colors.red.withOpacity(0.5),
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -293,6 +308,15 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
+                        //TODO: move to own example page
+                        TextButton(
+                          onPressed: () {
+                            controller!.setPadding(
+                              edgeInsets: const EdgeInsets.only(right: 100),
+                            );
+                          },
+                          child: const Text('addRightPadding'),
+                        ),
                         TextButton(
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)
