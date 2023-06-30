@@ -117,8 +117,8 @@ class AnimateCameraState extends State<AnimateCamera> {
                 TextButton(
                   onPressed: () {
                     mapController.animateCamera(
-                      CameraUpdate.scrollBy(150.0, -225.0),
-                    );
+                        CameraUpdate.scrollBy(150.0, -225.0),
+                        duration: const Duration(seconds: 5));
                   },
                   child: const Text('scrollBy'),
                 ),
@@ -184,6 +184,14 @@ class AnimateCameraState extends State<AnimateCamera> {
                     );
                   },
                   child: const Text('tiltTo'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    mapController.setPadding(
+                      edgeInsets: const EdgeInsets.only(right: 300.0),
+                    );
+                  },
+                  child: const Text('addRightPadding'),
                 ),
               ],
             ),
