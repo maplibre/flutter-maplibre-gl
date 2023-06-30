@@ -277,6 +277,7 @@ class MaplibreMapController extends ChangeNotifier {
   }
 
   Future<bool?> setPadding({required EdgeInsets edgeInsets}) async {
+    //TODO(tapped-matthias): don't animate by default = Duration.zero
     return _mapboxGlPlatform.setPadding(edgeInsets: edgeInsets);
   }
 

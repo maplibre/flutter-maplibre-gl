@@ -243,10 +243,10 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   @override
   Future<bool?> setPadding({required EdgeInsets edgeInsets}) async {
     return await _channel.invokeMethod('map#setPadding', <String, dynamic>{
-      'left': edgeInsets.left.toInt(),
-      'right': edgeInsets.right.toInt(),
-      'top': edgeInsets.top.toInt(),
-      'bottom': edgeInsets.bottom.toInt(),
+      'left': edgeInsets.left,
+      'right': edgeInsets.right,
+      'top': edgeInsets.top,
+      'bottom': edgeInsets.bottom,
     });
   }
 

@@ -280,7 +280,7 @@ final class MapboxMapController
     }
   }
 
-  
+
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
@@ -805,12 +805,17 @@ final class MapboxMapController
         }
       case "map#setPadding":
       {
-        final Integer left = call.argument("left");
-        final Integer right = call.argument("right");
-        final Integer top = call.argument("top");
-        final Integer bottom = call.argument("bottom");
+        final Double left = call.argument("left");
+        final Double right = call.argument("right");
+        final Double top = call.argument("top");
+        final Double bottom = call.argument("bottom");
 
-        final CameraUpdate update = CameraUpdateFactory.paddingTo(left,top,right,bottom);
+        final CameraUpdate update = CameraUpdateFactory.paddingTo(
+                Convert.toPixels(left, density),
+                Convert.toPixels(top, density),
+                Convert.toPixels(right, density),
+                Convert.toPixels(bottom, density)
+        );
         mapboxMap.animateCamera(update);
 
         result.success(true);
