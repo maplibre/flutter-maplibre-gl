@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 env:
   FLUTTER_CHANNEL: 'stable'
-  FLUTTER_VERSION: '3.7.7'
+  FLUTTER_VERSION: '3.10.5'
 
 jobs:
   format:
@@ -13,13 +13,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.8.0
+      - uses: subosito/flutter-action@v2.10.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - name: Lint analysis
-        run: flutter format --set-exit-if-changed .
+        run: dart format --set-exit-if-changed .
 
   lint:
     name: "Static code analysis"
@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.8.0
+      - uses: subosito/flutter-action@v2.10.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -54,7 +54,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: 'gradle'
-      - uses: subosito/flutter-action@v2.8.0
+      - uses: subosito/flutter-action@v2.10.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.8.0
+      - uses: subosito/flutter-action@v2.10.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2.8.0
+      - uses: subosito/flutter-action@v2.10.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: ${{ env.FLUTTER_CHANNEL }}

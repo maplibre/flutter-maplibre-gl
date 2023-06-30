@@ -16,7 +16,7 @@ final LatLngBounds sydneyBounds = LatLngBounds(
 );
 
 class MapUiPage extends ExamplePage {
-  MapUiPage() : super(const Icon(Icons.map), 'User interface');
+  const MapUiPage({super.key}) : super(const Icon(Icons.map), 'User interface');
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class MapUiPage extends ExamplePage {
 }
 
 class MapUiBody extends StatefulWidget {
-  const MapUiBody();
+  const MapUiBody({super.key});
 
   @override
   State<StatefulWidget> createState() => MapUiBodyState();
@@ -34,7 +34,7 @@ class MapUiBody extends StatefulWidget {
 class MapUiBodyState extends State<MapUiBody> {
   MapUiBodyState();
 
-  static final CameraPosition _kInitialPosition = const CameraPosition(
+  static const CameraPosition _kInitialPosition = CameraPosition(
     target: LatLng(-33.852, 151.211),
     zoom: 11.0,
   );
@@ -47,13 +47,17 @@ class MapUiBodyState extends State<MapUiBody> {
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
   int _styleStringIndex = 0;
+
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  List<String> _styleStrings = [
+  final List<String> _styleStrings = [
     "https://demotiles.maplibre.org/style.json",
     "assets/style.json"
   ];
-  List<String> _styleStringLabels = ["Maplibre demo style", "Local style file"];
+  final List<String> _styleStringLabels = [
+    "Maplibre demo style",
+    "Local style file"
+  ];
   bool _rotateGesturesEnabled = true;
   bool _scrollGesturesEnabled = true;
   bool? _doubleClickToZoomEnabled;
@@ -65,11 +69,6 @@ class MapUiBodyState extends State<MapUiBody> {
   MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   void _onMapChanged() {
     setState(() {
@@ -280,9 +279,11 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _visibleRegionGetter() {
     return TextButton(
-      child: Text('get currently visible region'),
+      child: const Text('get currently visible region'),
       onPressed: () async {
         var result = await mapController!.getVisibleRegion();
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
               "SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),
@@ -293,18 +294,18 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _sourceFeaturesGetter() {
     return TextButton(
-      child: Text('get source features (maplibre)'),
+      child: const Text('get source features (maplibre)'),
       onPressed: () async {
         var result = await mapController!
             .querySourceFeatures("maplibre", "centroids", null);
-        print(result);
+        debugPrint(result.toString());
       },
     );
   }
 
   Widget _layerVisibilityToggler() {
     return TextButton(
-      child: Text('toggle layer visibility'),
+      child: const Text('toggle layer visibility'),
       onPressed: () async {
         _countriesVisible = !_countriesVisible;
         mapController?.setLayerVisibility('countries-fill', _countriesVisible);
@@ -362,46 +363,48 @@ class MapUiBodyState extends State<MapUiBody> {
       myLocationTrackingMode: _myLocationTrackingMode,
       myLocationRenderMode: MyLocationRenderMode.GPS,
       onMapClick: (point, latLng) async {
-        print(
+        debugPrint(
             "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        print("Filter $_featureQueryFilter");
+        debugPrint("Filter $_featureQueryFilter");
         List features = await mapController!
             .queryRenderedFeatures(point, [], _featureQueryFilter);
-        print('# features: ${features.length}');
+        if (!mounted) return;
+
+        debugPrint('# features: ${features.length}');
         _clearFill();
         if (features.isEmpty && _featureQueryFilter != null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('QueryRenderedFeatures: No features found!')));
         } else if (features.isNotEmpty) {
           _drawFill(features);
         }
       },
       onMapLongClick: (point, latLng) async {
-        print(
+        debugPrint(
             "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
         Point convertedPoint = await mapController!.toScreenLocation(latLng);
         LatLng convertedLatLng = await mapController!.toLatLng(point);
-        print(
+        debugPrint(
             "Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}");
         double metersPerPixel =
             await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
 
-        print(
+        debugPrint(
             "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
 
         List features =
             await mapController!.queryRenderedFeatures(point, [], null);
-        if (features.length > 0) {
-          print(features[0]);
+        if (features.isNotEmpty) {
+          debugPrint(features[0]);
         }
       },
       onCameraTrackingDismissed: () {
-        this.setState(() {
+        setState(() {
           _myLocationTrackingMode = MyLocationTrackingMode.None;
         });
       },
       onUserLocationUpdated: (location) {
-        print(
+        debugPrint(
             "new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}");
       },
     );

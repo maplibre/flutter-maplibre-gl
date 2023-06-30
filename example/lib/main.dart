@@ -10,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/no_location_permission_page.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -34,39 +35,37 @@ import 'sources.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
-  MapUiPage(),
-  FullMapPage(),
-  AnimateCameraPage(),
-  MoveCameraPage(),
-  PlaceSymbolPage(),
-  PlaceSourcePage(),
-  LinePage(),
-  LocalStylePage(),
-  LayerPage(),
-  PlaceCirclePage(),
-  PlaceFillPage(),
-  ScrollingMapPage(),
-  OfflineRegionsPage(),
-  AnnotationOrderPage(),
-  CustomMarkerPage(),
-  BatchAddPage(),
-  ClickAnnotationPage(),
-  Sources(),
-  GivenBoundsPage(),
-  GetMapInfoPage(),
+  const MapUiPage(),
+  const FullMapPage(),
+  const AnimateCameraPage(),
+  const MoveCameraPage(),
+  const PlaceSymbolPage(),
+  const PlaceSourcePage(),
+  const LinePage(),
+  const LocalStylePage(),
+  const LayerPage(),
+  const PlaceCirclePage(),
+  const PlaceFillPage(),
+  const ScrollingMapPage(),
+  const OfflineRegionsPage(),
+  const AnnotationOrderPage(),
+  const CustomMarkerPage(),
+  const BatchAddPage(),
+  const ClickAnnotationPage(),
+  const Sources(),
+  const GivenBoundsPage(),
+  const GetMapInfoPage(),
+  const NoLocationPermissionPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
+  const MapsDemo({super.key});
+
   @override
   State<MapsDemo> createState() => _MapsDemoState();
 }
 
 class _MapsDemoState extends State<MapsDemo> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   /// Determine the android version of the phone and turn off HybridComposition
   /// on older sdk versions to improve performance for these
   ///
@@ -75,7 +74,7 @@ class _MapsDemoState extends State<MapsDemo> {
     if (!kIsWeb && Platform.isAndroid) {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
       final sdkVersion = androidInfo.version.sdkInt;
-      if (sdkVersion != null && sdkVersion >= 29) {
+      if (sdkVersion >= 29) {
         MaplibreMap.useHybridComposition = true;
       } else {
         MaplibreMap.useHybridComposition = false;
@@ -84,13 +83,15 @@ class _MapsDemoState extends State<MapsDemo> {
   }
 
   void _pushPage(BuildContext context, ExamplePage page) async {
-    if (!kIsWeb) {
+    if (!kIsWeb && page.needsLocationPermission) {
       final location = Location();
       final hasPermissions = await location.hasPermission();
       if (hasPermissions != PermissionStatus.granted) {
         await location.requestPermission();
       }
     }
+    if (!mounted) return;
+
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
               appBar: AppBar(title: Text(page.title)),
@@ -105,7 +106,7 @@ class _MapsDemoState extends State<MapsDemo> {
       body: ListView.builder(
         itemCount: _allPages.length + 1,
         itemBuilder: (_, int index) => index == _allPages.length
-            ? AboutListTile(
+            ? const AboutListTile(
                 applicationName: "flutter-maplibre-gl example",
               )
             : ListTile(
@@ -119,5 +120,5 @@ class _MapsDemoState extends State<MapsDemo> {
 }
 
 void main() {
-  runApp(MaterialApp(home: MapsDemo()));
+  runApp(const MaterialApp(home: MapsDemo()));
 }

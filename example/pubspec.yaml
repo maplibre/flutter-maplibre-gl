@@ -4,7 +4,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
 
 dependencies:
   flutter:
@@ -12,14 +13,27 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.0
-  location: ^4.0.0
-  path_provider: ^2.0.0
-  http: ^0.13.0
-  collection: ^1.0.0
+  cupertino_icons: ^1.0.5
+
+  maplibre_gl_platform_interface:
+    path: ../
+
+  maplibre_gl:
+    path: ../
+
+  # Workaround for this issue:
+  # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
+  location:
+    git:
+      url: https://github.com/781flyingdutchman/flutterlocation.git
+      ref: V4
+      path: packages/location
+  path_provider: ^2.0.15
+  http: ^1.1.0
+  collection: ^1.17.1
   # temporary fix:
   platform: ^3.1.0
-  device_info_plus: ^3.2.2
+  device_info_plus: ^9.0.2
 
 dependency_overrides:
   maplibre_gl_platform_interface:
@@ -28,11 +42,9 @@ dependency_overrides:
     path: ../maplibre_gl_web
 
 dev_dependencies:
+  flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
-
-  maplibre_gl:
-    path: ../
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
