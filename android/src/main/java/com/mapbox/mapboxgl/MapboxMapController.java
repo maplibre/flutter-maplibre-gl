@@ -809,8 +809,10 @@ final class MapboxMapController
         final Integer right = call.argument("right");
         final Integer top = call.argument("top");
         final Integer bottom = call.argument("bottom");
-        CameraUpdateFactory.paddingTo(left,right,top,bottom);
-        mapboxMap.setPadding(left,right,top,bottom);
+
+        final CameraUpdate update = CameraUpdateFactory.paddingTo(left,top,right,bottom);
+        mapboxMap.animateCamera(update);
+
         result.success(true);
         break;
       }
