@@ -1,3 +1,14 @@
+## upcoming version
+
+### Breaking Change:
+* The default for `myLocationRenderMode` was changed from `COMPASS` to `NORMAL` in https://github.com/maplibre/flutter-maplibre-gl/pull/244, since the previous default value of `COMPASS` implicitly enables displaying the location on iOS, which could crash apps that didn't want to display the device location. If you want to continue to use `MyLocationRenderMode.COMPASS`, please explicitly specify it in the constructor like this:
+```dart
+MaplibreMap(
+ myLocationRenderMode: MyLocationRenderMode.COMPASS,
+ ...
+)
+```
+
 ## 0.16.0, Jun 28, 2022
 * cherry-picked all commits from upstream up to [https://github.com/flutter-mapbox-gl/maps/commit/3496907955cd4b442e4eb905d67e8d46692174f1), including up to release 0.16.0 from upstream
 * updated Maplibre GL JS for web
