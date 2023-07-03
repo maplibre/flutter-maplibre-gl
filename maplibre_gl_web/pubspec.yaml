@@ -1,7 +1,7 @@
 name: maplibre_gl_web
 description: Web platform implementation of maplibre_gl
 version: 0.16.0
-homepage: https://github.com/m0nac0/flutter-maplibre-gl
+homepage: https://github.com/maplibre/flutter-maplibre-gl
 
 flutter:
   plugin:
@@ -18,14 +18,14 @@ dependencies:
   meta: ^1.3.0
   maplibre_gl_platform_interface:
     git:
-      url: https://github.com/m0nac0/flutter-maplibre-gl.git
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
       ref: main
   maplibre_gl_dart:
     git:
       url: https://github.com/m0nac0/maplibre-gl-dart.git
       ref: 0.2.2
-  image: ^3.0.2
+  image: ^4.0.17
 
 dependency_overrides:
   maplibre_gl_platform_interface:

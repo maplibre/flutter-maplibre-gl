@@ -194,7 +194,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   @override
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
-    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
+    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
 
     final around = getProperty(cameraOptions, 'around');
     final bearing = getProperty(cameraOptions, 'bearing');
@@ -203,9 +203,9 @@ class MaplibreMapController extends MapLibreGlPlatform
     final zoom = getProperty(cameraOptions, 'zoom');
 
     _map.flyTo({
-      if (around.jsObject != null) 'around': around,
+      if (around != null) 'around': around,
       if (bearing != null) 'bearing': bearing,
-      if (center.jsObject != null) 'center': center,
+      if (center != null) 'center': center,
       if (pitch != null) 'pitch': pitch,
       if (zoom != null) 'zoom': zoom,
       if (duration != null) 'duration': duration.inMilliseconds,
@@ -229,6 +229,8 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
+    // Fix in https://github.com/maplibre/flutter-maplibre-gl/issues/263
+    // ignore: deprecated_member_use
     setMapLanguage(ui.window.locale.languageCode);
   }
 
