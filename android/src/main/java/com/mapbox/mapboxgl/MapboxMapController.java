@@ -810,15 +810,29 @@ final class MapboxMapController
         final Double top = call.argument("top");
         final Double bottom = call.argument("bottom");
 
+        final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+              new OnCameraMoveFinishedListener() {
+                @Override
+                public void onFinish() {
+                  super.onFinish();
+                  result.success(true);
+                }
+
+                @Override
+                public void onCancel() {
+                  super.onCancel();
+                  result.success(false);
+                }
+              };
+
         final CameraUpdate update = CameraUpdateFactory.paddingTo(
                 Convert.toPixels(left, density),
                 Convert.toPixels(top, density),
                 Convert.toPixels(right, density),
                 Convert.toPixels(bottom, density)
         );
-        mapboxMap.animateCamera(update);
-
-        result.success(true);
+        
+        mapboxMap.animateCamera(update, onCameraMoveFinishedListener);
         break;
       }
       case "map#queryRenderedFeatures":
