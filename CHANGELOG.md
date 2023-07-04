@@ -1,6 +1,7 @@
 ## upcoming version
 
 ### Breaking Change:
+* `useDelayedDisposal` was removed since its now fixed in https://github.com/maplibre/flutter-maplibre-gl/pull/259
 * The default for `myLocationRenderMode` was changed from `COMPASS` to `NORMAL` in https://github.com/maplibre/flutter-maplibre-gl/pull/244, since the previous default value of `COMPASS` implicitly enables displaying the location on iOS, which could crash apps that didn't want to display the device location. If you want to continue to use `MyLocationRenderMode.COMPASS`, please explicitly specify it in the constructor like this:
 ```dart
 MaplibreMap(
