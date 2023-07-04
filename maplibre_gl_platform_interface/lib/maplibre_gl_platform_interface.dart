@@ -8,7 +8,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-part 'src/view_wrappers.dart';
 part 'src/annotation.dart';
 part 'src/callbacks.dart';
 part 'src/camera.dart';
