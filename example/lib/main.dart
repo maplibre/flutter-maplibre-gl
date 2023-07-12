@@ -10,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/map_padding_page.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -54,6 +55,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const Sources(),
   const GivenBoundsPage(),
   const GetMapInfoPage(),
+  const MapPaddingPage(),
 ];
 
 class MapsDemo extends StatefulWidget {

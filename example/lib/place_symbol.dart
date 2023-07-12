@@ -308,15 +308,6 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        //TODO: move to own example page
-                        TextButton(
-                          onPressed: () {
-                            controller!.setPadding(
-                              edgeInsets: const EdgeInsets.only(right: 100),
-                            );
-                          },
-                          child: const Text('addRightPadding'),
-                        ),
                         TextButton(
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)

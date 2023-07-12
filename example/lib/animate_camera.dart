@@ -185,14 +185,6 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('tiltTo'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    mapController.setPadding(
-                      edgeInsets: const EdgeInsets.only(right: 300.0),
-                    );
-                  },
-                  child: const Text('addRightPadding'),
-                ),
               ],
             ),
           ],
