@@ -61,7 +61,6 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
   @Override
   public void setStyleString(String styleString) {
     this.styleString = styleString;
-    // options. styleString(styleString);
   }
 
   @Override
