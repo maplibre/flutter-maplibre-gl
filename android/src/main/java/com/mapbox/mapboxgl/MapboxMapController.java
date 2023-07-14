@@ -248,7 +248,7 @@ final class MapboxMapController
   }
 
   @Override
-  public void setStyleString(String styleString) {
+  public void setStyleString(@NonNull String styleString) {
     // clear old layer id from the location Component
     clearLocationComponentLayer();
     styleString = styleString.trim();
