@@ -1086,6 +1086,13 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
   }
 
+  /// Update the image and/or coordinates of an image source.
+  Future<void> updateImageSource(
+      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
+    return _mapboxGlPlatform.updateImageSource(
+        imageSourceId, bytes, coordinates);
+  }
+
   /// Removes previously added image source by id
   @Deprecated("This method was renamed to removeSource")
   Future<void> removeImageSource(String imageSourceId) {
