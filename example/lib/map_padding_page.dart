@@ -28,6 +28,8 @@ class _MapPaddingBodyState extends State<_MapPaddingBody> {
 
   Symbol? _markerSymbol;
 
+  final _initialPos = const LatLng(50, 11);
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -39,8 +41,7 @@ class _MapPaddingBodyState extends State<_MapPaddingBody> {
                 SizedBox(
                   child: MaplibreMap(
                     onMapCreated: _onMapCreated,
-                    initialCameraPosition:
-                        const CameraPosition(target: LatLng(0.0, 0.0)),
+                    initialCameraPosition: CameraPosition(target: _initialPos),
                   ),
                 ),
                 Align(
@@ -96,8 +97,12 @@ class _MapPaddingBodyState extends State<_MapPaddingBody> {
     );
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) async {
     mapController = controller;
+    await mapController.animateCamera(
+      CameraUpdate.zoomBy(3),
+      duration: const Duration(seconds: 1),
+    );
   }
 
   void _togglePadding() {
@@ -121,13 +126,14 @@ class _MapPaddingBodyState extends State<_MapPaddingBody> {
       "assets/symbols/custom-marker.png",
     );
     const latLng = LatLng(48, 13);
-    _markerSymbol = await mapController.addSymbol(
-      const SymbolOptions(geometry: latLng, iconImage: "custom-marker"),
-    );
+
     await mapController.moveCamera(CameraUpdate.newLatLng(latLng));
     await mapController.animateCamera(
       CameraUpdate.zoomTo(9),
       duration: const Duration(milliseconds: 500),
+    );
+    _markerSymbol = await mapController.addSymbol(
+      const SymbolOptions(geometry: latLng, iconImage: "custom-marker"),
     );
   }
 }

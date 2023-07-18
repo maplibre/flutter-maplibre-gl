@@ -278,7 +278,7 @@ class MaplibreMapController extends ChangeNotifier {
 
   //TODO: docs
   Future<bool?> setPadding(EdgeInsets padding) async {
-    return _mapboxGlPlatform.setPadding(edgeInsets: padding);
+    return _mapboxGlPlatform.setPadding(padding);
   }
 
   /// Instantaneously re-position the camera.

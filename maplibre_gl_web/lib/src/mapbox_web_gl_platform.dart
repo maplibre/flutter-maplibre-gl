@@ -1052,4 +1052,9 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<List> getSourceIds() async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool?> setPadding(EdgeInsets padding) {
+    throw UnimplementedError("");
+  }
 }

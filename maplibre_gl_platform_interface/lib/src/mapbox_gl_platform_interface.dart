@@ -49,7 +49,7 @@ abstract class MapLibreGlPlatform {
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers);
   Future<CameraPosition?> updateMapOptions(Map<String, dynamic> optionsUpdate);
   Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration});
-  Future<bool?> setPadding({required EdgeInsets edgeInsets});
+  Future<bool?> setPadding(EdgeInsets padding);
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode);

@@ -339,9 +339,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let top = arguments["top"] as? Float else { return }
             guard let bottom = arguments["bottom"] as? Float else { return }
             
-            
-            mapView.contentInset = UIEdgeInsets(top: CGFloat(top), left: CGFloat(left), bottom: CGFloat(bottom), right: CGFloat(right))
-            result(nil)
+            let padding = UIEdgeInsets(top: CGFloat(top), left: CGFloat(left), bottom: CGFloat(bottom), right: CGFloat(right))
+            mapView.setContentInset(padding, animated: true) {
+                result(nil)
+            }
         case "symbolLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
