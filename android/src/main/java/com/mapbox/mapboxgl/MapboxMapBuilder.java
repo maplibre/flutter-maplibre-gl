@@ -6,6 +6,7 @@ package com.mapbox.mapboxgl;
 
 import android.content.Context;
 import android.view.Gravity;
+import androidx.annotation.NonNull;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
@@ -54,14 +55,13 @@ class MapboxMapBuilder implements MapboxMapOptionsSink {
   }
 
   @Override
-  public void setCameraTargetBounds(LatLngBounds bounds) {
+  public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
     this.bounds = bounds;
   }
 
   @Override
-  public void setStyleString(String styleString) {
+  public void setStyleString(@NonNull String styleString) {
     this.styleString = styleString;
-    // options. styleString(styleString);
   }
 
   @Override
