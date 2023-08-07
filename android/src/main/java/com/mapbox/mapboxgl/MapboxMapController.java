@@ -57,7 +57,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.offline.OfflineManager;
-import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
 import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.FillExtrusionLayer;
@@ -89,6 +88,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -131,7 +131,6 @@ final class MapboxMapController
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
-  private LocalizationPlugin localizationPlugin;
   private Style style;
   private Feature draggedFeature;
   private AndroidGesturesManager androidGesturesManager;
@@ -163,7 +162,6 @@ final class MapboxMapController
 
           mapboxMap.addOnMapClickListener(MapboxMapController.this);
           mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
-          localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
           methodChannel.invokeMethod("map#onStyleLoaded", null);
         }
@@ -644,7 +642,10 @@ final class MapboxMapController
       case "map#matchMapLanguageWithDeviceDefault":
         {
           try {
-            localizationPlugin.matchMapLanguageWithDeviceDefault();
+            final Locale deviceLocale = Locale.getDefault();
+
+            setMapLanguage(deviceLocale.getLanguage());
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -673,7 +674,7 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            localizationPlugin.setMapLanguage(language);
+            setMapLanguage(language);
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -1791,6 +1792,21 @@ final class MapboxMapController
       case Gravity.BOTTOM | Gravity.END:
         mapboxMap.getUiSettings().setAttributionMargins(0, 0, x, y);
         break;
+    }
+  }
+
+  private void setMapLanguage(String language){
+    final List<Layer> layers = mapboxMap.getStyle().getLayers();
+
+    final String expressionValue = String.format("['get', 'name:%s']", language);
+
+    final PropertyValue<Expression> newExpression =
+            PropertyFactory.textField(Expression.raw(expressionValue));
+
+    for (final Layer layer : layers) {
+      if(layer instanceof SymbolLayer) {
+        layer.setProperties(newExpression);
+      }
     }
   }
 
