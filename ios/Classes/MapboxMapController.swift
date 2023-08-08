@@ -848,18 +848,13 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         
         let layers = style.layers
         
-        //TODO
-        let expressionValue = ""
-        
-        //TODO
-        let newExpression = "Expression"
+        let expressionValue = "['get', 'name:\(language)']"
         
         for layer in layers {
             if let symbolLayer = layer as? MGLSymbolStyleLayer {
-                // TODO 
+                
             }
         }
-
     }
 
     /*
@@ -1601,9 +1596,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     func setAttributionButtonPosition(position: MGLOrnamentPosition) {
         mapView.attributionButtonPosition = position
     }
-    
-    
-    
 }
 
 extension String {
