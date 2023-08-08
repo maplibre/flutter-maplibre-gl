@@ -853,6 +853,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         for layer in layers {
             if let symbolLayer = layer as? MGLSymbolStyleLayer {
                 
+                symbolLayer.text = NSExpression(forConstantValue: expressionValue)
             }
         }
     }
