@@ -161,9 +161,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
             result(nil)
         case "map#matchMapLanguageWithDeviceDefault":
-            if let style = mapView.style {
-                style.localizeLabels(into: nil)
+            if let langStr = Locale.current.languageCode {
+                setMapLanguage(language: langStr)
             }
+            
             result(nil)
         case "map#updateContentInsets":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -195,9 +196,8 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
         case "map#setMapLanguage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            if let localIdentifier = arguments["language"] as? String, let style = mapView.style {
-                let locale = Locale(identifier: localIdentifier)
-                style.localizeLabels(into: locale)
+            if let localIdentifier = arguments["language"] as? String {
+                setMapLanguage(language: localIdentifier)
             }
             result(nil)
         case "map#queryRenderedFeatures":
@@ -840,6 +840,26 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
 
     private func getCamera() -> MGLMapCamera? {
         return trackCameraPosition ? mapView.camera : nil
+    }
+    
+    private func setMapLanguage(language: String) {
+        
+        guard let style = mapView.style else { return }
+        
+        let layers = style.layers
+        
+        //TODO
+        let expressionValue = ""
+        
+        //TODO
+        let newExpression = "Expression"
+        
+        for layer in layers {
+            if let symbolLayer = layer as? MGLSymbolStyleLayer {
+                // TODO 
+            }
+        }
+
     }
 
     /*
@@ -1581,6 +1601,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     func setAttributionButtonPosition(position: MGLOrnamentPosition) {
         mapView.attributionButtonPosition = position
     }
+    
+    
+    
 }
 
 extension String {
