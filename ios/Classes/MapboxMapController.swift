@@ -843,19 +843,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     }
     
     private func setMapLanguage(language: String) {
-        
-        guard let style = mapView.style else { return }
-        
-        let layers = style.layers
-        
-        let expressionValue = "['get', 'name:\(language)']"
-        
-        for layer in layers {
-            if let symbolLayer = layer as? MGLSymbolStyleLayer {
-                
-                symbolLayer.text = NSExpression(forKeyPath: expressionValue)
-            }
-        }
+        self.mapView.setMapLanguage(language)
     }
 
     /*
