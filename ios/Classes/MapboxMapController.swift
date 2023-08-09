@@ -848,12 +848,19 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         
         let layers = style.layers
         
-        let expressionValue = "['get', 'name:\(language)']"
         
         for layer in layers {
             if let symbolLayer = layer as? MGLSymbolStyleLayer {
+                if symbolLayer.text == nil {
+                    continue
+                }
                 
-                symbolLayer.text = NSExpression(forKeyPath: expressionValue)
+                let properties = ["text-field": "[\"coalesce\", [\"get\",\"name:\(language)\"],[\"get\",\"name\"]]"]
+                    
+                LayerPropertyConverter.addSymbolProperties(
+                    symbolLayer: symbolLayer,
+                    properties: properties
+                )
             }
         }
     }
