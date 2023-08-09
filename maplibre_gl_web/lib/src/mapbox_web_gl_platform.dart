@@ -247,23 +247,13 @@ class MaplibreMapController extends MapLibreGlPlatform
         continue;
       }
 
-      final dynamic newProperty;
+      final newProperties = [
+        "coalesce",
+        ["get", "name:$language"],
+        ["get", "name"],
+      ];
 
-      if (properties is List) {
-        newProperty = properties.map((property) {
-          if (property is List) {
-            return property
-                .map((x) => x.toString().replaceLanguageWith(language))
-                .toList();
-          } else {
-            return property.toString().replaceLanguageWith(language);
-          }
-        }).toList();
-      } else {
-        newProperty = properties.toString().replaceLanguageWith(language);
-      }
-
-      _map.setLayoutProperty(layer.id, 'text-field', newProperty);
+      _map.setLayoutProperty(layer.id, 'text-field', newProperties);
     }
   }
 
@@ -1075,13 +1065,5 @@ class MaplibreMapController extends MapLibreGlPlatform
   @override
   Future<List> getSourceIds() async {
     throw UnimplementedError();
-  }
-}
-
-extension on String {
-  String replaceLanguageWith(String language) {
-    final nameRegex = RegExp("(name:[a-z]+)");
-
-    return this.replaceAll(nameRegex, "name:$language");
   }
 }

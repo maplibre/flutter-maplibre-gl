@@ -10,19 +10,15 @@ class MapLibreLocalization(private val mapBoxMap: MapboxMap) {
     fun setMapLanguage(language: String) {
         val layers = mapBoxMap.style?.layers ?: emptyList()
 
-        // Find name:de, name:es or name:latin
-        val nameRegex = Regex("(name:[a-z]+)")
-
         val symbolLayers = layers.filterIsInstance<SymbolLayer>()
 
         for (layer in symbolLayers) {
-            val expression = layer.textField.expression ?: continue
+            // continue when there is no current expression
+            layer.textField.expression ?: continue
 
-            val newExpression = expression
-                .toString()
-                .replace(nameRegex, "name:$language")
+            val properties = "[\"coalesce\", [\"get\",\"name:$language\"],[\"get\",\"name\"]]";
 
-            layer.setProperties(PropertyFactory.textField(Expression.raw(newExpression)))
+            layer.setProperties(PropertyFactory.textField(Expression.raw(properties)))
         }
     }
 }
