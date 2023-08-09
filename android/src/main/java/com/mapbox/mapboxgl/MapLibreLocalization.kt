@@ -15,11 +15,11 @@ class MapLibreLocalization(private val mapBoxMap: MapboxMap) {
         for (layer in symbolLayers) {
             val expression = layer.textField.expression ?: continue
 
-            val languageNameRegex = Regex("(name:[a-z][a-z])")
+            val nameRegex = Regex("(name:[a-z]+)")
 
             val newExpression = expression
                 .toString()
-                .replace(languageNameRegex, "name:$language")
+                .replace(nameRegex, "name:$language")
 
             layer.setProperties(PropertyFactory.textField(Expression.raw(newExpression)))
         }
