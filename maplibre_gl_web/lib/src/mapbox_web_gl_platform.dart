@@ -238,27 +238,30 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<void> setMapLanguage(String language) async {
     final List<dynamic> layers = _map.getStyle()?.layers ?? [];
 
-    final nameRegex = RegExp("(name:[a-z]+)");
-
     final symbolLayers = layers.where((layer) => layer.type == "symbol");
 
     for (final layer in symbolLayers) {
-      final List<dynamic>? properties =
-          _map.getLayoutProperty(layer.id, 'text-field');
+      final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
 
-      if (properties == null || properties.isEmpty) {
+      if (properties == null) {
         continue;
       }
 
-      final List<dynamic> newProperty = properties.map((property) {
-        if (property is List) {
-          return property
-              .map((x) => x.toString().replaceAll(nameRegex, "name:$language"))
-              .toList();
-        } else {
-          return property.toString().replaceAll(nameRegex, "name:$language");
-        }
-      }).toList();
+      final dynamic newProperty;
+
+      if (properties is List) {
+        newProperty = properties.map((property) {
+          if (property is List) {
+            return property
+                .map((x) => x.toString().replaceLanguageWith(language))
+                .toList();
+          } else {
+            return property.toString().replaceLanguageWith(language);
+          }
+        }).toList();
+      } else {
+        newProperty = properties.toString().replaceLanguageWith(language);
+      }
 
       _map.setLayoutProperty(layer.id, 'text-field', newProperty);
     }
@@ -1072,5 +1075,13 @@ class MaplibreMapController extends MapLibreGlPlatform
   @override
   Future<List> getSourceIds() async {
     throw UnimplementedError();
+  }
+}
+
+extension on String {
+  String replaceLanguageWith(String language) {
+    final nameRegex = RegExp("(name:[a-z]+)");
+
+    return this.replaceAll(nameRegex, "name:$language");
   }
 }
