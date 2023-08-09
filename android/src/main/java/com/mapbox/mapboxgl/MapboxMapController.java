@@ -644,8 +644,7 @@ final class MapboxMapController
         {
           try {
             final Locale deviceLocale = Locale.getDefault();
-
-            new MapLibreLocalization(mapboxMap).setMapLanguage(deviceLocale.getLanguage());
+            MapboxMapUtils.setMapLanguage(mapboxMap, deviceLocale.getLanguage());
 
             result.success(null);
           } catch (RuntimeException exception) {
@@ -675,7 +674,8 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            new MapLibreLocalization(mapboxMap).setMapLanguage(language);
+            MapboxMapUtils.setMapLanguage(mapboxMap, language);
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
