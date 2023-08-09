@@ -75,6 +75,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import com.mapbox.mapboxsdk.style.sources.Source;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
+import com.mapbox.mapboxsdk.style.types.Formatted;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -644,7 +645,7 @@ final class MapboxMapController
           try {
             final Locale deviceLocale = Locale.getDefault();
 
-            setMapLanguage(deviceLocale.getLanguage());
+            new MapLibreLocalization(mapboxMap).setMapLanguage(deviceLocale.getLanguage());
 
             result.success(null);
           } catch (RuntimeException exception) {
@@ -674,7 +675,7 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            setMapLanguage(language);
+            new MapLibreLocalization(mapboxMap).setMapLanguage(language);
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -1792,21 +1793,6 @@ final class MapboxMapController
       case Gravity.BOTTOM | Gravity.END:
         mapboxMap.getUiSettings().setAttributionMargins(0, 0, x, y);
         break;
-    }
-  }
-
-  private void setMapLanguage(String language){
-    final List<Layer> layers = mapboxMap.getStyle().getLayers();
-
-    final String expressionValue = String.format("['get', 'name:%s']", language);
-
-    final PropertyValue<Expression> newExpression =
-            PropertyFactory.textField(Expression.raw(expressionValue));
-
-    for (final Layer layer : layers) {
-      if(layer instanceof SymbolLayer) {
-        layer.setProperties(newExpression);
-      }
     }
   }
 
