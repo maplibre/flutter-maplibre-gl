@@ -19,6 +19,10 @@ extension MGLMapView {
                     continue
                 }
                 
+                if symbolLayer.text.description.contains("ref") {
+                    continue
+                }
+                
                 let properties = ["text-field": "[\"coalesce\", [\"get\",\"name:\(language)\"],[\"get\",\"name:latin\"]]"]
                     
                 LayerPropertyConverter.addSymbolProperties(

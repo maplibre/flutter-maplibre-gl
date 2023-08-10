@@ -246,6 +246,9 @@ class MaplibreMapController extends MapLibreGlPlatform
       if (properties == null) {
         continue;
       }
+      if (properties.toString().contains("ref")) {
+        continue;
+      }
 
       final newProperties = [
         "coalesce",
