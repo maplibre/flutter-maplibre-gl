@@ -19,7 +19,7 @@ extension MGLMapView {
                     continue
                 }
                 
-                let properties = ["text-field": "[\"coalesce\", [\"get\",\"name:\(language)\"],[\"get\",\"name\"]]"]
+                let properties = ["text-field": "[\"coalesce\", [\"get\",\"name:\(language)\"],[\"get\",\"name:latin\"]]"]
                     
                 LayerPropertyConverter.addSymbolProperties(
                     symbolLayer: symbolLayer,

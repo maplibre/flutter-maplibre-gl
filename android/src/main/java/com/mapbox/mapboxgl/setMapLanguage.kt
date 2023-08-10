@@ -16,7 +16,7 @@ fun MapboxMap.setMapLanguage(language: String) {
         // continue when there is no current expression
         layer.textField.expression ?: continue
 
-        val properties = "[\"coalesce\", [\"get\",\"name:$language\"],[\"get\",\"name\"]]";
+        val properties = "[\"coalesce\", [\"get\",\"name:$language\"],[\"get\",\"name:latin\"]]";
 
         layer.setProperties(PropertyFactory.textField(Expression.raw(properties)))
     }
