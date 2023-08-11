@@ -238,6 +238,8 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<void> setMapLanguage(String language) async {
     final List<dynamic> layers = _map.getStyle()?.layers ?? [];
 
+    final languageRegex = RegExp("(name:[a-z]+)");
+
     final symbolLayers = layers.where((layer) => layer.type == "symbol");
 
     for (final layer in symbolLayers) {
@@ -246,7 +248,9 @@ class MaplibreMapController extends MapLibreGlPlatform
       if (properties == null) {
         continue;
       }
-      if (properties.toString().contains("ref")) {
+
+      // We could skip the current iteration, whenever there is not current language.
+      if (!languageRegex.hasMatch(properties.toString())) {
         continue;
       }
 

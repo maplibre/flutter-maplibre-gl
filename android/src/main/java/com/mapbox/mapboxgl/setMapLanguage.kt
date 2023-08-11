@@ -10,13 +10,16 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 fun MapboxMap.setMapLanguage(language: String) {
     val layers = this.style?.layers ?: emptyList()
 
+    val languageRegex = Regex("(name:[a-z]+)")
+
     val symbolLayers = layers.filterIsInstance<SymbolLayer>()
 
     for (layer in symbolLayers) {
         // continue when there is no current expression
         val expression = layer.textField.expression ?: continue
 
-        if (expression.toString().contains("ref")) {
+        // We could skip the current iteration, whenever there is not current language.
+        if (!expression.toString().contains(languageRegex)) {
             continue
         }
 
