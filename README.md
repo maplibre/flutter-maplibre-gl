@@ -50,8 +50,8 @@ To use this plugin with iOS, you need to add the source repository and 2 additio
 source 'https://cdn.cocoapods.org/'
 source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 
-pod 'MapLibre'
-pod 'MapLibreAnnotationExtension'
+pod 'MapLibre', '5.12.2'
+pod 'MapLibreAnnotationExtension', '0.0.1-beta.2'
 ```
 
 ### Web
