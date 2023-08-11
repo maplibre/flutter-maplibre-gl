@@ -308,9 +308,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
             
-            if let camera = Convert
-                .parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView)
-            {
+            if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
                 mapView.setCamera(camera, animated: false)
             }
             result(nil)
@@ -325,18 +323,15 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
             
             if let duration = arguments["duration"] as? TimeInterval {
-                if let padding = Convert.parseCameraPadding(cameraUpdate: cameraUpdate) {
-                    mapView.fly(to: camera, edgePadding: padding, withDuration: duration, completionHandler: completion)
+                if let padding = Convert.parseLatLngBoundsPadding(cameraUpdate) {
+                    mapView.fly(to: camera, edgePadding: padding, withDuration: duration / 1000, completionHandler: completion)
                 } else {
-                    mapView.fly(to: camera, withDuration: duration,completionHandler: completion)
+                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
                 }
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()
             }
-            
-            
-
         case "symbolLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }

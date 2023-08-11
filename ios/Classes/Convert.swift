@@ -71,8 +71,10 @@ class Convert {
         }
     }
     
-    class func parseCameraPadding(cameraUpdate: [Any]) -> UIEdgeInsets? {
-        if cameraUpdate.count < 6 {
+    class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {
+        guard let methodName = cameraUpdate[0] as? String else { return nil }
+        
+        if(methodName != "newLatLngBounds") {
             return nil
         }
         
