@@ -70,6 +70,20 @@ class Convert {
             delegate.setAttributionButtonPosition(position: position)
         }
     }
+    
+    class func parseCameraPadding(cameraUpdate: [Any]) -> UIEdgeInsets? {
+        guard let paddingLeft = cameraUpdate[2] as? CGFloat else { return nil }
+        guard let paddingTop = cameraUpdate[3] as? CGFloat else { return nil }
+        guard let paddingRight = cameraUpdate[4] as? CGFloat else { return nil }
+        guard let paddingBottom = cameraUpdate[5] as? CGFloat else { return nil }
+        
+        return UIEdgeInsets(
+            top: paddingTop,
+            left: paddingLeft,
+            bottom: paddingBottom,
+            right: paddingRight
+        )
+    }
 
     class func parseCameraUpdate(cameraUpdate: [Any], mapView: MGLMapView) -> MGLMapCamera? {
         guard let type = cameraUpdate[0] as? String else { return nil }
@@ -84,19 +98,8 @@ class Convert {
             return camera
         case "newLatLngBounds":
             guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
-            guard let paddingLeft = cameraUpdate[2] as? CGFloat else { return nil }
-            guard let paddingTop = cameraUpdate[3] as? CGFloat else { return nil }
-            guard let paddingRight = cameraUpdate[4] as? CGFloat else { return nil }
-            guard let paddingBottom = cameraUpdate[5] as? CGFloat else { return nil }
-            return mapView.cameraThatFitsCoordinateBounds(
-                MGLCoordinateBounds.fromArray(bounds),
-                edgePadding: UIEdgeInsets(
-                    top: paddingTop,
-                    left: paddingLeft,
-                    bottom: paddingBottom,
-                    right: paddingRight
-                )
-            )
+            
+            return mapView.cameraThatFitsCoordinateBounds(MGLCoordinateBounds.fromArray(bounds))
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             guard let zoom = cameraUpdate[2] as? Double else { return nil }
