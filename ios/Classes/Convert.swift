@@ -72,17 +72,16 @@ class Convert {
     }
     
     class func parseCameraPadding(cameraUpdate: [Any]) -> UIEdgeInsets? {
+        if cameraUpdate.count < 6 {
+            return nil
+        }
+        
         guard let paddingLeft = cameraUpdate[2] as? CGFloat else { return nil }
         guard let paddingTop = cameraUpdate[3] as? CGFloat else { return nil }
         guard let paddingRight = cameraUpdate[4] as? CGFloat else { return nil }
         guard let paddingBottom = cameraUpdate[5] as? CGFloat else { return nil }
         
-        return UIEdgeInsets(
-            top: paddingTop,
-            left: paddingLeft,
-            bottom: paddingBottom,
-            right: paddingRight
-        )
+        return UIEdgeInsets(top: paddingTop, left: paddingLeft, bottom: paddingBottom, right: paddingRight)
     }
 
     class func parseCameraUpdate(cameraUpdate: [Any], mapView: MGLMapView) -> MGLMapCamera? {
