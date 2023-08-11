@@ -1,6 +1,5 @@
 import Flutter
 import Mapbox
-import MapLibreAnnotationExtension
 
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink,
     UIGestureRecognizerDelegate
@@ -105,11 +104,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             pan.delegate = self
             mapView.addGestureRecognizer(pan)
         }
-    }
-    func removeAllForController(controller: MGLAnnotationController, ids: [String]){
-        let idSet = Set(ids)
-        let annotations = controller.styleAnnotations()
-        controller.removeStyleAnnotations(annotations.filter { idSet.contains($0.identifier) })
     }
 
     func gestureRecognizer(
