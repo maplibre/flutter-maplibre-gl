@@ -13,13 +13,15 @@ extension MGLMapView {
         guard let style = style else { return }
         
         let layers = style.layers
+        
         for layer in layers {
             if let symbolLayer = layer as? MGLSymbolStyleLayer {
                 if symbolLayer.text == nil {
                     continue
                 }
-                
-                if symbolLayer.text.description.contains("ref") {
+                 
+                // We could skip the current iteration, whenever there is not current language.
+                if !symbolLayer.text.description.containsLanguage() {
                     continue
                 }
                 
@@ -30,6 +32,24 @@ extension MGLMapView {
                     properties: properties
                 )
             }
+        }
+    }
+}
+
+
+private extension String {
+    func containsLanguage() -> Bool {
+        do {
+            let regex = try NSRegularExpression(pattern: "(name:[a-z]+)")
+            let range = NSRange(location: 0, length: self.utf16.count)
+            
+            if let _ = regex.firstMatch(in: self, options: [], range: range) {
+                return true
+            } else {
+                return false
+            }
+        } catch {
+            return false
         }
     }
 }
