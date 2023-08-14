@@ -57,7 +57,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.offline.OfflineManager;
-import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
 import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.FillExtrusionLayer;
@@ -76,6 +75,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import com.mapbox.mapboxsdk.style.sources.Source;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
+import com.mapbox.mapboxsdk.style.types.Formatted;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -89,6 +89,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -131,7 +132,6 @@ final class MapboxMapController
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
-  private LocalizationPlugin localizationPlugin;
   private Style style;
   private Feature draggedFeature;
   private AndroidGesturesManager androidGesturesManager;
@@ -163,7 +163,6 @@ final class MapboxMapController
 
           mapboxMap.addOnMapClickListener(MapboxMapController.this);
           mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
-          localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
           methodChannel.invokeMethod("map#onStyleLoaded", null);
         }
@@ -644,7 +643,9 @@ final class MapboxMapController
       case "map#matchMapLanguageWithDeviceDefault":
         {
           try {
-            localizationPlugin.matchMapLanguageWithDeviceDefault();
+            final Locale deviceLocale = Locale.getDefault();
+            MapboxMapUtils.setMapLanguage(mapboxMap, deviceLocale.getLanguage());
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -673,7 +674,8 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            localizationPlugin.setMapLanguage(language);
+            MapboxMapUtils.setMapLanguage(mapboxMap, language);
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());

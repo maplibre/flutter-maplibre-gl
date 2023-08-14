@@ -10,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/localized_map.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
 import 'package:maplibre_gl_example/trip_calculation_example.dart';
 
@@ -39,6 +40,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const TripCalculationPage(),
   const MapUiPage(),
   const FullMapPage(),
+  const LocalizedMapPage(),
   const AnimateCameraPage(),
   const MoveCameraPage(),
   const PlaceSymbolPage(),
