@@ -1451,11 +1451,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
      */
     func setCameraTargetBounds(bounds: MGLCoordinateBounds?) {
         cameraTargetBounds = bounds
-        if let bounds = bounds {
-            mapView.setLatLngBounds(bounds)
-        } else {
-            mapView.clearLatLnBounds()
-        }
     }
 
     func setCompassEnabled(compassEnabled: Bool) {
