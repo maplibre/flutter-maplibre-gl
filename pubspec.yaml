@@ -10,12 +10,12 @@ dependencies:
     git:
       url: https://github.com/maplibre/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
-      ref: 250-change-language-fixes
+      ref: main
   maplibre_gl_web:
     git:
       url: https://github.com/maplibre/flutter-maplibre-gl.git
       path: maplibre_gl_web
-      ref: 250-change-language-fixes
+      ref: main
 
 dependency_overrides:
   maplibre_gl_platform_interface:
