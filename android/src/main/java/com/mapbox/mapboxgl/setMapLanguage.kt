@@ -23,7 +23,8 @@ fun MapboxMap.setMapLanguage(language: String) {
             continue
         }
 
-        val properties = "[\"coalesce\", [\"get\",\"name:$language\"],[\"get\",\"name:latin\"]]"
+        val properties =
+            "[\"coalesce\", [\"get\",\"name:$language\"],[\"get\",\"name:latin\"],[\"get\",\"name\"]]"
 
         layer.setProperties(PropertyFactory.textField(Expression.raw(properties)))
     }

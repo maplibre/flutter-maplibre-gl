@@ -258,6 +258,7 @@ class MaplibreMapController extends MapLibreGlPlatform
         "coalesce",
         ["get", "name:$language"],
         ["get", "name:latin"],
+        ["get", "name"],
       ];
 
       _map.setLayoutProperty(layer.id, 'text-field', newProperties);
