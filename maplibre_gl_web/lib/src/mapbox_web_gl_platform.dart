@@ -236,11 +236,33 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setMapLanguage(String language) async {
-    _map.setLayoutProperty(
-      'country-label',
-      'text-field',
-      ['get', 'name_' + language],
-    );
+    final List<dynamic> layers = _map.getStyle()?.layers ?? [];
+
+    final languageRegex = RegExp("(name:[a-z]+)");
+
+    final symbolLayers = layers.where((layer) => layer.type == "symbol");
+
+    for (final layer in symbolLayers) {
+      final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
+
+      if (properties == null) {
+        continue;
+      }
+
+      // We could skip the current iteration, whenever there is not current language.
+      if (!languageRegex.hasMatch(properties.toString())) {
+        continue;
+      }
+
+      final newProperties = [
+        "coalesce",
+        ["get", "name:$language"],
+        ["get", "name:latin"],
+        ["get", "name"],
+      ];
+
+      _map.setLayoutProperty(layer.id, 'text-field', newProperties);
+    }
   }
 
   @override
