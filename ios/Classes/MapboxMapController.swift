@@ -1,6 +1,5 @@
 import Flutter
 import Mapbox
-import MapLibreAnnotationExtension
 
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink,
     UIGestureRecognizerDelegate
@@ -106,11 +105,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             mapView.addGestureRecognizer(pan)
         }
     }
-    func removeAllForController(controller: MGLAnnotationController, ids: [String]){
-        let idSet = Set(ids)
-        let annotations = controller.styleAnnotations()
-        controller.removeStyleAnnotations(annotations.filter { idSet.contains($0.identifier) })
-    }
 
     func gestureRecognizer(
         _: UIGestureRecognizer,
@@ -161,9 +155,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
             result(nil)
         case "map#matchMapLanguageWithDeviceDefault":
-            if let style = mapView.style {
-                style.localizeLabels(into: nil)
+            if let langStr = Locale.current.languageCode {
+                setMapLanguage(language: langStr)
             }
+            
             result(nil)
         case "map#updateContentInsets":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -195,9 +190,8 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
         case "map#setMapLanguage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            if let localIdentifier = arguments["language"] as? String, let style = mapView.style {
-                let locale = Locale(identifier: localIdentifier)
-                style.localizeLabels(into: locale)
+            if let localIdentifier = arguments["language"] as? String {
+                setMapLanguage(language: localIdentifier)
             }
             result(nil)
         case "map#queryRenderedFeatures":
@@ -840,6 +834,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
 
     private func getCamera() -> MGLMapCamera? {
         return trackCameraPosition ? mapView.camera : nil
+    }
+    
+    private func setMapLanguage(language: String) {
+        self.mapView.setMapLanguage(language)
     }
 
     /*

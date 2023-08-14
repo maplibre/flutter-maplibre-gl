@@ -5,7 +5,6 @@ source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 platform :ios, '11.0'
 
 pod 'MapLibre'
-pod 'MapLibreAnnotationExtension'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
