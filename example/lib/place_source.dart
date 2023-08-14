@@ -35,6 +35,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   bool sourceAdded = false;
   bool layerAdded = false;
+  bool imageFlag = false;
   late MaplibreMapController controller;
 
   void _onMapCreated(MaplibreMapController controller) {
@@ -90,6 +91,17 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return controller.removeLayer(imageLayerId);
   }
 
+  Future<void> updateImageSourceFromAsset(
+      String imageSourceId, String assetName) async {
+    final ByteData bytes = await rootBundle.load(assetName);
+    final Uint8List list = bytes.buffer.asUint8List();
+    return controller.updateImageSource(imageSourceId, list, null);
+  }
+
+  String pickImage() {
+    return imageFlag ? 'assets/sydney0.png' : 'assets/sydney1.png';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -120,8 +132,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? null
                           : () {
-                              addImageSourceFromAsset(
-                                      sourceId, 'assets/sydney.png')
+                              addImageSourceFromAsset(sourceId, pickImage())
                                   .then((value) {
                                 setState(() => sourceAdded = true);
                               });
@@ -155,6 +166,15 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed:
                           sourceAdded ? () => removeLayer(layerId) : null,
                       child: const Text('Hide layer'),
+                    ),
+                    TextButton(
+                      onPressed: sourceAdded
+                          ? () async {
+                              setState(() => imageFlag = !imageFlag);
+                              updateImageSourceFromAsset(sourceId, pickImage());
+                            }
+                          : null,
+                      child: const Text('Change image'),
                     ),
                   ],
                 ),
