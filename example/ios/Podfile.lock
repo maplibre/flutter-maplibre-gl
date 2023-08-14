@@ -4,12 +4,10 @@ PODS:
   - Flutter (1.0.0)
   - location (0.0.1):
     - Flutter
-  - MapboxMobileEvents (0.10.11)
-  - MapLibre (5.14.0-pre1):
-    - MapboxMobileEvents (= 0.10.11)
+  - MapLibre (5.14.0-pre3)
   - maplibre_gl (0.0.1):
     - Flutter
-    - MapLibre (= 5.14.0-pre1)
+    - MapLibre (= 5.14.0-pre3)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -24,7 +22,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - MapboxMobileEvents
     - MapLibre
 
 EXTERNAL SOURCES:
@@ -43,9 +40,8 @@ SPEC CHECKSUMS:
   device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
-  MapboxMobileEvents: 1176afebbeca86806614a3dc409840bc02a3dd89
-  MapLibre: 6cc3261b33747cb91ce83055ec13dc5da2473270
-  maplibre_gl: 7ea8a4355da59ba13294760193f1dcc31b9101e8
+  MapLibre: 620fc933c1d6029b33738c905c1490d024e5d4ef
+  maplibre_gl: 249958f57ed5cca73baf413ad6cbdbc64be69658
   path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
 
 PODFILE CHECKSUM: 00bbce151cce7e3542226c3dbb2422a2cb667d7a
