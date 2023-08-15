@@ -43,7 +43,7 @@ Documentation is available on the docs branch in the doc/api folder and automati
 
 Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
-## iOS
+### iOS
 To use this plugin with iOS, you do not need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should be able to remove these lines from your Podfile: 
 
 ```ruby
