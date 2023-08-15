@@ -100,7 +100,15 @@ class Convert {
         case "newLatLngBounds":
             guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
             
+            if let padding = parseLatLngBoundsPadding(cameraUpdate) {
+                return mapView.cameraThatFitsCoordinateBounds(
+                    MGLCoordinateBounds.fromArray(bounds),
+                    edgePadding: padding
+                )
+            }
+            
             return mapView.cameraThatFitsCoordinateBounds(MGLCoordinateBounds.fromArray(bounds))
+            
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             guard let zoom = cameraUpdate[2] as? Double else { return nil }
