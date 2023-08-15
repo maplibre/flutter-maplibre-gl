@@ -10,9 +10,9 @@ MaplibreMap(
  ...
 )
 ```
-
 * The old api `registerWith` was removed from the MapboxMapsPlugin.java, since there is no need for that. 
-* The `minSdkVersion` was bumped to at least 21 now, since the native android sdk constraint expect that.
+* The `minSdkVersion` was bumped to at least 21 now, since the native android sdk constraint expect that. 
+* Changed the minimum Dart version from sdk: `2.12.0` to `2.14.0` in `maplibre_gl_platform_interface/pubspec.yaml`.
 
 ## 0.16.0, Jun 28, 2022
 * cherry-picked all commits from upstream up to [https://github.com/flutter-mapbox-gl/maps/commit/3496907955cd4b442e4eb905d67e8d46692174f1), including up to release 0.16.0 from upstream

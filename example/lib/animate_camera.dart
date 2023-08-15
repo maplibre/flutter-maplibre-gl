@@ -140,6 +140,15 @@ class AnimateCameraState extends State<AnimateCamera> {
                 TextButton(
                   onPressed: () {
                     mapController.animateCamera(
+                      CameraUpdate.newLatLngZoom(const LatLng(48, 11), 5),
+                      duration: const Duration(milliseconds: 300),
+                    );
+                  },
+                  child: const Text('latlngZoom'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    mapController.animateCamera(
                       CameraUpdate.zoomBy(-0.5),
                     );
                   },
