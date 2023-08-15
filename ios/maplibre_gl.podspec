@@ -17,6 +17,6 @@ A new Flutter plugin.
   s.dependency 'Flutter'
   s.dependency 'MapLibre', '5.14.0-pre3'
   s.swift_version = '4.2'
-  s.ios.deployment_target = '12.0'
+  s.ios.deployment_target = '11.0'
 end
 
