@@ -1152,32 +1152,29 @@ internal class MapboxMapController(
                         null
                     )
                 }
-                val reply: MutableMap<String, Any> = HashMap()
-                val layerId = call.argument<String>("layerId")
-                val layer = style!!.getLayer(layerId!!)
-                val filter: Expression?
-                filter = if (layer is CircleLayer) {
-                    layer.filter
-                } else if (layer is FillExtrusionLayer) {
-                    layer.filter
-                } else if (layer is FillLayer) {
-                    layer.filter
-                } else if (layer is HeatmapLayer) {
-                    layer.filter
-                } else if (layer is LineLayer) {
-                    layer.filter
-                } else if (layer is SymbolLayer) {
-                    layer.filter
-                } else {
+
+                val layerId = call.argument<String>("layerId")!!
+
+                val filter: Expression? = when (val layer = style!!.getLayer(layerId)) {
+                    is CircleLayer -> layer.filter
+                    is FillExtrusionLayer -> layer.filter
+                    is FillLayer -> layer.filter
+                    is HeatmapLayer -> layer.filter
+                    is LineLayer -> layer.filter
+                    is SymbolLayer -> layer.filter
+                    else -> null
+                }
+
+                if (filter == null) {
                     result.error(
                         "INVALID LAYER TYPE",
                         String.format("Layer '%s' does not support filtering.", layerId),
                         null
                     )
-                    break
+                } else {
+                    val reply = mapOf("filter" to filter.toString())
+                    result.success(reply)
                 }
-                reply["filter"] = filter.toString()
-                result.success(reply)
             }
 
             "layer#setVisibility" -> {
@@ -1270,12 +1267,12 @@ internal class MapboxMapController(
         if (!trackCameraPosition) {
             return
         }
-        val arguments= mapOf("position" to Convert.toJson(mapboxMap!!.cameraPosition))
+        val arguments = mapOf("position" to Convert.toJson(mapboxMap!!.cameraPosition))
         methodChannel.invokeMethod("camera#onMove", arguments)
     }
 
     override fun onCameraIdle() {
-        val arguments= mutableMapOf<String, Any>()
+        val arguments = mutableMapOf<String, Any>()
         if (trackCameraPosition) {
             arguments["position"] = Convert.toJson(mapboxMap!!.cameraPosition)
         }
@@ -1283,7 +1280,7 @@ internal class MapboxMapController(
     }
 
     override fun onCameraTrackingChanged(currentMode: Int) {
-        val arguments= mapOf("mode" to currentMode)
+        val arguments = mapOf("mode" to currentMode)
         methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments)
     }
 
