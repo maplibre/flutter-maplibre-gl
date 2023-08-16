@@ -109,7 +109,7 @@ internal class MapboxMapController(
 
     private val density: Float = context.resources.displayMetrics.density
 
-    private var mapView: MapView? = MapView(context, options)
+    private var mapView: MapView?
 
     /**
      * This container is returned as the final platform view instead of returning `mapView`.
@@ -135,19 +135,20 @@ internal class MapboxMapController(
     private var bounds: LatLngBounds? = null
 
     private var onStyleLoadedCallback = OnStyleLoaded { style ->
-        this@MapboxMapController.style = style
+        this.style = style
 
         updateMyLocationEnabled()
         if (null != bounds) {
             mapboxMap!!.setLatLngBoundsForCameraTarget(bounds)
         }
-        mapboxMap!!.addOnMapClickListener(this@MapboxMapController)
-        mapboxMap!!.addOnMapLongClickListener(this@MapboxMapController)
+        mapboxMap!!.addOnMapClickListener(this)
+        mapboxMap!!.addOnMapLongClickListener(this)
         methodChannel.invokeMethod("map#onStyleLoaded", null)
     }
 
     init {
         MapBoxUtils.getMapbox(context)
+        mapView = MapView(context, options)
 
         if (dragEnabled) {
             androidGesturesManager = AndroidGesturesManager(mapView!!.context, false)
@@ -1609,7 +1610,9 @@ internal class MapboxMapController(
             locationComponent!!
                 .locationEngine!!
                 .requestLocationUpdates(
-                    locationComponent!!.locationEngineRequest, locationEngineCallback, null
+                    locationComponent!!.locationEngineRequest,
+                    locationEngineCallback,
+                    null,
                 )
         }
     }

@@ -294,9 +294,9 @@ class _MaplibreMapState extends State<MaplibreMap> {
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         if (_controller.isCompleted) {
-          widget.onStyleLoadedCallback!();
+          widget.onStyleLoadedCallback?.call();
         } else {
-          _controller.future.then((_) => widget.onStyleLoadedCallback!());
+          _controller.future.then((_) => widget.onStyleLoadedCallback?.call());
         }
       },
       onMapClick: widget.onMapClick,
