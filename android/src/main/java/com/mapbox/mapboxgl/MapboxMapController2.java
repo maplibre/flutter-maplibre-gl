@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -66,21 +67,16 @@ import com.mapbox.mapboxsdk.style.layers.HillshadeLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import com.mapbox.mapboxsdk.style.sources.Source;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
-import com.mapbox.mapboxsdk.style.types.Formatted;
 
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.platform.PlatformView;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -93,10 +89,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformView;
+
 
 /** Controller of a single MapboxMaps MapView instance. */
-@SuppressLint("MissingPermission")
-final class MapboxMapController
+@SuppressLint("MissingPermission") layer.filter
+final class MapboxMapController2
     implements DefaultLifecycleObserver,
         MapboxMap.OnCameraIdleListener,
         MapboxMap.OnCameraMoveListener,
@@ -118,7 +119,7 @@ final class MapboxMapController
   private final String styleStringInitial;
   /**
    * This container is returned as the final platform view instead of returning `mapView`.
-   * See {@link MapboxMapController#destroyMapViewIfNecessary()} for details.
+   * See {@link MapboxMapController2#destroyMapViewIfNecessary()} for details.
    */
   private FrameLayout mapViewContainer;
   private MapView mapView;
@@ -147,7 +148,7 @@ final class MapboxMapController
       new Style.OnStyleLoaded() {
         @Override
         public void onStyleLoaded(@NonNull Style style) {
-          MapboxMapController.this.style = style;
+          MapboxMapController2.this.style = style;
 
           // commented out while cherry-picking upstream956
           // if (myLocationEnabled) {
@@ -161,14 +162,14 @@ final class MapboxMapController
             mapboxMap.setLatLngBoundsForCameraTarget(bounds);
           }
 
-          mapboxMap.addOnMapClickListener(MapboxMapController.this);
-          mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
+          mapboxMap.addOnMapClickListener(MapboxMapController2.this);
+          mapboxMap.addOnMapLongClickListener(MapboxMapController2.this);
 
           methodChannel.invokeMethod("map#onStyleLoaded", null);
         }
       };
 
-  MapboxMapController(
+  MapboxMapController2(
       int id,
       Context context,
       BinaryMessenger messenger,
@@ -2016,17 +2017,17 @@ final class MapboxMapController
 
     @Override
     public boolean onMoveBegin(MoveGestureDetector detector) {
-      return MapboxMapController.this.onMoveBegin(detector);
+      return MapboxMapController2.this.onMoveBegin(detector);
     }
 
     @Override
     public boolean onMove(MoveGestureDetector detector, float distanceX, float distanceY) {
-      return MapboxMapController.this.onMove(detector);
+      return MapboxMapController2.this.onMove(detector);
     }
 
     @Override
     public void onMoveEnd(MoveGestureDetector detector, float velocityX, float velocityY) {
-      MapboxMapController.this.onMoveEnd(detector);
+      MapboxMapController2.this.onMoveEnd(detector);
     }
   }
 }

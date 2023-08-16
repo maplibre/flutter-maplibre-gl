@@ -1,5 +1,3 @@
-@file:JvmName("MapboxMapUtils")
-
 package com.mapbox.mapboxgl
 
 import com.mapbox.mapboxsdk.maps.MapboxMap
