@@ -7,7 +7,6 @@ package com.mapbox.mapboxgl;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.DisplayMetrics;
-import com.mapbox.geojson.Polygon;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -37,10 +36,6 @@ class Convert {
     builder.tilt(toFloat(data.get("tilt")));
     builder.zoom(toFloat(data.get("zoom")));
     return builder.build();
-  }
-
-  static boolean isScrollByCameraUpdate(Object o) {
-    return toString(toList(o).get(0)).equals("scrollBy");
   }
 
   static CameraUpdate toCameraUpdate(Object o, MapboxMap mapboxMap, float density) {
@@ -150,38 +145,8 @@ class Convert {
     return latLngList;
   }
 
-  private static List<List<LatLng>> toLatLngListList(Object o) {
-    if (o == null) {
-      return null;
-    }
-    final List<?> data = toList(o);
-    List<List<LatLng>> latLngListList = new ArrayList<>();
-    for (int i = 0; i < data.size(); i++) {
-      List<LatLng> latLngList = toLatLngList(data.get(i), false);
-      latLngListList.add(latLngList);
-    }
-    return latLngListList;
-  }
-
-  static Polygon interpretListLatLng(List<List<LatLng>> geometry) {
-    List<List<com.mapbox.geojson.Point>> points = new ArrayList<>(geometry.size());
-    for (List<LatLng> innerGeometry : geometry) {
-      List<com.mapbox.geojson.Point> innerPoints = new ArrayList<>(innerGeometry.size());
-      for (LatLng latLng : innerGeometry) {
-        innerPoints.add(
-            com.mapbox.geojson.Point.fromLngLat(latLng.getLongitude(), latLng.getLatitude()));
-      }
-      points.add(innerPoints);
-    }
-    return Polygon.fromLngLats(points);
-  }
-
   static List<?> toList(Object o) {
     return (List<?>) o;
-  }
-
-  static long toLong(Object o) {
-    return ((Number) o).longValue();
   }
 
   static Map<?, ?> toMap(Object o) {
