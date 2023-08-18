@@ -245,18 +245,14 @@ class MaplibreMapController extends MapLibreGlPlatform
     for (final layer in symbolLayers) {
       final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
 
-      print("properties for layer: ${layer.id} are: $properties");
-
       if (properties == null) {
         continue;
       }
 
       // We could skip the current iteration, whenever there is not current language.
       if (!languageRegex.hasMatch(properties.toString())) {
-        print("Regex for layer: ${layer.id} skipped");
         continue;
       }
-      print("Regex for layer: ${layer.id} used to translate");
 
       final newProperties = [
         "coalesce",
