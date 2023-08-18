@@ -236,7 +236,15 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setMapLanguage(String language) async {
-    final List<dynamic> layers = _map.getStyle()?.layers ?? [];
+    final bla = _map.getStyle();
+
+    print("Style: $bla");
+
+    final List<dynamic> layers = bla.layers;
+
+    print(layers);
+
+    print("Layers: $layers");
 
     final languageRegex = RegExp("(name:[a-z]+)");
 
@@ -245,14 +253,18 @@ class MaplibreMapController extends MapLibreGlPlatform
     for (final layer in symbolLayers) {
       final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
 
+      print("properties for layer: ${layer.id} are: $properties");
+
       if (properties == null) {
         continue;
       }
 
       // We could skip the current iteration, whenever there is not current language.
       if (!languageRegex.hasMatch(properties.toString())) {
+        print("Regex for layer: ${layer.id} skipped");
         continue;
       }
+      print("Regex for layer: ${layer.id} used to translate");
 
       final newProperties = [
         "coalesce",
@@ -1067,6 +1079,8 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<List> getLayerIds() async {
+    //TODO
+
     throw UnimplementedError();
   }
 
