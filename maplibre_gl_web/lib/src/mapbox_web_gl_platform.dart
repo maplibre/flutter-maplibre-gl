@@ -1067,9 +1067,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<List> getLayerIds() async {
-    //TODO
-
-    throw UnimplementedError();
+    return _map.getStyle().layers.map((e) => e.id).toList();
   }
 
   @override
