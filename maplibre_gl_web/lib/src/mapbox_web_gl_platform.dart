@@ -236,15 +236,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setMapLanguage(String language) async {
-    final bla = _map.getStyle();
-
-    print("Style: $bla");
-
-    final List<dynamic> layers = bla.layers;
-
-    print(layers);
-
-    print("Layers: $layers");
+    final List<dynamic> layers = _map.getStyle().layers;
 
     final languageRegex = RegExp("(name:[a-z]+)");
 
