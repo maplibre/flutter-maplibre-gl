@@ -71,9 +71,9 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "0.2.2"
-      resolved-ref: "24a48ecec0d07e02a0c51ced68a05f543d871583"
-      url: "https://github.com/m0nac0/maplibre-gl-dart.git"
+      ref: fix-style-layers
+      resolved-ref: "1d63c36e84f40ccaad4d9facc3b6c04809d56503"
+      url: "https://github.com/tappeddev/maplibre-gl-dart.git"
     source: git
     version: "0.2.2"
   maplibre_gl_platform_interface:
