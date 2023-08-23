@@ -92,6 +92,7 @@ class CameraPosition {
   @override
   int get hashCode => hashValues(bearing, target, tilt, zoom, padding);
 
+
   @override
   String toString() =>
       'CameraPosition(bearing: $bearing, target: $target, tilt: $tilt, zoom: $zoom, padding: $padding)';
