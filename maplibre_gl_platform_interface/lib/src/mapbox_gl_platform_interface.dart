@@ -6,6 +6,8 @@ part of maplibre_gl_platform_interface;
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibreGlPlatform {
+  static MethodChannelMaplibreGl? _instance;
+
   /// The default instance of [MapboxGlPlatform] to use.
   ///
   /// Defaults to [MethodChannelMaplibreGl].
@@ -13,7 +15,11 @@ abstract class MapLibreGlPlatform {
   /// Platform-specific plugins should set this with their own platform-specific
   /// class that extends [MapLibreGlPlatform] when they register themselves.
   static MapLibreGlPlatform Function() createInstance =
-      () => MethodChannelMaplibreGl();
+      () => _instance ?? MethodChannelMaplibreGl();
+
+  static set instance(MethodChannelMaplibreGl instance) {
+    _instance = instance;
+  }
 
   final onInfoWindowTappedPlatform = ArgumentCallbacks<String>();
 

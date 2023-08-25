@@ -46,7 +46,10 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         RasterDemSourceProperties,
         GeojsonSourceProperties,
         VideoSourceProperties,
-        ImageSourceProperties;
+        ImageSourceProperties,
+        MapLibreGlPlatform,
+        MethodChannelMaplibreGl,
+        OnPlatformViewCreatedCallback;
 
 part 'src/controller.dart';
 
