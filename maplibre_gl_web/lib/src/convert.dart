@@ -130,9 +130,9 @@ class Convert {
       case 'scrollBy':
         final x = json[1];
         final y = json[2];
-        final mapbox.Point point = mapboxMap.project(mapboxMap.getCenter());
+        final point = mapboxMap.project(mapboxMap.getCenter());
         return CameraOptions(
-          center: mapboxMap.unproject(mapbox.Point(point.x + x, point.y + y)),
+          center: mapboxMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
           zoom: mapboxMap.getZoom(),
           pitch: mapboxMap.getPitch(),
           bearing: mapboxMap.getBearing(),
@@ -150,7 +150,7 @@ class Convert {
         }
         final point = json[2];
         return CameraOptions(
-          center: mapboxMap.unproject(mapbox.Point(point[0], point[1])),
+          center: mapboxMap.unproject(geoPoint.Point(point[0], point[1])),
           zoom: mapboxMap.getZoom() + zoom,
           pitch: mapboxMap.getPitch(),
           bearing: mapboxMap.getBearing(),

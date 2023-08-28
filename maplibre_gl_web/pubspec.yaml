@@ -11,6 +11,7 @@ flutter:
         fileName: mapbox_gl_web.dart
 
 dependencies:
+  js: ^0.6.7
   flutter:
     sdk: flutter
   flutter_web_plugins:
@@ -21,17 +22,11 @@ dependencies:
       url: https://github.com/maplibre/flutter-maplibre-gl.git
       path: maplibre_gl_platform_interface
       ref: main
-  maplibre_gl_dart:
-    git:
-      url: https://github.com/m0nac0/maplibre-gl-dart.git
-      ref: 0.2.2
   image: ^4.0.17
 
 dependency_overrides:
   maplibre_gl_platform_interface:
     path: ../maplibre_gl_platform_interface
-  #maplibre_gl_dart:
-  #  path: ../../maplibre-gl-dart
 
 dev_dependencies:
   flutter_test:

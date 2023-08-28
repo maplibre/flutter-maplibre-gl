@@ -6,7 +6,7 @@ final _maplibreGlCssUrl =
 
 class MaplibreMapController extends MapLibreGlPlatform
     implements MapboxMapOptionsSink {
-  late DivElement _mapElement;
+  late html.DivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
   late MapboxMap _map;
@@ -48,7 +48,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/mapbox_gl_$identifier', (int viewId) {
-      _mapElement = DivElement()
+      _mapElement = html.DivElement()
         ..style.position = 'absolute'
         ..style.top = '0'
         ..style.bottom = '0'
@@ -95,7 +95,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   void _initResizeObserver() {
-    final resizeObserver = ResizeObserver((entries, observer) {
+    final resizeObserver = html.ResizeObserver((entries, observer) {
       // The resize observer might be called a lot of times when the user resizes the browser window with the mouse for example.
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
@@ -104,7 +104,7 @@ class MaplibreMapController extends MapLibreGlPlatform
         _onMapResize();
       });
     });
-    resizeObserver.observe(document.body as Element);
+    resizeObserver.observe(html.document.body as html.Element);
   }
 
   void _loadFromAssets(Event event) async {
@@ -174,8 +174,8 @@ class MaplibreMapController extends MapLibreGlPlatform
     }
   }
 
-  Future<void> _addStylesheetToShadowRoot(HtmlElement e) async {
-    LinkElement link = LinkElement()
+  Future<void> _addStylesheetToShadowRoot(html.HtmlElement e) async {
+    final link = html.LinkElement()
       ..href = _maplibreGlCssUrl
       ..rel = 'stylesheet';
     e.append(link);
@@ -236,7 +236,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setMapLanguage(String language) async {
-    final List<dynamic> layers = _map.getStyle()?.layers ?? [];
+    final List<dynamic> layers = _map.getStyle().layers;
 
     final languageRegex = RegExp("(name:[a-z]+)");
 
@@ -704,26 +704,29 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<Point> toScreenLocation(LatLng latLng) async {
-    var screenPosition =
-        _map.project(LngLat(latLng.longitude, latLng.latitude));
-    return Point(screenPosition.x.round(), screenPosition.y.round());
+  Future<LatLng> toLatLng(Point<num> screenLocation) async {
+    var lngLat =
+        _map.unproject(geoPoint.Point(screenLocation.x, screenLocation.y));
+    return LatLng(lngLat.lat as double, lngLat.lng as double);
   }
 
   @override
-  Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+  Future<Point> toScreenLocation(LatLng latLng) async {
+    var screenPosition =
+        _map.project(LngLat(latLng.longitude, latLng.latitude));
+    final point = Point(screenPosition.x.round(), screenPosition.y.round());
+
+    return point;
+  }
+
+  @override
+  Future<List<Point<num>>> toScreenLocationBatch(
+      Iterable<LatLng> latLngs) async {
     return latLngs.map((latLng) {
       var screenPosition =
           _map.project(LngLat(latLng.longitude, latLng.latitude));
       return Point(screenPosition.x.round(), screenPosition.y.round());
     }).toList(growable: false);
-  }
-
-  @override
-  Future<LatLng> toLatLng(Point screenLocation) async {
-    var lngLat =
-        _map.unproject(mapbox.Point(screenLocation.x, screenLocation.y));
-    return LatLng(lngLat.lat as double, lngLat.lng as double);
   }
 
   @override
