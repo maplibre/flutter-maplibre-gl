@@ -509,6 +509,9 @@ class MapboxMap extends Camera {
   ///  var styleJson = map.getStyle();
   dynamic getStyle() => jsObject.getStyle();
 
+  /// Return each layer of the  Mapbox style object, which can be used to check the order, toggle the visibility or change properties
+  List<dynamic> getLayers() => Style.fromJsObject(jsObject.getStyle()).layers;
+
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
   ///
   ///  @returns {boolean} A Boolean indicating whether the style is fully loaded.

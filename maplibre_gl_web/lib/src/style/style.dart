@@ -161,6 +161,8 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
 
   /// Creates a new Style from a [jsObject].
   Style.fromJsObject(StyleJsImpl jsObject) : super.fromJsObject(jsObject);
+
+  List<dynamic> get layers => jsObject.layers;
 }
 
 class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
