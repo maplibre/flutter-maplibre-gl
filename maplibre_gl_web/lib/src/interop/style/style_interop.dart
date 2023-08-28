@@ -137,6 +137,8 @@ abstract class StyleJsImpl extends EventedJsImpl {
   getGlyphs(String mapId, dynamic params, Function callback);
 
   getResource(String mapId, RequestParametersJsImpl params, Function callback);
+
+  external List<dynamic> layers;
 }
 
 @JS()

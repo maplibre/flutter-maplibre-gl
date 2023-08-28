@@ -236,7 +236,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setMapLanguage(String language) async {
-    final List<dynamic> layers = _map.getStyle().layers;
+    final layers = _map.getLayers();
 
     final languageRegex = RegExp("(name:[a-z]+)");
 
@@ -1070,7 +1070,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<List> getLayerIds() async {
-    throw UnimplementedError();
+    return _map.getLayers().map((e) => e.id).toList();
   }
 
   @override
