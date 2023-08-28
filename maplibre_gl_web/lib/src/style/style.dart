@@ -21,8 +21,6 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
 
   loaded() => jsObject.loaded();
 
-  List<dynamic> get layers => jsObject.layers;
-
   hasTransitions() => jsObject.hasTransitions();
 
   ///  Apply queued style updates in a batch and recalculate zoom-dependent paint properties.

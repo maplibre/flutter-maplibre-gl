@@ -23,8 +23,6 @@ abstract class StyleJsImpl extends EventedJsImpl {
 
   hasTransitions();
 
-  external List<dynamic> layers;
-
   ///  Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
   update(EvaluationParametersJsImpl parameters);
 
