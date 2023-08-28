@@ -8,7 +8,6 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 
-
 ///  Options common to {@link MapboxMap#jumpTo}, {@link MapboxMap#easeTo}, and {@link MapboxMap#flyTo}, controlling the desired location,
 ///  zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
 ///  camera value for that property will remain unchanged.
@@ -23,9 +22,13 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 
 class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
   LngLat get center => LngLat.fromJsObject(jsObject.center);
+
   num get zoom => jsObject.zoom;
+
   num get bearing => jsObject.bearing;
+
   num get pitch => jsObject.pitch;
+
   LngLat get around => LngLat.fromJsObject(jsObject.around);
 
   factory CameraOptions({
@@ -62,9 +65,13 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 ///    [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
   num get duration => jsObject.duration;
+
   num Function(num time) get easing => jsObject.easing;
+
   Point get offset => Point.fromJsObject(jsObject.offset);
+
   bool get animate => jsObject.animate;
+
   bool get essential => jsObject.essential;
 
   factory AnimationOptions({
@@ -97,8 +104,11 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
 ///  @property {number} right Padding in pixels from the right of the map canvas.
 class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
   num get top => jsObject.top;
+
   num get bottom => jsObject.bottom;
+
   num get left => jsObject.left;
+
   num get right => jsObject.right;
 
   factory PaddingOptions({
