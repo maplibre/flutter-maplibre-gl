@@ -1,7 +1,6 @@
 library mapboxgl.ui.map;
 
 import 'dart:html';
-import 'package:js/js.dart';
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -508,7 +507,7 @@ class MapboxMap extends Camera {
   ///
   ///  @example
   ///  var styleJson = map.getStyle();
-  MapboxStyle getStyle() => MapboxStyle.fromJsObject(jsObject.getStyle());
+  dynamic getStyle() => jsObject.getStyle();
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
   ///
@@ -1434,16 +1433,4 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
 
   /// Creates a new IControl from a [jsObject].
   IControl.fromJsObject(IControlJsImpl jsObject) : super.fromJsObject(jsObject);
-}
-
-class MapboxStyle extends JsObjectWrapper<MapboxStyleJsImpl> {
-  MapboxStyle.fromJsObject(MapboxStyleJsImpl jsObject)
-      : super.fromJsObject(jsObject);
-
-  List<dynamic> get layers => jsObject.layers;
-}
-
-@JS('Style')
-class MapboxStyleJsImpl {
-  external List<dynamic> layers;
 }
