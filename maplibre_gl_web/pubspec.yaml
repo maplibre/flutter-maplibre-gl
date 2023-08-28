@@ -11,7 +11,7 @@ flutter:
         fileName: mapbox_gl_web.dart
 
 dependencies:
-  js: ^0.6.3
+  js: ^0.6.7
   flutter:
     sdk: flutter
   flutter_web_plugins:
@@ -29,8 +29,6 @@ dependency_overrides:
     path: ../maplibre_gl_platform_interface
 
 dev_dependencies:
-  build_runner: ^2.4.6
-  build_web_compilers: ^4.0.5
   flutter_test:
     sdk: flutter
 
