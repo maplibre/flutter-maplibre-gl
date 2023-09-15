@@ -966,18 +966,28 @@ final class MapboxMapController
           final String layerId = call.argument("layerId");
           final PropertyValue[] properties = LayerPropertyConverter
               .interpretLineLayerProperties(call.argument("properties"));
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+
           try {
-            LineLayer lineLayer = style.getLayerAs < LineLayer > (layerId);
+            LineLayer lineLayer = style.<LineLayer>getLayerAs(layerId);
+
+            if (lineLayer != null) {
+              lineLayer.setProperties(properties);
+              result.success(null);
+            } else {
+              result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+            }
+
           } catch (ClassCastException e) {
             result.error("WRONG_LAYER_TYPE", "Layer " + layerId + "has wrong type", null);
           }
 
-          if (lineLayer != null) {
-            lineLayer.setProperties(properties);
-            result.success(null);
-          } else {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
-          }
           break;
         }
       case "fillLayer#add":

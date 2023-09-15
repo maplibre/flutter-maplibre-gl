@@ -394,7 +394,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let properties = arguments["properties"] as? [String: String] else { return }
 
             guard let layer = mapView.style?.layer(withIdentifier: layerId) as? MGLLineStyleLayer else {
-                result(error.flutterError)
+                result(FlutterError(
+                    code: "LAYER_NOT_FOUND_OR_WRONG_TYPE_ERROR",
+                    message: "Layer " + layerId + "not found or has wrong type",
+                    details: ""
+                ))
                 return
             }
 
