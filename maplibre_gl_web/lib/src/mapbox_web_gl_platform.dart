@@ -851,11 +851,12 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<void> setLineLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
+      // Very hacky: because we don't know if the property is a layout
+      // or paint property, we try to set it as both.
       _map.setLayoutProperty(layerId, entry.key, entry.value);
       _map.setPaintProperty(layerId, entry.key, entry.value);
     }
   }
-
 
   @override
   Future<void> addSymbolLayer(
