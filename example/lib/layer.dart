@@ -53,10 +53,8 @@ class LayerState extends State {
                 )),
           ),
           TextButton(
-            onPressed: () => controller.setLineLayerProperties(
-                "lines",
-                LineLayerProperties.fromJson(
-                    {"line-color": "yellow"})),
+            onPressed: () => controller.setLineLayerProperties("lines",
+                LineLayerProperties.fromJson({"line-color": "yellow"})),
             child: const Text('change line color to yellow'),
           ),
         ]);
