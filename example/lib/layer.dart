@@ -31,19 +31,35 @@ class LayerState extends State {
 
   @override
   Widget build(BuildContext context) {
-    return MaplibreMap(
-      dragEnabled: false,
-      myLocationEnabled: true,
-      onMapCreated: _onMapCreated,
-      onMapClick: (point, latLong) =>
-          debugPrint(point.toString() + latLong.toString()),
-      onStyleLoadedCallback: _onStyleLoadedCallback,
-      initialCameraPosition: const CameraPosition(
-        target: center,
-        zoom: 11.0,
-      ),
-      annotationOrder: const [],
-    );
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Center(
+            child: SizedBox(
+                height: 400.0,
+                child: MaplibreMap(
+                  dragEnabled: false,
+                  myLocationEnabled: true,
+                  onMapCreated: _onMapCreated,
+                  onMapClick: (point, latLong) =>
+                      debugPrint(point.toString() + latLong.toString()),
+                  onStyleLoadedCallback: _onStyleLoadedCallback,
+                  initialCameraPosition: const CameraPosition(
+                    target: center,
+                    zoom: 11.0,
+                  ),
+                  annotationOrder: const [],
+                )),
+          ),
+          TextButton(
+            onPressed: () => controller.setLineLayerProperties(
+                "lines",
+                LineLayerProperties.fromJson(
+                    {"line-color": "yellow"})),
+            child: const Text('change line color to yellow'),
+          ),
+        ]);
   }
 
   void _onMapCreated(MaplibreMapController controller) {
