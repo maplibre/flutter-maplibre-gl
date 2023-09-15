@@ -85,7 +85,6 @@ class LayerState extends State {
         18,
         'green'
       ], fillOpacity: 0.4),
-      belowLayerId: "water",
       filter: ['==', 'id', filteredId],
     );
 
