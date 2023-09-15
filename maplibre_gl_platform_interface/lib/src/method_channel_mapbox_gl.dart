@@ -402,6 +402,22 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<void> updateImageSource(
+      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) async {
+    try {
+      return await _channel
+          .invokeMethod('style#updateImageSource', <String, Object?>{
+        'imageSourceId': imageSourceId,
+        'bytes': bytes,
+        'length': bytes?.length,
+        'coordinates': coordinates?.toList()
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<Point> toScreenLocation(LatLng latLng) async {
     try {
       var screenPosMap =

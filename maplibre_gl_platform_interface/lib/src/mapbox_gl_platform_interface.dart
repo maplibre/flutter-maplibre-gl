@@ -87,6 +87,9 @@ abstract class MapLibreGlPlatform {
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates);
 
+  Future<void> updateImageSource(
+      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates);
+
   Future<void> addLayer(String imageLayerId, String imageSourceId,
       double? minzoom, double? maxzoom);
 

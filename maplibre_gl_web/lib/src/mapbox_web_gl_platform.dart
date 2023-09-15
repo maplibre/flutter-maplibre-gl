@@ -1008,6 +1008,12 @@ class MaplibreMapController extends MapLibreGlPlatform
     throw UnimplementedError();
   }
 
+  Future<void> updateImageSource(
+      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
+    // TODO: implement updateImageSource
+    throw UnimplementedError();
+  }
+
   @override
   Future<void> addLayer(String imageLayerId, String imageSourceId,
       double? minzoom, double? maxzoom) {
