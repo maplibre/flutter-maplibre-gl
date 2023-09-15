@@ -388,6 +388,19 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             case let .failure(error): result(error.flutterError)
             }
 
+        case "linelayer#setProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: String] else { return }
+
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) as? MGLLineStyleLayer else {
+                result(error.flutterError)
+                return
+            }
+
+            LayerPropertyConverter.addLineProperties(lineLayer: layer, properties: properties)
+            result(nil)
+
         case "fillLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }

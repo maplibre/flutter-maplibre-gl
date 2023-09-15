@@ -962,6 +962,24 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+        case "linelayer#setProperties": {
+          final String layerId = call.argument("layerId");
+          final PropertyValue[] properties = LayerPropertyConverter
+              .interpretLineLayerProperties(call.argument("properties"));
+          try {
+            LineLayer lineLayer = style.getLayerAs < LineLayer > (layerId);
+          } catch (ClassCastException e) {
+            result.error("WRONG_LAYER_TYPE", "Layer " + layerId + "has wrong type", null);
+          }
+
+          if (lineLayer != null) {
+            lineLayer.setProperties(properties);
+            result.success(null);
+          } else {
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+          }
+          break;
+        }
       case "fillLayer#add":
         {
           final String sourceId = call.argument("sourceId");

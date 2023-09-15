@@ -848,6 +848,15 @@ class MaplibreMapController extends MapLibreGlPlatform
         enableInteraction: enableInteraction);
   }
 
+  Future<void> setLineLayerProperties(
+      String layerId, Map<String, dynamic> properties) async {
+    for (final entry in properties.entries) {
+      _map.setLayoutProperty(layerId, entry.key, entry.value);
+      _map.setPaintProperty(layerId, entry.key, entry.value);
+    }
+  }
+
+
   @override
   Future<void> addSymbolLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
