@@ -51,7 +51,6 @@ source 'https://cdn.cocoapods.org/'
 source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 
 pod 'MapLibre'
-pod 'MapLibreAnnotationExtension'
 ```
 
 You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
