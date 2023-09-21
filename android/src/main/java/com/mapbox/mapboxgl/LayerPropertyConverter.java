@@ -318,7 +318,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          // remove leading and trailing quotes from entry.getValue()
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
