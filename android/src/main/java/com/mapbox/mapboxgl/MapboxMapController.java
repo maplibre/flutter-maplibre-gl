@@ -962,7 +962,7 @@ final class MapboxMapController
           result.success(null);
           break;
         }
-        case "linelayer#setProperties": {
+        case "lineLayer#setProperties": {
           final String layerId = call.argument("layerId");
           final PropertyValue[] properties = LayerPropertyConverter
               .interpretLineLayerProperties(call.argument("properties"));
