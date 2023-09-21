@@ -28,6 +28,7 @@ class LayerState extends State {
   Timer? bikeTimer;
   Timer? filterTimer;
   int filteredId = 0;
+  bool linesVisible = true;
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +54,16 @@ class LayerState extends State {
                 )),
           ),
           TextButton(
-            onPressed: () => controller.setLineLayerProperties("lines",
-                LineLayerProperties.fromJson({"visibility": "none"})),
-            child: const Text('hide lines'),
+            onPressed: () {
+              controller
+                  .setLineLayerProperties(
+                      "lines",
+                      LineLayerProperties.fromJson(
+                          {"visibility": linesVisible ? "none" : "visible"}))
+                  .then(
+                      (value) => setState(() => linesVisible = !linesVisible));
+            },
+            child: const Text('toggle line visibility'),
           ),
         ]);
   }
