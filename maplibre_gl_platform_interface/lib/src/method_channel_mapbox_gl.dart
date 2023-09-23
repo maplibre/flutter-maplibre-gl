@@ -642,9 +642,9 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
-  Future<void> setLineLayerProperties(
+  Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
-    await _channel.invokeMethod('lineLayer#setProperties', <String, dynamic>{
+    await _channel.invokeMethod('layer#setProperties', <String, dynamic>{
       'layerId': layerId,
       'properties': properties
           .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))

@@ -29,6 +29,7 @@ class LayerState extends State {
   Timer? filterTimer;
   int filteredId = 0;
   bool linesVisible = true;
+  bool fillsVisible = true;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +57,7 @@ class LayerState extends State {
           TextButton(
             onPressed: () {
               controller
-                  .setLineLayerProperties(
+                  .setLayerProperties(
                       "lines",
                       LineLayerProperties.fromJson(
                           {"visibility": linesVisible ? "none" : "visible"}))
@@ -64,6 +65,18 @@ class LayerState extends State {
                       (value) => setState(() => linesVisible = !linesVisible));
             },
             child: const Text('toggle line visibility'),
+          ),
+          TextButton(
+            onPressed: () {
+              controller
+                  .setLayerProperties(
+                      "fills",
+                      FillLayerProperties.fromJson(
+                          {"visibility": fillsVisible ? "none" : "visible"}))
+                  .then(
+                      (value) => setState(() => fillsVisible = !fillsVisible));
+            },
+            child: const Text('toggle fill visibility'),
           ),
         ]);
   }

@@ -848,7 +848,7 @@ class MaplibreMapController extends MapLibreGlPlatform
         enableInteraction: enableInteraction);
   }
 
-  Future<void> setLineLayerProperties(
+  Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
       // Very hacky: because we don't know if the property is a layout

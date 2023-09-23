@@ -962,10 +962,8 @@ final class MapboxMapController
           result.success(null);
           break;
         }
-        case "lineLayer#setProperties": {
+        case "layer#setProperties": {
           final String layerId = call.argument("layerId");
-          final PropertyValue[] properties = LayerPropertyConverter
-              .interpretLineLayerProperties(call.argument("properties"));
 
           if (style == null) {
             result.error(
@@ -974,18 +972,37 @@ final class MapboxMapController
                 null);
           }
 
-          try {
-            LineLayer lineLayer = style.<LineLayer>getLayerAs(layerId);
+          Layer layer = style.getLayer(layerId);
 
-            if (lineLayer != null) {
-              lineLayer.setProperties(properties);
-              result.success(null);
+          if (layer != null) {
+            final PropertyValue[] properties;
+
+            if (layer instanceof LineLayer) {
+              properties = LayerPropertyConverter
+                  .interpretLineLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillLayerProperties(call.argument("properties"));
+            } else if (layer instanceof CircleLayer) {
+              properties = LayerPropertyConverter
+                  .interpretCircleLayerProperties(call.argument("properties"));
+            } else if (layer instanceof SymbolLayer) {
+              properties = LayerPropertyConverter
+                  .interpretSymbolLayerProperties(call.argument("properties"));
+            } else if (layer instanceof RasterLayer) {
+              properties = LayerPropertyConverter
+                  .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HillshadeLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHillshadeLayerProperties(call.argument("properties"));
             } else {
-              result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+              result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
+              return;
             }
-
-          } catch (ClassCastException e) {
-            result.error("WRONG_LAYER_TYPE", "Layer " + layerId + "has wrong type", null);
+            layer.setProperties(properties);
+            result.success(null);
+          } else {
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
           }
 
           break;

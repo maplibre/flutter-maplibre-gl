@@ -150,7 +150,7 @@ abstract class MapLibreGlPlatform {
       dynamic filter,
       required bool enableInteraction});
 
-  Future<void> setLineLayerProperties(
+  Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties);
 
   Future<void> addCircleLayer(
