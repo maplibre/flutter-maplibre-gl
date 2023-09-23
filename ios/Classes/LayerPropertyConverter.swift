@@ -210,7 +210,9 @@ class LayerPropertyConverter {
             case "line-sort-key":
                 lineLayer.lineSortKey = expression
             case "visibility":
-                lineLayer.isVisible = propertyValue == "visible"
+                // make a copy of propertyValue with leading and trailing quotes removed
+                let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                lineLayer.isVisible = trimmedPropertyValue == "visible"
 
             default:
                 break
