@@ -29,7 +29,8 @@ class LayerPropertyConverter {
                 {{/isIosAsCamelCase}}
                 {{/isVisibilityProperty}}
                 {{#isVisibilityProperty}}
-                    {{type}}Layer.{{iosAsCamelCase}} = propertyValue == "visible";
+                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                    {{type}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
                 {{/isVisibilityProperty}}
                 {{/layout_properties}}
              
