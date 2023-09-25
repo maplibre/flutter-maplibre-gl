@@ -59,8 +59,8 @@ main() async {
     "ios/Classes/LayerPropertyConverter.swift",
     "lib/src/layer_expressions.dart",
     "lib/src/layer_properties.dart",
-    "mapbox_gl_web/lib/src/layer_tools.dart",
-    "mapbox_gl_platform_interface/lib/src/source_properties.dart",
+    "maplibre_gl_web/lib/src/layer_tools.dart",
+    "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
   for (var template in templates) await render(renderContext, template);
