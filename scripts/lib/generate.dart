@@ -122,9 +122,9 @@ Map<String, dynamic> buildSourceProperty(
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
   final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
-      dartTypeMappingTable[value["value"]["type"]];
+      dartTypeMappingTable[value["value"]?["type"]];
   final nestedTypeSwift = swiftTypeMappingTable[value["value"]] ??
-      swiftTypeMappingTable[value["value"]["type"]];
+      swiftTypeMappingTable[value["value"]?["type"]];
 
   var defaultValue = value["default"];
   if (defaultValue is List) {
