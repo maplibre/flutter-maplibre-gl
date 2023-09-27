@@ -22,6 +22,7 @@ class AttributionBody extends StatefulWidget {
 
 class _AttributionBodyState extends State<AttributionBody> {
   AttributionButtonPosition? attributionButtonPosition;
+  bool useDefaultAttributionPosition = false;
 
   @override
   Widget build(BuildContext context) {
@@ -30,54 +31,71 @@ class _AttributionBodyState extends State<AttributionBody> {
         const Text("Set attribution position"),
         Row(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  attributionButtonPosition =
-                      AttributionButtonPosition.TopRight;
-                });
-              },
-              child: const Text('TopRight'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  attributionButtonPosition = AttributionButtonPosition.TopLeft;
-                });
-              },
-              child: const Text('TopLeft'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  attributionButtonPosition =
-                      AttributionButtonPosition.BottomRight;
-                });
-              },
-              child: const Text('BottomRight'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  attributionButtonPosition =
-                      AttributionButtonPosition.BottomLeft;
-                });
-              },
-              child: const Text('BottomLeft'),
-            ),
+            buildPositionButton(null),
+            buildDefaultPositionButton(),
+            buildPositionButton(AttributionButtonPosition.TopRight),
+            buildPositionButton(AttributionButtonPosition.TopLeft),
+            buildPositionButton(AttributionButtonPosition.BottomRight),
+            buildPositionButton(AttributionButtonPosition.BottomLeft),
           ],
         ),
         Expanded(
-          child: MaplibreMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(-33.852, 151.211),
-              zoom: 11.0,
-            ),
-            styleString: "/assets/assets/osm_style.json",
-            attributionButtonPosition: attributionButtonPosition,
+          child: buildMap(
+            attributionButtonPosition,
+            useDefaultAttributionPosition,
           ),
         ),
       ],
     );
+  }
+
+  ElevatedButton buildDefaultPositionButton() {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          attributionButtonPosition = null;
+          useDefaultAttributionPosition = true;
+        });
+      },
+      child: const Text("Default"),
+    );
+  }
+
+  ElevatedButton buildPositionButton(AttributionButtonPosition? position) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          attributionButtonPosition = position;
+          useDefaultAttributionPosition = false;
+        });
+      },
+      child: Text(position?.name ?? "None"),
+    );
+  }
+
+  MaplibreMap buildMap(
+    AttributionButtonPosition? attributionButtonPosition,
+    bool useDefaultAttributionPosition,
+  ) {
+    if (useDefaultAttributionPosition) {
+      return MaplibreMap(
+        key: UniqueKey(),
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(-33.852, 151.211),
+          zoom: 11.0,
+        ),
+        styleString: "/assets/assets/osm_style.json",
+      );
+    } else {
+      return MaplibreMap(
+        key: UniqueKey(),
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(-33.852, 151.211),
+          zoom: 11.0,
+        ),
+        styleString: "/assets/assets/osm_style.json",
+        attributionButtonPosition: attributionButtonPosition,
+      );
+    }
   }
 }
