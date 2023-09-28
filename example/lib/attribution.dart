@@ -22,7 +22,7 @@ class AttributionBody extends StatefulWidget {
 
 class _AttributionBodyState extends State<AttributionBody> {
   AttributionButtonPosition? attributionButtonPosition;
-  bool useDefaultAttributionPosition = false;
+  bool useDefaultAttributionPosition = true;
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +31,8 @@ class _AttributionBodyState extends State<AttributionBody> {
         const Text("Set attribution position"),
         Row(
           children: [
-            buildPositionButton(null),
             buildDefaultPositionButton(),
+            buildPositionButton(null),
             buildPositionButton(AttributionButtonPosition.TopRight),
             buildPositionButton(AttributionButtonPosition.TopLeft),
             buildPositionButton(AttributionButtonPosition.BottomRight),
