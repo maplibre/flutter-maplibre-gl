@@ -54,7 +54,9 @@ class MaplibreMap extends StatefulWidget {
       AnnotationType.circle,
     ],
   })  : assert(
-          myLocationRenderMode != MyLocationRenderMode.NORMAL ? myLocationEnabled : true,
+          myLocationRenderMode != MyLocationRenderMode.NORMAL
+              ? myLocationEnabled
+              : true,
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
         assert(annotationOrder.length <= 4),
@@ -222,30 +224,37 @@ class MaplibreMap extends StatefulWidget {
   /// Set `MapboxMap.useHybridComposition` to `false` in order use Virtual-Display
   /// (better for Android 9 and below but may result in errors on Android 12)
   /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
-  static bool get useHybridComposition => MethodChannelMaplibreGl.useHybridComposition;
+  static bool get useHybridComposition =>
+      MethodChannelMaplibreGl.useHybridComposition;
 
-  static set useHybridComposition(bool useHybridComposition) => MethodChannelMaplibreGl.useHybridComposition = useHybridComposition;
+  static set useHybridComposition(bool useHybridComposition) =>
+      MethodChannelMaplibreGl.useHybridComposition = useHybridComposition;
 
   @override
   State createState() => _MaplibreMapState();
 }
 
 class _MaplibreMapState extends State<MaplibreMap> {
-  final Completer<MaplibreMapController> _controller = Completer<MaplibreMapController>();
+  final Completer<MaplibreMapController> _controller =
+      Completer<MaplibreMapController>();
 
   late _MapboxMapOptions _mapboxMapOptions;
-  final MapLibreGlPlatform _mapboxGlPlatform = MapLibreGlPlatform.createInstance();
+  final MapLibreGlPlatform _mapboxGlPlatform =
+      MapLibreGlPlatform.createInstance();
 
   @override
   Widget build(BuildContext context) {
-    assert(widget.annotationOrder.toSet().length == widget.annotationOrder.length, "annotationOrder must not have duplicate types");
+    assert(
+        widget.annotationOrder.toSet().length == widget.annotationOrder.length,
+        "annotationOrder must not have duplicate types");
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'options': _MapboxMapOptions.fromWidget(widget).toMap(),
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
     };
-    return _mapboxGlPlatform.buildView(creationParams, onPlatformViewCreated, widget.gestureRecognizers);
+    return _mapboxGlPlatform.buildView(
+        creationParams, onPlatformViewCreated, widget.gestureRecognizers);
   }
 
   @override
@@ -267,7 +276,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
   void didUpdateWidget(MaplibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
-    final Map<String, dynamic> updates = _mapboxMapOptions.updatesMap(newOptions);
+    final Map<String, dynamic> updates =
+        _mapboxMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
     _mapboxMapOptions = newOptions;
   }
@@ -346,7 +356,8 @@ class _MapboxMapOptions {
       tiltGesturesEnabled: map.tiltGesturesEnabled,
       trackCameraPosition: map.trackCameraPosition,
       zoomGesturesEnabled: map.zoomGesturesEnabled,
-      doubleClickZoomEnabled: map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+      doubleClickZoomEnabled:
+          map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
       myLocationEnabled: map.myLocationEnabled,
       myLocationTrackingMode: map.myLocationTrackingMode,
       myLocationRenderMode: map.myLocationRenderMode,
@@ -394,7 +405,13 @@ class _MapboxMapOptions {
 
   final Point? attributionButtonMargins;
 
-  final _gestureGroup = {'rotateGesturesEnabled', 'scrollGesturesEnabled', 'tiltGesturesEnabled', 'zoomGesturesEnabled', 'doubleClickZoomEnabled'};
+  final _gestureGroup = {
+    'rotateGesturesEnabled',
+    'scrollGesturesEnabled',
+    'tiltGesturesEnabled',
+    'zoomGesturesEnabled',
+    'doubleClickZoomEnabled'
+  };
 
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> optionsMap = <String, dynamic>{};
@@ -432,7 +449,8 @@ class _MapboxMapOptions {
     addIfNonNull('compassViewPosition', compassViewPosition?.index);
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
-    addIfNonNull('attributionButtonMargins', pointToArray(attributionButtonMargins));
+    addIfNonNull(
+        'attributionButtonMargins', pointToArray(attributionButtonMargins));
     return optionsMap;
   }
 
@@ -443,7 +461,8 @@ class _MapboxMapOptions {
     // if any gesture is updated also all other gestures have to the saved to
     // the update
 
-    final gesturesRequireUpdate = _gestureGroup.any((key) => newOptionsMap[key] != prevOptionsMap[key]);
+    final gesturesRequireUpdate =
+        _gestureGroup.any((key) => newOptionsMap[key] != prevOptionsMap[key]);
 
     return newOptionsMap
       ..removeWhere((String key, dynamic value) {

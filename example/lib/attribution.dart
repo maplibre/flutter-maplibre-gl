@@ -4,7 +4,8 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class AttributionPage extends ExamplePage {
-  const AttributionPage({super.key}) : super(const Icon(Icons.thumb_up), 'Attribution');
+  const AttributionPage({super.key})
+      : super(const Icon(Icons.thumb_up), 'Attribution');
 
   @override
   Widget build(BuildContext context) {

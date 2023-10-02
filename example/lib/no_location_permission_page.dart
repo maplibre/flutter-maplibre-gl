@@ -21,7 +21,8 @@ class NoLocationPermissionBody extends StatefulWidget {
   const NoLocationPermissionBody({super.key});
 
   @override
-  State<NoLocationPermissionBody> createState() => _NoLocationPermissionBodyState();
+  State<NoLocationPermissionBody> createState() =>
+      _NoLocationPermissionBodyState();
 }
 
 class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
