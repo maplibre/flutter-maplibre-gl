@@ -68,7 +68,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           useDefaultAttributionPosition = false;
         });
       },
-      child: Text(position?.name ?? "Null, same as default"),
+      child: Text(position?.name ?? "Null (=platform default)"),
     );
   }
 
