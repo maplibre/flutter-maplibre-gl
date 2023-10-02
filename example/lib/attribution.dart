@@ -29,7 +29,7 @@ class _AttributionBodyState extends State<AttributionBody> {
     return Column(
       children: [
         const Text("Set attribution position"),
-        Row(
+        Wrap(
           children: [
             buildDefaultPositionButton(),
             buildPositionButton(null),
@@ -84,7 +84,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "/assets/assets/osm_style.json",
+        styleString: "/assets/osm_style.json",
       );
     } else {
       return MaplibreMap(
@@ -93,7 +93,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "/assets/assets/osm_style.json",
+        styleString: "/assets/osm_style.json",
         attributionButtonPosition: attributionButtonPosition,
       );
     }

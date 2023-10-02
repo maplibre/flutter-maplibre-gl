@@ -129,7 +129,7 @@ A possible explanation could be: "Shows your location on the map".
 ## Running in GitHub Codespaces
 When you open this project in GitHub Codespaces, you can run the example app on web with the command 
 ```
-$ cd examples
+$ cd example
 $ flutter run -d web-server --web-hostname=0.0.0.0
 ```
 
