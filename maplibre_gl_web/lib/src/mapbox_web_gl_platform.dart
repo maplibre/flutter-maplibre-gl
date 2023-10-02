@@ -594,9 +594,9 @@ class MaplibreMapController extends MapLibreGlPlatform
     }
   }
 
-  void _updateAttributionButton({
-    AttributionButtonPosition? position,
-  }) {
+  void _updateAttributionButton(
+    AttributionButtonPosition position,
+  ) {
     String? positionString;
     switch (position) {
       case AttributionButtonPosition.TopRight:
@@ -611,18 +611,11 @@ class MaplibreMapController extends MapLibreGlPlatform
       case AttributionButtonPosition.BottomLeft:
         positionString = 'bottom-left';
         break;
-      default:
-        positionString = null;
     }
 
     _removeAttributionButton();
     _attributionControl = AttributionControl(AttributionControlOptions());
-
-    if (positionString == null) {
-      _map.addControl(_attributionControl);
-    } else {
-      _map.addControl(_attributionControl, positionString);
-    }
+    _map.addControl(_attributionControl, positionString);
   }
 
   void _removeAttributionButton() {
@@ -672,7 +665,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   void setAttributionButtonAlignment(AttributionButtonPosition position) {
-    _updateAttributionButton(position: position);
+    _updateAttributionButton(position);
   }
 
   @override
