@@ -4,8 +4,7 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'page.dart';
 
 class AttributionPage extends ExamplePage {
-  const AttributionPage({super.key})
-      : super(const Icon(Icons.thumb_up), 'Attribution');
+  const AttributionPage({super.key}) : super(const Icon(Icons.thumb_up), 'Attribution');
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +83,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "/assets/osm_style.json",
+        styleString: "assets/osm_style.json",
       );
     } else {
       return MaplibreMap(
@@ -93,7 +92,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "/assets/osm_style.json",
+        styleString: "assets/osm_style.json",
         attributionButtonPosition: attributionButtonPosition,
       );
     }

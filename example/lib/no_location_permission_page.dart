@@ -21,8 +21,7 @@ class NoLocationPermissionBody extends StatefulWidget {
   const NoLocationPermissionBody({super.key});
 
   @override
-  State<NoLocationPermissionBody> createState() =>
-      _NoLocationPermissionBodyState();
+  State<NoLocationPermissionBody> createState() => _NoLocationPermissionBodyState();
 }
 
 class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
@@ -33,7 +32,7 @@ class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
         target: LatLng(-33.852, 151.211),
         zoom: 11.0,
       ),
-      styleString: "/assets/osm_style.json",
+      styleString: "assets/osm_style.json",
     );
   }
 }
