@@ -70,6 +70,8 @@ class Convert {
       final position = AttributionButtonPosition
           .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
+    } else {
+      sink.setAttributionButtonAlignment(AttributionButtonPosition.BottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
       sink.setAttributionButtonMargins(options['attributionButtonMargins'][0],

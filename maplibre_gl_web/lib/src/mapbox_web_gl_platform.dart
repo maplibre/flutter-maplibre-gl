@@ -25,6 +25,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
+  AttributionControl? _attributionControl;
   Timer? lastResizeObserverTimer;
 
   @override
@@ -73,6 +74,7 @@ class MaplibreMapController extends MapLibreGlPlatform
           zoom: camera['zoom'],
           bearing: camera['bearing'],
           pitch: camera['tilt'],
+          attributionControl: false, //avoid duplicate control
         ),
       );
       _map.on('load', _onStyleLoaded);
@@ -592,6 +594,37 @@ class MaplibreMapController extends MapLibreGlPlatform
     }
   }
 
+  void _updateAttributionButton(
+    AttributionButtonPosition position,
+  ) {
+    String? positionString;
+    switch (position) {
+      case AttributionButtonPosition.TopRight:
+        positionString = 'top-right';
+        break;
+      case AttributionButtonPosition.TopLeft:
+        positionString = 'top-left';
+        break;
+      case AttributionButtonPosition.BottomRight:
+        positionString = 'bottom-right';
+        break;
+      case AttributionButtonPosition.BottomLeft:
+        positionString = 'bottom-left';
+        break;
+    }
+
+    _removeAttributionButton();
+    _attributionControl = AttributionControl(AttributionControlOptions());
+    _map.addControl(_attributionControl, positionString);
+  }
+
+  void _removeAttributionButton() {
+    if (_attributionControl != null) {
+      _map.removeControl(_attributionControl);
+      _attributionControl = null;
+    }
+  }
+
   /*
    *  MapboxMapOptionsSink
    */
@@ -632,7 +665,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   void setAttributionButtonAlignment(AttributionButtonPosition position) {
-    print('setAttributionButtonAlignment not available in web');
+    _updateAttributionButton(position);
   }
 
   @override
