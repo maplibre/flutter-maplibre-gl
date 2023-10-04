@@ -33,29 +33,7 @@ class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
         target: LatLng(-33.852, 151.211),
         zoom: 11.0,
       ),
-      styleString: '''{
-        "version": 8,
-        "sources": {
-          "OSM": {
-            "type": "raster",
-            "tiles": [
-              "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            ],
-            "tileSize": 256,
-            "attribution": "© OpenStreetMap contributors",
-            "maxzoom": 18
-          }
-        },
-        "layers": [
-          {
-            "id": "OSM-layer",
-            "source": "OSM",
-            "type": "raster"
-          }
-        ]
-      }''',
+      styleString: "assets/osm_style.json",
     );
   }
 }

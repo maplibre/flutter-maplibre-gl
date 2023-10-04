@@ -175,10 +175,12 @@ class MaplibreMap extends StatefulWidget {
   /// Set the layout margins for the Mapbox Compass
   final Point? compassViewMargins;
 
-  /// Set the position for the Mapbox Attribution Button
+  /// Set the position for the MapLibre Attribution Button
+  /// When set to null, the default value of the underlying MapLibre libraries is used,
+  /// which differs depending on the operating system the app is being run on.
   final AttributionButtonPosition? attributionButtonPosition;
 
-  /// Set the layout margins for the Mapbox Attribution Buttons. If you set this
+  /// Set the layout margins for the MapLibre Attribution Buttons. If you set this
   /// value, you may also want to set [attributionButtonPosition] to harmonize
   /// the layout between iOS and Android, since the underlying frameworks have
   /// different defaults.
