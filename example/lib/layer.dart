@@ -74,7 +74,7 @@ class LayerState extends State {
               .setLayerProperties(
                   "lines",
                   LineLayerProperties.fromJson(
-                      {"line-color": linesRed ? "blue" : "red"}))
+                      {"line-color": linesRed ? "#0000ff" : "#ff0000"}))
               .then((value) => setState(() => linesRed = !linesRed));
         },
         child: const Text('toggle line color'),
@@ -96,7 +96,7 @@ class LayerState extends State {
               .setLayerProperties(
                   "fills",
                   FillLayerProperties.fromJson(
-                      {"fill-color": fillsRed ? "blue" : "red"}))
+                      {"fill-color": fillsRed ? "#0000ff" : "#ff0000"}))
               .then((value) => setState(() => fillsRed = !fillsRed));
         },
         child: const Text('toggle fill color'),
@@ -119,7 +119,7 @@ class LayerState extends State {
               .setLayerProperties(
                   "circles",
                   CircleLayerProperties.fromJson(
-                      {"circle-color": circlesRed ? "blue" : "red"}))
+                      {"circle-color": circlesRed ? "#0000ff" : "#ff0000"}))
               .then((value) => setState(() => circlesRed = !circlesRed));
         },
         child: const Text('toggle circle color'),
