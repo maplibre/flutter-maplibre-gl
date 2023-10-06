@@ -1,6 +1,7 @@
 ## upcoming version
 * Developers do not need to adapt their Podfile for iOS apps anymore as it was previously described in the Readme.  [https://github.com/maplibre/flutter-maplibre-gl/pull/278](https://github.com/maplibre/flutter-maplibre-gl/pull/278)
 ### Breaking Change:
+* `maplibre_gl/mapbox_gl.dart` was renamed to `maplibre_gl/maplibre_gl.dart`. You can do a replace-all from `import 'package:maplibre_gl/mapbox_gl.dart';` to `import 'package:maplibre_gl/maplibre_gl.dart';`
 * `useDelayedDisposal` was removed since its now fixed in https://github.com/maplibre/flutter-maplibre-gl/pull/259
 * `useHybridCompositionOverride` was removed since it was added in the following fix: https://github.com/maplibre/flutter-maplibre-gl/pull/203 and we reverted the fix and used another approach to fix the actual issue.
 * The default for `myLocationRenderMode` was changed from `COMPASS` to `NORMAL` in https://github.com/maplibre/flutter-maplibre-gl/pull/244, since the previous default value of `COMPASS` implicitly enables displaying the location on iOS, which could crash apps that didn't want to display the device location. If you want to continue to use `MyLocationRenderMode.COMPASS`, please explicitly specify it in the constructor like this:
