@@ -39,4 +39,4 @@ part 'src/mapbox_map_plugin.dart';
 
 part 'src/options_sink.dart';
 
-part 'src/mapbox_web_gl_platform.dart';
+part 'src/maplibre_web_gl_platform.dart';
