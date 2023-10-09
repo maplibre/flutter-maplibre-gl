@@ -35,7 +35,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 
 part 'src/convert.dart';
 
-part 'src/mapbox_map_plugin.dart';
+part 'src/maplibre_map_plugin.dart';
 
 part 'src/options_sink.dart';
 
