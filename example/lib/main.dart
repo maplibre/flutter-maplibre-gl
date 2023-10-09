@@ -34,7 +34,7 @@ import 'place_batch.dart';
 import 'layer.dart';
 import 'sources.dart';
 
-import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),

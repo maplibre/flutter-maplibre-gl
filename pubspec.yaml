@@ -32,7 +32,7 @@ flutter:
       ios:
         pluginClass: MapboxMapsPlugin
       web:
-        default_package: mapbox_gl_web
+        default_package: maplibre_gl_web
 
 environment:
   # Flutter 2.15 is the required min to be able to use Enum.name
