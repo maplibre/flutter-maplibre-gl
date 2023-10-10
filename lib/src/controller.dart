@@ -1081,9 +1081,18 @@ class MaplibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
+  /// Not implemented on web.
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     return _mapboxGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
+  }
+
+  /// Update the image and/or coordinates of an image source.
+  /// Not implemented on web.
+  Future<void> updateImageSource(
+      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
+    return _mapboxGlPlatform.updateImageSource(
+        imageSourceId, bytes, coordinates);
   }
 
   /// Removes previously added image source by id

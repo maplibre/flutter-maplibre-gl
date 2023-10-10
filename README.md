@@ -127,7 +127,11 @@ A possible explanation could be: "Shows your location on the map".
 - **Have a feature request?** [Open an issue](https://github.com/maplibre/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
 ## Running in GitHub Codespaces
-When you open this project in GitHub Codespaces, you can run the example app on web with the command `flutter run -d web-server --web-hostname=0.0.0.0`
+When you open this project in GitHub Codespaces, you can run the example app on web with the command 
+```
+$ cd example
+$ flutter run -d web-server --web-hostname=0.0.0.0
+```
 
 Codespaces should automatically take care of the necessary port forwarding, so that you can view the running web app on your local device or in a new tab.
 

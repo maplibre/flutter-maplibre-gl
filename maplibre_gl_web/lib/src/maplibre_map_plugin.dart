@@ -1,7 +1,7 @@
 part of maplibre_gl_web;
 
-class MapboxMapPlugin {
-  /// Registers this class as the default instance of [MapboxGlPlatform].
+class MapLibreMapPlugin {
+  /// Registers this class as the default instance of [MapLibreGlPlatform].
   static void registerWith(Registrar registrar) {
     MapLibreGlPlatform.createInstance = () => MaplibreMapController();
   }
