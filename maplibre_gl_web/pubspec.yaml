@@ -7,8 +7,8 @@ flutter:
   plugin:
     platforms:
       web:
-        pluginClass: MapboxMapPlugin
-        fileName: mapbox_gl_web.dart
+        pluginClass: MapLibreMapPlugin
+        fileName: maplibre_gl_web.dart
 
 dependencies:
   js: ^0.6.7
