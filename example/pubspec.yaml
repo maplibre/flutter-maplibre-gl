@@ -16,10 +16,15 @@ dependencies:
   cupertino_icons: ^1.0.5
 
   maplibre_gl_platform_interface:
-    path: ../
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      path: maplibre_gl_platform_interface
+      ref: git-release-0.17.0
 
   maplibre_gl:
-    path: ../
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      ref: git-release-0.17.0
 
   # Workaround for this issue:
   # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
