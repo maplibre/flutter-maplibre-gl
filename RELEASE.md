@@ -18,21 +18,24 @@ We may want to make releases where we only increase the patch version (the final
 
 
 ## Only on the GitHub release branch 
-After performing the above changes on the main branch (new changelog and versions), create a new git release branch from the main branch, named like `git-release-x.y.z`.
+1. After performing the above changes on the main branch (new changelog and versions), create a new git release branch from the main branch, named like `git-release-x.y.z`.
 
-On that branch: In `flutter-maplibre-gl` and `maplibre_gl_web` in their respective pubspec.yaml file,  change the `ref` value for the maplibre git dependencies from `main` to `git-release-x.y.z` (the new git release branch).
+2. On that branch:
+   
+    a.     In `flutter-maplibre-gl` and `maplibre_gl_web` in their respective pubspec.yaml file,  change the `ref` value for the maplibre git dependencies from `main` to `git-release-x.y.z` (the new git release branch).
+   
+    b.     In the example app's pubspec.yaml: change the git refs for `maplibre_gl_platform_interface` and `maplibre_gl_platform_interface` to the new git release branch and comment out the `dependency_overrides`. Then the example app will use the packages from this git release branch, instead of their local copies. This way, inter-package dependencies can be tested and users can see how to correctly use the release in their app.
 
-Now testing can be performed by commenting out the `dependency_overrides` in the example app. Then the example app will use the packages from this git release branch, instead of their local copies. This way, inter-package dependencies can be tested.
-
-
-Then, create a GitHub release (`x.y.z`) with a new git tag (`x.y.z`) from this git release branch (This can be done from the GitHub web interface).
-
-The only difference between the git release branch and the `main` branch directly after the GitHub release is, which branch the git refs for the intra-package dependencies point to.
+4. Then, create a GitHub release (`x.y.z`) with a new git tag (`x.y.z`) from this git release branch (This can be done from the GitHub web interface).
 
 ## Only on the pub release branch
-After performing the above changes on the git release branch, create a new pub release branch from the git release branch, named like `pub-release-x.y.z`.
+1. After performing the above changes on the git release branch, create a new pub release branch from the git release branch, named like `pub-release-x.y.z`.
 
- On that branch: In `flutter-maplibre-gl` and `maplibre_gl_web` in their pubspec.yaml files change the maplibre git dependencies to hosted dependencies (regular pub.dev dependencies) with the same version number.
+2. On that branch:
+   
+    a. In `flutter-maplibre-gl` and `maplibre_gl_web` in their pubspec.yaml files change the maplibre git dependencies to hosted dependencies (regular pub.dev dependencies) with the same version number.
+   
+    b. In the example apps's pubspec.yaml file, change the `maplibre_gl_platform_interface` and `maplibre_gl_platform_interface` dependencies to use the hosted versions from pub.dev as well.
 
  ### Publishing order to pub.dev
  Then the 3 plugins can be published from this pub release branch in this order (because of the inter-package dependencies):
