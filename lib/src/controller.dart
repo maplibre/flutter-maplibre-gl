@@ -67,7 +67,7 @@ typedef void OnMapIdleCallback();
 /// Listeners are notified after changes have been applied on the platform side.
 class MaplibreMapController extends ChangeNotifier {
   MaplibreMapController({
-    required MapLibreGlPlatform mapboxGlPlatform,
+    required MapLibreGlPlatform maplibreGlPlatform,
     required CameraPosition initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
@@ -80,17 +80,17 @@ class MaplibreMapController extends ChangeNotifier {
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
-  }) : _mapboxGlPlatform = mapboxGlPlatform {
+  }) : _maplibreGlPlatform = maplibreGlPlatform {
     _cameraPosition = initialCameraPosition;
 
-    _mapboxGlPlatform.onFeatureTappedPlatform.add((payload) {
+    _maplibreGlPlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
           in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
         fun(payload["id"], payload["point"], payload["latLng"]);
       }
     });
 
-    _mapboxGlPlatform.onFeatureDraggedPlatform.add((payload) {
+    _maplibreGlPlatform.onFeatureDraggedPlatform.add((payload) {
       for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
         final DragEventType enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
@@ -103,17 +103,17 @@ class MaplibreMapController extends ChangeNotifier {
       }
     });
 
-    _mapboxGlPlatform.onCameraMoveStartedPlatform.add((_) {
+    _maplibreGlPlatform.onCameraMoveStartedPlatform.add((_) {
       _isCameraMoving = true;
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onCameraMovePlatform.add((cameraPosition) {
+    _maplibreGlPlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onCameraIdlePlatform.add((cameraPosition) {
+    _maplibreGlPlatform.onCameraIdlePlatform.add((cameraPosition) {
       _isCameraMoving = false;
       if (cameraPosition != null) {
         _cameraPosition = cameraPosition;
@@ -124,7 +124,7 @@ class MaplibreMapController extends ChangeNotifier {
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onMapStyleLoadedPlatform.add((_) {
+    _maplibreGlPlatform.onMapStyleLoadedPlatform.add((_) {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (var type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
@@ -153,36 +153,36 @@ class MaplibreMapController extends ChangeNotifier {
       }
     });
 
-    _mapboxGlPlatform.onMapClickPlatform.add((dict) {
+    _maplibreGlPlatform.onMapClickPlatform.add((dict) {
       if (onMapClick != null) {
         onMapClick!(dict['point'], dict['latLng']);
       }
     });
 
-    _mapboxGlPlatform.onMapLongClickPlatform.add((dict) {
+    _maplibreGlPlatform.onMapLongClickPlatform.add((dict) {
       if (onMapLongClick != null) {
         onMapLongClick!(dict['point'], dict['latLng']);
       }
     });
 
-    _mapboxGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
+    _maplibreGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
       if (onCameraTrackingChanged != null) {
         onCameraTrackingChanged!(mode);
       }
     });
 
-    _mapboxGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
+    _maplibreGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
       if (onCameraTrackingDismissed != null) {
         onCameraTrackingDismissed!();
       }
     });
 
-    _mapboxGlPlatform.onMapIdlePlatform.add((_) {
+    _maplibreGlPlatform.onMapIdlePlatform.add((_) {
       if (onMapIdle != null) {
         onMapIdle!();
       }
     });
-    _mapboxGlPlatform.onUserLocationUpdatedPlatform.add((location) {
+    _maplibreGlPlatform.onUserLocationUpdatedPlatform.add((location) {
       onUserLocationUpdated?.call(location);
     });
   }
@@ -256,7 +256,7 @@ class MaplibreMapController extends ChangeNotifier {
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
-  final MapLibreGlPlatform _mapboxGlPlatform; //ignore: unused_field
+  final MapLibreGlPlatform _maplibreGlPlatform; //ignore: unused_field
 
   /// Updates configuration options of the map user interface.
   ///
@@ -265,7 +265,7 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
-    _cameraPosition = await _mapboxGlPlatform.updateMapOptions(optionsUpdate);
+    _cameraPosition = await _maplibreGlPlatform.updateMapOptions(optionsUpdate);
     notifyListeners();
   }
 
@@ -276,12 +276,12 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// To force resize map (without any checks) have a look at forceResizeWebMap()
   void resizeWebMap() {
-    _mapboxGlPlatform.resizeWebMap();
+    _maplibreGlPlatform.resizeWebMap();
   }
 
   /// Triggers a hard map resize event on web and does not check if it is required or not.
   void forceResizeWebMap() {
-    _mapboxGlPlatform.forceResizeWebMap();
+    _maplibreGlPlatform.forceResizeWebMap();
   }
 
   /// Starts an animated change of the map camera position.
@@ -294,7 +294,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: this currently always returns immediately with a value of null on iOS
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
-    return _mapboxGlPlatform.animateCamera(cameraUpdate, duration: duration);
+    return _maplibreGlPlatform.animateCamera(cameraUpdate, duration: duration);
   }
 
   /// Instantaneously re-position the camera.
@@ -305,7 +305,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
-    return _mapboxGlPlatform.moveCamera(cameraUpdate);
+    return _maplibreGlPlatform.moveCamera(cameraUpdate);
   }
 
   /// Adds a new geojson source
@@ -321,7 +321,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId}) async {
-    await _mapboxGlPlatform.addGeoJsonSource(sourceId, geojson,
+    await _maplibreGlPlatform.addGeoJsonSource(sourceId, geojson,
         promoteId: promoteId);
   }
 
@@ -338,7 +338,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setGeoJsonSource(
       String sourceId, Map<String, dynamic> geojson) async {
-    await _mapboxGlPlatform.setGeoJsonSource(sourceId, geojson);
+    await _maplibreGlPlatform.setGeoJsonSource(sourceId, geojson);
   }
 
   /// Sets new geojson data to and existing source
@@ -354,7 +354,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setGeoJsonFeature(
       String sourceId, Map<String, dynamic> geojsonFeature) async {
-    await _mapboxGlPlatform.setFeatureForGeoJsonSource(
+    await _maplibreGlPlatform.setFeatureForGeoJsonSource(
         sourceId, geojsonFeature);
   }
 
@@ -385,7 +385,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addSymbolLayer(
+    await _maplibreGlPlatform.addSymbolLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -425,7 +425,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addLineLayer(
+    await _maplibreGlPlatform.addLineLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -465,7 +465,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addFillLayer(
+    await _maplibreGlPlatform.addFillLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -505,7 +505,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addCircleLayer(
+    await _maplibreGlPlatform.addCircleLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -538,7 +538,7 @@ class MaplibreMapController extends ChangeNotifier {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    await _mapboxGlPlatform.addRasterLayer(
+    await _maplibreGlPlatform.addRasterLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -569,7 +569,7 @@ class MaplibreMapController extends ChangeNotifier {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    await _mapboxGlPlatform.addHillshadeLayer(
+    await _maplibreGlPlatform.addHillshadeLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -586,7 +586,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode) async {
-    return _mapboxGlPlatform
+    return _maplibreGlPlatform
         .updateMyLocationTrackingMode(myLocationTrackingMode);
   }
 
@@ -595,7 +595,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> matchMapLanguageWithDeviceDefault() async {
-    return _mapboxGlPlatform.matchMapLanguageWithDeviceDefault();
+    return _maplibreGlPlatform.matchMapLanguageWithDeviceDefault();
   }
 
   /// Updates the distance from the edges of the map view’s frame to the edges
@@ -611,7 +611,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> updateContentInsets(EdgeInsets insets,
       [bool animated = false]) async {
-    return _mapboxGlPlatform.updateContentInsets(insets, animated);
+    return _maplibreGlPlatform.updateContentInsets(insets, animated);
   }
 
   /// Updates the language of the map labels to match the specified language.
@@ -621,7 +621,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setMapLanguage(String language) async {
-    return _mapboxGlPlatform.setMapLanguage(language);
+    return _maplibreGlPlatform.setMapLanguage(language);
   }
 
   /// Enables or disables the collection of anonymized telemetry data.
@@ -629,7 +629,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setTelemetryEnabled(bool enabled) async {
-    return _mapboxGlPlatform.setTelemetryEnabled(enabled);
+    return _maplibreGlPlatform.setTelemetryEnabled(enabled);
   }
 
   /// Retrieves whether collection of anonymized telemetry data is enabled.
@@ -637,7 +637,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the query has been made on the
   /// platform side.
   Future<bool> getTelemetryEnabled() async {
-    return _mapboxGlPlatform.getTelemetryEnabled();
+    return _maplibreGlPlatform.getTelemetryEnabled();
   }
 
   /// Adds a symbol to the map, configured using the specified custom [options].
@@ -1007,13 +1007,13 @@ class MaplibreMapController extends ChangeNotifier {
   /// Query rendered features at a point in screen cooridnates
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
-    return _mapboxGlPlatform.queryRenderedFeatures(point, layerIds, filter);
+    return _maplibreGlPlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
   /// Query rendered features in a Rect in screen coordinates
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
-    return _mapboxGlPlatform.queryRenderedFeaturesInRect(
+    return _maplibreGlPlatform.queryRenderedFeaturesInRect(
         rect, layerIds, filter);
   }
 
@@ -1021,24 +1021,24 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
-    return _mapboxGlPlatform.querySourceFeatures(
+    return _maplibreGlPlatform.querySourceFeatures(
         sourceId, sourceLayerId, filter);
   }
 
   Future invalidateAmbientCache() async {
-    return _mapboxGlPlatform.invalidateAmbientCache();
+    return _maplibreGlPlatform.invalidateAmbientCache();
   }
 
   /// Get last my location
   ///
   /// Return last latlng, nullable
   Future<LatLng?> requestMyLocationLatLng() async {
-    return _mapboxGlPlatform.requestMyLocationLatLng();
+    return _maplibreGlPlatform.requestMyLocationLatLng();
   }
 
   /// This method returns the boundaries of the region currently displayed in the map.
   Future<LatLngBounds> getVisibleRegion() async {
-    return _mapboxGlPlatform.getVisibleRegion();
+    return _maplibreGlPlatform.getVisibleRegion();
   }
 
   /// Adds an image to the style currently displayed in the map, so that it can later be referred to by the provided name.
@@ -1077,7 +1077,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// }
   /// ```
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]) {
-    return _mapboxGlPlatform.addImage(name, bytes, sdf);
+    return _maplibreGlPlatform.addImage(name, bytes, sdf);
   }
 
   /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
@@ -1104,39 +1104,39 @@ class MaplibreMapController extends ChangeNotifier {
   /// Not implemented on web.
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
-    return _mapboxGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
+    return _maplibreGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
   }
 
   /// Update the image and/or coordinates of an image source.
   /// Not implemented on web.
   Future<void> updateImageSource(
       String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
-    return _mapboxGlPlatform.updateImageSource(
+    return _maplibreGlPlatform.updateImageSource(
         imageSourceId, bytes, coordinates);
   }
 
   /// Removes previously added image source by id
   @Deprecated("This method was renamed to removeSource")
   Future<void> removeImageSource(String imageSourceId) {
-    return _mapboxGlPlatform.removeSource(imageSourceId);
+    return _maplibreGlPlatform.removeSource(imageSourceId);
   }
 
   /// Removes previously added source by id
   Future<void> removeSource(String sourceId) {
-    return _mapboxGlPlatform.removeSource(sourceId);
+    return _maplibreGlPlatform.removeSource(sourceId);
   }
 
   /// Adds an image layer to the map's style at render time.
   Future<void> addImageLayer(String layerId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
+    return _maplibreGlPlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
   Future<void> addImageLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayerBelow(
+    return _maplibreGlPlatform.addLayerBelow(
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
@@ -1145,21 +1145,21 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> addLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayerBelow(
+    return _maplibreGlPlatform.addLayerBelow(
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
   /// Removes a MapLibre style layer
   Future<void> removeLayer(String layerId) {
-    return _mapboxGlPlatform.removeLayer(layerId);
+    return _maplibreGlPlatform.removeLayer(layerId);
   }
 
   Future<void> setFilter(String layerId, dynamic filter) {
-    return _mapboxGlPlatform.setFilter(layerId, filter);
+    return _maplibreGlPlatform.setFilter(layerId, filter);
   }
 
   Future<dynamic> getFilter(String layerId) {
-    return _mapboxGlPlatform.getFilter(layerId);
+    return _maplibreGlPlatform.getFilter(layerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
@@ -1169,27 +1169,27 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// Returns null if [latLng] is not currently visible on the map.
   Future<Point> toScreenLocation(LatLng latLng) async {
-    return _mapboxGlPlatform.toScreenLocation(latLng);
+    return _maplibreGlPlatform.toScreenLocation(latLng);
   }
 
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
-    return _mapboxGlPlatform.toScreenLocationBatch(latLngs);
+    return _maplibreGlPlatform.toScreenLocationBatch(latLngs);
   }
 
   /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
   Future<LatLng> toLatLng(Point screenLocation) async {
-    return _mapboxGlPlatform.toLatLng(screenLocation);
+    return _maplibreGlPlatform.toLatLng(screenLocation);
   }
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
-    return _mapboxGlPlatform.getMetersPerPixelAtLatitude(latitude);
+    return _maplibreGlPlatform.getMetersPerPixelAtLatitude(latitude);
   }
 
   /// Add a new source to the map
   Future<void> addSource(String sourceid, SourceProperties properties) async {
-    return _mapboxGlPlatform.addSource(sourceid, properties);
+    return _maplibreGlPlatform.addSource(sourceid, properties);
   }
 
   Future setCameraBounds({
@@ -1199,7 +1199,7 @@ class MaplibreMapController extends ChangeNotifier {
     required double east,
     required int padding,
   }) async {
-    return _mapboxGlPlatform.setCameraBounds(
+    return _maplibreGlPlatform.setCameraBounds(
       west: west,
       north: north,
       south: south,
@@ -1292,18 +1292,18 @@ class MaplibreMapController extends ChangeNotifier {
   }
 
   Future<void> setLayerVisibility(String layerId, bool visible) async {
-    return _mapboxGlPlatform.setLayerVisibility(layerId, visible);
+    return _maplibreGlPlatform.setLayerVisibility(layerId, visible);
   }
 
   Future<List> getLayerIds() {
-    return _mapboxGlPlatform.getLayerIds();
+    return _maplibreGlPlatform.getLayerIds();
   }
 
   /// Retrieve every source ids of the map as a [String] list, including the ones added internally
   ///
   /// This method is not currently implemented on the web
   Future<List<String>> getSourceIds() async {
-    return (await _mapboxGlPlatform.getSourceIds())
+    return (await _maplibreGlPlatform.getSourceIds())
         .whereType<String>()
         .toList();
   }
@@ -1311,6 +1311,6 @@ class MaplibreMapController extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
-    _mapboxGlPlatform.dispose();
+    _maplibreGlPlatform.dispose();
   }
 }
