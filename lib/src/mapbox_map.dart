@@ -246,7 +246,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
   final Completer<MaplibreMapController> _controller =
       Completer<MaplibreMapController>();
 
-  late _MapboxMapOptions _mapboxMapOptions;
+  late _MaplibreMapOptions _maplibreMapOptions;
   final MapLibreGlPlatform _mapboxGlPlatform =
       MapLibreGlPlatform.createInstance();
 
@@ -257,7 +257,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
         "annotationOrder must not have duplicate types");
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
-      'options': _MapboxMapOptions.fromWidget(widget).toMap(),
+      'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
     };
@@ -268,7 +268,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
   @override
   void initState() {
     super.initState();
-    _mapboxMapOptions = _MapboxMapOptions.fromWidget(widget);
+    _maplibreMapOptions = _MaplibreMapOptions.fromWidget(widget);
   }
 
   @override
@@ -283,11 +283,11 @@ class _MaplibreMapState extends State<MaplibreMap> {
   @override
   void didUpdateWidget(MaplibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
+    final _MaplibreMapOptions newOptions = _MaplibreMapOptions.fromWidget(widget);
     final Map<String, dynamic> updates =
-        _mapboxMapOptions.updatesMap(newOptions);
+        _maplibreMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
-    _mapboxMapOptions = newOptions;
+    _maplibreMapOptions = newOptions;
   }
 
   void _updateOptions(Map<String, dynamic> updates) async {
@@ -331,8 +331,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
 ///
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
-class _MapboxMapOptions {
-  _MapboxMapOptions({
+class _MaplibreMapOptions {
+  _MaplibreMapOptions({
     this.compassEnabled,
     this.cameraTargetBounds,
     this.styleString,
@@ -353,8 +353,8 @@ class _MapboxMapOptions {
     this.attributionButtonMargins,
   });
 
-  static _MapboxMapOptions fromWidget(MaplibreMap map) {
-    return _MapboxMapOptions(
+  static _MaplibreMapOptions fromWidget(MaplibreMap map) {
+    return _MaplibreMapOptions(
       compassEnabled: map.compassEnabled,
       cameraTargetBounds: map.cameraTargetBounds,
       styleString: map.styleString,
@@ -462,7 +462,7 @@ class _MapboxMapOptions {
     return optionsMap;
   }
 
-  Map<String, dynamic> updatesMap(_MapboxMapOptions newOptions) {
+  Map<String, dynamic> updatesMap(_MaplibreMapOptions newOptions) {
     final Map<String, dynamic> prevOptionsMap = toMap();
     final newOptionsMap = newOptions.toMap();
 
