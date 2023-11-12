@@ -174,13 +174,13 @@ class MaplibreMap extends StatefulWidget {
   /// If this is set to a value other than [MyLocationRenderMode.NORMAL], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
-  /// Set the layout margins for the Mapbox Logo
+  /// Set the layout margins for the Logo
   final Point? logoViewMargins;
 
   /// Set the position for the Compass
   final CompassViewPosition? compassViewPosition;
 
-  /// Set the layout margins for the Mapbox Compass
+  /// Set the layout margins for the Compass
   final Point? compassViewMargins;
 
   /// Set the position for the MapLibre Attribution Button
