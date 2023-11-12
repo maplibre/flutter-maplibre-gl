@@ -444,7 +444,7 @@ class GeojsonSourceProperties implements SourceProperties {
   /// * `cluster` Is `true` if the point is a cluster
   /// * `cluster_id` A unqiue id for the cluster to be used in conjunction
   /// with the [cluster inspection
-  /// methods](https://www.mapbox.com/mapbox-gl-js/api/#geojsonsource#getclusterexpansionzoom)
+  /// methods](https://maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GeoJSONSource/#getclusterexpansionzoom)
   /// * `point_count` Number of original points grouped into this cluster
   /// * `point_count_abbreviated` An abbreviated point count
   ///

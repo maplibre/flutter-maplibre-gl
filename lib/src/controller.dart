@@ -29,21 +29,42 @@ typedef void OnCameraIdleCallback();
 
 typedef void OnMapIdleCallback();
 
-/// Controller for a single MaplibreMap instance running on the host platform.
+/// Controller for a single [MaplibreMap] instance running on the host platform.
+/// 
+/// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.
+/// 
+/// To add annotations ([Circle]s, [Line]s, [Symbol]s and [Fill]s) on the map, there are two ways:
+/// 
+/// 1. Simple: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
+/// There are also corresponding [addCircles], [addLines] etc. methods which work the same but add multiple annotations at a time.
+/// 
+/// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations. 
+/// An annotation manager performs the steps from the advanced way, but hides the complexity from the developer.
+/// E.g. the [addCircle] method uses the [CircleManager], which in turn adds a GeoJson source to the map's style with the circle's locations as features. 
+/// The CircleManager also adds a circle style layer to the map's style that references that GeoJson source, therefore rendering all circles added with [addCircle] on the map.)
+/// 
+/// There are also corresponding clear* methods like [clearCircles] to remove all circles from the map, which had been added with [addCircle] or [addCircles].
+/// 
+/// There are also properties like [circles] to get the current set of circles on the map, which had been added with [addCircle] or [addCircles].
+/// 
+/// Click events on annotations that are added this way (with the [addCircle], [addLine] etc. methods) can be received by adding callbacks to [onCircleTapped], [onLineTapped] etc.
+/// 
+/// Note: [circles], [clearCircles] and [onCircleTapped] only work for circles added with [addCircle] or [addCircles], 
+/// not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
+/// The same of course applies for fills, lines and symbols.
+/// 
+/// 2. Advanced: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource]) 
+/// and add a new layer to display the data of that source on the map (either with the [addLayer] method or with the more specific methods like [addCircleLayer], [addLineLayer] etc.).
 ///
-/// Change listeners are notified upon changes to any of
+/// A MaplibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
 ///
-/// * the [options] property
-/// * the collection of [Symbol]s added to this map
-/// * the collection of [Line]s added to this map
+/// * the configuration options of the [MaplibreMap] widget
+/// * the [symbols], [lines], [circles] or [fills] properties 
+/// (i.e. the collection of [Symbol]s, [Line]s, [Circle]s and [Fill]s added to this map via the "simple way" (see above))
 /// * the [isCameraMoving] property
 /// * the [cameraPosition] property
 ///
 /// Listeners are notified after changes have been applied on the platform side.
-///
-/// Symbol tap events can be received by adding callbacks to [onSymbolTapped].
-/// Line tap events can be received by adding callbacks to [onLineTapped].
-/// Circle tap events can be received by adding callbacks to [onCircleTapped].
 class MaplibreMapController extends ChangeNotifier {
   MaplibreMapController({
     required MapLibreGlPlatform mapboxGlPlatform,
@@ -203,7 +224,7 @@ class MaplibreMapController extends ChangeNotifier {
   final ArgumentCallbacks<Symbol> onInfoWindowTapped =
       ArgumentCallbacks<Symbol>();
 
-  /// The current set of symbols on this map.
+  /// The current set of symbols on this map added with the [addSymbol] or [addSymbols] methods.
   ///
   /// The returned set will be a detached snapshot of the symbols collection.
   Set<Symbol> get symbols => symbolManager!.annotations;
@@ -211,17 +232,17 @@ class MaplibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
 
-  /// The current set of lines on this map.
+  /// The current set of lines on this map added with the [addLine] or [addLines] methods.
   ///
   /// The returned set will be a detached snapshot of the lines collection.
   Set<Line> get lines => lineManager!.annotations;
 
-  /// The current set of circles on this map.
+  /// The current set of circles on this map added with the [addCircle] or [addCircles] methods.
   ///
   /// The returned set will be a detached snapshot of the circles collection.
   Set<Circle> get circles => circleManager!.annotations;
 
-  /// The current set of fills on this map.
+  /// The current set of fills on this map added with the [addFill] or [addFills] methods.
   ///
   /// The returned set will be a detached snapshot of the fills collection.
   Set<Fill> get fills => fillManager!.annotations;
@@ -231,7 +252,7 @@ class MaplibreMapController extends ChangeNotifier {
   bool _isCameraMoving = false;
 
   /// Returns the most recent camera position reported by the platform side.
-  /// Will be null, if [MapboxMap.trackCameraPosition] is false.
+  /// Will be null, if [MaplibreMap.trackCameraPosition] is false.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
@@ -293,12 +314,11 @@ class MaplibreMapController extends ChangeNotifier {
   /// as specified in https://datatracker.ietf.org/doc/html/rfc7946#section-3.3
   ///
   /// [promoteId] can be used on web to promote an id from properties to be the
-  /// id of the feature. This is useful because by default mapbox-gl-js does not
+  /// id of the feature. This is useful because by default maplibre-gl-js does not
   /// support string ids
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
-  ///
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId}) async {
     await _mapboxGlPlatform.addGeoJsonSource(sourceId, geojson,
@@ -356,7 +376,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addSymbolLayer(
       String sourceId, String layerId, SymbolLayerProperties properties,
       {String? belowLayerId,
@@ -396,7 +416,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLineLayer(
       String sourceId, String layerId, LineLayerProperties properties,
       {String? belowLayerId,
@@ -436,7 +456,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addFillLayer(
       String sourceId, String layerId, FillLayerProperties properties,
       {String? belowLayerId,
@@ -476,7 +496,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addCircleLayer(
       String sourceId, String layerId, CircleLayerProperties properties,
       {String? belowLayerId,
@@ -701,7 +721,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [symbols] from the map.
+  /// Removes all [symbols] from the map added with the [addSymbol] or [addSymbols] methods.
   ///
   /// Change listeners are notified once all symbols have been removed on the
   /// platform side.
@@ -791,7 +811,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [lines] from the map.
+  /// Removes all [lines] from the map added with the [addLine] or [addLines] methods.
   ///
   /// Change listeners are notified once all lines have been removed on the
   /// platform side.
@@ -885,7 +905,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [circles] from the map.
+  /// Removes all [circles] from the map added with the [addCircle] or [addCircles] methods.
   ///
   /// Change listeners are notified once all circles have been removed on the
   /// platform side.
@@ -948,7 +968,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [fill] from the map.
+  /// Removes all [fills] from the map added with the [addFill] or [addFills] methods.
   ///
   /// Change listeners are notified once all fills have been removed on the
   /// platform side.
@@ -1106,13 +1126,13 @@ class MaplibreMapController extends ChangeNotifier {
     return _mapboxGlPlatform.removeSource(sourceId);
   }
 
-  /// Adds a Mapbox image layer to the map's style at render time.
+  /// Adds an image layer to the map's style at render time.
   Future<void> addImageLayer(String layerId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
     return _mapboxGlPlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Adds a Mapbox image layer below the layer provided with belowLayerId to the map's style at render time.
+  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
   Future<void> addImageLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
@@ -1120,7 +1140,7 @@ class MaplibreMapController extends ChangeNotifier {
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Adds a Mapbox image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
+  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
   @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
   Future<void> addLayerBelow(
       String layerId, String sourceId, String imageSourceId,
@@ -1129,7 +1149,7 @@ class MaplibreMapController extends ChangeNotifier {
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Removes a Mapbox style layer
+  /// Removes a MapLibre style layer
   Future<void> removeLayer(String layerId) {
     return _mapboxGlPlatform.removeLayer(layerId);
   }
@@ -1207,7 +1227,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   /// [filter] is not supported by RasterLayer and HillshadeLayer.
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
       String sourceId, String layerId, LayerProperties properties,
       {String? belowLayerId,
