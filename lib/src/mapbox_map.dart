@@ -247,7 +247,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
       Completer<MaplibreMapController>();
 
   late _MaplibreMapOptions _maplibreMapOptions;
-  final MapLibreGlPlatform _mapboxGlPlatform =
+  final MapLibreGlPlatform _maplibreGlPlatform =
       MapLibreGlPlatform.createInstance();
 
   @override
@@ -261,7 +261,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
     };
-    return _mapboxGlPlatform.buildView(
+    return _maplibreGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
   }
 
@@ -300,7 +300,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
 
   Future<void> onPlatformViewCreated(int id) async {
     final MaplibreMapController controller = MaplibreMapController(
-      maplibreGlPlatform: _mapboxGlPlatform,
+      maplibreGlPlatform: _maplibreGlPlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         if (_controller.isCompleted) {
@@ -319,7 +319,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
-    await _mapboxGlPlatform.initPlatform(id);
+    await _maplibreGlPlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated!(controller);
