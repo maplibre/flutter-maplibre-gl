@@ -51,7 +51,7 @@ class LayerPropertyConverter {
         {{/requiresLiteral}}
         {{#isVisibilityProperty}}
         case "{{value}}":
-          properties.add(PropertyFactory.{{valueAsCamelCase}}(entry.getValue()));
+          properties.add(PropertyFactory.{{valueAsCamelCase}}(entry.getValue().substring(1, entry.getValue().length() - 1)));
         {{/isVisibilityProperty}}
           break;
         {{/layout_properties}}

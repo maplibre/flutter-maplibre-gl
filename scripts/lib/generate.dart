@@ -59,8 +59,8 @@ main() async {
     "ios/Classes/LayerPropertyConverter.swift",
     "lib/src/layer_expressions.dart",
     "lib/src/layer_properties.dart",
-    "mapbox_gl_web/lib/src/layer_tools.dart",
-    "mapbox_gl_platform_interface/lib/src/source_properties.dart",
+    "maplibre_gl_web/lib/src/layer_tools.dart",
+    "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
   for (var template in templates) await render(renderContext, template);
@@ -122,9 +122,9 @@ Map<String, dynamic> buildSourceProperty(
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
   final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
-      dartTypeMappingTable[value["value"]["type"]];
+      dartTypeMappingTable[value["value"]?["type"]];
   final nestedTypeSwift = swiftTypeMappingTable[value["value"]] ??
-      swiftTypeMappingTable[value["value"]["type"]];
+      swiftTypeMappingTable[value["value"]?["type"]];
 
   var defaultValue = value["default"];
   if (defaultValue is List) {
