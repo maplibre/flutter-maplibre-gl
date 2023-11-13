@@ -962,6 +962,51 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+        case "layer#setProperties": {
+          final String layerId = call.argument("layerId");
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+
+          Layer layer = style.getLayer(layerId);
+
+          if (layer != null) {
+            final PropertyValue[] properties;
+
+            if (layer instanceof LineLayer) {
+              properties = LayerPropertyConverter
+                  .interpretLineLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillLayerProperties(call.argument("properties"));
+            } else if (layer instanceof CircleLayer) {
+              properties = LayerPropertyConverter
+                  .interpretCircleLayerProperties(call.argument("properties"));
+            } else if (layer instanceof SymbolLayer) {
+              properties = LayerPropertyConverter
+                  .interpretSymbolLayerProperties(call.argument("properties"));
+            } else if (layer instanceof RasterLayer) {
+              properties = LayerPropertyConverter
+                  .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HillshadeLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHillshadeLayerProperties(call.argument("properties"));
+            } else {
+              result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
+              return;
+            }
+            layer.setProperties(properties);
+            result.success(null);
+          } else {
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+          }
+
+          break;
+        }
       case "fillLayer#add":
         {
           final String sourceId = call.argument("sourceId");

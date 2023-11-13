@@ -3,16 +3,19 @@
 
 package com.mapbox.mapboxgl;
 
-import static com.mapbox.mapboxgl.Convert.toMap;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+
+import static com.mapbox.mapboxgl.Convert.toMap;
 
 class LayerPropertyConverter {
   static PropertyValue[] interpretSymbolLayerProperties(Object o) {
@@ -194,7 +197,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textOptional(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -250,7 +253,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -318,7 +321,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -362,7 +365,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -406,7 +409,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.rasterFadeDuration(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -444,7 +447,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.hillshadeAccentColor(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -453,4 +456,5 @@ class LayerPropertyConverter {
 
     return properties.toArray(new PropertyValue[properties.size()]);
   }
+
 }
