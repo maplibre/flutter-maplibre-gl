@@ -418,6 +418,17 @@ class MaplibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Set one or multiple properties of a layer.
+  /// You can only use properties that are supported for the layer's type.
+  /// So you can e.g. only use LineLayerProperties on a line layer.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setLayerProperties(
+      String layerId, LayerProperties properties) async {
+    await _mapboxGlPlatform.setLayerProperties(layerId, properties.toJson());
+  }
+
   /// Add a fill layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.

@@ -881,6 +881,24 @@ class MaplibreMapController extends MapLibreGlPlatform
         enableInteraction: enableInteraction);
   }
 
+  Future<void> setLayerProperties(
+      String layerId, Map<String, dynamic> properties) async {
+    for (final entry in properties.entries) {
+      // Very hacky: because we don't know if the property is a layout
+      // or paint property, we try to set it as both.
+      try {
+        _map.setLayoutProperty(layerId, entry.key, entry.value);
+      } catch (e) {
+        print('Caught exception (usually safe to ignore): $e');
+      }
+      try {
+        _map.setPaintProperty(layerId, entry.key, entry.value);
+      } catch (e) {
+        print('Caught exception (usually safe to ignore): $e');
+      }
+    }
+  }
+
   @override
   Future<void> addSymbolLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
