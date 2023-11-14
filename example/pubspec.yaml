@@ -16,10 +16,15 @@ dependencies:
   cupertino_icons: ^1.0.5
 
   maplibre_gl_platform_interface:
-    path: ../
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      path: maplibre_gl_platform_interface
+      ref: git-release-0.17.0
 
   maplibre_gl:
-    path: ../
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      ref: git-release-0.17.0
 
   # Workaround for this issue:
   # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
@@ -35,11 +40,17 @@ dependencies:
   platform: ^3.1.0
   device_info_plus: ^9.0.2
 
+# The following lines can be useful if you make changes to this plugin (specifically to the two sub-plugins), 
+# e.g. because you contribute to the project.
+# If the following lines are not commented out, your local versions of the sub-plugins will be used,
+#  instead of the hosted ones.
 dependency_overrides:
   maplibre_gl_platform_interface:
     path: ../maplibre_gl_platform_interface
   maplibre_gl_web:
     path: ../maplibre_gl_web
+  maplibre_gl:
+    path: ..
 
 dev_dependencies:
   flutter_lints: ^2.0.1

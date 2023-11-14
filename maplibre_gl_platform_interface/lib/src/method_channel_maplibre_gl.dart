@@ -642,6 +642,16 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   }
 
   @override
+  Future<void> setLayerProperties(
+      String layerId, Map<String, dynamic> properties) async {
+    await _channel.invokeMethod('layer#setProperties', <String, dynamic>{
+      'layerId': layerId,
+      'properties': properties
+          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
+    });
+  }
+
+  @override
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,

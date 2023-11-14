@@ -1,0 +1,14 @@
+name: Publish maplibre_gl_platform_interface to pub.dev
+
+on:
+  push:
+    tags:
+      - 'pub-maplibre_gl_platform_interface-[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    with:
+      working-directory: maplibre_gl_platform_interface

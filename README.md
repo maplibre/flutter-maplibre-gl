@@ -176,3 +176,5 @@ Note : iOS will display the error : `NSPredicate: Use of 'mgl_does:have:' as an 
 
 
 [Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues) and contributions are very welcome!
+
+RELEASE.md contains information on how we cut releases.

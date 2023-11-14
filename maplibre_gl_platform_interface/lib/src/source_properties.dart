@@ -596,7 +596,7 @@ class VideoSourceProperties implements SourceProperties {
   /// Corners of video specified in longitude, latitude pairs.
   ///
   /// Type: array
-  final List? coordinates;
+  final List<List>? coordinates;
 
   const VideoSourceProperties({
     this.urls,
@@ -605,7 +605,7 @@ class VideoSourceProperties implements SourceProperties {
 
   VideoSourceProperties copyWith(
     List<String>? urls,
-    List? coordinates,
+    List<List>? coordinates,
   ) {
     return VideoSourceProperties(
       urls: urls ?? this.urls,
@@ -645,7 +645,7 @@ class ImageSourceProperties implements SourceProperties {
   /// Corners of image specified in longitude, latitude pairs.
   ///
   /// Type: array
-  final List? coordinates;
+  final List<List>? coordinates;
 
   const ImageSourceProperties({
     this.url,
@@ -654,7 +654,7 @@ class ImageSourceProperties implements SourceProperties {
 
   ImageSourceProperties copyWith(
     String? url,
-    List? coordinates,
+    List<List>? coordinates,
   ) {
     return ImageSourceProperties(
       url: url ?? this.url,
