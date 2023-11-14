@@ -1185,7 +1185,7 @@ class RequestParametersJsImpl {
 ///
 ///  Controls must implement `onAdd` and `onRemove`, and must own an
 ///  element, which is often a `div` element. To use MapLibre JS JS's
-///  default control styling, add the `mapboxgl-ctrl` class to your control's
+///  default control styling, add the `maplibregl-ctrl` class to your control's
 ///  node.
 ///
 /// ```dart
