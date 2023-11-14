@@ -31,7 +31,7 @@ class MarkerJsImpl extends EventedJsImpl {
   external factory MarkerJsImpl([MarkerOptionsJsImpl? options]);
 
   ///  Attaches the marker to a map
-  ///  @param {MapboxMap} map
+  ///  @param {MapLibreMap} map
   ///  @returns {Marker} `this`
   external MarkerJsImpl addTo(MapLibreMapJsImpl map);
 

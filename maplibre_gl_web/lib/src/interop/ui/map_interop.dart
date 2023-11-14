@@ -17,12 +17,12 @@ import 'package:maplibre_gl_web/src/interop/ui/handler/keyboard_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/handler/scroll_zoom_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/handler/touch_zoom_rotate_interop.dart';
 
-///  The `MapboxMap` object represents the map on your page. It exposes methods
+///  The `MapLibreMap` object represents the map on your page. It exposes methods
 ///  and properties that enable you to programmatically change the map,
 ///  and fires events as users interact with it.
 ///
-///  You create a `MapboxMap` by specifying a `container` and other options.
-///  Then MapLibre JS JS initializes the map on the page and returns your `MapboxMap`
+///  You create a `MapLibreMap` by specifying a `container` and other options.
+///  Then MapLibre JS JS initializes the map on the page and returns your `MapLibreMap`
 ///  object.
 ///
 ///  ```dart
@@ -88,7 +88,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {IControl} control The {@link IControl} to add.
   ///  @param {string} [position] position on the map to which the control will be added.
   ///  Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
@@ -99,7 +99,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Removes the control from the map.
   ///
   ///  @param {IControl} control The {@link IControl} to remove.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Define a new navigation control.
   ///  var navigation = new NavigationControl();
@@ -119,7 +119,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
   ///    events that get triggered as a result of resize. This can be useful for differentiating the
   ///    source of an event (for example, user-initiated or programmatically-triggered events).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Resize the map when the map container is shown
   ///  // after being initially hidden with CSS.
@@ -148,7 +148,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  remaining within the bounds.
   ///
   ///  @param {LngLatBoundsLike | null | undefined} bounds The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Define bounds that conform to the `LngLatBoundsLike` object.
   ///  var bounds = [
@@ -170,7 +170,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {number | null | undefined} minZoom The minimum zoom level to set (-2 - 24).
   ///    If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setMinZoom(12.25);
   external MapLibreMapJsImpl setMinZoom([num? minZoom]);
@@ -188,7 +188,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {number | null | undefined} maxZoom The maximum zoom level to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setMaxZoom(18.75);
   external MapLibreMapJsImpl setMaxZoom([num? maxZoom]);
@@ -206,7 +206,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {number | null | undefined} minPitch The minimum pitch to set (0-60).
   ///    If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setMinPitch([num? minPitch]);
 
   ///  Returns the map's minimum allowable pitch.
@@ -220,7 +220,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {number | null | undefined} maxPitch The maximum pitch to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setMaxPitch([num? maxPitch]);
 
   ///  Returns the map's maximum allowable pitch.
@@ -248,7 +248,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  map and the other on the left edge of the map) at every zoom level.
   ///
   ///  `undefined` is treated as `true`, `null` is treated as `false`.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setRenderWorldCopies(true);
   ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
@@ -303,16 +303,16 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  feature in this layer will trigger the listener. The event will have a `features` property containing
   ///  an array of the matching features.
   ///  @param {Function} listener The function to be called when the event is fired.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
   //external MapboxMap on(String type, [dynamic layerIdOrListener, Listener listener]);
 
-  ///  Removes an event listener for layer-specific events previously added with `MapboxMap#on`.
+  ///  Removes an event listener for layer-specific events previously added with `MapLibreMap#on`.
   ///
   ///  @param {string} type The event type previously used to install the listener.
   ///  @param {string} layerId The layer ID previously used to install the listener.
   ///  @param {Function} listener The function previously installed as a listener.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
   //external MapboxMap off(String type, [dynamic layerIdOrListener, Listener listener]);
 
@@ -453,7 +453,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///    In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
   ///    Set to `false`, to enable font settings from the map's style for these glyph ranges.
   ///    Forces a full update.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
@@ -484,7 +484,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Mapbox Style Specification's [source definition](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or
   ///  {@link CanvasSourceOptions}.
   ///  @fires source.add
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.addSource('my-data', {
   ///    type: 'vector',
@@ -537,7 +537,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Removes a source from the map's style.
   ///
   ///  @param {string} id The ID of the source to remove.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
   external removeSource(String id);
@@ -641,7 +641,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  if (map.hasImage('cat')) map.removeImage('cat');
   external removeImage(String id);
 
-  ///  Load an image from an external URL to be used with `MapboxMap#addImage`. External
+  ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
   ///
   ///  @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
@@ -681,7 +681,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} [beforeId] The ID of an existing layer to insert the new layer before.
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
   ///
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  // Add a circle layer with a vector source.
@@ -711,7 +711,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} id The ID of the layer to move.
   ///  @param {string} [beforeId] The ID of an existing layer to insert the new layer before.
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
@@ -756,7 +756,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} layerId The ID of the layer to which the zoom extent will be applied.
   ///  @param {number} minzoom The minimum zoom to set (0-24).
   ///  @param {number} maxzoom The maximum zoom to set (0-24).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
@@ -771,7 +771,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setFilter('my-layer', ['==', 'name', 'USA']);
   ///
@@ -795,7 +795,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///    Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setPaintProperty('my-layer', 'fill-color', '#faafee');
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
@@ -818,7 +818,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
@@ -837,7 +837,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param light Light properties to set. Must conform to the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#light).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
       dynamic light, StyleSetterOptionsJsImpl options);
 
@@ -1258,14 +1258,14 @@ class RequestParametersJsImpl {
 ///   }
 ///
 ///   @override
-///   HtmlElement onAdd(MapboxMap map) {
+///   HtmlElement onAdd(MapLibreMap map) {
 ///     _divElement = DivElement();
 ///     _divElement.text = 'Hello World';
 ///     return _divElement;
 ///   }
 ///
 ///   @override
-///   onRemove(MapboxMap map) {
+///   onRemove(MapLibreMap map) {
 ///     _divElement.remove();
 ///   }
 /// }

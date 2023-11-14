@@ -13,7 +13,7 @@ abstract class MapMouseEventJsImpl {
   /// The event type.
   external String get type;
 
-  /// The `MapboxMap` object that fired the event.
+  /// The `MapLibreMap` object that fired the event.
   external MapLibreMapJsImpl get target;
 
   /// The DOM event which caused the map event.
@@ -45,7 +45,7 @@ abstract class MapTouchEventJsImpl {
   /// The event type.
   external String get type;
 
-  /// The `MapboxMap` object that fired the event.
+  /// The `MapLibreMap` object that fired the event.
   external MapLibreMapJsImpl get target;
 
   /// The DOM event which caused the map event.

@@ -117,7 +117,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setCenter([-74, 38]);
   external MapLibreMapJsImpl setCenter(LngLatJsImpl center, [dynamic eventData]);
@@ -130,7 +130,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   external MapLibreMapJsImpl panBy(PointJsImpl offset,
       [AnimationOptionsJsImpl? options, dynamic eventData]);
@@ -143,7 +143,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl panTo(LngLatJsImpl lnglat,
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -164,7 +164,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires zoom
   ///  @fires moveend
   ///  @fires zoomend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // zoom the map to 5
   ///  map.setZoom(5);
@@ -182,7 +182,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires zoom
   ///  @fires moveend
   ///  @fires zoomend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl zoomTo(num zoom,
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -197,7 +197,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires zoom
   ///  @fires moveend
   ///  @fires zoomend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl zoomIn(
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -212,7 +212,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires zoom
   ///  @fires moveend
   ///  @fires zoomend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl zoomOut(
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -234,7 +234,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // rotate the map to 90 degrees
   ///  map.setBearing(90);
@@ -249,7 +249,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl rotateTo(num bearing,
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -260,7 +260,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl resetNorth(
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -271,7 +271,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl resetNorthPitch(
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -283,7 +283,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl snapToNorth(
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -301,12 +301,12 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires pitchstart
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setPitch(num pitch, [dynamic eventData]);
 
   ///  @memberof MapLibreMap#
   ///  @param {LatLngBoundsLike} bounds Calculate the center for these bounds in the viewport and use
-  ///       the highest zoom level up to and including `MapboxMap#getMaxZoom()` that fits
+  ///       the highest zoom level up to and including `MapLibreMap#getMaxZoom()` that fits
   ///       in the viewport. LatLngBounds represent a box that is always axis-aligned with bearing 0.
   ///  @param options
   ///  @param {number | PaddingOptions} `options.padding` The amount of padding in pixels to add to the given bounds.
@@ -397,7 +397,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @fires pitchend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl jumpTo(CameraOptionsJsImpl options,
       [dynamic eventData]);
 
@@ -422,7 +422,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @fires pitchend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   external MapLibreMapJsImpl easeTo(dynamic options, [dynamic eventData]);
 
@@ -465,7 +465,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @fires pitchend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // fly with default options to null island
   ///  map.flyTo({center: [0, 0], zoom: 9});
@@ -489,6 +489,6 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  Stops any animated transition underway.
   ///
   ///  @memberof MapLibreMap#
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl stop();
 }

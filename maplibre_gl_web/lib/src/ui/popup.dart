@@ -65,7 +65,7 @@ class Popup extends Evented {
 
   /// Adds the popup to a map.
   ///
-  /// @param {MapboxMap} map The MapLibre JS JS map to add the popup to.
+  /// @param {MapLibreMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
 ////
   Popup addTo(MapLibreMap map) =>
