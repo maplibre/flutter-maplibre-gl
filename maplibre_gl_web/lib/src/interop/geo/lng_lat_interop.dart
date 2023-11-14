@@ -74,7 +74,7 @@ class LngLatJsImpl {
   ///  @returns {LngLat} A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
   ///  @example
   ///  var arr = [-73.9749, 40.7736];
-  ///  var ll = mapboxgl.LngLat.convert(arr);
+  ///  var ll = maplibregl.LngLat.convert(arr);
   ///  ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
   external static LngLatJsImpl convert(dynamic input);
 }

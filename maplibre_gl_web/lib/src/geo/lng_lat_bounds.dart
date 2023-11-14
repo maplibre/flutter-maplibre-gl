@@ -136,7 +136,7 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  @returns {LngLatBounds} A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.
   ///  @example
   ///  var arr = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
-  ///  var llb = mapboxgl.LngLatBounds.convert(arr);
+  ///  var llb = maplibregl.LngLatBounds.convert(arr);
   ///  llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
   static LngLatBounds convert(dynamic input) =>
       LngLatBounds.fromJsObject(LngLatBoundsJsImpl.convert(input));

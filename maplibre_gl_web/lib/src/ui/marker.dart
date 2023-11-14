@@ -19,7 +19,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 /// @param {string} [pitchAlignment='auto'] `map` aligns the `Marker` to the plane of the map. `viewport` aligns the `Marker` to the plane of the viewport. `auto` automatically matches the value of `rotationAlignment`.
 /// @param {string} [rotationAlignment='auto'] `map` aligns the `Marker`'s rotation relative to the map, maintaining a bearing as the map rotates. `viewport` aligns the `Marker`'s rotation relative to the viewport, agnostic to map rotations. `auto` is equivalent to `viewport`.
 /// ```dart
-/// var marker = mapboxgl.Marker()
+/// var marker = maplibregl.Marker()
 ///   .setLngLat([30.5, 50.5])
 ///   .addTo(map);
 /// ```
