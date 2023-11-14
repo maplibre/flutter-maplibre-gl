@@ -37,7 +37,7 @@ class MarkerJsImpl extends EventedJsImpl {
 
   ///  Removes the marker from a map
   ///  @example
-  ///  var marker = new mapboxgl.Marker().addTo(map);
+  ///  var marker = new maplibregl.Marker().addTo(map);
   ///  marker.remove();
   ///  @returns {Marker} `this`
   external MarkerJsImpl remove();

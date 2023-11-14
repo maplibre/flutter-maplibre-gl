@@ -39,7 +39,7 @@ class Marker extends Evented {
 
   ///  Removes the marker from a map
   ///  @example
-  ///  var marker = new mapboxgl.Marker().addTo(map);
+  ///  var marker = new maplibregl.Marker().addTo(map);
   ///  marker.remove();
   ///  @returns {Marker} `this`
   Marker remove() => Marker.fromJsObject(jsObject.remove());

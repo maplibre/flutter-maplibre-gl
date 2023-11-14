@@ -15,7 +15,7 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
 ///  @param {number} lng Longitude, measured in degrees.
 ///  @param {number} lat Latitude, measured in degrees.
 ///  @example
-///  var ll = new mapboxgl.LngLat(-73.9749, 40.7736);
+///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
 ///  @see [Get coordinates of the mouse pointer](https://www.mapbox.com/mapbox-gl-js/example/mouse-position/)
 ///  @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
 ///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
@@ -35,7 +35,7 @@ class LngLatJsImpl {
   ///
   ///  @returns {LngLat} The wrapped `LngLat` object.
   ///  @example
-  ///  var ll = new mapboxgl.LngLat(286.0251, 40.7736);
+  ///  var ll = new maplibregl.LngLat(286.0251, 40.7736);
   ///  var wrapped = ll.wrap();
   ///  wrapped.lng; // = -73.9749
   external LngLatJsImpl wrap();
@@ -44,7 +44,7 @@ class LngLatJsImpl {
   ///
   ///  @returns {Array<number>} The coordinates represeted as an array of longitude and latitude.
   ///  @example
-  ///  var ll = new mapboxgl.LngLat(-73.9749, 40.7736);
+  ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toArray(); // = [-73.9749, 40.7736]
   external List<num> toArray();
 
@@ -52,7 +52,7 @@ class LngLatJsImpl {
   ///
   ///  @returns {string} The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
   ///  @example
-  ///  var ll = new mapboxgl.LngLat(-73.9749, 40.7736);
+  ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toString(); // = "LngLat(-73.9749, 40.7736)"
   external String toString();
 
@@ -61,7 +61,7 @@ class LngLatJsImpl {
   ///  @param {number} [radius]=0 Distance in meters from the coordinates to extend the bounds.
   ///  @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
   ///  @example
-  ///  var ll = new mapboxgl.LngLat(-73.9749, 40.7736);
+  ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toBounds(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
   external LngLatBoundsJsImpl toBounds(num radius);
 
