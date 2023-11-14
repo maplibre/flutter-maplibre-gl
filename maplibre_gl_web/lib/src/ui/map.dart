@@ -261,7 +261,7 @@ class MapLibreMap extends Camera {
   ///  @returns {boolean} renderWorldCopies
   ///  @example
   ///  var worldCopiesRendered = map.getRenderWorldCopies();
-  ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
+  ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   bool getRenderWorldCopies() => jsObject.getRenderWorldCopies();
 
   ///  Sets the state of `renderWorldCopies`.
@@ -276,7 +276,7 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setRenderWorldCopies(true);
-  ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
+  ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
       MapLibreMap.fromJsObject(jsObject.setRenderWorldCopies(renderWorldCopies));
 
@@ -548,9 +548,9 @@ class MapLibreMap extends Camera {
   ///      }
   ///    }
   ///  });
-  ///  @see Vector source: [Show and hide layers](https://docs.mapbox.com/mapbox-gl-js/example/toggle-layers/)
-  ///  @see GeoJSON source: [Add live realtime data](https://docs.mapbox.com/mapbox-gl-js/example/live-geojson/)
-  ///  @see Raster DEM source: [Add hillshading](https://docs.mapbox.com/mapbox-gl-js/example/hillshade/)
+  ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
+  ///  @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+  ///  @see Raster DEM source: [Add hillshading](https://maplibre.org/maplibre-gl-js/docs/examples/hillshade/)
   MapLibreMap addSource(String id, dynamic source) {
     if (source is Source) {
       return MapLibreMap.fromJsObject(jsObject.addSource(id, source.jsObject));
