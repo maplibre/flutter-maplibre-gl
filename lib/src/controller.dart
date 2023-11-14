@@ -35,7 +35,7 @@ typedef void OnMapIdleCallback();
 /// 
 /// To add annotations ([Circle]s, [Line]s, [Symbol]s and [Fill]s) on the map, there are two ways:
 /// 
-/// 1. Simple: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
+/// 1. *Simple way to add annotations*: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
 /// There are also corresponding [addCircles], [addLines] etc. methods which work the same but add multiple annotations at a time.
 /// 
 /// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations. 
@@ -53,8 +53,9 @@ typedef void OnMapIdleCallback();
 /// not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
 /// The same of course applies for fills, lines and symbols.
 /// 
-/// 2. Advanced: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource]) 
+/// 2. *Advanced way to add annotations*: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource]) 
 /// and add a new layer to display the data of that source on the map (either with the [addLayer] method or with the more specific methods like [addCircleLayer], [addLineLayer] etc.).
+/// For more information about Maplibre Styles, see the documentation of [maplibre_gl] as well as the specification at [https://maplibre.org/maplibre-style-spec/].
 ///
 /// A MaplibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
 ///
