@@ -1100,22 +1100,22 @@ class MaplibreMapController extends ChangeNotifier {
     return _maplibreGlPlatform.addImage(name, bytes, sdf);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the icon will be visible even if it collides with other previously drawn symbols.
   Future<void> setSymbolIconAllowOverlap(bool enable) async {
     await symbolManager?.setIconAllowOverlap(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the icon.
   Future<void> setSymbolIconIgnorePlacement(bool enable) async {
     await symbolManager?.setIconIgnorePlacement(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the text will be visible even if it collides with other previously drawn symbols.
   Future<void> setSymbolTextAllowOverlap(bool enable) async {
     await symbolManager?.setTextAllowOverlap(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the text.
   Future<void> setSymbolTextIgnorePlacement(bool enable) async {
     await symbolManager?.setTextIgnorePlacement(enable);
   }
