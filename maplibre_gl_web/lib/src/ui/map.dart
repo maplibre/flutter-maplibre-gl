@@ -1087,7 +1087,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// `String` or `List<String>`
   dynamic get customAttribution => jsObject.customAttribution;
 
-  /// A string representing the position of the Mapbox wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
+  /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   String get logoPosition => jsObject.logoPosition;
 
   /// If `true`, map creation will fail if the performance of MapLibre

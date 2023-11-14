@@ -997,7 +997,7 @@ class MapOptionsJsImpl {
   /// `String` or `List<String>`
   external dynamic get customAttribution;
 
-  /// A string representing the position of the Mapbox wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
+  /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   external String get logoPosition;
 
   /// If `true`, map creation will fail if the performance of MapLibre
