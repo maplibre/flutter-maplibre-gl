@@ -62,7 +62,7 @@ class PopupJsImpl extends EventedJsImpl {
   ///
   /// @param {MapboxMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
-  external PopupJsImpl addTo(MapboxMapJsImpl map);
+  external PopupJsImpl addTo(MapLibreMapJsImpl map);
 
   /// @returns {boolean} `true` if the popup is open, `false` if it is closed.
   external bool isOpen();

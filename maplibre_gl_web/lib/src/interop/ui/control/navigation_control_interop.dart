@@ -39,7 +39,7 @@ class NavigationControlJsImpl {
   external factory NavigationControlJsImpl(
       NavigationControlOptionsJsImpl options);
 
-  external onAdd(MapboxMapJsImpl map);
+  external onAdd(MapLibreMapJsImpl map);
 
   external onRemove();
 }

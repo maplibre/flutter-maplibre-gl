@@ -32,7 +32,7 @@ class AttributionControlJsImpl {
   external factory AttributionControlJsImpl(
       AttributionControlOptionsJsImpl options);
 
-  external onAdd(MapboxMapJsImpl map);
+  external onAdd(MapLibreMapJsImpl map);
 
   external onRemove();
 }

@@ -14,7 +14,7 @@ import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 class LogoControlJsImpl {
   external factory LogoControlJsImpl();
 
-  external onAdd(MapboxMapJsImpl map);
+  external onAdd(MapLibreMapJsImpl map);
 
   external onRemove();
 

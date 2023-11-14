@@ -33,7 +33,7 @@ class MarkerJsImpl extends EventedJsImpl {
   ///  Attaches the marker to a map
   ///  @param {MapboxMap} map
   ///  @returns {Marker} `this`
-  external MarkerJsImpl addTo(MapboxMapJsImpl map);
+  external MarkerJsImpl addTo(MapLibreMapJsImpl map);
 
   ///  Removes the marker from a map
   ///  @example

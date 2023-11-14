@@ -52,10 +52,10 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  ```
 ///  @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
 class MapboxMap extends Camera {
-  final MapboxMapJsImpl jsObject;
+  final MapLibreMapJsImpl jsObject;
 
   factory MapboxMap(MapOptions options) =>
-      MapboxMap.fromJsObject(MapboxMapJsImpl(options.jsObject));
+      MapboxMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
 
   Style get style => Style.fromJsObject(jsObject.style);
 

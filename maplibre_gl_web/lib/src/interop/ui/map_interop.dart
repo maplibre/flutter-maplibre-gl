@@ -48,8 +48,8 @@ import 'package:maplibre_gl_web/src/interop/ui/handler/touch_zoom_rotate_interop
 ///  ```
 ///  @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
 @JS('Map')
-class MapboxMapJsImpl extends CameraJsImpl {
-  external factory MapboxMapJsImpl(MapOptionsJsImpl options);
+class MapLibreMapJsImpl extends CameraJsImpl {
+  external factory MapLibreMapJsImpl(MapOptionsJsImpl options);
 
   external StyleJsImpl get style;
   external dynamic get painter;
@@ -93,7 +93,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  external MapboxMapJsImpl addControl(IControlJsImpl? control,
+  external MapLibreMapJsImpl addControl(IControlJsImpl? control,
       [String? position]);
 
   ///  Removes the control from the map.
@@ -107,7 +107,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  map.addControl(navigation);
   ///  // Remove zoom and rotation controls from the map.
   ///  map.removeControl(navigation);
-  external MapboxMapJsImpl removeControl(IControlJsImpl? control);
+  external MapLibreMapJsImpl removeControl(IControlJsImpl? control);
 
   ///  Resizes the map according to the dimensions of its
   ///  `container` element.
@@ -125,7 +125,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  // after being initially hidden with CSS.
   ///  var mapDiv = document.getElementById('map');
   ///  if (mapDiv.style.visibility === true) map.resize();
-  external MapboxMapJsImpl resize([dynamic eventData]);
+  external MapLibreMapJsImpl resize([dynamic eventData]);
 
   ///  Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
   ///  an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
@@ -157,7 +157,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  ];
   ///  // Set the map's max bounds.
   ///  map.setMaxBounds(bounds);
-  external MapboxMapJsImpl setMaxBounds(LngLatBoundsJsImpl? bounds);
+  external MapLibreMapJsImpl setMaxBounds(LngLatBoundsJsImpl? bounds);
 
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
@@ -173,7 +173,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setMinZoom(12.25);
-  external MapboxMapJsImpl setMinZoom([num? minZoom]);
+  external MapLibreMapJsImpl setMinZoom([num? minZoom]);
 
   ///  Returns the map's minimum allowable zoom level.
   ///
@@ -191,7 +191,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setMaxZoom(18.75);
-  external MapboxMapJsImpl setMaxZoom([num? maxZoom]);
+  external MapLibreMapJsImpl setMaxZoom([num? maxZoom]);
 
   ///  Returns the map's maximum allowable zoom level.
   ///
@@ -207,7 +207,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @param {number | null | undefined} minPitch The minimum pitch to set (0-60).
   ///    If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
   ///  @returns {MapboxMap} `this`
-  external MapboxMapJsImpl setMinPitch([num? minPitch]);
+  external MapLibreMapJsImpl setMinPitch([num? minPitch]);
 
   ///  Returns the map's minimum allowable pitch.
   ///
@@ -221,7 +221,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @param {number | null | undefined} maxPitch The maximum pitch to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
   ///  @returns {MapboxMap} `this`
-  external MapboxMapJsImpl setMaxPitch([num? maxPitch]);
+  external MapLibreMapJsImpl setMaxPitch([num? maxPitch]);
 
   ///  Returns the map's maximum allowable pitch.
   ///
@@ -252,7 +252,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setRenderWorldCopies(true);
   ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
-  external MapboxMapJsImpl setRenderWorldCopies([bool? renderWorldCopies]);
+  external MapLibreMapJsImpl setRenderWorldCopies([bool? renderWorldCopies]);
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -459,7 +459,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
   ///
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
-  external MapboxMapJsImpl setStyle(dynamic style, [dynamic options]);
+  external MapLibreMapJsImpl setStyle(dynamic style, [dynamic options]);
 
   ///  Returns the map's Mapbox style object, which can be used to recreate the map's style.
   ///
@@ -508,7 +508,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @see Vector source: [Show and hide layers](https://docs.mapbox.com/mapbox-gl-js/example/toggle-layers/)
   ///  @see GeoJSON source: [Add live realtime data](https://docs.mapbox.com/mapbox-gl-js/example/live-geojson/)
   ///  @see Raster DEM source: [Add hillshading](https://docs.mapbox.com/mapbox-gl-js/example/hillshade/)
-  external MapboxMapJsImpl addSource(String id, dynamic source);
+  external MapLibreMapJsImpl addSource(String id, dynamic source);
 
   ///  Returns a Boolean indicating whether the source is loaded.
   ///
@@ -704,7 +704,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
   ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
   ///  @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
-  external MapboxMapJsImpl addLayer(dynamic layer, [String? beforeId]);
+  external MapLibreMapJsImpl addLayer(dynamic layer, [String? beforeId]);
 
   ///  Moves a layer to a different z-position.
   ///
@@ -716,7 +716,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  external MapboxMapJsImpl moveLayer(String id, String beforeId);
+  external MapLibreMapJsImpl moveLayer(String id, String beforeId);
 
   ///  Removes the layer with the given ID from the map's style.
   ///
@@ -760,7 +760,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
-  external MapboxMapJsImpl setLayerZoomRange(
+  external MapLibreMapJsImpl setLayerZoomRange(
       String layerId, num minzoom, num maxzoom);
 
   ///  Sets the filter for the specified style layer.
@@ -778,7 +778,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapboxMapJsImpl setFilter(String layerId, dynamic filter,
+  external MapLibreMapJsImpl setFilter(String layerId, dynamic filter,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the filter applied to the specified style layer.
@@ -821,7 +821,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
-  external MapboxMapJsImpl setLayoutProperty(
+  external MapLibreMapJsImpl setLayoutProperty(
       String layerId, String name, dynamic value,
       [StyleSetterOptionsJsImpl? options]);
 
@@ -838,7 +838,7 @@ class MapboxMapJsImpl extends CameraJsImpl {
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapboxMap} `this`
-  external MapboxMapJsImpl setLight(
+  external MapLibreMapJsImpl setLight(
       dynamic light, StyleSetterOptionsJsImpl options);
 
   ///  Returns the value of the light object.
@@ -1276,12 +1276,12 @@ abstract class IControlJsImpl {
   ///  Register a control on the map and give it a chance to register event listeners
   ///  and resources. This method is called by {@link MapboxMap#addControl}
   ///  internally.
-  external HtmlElement onAdd(MapboxMapJsImpl map);
+  external HtmlElement onAdd(MapLibreMapJsImpl map);
 
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapboxMap#removeControl}
   ///  internally.
-  external onRemove(MapboxMapJsImpl map);
+  external onRemove(MapLibreMapJsImpl map);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapboxMap#addControl} is called without the `position`
