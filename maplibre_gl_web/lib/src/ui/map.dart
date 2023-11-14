@@ -35,7 +35,7 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///      container: 'map',
 ///      center: LngLat(-122.420679, 37.772537),
 ///      zoom: 13,
-///      style: 'mapbox://styles/mapbox/satellite-streets-v11',
+///      style: style_object,
 ///      hash: true,
 ///      transformRequest: (url, resourceType) {
 ///        if (resourceType == 'Source' && url.startsWith('http://myHost')) {
@@ -493,10 +493,6 @@ class MapLibreMap extends Camera {
   ///    Set to `false`, to enable font settings from the map's style for these glyph ranges.
   ///    Forces a full update.
   ///  @returns {MapLibreMap} `this`
-  ///
-  ///  @example
-  ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
-  ///
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) =>
       MapLibreMap.fromJsObject(jsObject.setStyle(style));
@@ -528,25 +524,6 @@ class MapLibreMap extends Camera {
   ///  {@link CanvasSourceOptions}.
   ///  @fires source.add
   ///  @returns {MapLibreMap} `this`
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    type: 'vector',
-  ///    url: 'mapbox://myusername.tilesetid'
-  ///  });
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    "type": "geojson",
-  ///    "data": {
-  ///      "type": "Feature",
-  ///      "geometry": {
-  ///        "type": "Point",
-  ///        "coordinates": [-77.0323, 38.9131]
-  ///      },
-  ///      "properties": {
-  ///        "title": "Mapbox DC",
-  ///        "marker-symbol": "monument"
-  ///      }
-  ///    }
   ///  });
   ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
   ///  @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
@@ -748,24 +725,6 @@ class MapLibreMap extends Camera {
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
   ///
   ///  @returns {MapLibreMap} `this`
-  ///
-  ///  @example
-  ///  // Add a circle layer with a vector source.
-  ///  map.addLayer({
-  ///    id: 'points-of-interest',
-  ///    source: {
-  ///      type: 'vector',
-  ///      url: 'mapbox://mapbox.mapbox-streets-v8'
-  ///    },
-  ///    'source-layer': 'poi_label',
-  ///    type: 'circle',
-  ///    paint: {
-  ///      // MapLibre Style Specification paint properties
-  ///    },
-  ///    layout: {
-  ///      // MapLibre Style Specification layout properties
-  ///    }
-  ///  });
   ///
   ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
   ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
@@ -1163,27 +1122,9 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// The maximum pitch of the map (0-60).
   num get maxPitch => jsObject.maxPitch;
 
-  ///  The map's Mapbox style. This must be an a JSON object conforming to
+  ///  The map's MapLibre style. This must be an a JSON object conforming to
   ///  the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
   ///  such JSON.
-  ///
-  ///  To load a style from the Mapbox API, you can use a URL of the form `mapbox://styles/:owner/:style`,
-  ///  where `:owner` is your Mapbox account name and `:style` is the style ID. Or you can use one of the following
-  ///  [the predefined Mapbox styles](https://www.mapbox.com/maps/):
-  ///
-  ///  *  `mapbox://styles/mapbox/streets-v11`
-  ///  *  `mapbox://styles/mapbox/outdoors-v11`
-  ///  *  `mapbox://styles/mapbox/light-v10`
-  ///  *  `mapbox://styles/mapbox/dark-v10`
-  ///  *  `mapbox://styles/mapbox/satellite-v9`
-  ///  *  `mapbox://styles/mapbox/satellite-streets-v11`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-night-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-night-v4`
-  ///
-  ///  Tilesets hosted with Mapbox can be style-optimized if you append `?optimize=true` to the end of your style URL, like `mapbox://styles/mapbox/streets-v11?optimize=true`.
-  ///  Learn more about style-optimized vector tiles in our [API documentation](https://www.mapbox.com/api-documentation/maps/#retrieve-tiles).
   dynamic get style => jsObject.style;
 
   /// If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).

@@ -453,9 +453,6 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///    Forces a full update.
   ///  @returns {MapLibreMap} `this`
   ///
-  ///  @example
-  ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
-  ///
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   external MapLibreMapJsImpl setStyle(dynamic style, [dynamic options]);
 
@@ -483,26 +480,6 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  {@link CanvasSourceOptions}.
   ///  @fires source.add
   ///  @returns {MapLibreMap} `this`
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    type: 'vector',
-  ///    url: 'mapbox://myusername.tilesetid'
-  ///  });
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    "type": "geojson",
-  ///    "data": {
-  ///      "type": "Feature",
-  ///      "geometry": {
-  ///        "type": "Point",
-  ///        "coordinates": [-77.0323, 38.9131]
-  ///      },
-  ///      "properties": {
-  ///        "title": "Mapbox DC",
-  ///        "marker-symbol": "monument"
-  ///      }
-  ///    }
-  ///  });
   ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
   ///  @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
   ///  @see Raster DEM source: [Add hillshading](https://maplibre.org/maplibre-gl-js/docs/examples/hillshade/)
@@ -680,24 +657,6 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
   ///
   ///  @returns {MapLibreMap} `this`
-  ///
-  ///  @example
-  ///  // Add a circle layer with a vector source.
-  ///  map.addLayer({
-  ///    id: 'points-of-interest',
-  ///    source: {
-  ///      type: 'vector',
-  ///      url: 'mapbox://mapbox.mapbox-streets-v8'
-  ///    },
-  ///    'source-layer': 'poi_label',
-  ///    type: 'circle',
-  ///    paint: {
-  ///      // MapLibre Style Specification paint properties
-  ///    },
-  ///    layout: {
-  ///      // MapLibre Style Specification layout properties
-  ///    }
-  ///  });
   ///
   ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
   ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
@@ -1072,27 +1031,9 @@ class MapOptionsJsImpl {
   /// The maximum pitch of the map (0-60).
   external num get maxPitch;
 
-  ///  The map's Mapbox style. This must be an a JSON object conforming to
+  ///  The map's MapLibre style. This must be an a JSON object conforming to
   ///  the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
   ///  such JSON.
-  ///
-  ///  To load a style from the Mapbox API, you can use a URL of the form `mapbox://styles/:owner/:style`,
-  ///  where `:owner` is your Mapbox account name and `:style` is the style ID. Or you can use one of the following
-  ///  [the predefined Mapbox styles](https://www.mapbox.com/maps/):
-  ///
-  ///  *  `mapbox://styles/mapbox/streets-v11`
-  ///  *  `mapbox://styles/mapbox/outdoors-v11`
-  ///  *  `mapbox://styles/mapbox/light-v10`
-  ///  *  `mapbox://styles/mapbox/dark-v10`
-  ///  *  `mapbox://styles/mapbox/satellite-v9`
-  ///  *  `mapbox://styles/mapbox/satellite-streets-v11`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-night-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-night-v4`
-  ///
-  ///  Tilesets hosted with Mapbox can be style-optimized if you append `?optimize=true` to the end of your style URL, like `mapbox://styles/mapbox/streets-v11?optimize=true`.
-  ///  Learn more about style-optimized vector tiles in our [API documentation](https://www.mapbox.com/api-documentation/maps/#retrieve-tiles).
   external dynamic get style;
 
   /// If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
