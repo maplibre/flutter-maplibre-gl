@@ -627,7 +627,15 @@ class MaplibreMapController extends ChangeNotifier {
   }
 
   /// Updates the language of the map labels to match the specified language.
-  /// Supported language strings are available here: https://github.com/mapbox/mapbox-plugins-android/blob/e29c18d25098eb023a831796ff807e30d8207c36/plugin-localization/src/main/java/com/mapbox/mapboxsdk/plugins/localization/MapLocale.java#L39-L87
+  /// This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
+  /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]), 
+  /// and is also used by some other vector tile generation software and vector tile providers.
+  /// Commonly, (and according to the OSM wiki) [language] should be 
+  /// "a lowercase language's ISO 639-1 alpha2 code (second column), a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist, or a ISO 639-3 code if neither of those exist".
+  /// 
+  /// If your vector tiles do not follow this schema of having labels with "name:$language" for different language, this method will not work for you.
+  /// In that case, you need to adapt your Maplibre style accordingly yourself to use labels in your preferred language.
+  /// 
   /// Attention: This may only be called after onStyleLoaded() has been invoked.
   ///
   /// The returned [Future] completes after the change has been made on the
