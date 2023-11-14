@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.geo.lng_lat_bounds;
+library maplibre.interop.geo.lng_lat_bounds;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
@@ -9,7 +9,7 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 ///
 ///  If no arguments are provided to the constructor, a `null` bounding box is created.
 ///
-///  Note that any Mapbox GL method that accepts a `LngLatBounds` object as an argument or option
+///  Note that any MapLibre method that accepts a `LngLatBounds` object as an argument or option
 ///  can also accept an `Array` of two {@link LngLatLike} constructs and will perform an implicit conversion.
 ///  This flexible type is documented as {@link LngLatBoundsLike}.
 ///

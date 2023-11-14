@@ -1,4 +1,4 @@
-library mapboxgl.style.layers.line_layer;
+library maplibre.style.layers.line_layer;
 
 import 'package:maplibre_gl_web/src/interop/style/layers/line_layer_interop.dart';
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';

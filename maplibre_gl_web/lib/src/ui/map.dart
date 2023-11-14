@@ -1,4 +1,4 @@
-library mapboxgl.ui.map;
+library maplibre.ui.map;
 
 import 'dart:html';
 import 'package:js/js_util.dart';
@@ -26,7 +26,7 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  and fires events as users interact with it.
 ///
 ///  You create a `MapboxMap` by specifying a `container` and other options.
-///  Then Mapbox GL JS initializes the map on the page and returns your `MapboxMap`
+///  Then MapLibre JS JS initializes the map on the page and returns your `MapboxMap`
 ///  object.
 ///
 ///  ```dart
@@ -358,7 +358,7 @@ class MapboxMap extends Camera {
   ///    Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
   ///  @param {Array} `options.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
   ///    to limit query results.
-  ///  @param {boolean} [options.validate=true] Whether to check if the `options.filter` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if the `options.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
@@ -445,7 +445,7 @@ class MapboxMap extends Camera {
   ///    to query./// For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
   ///  @param {Array} `parameters.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
   ///    to limit query results.
-  ///  @param {boolean} `parameters.validate=true` Whether to check if the `parameters.filter` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} `parameters.validate=true` Whether to check if the `parameters.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
@@ -845,7 +845,7 @@ class MapboxMap extends Camera {
   ///  @param {Array | null | undefined} filter The filter, conforming to the Mapbox Style Specification's
   ///    [filter definition](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
   ///  @returns {MapboxMap} `this`
   ///  @example
@@ -871,7 +871,7 @@ class MapboxMap extends Camera {
   ///  @param {*} value The value of the paint property to set.
   ///    Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -896,7 +896,7 @@ class MapboxMap extends Camera {
   ///  @param {string} name The name of the layout property to set.
   ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -916,7 +916,7 @@ class MapboxMap extends Camera {
   ///
   ///  @param light Light properties to set. Must conform to the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#light).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapboxMap} `this`
   MapboxMap setLight(dynamic light, StyleSetterOptions options) =>
       MapboxMap.fromJsObject(jsObject.setLight(light, options.jsObject));
@@ -1082,7 +1082,7 @@ class MapboxMap extends Camera {
 
   set vertices(bool value) => jsObject.vertices;
 
-  ///  The version of Mapbox GL JS in use as specified in package.json, CHANGELOG.md, and the GitHub release.
+  ///  The version of MapLibre JS JS in use as specified in package.json, CHANGELOG.md, and the GitHub release.
   ///
   ///  @name version
   ///  @instance
@@ -1106,7 +1106,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
   bool get interactive => jsObject.interactive;
 
-  /// The HTML element in which Mapbox GL JS will render the map, or the element's string `id`. The specified element must have no children.
+  /// The HTML element in which MapLibre JS JS will render the map, or the element's string `id`. The specified element must have no children.
   /// `HTMLElement` or `String`
   dynamic get container => jsObject.container;
 
@@ -1207,16 +1207,16 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// If `true`, the map will automatically resize when the browser window resizes.
   bool get trackResize => jsObject.trackResize;
 
-  /// The inital geographical centerpoint of the map. If `center` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: Mapbox GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+  /// The inital geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
   LngLat get center => LngLat.fromJsObject(jsObject.center);
 
-  /// The initial zoom level of the map. If `zoom` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get zoom => jsObject.zoom;
 
-  /// The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get bearing => jsObject.bearing;
 
-  /// The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get pitch => jsObject.pitch;
 
   /// The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
@@ -1392,7 +1392,7 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 ///  an exported method or class.
 ///
 ///  Controls must implement `onAdd` and `onRemove`, and must own an
-///  element, which is often a `div` element. To use Mapbox GL JS's
+///  element, which is often a `div` element. To use MapLibre JS JS's
 ///  default control styling, add the `mapboxgl-ctrl` class to your control's
 ///  node.
 ///

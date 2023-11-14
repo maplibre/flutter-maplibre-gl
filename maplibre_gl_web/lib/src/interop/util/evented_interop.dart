@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.util.evented;
+library maplibre.interop.util.evented;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/geojson_interop.dart';

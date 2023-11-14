@@ -1,4 +1,4 @@
-library mapboxgl.ui.control.geolocate_control;
+library maplibre.ui.control.geolocate_control;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';

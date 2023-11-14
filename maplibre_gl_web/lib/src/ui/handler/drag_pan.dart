@@ -1,4 +1,4 @@
-library mapboxgl.ui.handler.drag_pan;
+library maplibre.ui.handler.drag_pan;
 
 import 'dart:html';
 

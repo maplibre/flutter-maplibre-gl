@@ -1,4 +1,4 @@
-library mapboxgl.ui.events;
+library maplibre.ui.events;
 
 import 'dart:html';
 

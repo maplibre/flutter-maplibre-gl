@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.control.navigation_control;
+library maplibre.interop.ui.control.navigation_control;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';

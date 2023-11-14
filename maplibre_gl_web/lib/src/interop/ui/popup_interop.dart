@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.popup;
+library maplibre.interop.ui.popup;
 
 import 'dart:html';
 import 'package:js/js.dart';
@@ -60,7 +60,7 @@ class PopupJsImpl extends EventedJsImpl {
 
   /// Adds the popup to a map.
   ///
-  /// @param {MapboxMap} map The Mapbox GL JS map to add the popup to.
+  /// @param {MapboxMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
   external PopupJsImpl addTo(MapboxMapJsImpl map);
 

@@ -1,4 +1,4 @@
-library mapboxgl.style.style_image;
+library maplibre.style.style_image;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

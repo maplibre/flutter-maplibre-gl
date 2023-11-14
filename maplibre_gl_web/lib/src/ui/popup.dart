@@ -1,4 +1,4 @@
-library mapboxgl.ui.popup;
+library maplibre.ui.popup;
 
 import 'dart:html';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -65,7 +65,7 @@ class Popup extends Evented {
 
   /// Adds the popup to a map.
   ///
-  /// @param {MapboxMap} map The Mapbox GL JS map to add the popup to.
+  /// @param {MapboxMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
 ////
   Popup addTo(MapboxMap map) =>

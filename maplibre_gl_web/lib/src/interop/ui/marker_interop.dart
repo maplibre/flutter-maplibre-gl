@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.marker;
+library maplibre.interop.ui.marker;
 
 import 'dart:html';
 import 'package:js/js.dart';

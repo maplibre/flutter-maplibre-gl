@@ -1,4 +1,4 @@
-library mapboxgl.util.evented;
+library maplibre.util.evented;
 
 import 'dart:js';
 

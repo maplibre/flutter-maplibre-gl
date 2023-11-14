@@ -1,4 +1,4 @@
-library mapboxgl.ui.marker;
+library maplibre.ui.marker;
 
 import 'dart:html';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';

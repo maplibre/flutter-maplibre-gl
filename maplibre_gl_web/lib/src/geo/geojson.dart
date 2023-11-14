@@ -1,4 +1,4 @@
-library mapboxgl.geo.geojson;
+library maplibre.geo.geojson;
 
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';

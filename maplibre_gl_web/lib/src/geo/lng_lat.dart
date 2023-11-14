@@ -1,13 +1,13 @@
-library mapboxgl.geo.lng_lat;
+library maplibre.geo.lng_lat;
 
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 ///  A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
 ///
-///  Mapbox GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+///  MapLibre uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
 ///
-///  Note that any Mapbox GL method that accepts a `LngLat` object as an argument or option
+///  Note that any MapLibre method that accepts a `LngLat` object as an argument or option
 ///  can also accept an `Array` of two numbers and will perform an implicit conversion.
 ///  This flexible type is documented as {@link LngLatLike}.
 ///

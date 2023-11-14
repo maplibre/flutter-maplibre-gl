@@ -1,4 +1,4 @@
-library mapboxgl.interop.style.layers.circle_layer;
+library maplibre.interop.style.layers.circle_layer;
 
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/circle_layer.dart';

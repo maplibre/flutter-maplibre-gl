@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.camera;
+library maplibre.interop.ui.camera;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';

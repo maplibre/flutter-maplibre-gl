@@ -1,4 +1,4 @@
-library mapboxgl.geo.point;
+library maplibre.geo.point;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

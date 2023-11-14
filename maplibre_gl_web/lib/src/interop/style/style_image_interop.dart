@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.style.style_image;
+library maplibre.interop.style.style_image;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
