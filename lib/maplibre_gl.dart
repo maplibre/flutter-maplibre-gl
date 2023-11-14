@@ -84,7 +84,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 
 part 'src/controller.dart';
 
-part 'src/mapbox_map.dart';
+part 'src/maplibre_map.dart';
 
 part 'src/global.dart';
 
