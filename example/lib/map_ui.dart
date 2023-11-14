@@ -346,7 +346,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   Widget build(BuildContext context) {
-    final MaplibreMap mapboxMap = MaplibreMap(
+    final MaplibreMap maplibreMap = MaplibreMap(
       onMapCreated: onMapCreated,
       initialCameraPosition: _kInitialPosition,
       trackCameraPosition: true,
@@ -447,7 +447,7 @@ class MapUiBodyState extends State<MapUiBody> {
           child: SizedBox(
             width: _mapExpanded ? null : 300.0,
             height: 200.0,
-            child: mapboxMap,
+            child: maplibreMap,
           ),
         ),
         Expanded(
