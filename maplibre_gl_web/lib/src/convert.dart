@@ -2,7 +2,7 @@ part of maplibre_gl_web;
 
 class Convert {
   static void interpretMapLibreMapOptions(
-      Map<String, dynamic> options, MapboxMapOptionsSink sink) {
+      Map<String, dynamic> options, MapLibreMapOptionsSink sink) {
     if (options.containsKey('cameraTargetBounds')) {
       final bounds = options['cameraTargetBounds'][0];
       if (bounds == null) {
