@@ -26,27 +26,25 @@ import 'package:maplibre_gl_web/src/interop/ui/handler/touch_zoom_rotate_interop
 ///  object.
 ///
 ///  ```dart
-///  var map = MapLibreMap(
-///    MapOptions(
-///      container: 'map',
-///      center: LngLat(-122.420679, 37.772537),
-///      zoom: 13,
-///      style: 'mapbox://styles/mapbox/satellite-streets-v11',
-///      hash: true,
-///      transformRequest: (url, resourceType) {
-///        if (resourceType == 'Source' && url.startsWith('http://myHost')) {
-///          return xr(
-///            url: url.replaceAll('http', 'https'),
-///            headers: {'my-custom-header': true},
-///            credentials: 'include',
-///          );
-///        }
-///        return RequestParameters(url: url);
-///      },
-///    ),
-///  );
+/// let map = new maplibregl.Map({
+///   container: 'map',
+///   center: [-122.420679, 37.772537],
+///   zoom: 13,
+///   style: style_object,
+///   hash: true,
+///   transformRequest: (url, resourceType)=> {
+///     if(resourceType === 'Source' && url.startsWith('http://myHost')) {
+///       return {
+///        url: url.replace('http', 'https'),
+///        headers: { 'my-custom-header': true},
+///        credentials: 'include'  // Include cookies for cross-origin requests
+///      }
+///     }
+///   }
+/// });
+
 ///  ```
-///  @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
+///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 @JS('Map')
 class MapLibreMapJsImpl extends CameraJsImpl {
   external factory MapLibreMapJsImpl(MapOptionsJsImpl options);
