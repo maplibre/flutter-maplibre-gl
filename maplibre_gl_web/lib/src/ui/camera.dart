@@ -8,7 +8,7 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 
-///  Options common to {@link MapboxMap#jumpTo}, {@link MapboxMap#easeTo}, and {@link MapboxMap#flyTo}, controlling the desired location,
+///  Options common to {@link MapLibreMap#jumpTo}, {@link MapLibreMap#easeTo}, and {@link MapLibreMap#flyTo}, controlling the desired location,
 ///  zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
 ///  camera value for that property will remain unchanged.
 ///
@@ -51,8 +51,8 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
       : super.fromJsObject(jsObject);
 }
 
-///  Options common to map movement methods that involve animation, such as {@link MapboxMap#panBy} and
-///  {@link MapboxMap#easeTo}, controlling the duration and easing function of the animation. All properties
+///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
+///  {@link MapLibreMap#easeTo}, controlling the duration and easing function of the animation. All properties
 ///  are optional.
 ///
 ///  @typedef {Object} AnimationOptions
@@ -94,7 +94,7 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
       : super.fromJsObject(jsObject);
 }
 
-///  Options for setting padding on a call to {@link MapboxMap#fitBounds}. All properties of this object must be
+///  Options for setting padding on a call to {@link MapLibreMap#fitBounds}. All properties of this object must be
 ///  non-negative integers.
 ///
 ///  @typedef {Object} PaddingOptions
@@ -134,13 +134,13 @@ class Camera extends Evented {
 
   ///  Returns the map's geographical centerpoint.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @returns The map's geographical centerpoint.
   LngLat getCenter() => LngLat.fromJsObject(jsObject.getCenter());
 
   ///  Sets the map's geographical centerpoint. Equivalent to `jumpTo({center: center})`.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param center The centerpoint to set.
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -153,7 +153,7 @@ class Camera extends Evented {
 
   ///  Pans the map by the specified offset.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param offset `x` and `y` coordinates by which to pan the map.
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
@@ -167,7 +167,7 @@ class Camera extends Evented {
 
   ///  Pans the map to the specified location, with an animated transition.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param lnglat The location to pan the map to.
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
@@ -180,13 +180,13 @@ class Camera extends Evented {
 
   ///  Returns the map's current zoom level.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @returns The map's current zoom level.
   num getZoom() => jsObject.getZoom();
 
   ///  Sets the map's zoom level. Equivalent to `jumpTo({zoom: zoom})`.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param zoom The zoom level to set (0-20).
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -204,7 +204,7 @@ class Camera extends Evented {
 
   ///  Zooms the map to the specified zoom level, with an animated transition.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param zoom The zoom level to transition to.
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
@@ -220,7 +220,7 @@ class Camera extends Evented {
 
   ///  Increases the map's zoom level by 1.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -235,7 +235,7 @@ class Camera extends Evented {
 
   ///  Decreases the map's zoom level by 1.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -251,7 +251,7 @@ class Camera extends Evented {
   ///  Returns the map's current bearing. The bearing is the compass direction that is \"up\"; for example, a bearing
   ///  of 90° orients the map so that east is up.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @returns The map's current bearing.
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   num getBearing() => jsObject.getBearing();
@@ -261,7 +261,7 @@ class Camera extends Evented {
   ///
   ///  Equivalent to `jumpTo({bearing: bearing})`.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param bearing The desired bearing.
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -276,7 +276,7 @@ class Camera extends Evented {
   ///  Rotates the map to the specified bearing, with an animated transition. The bearing is the compass direction
   ///  that is \"up\"; for example, a bearing of 90° orients the map so that east is up.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param bearing The desired bearing.
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
@@ -289,7 +289,7 @@ class Camera extends Evented {
 
   ///  Rotates the map so that north is up (0° bearing), with an animated transition.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -300,7 +300,7 @@ class Camera extends Evented {
 
   ///  Rotates and pitches the map so that north is up (0° bearing) and pitch is 0°, with an animated transition.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -312,7 +312,7 @@ class Camera extends Evented {
   ///  Snaps the map so that north is up (0° bearing), if the current bearing is close enough to it (i.e. within the
   ///  `bearingSnap` threshold).
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -323,13 +323,13 @@ class Camera extends Evented {
 
   ///  Returns the map's current pitch (tilt).
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @returns The map's current pitch, measured in degrees away from the plane of the screen.
   num getPitch() => jsObject.getPitch();
 
   ///  Sets the map's pitch (tilt). Equivalent to `jumpTo({pitch: pitch})`.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param pitch The pitch to set, measured in degrees away from the plane of the screen (0-60).
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires pitchstart
@@ -339,7 +339,7 @@ class Camera extends Evented {
   MapLibreMap setPitch(num pitch, [dynamic eventData]) =>
       MapLibreMap.fromJsObject(jsObject.setPitch(pitch));
 
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param {LatLngBoundsLike} bounds Calculate the center for these bounds in the viewport and use
   ///       the highest zoom level up to and including `MapboxMap#getMaxZoom()` that fits
   ///       in the viewport. LatLngBounds represent a box that is always axis-aligned with bearing 0.
@@ -366,13 +366,13 @@ class Camera extends Evented {
   ///  Pans and zooms the map to contain its visible area within the specified geographical bounds.
   ///  This function will also reset the map's bearing to 0 if bearing is nonzero.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param bounds Center these bounds in the viewport and use the highest
-  ///       zoom level up to and including `MapboxMap#getMaxZoom()` that fits them in the viewport.
+  ///       zoom level up to and including `MapLibreMap#getMaxZoom()` that fits them in the viewport.
   ///  @param {Object} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
   ///  @param {number | PaddingOptions} `options.padding` The amount of padding in pixels to add to the given bounds.
   ///  @param {boolean} `options.linear=false` If `true`, the map transitions using
-  ///      {@link MapboxMap#easeTo}. If `false`, the map transitions using {@link MapboxMap#flyTo}. See
+  ///      {@link MapLibreMap#easeTo}. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
   ///      those functions and {@link AnimationOptions} for information about options available.
   ///  @param {Function} `options.easing` An easing function for the animated transition. See {@link AnimationOptions}.
   ///  @param {PointLike} `options.offset=[0, 0]` The center of the given bounds relative to the map's center, measured in pixels.
@@ -380,7 +380,7 @@ class Camera extends Evented {
   ///  @param {Object} [eventData] Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  var bbox = [[-79, 43], [-73, 45]];
   ///  map.fitBounds(bbox, {
@@ -396,14 +396,14 @@ class Camera extends Evented {
   ///  once the map is rotated to the specified bearing. To zoom without rotating,
   ///  pass in the current map bearing.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param p0 First point on screen, in pixel coordinates
   ///  @param p1 Second point on screen, in pixel coordinates
   ///  @param bearing Desired map bearing at end of animation, in degrees
   ///  @param options
   ///  @param {number | PaddingOptions} `options.padding` The amount of padding in pixels to add to the given bounds.
   ///  @param {boolean} `options.linear=false` If `true`, the map transitions using
-  ///      {@link MapboxMap#easeTo}. If `false`, the map transitions using {@link MapboxMap#flyTo}. See
+  ///      {@link MapLibreMap#easeTo}. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
   ///      those functions and {@link AnimationOptions} for information about options available.
   ///  @param {Function} `options.easing` An easing function for the animated transition. See {@link AnimationOptions}.
   ///  @param {PointLike} `options.offset=[0, 0]` The center of the given bounds relative to the map's center, measured in pixels.
@@ -411,7 +411,7 @@ class Camera extends Evented {
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
   ///  @fires moveend
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  var p0 = [220, 400];
   ///  var p1 = [500, 900];
@@ -428,7 +428,7 @@ class Camera extends Evented {
   ///  an animated transition. The map will retain its current values for any
   ///  details not specified in [options].
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
   ///  @fires movestart
@@ -452,7 +452,7 @@ class Camera extends Evented {
   ///  Note: The transition will happen instantly if the user has enabled
   ///  the `reduced motion` accesibility feature enabled in their operating system.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param options Options describing the destination and animation of the transition.
   ///             Accepts {@link CameraOptions} and {@link AnimationOptions}.
   ///  @param eventData Additional properties to be added to event objects of events triggered by this method.
@@ -478,13 +478,13 @@ class Camera extends Evented {
   ///  Note: The animation will be skipped, and this will behave equivalently to `jumpTo`
   ///  if the user has the `reduced motion` accesibility feature enabled in their operating system.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @param {Object} options Options describing the destination and animation of the transition.
   ///      Accepts {@link CameraOptions}, {@link AnimationOptions},
   ///      and the following additional options.
   ///  @param {number} [options.curve=1.42] The zooming "curve" that will occur along the
   ///      flight path. A high value maximizes zooming for an exaggerated animation, while a low
-  ///      value minimizes zooming for an effect closer to {@link MapboxMap#easeTo}. 1.42 is the average
+  ///      value minimizes zooming for an effect closer to {@link MapLibreMap#easeTo}. 1.42 is the average
   ///      value selected by participants in the user study discussed in
   ///      [van Wijk (2003)](https://www.win.tue.nl/~vanwijk/zoompan.pdf). A value of
   ///      `Math.pow(6, 0.25)` would be equivalent to the root mean squared average velocity. A
@@ -535,7 +535,7 @@ class Camera extends Evented {
 
   ///  Stops any animated transition underway.
   ///
-  ///  @memberof MapboxMap#
+  ///  @memberof MapLibreMap#
   ///  @returns {MapboxMap} `this`
   MapLibreMap stop() => MapLibreMap.fromJsObject(jsObject.stop());
 

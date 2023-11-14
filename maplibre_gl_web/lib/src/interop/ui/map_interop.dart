@@ -26,7 +26,7 @@ import 'package:maplibre_gl_web/src/interop/ui/handler/touch_zoom_rotate_interop
 ///  object.
 ///
 ///  ```dart
-///  var map = MapboxMap(
+///  var map = MapLibreMap(
 ///    MapOptions(
 ///      container: 'map',
 ///      center: LngLat(-122.420679, 37.772537),
@@ -322,7 +322,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
   ///  either a single point or southwest and northeast points describing a bounding box.
-  ///  Omitting this parameter (i.e. calling {@link MapboxMap#queryRenderedFeatures} with zero arguments,
+  ///  Omitting this parameter (i.e. calling {@link MapLibreMap#queryRenderedFeatures} with zero arguments,
   ///  or with only a [options] argument) is equivalent to passing a bounding box encompassing the entire
   ///  map viewport.
   ///  @param {Object} [options]
@@ -411,7 +411,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
   ///
-  ///  In contrast to {@link MapboxMap#queryRenderedFeatures}, this function returns all features matching the query parameters,
+  ///  In contrast to {@link MapLibreMap#queryRenderedFeatures}, this function returns all features matching the query parameters,
   ///  whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
   ///  vector tiles and GeoJSON source tiles: this function does not check tiles outside the currently
   ///  visible viewport.
@@ -527,7 +527,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external bool areTilesLoaded();
 
   ///  Adds a/// *custom source type**(#Custom Sources), making it available for use with
-  ///  {@link MapboxMap#addSource}.
+  ///  {@link MapLibreMap#addSource}.
   ///  @private
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
@@ -560,7 +560,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
   ///  [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
   ///  or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
-  ///  A {@link MapboxMap#error} event will be fired if there is not enough space in the sprite to add this image.
+  ///  A {@link MapLibreMap#error} event will be fired if there is not enough space in the sprite to add this image.
   ///
   ///  @param id The ID of the image.
   ///  @param image The image as an `HTMLImageElement`, `ImageData`, or object with `width`, `height`, and `data`
@@ -851,7 +851,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -871,7 +871,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
   ///  cast to an integer.
   ///  @param {Object} target Identifier of where to set state: can be a source, a feature, or a specific key of feature.
-  ///  Feature objects returned from {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  Feature objects returned from {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
   ///  @param {string} target.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -884,7 +884,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -952,7 +952,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @name showTileBoundaries
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   external bool get showTileBoundaries;
   external set showTileBoundaries(bool value);
 
@@ -964,7 +964,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @name showCollisionBoxes
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   external bool get showCollisionBoxes;
   external set showCollisionBoxes(bool value);
 
@@ -977,7 +977,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @name showOverdraw
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   external bool get showOverdrawInspector;
   external set showOverdrawInspector(bool value);
 
@@ -987,7 +987,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @name repaint
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   external bool get repaint;
   external set repaint(bool value);
 
@@ -999,7 +999,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @name version
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   ///  @var {string} version
   external String get version;
 }
@@ -1153,7 +1153,7 @@ class MapOptionsJsImpl {
   /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
   external String get localIdeographFontFamily;
 
-  /// A callback run before the MapboxMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+  /// A callback run before the MapLibreMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
   /// Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
   external RequestTransformFunctionJsImpl
       get transformRequest; //TODO: Remove JsImpl
@@ -1274,17 +1274,17 @@ class RequestParametersJsImpl {
 @anonymous
 abstract class IControlJsImpl {
   ///  Register a control on the map and give it a chance to register event listeners
-  ///  and resources. This method is called by {@link MapboxMap#addControl}
+  ///  and resources. This method is called by {@link MapLibreMap#addControl}
   ///  internally.
   external HtmlElement onAdd(MapLibreMapJsImpl map);
 
   ///  Unregister a control on the map and give it a chance to detach event listeners
-  ///  and resources. This method is called by {@link MapboxMap#removeControl}
+  ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
   external onRemove(MapLibreMapJsImpl map);
 
   ///  Optionally provide a default position for this control. If this method
-  ///  is implemented and {@link MapboxMap#addControl} is called without the `position`
+  ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`
   ///  parameter, the value returned by getDefaultPosition will be used as the
   ///  control's position.
   external String getDefaultPosition();
