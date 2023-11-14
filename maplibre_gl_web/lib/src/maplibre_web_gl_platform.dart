@@ -93,7 +93,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
       _initResizeObserver();
     }
-    Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+    Convert.interpretMapLibreMapOptions(_creationParams['options'], this);
   }
 
   void _initResizeObserver() {
@@ -189,7 +189,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
     // FIX: why is called indefinitely? (map_ui page)
-    Convert.interpretMapboxMapOptions(optionsUpdate, this);
+    Convert.interpretMapLibreMapOptions(optionsUpdate, this);
     return _getCameraPosition();
   }
 
