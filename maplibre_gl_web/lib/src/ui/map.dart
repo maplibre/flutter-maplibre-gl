@@ -354,9 +354,9 @@ class MapLibreMap extends Camera {
   ///  or with only a [options] argument) is equivalent to passing a bounding box encompassing the entire
   ///  map viewport.
   ///  @param {Object} [options]
-  ///  @param {Array<string>} `options.layers` An array of [style layer IDs](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-id) for the query to inspect.
+  ///  @param {Array<string>} `options.layers` An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
   ///    Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-  ///  @param {Array} `options.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
+  ///  @param {Array} `options.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
   ///  @param {boolean} [options.validate=true] Whether to check if the `options.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
@@ -443,7 +443,7 @@ class MapLibreMap extends Camera {
   ///  @param {Object} [parameters]
   ///  @param {string} `parameters.sourceLayer` The name of the [source layer](https://docs.mapbox.com/help/glossary/source-layer/)
   ///    to query./// For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-  ///  @param {Array} `parameters.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
+  ///  @param {Array} `parameters.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
   ///  @param {boolean} `parameters.validate=true` Whether to check if the `parameters.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
@@ -524,7 +524,7 @@ class MapLibreMap extends Camera {
   ///
   ///  @param {string} id The ID of the source to add. Must not conflict with existing sources.
   ///  @param {Object} source The source object, conforming to the
-  ///  MapLibre Style Specification's [source definition](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or
+  ///  MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
   ///  {@link CanvasSourceOptions}.
   ///  @fires source.add
   ///  @returns {MapLibreMap} `this`
@@ -614,10 +614,10 @@ class MapLibreMap extends Camera {
 
   ///  Add an image to the style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-  ///  [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-  ///  [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-  ///  [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-  ///  or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
+  ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+  ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+  ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+  ///  or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
   ///  A {@link MapLibreMap#error} event will be fired if there is not enough space in the sprite to add this image.
   ///
   ///  @param id The ID of the image.
@@ -666,10 +666,10 @@ class MapLibreMap extends Camera {
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-  ///  [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-  ///  [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-  ///  [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-  ///  or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
+  ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+  ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+  ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+  ///  or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
   ///
   ///  @param id The ID of the image.
   ///  @param image The image as an `HTMLImageElement`, `ImageData`, or object with `width`, `height`, and `data`
@@ -736,14 +736,14 @@ class MapLibreMap extends Camera {
   ///
   List<String> listImages() => jsObject.listImages();
 
-  ///  Adds a [Mapbox style layer](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers)
+  ///  Adds a [Mapbox style layer](https://maplibre.org/maplibre-style-spec/#layers)
   ///  to the map's style.
   ///
   ///  A layer defines how data from a specified source will be styled. Read more about layer types
-  ///  and available paint and layout properties in the [MapLibre Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers).
+  ///  and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
   ///
   ///  @param {Object | CustomLayerInterface} layer The style layer to add, conforming to the MapLibre Style Specification's
-  ///    [layer definition](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers).
+  ///    [layer definition](https://maplibre.org/maplibre-style-spec/#layers).
   ///  @param {string} [beforeId] The ID of an existing layer to insert the new layer before.
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
   ///
@@ -819,8 +819,8 @@ class MapLibreMap extends Camera {
   dynamic getLayer(String id) => jsObject.getLayer(id);
 
   ///  Sets the zoom extent for the specified style layer. The zoom extent includes the
-  ///  [minimum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-minzoom)
-  ///  and [maximum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-maxzoom))
+  ///  [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
+  ///  and [maximum zoom level](https://maplibre.org/maplibre-style-spec/#layer-maxzoom))
   ///  at which the layer will be rendered.
   ///
   ///  Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -843,7 +843,7 @@ class MapLibreMap extends Camera {
   ///
   ///  @param {string} layerId The ID of the layer to which the filter will be applied.
   ///  @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
-  ///    [filter definition](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+  ///    [filter definition](https://maplibre.org/maplibre-style-spec/#other-filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
@@ -869,7 +869,7 @@ class MapLibreMap extends Camera {
   ///  @param {string} layerId The ID of the layer to set the paint property in.
   ///  @param {string} name The name of the paint property to set.
   ///  @param {*} value The value of the paint property to set.
-  ///    Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+  ///    Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
@@ -894,7 +894,7 @@ class MapLibreMap extends Camera {
   ///
   ///  @param {string} layerId The ID of the layer to set the layout property in.
   ///  @param {string} name The name of the layout property to set.
-  ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+  ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
@@ -914,7 +914,7 @@ class MapLibreMap extends Camera {
 
   ///  Sets the any combination of light values.
   ///
-  ///  @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#light).
+  ///  @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
