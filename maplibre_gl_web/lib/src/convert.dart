@@ -134,7 +134,8 @@ class Convert {
         final y = json[2];
         final point = mapLibreMap.project(mapLibreMap.getCenter());
         return CameraOptions(
-          center: mapLibreMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
+          center:
+              mapLibreMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
           zoom: mapLibreMap.getZoom(),
           pitch: mapLibreMap.getPitch(),
           bearing: mapLibreMap.getBearing(),

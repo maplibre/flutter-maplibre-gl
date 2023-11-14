@@ -120,7 +120,8 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setCenter([-74, 38]);
-  external MapLibreMapJsImpl setCenter(LngLatJsImpl center, [dynamic eventData]);
+  external MapLibreMapJsImpl setCenter(LngLatJsImpl center,
+      [dynamic eventData]);
 
   ///  Pans the map by the specified offset.
   ///

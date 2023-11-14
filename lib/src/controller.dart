@@ -30,37 +30,37 @@ typedef void OnCameraIdleCallback();
 typedef void OnMapIdleCallback();
 
 /// Controller for a single [MaplibreMap] instance running on the host platform.
-/// 
+///
 /// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.
-/// 
+///
 /// To add annotations ([Circle]s, [Line]s, [Symbol]s and [Fill]s) on the map, there are two ways:
-/// 
+///
 /// 1. *Simple way to add annotations*: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
 /// There are also corresponding [addCircles], [addLines] etc. methods which work the same but add multiple annotations at a time.
-/// 
-/// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations. 
+///
+/// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations.
 /// An annotation manager performs the steps from the advanced way, but hides the complexity from the developer.
-/// E.g. the [addCircle] method uses the [CircleManager], which in turn adds a GeoJson source to the map's style with the circle's locations as features. 
+/// E.g. the [addCircle] method uses the [CircleManager], which in turn adds a GeoJson source to the map's style with the circle's locations as features.
 /// The CircleManager also adds a circle style layer to the map's style that references that GeoJson source, therefore rendering all circles added with [addCircle] on the map.)
-/// 
+///
 /// There are also corresponding clear* methods like [clearCircles] to remove all circles from the map, which had been added with [addCircle] or [addCircles].
-/// 
+///
 /// There are also properties like [circles] to get the current set of circles on the map, which had been added with [addCircle] or [addCircles].
-/// 
+///
 /// Click events on annotations that are added this way (with the [addCircle], [addLine] etc. methods) can be received by adding callbacks to [onCircleTapped], [onLineTapped] etc.
-/// 
-/// Note: [circles], [clearCircles] and [onCircleTapped] only work for circles added with [addCircle] or [addCircles], 
+///
+/// Note: [circles], [clearCircles] and [onCircleTapped] only work for circles added with [addCircle] or [addCircles],
 /// not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
 /// The same of course applies for fills, lines and symbols.
-/// 
-/// 2. *Advanced way to add annotations*: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource]) 
+///
+/// 2. *Advanced way to add annotations*: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource])
 /// and add a new layer to display the data of that source on the map (either with the [addLayer] method or with the more specific methods like [addCircleLayer], [addLineLayer] etc.).
 /// For more information about Maplibre Styles, see the documentation of [maplibre_gl] as well as the specification at [https://maplibre.org/maplibre-style-spec/].
 ///
 /// A MaplibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
 ///
 /// * the configuration options of the [MaplibreMap] widget
-/// * the [symbols], [lines], [circles] or [fills] properties 
+/// * the [symbols], [lines], [circles] or [fills] properties
 /// (i.e. the collection of [Symbol]s, [Line]s, [Circle]s and [Fill]s added to this map via the "simple way" (see above))
 /// * the [isCameraMoving] property
 /// * the [cameraPosition] property
@@ -628,14 +628,14 @@ class MaplibreMapController extends ChangeNotifier {
 
   /// Updates the language of the map labels to match the specified language.
   /// This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
-  /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]), 
+  /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]),
   /// and is also used by some other vector tile generation software and vector tile providers.
-  /// Commonly, (and according to the OSM wiki) [language] should be 
+  /// Commonly, (and according to the OSM wiki) [language] should be
   /// "a lowercase language's ISO 639-1 alpha2 code (second column), a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist, or a ISO 639-3 code if neither of those exist".
-  /// 
+  ///
   /// If your vector tiles do not follow this schema of having labels with "name:$language" for different language, this method will not work for you.
   /// In that case, you need to adapt your Maplibre style accordingly yourself to use labels in your preferred language.
-  /// 
+  ///
   /// Attention: This may only be called after onStyleLoaded() has been invoked.
   ///
   /// The returned [Future] completes after the change has been made on the
@@ -1124,7 +1124,8 @@ class MaplibreMapController extends ChangeNotifier {
   /// Not implemented on web.
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
-    return _maplibreGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
+    return _maplibreGlPlatform.addImageSource(
+        imageSourceId, bytes, coordinates);
   }
 
   /// Update the image and/or coordinates of an image source.
@@ -1149,7 +1150,8 @@ class MaplibreMapController extends ChangeNotifier {
   /// Adds an image layer to the map's style at render time.
   Future<void> addImageLayer(String layerId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _maplibreGlPlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
+    return _maplibreGlPlatform.addLayer(
+        layerId, imageSourceId, minzoom, maxzoom);
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.

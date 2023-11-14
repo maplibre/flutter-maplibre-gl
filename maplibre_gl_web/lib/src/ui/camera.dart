@@ -215,7 +215,8 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap zoomTo(num zoom, [AnimationOptions? options, dynamic eventData]) =>
+  MapLibreMap zoomTo(num zoom,
+          [AnimationOptions? options, dynamic eventData]) =>
       MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
 
   ///  Increases the map's zoom level by 1.

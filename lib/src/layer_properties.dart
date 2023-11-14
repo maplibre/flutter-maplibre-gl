@@ -205,7 +205,7 @@ class SymbolLayerProperties implements LayerProperties {
   /// collisions. Recommended in layers that don't have enough padding in
   /// the vector tile to prevent collisions, or if it is a point symbol
   /// layer placed after a line symbol layer. When using a client that
-  /// supports global collision detection, like MapLibre GL JS, 
+  /// supports global collision detection, like MapLibre GL JS,
   /// enabling this property is not needed to prevent clipped
   /// labels at tile boundaries.
   ///

@@ -278,7 +278,8 @@ class MapLibreMap extends Camera {
   ///  map.setRenderWorldCopies(true);
   ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
-      MapLibreMap.fromJsObject(jsObject.setRenderWorldCopies(renderWorldCopies));
+      MapLibreMap.fromJsObject(
+          jsObject.setRenderWorldCopies(renderWorldCopies));
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -441,7 +442,7 @@ class MapLibreMap extends Camera {
   ///
   ///  @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
   ///  @param {Object} [parameters]
-  ///  @param {string} `parameters.sourceLayer` The name of the [source layer] 
+  ///  @param {string} `parameters.sourceLayer` The name of the [source layer]
   ///    to query./// For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
   ///  @param {Array} `parameters.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
@@ -703,7 +704,7 @@ class MapLibreMap extends Camera {
 
   //////
   ///  Returns an Array of strings containing the IDs of all images currently available in the map.
-  ///  This includes both images from the style's original [sprite] 
+  ///  This includes both images from the style's original [sprite]
   ///  and any images that have been added at runtime using {@link addImage}.
   ///
   ///  @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
@@ -861,7 +862,8 @@ class MapLibreMap extends Camera {
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
-      MapLibreMap.fromJsObject(jsObject.setLayoutProperty(layerId, name, value));
+      MapLibreMap.fromJsObject(
+          jsObject.setLayoutProperty(layerId, name, value));
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -1179,7 +1181,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// Defines a CSS
   /// font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
   /// In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-  /// Set to `false`, to enable font settings from the map's style for these glyph ranges.  
+  /// Set to `false`, to enable font settings from the map's style for these glyph ranges.
   /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
   String get localIdeographFontFamily => jsObject.localIdeographFontFamily;
 

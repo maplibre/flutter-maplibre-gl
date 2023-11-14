@@ -86,7 +86,8 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
-  MapLibreMap off(String type, [dynamic layerIdOrListener, Listener? listener]) {
+  MapLibreMap off(String type,
+      [dynamic layerIdOrListener, Listener? listener]) {
     if (layerIdOrListener is Listener) {
       return MapLibreMap.fromJsObject(
         jsObject.off(type, allowInterop(
