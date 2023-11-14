@@ -473,7 +473,7 @@ class MapLibreMap extends Camera {
   List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
       jsObject.querySourceFeatures(sourceId, parameters);
 
-  ///  Updates the map's Mapbox style object with a new value.
+  ///  Updates the map's MapLibre style object with a new value.
   ///
   ///  If a style is already set when this is used and options.diff is set to true, the map renderer will attempt to compare the given style
   ///  against the map's current state and perform only the changes necessary to make the map style match the desired state. Changes in sprites
@@ -497,7 +497,7 @@ class MapLibreMap extends Camera {
   MapLibreMap setStyle(dynamic style, [dynamic options]) =>
       MapLibreMap.fromJsObject(jsObject.setStyle(style));
 
-  ///  Returns the map's Mapbox style object, which can be used to recreate the map's style.
+  ///  Returns the map's MapLibre style object, which can be used to recreate the map's style.
   ///
   ///  @returns {Object} The map's style object.
   ///
@@ -505,7 +505,7 @@ class MapLibreMap extends Camera {
   ///  var styleJson = map.getStyle();
   dynamic getStyle() => jsObject.getStyle();
 
-  /// Return each layer of the  Mapbox style object, which can be used to check the order, toggle the visibility or change properties
+  /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
   List<dynamic> getLayers() => Style.fromJsObject(jsObject.getStyle()).layers;
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
@@ -713,7 +713,7 @@ class MapLibreMap extends Camera {
   ///
   List<String> listImages() => jsObject.listImages();
 
-  ///  Adds a [Mapbox style layer](https://maplibre.org/maplibre-style-spec/#layers)
+  ///  Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
   ///  to the map's style.
   ///
   ///  A layer defines how data from a specified source will be styled. Read more about layer types

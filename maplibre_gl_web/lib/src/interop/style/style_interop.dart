@@ -29,7 +29,7 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///  Update this style's state to match the given style JSON, performing only
   ///  the necessary mutations.
   ///
-  ///  May throw an Error ('Unimplemented: METHOD') if the mapbox-gl-style-spec
+  ///  May throw an Error ('Unimplemented: METHOD') if the maplibre-gl-style-spec
   ///  diff algorithm produces an operation that is not supported.
   ///
   ///  @returns {boolean} true if any changes were made; false otherwise

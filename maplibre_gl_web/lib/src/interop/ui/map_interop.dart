@@ -432,7 +432,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external List<dynamic> querySourceFeatures(
       String sourceId, dynamic parameters);
 
-  ///  Updates the map's Mapbox style object with a new value.
+  ///  Updates the map's MapLibre style object with a new value.
   ///
   ///  If a style is already set when this is used and options.diff is set to true, the map renderer will attempt to compare the given style
   ///  against the map's current state and perform only the changes necessary to make the map style match the desired state. Changes in sprites
@@ -456,7 +456,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   external MapLibreMapJsImpl setStyle(dynamic style, [dynamic options]);
 
-  ///  Returns the map's Mapbox style object, which can be used to recreate the map's style.
+  ///  Returns the map's MapLibre style object, which can be used to recreate the map's style.
   ///
   ///  @returns {Object} The map's style object.
   ///
@@ -645,7 +645,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   external List<String> listImages();
 
-  ///  Adds a [Mapbox style layer](https://maplibre.org/maplibre-style-spec/#layers)
+  ///  Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
   ///  to the map's style.
   ///
   ///  A layer defines how data from a specified source will be styled. Read more about layer types
