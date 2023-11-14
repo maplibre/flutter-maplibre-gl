@@ -1,3 +1,12 @@
+## 0.18.0
+
+* New feature: set arbitrary layer properties by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/303
+* Update release process by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/315
+* Add workflows for automated publishing to pub.dev by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/328
+* Fix example app pubspec by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/329
+
+**Full Changelog**: https://github.com/maplibre/flutter-maplibre-gl/compare/0.17.0...0.18.0
+
 ## 0.17.0
 
 **Repository transfer**: The project repository was transferred to the MapLibre GitHub organization. More information at  https://github.com/maplibre/flutter-maplibre-gl/issues/221
