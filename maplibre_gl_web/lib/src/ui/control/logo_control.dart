@@ -9,7 +9,7 @@ import 'package:maplibre_gl_web/src/ui/map.dart';
 class LogoControl extends JsObjectWrapper<LogoControlJsImpl> {
   factory LogoControl() => LogoControl.fromJsObject(LogoControlJsImpl());
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   onRemove() => jsObject.onRemove();
 

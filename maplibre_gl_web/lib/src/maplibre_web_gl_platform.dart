@@ -9,7 +9,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   late html.DivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
-  late MapboxMap _map;
+  late MapLibreMap _map;
   bool _mapReady = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
@@ -66,7 +66,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       var camera = _creationParams['initialCameraPosition'];
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-      _map = MapboxMap(
+      _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
           style: 'https://demotiles.maplibre.org/style.json',

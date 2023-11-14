@@ -46,7 +46,7 @@ class NavigationControl extends JsObjectWrapper<NavigationControlJsImpl> {
   factory NavigationControl(NavigationControlOptions options) =>
       NavigationControl.fromJsObject(NavigationControlJsImpl(options.jsObject));
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   onRemove() => jsObject.onRemove();
 

@@ -80,7 +80,7 @@ class Convert {
   }
 
   static CameraOptions toCameraOptions(
-      CameraUpdate cameraUpdate, MapboxMap mapboxMap) {
+      CameraUpdate cameraUpdate, MapLibreMap mapboxMap) {
     final List<dynamic> json = cameraUpdate.toJson();
     final type = json[0];
     switch (type) {

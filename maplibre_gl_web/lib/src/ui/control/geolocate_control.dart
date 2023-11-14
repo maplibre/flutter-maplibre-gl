@@ -93,9 +93,9 @@ class GeolocateControl extends Evented {
   factory GeolocateControl(GeolocateControlOptions options) =>
       GeolocateControl.fromJsObject(GeolocateControlJsImpl(options.jsObject));
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
-  onRemove(MapboxMap map) => jsObject.onRemove(map.jsObject);
+  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   /// Trigger a geolocation
   ///

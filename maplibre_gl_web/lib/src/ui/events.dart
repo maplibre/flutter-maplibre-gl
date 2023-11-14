@@ -12,7 +12,7 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
   String get type => jsObject.type;
 
   /// The `MapboxMap` object that fired the event.
-  MapboxMap get target => MapboxMap.fromJsObject(jsObject.target);
+  MapLibreMap get target => MapLibreMap.fromJsObject(jsObject.target);
 
   /// The DOM event which caused the map event.
   MouseEvent get originalEvent => jsObject.originalEvent;
@@ -46,7 +46,7 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
   String get type => jsObject.type;
 
   /// The `MapboxMap` object that fired the event.
-  MapboxMap get target => MapboxMap.fromJsObject(jsObject.target);
+  MapLibreMap get target => MapLibreMap.fromJsObject(jsObject.target);
 
   /// The DOM event which caused the map event.
   TouchEvent get originalEvent => jsObject.originalEvent;

@@ -34,7 +34,7 @@ class Marker extends Evented {
   ///  Attaches the marker to a map
   ///  @param {MapboxMap} map
   ///  @returns {Marker} `this`
-  Marker addTo(MapboxMap map) =>
+  Marker addTo(MapLibreMap map) =>
       Marker.fromJsObject(jsObject.addTo(map.jsObject));
 
   ///  Removes the marker from a map

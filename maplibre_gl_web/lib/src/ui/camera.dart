@@ -148,8 +148,8 @@ class Camera extends Evented {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setCenter([-74, 38]);
-  MapboxMap setCenter(LngLat center, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.setCenter(center.jsObject));
+  MapLibreMap setCenter(LngLat center, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.setCenter(center.jsObject));
 
   ///  Pans the map by the specified offset.
   ///
@@ -161,9 +161,9 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
-  MapboxMap panBy(Point offset,
+  MapLibreMap panBy(Point offset,
           [AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.panBy(offset.jsObject));
+      MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
 
   ///  Pans the map to the specified location, with an animated transition.
   ///
@@ -174,9 +174,9 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap panTo(LngLat lnglat,
+  MapLibreMap panTo(LngLat lnglat,
           [AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
+      MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
 
   ///  Returns the map's current zoom level.
   ///
@@ -199,8 +199,8 @@ class Camera extends Evented {
   ///  @example
   ///  // zoom the map to 5
   ///  map.setZoom(5);
-  MapboxMap setZoom(num zoom, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.setZoom(zoom));
+  MapLibreMap setZoom(num zoom, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.setZoom(zoom));
 
   ///  Zooms the map to the specified zoom level, with an animated transition.
   ///
@@ -215,8 +215,8 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapboxMap} `this`
-  MapboxMap zoomTo(num zoom, [AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.zoomTo(zoom));
+  MapLibreMap zoomTo(num zoom, [AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
 
   ///  Increases the map's zoom level by 1.
   ///
@@ -230,8 +230,8 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapboxMap} `this`
-  MapboxMap zoomIn([AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.zoomIn());
+  MapLibreMap zoomIn([AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.zoomIn());
 
   ///  Decreases the map's zoom level by 1.
   ///
@@ -245,8 +245,8 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapboxMap} `this`
-  MapboxMap zoomOut([AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.zoomOut());
+  MapLibreMap zoomOut([AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.zoomOut());
 
   ///  Returns the map's current bearing. The bearing is the compass direction that is \"up\"; for example, a bearing
   ///  of 90° orients the map so that east is up.
@@ -270,8 +270,8 @@ class Camera extends Evented {
   ///  @example
   ///  // rotate the map to 90 degrees
   ///  map.setBearing(90);
-  MapboxMap setBearing(num bearing, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.setBearing(bearing));
+  MapLibreMap setBearing(num bearing, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.setBearing(bearing));
 
   ///  Rotates the map to the specified bearing, with an animated transition. The bearing is the compass direction
   ///  that is \"up\"; for example, a bearing of 90° orients the map so that east is up.
@@ -283,9 +283,9 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap rotateTo(num bearing,
+  MapLibreMap rotateTo(num bearing,
           [AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.rotateTo(bearing));
+      MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
 
   ///  Rotates the map so that north is up (0° bearing), with an animated transition.
   ///
@@ -295,8 +295,8 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap resetNorth([AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.resetNorth());
+  MapLibreMap resetNorth([AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.resetNorth());
 
   ///  Rotates and pitches the map so that north is up (0° bearing) and pitch is 0°, with an animated transition.
   ///
@@ -306,8 +306,8 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap resetNorthPitch([AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.resetNorthPitch());
+  MapLibreMap resetNorthPitch([AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.resetNorthPitch());
 
   ///  Snaps the map so that north is up (0° bearing), if the current bearing is close enough to it (i.e. within the
   ///  `bearingSnap` threshold).
@@ -318,8 +318,8 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap snapToNorth([AnimationOptions? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.snapToNorth());
+  MapLibreMap snapToNorth([AnimationOptions? options, dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.snapToNorth());
 
   ///  Returns the map's current pitch (tilt).
   ///
@@ -336,8 +336,8 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  MapboxMap setPitch(num pitch, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.setPitch(pitch));
+  MapLibreMap setPitch(num pitch, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.setPitch(pitch));
 
   ///  @memberof MapboxMap#
   ///  @param {LatLngBoundsLike} bounds Calculate the center for these bounds in the viewport and use
@@ -387,9 +387,9 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
-  MapboxMap fitBounds(LngLatBounds bounds,
+  MapLibreMap fitBounds(LngLatBounds bounds,
           [Map<String, dynamic>? options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(
+      MapLibreMap.fromJsObject(
           jsObject.fitBounds(bounds.jsObject, jsify(options ?? {}), eventData));
 
   ///  Pans, rotates and zooms the map to to fit the box made by points p0 and p1
@@ -419,9 +419,9 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Used by BoxZoomHandler](https://www.mapbox.com/mapbox-gl-js/api/#boxzoomhandler)
-  MapboxMap fitScreenCoordinates(Point p0, Point p1, num bearing,
+  MapLibreMap fitScreenCoordinates(Point p0, Point p1, num bearing,
           [dynamic options, dynamic eventData]) =>
-      MapboxMap.fromJsObject(
+      MapLibreMap.fromJsObject(
           jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing));
 
   ///  Changes any combination of center, zoom, bearing, and pitch, without
@@ -442,8 +442,8 @@ class Camera extends Evented {
   ///  @fires zoomend
   ///  @fires pitchend
   ///  @returns {MapboxMap} `this`
-  MapboxMap jumpTo(CameraOptions options, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.jumpTo(options.jsObject));
+  MapLibreMap jumpTo(CameraOptions options, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.jumpTo(options.jsObject));
 
   ///  Changes any combination of center, zoom, bearing, and pitch, with an animated transition
   ///  between old and new values. The map will retain its current values for any
@@ -468,8 +468,8 @@ class Camera extends Evented {
   ///  @fires pitchend
   ///  @returns {MapboxMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
-  MapboxMap easeTo(dynamic options, [dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.easeTo(options));
+  MapLibreMap easeTo(dynamic options, [dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.easeTo(options));
 
   ///  Changes any combination of center, zoom, bearing, and pitch, animating the transition along a curve that
   ///  evokes flight. The animation seamlessly incorporates zooming and panning to help
@@ -527,8 +527,8 @@ class Camera extends Evented {
   ///  @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
   ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
   ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
-  MapboxMap flyTo(dynamic options, [String? eventData]) =>
-      MapboxMap.fromJsObject(jsObject
+  MapLibreMap flyTo(dynamic options, [String? eventData]) =>
+      MapLibreMap.fromJsObject(jsObject
           .flyTo(options is CameraOptions ? options.jsObject : jsify(options)));
 
   bool isEasing() => jsObject.isEasing();
@@ -537,7 +537,7 @@ class Camera extends Evented {
   ///
   ///  @memberof MapboxMap#
   ///  @returns {MapboxMap} `this`
-  MapboxMap stop() => MapboxMap.fromJsObject(jsObject.stop());
+  MapLibreMap stop() => MapLibreMap.fromJsObject(jsObject.stop());
 
   /// Creates a new Camera from a [jsObject].
   Camera.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);

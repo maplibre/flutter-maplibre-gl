@@ -51,11 +51,11 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  );
 ///  ```
 ///  @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
-class MapboxMap extends Camera {
+class MapLibreMap extends Camera {
   final MapLibreMapJsImpl jsObject;
 
-  factory MapboxMap(MapOptions options) =>
-      MapboxMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
+  factory MapLibreMap(MapOptions options) =>
+      MapLibreMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
 
   Style get style => Style.fromJsObject(jsObject.style);
 
@@ -105,12 +105,12 @@ class MapboxMap extends Camera {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  MapboxMap addControl(dynamic control, [String? position]) {
+  MapLibreMap addControl(dynamic control, [String? position]) {
     if (position != null) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
           jsObject.addControl(control.jsObject, position));
     }
-    return MapboxMap.fromJsObject(jsObject.addControl(control.jsObject));
+    return MapLibreMap.fromJsObject(jsObject.addControl(control.jsObject));
   }
 
   ///  Removes the control from the map.
@@ -124,8 +124,8 @@ class MapboxMap extends Camera {
   ///  map.addControl(navigation);
   ///  // Remove zoom and rotation controls from the map.
   ///  map.removeControl(navigation);
-  MapboxMap removeControl(dynamic control) =>
-      MapboxMap.fromJsObject(jsObject.removeControl(control.jsObject));
+  MapLibreMap removeControl(dynamic control) =>
+      MapLibreMap.fromJsObject(jsObject.removeControl(control.jsObject));
 
   ///  Resizes the map according to the dimensions of its
   ///  `container` element.
@@ -143,8 +143,8 @@ class MapboxMap extends Camera {
   ///  // after being initially hidden with CSS.
   ///  var mapDiv = document.getElementById('map');
   ///  if (mapDiv.style.visibility === true) map.resize();
-  MapboxMap resize([dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.resize());
+  MapLibreMap resize([dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.resize());
 
   ///  Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
   ///  an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
@@ -177,8 +177,8 @@ class MapboxMap extends Camera {
   ///  ];
   ///  // Set the map's max bounds.
   ///  map.setMaxBounds(bounds);
-  MapboxMap setMaxBounds(LngLatBounds? bounds) =>
-      MapboxMap.fromJsObject(jsObject.setMaxBounds(bounds?.jsObject));
+  MapLibreMap setMaxBounds(LngLatBounds? bounds) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxBounds(bounds?.jsObject));
 
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
@@ -194,8 +194,8 @@ class MapboxMap extends Camera {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setMinZoom(12.25);
-  MapboxMap setMinZoom([num? minZoom]) =>
-      MapboxMap.fromJsObject(jsObject.setMinZoom(minZoom));
+  MapLibreMap setMinZoom([num? minZoom]) =>
+      MapLibreMap.fromJsObject(jsObject.setMinZoom(minZoom));
 
   ///  Returns the map's minimum allowable zoom level.
   ///
@@ -213,8 +213,8 @@ class MapboxMap extends Camera {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setMaxZoom(18.75);
-  MapboxMap setMaxZoom([num? maxZoom]) =>
-      MapboxMap.fromJsObject(jsObject.setMaxZoom(maxZoom));
+  MapLibreMap setMaxZoom([num? maxZoom]) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxZoom(maxZoom));
 
   ///  Returns the map's maximum allowable zoom level.
   ///
@@ -230,8 +230,8 @@ class MapboxMap extends Camera {
   ///  @param {number | null | undefined} minPitch The minimum pitch to set (0-60).
   ///    If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
   ///  @returns {MapboxMap} `this`
-  MapboxMap setMinPitch([num? minPitch]) =>
-      MapboxMap.fromJsObject(jsObject.setMinPitch());
+  MapLibreMap setMinPitch([num? minPitch]) =>
+      MapLibreMap.fromJsObject(jsObject.setMinPitch());
 
   ///  Returns the map's minimum allowable pitch.
   ///
@@ -245,8 +245,8 @@ class MapboxMap extends Camera {
   ///  @param {number | null | undefined} maxPitch The maximum pitch to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
   ///  @returns {MapboxMap} `this`
-  MapboxMap setMaxPitch([num? maxPitch]) =>
-      MapboxMap.fromJsObject(jsObject.setMaxPitch());
+  MapLibreMap setMaxPitch([num? maxPitch]) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxPitch());
 
   ///  Returns the map's maximum allowable pitch.
   ///
@@ -277,8 +277,8 @@ class MapboxMap extends Camera {
   ///  @example
   ///  map.setRenderWorldCopies(true);
   ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
-  MapboxMap setRenderWorldCopies([bool? renderWorldCopies]) =>
-      MapboxMap.fromJsObject(jsObject.setRenderWorldCopies(renderWorldCopies));
+  MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
+      MapLibreMap.fromJsObject(jsObject.setRenderWorldCopies(renderWorldCopies));
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -498,8 +498,8 @@ class MapboxMap extends Camera {
   ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
   ///
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
-  MapboxMap setStyle(dynamic style, [dynamic options]) =>
-      MapboxMap.fromJsObject(jsObject.setStyle(style));
+  MapLibreMap setStyle(dynamic style, [dynamic options]) =>
+      MapLibreMap.fromJsObject(jsObject.setStyle(style));
 
   ///  Returns the map's Mapbox style object, which can be used to recreate the map's style.
   ///
@@ -551,11 +551,11 @@ class MapboxMap extends Camera {
   ///  @see Vector source: [Show and hide layers](https://docs.mapbox.com/mapbox-gl-js/example/toggle-layers/)
   ///  @see GeoJSON source: [Add live realtime data](https://docs.mapbox.com/mapbox-gl-js/example/live-geojson/)
   ///  @see Raster DEM source: [Add hillshading](https://docs.mapbox.com/mapbox-gl-js/example/hillshade/)
-  MapboxMap addSource(String id, dynamic source) {
+  MapLibreMap addSource(String id, dynamic source) {
     if (source is Source) {
-      return MapboxMap.fromJsObject(jsObject.addSource(id, source.jsObject));
+      return MapLibreMap.fromJsObject(jsObject.addSource(id, source.jsObject));
     }
-    return MapboxMap.fromJsObject(jsObject.addSource(id, jsify(source)));
+    return MapLibreMap.fromJsObject(jsObject.addSource(id, jsify(source)));
   }
 
   ///  Returns a Boolean indicating whether the source is loaded.
@@ -770,12 +770,12 @@ class MapboxMap extends Camera {
   ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
   ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
   ///  @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
-  MapboxMap addLayer(dynamic layer, [String? beforeId]) {
+  MapLibreMap addLayer(dynamic layer, [String? beforeId]) {
     if (layer is Layer) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
           jsObject.addLayer(layer.jsObject, beforeId));
     }
-    return MapboxMap.fromJsObject(jsObject.addLayer(jsify(layer), beforeId));
+    return MapLibreMap.fromJsObject(jsObject.addLayer(jsify(layer), beforeId));
   }
 
   //jsObject.addLayer(layer.jsObject ?? jsify(layer));
@@ -790,8 +790,8 @@ class MapboxMap extends Camera {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  MapboxMap moveLayer(String id, String beforeId) =>
-      MapboxMap.fromJsObject(jsObject.moveLayer(id, beforeId));
+  MapLibreMap moveLayer(String id, String beforeId) =>
+      MapLibreMap.fromJsObject(jsObject.moveLayer(id, beforeId));
 
   ///  Removes the layer with the given ID from the map's style.
   ///
@@ -835,8 +835,8 @@ class MapboxMap extends Camera {
   ///
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
-  MapboxMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
-      MapboxMap.fromJsObject(
+  MapLibreMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
+      MapLibreMap.fromJsObject(
           jsObject.setLayerZoomRange(layerId, minzoom, maxzoom));
 
   ///  Sets the filter for the specified style layer.
@@ -854,9 +854,9 @@ class MapboxMap extends Camera {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  MapboxMap setFilter(String layerId, dynamic filter,
+  MapLibreMap setFilter(String layerId, dynamic filter,
           [StyleSetterOptions? options]) =>
-      MapboxMap.fromJsObject(jsObject.setFilter(layerId, filter));
+      MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -900,9 +900,9 @@ class MapboxMap extends Camera {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
-  MapboxMap setLayoutProperty(String layerId, String name, dynamic value,
+  MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
-      MapboxMap.fromJsObject(jsObject.setLayoutProperty(layerId, name, value));
+      MapLibreMap.fromJsObject(jsObject.setLayoutProperty(layerId, name, value));
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -918,8 +918,8 @@ class MapboxMap extends Camera {
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapboxMap} `this`
-  MapboxMap setLight(dynamic light, StyleSetterOptions options) =>
-      MapboxMap.fromJsObject(jsObject.setLight(light, options.jsObject));
+  MapLibreMap setLight(dynamic light, StyleSetterOptions options) =>
+      MapLibreMap.fromJsObject(jsObject.setLight(light, options.jsObject));
 
   ///  Returns the value of the light object.
   ///
@@ -1091,7 +1091,7 @@ class MapboxMap extends Camera {
   String get version => jsObject.version;
 
   /// Creates a new MapboxMap from a [jsObject].
-  MapboxMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  MapLibreMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
@@ -1421,12 +1421,12 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
   ///  Register a control on the map and give it a chance to register event listeners
   ///  and resources. This method is called by {@link MapboxMap#addControl}
   ///  internally.
-  HtmlElement onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  HtmlElement onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapboxMap#removeControl}
   ///  internally.
-  onRemove(MapboxMap map) => jsObject.onRemove(map.jsObject);
+  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapboxMap#addControl} is called without the `position`
