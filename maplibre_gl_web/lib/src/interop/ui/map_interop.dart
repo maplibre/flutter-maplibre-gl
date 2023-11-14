@@ -303,7 +303,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {Function} listener The function to be called when the event is fired.
   ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
-  //external MapboxMap on(String type, [dynamic layerIdOrListener, Listener listener]);
+  //external MapLibreMap on(String type, [dynamic layerIdOrListener, Listener listener]);
 
   ///  Removes an event listener for layer-specific events previously added with `MapLibreMap#on`.
   ///
@@ -312,7 +312,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {Function} listener The function previously installed as a listener.
   ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
-  //external MapboxMap off(String type, [dynamic layerIdOrListener, Listener listener]);
+  //external MapLibreMap off(String type, [dynamic layerIdOrListener, Listener listener]);
 
   ///  Returns an array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
