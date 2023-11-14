@@ -418,7 +418,7 @@ class Camera extends Evented {
   ///  map.fitScreenCoordinates(p0, p1, map.getBearing(), {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
-  ///  @see [Used by BoxZoomHandler](https://www.mapbox.com/mapbox-gl-js/api/#boxzoomhandler)
+  ///  @see [Used by BoxZoomHandler](https://maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.BoxZoomHandler/)
   MapLibreMap fitScreenCoordinates(Point p0, Point p1, num bearing,
           [dynamic options, dynamic eventData]) =>
       MapLibreMap.fromJsObject(
