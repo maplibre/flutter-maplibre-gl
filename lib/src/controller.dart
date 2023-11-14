@@ -447,7 +447,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setLayerProperties(
       String layerId, LayerProperties properties) async {
-    await _mapboxGlPlatform.setLayerProperties(layerId, properties.toJson());
+    await _maplibreGlPlatform.setLayerProperties(layerId, properties.toJson());
   }
 
   /// Add a fill layer to the map with the given properties
