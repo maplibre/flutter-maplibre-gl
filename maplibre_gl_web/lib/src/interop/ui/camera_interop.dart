@@ -131,7 +131,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   external MapboxMapJsImpl panBy(PointJsImpl offset,
       [AnimationOptionsJsImpl? options, dynamic eventData]);
 
@@ -221,7 +221,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///
   ///  @memberof MapboxMap#
   ///  @returns The map's current bearing.
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   external num getBearing();
 
   ///  Sets the map's bearing (rotation). The bearing is the compass direction that is \"up\"; for example, a bearing
@@ -345,7 +345,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  map.fitBounds(bbox, {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
-  ///  @see [Fit a map to a bounding box](https://www.mapbox.com/mapbox-gl-js/example/fitbounds/)
+  ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
   external MapboxMapJsImpl fitBounds(LngLatBoundsJsImpl bounds,
       [dynamic options, dynamic eventData]);
 
@@ -423,7 +423,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  @fires zoomend
   ///  @fires pitchend
   ///  @returns {MapboxMap} `this`
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   external MapboxMapJsImpl easeTo(dynamic options, [dynamic eventData]);
 
   ///  Changes any combination of center, zoom, bearing, and pitch, animating the transition along a curve that
@@ -479,9 +479,9 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///      return t;
   ///    }
   ///  });
-  ///  @see [Fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto/)
-  ///  @see [Slowly fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto-options/)
-  ///  @see [Fly to a location based on scroll position](https://www.mapbox.com/mapbox-gl-js/example/scroll-fly-to/)
+  ///  @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
+  ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
+  ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
   external MapboxMapJsImpl flyTo(dynamic options, [dynamic eventData]);
 
   external bool isEasing();

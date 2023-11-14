@@ -104,7 +104,7 @@ class MapboxMap extends Camera {
   ///  @example
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
-  ///  @see [Display map navigation controls](https://www.mapbox.com/mapbox-gl-js/example/navigation/)
+  ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
   MapboxMap addControl(dynamic control, [String? position]) {
     if (position != null) {
       return MapboxMap.fromJsObject(
@@ -418,9 +418,9 @@ class MapboxMap extends Camera {
   ///  @example
   ///  // Query all rendered features from a single layer
   ///  var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
-  ///  @see [Get features under the mouse pointer](https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/)
-  ///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
-  ///  @see [Filter features within map view](https://www.mapbox.com/mapbox-gl-js/example/filter-features-within-map-view/)
+  ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
+  ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
+  ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   List<Feature> queryRenderedFeatures(dynamic geometry,
       [Map<String, dynamic>? options]) {
     if (options == null) {
@@ -469,7 +469,7 @@ class MapboxMap extends Camera {
   ///    sourceLayer: 'your-source-layer'
   ///  });
   ///
-  ///  @see [Highlight features containing similar data](https://www.mapbox.com/mapbox-gl-js/example/query-similar-features/)
+  ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
       jsObject.querySourceFeatures(sourceId, parameters);
 
@@ -497,7 +497,7 @@ class MapboxMap extends Camera {
   ///  @example
   ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
   ///
-  ///  @see [Change a map's style](https://www.mapbox.com/mapbox-gl-js/example/setstyle/)
+  ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapboxMap setStyle(dynamic style, [dynamic options]) =>
       MapboxMap.fromJsObject(jsObject.setStyle(style));
 
@@ -598,9 +598,9 @@ class MapboxMap extends Camera {
   ///    if the ID corresponds to no existing sources.
   ///  @example
   ///  var sourceObject = map.getSource('points');
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
-  ///  @see [Animate a point](https://www.mapbox.com/mapbox-gl-js/example/animate-point-along-line/)
-  ///  @see [Add live realtime data](https://www.mapbox.com/mapbox-gl-js/example/live-geojson/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+  ///  @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
+  ///  @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
   dynamic getSource(String id) {
     var source = jsObject.getSource(id);
     if (source is GeoJsonSourceJsImpl) {
@@ -653,8 +653,8 @@ class MapboxMap extends Camera {
   ///  });
   ///
   ///
-  ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
-  ///  @see Use `ImageData`: [Add a generated icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image-generated/)
+  ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
+  ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
   addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
     if (image is Map) {
       image = jsify(image);
@@ -720,7 +720,7 @@ class MapboxMap extends Camera {
   ///    map.addImage('kitten', image);
   ///  });
   ///
-  ///  @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
+  ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   loadImage(String url, Function callback) =>
       jsObject.loadImage(url, allowInterop(callback));
 
@@ -767,9 +767,9 @@ class MapboxMap extends Camera {
   ///    }
   ///  });
   ///
-  ///  @see [Create and style clusters](https://www.mapbox.com/mapbox-gl-js/example/cluster/)
-  ///  @see [Add a vector tile source](https://www.mapbox.com/mapbox-gl-js/example/vector-source/)
-  ///  @see [Add a WMS source](https://www.mapbox.com/mapbox-gl-js/example/wms/)
+  ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
+  ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
+  ///  @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
   MapboxMap addLayer(dynamic layer, [String? beforeId]) {
     if (layer is Layer) {
       return MapboxMap.fromJsObject(
@@ -814,8 +814,8 @@ class MapboxMap extends Camera {
   ///  @example
   ///  var stateDataLayer = map.getLayer('state-data');
   ///
-  ///  @see [Filter symbols by toggling a list](https://www.mapbox.com/mapbox-gl-js/example/filter-markers/)
-  ///  @see [Filter symbols by text input](https://www.mapbox.com/mapbox-gl-js/example/filter-markers-by-input/)
+  ///  @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
+  ///  @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
   dynamic getLayer(String id) => jsObject.getLayer(id);
 
   ///  Sets the zoom extent for the specified style layer. The zoom extent includes the
@@ -851,9 +851,9 @@ class MapboxMap extends Camera {
   ///  @example
   ///  map.setFilter('my-layer', ['==', 'name', 'USA']);
   ///
-  ///  @see [Filter features within map view](https://www.mapbox.com/mapbox-gl-js/example/filter-features-within-map-view/)
-  ///  @see [Highlight features containing similar data](https://www.mapbox.com/mapbox-gl-js/example/query-similar-features/)
-  ///  @see [Create a timeline animation](https://www.mapbox.com/mapbox-gl-js/example/timeline-animation/)
+  ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
+  ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
+  ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
   MapboxMap setFilter(String layerId, dynamic filter,
           [StyleSetterOptions? options]) =>
       MapboxMap.fromJsObject(jsObject.setFilter(layerId, filter));
@@ -875,9 +875,9 @@ class MapboxMap extends Camera {
   ///  @returns {MapboxMap} `this`
   ///  @example
   ///  map.setPaintProperty('my-layer', 'fill-color', '#faafee');
-  ///  @see [Change a layer's color with buttons](https://www.mapbox.com/mapbox-gl-js/example/color-switcher/)
-  ///  @see [Adjust a layer's opacity](https://www.mapbox.com/mapbox-gl-js/example/adjust-layer-opacity/)
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
+  ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
+  ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
   setPaintProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
       jsObject.setPaintProperty(layerId, name, jsify(value));
@@ -989,16 +989,16 @@ class MapboxMap extends Camera {
   ///  map controls.
   ///
   ///  @returns {HTMLElement} The container of the map's `<canvas>`.
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
-  ///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+  ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   HtmlElement getCanvasContainer() => jsObject.getCanvasContainer();
 
   ///  Returns the map's `<canvas>` element.
   ///
   ///  @returns {HTMLCanvasElement} The map's `<canvas>` element.
-  ///  @see [Measure distances](https://www.mapbox.com/mapbox-gl-js/example/measure/)
-  ///  @see [Display a popup on hover](https://www.mapbox.com/mapbox-gl-js/example/popup-on-hover/)
-  ///  @see [Center the map on a clicked symbol](https://www.mapbox.com/mapbox-gl-js/example/center-on-symbol/)
+  ///  @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
+  ///  @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+  ///  @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
   CanvasElement getCanvas() => jsObject.getCanvas();
 
   ///  Returns a Boolean indicating whether the map is fully loaded.
@@ -1239,7 +1239,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
   /// In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
   /// Set to `false`, to enable font settings from the map's style for these glyph ranges.  Note that [Mapbox Studio](https://studio.mapbox.com/) sets this value to `false` by default.
-  /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://www.mapbox.com/mapbox-gl-js/example/local-ideographs).)
+  /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
   String get localIdeographFontFamily => jsObject.localIdeographFontFamily;
 
   /// A callback run before the MapboxMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.

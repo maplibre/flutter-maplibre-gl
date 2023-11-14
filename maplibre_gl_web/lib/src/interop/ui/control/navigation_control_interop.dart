@@ -30,8 +30,8 @@ class NavigationControlOptionsJsImpl {
 /// @example
 /// var nav = new maplibregl.NavigationControl();
 /// map.addControl(nav, 'top-left');
-/// @see [Display map navigation controls](https://www.mapbox.com/mapbox-gl-js/example/navigation/)
-/// @see [Add a third party vector tile source](https://www.mapbox.com/mapbox-gl-js/example/third-party/)
+/// @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+/// @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
 @JS('NavigationControl')
 class NavigationControlJsImpl {
   external NavigationControlOptionsJsImpl get options;

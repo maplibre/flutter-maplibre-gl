@@ -160,7 +160,7 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapboxMap} `this`
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   MapboxMap panBy(Point offset,
           [AnimationOptions? options, dynamic eventData]) =>
       MapboxMap.fromJsObject(jsObject.panBy(offset.jsObject));
@@ -253,7 +253,7 @@ class Camera extends Evented {
   ///
   ///  @memberof MapboxMap#
   ///  @returns The map's current bearing.
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   num getBearing() => jsObject.getBearing();
 
   ///  Sets the map's bearing (rotation). The bearing is the compass direction that is \"up\"; for example, a bearing
@@ -386,7 +386,7 @@ class Camera extends Evented {
   ///  map.fitBounds(bbox, {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
-  ///  @see [Fit a map to a bounding box](https://www.mapbox.com/mapbox-gl-js/example/fitbounds/)
+  ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
   MapboxMap fitBounds(LngLatBounds bounds,
           [Map<String, dynamic>? options, dynamic eventData]) =>
       MapboxMap.fromJsObject(
@@ -467,7 +467,7 @@ class Camera extends Evented {
   ///  @fires zoomend
   ///  @fires pitchend
   ///  @returns {MapboxMap} `this`
-  ///  @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+  ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
   MapboxMap easeTo(dynamic options, [dynamic eventData]) =>
       MapboxMap.fromJsObject(jsObject.easeTo(options));
 
@@ -524,9 +524,9 @@ class Camera extends Evented {
   ///      return t;
   ///    }
   ///  });
-  ///  @see [Fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto/)
-  ///  @see [Slowly fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto-options/)
-  ///  @see [Fly to a location based on scroll position](https://www.mapbox.com/mapbox-gl-js/example/scroll-fly-to/)
+  ///  @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
+  ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
+  ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
   MapboxMap flyTo(dynamic options, [String? eventData]) =>
       MapboxMap.fromJsObject(jsObject
           .flyTo(options is CameraOptions ? options.jsObject : jsify(options)));

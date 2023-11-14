@@ -15,10 +15,10 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 ///  @param {number} lat Latitude, measured in degrees.
 ///  @example
 ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
-///  @see [Get coordinates of the mouse pointer](https://www.mapbox.com/mapbox-gl-js/example/mouse-position/)
-///  @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
-///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
-///  @see [Create a timeline animation](https://www.mapbox.com/mapbox-gl-js/example/timeline-animation/)
+///  @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+///  @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
+///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
 class LngLat extends JsObjectWrapper<LngLatJsImpl> {
   num get lng => jsObject.lng;
 

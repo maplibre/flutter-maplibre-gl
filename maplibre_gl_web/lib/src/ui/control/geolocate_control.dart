@@ -84,7 +84,7 @@ class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
 ///     },
 ///     trackUserLocation: true
 /// }));
-/// @see [Locate the user](https://www.mapbox.com/mapbox-gl-js/example/locate-user/)
+/// @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
 class GeolocateControl extends Evented {
   final GeolocateControlJsImpl jsObject;
   GeolocateControlOptions get options =>

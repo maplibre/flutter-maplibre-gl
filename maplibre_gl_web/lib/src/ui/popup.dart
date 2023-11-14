@@ -47,10 +47,10 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 ///   .setHTML("<h1>Hello World!</h1>")
 ///   .setMaxWidth("300px")
 ///   .addTo(map);
-/// @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
-/// @see [Display a popup on hover](https://www.mapbox.com/mapbox-gl-js/example/popup-on-hover/)
-/// @see [Display a popup on click](https://www.mapbox.com/mapbox-gl-js/example/popup-on-click/)
-/// @see [Attach a popup to a marker instance](https://www.mapbox.com/mapbox-gl-js/example/set-popup/)
+/// @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+/// @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+/// @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+/// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 class Popup extends Evented {
   dynamic get options => jsObject.options;
 
