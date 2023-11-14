@@ -375,7 +375,7 @@ abstract class CameraJsImpl extends EventedJsImpl {
   ///  map.fitScreenCoordinates(p0, p1, map.getBearing(), {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
-  ///  @see [Used by BoxZoomHandler](https://www.mapbox.com/mapbox-gl-js/api/#boxzoomhandler)
+  ///  @see [Used by BoxZoomHandler]
   external MapLibreMapJsImpl fitScreenCoordinates(
       PointJsImpl p0, PointJsImpl p1, num bearing,
       [dynamic options, dynamic eventData]);

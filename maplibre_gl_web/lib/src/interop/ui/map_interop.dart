@@ -1000,7 +1000,7 @@ class MapOptionsJsImpl {
   /// A string representing the position of the Mapbox wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   external String get logoPosition;
 
-  /// If `true`, map creation will fail if the performance of Mapbox
+  /// If `true`, map creation will fail if the performance of MapLibre
   /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
   external bool get failIfMajorPerformanceCaveat;
 
@@ -1088,7 +1088,7 @@ class MapOptionsJsImpl {
   /// Defines a CSS
   /// font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
   /// In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-  /// Set to `false`, to enable font settings from the map's style for these glyph ranges.  Note that [Mapbox Studio](https://studio.mapbox.com/) sets this value to `false` by default.
+  /// Set to `false`, to enable font settings from the map's style for these glyph ranges. 
   /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
   external String get localIdeographFontFamily;
 
