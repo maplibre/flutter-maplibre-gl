@@ -400,7 +400,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
   ///  @param {Object} [parameters]
-  ///  @param {string} `parameters.sourceLayer` The name of the [source layer](https://docs.mapbox.com/help/glossary/source-layer/)
+  ///  @param {string} `parameters.sourceLayer` The name of the [source layer] 
   ///    to query./// For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
   ///  @param {Array} `parameters.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
@@ -530,7 +530,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external dynamic getSource(String id);
 
   ///  Add an image to the style. This image can be displayed on the map like any other icon in the style's
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
+  ///  [sprite]  using the image's ID with
   ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
   ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
   ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
@@ -575,7 +575,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external addImage(String id, dynamic image, [dynamic options]);
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
+  ///  [sprite]  using the image's ID with
   ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
   ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
   ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
@@ -592,7 +592,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external updateImage(String id, dynamic image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
-  ///  in the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/) and any images
+  ///  in the style's original [sprite]  and any images
   ///  that have been added at runtime using {@link addImage}.
   ///
   ///  @param id The ID of the image.
@@ -605,7 +605,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external bool hasImage(String id);
 
   ///  Remove an image from a style. This can be an image from the style's original
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) or any images
+  ///  [sprite]  or any images
   ///  that have been added at runtime using {@link addImage}.
   ///
   ///  @param id The ID of the image.
@@ -635,7 +635,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
 
   //////
   ///  Returns an Array of strings containing the IDs of all images currently available in the map.
-  ///  This includes both images from the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/)
+  ///  This includes both images from the style's original [sprite] 
   ///  and any images that have been added at runtime using {@link addImage}.
   ///
   ///  @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
