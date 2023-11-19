@@ -26,13 +26,7 @@ dependencies:
       url: https://github.com/maplibre/flutter-maplibre-gl.git
       ref: git-release-0.17.0
 
-  # Workaround for this issue:
-  # https://github.com/Lyokone/flutterlocation/issues/838#issuecomment-1546739392
-  location:
-    git:
-      url: https://github.com/781flyingdutchman/flutterlocation.git
-      ref: V4
-      path: packages/location
+  location: ^5.0.3
   path_provider: ^2.0.15
   http: ^1.1.0
   collection: ^1.17.1
