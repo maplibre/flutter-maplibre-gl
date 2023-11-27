@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.geo.point;
+library maplibre.interop.geo.point;
 
 import 'package:js/js.dart';
 

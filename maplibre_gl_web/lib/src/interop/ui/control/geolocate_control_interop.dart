@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.control.geolocate_control;
+library maplibre.interop.ui.control.geolocate_control;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
@@ -50,9 +50,9 @@ abstract class GeolocateControlJsImpl extends EventedJsImpl {
   external factory GeolocateControlJsImpl(
       GeolocateControlOptionsJsImpl options);
 
-  external onAdd(MapboxMapJsImpl map);
+  external onAdd(MapLibreMapJsImpl map);
 
-  external onRemove(MapboxMapJsImpl map);
+  external onRemove(MapLibreMapJsImpl map);
 
   external trigger();
 }

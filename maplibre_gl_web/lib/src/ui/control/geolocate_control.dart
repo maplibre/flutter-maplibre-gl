@@ -1,4 +1,4 @@
-library mapboxgl.ui.control.geolocate_control;
+library maplibre.ui.control.geolocate_control;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
@@ -78,13 +78,13 @@ class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
 /// @param {Object} [options.showUserLocation=true] By default a dot will be shown on the map at the user's location. Set to `false` to disable.
 ///
 /// @example
-/// map.addControl(new mapboxgl.GeolocateControl({
+/// map.addControl(new maplibregl.GeolocateControl({
 ///     positionOptions: {
 ///         enableHighAccuracy: true
 ///     },
 ///     trackUserLocation: true
 /// }));
-/// @see [Locate the user](https://www.mapbox.com/mapbox-gl-js/example/locate-user/)
+/// @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
 class GeolocateControl extends Evented {
   final GeolocateControlJsImpl jsObject;
   GeolocateControlOptions get options =>
@@ -93,9 +93,9 @@ class GeolocateControl extends Evented {
   factory GeolocateControl(GeolocateControlOptions options) =>
       GeolocateControl.fromJsObject(GeolocateControlJsImpl(options.jsObject));
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
-  onRemove(MapboxMap map) => jsObject.onRemove(map.jsObject);
+  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   /// Trigger a geolocation
   ///

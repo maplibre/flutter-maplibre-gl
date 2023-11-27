@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.popup;
+library maplibre.interop.ui.popup;
 
 import 'dart:html';
 import 'package:js/js.dart';
@@ -43,15 +43,15 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 ///  'left': [markerRadius, (markerHeight - markerRadius) /// -1],
 ///  'right': [-markerRadius, (markerHeight - markerRadius) /// -1]
 ///  };
-/// var popup = new mapboxgl.Popup({offset: popupOffsets, className: 'my-class'})
+/// var popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
 ///   .setLngLat(e.lngLat)
 ///   .setHTML("<h1>Hello World!</h1>")
 ///   .setMaxWidth("300px")
 ///   .addTo(map);
-/// @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
-/// @see [Display a popup on hover](https://www.mapbox.com/mapbox-gl-js/example/popup-on-hover/)
-/// @see [Display a popup on click](https://www.mapbox.com/mapbox-gl-js/example/popup-on-click/)
-/// @see [Attach a popup to a marker instance](https://www.mapbox.com/mapbox-gl-js/example/set-popup/)
+/// @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+/// @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+/// @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+/// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 @JS('Popup')
 class PopupJsImpl extends EventedJsImpl {
   external dynamic get options;
@@ -60,9 +60,9 @@ class PopupJsImpl extends EventedJsImpl {
 
   /// Adds the popup to a map.
   ///
-  /// @param {MapboxMap} map The Mapbox GL JS map to add the popup to.
+  /// @param {MapLibreMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
-  external PopupJsImpl addTo(MapboxMapJsImpl map);
+  external PopupJsImpl addTo(MapLibreMapJsImpl map);
 
   /// @returns {boolean} `true` if the popup is open, `false` if it is closed.
   external bool isOpen();
@@ -70,7 +70,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// Removes the popup from the map it has been added to.
   ///
   /// @example
-  /// var popup = new mapboxgl.Popup().addTo(map);
+  /// var popup = new maplibregl.Popup().addTo(map);
   /// popup.remove();
   /// @returns {Popup} `this`
   external PopupJsImpl remove();
@@ -109,7 +109,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @param text Textual content for the popup.
   /// @returns {Popup} `this`
   /// @example
-  /// var popup = new mapboxgl.Popup()
+  /// var popup = new maplibregl.Popup()
   ///   .setLngLat(e.lngLat)
   ///   .setText('Hello, world!')
   ///   .addTo(map);
@@ -146,7 +146,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// // create an element with the popup content
   /// var div = window.document.createElement('div');
   /// div.innerHTML = 'Hello, world!';
-  /// var popup = new mapboxgl.Popup()
+  /// var popup = new maplibregl.Popup()
   ///   .setLngLat(e.lngLat)
   ///   .setDOMContent(div)
   ///   .addTo(map);
@@ -157,7 +157,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @param {string} className Non-empty string with CSS class name to add to popup container
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
   external addClassName(String className);
 
@@ -166,7 +166,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @param {string} className Non-empty string with CSS class name to remove from popup container
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
   external removeClassName(String className);
 
@@ -177,7 +177,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @returns {boolean} if the class was removed return false, if class was added, then return true
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.toggleClassName('toggleClass')
   external bool toggleClassName(String className);
 }

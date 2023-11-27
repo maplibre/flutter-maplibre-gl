@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.events;
+library maplibre.interop.ui.events;
 
 import 'dart:html';
 import 'package:js/js.dart';
@@ -13,8 +13,8 @@ abstract class MapMouseEventJsImpl {
   /// The event type.
   external String get type;
 
-  /// The `MapboxMap` object that fired the event.
-  external MapboxMapJsImpl get target;
+  /// The `MapLibreMap` object that fired the event.
+  external MapLibreMapJsImpl get target;
 
   /// The DOM event which caused the map event.
   external MouseEvent get originalEvent;
@@ -45,8 +45,8 @@ abstract class MapTouchEventJsImpl {
   /// The event type.
   external String get type;
 
-  /// The `MapboxMap` object that fired the event.
-  external MapboxMapJsImpl get target;
+  /// The `MapLibreMap` object that fired the event.
+  external MapLibreMapJsImpl get target;
 
   /// The DOM event which caused the map event.
   external TouchEvent get originalEvent;

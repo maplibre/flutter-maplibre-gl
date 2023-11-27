@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.handler.drag_pan;
+library maplibre.interop.ui.handler.drag_pan;
 
 import 'dart:html';
 

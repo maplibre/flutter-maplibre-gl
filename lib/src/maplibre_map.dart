@@ -8,6 +8,8 @@ enum AnnotationType { fill, line, circle, symbol }
 
 typedef void MapCreatedCallback(MaplibreMapController controller);
 
+/// Shows a MapLibre map.
+/// Also refer to the documentation of [maplibre_gl] and [MaplibreMapController].
 class MaplibreMap extends StatefulWidget {
   const MaplibreMap({
     Key? key,
@@ -98,9 +100,15 @@ class MaplibreMap extends StatefulWidget {
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
 
-  /// Style URL or Style JSON
-  /// Can be a MapboxStyle constant, any Mapbox Style URL,
-  /// or a StyleJSON (https://docs.mapbox.com/mapbox-gl-js/style-spec/)
+  /// A MapLibre GL style document defining the map's appearance.
+  /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
+  /// A short introduction can be found in the documentation of the [maplibre_gl] library.
+  /// The following formats are supported:
+  ///
+  /// 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
+  /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
+  /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
+  /// 4. Passing the raw JSON of the map style. This is only supported on Android.
   final String? styleString;
 
   /// Preferred bounds for the camera zoom level.
@@ -126,10 +134,10 @@ class MaplibreMap extends StatefulWidget {
   /// This takes presedence over zoomGesturesEnabled. Only supported for web.
   final bool? doubleClickZoomEnabled;
 
-  /// True if you want to be notified of map camera movements by the MapboxMapController. Default is false.
+  /// True if you want to be notified of map camera movements by the [MaplibreMapController]. Default is false.
   ///
-  /// If this is set to true and the user pans/zooms/rotates the map, MapboxMapController (which is a ChangeNotifier)
-  /// will notify it's listeners and you can then get the new MapboxMapController.cameraPosition.
+  /// If this is set to true and the user pans/zooms/rotates the map, [MaplibreMapController] (which is a [ChangeNotifier])
+  /// will notify it's listeners and you can then get the new [MaplibreMapController].cameraPosition.
   final bool trackCameraPosition;
 
   /// True if a "My Location" layer should be shown on the map.
@@ -166,13 +174,13 @@ class MaplibreMap extends StatefulWidget {
   /// If this is set to a value other than [MyLocationRenderMode.NORMAL], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
-  /// Set the layout margins for the Mapbox Logo
+  /// Set the layout margins for the Logo
   final Point? logoViewMargins;
 
-  /// Set the position for the Mapbox Compass
+  /// Set the position for the Compass
   final CompassViewPosition? compassViewPosition;
 
-  /// Set the layout margins for the Mapbox Compass
+  /// Set the layout margins for the Compass
   final Point? compassViewMargins;
 
   /// Set the position for the MapLibre Attribution Button
@@ -221,7 +229,7 @@ class MaplibreMap extends StatefulWidget {
   /// * All fade/transition animations have completed
   final OnMapIdleCallback? onMapIdle;
 
-  /// Set `MapboxMap.useHybridComposition` to `false` in order use Virtual-Display
+  /// Set `MaplibreMap.useHybridComposition` to `false` in order use Virtual-Display
   /// (better for Android 9 and below but may result in errors on Android 12)
   /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
   static bool get useHybridComposition =>
@@ -238,8 +246,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
   final Completer<MaplibreMapController> _controller =
       Completer<MaplibreMapController>();
 
-  late _MapboxMapOptions _mapboxMapOptions;
-  final MapLibreGlPlatform _mapboxGlPlatform =
+  late _MaplibreMapOptions _maplibreMapOptions;
+  final MapLibreGlPlatform _maplibreGlPlatform =
       MapLibreGlPlatform.createInstance();
 
   @override
@@ -249,18 +257,18 @@ class _MaplibreMapState extends State<MaplibreMap> {
         "annotationOrder must not have duplicate types");
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
-      'options': _MapboxMapOptions.fromWidget(widget).toMap(),
+      'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
     };
-    return _mapboxGlPlatform.buildView(
+    return _maplibreGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
   }
 
   @override
   void initState() {
     super.initState();
-    _mapboxMapOptions = _MapboxMapOptions.fromWidget(widget);
+    _maplibreMapOptions = _MaplibreMapOptions.fromWidget(widget);
   }
 
   @override
@@ -275,11 +283,12 @@ class _MaplibreMapState extends State<MaplibreMap> {
   @override
   void didUpdateWidget(MaplibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
+    final _MaplibreMapOptions newOptions =
+        _MaplibreMapOptions.fromWidget(widget);
     final Map<String, dynamic> updates =
-        _mapboxMapOptions.updatesMap(newOptions);
+        _maplibreMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
-    _mapboxMapOptions = newOptions;
+    _maplibreMapOptions = newOptions;
   }
 
   void _updateOptions(Map<String, dynamic> updates) async {
@@ -292,7 +301,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
 
   Future<void> onPlatformViewCreated(int id) async {
     final MaplibreMapController controller = MaplibreMapController(
-      mapboxGlPlatform: _mapboxGlPlatform,
+      maplibreGlPlatform: _maplibreGlPlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         if (_controller.isCompleted) {
@@ -311,7 +320,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
-    await _mapboxGlPlatform.initPlatform(id);
+    await _maplibreGlPlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated!(controller);
@@ -319,12 +328,12 @@ class _MaplibreMapState extends State<MaplibreMap> {
   }
 }
 
-/// Configuration options for the MapboxMaps user interface.
+/// Configuration options for the MaplibreMap user interface.
 ///
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
-class _MapboxMapOptions {
-  _MapboxMapOptions({
+class _MaplibreMapOptions {
+  _MaplibreMapOptions({
     this.compassEnabled,
     this.cameraTargetBounds,
     this.styleString,
@@ -345,8 +354,8 @@ class _MapboxMapOptions {
     this.attributionButtonMargins,
   });
 
-  static _MapboxMapOptions fromWidget(MaplibreMap map) {
-    return _MapboxMapOptions(
+  static _MaplibreMapOptions fromWidget(MaplibreMap map) {
+    return _MaplibreMapOptions(
       compassEnabled: map.compassEnabled,
       cameraTargetBounds: map.cameraTargetBounds,
       styleString: map.styleString,
@@ -454,7 +463,7 @@ class _MapboxMapOptions {
     return optionsMap;
   }
 
-  Map<String, dynamic> updatesMap(_MapboxMapOptions newOptions) {
+  Map<String, dynamic> updatesMap(_MaplibreMapOptions newOptions) {
     final Map<String, dynamic> prevOptionsMap = toMap();
     final newOptionsMap = newOptions.toMap();
 

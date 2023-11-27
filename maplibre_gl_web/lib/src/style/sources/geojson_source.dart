@@ -1,4 +1,4 @@
-library mapboxgl.style.sources.geojson_source;
+library maplibre.style.sources.geojson_source;
 
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/interop/style/sources/geojson_source_interop.dart';

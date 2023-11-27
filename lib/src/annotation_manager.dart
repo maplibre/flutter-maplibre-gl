@@ -269,25 +269,25 @@ class SymbolManager extends AnnotationManager<Symbol> {
   bool _iconIgnorePlacement;
   bool _textIgnorePlacement;
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the icon will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconAllowOverlap(bool value) async {
     _iconAllowOverlap = value;
     await _rebuildLayers();
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the icon.
   Future<void> setTextAllowOverlap(bool value) async {
     _textAllowOverlap = value;
     await _rebuildLayers();
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the text will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconIgnorePlacement(bool value) async {
     _iconIgnorePlacement = value;
     await _rebuildLayers();
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the text.
   Future<void> setTextIgnorePlacement(bool value) async {
     _textIgnorePlacement = value;
     await _rebuildLayers();

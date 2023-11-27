@@ -1,4 +1,4 @@
-library mapboxgl.ui.control.Attribution_control;
+library maplibre.ui.control.Attribution_control;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/control/attribution_control_interop.dart';
@@ -28,7 +28,7 @@ class AttributionControlOptions
 /// @param {Boolean} [options.compact] If `true`, the attribution control will always collapse when moving the map. If `false`,force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
 /// @param {List<String>} [options.customAttribution] Attributions to show in addition to any other attributions.
 /// @example
-/// var attribution = new mapboxgl.AttributionControl();
+/// var attribution = new maplibregl.AttributionControl();
 /// map.addControl(attribution, 'top-left');
 /// @see [Display map attribution controls](https://maplibre.org/maplibre-gl-js/docs/examples/attribution-position/)
 class AttributionControl extends JsObjectWrapper<AttributionControlJsImpl> {
@@ -39,7 +39,7 @@ class AttributionControl extends JsObjectWrapper<AttributionControlJsImpl> {
       AttributionControl.fromJsObject(
           AttributionControlJsImpl(options.jsObject));
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   onRemove() => jsObject.onRemove();
 

@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.util.evented;
+library maplibre.interop.util.evented;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/geojson_interop.dart';
@@ -39,7 +39,7 @@ abstract class EventedJsImpl {
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
   //external on(String type, Listener listener);
-  external MapboxMapJsImpl on(String type,
+  external MapLibreMapJsImpl on(String type,
       [dynamic layerIdOrListener, ListenerJsImpl? listener]);
 
   ///  Removes a previously registered event listener.
@@ -48,7 +48,7 @@ abstract class EventedJsImpl {
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
   //external off(String type, Listener listener);
-  external MapboxMapJsImpl off(String type,
+  external MapLibreMapJsImpl off(String type,
       [dynamic layerIdOrListener, ListenerJsImpl? listener]);
 
   ///  Adds a listener that will be called only once to a specified event type.
@@ -58,7 +58,7 @@ abstract class EventedJsImpl {
   ///  @param {string} type The event type to listen for.
   ///  @param {Function} listener The function to be called when the event is fired the first time.
   ///  @returns {Object} `this`
-  external MapboxMapJsImpl once(String type, ListenerJsImpl listener);
+  external MapLibreMapJsImpl once(String type, ListenerJsImpl listener);
 
   external fire(EventJsImpl event, [dynamic properties]);
 

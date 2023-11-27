@@ -1,4 +1,4 @@
-library mapboxgl.ui.handler.drag_rotate;
+library maplibre.ui.handler.drag_rotate;
 
 import 'dart:html';
 

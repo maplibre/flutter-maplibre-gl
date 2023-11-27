@@ -1,4 +1,4 @@
-library mapboxgl.ui.handler.keyboard;
+library maplibre.ui.handler.keyboard;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

@@ -29,24 +29,46 @@ typedef void OnCameraIdleCallback();
 
 typedef void OnMapIdleCallback();
 
-/// Controller for a single MaplibreMap instance running on the host platform.
+/// Controller for a single [MaplibreMap] instance running on the host platform.
 ///
-/// Change listeners are notified upon changes to any of
+/// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.
 ///
-/// * the [options] property
-/// * the collection of [Symbol]s added to this map
-/// * the collection of [Line]s added to this map
+/// To add annotations ([Circle]s, [Line]s, [Symbol]s and [Fill]s) on the map, there are two ways:
+///
+/// 1. *Simple way to add annotations*: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
+/// There are also corresponding [addCircles], [addLines] etc. methods which work the same but add multiple annotations at a time.
+///
+/// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations.
+/// An annotation manager performs the steps from the advanced way, but hides the complexity from the developer.
+/// E.g. the [addCircle] method uses the [CircleManager], which in turn adds a GeoJson source to the map's style with the circle's locations as features.
+/// The CircleManager also adds a circle style layer to the map's style that references that GeoJson source, therefore rendering all circles added with [addCircle] on the map.)
+///
+/// There are also corresponding clear* methods like [clearCircles] to remove all circles from the map, which had been added with [addCircle] or [addCircles].
+///
+/// There are also properties like [circles] to get the current set of circles on the map, which had been added with [addCircle] or [addCircles].
+///
+/// Click events on annotations that are added this way (with the [addCircle], [addLine] etc. methods) can be received by adding callbacks to [onCircleTapped], [onLineTapped] etc.
+///
+/// Note: [circles], [clearCircles] and [onCircleTapped] only work for circles added with [addCircle] or [addCircles],
+/// not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
+/// The same of course applies for fills, lines and symbols.
+///
+/// 2. *Advanced way to add annotations*: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource])
+/// and add a new layer to display the data of that source on the map (either with the [addLayer] method or with the more specific methods like [addCircleLayer], [addLineLayer] etc.).
+/// For more information about Maplibre Styles, see the documentation of [maplibre_gl] as well as the specification at [https://maplibre.org/maplibre-style-spec/].
+///
+/// A MaplibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
+///
+/// * the configuration options of the [MaplibreMap] widget
+/// * the [symbols], [lines], [circles] or [fills] properties
+/// (i.e. the collection of [Symbol]s, [Line]s, [Circle]s and [Fill]s added to this map via the "simple way" (see above))
 /// * the [isCameraMoving] property
 /// * the [cameraPosition] property
 ///
 /// Listeners are notified after changes have been applied on the platform side.
-///
-/// Symbol tap events can be received by adding callbacks to [onSymbolTapped].
-/// Line tap events can be received by adding callbacks to [onLineTapped].
-/// Circle tap events can be received by adding callbacks to [onCircleTapped].
 class MaplibreMapController extends ChangeNotifier {
   MaplibreMapController({
-    required MapLibreGlPlatform mapboxGlPlatform,
+    required MapLibreGlPlatform maplibreGlPlatform,
     required CameraPosition initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
@@ -59,17 +81,17 @@ class MaplibreMapController extends ChangeNotifier {
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
-  }) : _mapboxGlPlatform = mapboxGlPlatform {
+  }) : _maplibreGlPlatform = maplibreGlPlatform {
     _cameraPosition = initialCameraPosition;
 
-    _mapboxGlPlatform.onFeatureTappedPlatform.add((payload) {
+    _maplibreGlPlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
           in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
         fun(payload["id"], payload["point"], payload["latLng"]);
       }
     });
 
-    _mapboxGlPlatform.onFeatureDraggedPlatform.add((payload) {
+    _maplibreGlPlatform.onFeatureDraggedPlatform.add((payload) {
       for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
         final DragEventType enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
@@ -82,17 +104,17 @@ class MaplibreMapController extends ChangeNotifier {
       }
     });
 
-    _mapboxGlPlatform.onCameraMoveStartedPlatform.add((_) {
+    _maplibreGlPlatform.onCameraMoveStartedPlatform.add((_) {
       _isCameraMoving = true;
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onCameraMovePlatform.add((cameraPosition) {
+    _maplibreGlPlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onCameraIdlePlatform.add((cameraPosition) {
+    _maplibreGlPlatform.onCameraIdlePlatform.add((cameraPosition) {
       _isCameraMoving = false;
       if (cameraPosition != null) {
         _cameraPosition = cameraPosition;
@@ -103,7 +125,7 @@ class MaplibreMapController extends ChangeNotifier {
       notifyListeners();
     });
 
-    _mapboxGlPlatform.onMapStyleLoadedPlatform.add((_) {
+    _maplibreGlPlatform.onMapStyleLoadedPlatform.add((_) {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (var type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
@@ -132,36 +154,36 @@ class MaplibreMapController extends ChangeNotifier {
       }
     });
 
-    _mapboxGlPlatform.onMapClickPlatform.add((dict) {
+    _maplibreGlPlatform.onMapClickPlatform.add((dict) {
       if (onMapClick != null) {
         onMapClick!(dict['point'], dict['latLng']);
       }
     });
 
-    _mapboxGlPlatform.onMapLongClickPlatform.add((dict) {
+    _maplibreGlPlatform.onMapLongClickPlatform.add((dict) {
       if (onMapLongClick != null) {
         onMapLongClick!(dict['point'], dict['latLng']);
       }
     });
 
-    _mapboxGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
+    _maplibreGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
       if (onCameraTrackingChanged != null) {
         onCameraTrackingChanged!(mode);
       }
     });
 
-    _mapboxGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
+    _maplibreGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
       if (onCameraTrackingDismissed != null) {
         onCameraTrackingDismissed!();
       }
     });
 
-    _mapboxGlPlatform.onMapIdlePlatform.add((_) {
+    _maplibreGlPlatform.onMapIdlePlatform.add((_) {
       if (onMapIdle != null) {
         onMapIdle!();
       }
     });
-    _mapboxGlPlatform.onUserLocationUpdatedPlatform.add((location) {
+    _maplibreGlPlatform.onUserLocationUpdatedPlatform.add((location) {
       onUserLocationUpdated?.call(location);
     });
   }
@@ -203,7 +225,7 @@ class MaplibreMapController extends ChangeNotifier {
   final ArgumentCallbacks<Symbol> onInfoWindowTapped =
       ArgumentCallbacks<Symbol>();
 
-  /// The current set of symbols on this map.
+  /// The current set of symbols on this map added with the [addSymbol] or [addSymbols] methods.
   ///
   /// The returned set will be a detached snapshot of the symbols collection.
   Set<Symbol> get symbols => symbolManager!.annotations;
@@ -211,17 +233,17 @@ class MaplibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
 
-  /// The current set of lines on this map.
+  /// The current set of lines on this map added with the [addLine] or [addLines] methods.
   ///
   /// The returned set will be a detached snapshot of the lines collection.
   Set<Line> get lines => lineManager!.annotations;
 
-  /// The current set of circles on this map.
+  /// The current set of circles on this map added with the [addCircle] or [addCircles] methods.
   ///
   /// The returned set will be a detached snapshot of the circles collection.
   Set<Circle> get circles => circleManager!.annotations;
 
-  /// The current set of fills on this map.
+  /// The current set of fills on this map added with the [addFill] or [addFills] methods.
   ///
   /// The returned set will be a detached snapshot of the fills collection.
   Set<Fill> get fills => fillManager!.annotations;
@@ -231,11 +253,11 @@ class MaplibreMapController extends ChangeNotifier {
   bool _isCameraMoving = false;
 
   /// Returns the most recent camera position reported by the platform side.
-  /// Will be null, if [MapboxMap.trackCameraPosition] is false.
+  /// Will be null, if [MaplibreMap.trackCameraPosition] is false.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
-  final MapLibreGlPlatform _mapboxGlPlatform; //ignore: unused_field
+  final MapLibreGlPlatform _maplibreGlPlatform; //ignore: unused_field
 
   /// Updates configuration options of the map user interface.
   ///
@@ -244,7 +266,7 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
-    _cameraPosition = await _mapboxGlPlatform.updateMapOptions(optionsUpdate);
+    _cameraPosition = await _maplibreGlPlatform.updateMapOptions(optionsUpdate);
     notifyListeners();
   }
 
@@ -255,12 +277,12 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// To force resize map (without any checks) have a look at forceResizeWebMap()
   void resizeWebMap() {
-    _mapboxGlPlatform.resizeWebMap();
+    _maplibreGlPlatform.resizeWebMap();
   }
 
   /// Triggers a hard map resize event on web and does not check if it is required or not.
   void forceResizeWebMap() {
-    _mapboxGlPlatform.forceResizeWebMap();
+    _maplibreGlPlatform.forceResizeWebMap();
   }
 
   /// Starts an animated change of the map camera position.
@@ -273,7 +295,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: this currently always returns immediately with a value of null on iOS
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
-    return _mapboxGlPlatform.animateCamera(cameraUpdate, duration: duration);
+    return _maplibreGlPlatform.animateCamera(cameraUpdate, duration: duration);
   }
 
   /// Instantaneously re-position the camera.
@@ -284,7 +306,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
-    return _mapboxGlPlatform.moveCamera(cameraUpdate);
+    return _maplibreGlPlatform.moveCamera(cameraUpdate);
   }
 
   /// Adds a new geojson source
@@ -293,15 +315,14 @@ class MaplibreMapController extends ChangeNotifier {
   /// as specified in https://datatracker.ietf.org/doc/html/rfc7946#section-3.3
   ///
   /// [promoteId] can be used on web to promote an id from properties to be the
-  /// id of the feature. This is useful because by default mapbox-gl-js does not
+  /// id of the feature. This is useful because by default maplibre-gl-js does not
   /// support string ids
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
-  ///
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId}) async {
-    await _mapboxGlPlatform.addGeoJsonSource(sourceId, geojson,
+    await _maplibreGlPlatform.addGeoJsonSource(sourceId, geojson,
         promoteId: promoteId);
   }
 
@@ -318,7 +339,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setGeoJsonSource(
       String sourceId, Map<String, dynamic> geojson) async {
-    await _mapboxGlPlatform.setGeoJsonSource(sourceId, geojson);
+    await _maplibreGlPlatform.setGeoJsonSource(sourceId, geojson);
   }
 
   /// Sets new geojson data to and existing source
@@ -334,7 +355,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setGeoJsonFeature(
       String sourceId, Map<String, dynamic> geojsonFeature) async {
-    await _mapboxGlPlatform.setFeatureForGeoJsonSource(
+    await _maplibreGlPlatform.setFeatureForGeoJsonSource(
         sourceId, geojsonFeature);
   }
 
@@ -356,7 +377,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addSymbolLayer(
       String sourceId, String layerId, SymbolLayerProperties properties,
       {String? belowLayerId,
@@ -365,7 +386,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addSymbolLayer(
+    await _maplibreGlPlatform.addSymbolLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -396,7 +417,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLineLayer(
       String sourceId, String layerId, LineLayerProperties properties,
       {String? belowLayerId,
@@ -405,7 +426,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addLineLayer(
+    await _maplibreGlPlatform.addLineLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -426,7 +447,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> setLayerProperties(
       String layerId, LayerProperties properties) async {
-    await _mapboxGlPlatform.setLayerProperties(layerId, properties.toJson());
+    await _maplibreGlPlatform.setLayerProperties(layerId, properties.toJson());
   }
 
   /// Add a fill layer to the map with the given properties
@@ -447,7 +468,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addFillLayer(
       String sourceId, String layerId, FillLayerProperties properties,
       {String? belowLayerId,
@@ -456,7 +477,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addFillLayer(
+    await _maplibreGlPlatform.addFillLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -487,7 +508,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addCircleLayer(
       String sourceId, String layerId, CircleLayerProperties properties,
       {String? belowLayerId,
@@ -496,7 +517,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addCircleLayer(
+    await _maplibreGlPlatform.addCircleLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -529,7 +550,7 @@ class MaplibreMapController extends ChangeNotifier {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    await _mapboxGlPlatform.addRasterLayer(
+    await _maplibreGlPlatform.addRasterLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -560,7 +581,7 @@ class MaplibreMapController extends ChangeNotifier {
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    await _mapboxGlPlatform.addHillshadeLayer(
+    await _maplibreGlPlatform.addHillshadeLayer(
       sourceId,
       layerId,
       properties.toJson(),
@@ -577,7 +598,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode) async {
-    return _mapboxGlPlatform
+    return _maplibreGlPlatform
         .updateMyLocationTrackingMode(myLocationTrackingMode);
   }
 
@@ -586,7 +607,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> matchMapLanguageWithDeviceDefault() async {
-    return _mapboxGlPlatform.matchMapLanguageWithDeviceDefault();
+    return _maplibreGlPlatform.matchMapLanguageWithDeviceDefault();
   }
 
   /// Updates the distance from the edges of the map view’s frame to the edges
@@ -602,17 +623,25 @@ class MaplibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> updateContentInsets(EdgeInsets insets,
       [bool animated = false]) async {
-    return _mapboxGlPlatform.updateContentInsets(insets, animated);
+    return _maplibreGlPlatform.updateContentInsets(insets, animated);
   }
 
   /// Updates the language of the map labels to match the specified language.
-  /// Supported language strings are available here: https://github.com/mapbox/mapbox-plugins-android/blob/e29c18d25098eb023a831796ff807e30d8207c36/plugin-localization/src/main/java/com/mapbox/mapboxsdk/plugins/localization/MapLocale.java#L39-L87
+  /// This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
+  /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]),
+  /// and is also used by some other vector tile generation software and vector tile providers.
+  /// Commonly, (and according to the OSM wiki) [language] should be
+  /// "a lowercase language's ISO 639-1 alpha2 code (second column), a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist, or a ISO 639-3 code if neither of those exist".
+  ///
+  /// If your vector tiles do not follow this schema of having labels with "name:$language" for different language, this method will not work for you.
+  /// In that case, you need to adapt your Maplibre style accordingly yourself to use labels in your preferred language.
+  ///
   /// Attention: This may only be called after onStyleLoaded() has been invoked.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setMapLanguage(String language) async {
-    return _mapboxGlPlatform.setMapLanguage(language);
+    return _maplibreGlPlatform.setMapLanguage(language);
   }
 
   /// Enables or disables the collection of anonymized telemetry data.
@@ -620,7 +649,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setTelemetryEnabled(bool enabled) async {
-    return _mapboxGlPlatform.setTelemetryEnabled(enabled);
+    return _maplibreGlPlatform.setTelemetryEnabled(enabled);
   }
 
   /// Retrieves whether collection of anonymized telemetry data is enabled.
@@ -628,7 +657,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the query has been made on the
   /// platform side.
   Future<bool> getTelemetryEnabled() async {
-    return _mapboxGlPlatform.getTelemetryEnabled();
+    return _maplibreGlPlatform.getTelemetryEnabled();
   }
 
   /// Adds a symbol to the map, configured using the specified custom [options].
@@ -712,7 +741,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [symbols] from the map.
+  /// Removes all [symbols] from the map added with the [addSymbol] or [addSymbols] methods.
   ///
   /// Change listeners are notified once all symbols have been removed on the
   /// platform side.
@@ -802,7 +831,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [lines] from the map.
+  /// Removes all [lines] from the map added with the [addLine] or [addLines] methods.
   ///
   /// Change listeners are notified once all lines have been removed on the
   /// platform side.
@@ -896,7 +925,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [circles] from the map.
+  /// Removes all [circles] from the map added with the [addCircle] or [addCircles] methods.
   ///
   /// Change listeners are notified once all circles have been removed on the
   /// platform side.
@@ -959,7 +988,7 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes all [fill] from the map.
+  /// Removes all [fills] from the map added with the [addFill] or [addFills] methods.
   ///
   /// Change listeners are notified once all fills have been removed on the
   /// platform side.
@@ -998,13 +1027,13 @@ class MaplibreMapController extends ChangeNotifier {
   /// Query rendered features at a point in screen cooridnates
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
-    return _mapboxGlPlatform.queryRenderedFeatures(point, layerIds, filter);
+    return _maplibreGlPlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
   /// Query rendered features in a Rect in screen coordinates
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
-    return _mapboxGlPlatform.queryRenderedFeaturesInRect(
+    return _maplibreGlPlatform.queryRenderedFeaturesInRect(
         rect, layerIds, filter);
   }
 
@@ -1012,24 +1041,24 @@ class MaplibreMapController extends ChangeNotifier {
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
-    return _mapboxGlPlatform.querySourceFeatures(
+    return _maplibreGlPlatform.querySourceFeatures(
         sourceId, sourceLayerId, filter);
   }
 
   Future invalidateAmbientCache() async {
-    return _mapboxGlPlatform.invalidateAmbientCache();
+    return _maplibreGlPlatform.invalidateAmbientCache();
   }
 
   /// Get last my location
   ///
   /// Return last latlng, nullable
   Future<LatLng?> requestMyLocationLatLng() async {
-    return _mapboxGlPlatform.requestMyLocationLatLng();
+    return _maplibreGlPlatform.requestMyLocationLatLng();
   }
 
   /// This method returns the boundaries of the region currently displayed in the map.
   Future<LatLngBounds> getVisibleRegion() async {
-    return _mapboxGlPlatform.getVisibleRegion();
+    return _maplibreGlPlatform.getVisibleRegion();
   }
 
   /// Adds an image to the style currently displayed in the map, so that it can later be referred to by the provided name.
@@ -1068,25 +1097,25 @@ class MaplibreMapController extends ChangeNotifier {
   /// }
   /// ```
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]) {
-    return _mapboxGlPlatform.addImage(name, bytes, sdf);
+    return _maplibreGlPlatform.addImage(name, bytes, sdf);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the icon will be visible even if it collides with other previously drawn symbols.
   Future<void> setSymbolIconAllowOverlap(bool enable) async {
     await symbolManager?.setIconAllowOverlap(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the icon.
   Future<void> setSymbolIconIgnorePlacement(bool enable) async {
     await symbolManager?.setIconIgnorePlacement(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, the text will be visible even if it collides with other previously drawn symbols.
   Future<void> setSymbolTextAllowOverlap(bool enable) async {
     await symbolManager?.setTextAllowOverlap(enable);
   }
 
-  /// For more information on what this does, see https://docs.mapbox.com/help/troubleshooting/optimize-map-label-placement/#label-collision
+  /// If true, other symbols can be visible even if they collide with the text.
   Future<void> setSymbolTextIgnorePlacement(bool enable) async {
     await symbolManager?.setTextIgnorePlacement(enable);
   }
@@ -1095,62 +1124,64 @@ class MaplibreMapController extends ChangeNotifier {
   /// Not implemented on web.
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
-    return _mapboxGlPlatform.addImageSource(imageSourceId, bytes, coordinates);
+    return _maplibreGlPlatform.addImageSource(
+        imageSourceId, bytes, coordinates);
   }
 
   /// Update the image and/or coordinates of an image source.
   /// Not implemented on web.
   Future<void> updateImageSource(
       String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
-    return _mapboxGlPlatform.updateImageSource(
+    return _maplibreGlPlatform.updateImageSource(
         imageSourceId, bytes, coordinates);
   }
 
   /// Removes previously added image source by id
   @Deprecated("This method was renamed to removeSource")
   Future<void> removeImageSource(String imageSourceId) {
-    return _mapboxGlPlatform.removeSource(imageSourceId);
+    return _maplibreGlPlatform.removeSource(imageSourceId);
   }
 
   /// Removes previously added source by id
   Future<void> removeSource(String sourceId) {
-    return _mapboxGlPlatform.removeSource(sourceId);
+    return _maplibreGlPlatform.removeSource(sourceId);
   }
 
-  /// Adds a Mapbox image layer to the map's style at render time.
+  /// Adds an image layer to the map's style at render time.
   Future<void> addImageLayer(String layerId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
+    return _maplibreGlPlatform.addLayer(
+        layerId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Adds a Mapbox image layer below the layer provided with belowLayerId to the map's style at render time.
+  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
   Future<void> addImageLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayerBelow(
+    return _maplibreGlPlatform.addLayerBelow(
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Adds a Mapbox image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
+  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
   @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
   Future<void> addLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _mapboxGlPlatform.addLayerBelow(
+    return _maplibreGlPlatform.addLayerBelow(
         layerId, sourceId, imageSourceId, minzoom, maxzoom);
   }
 
-  /// Removes a Mapbox style layer
+  /// Removes a MapLibre style layer
   Future<void> removeLayer(String layerId) {
-    return _mapboxGlPlatform.removeLayer(layerId);
+    return _maplibreGlPlatform.removeLayer(layerId);
   }
 
   Future<void> setFilter(String layerId, dynamic filter) {
-    return _mapboxGlPlatform.setFilter(layerId, filter);
+    return _maplibreGlPlatform.setFilter(layerId, filter);
   }
 
   Future<dynamic> getFilter(String layerId) {
-    return _mapboxGlPlatform.getFilter(layerId);
+    return _maplibreGlPlatform.getFilter(layerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
@@ -1160,27 +1191,27 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// Returns null if [latLng] is not currently visible on the map.
   Future<Point> toScreenLocation(LatLng latLng) async {
-    return _mapboxGlPlatform.toScreenLocation(latLng);
+    return _maplibreGlPlatform.toScreenLocation(latLng);
   }
 
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
-    return _mapboxGlPlatform.toScreenLocationBatch(latLngs);
+    return _maplibreGlPlatform.toScreenLocationBatch(latLngs);
   }
 
   /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
   Future<LatLng> toLatLng(Point screenLocation) async {
-    return _mapboxGlPlatform.toLatLng(screenLocation);
+    return _maplibreGlPlatform.toLatLng(screenLocation);
   }
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
-    return _mapboxGlPlatform.getMetersPerPixelAtLatitude(latitude);
+    return _maplibreGlPlatform.getMetersPerPixelAtLatitude(latitude);
   }
 
   /// Add a new source to the map
   Future<void> addSource(String sourceid, SourceProperties properties) async {
-    return _mapboxGlPlatform.addSource(sourceid, properties);
+    return _maplibreGlPlatform.addSource(sourceid, properties);
   }
 
   Future setCameraBounds({
@@ -1190,7 +1221,7 @@ class MaplibreMapController extends ChangeNotifier {
     required double east,
     required int padding,
   }) async {
-    return _mapboxGlPlatform.setCameraBounds(
+    return _maplibreGlPlatform.setCameraBounds(
       west: west,
       north: north,
       south: south,
@@ -1218,7 +1249,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   /// [filter] is not supported by RasterLayer and HillshadeLayer.
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
       String sourceId, String layerId, LayerProperties properties,
       {String? belowLayerId,
@@ -1283,18 +1314,18 @@ class MaplibreMapController extends ChangeNotifier {
   }
 
   Future<void> setLayerVisibility(String layerId, bool visible) async {
-    return _mapboxGlPlatform.setLayerVisibility(layerId, visible);
+    return _maplibreGlPlatform.setLayerVisibility(layerId, visible);
   }
 
   Future<List> getLayerIds() {
-    return _mapboxGlPlatform.getLayerIds();
+    return _maplibreGlPlatform.getLayerIds();
   }
 
   /// Retrieve every source ids of the map as a [String] list, including the ones added internally
   ///
   /// This method is not currently implemented on the web
   Future<List<String>> getSourceIds() async {
-    return (await _mapboxGlPlatform.getSourceIds())
+    return (await _maplibreGlPlatform.getSourceIds())
         .whereType<String>()
         .toList();
   }
@@ -1302,6 +1333,6 @@ class MaplibreMapController extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
-    _mapboxGlPlatform.dispose();
+    _maplibreGlPlatform.dispose();
   }
 }

@@ -53,7 +53,6 @@ class FullMapState extends State<FullMap> {
         // ),
         // ),
         body: MaplibreMap(
-      // TODO: styleString: isLight ? MapboxStyles.LIGHT : MapboxStyles.DARK,
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
       onStyleLoadedCallback: _onStyleLoadedCallback,
