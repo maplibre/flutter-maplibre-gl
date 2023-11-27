@@ -44,7 +44,9 @@ Documentation is available on the docs branch in the doc/api folder and automati
 Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
 ### iOS
-To use this plugin with iOS, you do not need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should be able to remove these lines from your Podfile: 
+To use this plugin with iOS, you **do not** need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should actually remove these lines from your Podfile to avoid build errors: 
+<details>
+<summary>View obsolete code</summary>
 
 ```ruby
 source 'https://cdn.cocoapods.org/'
@@ -53,7 +55,7 @@ source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
 ```
-
+</details>
 You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
 
 ### Web
