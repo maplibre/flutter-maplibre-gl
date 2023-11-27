@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.handler.touch_zoom_rotate;
+library maplibre.interop.ui.handler.touch_zoom_rotate;
 
 import 'dart:html';
 

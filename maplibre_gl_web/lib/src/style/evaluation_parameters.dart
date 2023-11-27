@@ -1,4 +1,4 @@
-library mapboxgl.style.evaluation_parameters;
+library maplibre.style.evaluation_parameters;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

@@ -1,4 +1,4 @@
-library mapboxgl.ui.events;
+library maplibre.ui.events;
 
 import 'dart:html';
 
@@ -11,8 +11,8 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
   /// The event type.
   String get type => jsObject.type;
 
-  /// The `MapboxMap` object that fired the event.
-  MapboxMap get target => MapboxMap.fromJsObject(jsObject.target);
+  /// The `MapLibreMap` object that fired the event.
+  MapLibreMap get target => MapLibreMap.fromJsObject(jsObject.target);
 
   /// The DOM event which caused the map event.
   MouseEvent get originalEvent => jsObject.originalEvent;
@@ -45,8 +45,8 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
   /// The event type.
   String get type => jsObject.type;
 
-  /// The `MapboxMap` object that fired the event.
-  MapboxMap get target => MapboxMap.fromJsObject(jsObject.target);
+  /// The `MapLibreMap` object that fired the event.
+  MapLibreMap get target => MapLibreMap.fromJsObject(jsObject.target);
 
   /// The DOM event which caused the map event.
   TouchEvent get originalEvent => jsObject.originalEvent;

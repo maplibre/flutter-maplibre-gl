@@ -1,4 +1,4 @@
-library mapboxgl.ui.control.navigation_control;
+library maplibre.ui.control.navigation_control;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
@@ -35,10 +35,10 @@ class NavigationControlOptions
 /// @param {Boolean} [options.showZoom=true] If `true` the zoom-in and zoom-out buttons are included.
 /// @param {Boolean} [options.visualizePitch=false] If `true` the pitch is visualized by rotating X-axis of compass.
 /// @example
-/// var nav = new mapboxgl.NavigationControl();
+/// var nav = new maplibregl.NavigationControl();
 /// map.addControl(nav, 'top-left');
-/// @see [Display map navigation controls](https://www.mapbox.com/mapbox-gl-js/example/navigation/)
-/// @see [Add a third party vector tile source](https://www.mapbox.com/mapbox-gl-js/example/third-party/)
+/// @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+/// @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
 class NavigationControl extends JsObjectWrapper<NavigationControlJsImpl> {
   NavigationControlOptions get options =>
       NavigationControlOptions.fromJsObject(jsObject.options);
@@ -46,7 +46,7 @@ class NavigationControl extends JsObjectWrapper<NavigationControlJsImpl> {
   factory NavigationControl(NavigationControlOptions options) =>
       NavigationControl.fromJsObject(NavigationControlJsImpl(options.jsObject));
 
-  onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   onRemove() => jsObject.onRemove();
 

@@ -1,4 +1,4 @@
-library mapboxgl.util.evented;
+library maplibre.util.evented;
 
 import 'dart:js';
 
@@ -54,9 +54,9 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
-  MapboxMap on(String type, [dynamic layerIdOrListener, Listener? listener]) {
+  MapLibreMap on(String type, [dynamic layerIdOrListener, Listener? listener]) {
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
         jsObject.on(type, allowInterop(
           (dynamic position) {
             layerIdOrListener(position);
@@ -65,7 +65,7 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
       );
     }
     if (layerIdOrListener is Listener) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
         jsObject.on(type, allowInterop(
           (EventJsImpl object) {
             layerIdOrListener(Event.fromJsObject(object));
@@ -73,7 +73,7 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
         )),
       );
     }
-    return MapboxMap.fromJsObject(
+    return MapLibreMap.fromJsObject(
         jsObject.on(type, layerIdOrListener, allowInterop(
       (EventJsImpl object) {
         listener!(Event.fromJsObject(object));
@@ -86,9 +86,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
-  MapboxMap off(String type, [dynamic layerIdOrListener, Listener? listener]) {
+  MapLibreMap off(String type,
+      [dynamic layerIdOrListener, Listener? listener]) {
     if (layerIdOrListener is Listener) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
         jsObject.off(type, allowInterop(
           (EventJsImpl object) {
             layerIdOrListener(Event.fromJsObject(object));
@@ -96,7 +97,7 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
         )),
       );
     }
-    return MapboxMap.fromJsObject(
+    return MapLibreMap.fromJsObject(
         jsObject.off(type, layerIdOrListener, allowInterop(
       (EventJsImpl object) {
         listener!(Event.fromJsObject(object));
@@ -111,8 +112,8 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to listen for.
   ///  @param {Function} listener The function to be called when the event is fired the first time.
   ///  @returns {Object} `this`
-  MapboxMap once(String type, Listener listener) =>
-      MapboxMap.fromJsObject(jsObject.once(type, allowInterop(
+  MapLibreMap once(String type, Listener listener) =>
+      MapLibreMap.fromJsObject(jsObject.once(type, allowInterop(
         (EventJsImpl object) {
           listener(Event.fromJsObject(object));
         },

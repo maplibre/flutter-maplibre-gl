@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library mapboxgl.interop.ui.marker;
+library maplibre.interop.ui.marker;
 
 import 'dart:html';
 import 'package:js/js.dart';
@@ -20,24 +20,24 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 /// @param {string} [pitchAlignment='auto'] `map` aligns the `Marker` to the plane of the map. `viewport` aligns the `Marker` to the plane of the viewport. `auto` automatically matches the value of `rotationAlignment`.
 /// @param {string} [rotationAlignment='auto'] `map` aligns the `Marker`'s rotation relative to the map, maintaining a bearing as the map rotates. `viewport` aligns the `Marker`'s rotation relative to the viewport, agnostic to map rotations. `auto` is equivalent to `viewport`.
 /// ```dart
-/// var marker = mapboxgl.Marker()
+/// var marker = maplibregl.Marker()
 ///   .setLngLat([30.5, 50.5])
 ///   .addTo(map);
 /// ```
-/// @see [Add custom icons with Markers](https://www.mapbox.com/mapbox-gl-js/example/custom-marker-icons/)
-/// @see [Create a draggable Marker](https://www.mapbox.com/mapbox-gl-js/example/drag-a-marker/)
+/// @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
+/// @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
 @JS('Marker')
 class MarkerJsImpl extends EventedJsImpl {
   external factory MarkerJsImpl([MarkerOptionsJsImpl? options]);
 
   ///  Attaches the marker to a map
-  ///  @param {MapboxMap} map
+  ///  @param {MapLibreMap} map
   ///  @returns {Marker} `this`
-  external MarkerJsImpl addTo(MapboxMapJsImpl map);
+  external MarkerJsImpl addTo(MapLibreMapJsImpl map);
 
   ///  Removes the marker from a map
   ///  @example
-  ///  var marker = new mapboxgl.Marker().addTo(map);
+  ///  var marker = new maplibregl.Marker().addTo(map);
   ///  marker.remove();
   ///  @returns {Marker} `this`
   external MarkerJsImpl remove();

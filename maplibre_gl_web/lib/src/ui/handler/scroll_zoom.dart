@@ -1,4 +1,4 @@
-library mapboxgl.ui.handler.scroll_zoom;
+library maplibre.ui.handler.scroll_zoom;
 
 import 'dart:html';
 

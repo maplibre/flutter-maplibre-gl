@@ -1,5 +1,5 @@
 @JS()
-library mapboxgl.interop.js;
+library maplibre.interop.js;
 
 import 'package:js/js.dart';
 

@@ -1,4 +1,4 @@
-library mapboxgl.style.layers.layer;
+library maplibre.style.layers.layer;
 
 abstract class Layer {
   /// JS object.

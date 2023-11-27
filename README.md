@@ -80,7 +80,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 
 ## Map Styles
 
-Map styles can be supplied by setting the `styleString` in the `MapOptions`. The following formats are supported:
+Map styles can be supplied by setting the `styleString` in the `MaplibreMap` constructor. The following formats are supported:
 
 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.

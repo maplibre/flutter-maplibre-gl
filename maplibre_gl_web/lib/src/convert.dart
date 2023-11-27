@@ -1,8 +1,8 @@
 part of maplibre_gl_web;
 
 class Convert {
-  static void interpretMapboxMapOptions(
-      Map<String, dynamic> options, MapboxMapOptionsSink sink) {
+  static void interpretMapLibreMapOptions(
+      Map<String, dynamic> options, MapLibreMapOptionsSink sink) {
     if (options.containsKey('cameraTargetBounds')) {
       final bounds = options['cameraTargetBounds'][0];
       if (bounds == null) {
@@ -80,7 +80,7 @@ class Convert {
   }
 
   static CameraOptions toCameraOptions(
-      CameraUpdate cameraUpdate, MapboxMap mapboxMap) {
+      CameraUpdate cameraUpdate, MapLibreMap mapLibreMap) {
     final List<dynamic> json = cameraUpdate.toJson();
     final type = json[0];
     switch (type) {
@@ -96,9 +96,9 @@ class Convert {
         final target = json[1];
         return CameraOptions(
           center: LngLat(target[1], target[0]),
-          zoom: mapboxMap.getZoom(),
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          zoom: mapLibreMap.getZoom(),
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'newLatLngBounds':
         final bounds = json[1];
@@ -106,7 +106,7 @@ class Convert {
         final top = json[3];
         final right = json[4];
         final bottom = json[5];
-        final camera = mapboxMap.cameraForBounds(
+        final camera = mapLibreMap.cameraForBounds(
             LngLatBounds(
               LngLat(bounds[0][1], bounds[0][0]),
               LngLat(bounds[1][1], bounds[1][0]),
@@ -126,74 +126,75 @@ class Convert {
         return CameraOptions(
           center: LngLat(target[1], target[0]),
           zoom: zoom,
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'scrollBy':
         final x = json[1];
         final y = json[2];
-        final point = mapboxMap.project(mapboxMap.getCenter());
+        final point = mapLibreMap.project(mapLibreMap.getCenter());
         return CameraOptions(
-          center: mapboxMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
-          zoom: mapboxMap.getZoom(),
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          center:
+              mapLibreMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
+          zoom: mapLibreMap.getZoom(),
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
 
       case 'zoomBy':
         final zoom = json[1];
         if (json.length == 2) {
           return CameraOptions(
-            center: mapboxMap.getCenter(),
-            zoom: mapboxMap.getZoom() + zoom,
-            pitch: mapboxMap.getPitch(),
-            bearing: mapboxMap.getBearing(),
+            center: mapLibreMap.getCenter(),
+            zoom: mapLibreMap.getZoom() + zoom,
+            pitch: mapLibreMap.getPitch(),
+            bearing: mapLibreMap.getBearing(),
           );
         }
         final point = json[2];
         return CameraOptions(
-          center: mapboxMap.unproject(geoPoint.Point(point[0], point[1])),
-          zoom: mapboxMap.getZoom() + zoom,
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          center: mapLibreMap.unproject(geoPoint.Point(point[0], point[1])),
+          zoom: mapLibreMap.getZoom() + zoom,
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'zoomIn':
         return CameraOptions(
-          center: mapboxMap.getCenter(),
-          zoom: mapboxMap.getZoom() + 1,
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          center: mapLibreMap.getCenter(),
+          zoom: mapLibreMap.getZoom() + 1,
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'zoomOut':
         return CameraOptions(
-          center: mapboxMap.getCenter(),
-          zoom: mapboxMap.getZoom() - 1,
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          center: mapLibreMap.getCenter(),
+          zoom: mapLibreMap.getZoom() - 1,
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'zoomTo':
         final zoom = json[1];
         return CameraOptions(
-          center: mapboxMap.getCenter(),
+          center: mapLibreMap.getCenter(),
           zoom: zoom,
-          pitch: mapboxMap.getPitch(),
-          bearing: mapboxMap.getBearing(),
+          pitch: mapLibreMap.getPitch(),
+          bearing: mapLibreMap.getBearing(),
         );
       case 'bearingTo':
         final bearing = json[1];
         return CameraOptions(
-          center: mapboxMap.getCenter(),
-          zoom: mapboxMap.getZoom(),
-          pitch: mapboxMap.getPitch(),
+          center: mapLibreMap.getCenter(),
+          zoom: mapLibreMap.getZoom(),
+          pitch: mapLibreMap.getPitch(),
           bearing: bearing,
         );
       case 'tiltTo':
         final tilt = json[1];
         return CameraOptions(
-          center: mapboxMap.getCenter(),
-          zoom: mapboxMap.getZoom(),
+          center: mapLibreMap.getCenter(),
+          zoom: mapLibreMap.getZoom(),
           pitch: tilt,
-          bearing: mapboxMap.getBearing(),
+          bearing: mapLibreMap.getBearing(),
         );
       default:
         throw UnimplementedError('Cannot interpret $type as CameraUpdate');

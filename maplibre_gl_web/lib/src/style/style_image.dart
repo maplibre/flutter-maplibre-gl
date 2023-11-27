@@ -1,4 +1,4 @@
-library mapboxgl.style.style_image;
+library maplibre.style.style_image;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
@@ -21,7 +21,7 @@ class StyleImageInterface extends JsObjectWrapper<StyleImageInterfaceJsImpl> {
   num get height => jsObject.height;
   dynamic get data => jsObject.data;
   Function get render => jsObject.render;
-  Function(MapboxMapJsImpl map, String id) get onAdd =>
+  Function(MapLibreMapJsImpl map, String id) get onAdd =>
       jsObject.onAdd; //TODO: Remove JsImpl
   Function get onRemove => jsObject.onRemove;
 

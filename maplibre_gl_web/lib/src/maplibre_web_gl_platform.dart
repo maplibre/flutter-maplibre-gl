@@ -5,11 +5,11 @@ final _maplibreGlCssUrl =
     'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
 
 class MaplibreMapController extends MapLibreGlPlatform
-    implements MapboxMapOptionsSink {
+    implements MapLibreMapOptionsSink {
   late html.DivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
-  late MapboxMap _map;
+  late MapLibreMap _map;
   bool _mapReady = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
@@ -66,7 +66,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       var camera = _creationParams['initialCameraPosition'];
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-      _map = MapboxMap(
+      _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
           style: 'https://demotiles.maplibre.org/style.json',
@@ -93,7 +93,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
       _initResizeObserver();
     }
-    Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+    Convert.interpretMapLibreMapOptions(_creationParams['options'], this);
   }
 
   void _initResizeObserver() {
@@ -189,7 +189,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
     // FIX: why is called indefinitely? (map_ui page)
-    Convert.interpretMapboxMapOptions(optionsUpdate, this);
+    Convert.interpretMapLibreMapOptions(optionsUpdate, this);
     return _getCameraPosition();
   }
 
@@ -626,7 +626,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   /*
-   *  MapboxMapOptionsSink
+   *  MapLibreMapOptionsSink
    */
   @override
   void setAttributionButtonMargins(int x, int y) {

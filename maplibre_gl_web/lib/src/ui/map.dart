@@ -1,4 +1,4 @@
-library mapboxgl.ui.map;
+library maplibre.ui.map;
 
 import 'dart:html';
 import 'package:js/js_util.dart';
@@ -21,21 +21,21 @@ import 'package:maplibre_gl_web/src/ui/handler/keyboard.dart';
 import 'package:maplibre_gl_web/src/ui/handler/scroll_zoom.dart';
 import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 
-///  The `MapboxMap` object represents the map on your page. It exposes methods
+///  The `MapLibreMap` object represents the map on your page. It exposes methods
 ///  and properties that enable you to programmatically change the map,
 ///  and fires events as users interact with it.
 ///
-///  You create a `MapboxMap` by specifying a `container` and other options.
-///  Then Mapbox GL JS initializes the map on the page and returns your `MapboxMap`
+///  You create a `MapLibreMap` by specifying a `container` and other options.
+///  Then MapLibre JS JS initializes the map on the page and returns your `MapLibreMap`
 ///  object.
 ///
 ///  ```dart
-///  var map = MapboxMap(
+///  var map = MapLibreMap(
 ///    MapOptions(
 ///      container: 'map',
 ///      center: LngLat(-122.420679, 37.772537),
 ///      zoom: 13,
-///      style: 'mapbox://styles/mapbox/satellite-streets-v11',
+///      style: style_object,
 ///      hash: true,
 ///      transformRequest: (url, resourceType) {
 ///        if (resourceType == 'Source' && url.startsWith('http://myHost')) {
@@ -50,12 +50,12 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///    ),
 ///  );
 ///  ```
-///  @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
-class MapboxMap extends Camera {
-  final MapboxMapJsImpl jsObject;
+///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
+class MapLibreMap extends Camera {
+  final MapLibreMapJsImpl jsObject;
 
-  factory MapboxMap(MapOptions options) =>
-      MapboxMap.fromJsObject(MapboxMapJsImpl(options.jsObject));
+  factory MapLibreMap(MapOptions options) =>
+      MapLibreMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
 
   Style get style => Style.fromJsObject(jsObject.style);
 
@@ -100,23 +100,23 @@ class MapboxMap extends Camera {
   ///  @param {IControl} control The {@link IControl} to add.
   ///  @param {string} [position] position on the map to which the control will be added.
   ///  Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
-  ///  @see [Display map navigation controls](https://www.mapbox.com/mapbox-gl-js/example/navigation/)
-  MapboxMap addControl(dynamic control, [String? position]) {
+  ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+  MapLibreMap addControl(dynamic control, [String? position]) {
     if (position != null) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
           jsObject.addControl(control.jsObject, position));
     }
-    return MapboxMap.fromJsObject(jsObject.addControl(control.jsObject));
+    return MapLibreMap.fromJsObject(jsObject.addControl(control.jsObject));
   }
 
   ///  Removes the control from the map.
   ///
   ///  @param {IControl} control The {@link IControl} to remove.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Define a new navigation control.
   ///  var navigation = new NavigationControl();
@@ -124,8 +124,8 @@ class MapboxMap extends Camera {
   ///  map.addControl(navigation);
   ///  // Remove zoom and rotation controls from the map.
   ///  map.removeControl(navigation);
-  MapboxMap removeControl(dynamic control) =>
-      MapboxMap.fromJsObject(jsObject.removeControl(control.jsObject));
+  MapLibreMap removeControl(dynamic control) =>
+      MapLibreMap.fromJsObject(jsObject.removeControl(control.jsObject));
 
   ///  Resizes the map according to the dimensions of its
   ///  `container` element.
@@ -137,14 +137,14 @@ class MapboxMap extends Camera {
   ///  @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
   ///    events that get triggered as a result of resize. This can be useful for differentiating the
   ///    source of an event (for example, user-initiated or programmatically-triggered events).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Resize the map when the map container is shown
   ///  // after being initially hidden with CSS.
   ///  var mapDiv = document.getElementById('map');
   ///  if (mapDiv.style.visibility === true) map.resize();
-  MapboxMap resize([dynamic eventData]) =>
-      MapboxMap.fromJsObject(jsObject.resize());
+  MapLibreMap resize([dynamic eventData]) =>
+      MapLibreMap.fromJsObject(jsObject.resize());
 
   ///  Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
   ///  an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
@@ -168,7 +168,7 @@ class MapboxMap extends Camera {
   ///  remaining within the bounds.
   ///
   ///  @param {LngLatBoundsLike | null | undefined} bounds The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  // Define bounds that conform to the `LngLatBoundsLike` object.
   ///  var bounds = [
@@ -177,8 +177,8 @@ class MapboxMap extends Camera {
   ///  ];
   ///  // Set the map's max bounds.
   ///  map.setMaxBounds(bounds);
-  MapboxMap setMaxBounds(LngLatBounds? bounds) =>
-      MapboxMap.fromJsObject(jsObject.setMaxBounds(bounds?.jsObject));
+  MapLibreMap setMaxBounds(LngLatBounds? bounds) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxBounds(bounds?.jsObject));
 
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
@@ -191,11 +191,11 @@ class MapboxMap extends Camera {
   ///
   ///  @param {number | null | undefined} minZoom The minimum zoom level to set (-2 - 24).
   ///    If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setMinZoom(12.25);
-  MapboxMap setMinZoom([num? minZoom]) =>
-      MapboxMap.fromJsObject(jsObject.setMinZoom(minZoom));
+  MapLibreMap setMinZoom([num? minZoom]) =>
+      MapLibreMap.fromJsObject(jsObject.setMinZoom(minZoom));
 
   ///  Returns the map's minimum allowable zoom level.
   ///
@@ -210,11 +210,11 @@ class MapboxMap extends Camera {
   ///
   ///  @param {number | null | undefined} maxZoom The maximum zoom level to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setMaxZoom(18.75);
-  MapboxMap setMaxZoom([num? maxZoom]) =>
-      MapboxMap.fromJsObject(jsObject.setMaxZoom(maxZoom));
+  MapLibreMap setMaxZoom([num? maxZoom]) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxZoom(maxZoom));
 
   ///  Returns the map's maximum allowable zoom level.
   ///
@@ -229,9 +229,9 @@ class MapboxMap extends Camera {
   ///
   ///  @param {number | null | undefined} minPitch The minimum pitch to set (0-60).
   ///    If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
-  ///  @returns {MapboxMap} `this`
-  MapboxMap setMinPitch([num? minPitch]) =>
-      MapboxMap.fromJsObject(jsObject.setMinPitch());
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setMinPitch([num? minPitch]) =>
+      MapLibreMap.fromJsObject(jsObject.setMinPitch());
 
   ///  Returns the map's minimum allowable pitch.
   ///
@@ -244,9 +244,9 @@ class MapboxMap extends Camera {
   ///
   ///  @param {number | null | undefined} maxPitch The maximum pitch to set.
   ///    If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
-  ///  @returns {MapboxMap} `this`
-  MapboxMap setMaxPitch([num? maxPitch]) =>
-      MapboxMap.fromJsObject(jsObject.setMaxPitch());
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setMaxPitch([num? maxPitch]) =>
+      MapLibreMap.fromJsObject(jsObject.setMaxPitch());
 
   ///  Returns the map's maximum allowable pitch.
   ///
@@ -261,7 +261,7 @@ class MapboxMap extends Camera {
   ///  @returns {boolean} renderWorldCopies
   ///  @example
   ///  var worldCopiesRendered = map.getRenderWorldCopies();
-  ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
+  ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   bool getRenderWorldCopies() => jsObject.getRenderWorldCopies();
 
   ///  Sets the state of `renderWorldCopies`.
@@ -273,12 +273,13 @@ class MapboxMap extends Camera {
   ///  map and the other on the left edge of the map) at every zoom level.
   ///
   ///  `undefined` is treated as `true`, `null` is treated as `false`.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setRenderWorldCopies(true);
-  ///  @see [Render world copies](https://docs.mapbox.com/mapbox-gl-js/example/render-world-copies/)
-  MapboxMap setRenderWorldCopies([bool? renderWorldCopies]) =>
-      MapboxMap.fromJsObject(jsObject.setRenderWorldCopies(renderWorldCopies));
+  ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
+  MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
+      MapLibreMap.fromJsObject(
+          jsObject.setRenderWorldCopies(renderWorldCopies));
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -331,18 +332,18 @@ class MapboxMap extends Camera {
   ///  feature in this layer will trigger the listener. The event will have a `features` property containing
   ///  an array of the matching features.
   ///  @param {Function} listener The function to be called when the event is fired.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
-  // MapboxMap on(String type, [dynamic layerIdOrListener, Listener listener]);
+  // MapLibreMap on(String type, [dynamic layerIdOrListener, Listener listener]);
 
-  ///  Removes an event listener for layer-specific events previously added with `MapboxMap#on`.
+  ///  Removes an event listener for layer-specific events previously added with `MapLibreMap#on`.
   ///
   ///  @param {string} type The event type previously used to install the listener.
   ///  @param {string} layerId The layer ID previously used to install the listener.
   ///  @param {Function} listener The function previously installed as a listener.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   // Defined in evented.dart
-  // MapboxMap off(String type, [dynamic layerIdOrListener, Listener listener]);
+  // MapLibreMap off(String type, [dynamic layerIdOrListener, Listener listener]);
 
   ///  Returns an array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -350,15 +351,15 @@ class MapboxMap extends Camera {
   ///
   ///  @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
   ///  either a single point or southwest and northeast points describing a bounding box.
-  ///  Omitting this parameter (i.e. calling {@link MapboxMap#queryRenderedFeatures} with zero arguments,
+  ///  Omitting this parameter (i.e. calling {@link MapLibreMap#queryRenderedFeatures} with zero arguments,
   ///  or with only a [options] argument) is equivalent to passing a bounding box encompassing the entire
   ///  map viewport.
   ///  @param {Object} [options]
-  ///  @param {Array<string>} `options.layers` An array of [style layer IDs](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-id) for the query to inspect.
+  ///  @param {Array<string>} `options.layers` An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
   ///    Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-  ///  @param {Array} `options.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
+  ///  @param {Array} `options.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
-  ///  @param {boolean} [options.validate=true] Whether to check if the `options.filter` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if the `options.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
@@ -418,9 +419,9 @@ class MapboxMap extends Camera {
   ///  @example
   ///  // Query all rendered features from a single layer
   ///  var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
-  ///  @see [Get features under the mouse pointer](https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/)
-  ///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
-  ///  @see [Filter features within map view](https://www.mapbox.com/mapbox-gl-js/example/filter-features-within-map-view/)
+  ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
+  ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
+  ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   List<Feature> queryRenderedFeatures(dynamic geometry,
       [Map<String, dynamic>? options]) {
     if (options == null) {
@@ -441,16 +442,16 @@ class MapboxMap extends Camera {
   ///
   ///  @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
   ///  @param {Object} [parameters]
-  ///  @param {string} `parameters.sourceLayer` The name of the [source layer](https://docs.mapbox.com/help/glossary/source-layer/)
+  ///  @param {string} `parameters.sourceLayer` The name of the [source layer]
   ///    to query./// For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-  ///  @param {Array} `parameters.filter` A [filter](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter)
+  ///  @param {Array} `parameters.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
-  ///  @param {boolean} `parameters.validate=true` Whether to check if the `parameters.filter` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} `parameters.validate=true` Whether to check if the `parameters.filter` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
   ///
-  ///  In contrast to {@link MapboxMap#queryRenderedFeatures}, this function returns all features matching the query parameters,
+  ///  In contrast to {@link MapLibreMap#queryRenderedFeatures}, this function returns all features matching the query parameters,
   ///  whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
   ///  vector tiles and GeoJSON source tiles: this function does not check tiles outside the currently
   ///  visible viewport.
@@ -469,11 +470,11 @@ class MapboxMap extends Camera {
   ///    sourceLayer: 'your-source-layer'
   ///  });
   ///
-  ///  @see [Highlight features containing similar data](https://www.mapbox.com/mapbox-gl-js/example/query-similar-features/)
+  ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
       jsObject.querySourceFeatures(sourceId, parameters);
 
-  ///  Updates the map's Mapbox style object with a new value.
+  ///  Updates the map's MapLibre style object with a new value.
   ///
   ///  If a style is already set when this is used and options.diff is set to true, the map renderer will attempt to compare the given style
   ///  against the map's current state and perform only the changes necessary to make the map style match the desired state. Changes in sprites
@@ -483,7 +484,7 @@ class MapboxMap extends Camera {
   ///
   ///
   ///  @param style A JSON object conforming to the schema described in the
-  ///    [Mapbox Style Specification](https://mapbox.com/mapbox-gl-style-spec/), or a URL to such JSON.
+  ///    [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
   ///  @param {Object} [options]
   ///  @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
   ///    and building the given one instead of attempting a diff-based update.
@@ -492,16 +493,12 @@ class MapboxMap extends Camera {
   ///    In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
   ///    Set to `false`, to enable font settings from the map's style for these glyph ranges.
   ///    Forces a full update.
-  ///  @returns {MapboxMap} `this`
-  ///
-  ///  @example
-  ///  map.setStyle("mapbox://styles/mapbox/streets-v11");
-  ///
-  ///  @see [Change a map's style](https://www.mapbox.com/mapbox-gl-js/example/setstyle/)
-  MapboxMap setStyle(dynamic style, [dynamic options]) =>
-      MapboxMap.fromJsObject(jsObject.setStyle(style));
+  ///  @returns {MapLibreMap} `this`
+  ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
+  MapLibreMap setStyle(dynamic style, [dynamic options]) =>
+      MapLibreMap.fromJsObject(jsObject.setStyle(style));
 
-  ///  Returns the map's Mapbox style object, which can be used to recreate the map's style.
+  ///  Returns the map's MapLibre style object, which can be used to recreate the map's style.
   ///
   ///  @returns {Object} The map's style object.
   ///
@@ -509,7 +506,7 @@ class MapboxMap extends Camera {
   ///  var styleJson = map.getStyle();
   dynamic getStyle() => jsObject.getStyle();
 
-  /// Return each layer of the  Mapbox style object, which can be used to check the order, toggle the visibility or change properties
+  /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
   List<dynamic> getLayers() => Style.fromJsObject(jsObject.getStyle()).layers;
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
@@ -524,38 +521,19 @@ class MapboxMap extends Camera {
   ///
   ///  @param {string} id The ID of the source to add. Must not conflict with existing sources.
   ///  @param {Object} source The source object, conforming to the
-  ///  Mapbox Style Specification's [source definition](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or
+  ///  MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
   ///  {@link CanvasSourceOptions}.
   ///  @fires source.add
-  ///  @returns {MapboxMap} `this`
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    type: 'vector',
-  ///    url: 'mapbox://myusername.tilesetid'
+  ///  @returns {MapLibreMap} `this`
   ///  });
-  ///  @example
-  ///  map.addSource('my-data', {
-  ///    "type": "geojson",
-  ///    "data": {
-  ///      "type": "Feature",
-  ///      "geometry": {
-  ///        "type": "Point",
-  ///        "coordinates": [-77.0323, 38.9131]
-  ///      },
-  ///      "properties": {
-  ///        "title": "Mapbox DC",
-  ///        "marker-symbol": "monument"
-  ///      }
-  ///    }
-  ///  });
-  ///  @see Vector source: [Show and hide layers](https://docs.mapbox.com/mapbox-gl-js/example/toggle-layers/)
-  ///  @see GeoJSON source: [Add live realtime data](https://docs.mapbox.com/mapbox-gl-js/example/live-geojson/)
-  ///  @see Raster DEM source: [Add hillshading](https://docs.mapbox.com/mapbox-gl-js/example/hillshade/)
-  MapboxMap addSource(String id, dynamic source) {
+  ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
+  ///  @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+  ///  @see Raster DEM source: [Add hillshading](https://maplibre.org/maplibre-gl-js/docs/examples/hillshade/)
+  MapLibreMap addSource(String id, dynamic source) {
     if (source is Source) {
-      return MapboxMap.fromJsObject(jsObject.addSource(id, source.jsObject));
+      return MapLibreMap.fromJsObject(jsObject.addSource(id, source.jsObject));
     }
-    return MapboxMap.fromJsObject(jsObject.addSource(id, jsify(source)));
+    return MapLibreMap.fromJsObject(jsObject.addSource(id, jsify(source)));
   }
 
   ///  Returns a Boolean indicating whether the source is loaded.
@@ -575,7 +553,7 @@ class MapboxMap extends Camera {
   bool areTilesLoaded() => jsObject.areTilesLoaded();
 
   ///  Adds a/// *custom source type**(#Custom Sources), making it available for use with
-  ///  {@link MapboxMap#addSource}.
+  ///  {@link MapLibreMap#addSource}.
   ///  @private
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
@@ -586,7 +564,7 @@ class MapboxMap extends Camera {
   ///  Removes a source from the map's style.
   ///
   ///  @param {string} id The ID of the source to remove.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
   removeSource(String id) => jsObject.removeSource(id);
@@ -598,9 +576,9 @@ class MapboxMap extends Camera {
   ///    if the ID corresponds to no existing sources.
   ///  @example
   ///  var sourceObject = map.getSource('points');
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
-  ///  @see [Animate a point](https://www.mapbox.com/mapbox-gl-js/example/animate-point-along-line/)
-  ///  @see [Add live realtime data](https://www.mapbox.com/mapbox-gl-js/example/live-geojson/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+  ///  @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
+  ///  @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
   dynamic getSource(String id) {
     var source = jsObject.getSource(id);
     if (source is GeoJsonSourceJsImpl) {
@@ -613,12 +591,12 @@ class MapboxMap extends Camera {
   }
 
   ///  Add an image to the style. This image can be displayed on the map like any other icon in the style's
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-  ///  [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-  ///  [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-  ///  [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-  ///  or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
-  ///  A {@link MapboxMap#error} event will be fired if there is not enough space in the sprite to add this image.
+  ///  [sprite]  using the image's ID with
+  ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+  ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+  ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+  ///  or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
+  ///  A {@link MapLibreMap#error} event will be fired if there is not enough space in the sprite to add this image.
   ///
   ///  @param id The ID of the image.
   ///  @param image The image as an `HTMLImageElement`, `ImageData`, or object with `width`, `height`, and `data`
@@ -653,8 +631,8 @@ class MapboxMap extends Camera {
   ///  });
   ///
   ///
-  ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
-  ///  @see Use `ImageData`: [Add a generated icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image-generated/)
+  ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
+  ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
   addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
     if (image is Map) {
       image = jsify(image);
@@ -665,11 +643,11 @@ class MapboxMap extends Camera {
   }
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-  ///  [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-  ///  [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-  ///  [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-  ///  or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
+  ///  [sprite]  using the image's ID with
+  ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+  ///  [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+  ///  [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+  ///  or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
   ///
   ///  @param id The ID of the image.
   ///  @param image The image as an `HTMLImageElement`, `ImageData`, or object with `width`, `height`, and `data`
@@ -682,7 +660,7 @@ class MapboxMap extends Camera {
   updateImage(String id, dynamic image) => jsObject.updateImage(id, image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
-  ///  in the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/) and any images
+  ///  in the style's original [sprite]  and any images
   ///  that have been added at runtime using {@link addImage}.
   ///
   ///  @param id The ID of the image.
@@ -695,7 +673,7 @@ class MapboxMap extends Camera {
   bool hasImage(String id) => jsObject.hasImage(id);
 
   ///  Remove an image from a style. This can be an image from the style's original
-  ///  [sprite](https://docs.mapbox.com/help/glossary/sprite/) or any images
+  ///  [sprite]  or any images
   ///  that have been added at runtime using {@link addImage}.
   ///
   ///  @param id The ID of the image.
@@ -706,7 +684,7 @@ class MapboxMap extends Camera {
   ///  if (map.hasImage('cat')) map.removeImage('cat');
   removeImage(String id) => jsObject.removeImage(id);
 
-  ///  Load an image from an external URL to be used with `MapboxMap#addImage`. External
+  ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
   ///
   ///  @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
@@ -720,13 +698,13 @@ class MapboxMap extends Camera {
   ///    map.addImage('kitten', image);
   ///  });
   ///
-  ///  @see [Add an icon to the map](https://www.mapbox.com/mapbox-gl-js/example/add-image/)
+  ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   loadImage(String url, Function callback) =>
       jsObject.loadImage(url, allowInterop(callback));
 
   //////
   ///  Returns an Array of strings containing the IDs of all images currently available in the map.
-  ///  This includes both images from the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/)
+  ///  This includes both images from the style's original [sprite]
   ///  and any images that have been added at runtime using {@link addImage}.
   ///
   ///  @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
@@ -736,46 +714,28 @@ class MapboxMap extends Camera {
   ///
   List<String> listImages() => jsObject.listImages();
 
-  ///  Adds a [Mapbox style layer](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers)
+  ///  Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
   ///  to the map's style.
   ///
   ///  A layer defines how data from a specified source will be styled. Read more about layer types
-  ///  and available paint and layout properties in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers).
+  ///  and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
   ///
-  ///  @param {Object | CustomLayerInterface} layer The style layer to add, conforming to the Mapbox Style Specification's
-  ///    [layer definition](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers).
+  ///  @param {Object | CustomLayerInterface} layer The style layer to add, conforming to the MapLibre Style Specification's
+  ///    [layer definition](https://maplibre.org/maplibre-style-spec/#layers).
   ///  @param {string} [beforeId] The ID of an existing layer to insert the new layer before.
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
   ///
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
-  ///  @example
-  ///  // Add a circle layer with a vector source.
-  ///  map.addLayer({
-  ///    id: 'points-of-interest',
-  ///    source: {
-  ///      type: 'vector',
-  ///      url: 'mapbox://mapbox.mapbox-streets-v8'
-  ///    },
-  ///    'source-layer': 'poi_label',
-  ///    type: 'circle',
-  ///    paint: {
-  ///      // Mapbox Style Specification paint properties
-  ///    },
-  ///    layout: {
-  ///      // Mapbox Style Specification layout properties
-  ///    }
-  ///  });
-  ///
-  ///  @see [Create and style clusters](https://www.mapbox.com/mapbox-gl-js/example/cluster/)
-  ///  @see [Add a vector tile source](https://www.mapbox.com/mapbox-gl-js/example/vector-source/)
-  ///  @see [Add a WMS source](https://www.mapbox.com/mapbox-gl-js/example/wms/)
-  MapboxMap addLayer(dynamic layer, [String? beforeId]) {
+  ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
+  ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
+  ///  @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
+  MapLibreMap addLayer(dynamic layer, [String? beforeId]) {
     if (layer is Layer) {
-      return MapboxMap.fromJsObject(
+      return MapLibreMap.fromJsObject(
           jsObject.addLayer(layer.jsObject, beforeId));
     }
-    return MapboxMap.fromJsObject(jsObject.addLayer(jsify(layer), beforeId));
+    return MapLibreMap.fromJsObject(jsObject.addLayer(jsify(layer), beforeId));
   }
 
   //jsObject.addLayer(layer.jsObject ?? jsify(layer));
@@ -785,13 +745,13 @@ class MapboxMap extends Camera {
   ///  @param {string} id The ID of the layer to move.
   ///  @param {string} [beforeId] The ID of an existing layer to insert the new layer before.
   ///    If this argument is omitted, the layer will be appended to the end of the layers array.
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  MapboxMap moveLayer(String id, String beforeId) =>
-      MapboxMap.fromJsObject(jsObject.moveLayer(id, beforeId));
+  MapLibreMap moveLayer(String id, String beforeId) =>
+      MapLibreMap.fromJsObject(jsObject.moveLayer(id, beforeId));
 
   ///  Removes the layer with the given ID from the map's style.
   ///
@@ -814,13 +774,13 @@ class MapboxMap extends Camera {
   ///  @example
   ///  var stateDataLayer = map.getLayer('state-data');
   ///
-  ///  @see [Filter symbols by toggling a list](https://www.mapbox.com/mapbox-gl-js/example/filter-markers/)
-  ///  @see [Filter symbols by text input](https://www.mapbox.com/mapbox-gl-js/example/filter-markers-by-input/)
+  ///  @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
+  ///  @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
   dynamic getLayer(String id) => jsObject.getLayer(id);
 
   ///  Sets the zoom extent for the specified style layer. The zoom extent includes the
-  ///  [minimum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-minzoom)
-  ///  and [maximum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-maxzoom))
+  ///  [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
+  ///  and [maximum zoom level](https://maplibre.org/maplibre-style-spec/#layer-maxzoom))
   ///  at which the layer will be rendered.
   ///
   ///  Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -831,32 +791,32 @@ class MapboxMap extends Camera {
   ///  @param {string} layerId The ID of the layer to which the zoom extent will be applied.
   ///  @param {number} minzoom The minimum zoom to set (0-24).
   ///  @param {number} maxzoom The maximum zoom to set (0-24).
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
-  MapboxMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
-      MapboxMap.fromJsObject(
+  MapLibreMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
+      MapLibreMap.fromJsObject(
           jsObject.setLayerZoomRange(layerId, minzoom, maxzoom));
 
   ///  Sets the filter for the specified style layer.
   ///
   ///  @param {string} layerId The ID of the layer to which the filter will be applied.
-  ///  @param {Array | null | undefined} filter The filter, conforming to the Mapbox Style Specification's
-  ///    [filter definition](https://www.mapbox.com/mapbox-gl-js/style-spec/#other-filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+  ///  @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+  ///    [filter definition](https://maplibre.org/maplibre-style-spec/#other-filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///
-  ///  @returns {MapboxMap} `this`
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setFilter('my-layer', ['==', 'name', 'USA']);
   ///
-  ///  @see [Filter features within map view](https://www.mapbox.com/mapbox-gl-js/example/filter-features-within-map-view/)
-  ///  @see [Highlight features containing similar data](https://www.mapbox.com/mapbox-gl-js/example/query-similar-features/)
-  ///  @see [Create a timeline animation](https://www.mapbox.com/mapbox-gl-js/example/timeline-animation/)
-  MapboxMap setFilter(String layerId, dynamic filter,
+  ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
+  ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
+  ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+  MapLibreMap setFilter(String layerId, dynamic filter,
           [StyleSetterOptions? options]) =>
-      MapboxMap.fromJsObject(jsObject.setFilter(layerId, filter));
+      MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -869,15 +829,15 @@ class MapboxMap extends Camera {
   ///  @param {string} layerId The ID of the layer to set the paint property in.
   ///  @param {string} name The name of the paint property to set.
   ///  @param {*} value The value of the paint property to set.
-  ///    Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+  ///    Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
+  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setPaintProperty('my-layer', 'fill-color', '#faafee');
-  ///  @see [Change a layer's color with buttons](https://www.mapbox.com/mapbox-gl-js/example/color-switcher/)
-  ///  @see [Adjust a layer's opacity](https://www.mapbox.com/mapbox-gl-js/example/adjust-layer-opacity/)
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
+  ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
+  ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
   setPaintProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
       jsObject.setPaintProperty(layerId, name, jsify(value));
@@ -894,15 +854,16 @@ class MapboxMap extends Camera {
   ///
   ///  @param {string} layerId The ID of the layer to set the layout property in.
   ///  @param {string} name The name of the layout property to set.
-  ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+  ///  @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
+  ///  @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
-  MapboxMap setLayoutProperty(String layerId, String name, dynamic value,
+  MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
-      MapboxMap.fromJsObject(jsObject.setLayoutProperty(layerId, name, value));
+      MapLibreMap.fromJsObject(
+          jsObject.setLayoutProperty(layerId, name, value));
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -914,12 +875,12 @@ class MapboxMap extends Camera {
 
   ///  Sets the any combination of light values.
   ///
-  ///  @param light Light properties to set. Must conform to the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#light).
+  ///  @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
   ///  @param {Object} [options]
-  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-  ///  @returns {MapboxMap} `this`
-  MapboxMap setLight(dynamic light, StyleSetterOptions options) =>
-      MapboxMap.fromJsObject(jsObject.setLight(light, options.jsObject));
+  ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setLight(dynamic light, StyleSetterOptions options) =>
+      MapLibreMap.fromJsObject(jsObject.setLight(light, options.jsObject));
 
   ///  Returns the value of the light object.
   ///
@@ -931,7 +892,7 @@ class MapboxMap extends Camera {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -952,7 +913,7 @@ class MapboxMap extends Camera {
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
   ///  cast to an integer.
   ///  @param {Object} target Identifier of where to set state: can be a source, a feature, or a specific key of feature.
-  ///  Feature objects returned from {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  Feature objects returned from {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
   ///  @param {string} target.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -966,7 +927,7 @@ class MapboxMap extends Camera {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapboxMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -989,16 +950,16 @@ class MapboxMap extends Camera {
   ///  map controls.
   ///
   ///  @returns {HTMLElement} The container of the map's `<canvas>`.
-  ///  @see [Create a draggable point](https://www.mapbox.com/mapbox-gl-js/example/drag-a-point/)
-  ///  @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
+  ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+  ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   HtmlElement getCanvasContainer() => jsObject.getCanvasContainer();
 
   ///  Returns the map's `<canvas>` element.
   ///
   ///  @returns {HTMLCanvasElement} The map's `<canvas>` element.
-  ///  @see [Measure distances](https://www.mapbox.com/mapbox-gl-js/example/measure/)
-  ///  @see [Display a popup on hover](https://www.mapbox.com/mapbox-gl-js/example/popup-on-hover/)
-  ///  @see [Center the map on a clicked symbol](https://www.mapbox.com/mapbox-gl-js/example/center-on-symbol/)
+  ///  @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
+  ///  @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+  ///  @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
   CanvasElement getCanvas() => jsObject.getCanvas();
 
   ///  Returns a Boolean indicating whether the map is fully loaded.
@@ -1034,7 +995,7 @@ class MapboxMap extends Camera {
   ///  @name showTileBoundaries
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   bool get showTileBoundaries => jsObject.showTileBoundaries;
 
   set showTileBoundaries(bool value) => jsObject.showTileBoundaries;
@@ -1047,7 +1008,7 @@ class MapboxMap extends Camera {
   ///  @name showCollisionBoxes
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   bool get showCollisionBoxes => jsObject.showCollisionBoxes;
 
   set showCollisionBoxes(bool value) => jsObject.showCollisionBoxes;
@@ -1061,7 +1022,7 @@ class MapboxMap extends Camera {
   ///  @name showOverdraw
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   bool get showOverdrawInspector => jsObject.showOverdrawInspector;
 
   set showOverdrawInspector(bool value) => jsObject.showOverdrawInspector;
@@ -1072,7 +1033,7 @@ class MapboxMap extends Camera {
   ///  @name repaint
   ///  @type {boolean}
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   bool get repaint => jsObject.repaint;
 
   set repaint(bool value) => jsObject.repaint;
@@ -1082,16 +1043,16 @@ class MapboxMap extends Camera {
 
   set vertices(bool value) => jsObject.vertices;
 
-  ///  The version of Mapbox GL JS in use as specified in package.json, CHANGELOG.md, and the GitHub release.
+  ///  The version of MapLibre JS JS in use as specified in package.json, CHANGELOG.md, and the GitHub release.
   ///
   ///  @name version
   ///  @instance
-  ///  @memberof MapboxMap
+  ///  @memberof MapLibreMap
   ///  @var {string} version
   String get version => jsObject.version;
 
-  /// Creates a new MapboxMap from a [jsObject].
-  MapboxMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  /// Creates a new MapLibreMap from a [jsObject].
+  MapLibreMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
@@ -1106,7 +1067,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
   bool get interactive => jsObject.interactive;
 
-  /// The HTML element in which Mapbox GL JS will render the map, or the element's string `id`. The specified element must have no children.
+  /// The HTML element in which MapLibre JS JS will render the map, or the element's string `id`. The specified element must have no children.
   /// `HTMLElement` or `String`
   dynamic get container => jsObject.container;
 
@@ -1128,10 +1089,10 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// `String` or `List<String>`
   dynamic get customAttribution => jsObject.customAttribution;
 
-  /// A string representing the position of the Mapbox wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
+  /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   String get logoPosition => jsObject.logoPosition;
 
-  /// If `true`, map creation will fail if the performance of Mapbox
+  /// If `true`, map creation will fail if the performance of MapLibre
   /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
   bool get failIfMajorPerformanceCaveat =>
       jsObject.failIfMajorPerformanceCaveat;
@@ -1163,27 +1124,9 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// The maximum pitch of the map (0-60).
   num get maxPitch => jsObject.maxPitch;
 
-  ///  The map's Mapbox style. This must be an a JSON object conforming to
-  ///  the schema described in the [Mapbox Style Specification](https://mapbox.com/mapbox-gl-style-spec/), or a URL to
+  ///  The map's MapLibre style. This must be an a JSON object conforming to
+  ///  the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
   ///  such JSON.
-  ///
-  ///  To load a style from the Mapbox API, you can use a URL of the form `mapbox://styles/:owner/:style`,
-  ///  where `:owner` is your Mapbox account name and `:style` is the style ID. Or you can use one of the following
-  ///  [the predefined Mapbox styles](https://www.mapbox.com/maps/):
-  ///
-  ///  *  `mapbox://styles/mapbox/streets-v11`
-  ///  *  `mapbox://styles/mapbox/outdoors-v11`
-  ///  *  `mapbox://styles/mapbox/light-v10`
-  ///  *  `mapbox://styles/mapbox/dark-v10`
-  ///  *  `mapbox://styles/mapbox/satellite-v9`
-  ///  *  `mapbox://styles/mapbox/satellite-streets-v11`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-preview-night-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-day-v4`
-  ///  *  `mapbox://styles/mapbox/navigation-guidance-night-v4`
-  ///
-  ///  Tilesets hosted with Mapbox can be style-optimized if you append `?optimize=true` to the end of your style URL, like `mapbox://styles/mapbox/streets-v11?optimize=true`.
-  ///  Learn more about style-optimized vector tiles in our [API documentation](https://www.mapbox.com/api-documentation/maps/#retrieve-tiles).
   dynamic get style => jsObject.style;
 
   /// If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
@@ -1207,16 +1150,16 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// If `true`, the map will automatically resize when the browser window resizes.
   bool get trackResize => jsObject.trackResize;
 
-  /// The inital geographical centerpoint of the map. If `center` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: Mapbox GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+  /// The inital geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
   LngLat get center => LngLat.fromJsObject(jsObject.center);
 
-  /// The initial zoom level of the map. If `zoom` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get zoom => jsObject.zoom;
 
-  /// The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get bearing => jsObject.bearing;
 
-  /// The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+  /// The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
   num get pitch => jsObject.pitch;
 
   /// The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
@@ -1238,11 +1181,11 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// Defines a CSS
   /// font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
   /// In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-  /// Set to `false`, to enable font settings from the map's style for these glyph ranges.  Note that [Mapbox Studio](https://studio.mapbox.com/) sets this value to `false` by default.
-  /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://www.mapbox.com/mapbox-gl-js/example/local-ideographs).)
+  /// Set to `false`, to enable font settings from the map's style for these glyph ranges.
+  /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
   String get localIdeographFontFamily => jsObject.localIdeographFontFamily;
 
-  /// A callback run before the MapboxMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+  /// A callback run before the MapLibreMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
   /// Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
   RequestTransformFunctionJsImpl get transformRequest =>
       jsObject.transformRequest; //TODO: Remove JsImpl
@@ -1392,8 +1335,8 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 ///  an exported method or class.
 ///
 ///  Controls must implement `onAdd` and `onRemove`, and must own an
-///  element, which is often a `div` element. To use Mapbox GL JS's
-///  default control styling, add the `mapboxgl-ctrl` class to your control's
+///  element, which is often a `div` element. To use MapLibre JS JS's
+///  default control styling, add the `maplibregl-ctrl` class to your control's
 ///  node.
 ///
 /// ```dart
@@ -1405,31 +1348,31 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 ///   }
 ///
 ///   @override
-///   HtmlElement onAdd(MapboxMap map) {
+///   HtmlElement onAdd(MapLibreMap map) {
 ///     _divElement = DivElement();
 ///     _divElement.text = 'Hello World';
 ///     return _divElement;
 ///   }
 ///
 ///   @override
-///   onRemove(MapboxMap map) {
+///   onRemove(MapLibreMap map) {
 ///     _divElement.remove();
 ///   }
 /// }
 /// ```
 class IControl extends JsObjectWrapper<IControlJsImpl> {
   ///  Register a control on the map and give it a chance to register event listeners
-  ///  and resources. This method is called by {@link MapboxMap#addControl}
+  ///  and resources. This method is called by {@link MapLibreMap#addControl}
   ///  internally.
-  HtmlElement onAdd(MapboxMap map) => jsObject.onAdd(map.jsObject);
+  HtmlElement onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   ///  Unregister a control on the map and give it a chance to detach event listeners
-  ///  and resources. This method is called by {@link MapboxMap#removeControl}
+  ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
-  onRemove(MapboxMap map) => jsObject.onRemove(map.jsObject);
+  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   ///  Optionally provide a default position for this control. If this method
-  ///  is implemented and {@link MapboxMap#addControl} is called without the `position`
+  ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`
   ///  parameter, the value returned by getDefaultPosition will be used as the
   ///  control's position.
   String getDefaultPosition() => jsObject.getDefaultPosition();

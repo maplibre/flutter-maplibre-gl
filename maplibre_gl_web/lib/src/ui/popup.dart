@@ -1,4 +1,4 @@
-library mapboxgl.ui.popup;
+library maplibre.ui.popup;
 
 import 'dart:html';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -42,15 +42,15 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 ///  'left': [markerRadius, (markerHeight - markerRadius)/// -1],
 ///  'right': [-markerRadius, (markerHeight - markerRadius)/// -1]
 ///  };
-/// var popup = new mapboxgl.Popup({offset: popupOffsets, className: 'my-class'})
+/// var popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
 ///   .setLngLat(e.lngLat)
 ///   .setHTML("<h1>Hello World!</h1>")
 ///   .setMaxWidth("300px")
 ///   .addTo(map);
-/// @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
-/// @see [Display a popup on hover](https://www.mapbox.com/mapbox-gl-js/example/popup-on-hover/)
-/// @see [Display a popup on click](https://www.mapbox.com/mapbox-gl-js/example/popup-on-click/)
-/// @see [Attach a popup to a marker instance](https://www.mapbox.com/mapbox-gl-js/example/set-popup/)
+/// @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+/// @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+/// @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+/// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 class Popup extends Evented {
   dynamic get options => jsObject.options;
 
@@ -65,10 +65,10 @@ class Popup extends Evented {
 
   /// Adds the popup to a map.
   ///
-  /// @param {MapboxMap} map The Mapbox GL JS map to add the popup to.
+  /// @param {MapLibreMap} map The MapLibre JS JS map to add the popup to.
   /// @returns {Popup} `this`
 ////
-  Popup addTo(MapboxMap map) =>
+  Popup addTo(MapLibreMap map) =>
       Popup.fromJsObject(jsObject.addTo(map.jsObject));
 
   /// @returns {boolean} `true` if the popup is open, `false` if it is closed.
@@ -77,7 +77,7 @@ class Popup extends Evented {
   /// Removes the popup from the map it has been added to.
   ///
   /// @example
-  /// var popup = new mapboxgl.Popup().addTo(map);
+  /// var popup = new maplibregl.Popup().addTo(map);
   /// popup.remove();
   /// @returns {Popup} `this`
   Popup remove() => Popup.fromJsObject(jsObject.remove());
@@ -116,7 +116,7 @@ class Popup extends Evented {
   /// @param text Textual content for the popup.
   /// @returns {Popup} `this`
   /// @example
-  /// var popup = new mapboxgl.Popup()
+  /// var popup = new maplibregl.Popup()
   ///   .setLngLat(e.lngLat)
   ///   .setText('Hello, world!')
   ///   .addTo(map);
@@ -153,7 +153,7 @@ class Popup extends Evented {
   /// // create an element with the popup content
   /// var div = window.document.createElement('div');
   /// div.innerHTML = 'Hello, world!';
-  /// var popup = new mapboxgl.Popup()
+  /// var popup = new maplibregl.Popup()
   ///   .setLngLat(e.lngLat)
   ///   .setDOMContent(div)
   ///   .addTo(map);
@@ -165,7 +165,7 @@ class Popup extends Evented {
   /// @param {string} className Non-empty string with CSS class name to add to popup container
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
   addClassName(String className) => jsObject.addClassName(className);
 
@@ -174,7 +174,7 @@ class Popup extends Evented {
   /// @param {string} className Non-empty string with CSS class name to remove from popup container
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
   removeClassName(String className) => jsObject.removeClassName(className);
 
@@ -185,7 +185,7 @@ class Popup extends Evented {
   /// @returns {boolean} if the class was removed return false, if class was added, then return true
   ///
   /// @example
-  /// let popup = new mapboxgl.Popup()
+  /// let popup = new maplibregl.Popup()
   /// popup.toggleClassName('toggleClass')
   bool toggleClassName(String className) => jsObject.toggleClassName(className);
 
