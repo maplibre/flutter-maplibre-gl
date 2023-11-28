@@ -1,3 +1,20 @@
+## 0.18.0
+### Breaking Change:
+Already since 0.17.0, developers do not need to adapt their Podfile for iOS apps anymore as it was previously described in the Readme. Developers who previously added these lines should remove them, since not removing these lines may cause a build failure on iOS. (This change actually already landed in 0.17.0, but it may not have been sufficiently clear that not removing these lines might break builds).
+
+### Other Changes:
+
+* new feature: set arbitrary layer properties by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/303
+* Update release process by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/315
+* Add workflows for automated publishing to pub.dev by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/328
+* Fix example app pubspec by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/329
+* Updated location plugin version for example app by @varunlohade in https://github.com/maplibre/flutter-maplibre-gl/pull/334
+* Housekeeping: Improve docs and update outdated references to point to MapLibre by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/330
+
+
+**Full Changelog**: https://github.com/maplibre/flutter-maplibre-gl/compare/0.17.0...0.18.0
+
+
 ## 0.17.0
 
 **Repository transfer**: The project repository was transferred to the MapLibre GitHub organization. More information at  https://github.com/maplibre/flutter-maplibre-gl/issues/221

@@ -207,21 +207,21 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.17.0"
+    version: "0.18.0"
   maplibre_gl_platform_interface:
     dependency: "direct main"
     description:
       path: "../maplibre_gl_platform_interface"
       relative: true
     source: path
-    version: "0.17.0"
+    version: "0.18.0"
   maplibre_gl_web:
     dependency: "direct overridden"
     description:
       path: "../maplibre_gl_web"
       relative: true
     source: path
-    version: "0.17.0"
+    version: "0.18.0"
   matcher:
     dependency: transitive
     description:
