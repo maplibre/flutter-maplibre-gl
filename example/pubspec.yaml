@@ -15,16 +15,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.5
 
-  maplibre_gl_platform_interface:
-    git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_platform_interface
-      ref: git-release-0.18.0
+  maplibre_gl_platform_interface: ^0.18.0
 
-  maplibre_gl:
-    git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      ref: git-release-0.18.0
+  maplibre_gl: ^0.18.0
 
   location: ^5.0.3
   path_provider: ^2.0.15
