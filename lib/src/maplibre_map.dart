@@ -266,7 +266,9 @@ class _MaplibreMapState extends State<MaplibreMap> {
       'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
-      if(widget.iosLongClickDuration != null) 'iosLongClickDurationMilliseconds': widget.iosLongClickDuration!.inMilliseconds,
+      if (widget.iosLongClickDuration != null)
+        'iosLongClickDurationMilliseconds':
+            widget.iosLongClickDuration!.inMilliseconds,
     };
     return _maplibreGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
