@@ -517,7 +517,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addFillExtrusionLayer(
+    await _maplibreGlPlatform.addFillExtrusionLayer(
       sourceId,
       layerId,
       properties.toJson(),
