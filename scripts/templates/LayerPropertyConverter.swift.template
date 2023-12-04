@@ -2,7 +2,6 @@
 // ./scripts/lib/generate.dart
 
 import Mapbox
-import MapboxAnnotationExtension
 
 class LayerPropertyConverter {
 {{#layerTypes}}
@@ -13,27 +12,26 @@ class LayerPropertyConverter {
                 {{#paint_properties}}
                 case "{{{value}}}":
                 {{#isIosAsCamelCase}}
-                    {{type}}Layer.{{iosAsCamelCase}} = expression;
+                    {{type}}Layer.{{iosAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{type}}Layer.{{valueAsCamelCase}} = expression;
+                    {{type}}Layer.{{valueAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
-                break;
                 {{/paint_properties}}
                 {{#layout_properties}}
                 case "{{{value}}}":
                 {{^isVisibilityProperty}}
                 {{#isIosAsCamelCase}}
-                    {{type}}Layer.{{iosAsCamelCase}} = expression;
+                    {{type}}Layer.{{iosAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{type}}Layer.{{valueAsCamelCase}} = expression;
+                    {{type}}Layer.{{valueAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{/isVisibilityProperty}}
                 {{#isVisibilityProperty}}
-                    {{type}}Layer.{{iosAsCamelCase}} = propertyValue == "visible";
+                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                    {{type}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
                 {{/isVisibilityProperty}}
-                break;
                 {{/layout_properties}}
              
                 default:

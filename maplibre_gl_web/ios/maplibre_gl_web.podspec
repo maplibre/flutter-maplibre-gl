@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
     s.version          = '0.1.0'
     s.summary          = 'No-op implementation of maplibre_gl_web web plugin to avoid build issues on iOS'
     s.description      = <<-DESC
-  temp fake mapbox_gl_web plugin
+  temp fake maplibre_gl_web plugin
                          DESC
     s.homepage         = 'http://example.com'
     s.license          = { :file => '../LICENSE' }

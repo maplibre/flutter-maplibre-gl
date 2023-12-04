@@ -1,6 +1,6 @@
 part of maplibre_gl;
 
-extension MapBoxColorConversion on Color {
+extension MapLibreColorConversion on Color {
   String toHexStringRGB() {
     final r = red.toRadixString(16).padLeft(2, '0');
     final g = green.toRadixString(16).padLeft(2, '0');

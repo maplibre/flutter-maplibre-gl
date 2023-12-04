@@ -19,7 +19,10 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
+import android.widget.FrameLayout;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
@@ -28,16 +31,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-// import com.mapbox.android.core.location.LocationEngine;
-// import com.mapbox.android.core.location.LocationEngineCallback;
-// import com.mapbox.android.core.location.LocationEngineProvider;
-// import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.gestures.AndroidGesturesManager;
-// import com.mapbox.android.telemetry.TelemetryEnabler;
 import com.mapbox.android.gestures.MoveGestureDetector;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.BoundingBox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -47,11 +44,10 @@ import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.geometry.LatLngQuad;
 import com.mapbox.mapboxsdk.geometry.VisibleRegion;
 import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.LocationComponentOptions;
 import com.mapbox.mapboxsdk.location.OnCameraTrackingChangedListener;
-import com.mapbox.mapboxsdk.location.engine.LocationEngine;
 import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback;
-import com.mapbox.mapboxsdk.location.engine.LocationEngineProvider;
 import com.mapbox.mapboxsdk.location.engine.LocationEngineResult;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
 import com.mapbox.mapboxsdk.location.modes.RenderMode;
@@ -61,7 +57,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.offline.OfflineManager;
-import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
 import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.FillExtrusionLayer;
@@ -70,6 +65,7 @@ import com.mapbox.mapboxsdk.style.layers.HeatmapLayer;
 import com.mapbox.mapboxsdk.style.layers.HillshadeLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
+import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
@@ -79,6 +75,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import com.mapbox.mapboxsdk.style.sources.Source;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
+import com.mapbox.mapboxsdk.style.types.Formatted;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -92,6 +89,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -118,6 +116,11 @@ final class MapboxMapController
   private final float density;
   private final Context context;
   private final String styleStringInitial;
+  /**
+   * This container is returned as the final platform view instead of returning `mapView`.
+   * See {@link MapboxMapController#destroyMapViewIfNecessary()} for details.
+   */
+  private FrameLayout mapViewContainer;
   private MapView mapView;
   private MapboxMap mapboxMap;
   private boolean trackCameraPosition = false;
@@ -128,9 +131,7 @@ final class MapboxMapController
   private boolean dragEnabled = true;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
-  private LocationEngine locationEngine = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
-  private LocalizationPlugin localizationPlugin;
   private Style style;
   private Feature draggedFeature;
   private AndroidGesturesManager androidGesturesManager;
@@ -162,7 +163,6 @@ final class MapboxMapController
 
           mapboxMap.addOnMapClickListener(MapboxMapController.this);
           mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
-          localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
           methodChannel.invokeMethod("map#onStyleLoaded", null);
         }
@@ -181,6 +181,7 @@ final class MapboxMapController
     this.context = context;
     this.dragEnabled = dragEnabled;
     this.styleStringInitial = styleStringInitial;
+    this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
     this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
@@ -190,13 +191,14 @@ final class MapboxMapController
       this.androidGesturesManager = new AndroidGesturesManager(this.mapView.getContext(), false);
     }
 
+    mapViewContainer.addView(mapView);
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/mapbox_maps_" + id);
     methodChannel.setMethodCallHandler(this);
   }
 
   @Override
   public View getView() {
-    return mapView;
+    return mapViewContainer;
   }
 
   void init() {
@@ -255,7 +257,7 @@ final class MapboxMapController
   }
 
   @Override
-  public void setStyleString(String styleString) {
+  public void setStyleString(@NonNull String styleString) {
     // clear old layer id from the location Component
     clearLocationComponentLayer();
     styleString = styleString.trim();
@@ -280,18 +282,22 @@ final class MapboxMapController
     }
   }
 
-  
+
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
     if (hasLocationPermission()) {
-      locationEngine = LocationEngineProvider.getBestLocationEngine(context);
+
       locationComponent = mapboxMap.getLocationComponent();
-      locationComponent.activateLocationComponent(
-          context, style, buildLocationComponentOptions(style));
+
+      LocationComponentActivationOptions options =
+              LocationComponentActivationOptions
+                      .builder(context, style)
+                      .locationComponentOptions(buildLocationComponentOptions(style))
+                      .build();
+
+      locationComponent.activateLocationComponent(options);
       locationComponent.setLocationComponentEnabled(true);
-      // locationComponent.setRenderMode(RenderMode.COMPASS); // remove or keep default?
-      locationComponent.setLocationEngine(locationEngine);
       locationComponent.setMaxAnimationFps(30);
       updateMyLocationTrackingMode();
       updateMyLocationRenderMode();
@@ -671,7 +677,9 @@ final class MapboxMapController
       case "map#matchMapLanguageWithDeviceDefault":
         {
           try {
-            localizationPlugin.matchMapLanguageWithDeviceDefault();
+            final Locale deviceLocale = Locale.getDefault();
+            MapboxMapUtils.setMapLanguage(mapboxMap, deviceLocale.getLanguage());
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -700,7 +708,8 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            localizationPlugin.setMapLanguage(language);
+            MapboxMapUtils.setMapLanguage(mapboxMap, language);
+
             result.success(null);
           } catch (RuntimeException exception) {
             Log.d(TAG, exception.toString());
@@ -887,7 +896,7 @@ final class MapboxMapController
         }
       case "map#invalidateAmbientCache":
         {
-          OfflineManager fileSource = OfflineManager.getInstance(context);
+          OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
 
           fileSource.invalidateAmbientCache(
               new OfflineManager.FileSourceCallback() {
@@ -985,6 +994,51 @@ final class MapboxMapController
           updateLocationComponentLayer();
 
           result.success(null);
+          break;
+        }
+        case "layer#setProperties": {
+          final String layerId = call.argument("layerId");
+
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+
+          Layer layer = style.getLayer(layerId);
+
+          if (layer != null) {
+            final PropertyValue[] properties;
+
+            if (layer instanceof LineLayer) {
+              properties = LayerPropertyConverter
+                  .interpretLineLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillLayerProperties(call.argument("properties"));
+            } else if (layer instanceof CircleLayer) {
+              properties = LayerPropertyConverter
+                  .interpretCircleLayerProperties(call.argument("properties"));
+            } else if (layer instanceof SymbolLayer) {
+              properties = LayerPropertyConverter
+                  .interpretSymbolLayerProperties(call.argument("properties"));
+            } else if (layer instanceof RasterLayer) {
+              properties = LayerPropertyConverter
+                  .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HillshadeLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHillshadeLayerProperties(call.argument("properties"));
+            } else {
+              result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
+              return;
+            }
+            layer.setProperties(properties);
+            result.success(null);
+          } else {
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+          }
+
           break;
         }
       case "fillLayer#add":
@@ -1125,9 +1179,10 @@ final class MapboxMapController
       case "locationComponent#getLastLocation":
         {
           Log.e(TAG, "location component: getLastLocation");
-          if (this.myLocationEnabled && locationComponent != null && locationEngine != null) {
+          if (this.myLocationEnabled && locationComponent != null) {
             Map<String, Object> reply = new HashMap<>();
-            locationEngine.getLastLocation(
+
+            mapboxMap.getLocationComponent().getLocationEngine().getLastLocation(
                 new LocationEngineCallback<LocationEngineResult>() {
                   @Override
                   public void onSuccess(LocationEngineResult locationEngineResult) {
@@ -1184,6 +1239,31 @@ final class MapboxMapController
                       coordinates.get(3)),
                   BitmapFactory.decodeByteArray(
                       call.argument("bytes"), 0, call.argument("length"))));
+          result.success(null);
+          break;
+        }
+        case "style#updateImageSource":
+        {
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+          ImageSource imageSource = style.getSourceAs(call.argument("imageSourceId"));
+          List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
+          if (coordinates != null) {
+            imageSource.setCoordinates(
+                new LatLngQuad(
+                    coordinates.get(0),
+                    coordinates.get(1),
+                    coordinates.get(2),
+                    coordinates.get(3)));
+          }
+          byte[] bytes = call.argument("bytes");
+          if (bytes != null) {
+            imageSource.setImage(BitmapFactory.decodeByteArray(bytes, 0, call.argument("length")));
+          }
           result.success(null);
           break;
         }
@@ -1380,7 +1460,7 @@ final class MapboxMapController
 
           Layer layer = style.getLayer(layerId);
 
-          layer.setProperties(PropertyFactory.visibility(visible ? "visible" : "none"));
+          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
 
           result.success(null);
           break;
@@ -1609,17 +1689,33 @@ final class MapboxMapController
     }
   }
 
+  /**
+   * Destroy the MapView and cleans up listeners.
+   * It's very important to call mapViewContainer.removeView(mapView) to make sure
+   * that {@link TextureView#onDetachedFromWindowInternal()} is called which releases the
+   * underlying surface.
+   * This is required due to an FlutterEngine change that was introduce when updating from
+   * Flutter 2.10.5 to Flutter 3.10.0.
+   * This FlutterEngine change is not calling `removeView` on a PlatformView which causes the issue.
+   * <p>
+   * For more information check out:
+   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>
+   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter Engine commit that introduced the issue</a>
+   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the MapLibre repo</a>
+   */
   private void destroyMapViewIfNecessary() {
     if (mapView == null) {
       return;
     }
+    mapViewContainer.removeView(mapView);
+    mapView.onStop();
+    mapView.onDestroy();
 
     if (locationComponent != null) {
       locationComponent.setLocationComponentEnabled(false);
     }
     stopListeningForLocationUpdates();
 
-    mapView.onDestroy();
     mapView = null;
   }
 

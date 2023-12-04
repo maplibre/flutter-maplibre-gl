@@ -44,7 +44,9 @@ Documentation is available on the docs branch in the doc/api folder and automati
 Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
 ### iOS
-To use this plugin with iOS, you need to add the source repository and 2 additional pods to your Podfile, as shown in the example app: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
+To use this plugin with iOS, you **do not** need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should actually remove these lines from your Podfile to avoid build errors: 
+<details>
+<summary>View obsolete code</summary>
 
 ```ruby
 source 'https://cdn.cocoapods.org/'
@@ -53,6 +55,8 @@ source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
 ```
+</details>
+You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
 
 ### Web
 Include the following JavaScript and CSS files in the `<head>` of the `web/index.html` file.
@@ -79,7 +83,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 
 ## Map Styles
 
-Map styles can be supplied by setting the `styleString` in the `MapOptions`. The following formats are supported:
+Map styles can be supplied by setting the `styleString` in the `MaplibreMap` constructor. The following formats are supported:
 
 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
@@ -126,7 +130,11 @@ A possible explanation could be: "Shows your location on the map".
 - **Have a feature request?** [Open an issue](https://github.com/maplibre/flutter-maplibre-gl/issues/new). Tell us what the feature should do and why you want the feature.
 
 ## Running in GitHub Codespaces
-When you open this project in GitHub Codespaces, you can run the example app on web with the command `flutter run -d web-server --web-hostname=0.0.0.0`
+When you open this project in GitHub Codespaces, you can run the example app on web with the command 
+```
+$ cd example
+$ flutter run -d web-server --web-hostname=0.0.0.0
+```
 
 Codespaces should automatically take care of the necessary port forwarding, so that you can view the running web app on your local device or in a new tab.
 
@@ -150,12 +158,7 @@ buildTypes {
 }
 ```
 
-## Flutter 3.x.x issues
-Since Flutter 3.x.x was introduced, it exposed some race conditions resulting in occasional crashes upon map disposal. The parameter `useDelayedDisposal` was introduced as a workaround for this issue until Flutter and/or Maplibre fix this issue properly. Use with caution.
-
-
-
-### iOS app crashes on startup
+### iOS app crashes when using location based features
 
 Please include the `NSLocationWhenInUseUsageDescription` as described [here](#location-features)
 
@@ -176,3 +179,5 @@ Note : iOS will display the error : `NSPredicate: Use of 'mgl_does:have:' as an 
 
 
 [Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues) and contributions are very welcome!
+
+RELEASE.md contains information on how we cut releases.

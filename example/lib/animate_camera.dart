@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
 
@@ -136,6 +136,15 @@ class AnimateCameraState extends State<AnimateCamera> {
                     );
                   },
                   child: const Text('zoomBy with focus'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    mapController.animateCamera(
+                      CameraUpdate.newLatLngZoom(const LatLng(48, 11), 5),
+                      duration: const Duration(milliseconds: 300),
+                    );
+                  },
+                  child: const Text('latlngZoom'),
                 ),
                 TextButton(
                   onPressed: () {
