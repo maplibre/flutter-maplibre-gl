@@ -8,8 +8,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:maplibre_gl_example/attribution.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/localized_map.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
 
 import 'animate_camera.dart';
@@ -32,11 +34,12 @@ import 'place_batch.dart';
 import 'layer.dart';
 import 'sources.dart';
 
-import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),
   const FullMapPage(),
+  const LocalizedMapPage(),
   const AnimateCameraPage(),
   const MoveCameraPage(),
   const PlaceSymbolPage(),
@@ -56,6 +59,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const GivenBoundsPage(),
   const GetMapInfoPage(),
   const NoLocationPermissionPage(),
+  const AttributionPage(),
 ];
 
 class MapsDemo extends StatefulWidget {

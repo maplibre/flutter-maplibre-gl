@@ -1,6 +1,6 @@
 part of maplibre_gl_web;
 
-abstract class MapboxMapOptionsSink {
+abstract class MapLibreMapOptionsSink {
   // TODO: dddd replace with CameraPosition.Builder target
   void setCameraTargetBounds(LatLngBounds? bounds);
 

@@ -15,9 +15,8 @@ A new Flutter plugin.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'MapLibreAnnotationExtension', '~> 0.0.1-beta.2'
-  s.dependency 'MapLibre', '~> 5.12.2'
+  s.dependency 'MapLibre', '5.14.0-pre3'
   s.swift_version = '4.2'
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '11.0'
 end
 

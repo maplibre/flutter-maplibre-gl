@@ -23,7 +23,7 @@ abstract class OfflineManagerUtils {
   private static final String TAG = "OfflineManagerUtils";
 
   static void mergeRegions(MethodChannel.Result result, Context context, String path) {
-    OfflineManager.getInstance(context)
+    OfflineManager.Companion.getInstance(context)
         .mergeOfflineRegions(
             path,
             new OfflineManager.MergeOfflineRegionsCallback() {
@@ -45,7 +45,7 @@ abstract class OfflineManagerUtils {
   }
 
   static void setOfflineTileCountLimit(MethodChannel.Result result, Context context, long limit) {
-    OfflineManager.getInstance(context).setOfflineMapboxTileCountLimit(limit);
+    OfflineManager.Companion.getInstance(context).setOfflineMapboxTileCountLimit(limit);
     result.success(null);
   }
 
@@ -63,7 +63,7 @@ abstract class OfflineManagerUtils {
     }
     AtomicBoolean isComplete = new AtomicBoolean(false);
     // Download region
-    OfflineManager.getInstance(context)
+    OfflineManager.Companion.getInstance(context)
         .createOfflineRegion(
             definition,
             metadata.getBytes(),
@@ -134,7 +134,7 @@ abstract class OfflineManagerUtils {
                         // region still keeps part
                         // of it in database, so we
                         // have to remove it
-                        deleteRegion(null, context, _offlineRegion.getID());
+                        deleteRegion(null, context, _offlineRegion.getId());
                       }
                     };
 
@@ -162,7 +162,7 @@ abstract class OfflineManagerUtils {
   }
 
   static void regionsList(MethodChannel.Result result, Context context) {
-    OfflineManager.getInstance(context)
+    OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
@@ -183,13 +183,13 @@ abstract class OfflineManagerUtils {
 
   static void updateRegionMetadata(
       MethodChannel.Result result, Context context, long id, Map<String, Object> metadataMap) {
-    OfflineManager.getInstance(context)
+    OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
                 for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getID() != id) continue;
+                  if (offlineRegion.getId() != id) continue;
 
                   String metadata = "{}";
                   if (metadataMap != null) {
@@ -231,13 +231,13 @@ abstract class OfflineManagerUtils {
   }
 
   static void deleteRegion(MethodChannel.Result result, Context context, long id) {
-    OfflineManager.getInstance(context)
+    OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
                 for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getID() != id) continue;
+                  if (offlineRegion.getId() != id) continue;
 
                   offlineRegion.delete(
                       new OfflineRegion.OfflineRegionDeleteCallback() {
@@ -302,7 +302,7 @@ abstract class OfflineManagerUtils {
 
   private static Map<String, Object> offlineRegionToMap(OfflineRegion region) {
     Map<String, Object> result = new HashMap();
-    result.put("id", region.getID());
+    result.put("id", region.getId());
     result.put("definition", offlineRegionDefinitionToMap(region.getDefinition()));
     result.put("metadata", metadataBytesToMap(region.getMetadata()));
     return result;
