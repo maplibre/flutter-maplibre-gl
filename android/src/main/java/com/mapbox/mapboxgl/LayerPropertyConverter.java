@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+
 import static com.mapbox.mapboxgl.Convert.toMap;
 
 class LayerPropertyConverter {
@@ -106,9 +107,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconTextFitPadding(expression));
           break;
         case "icon-image":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()){
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
-          } else {
+          }else{
             properties.add(PropertyFactory.iconImage(expression));
           }
           break;
@@ -409,7 +410,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionVerticalGradient(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue()));
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;

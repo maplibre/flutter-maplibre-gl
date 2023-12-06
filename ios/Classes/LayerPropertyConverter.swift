@@ -242,37 +242,32 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addFillExtrusionProperties(
-        fillExtrusionLayer: MGLFillExtrusionStyleLayer,
-        properties: [String: String]
-    ) {
+    class func addFillExtrusionProperties(fill-extrusionLayer: MGLFillExtrusionStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(
-                propertyName: propertyName,
-                expression: propertyValue
-            )
+            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
             switch propertyName {
-            case "fill-extrusion-opacity":
-                fillExtrusionLayer.fillExtrusionOpacity = expression
-            case "fill-extrusion-color":
-                fillExtrusionLayer.fillExtrusionColor = expression
-            case "fill-extrusion-translate":
-                fillExtrusionLayer.fillExtrusionTranslation = expression
-            case "fill-extrusion-translate-anchor":
-                fillExtrusionLayer.fillExtrusionTranslationAnchor = expression
-            case "fill-extrusion-pattern":
-                fillExtrusionLayer.fillExtrusionPattern = expression
-            case "fill-extrusion-height":
-                fillExtrusionLayer.fillExtrusionHeight = expression
-            case "fill-extrusion-base":
-                fillExtrusionLayer.fillExtrusionBase = expression
-            case "fill-extrusion-vertical-gradient":
-                fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
-            case "visibility":
-                fillExtrusionLayer.isVisible = propertyValue == "visible"
-
-            default:
-                break
+                case "fill-extrusion-opacity":
+                    fill-extrusionLayer.fillExtrusionOpacity = expression
+                case "fill-extrusion-color":
+                    fill-extrusionLayer.fillExtrusionColor = expression
+                case "fill-extrusion-translate":
+                    fill-extrusionLayer.fillExtrusionTranslation = expression
+                case "fill-extrusion-translate-anchor":
+                    fill-extrusionLayer.fillExtrusionTranslationAnchor = expression
+                case "fill-extrusion-pattern":
+                    fill-extrusionLayer.fillExtrusionPattern = expression
+                case "fill-extrusion-height":
+                    fill-extrusionLayer.fillExtrusionHeight = expression
+                case "fill-extrusion-base":
+                    fill-extrusionLayer.fillExtrusionBase = expression
+                case "fill-extrusion-vertical-gradient":
+                    fill-extrusionLayer.fillExtrusionHasVerticalGradient = expression
+                case "visibility":
+                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                    fill-extrusionLayer.isVisible = trimmedPropertyValue == "visible"
+             
+                default:
+                    break
             }
         }
     }
