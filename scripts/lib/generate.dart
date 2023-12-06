@@ -34,6 +34,7 @@ main() async {
         {
           "type": type,
           "typePascal": ReCase(type).pascalCase,
+          "typeCamel": ReCase(type).camelCase,
           "paint_properties": buildStyleProperties(styleJson, "paint_$type"),
           "layout_properties": buildStyleProperties(styleJson, "layout_$type"),
         },
