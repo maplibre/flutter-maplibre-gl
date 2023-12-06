@@ -184,7 +184,7 @@ class LayerState extends State {
     await controller.addFillExtrusionLayer(
       "fills",
       "fills-extrusion",
-      FillExtrusionLayerProperties(
+      const FillExtrusionLayerProperties(
         fillExtrusionHeight: 300,
         fillExtrusionColor: [
           Expressions.interpolate,
