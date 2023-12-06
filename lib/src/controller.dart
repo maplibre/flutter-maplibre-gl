@@ -508,7 +508,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
   ///
-  /// [expressions]: https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addFillExtrusionLayer(
       String sourceId, String layerId, FillExtrusionLayerProperties properties,
       {String? belowLayerId,
@@ -517,7 +517,7 @@ class MaplibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter,
       bool enableInteraction = true}) async {
-    await _mapboxGlPlatform.addFillExtrusionLayer(
+    await _maplibreGlPlatform.addFillExtrusionLayer(
       sourceId,
       layerId,
       properties.toJson(),
