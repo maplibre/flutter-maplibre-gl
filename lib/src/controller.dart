@@ -1254,6 +1254,10 @@ class MaplibreMapController extends ChangeNotifier {
     return _maplibreGlPlatform.addSource(sourceid, properties);
   }
 
+  /// Pans and zooms the map to contain its visible area within the specified geographical bounds.
+  ///
+  /// Also consider using [animateCamera] or [moveCamera], which allow you to set camera bounds (with different padding values per side)
+  /// as well as other camera properties.
   Future setCameraBounds({
     required double west,
     required double north,

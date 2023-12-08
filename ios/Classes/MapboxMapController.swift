@@ -70,9 +70,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         {
             longPress.require(toFail: recognizer)
         }
-        mapView.addGestureRecognizer(longPress)
+        var longPressRecognizerAdded = false
         
         if let args = args as? [String: Any] {
+            
             Convert.interpretMapboxMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
                let camera = MGLMapCamera.fromDict(initialCameraPosition, mapView: mapView),
@@ -98,6 +99,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             if let enabled = args["dragEnabled"] as? Bool {
                 dragEnabled = enabled
             }
+
+            if let iosLongClickDurationMilliseconds = args["iosLongClickDurationMilliseconds"] as? Int {
+                longPress.minimumPressDuration = TimeInterval(iosLongClickDurationMilliseconds) / 1000
+                mapView.addGestureRecognizer(longPress)
+                longPressRecognizerAdded = true
+            }
         }
         if dragEnabled {
             let pan = UIPanGestureRecognizer(
@@ -106,6 +113,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             )
             pan.delegate = self
             mapView.addGestureRecognizer(pan)
+        }
+
+        if(!longPressRecognizerAdded) {
+            mapView.addGestureRecognizer(longPress)
+            longPressRecognizerAdded = true
         }
     }
 
