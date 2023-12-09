@@ -8,7 +8,8 @@ abstract class SourceProperties {
 }
 
 class VectorSourceProperties implements SourceProperties {
-  /// A URL to a TileJSON resource. Supported protocols are `http:` and `https:`
+  /// A URL to a TileJSON resource. Supported protocols are `http:` and
+  /// `https:`
   ///
   /// Type: string
   final String? url;
@@ -21,8 +22,8 @@ class VectorSourceProperties implements SourceProperties {
   /// An array containing the longitude and latitude of the southwest and
   /// northeast corners of the source's bounding box in the following order:
   /// `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in
-  /// a source, no tiles outside of the given bounds are requested by MapLibre
-  /// GL.
+  /// a source, no tiles outside of the given bounds are requested by
+  /// MapLibre.
   ///
   /// Type: array
   ///   default: [-180, -85.051129, 180, 85.051129]
@@ -138,7 +139,8 @@ class VectorSourceProperties implements SourceProperties {
 }
 
 class RasterSourceProperties implements SourceProperties {
-  /// A URL to a TileJSON resource. Supported protocols are `http:` and `https:`
+  /// A URL to a TileJSON resource. Supported protocols are `http:` and
+  /// `https:`.
   ///
   /// Type: string
   final String? url;
@@ -151,7 +153,8 @@ class RasterSourceProperties implements SourceProperties {
   /// An array containing the longitude and latitude of the southwest and
   /// northeast corners of the source's bounding box in the following order:
   /// `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in
-  /// a source, no tiles outside of the given bounds are requested by MapLibre.
+  /// a source, no tiles outside of the given bounds are requested by
+  /// MapLibre.
   ///
   /// Type: array
   ///   default: [-180, -85.051129, 180, 85.051129]
@@ -266,7 +269,8 @@ class RasterSourceProperties implements SourceProperties {
 }
 
 class RasterDemSourceProperties implements SourceProperties {
-  /// A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
+  /// A URL to a TileJSON resource. Supported protocols are `http:` and
+  /// `https:`.
   ///
   /// Type: string
   final String? url;
@@ -279,7 +283,8 @@ class RasterDemSourceProperties implements SourceProperties {
   /// An array containing the longitude and latitude of the southwest and
   /// northeast corners of the source's bounding box in the following order:
   /// `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in
-  /// a source, no tiles outside of the given bounds are requested by MapLibre.
+  /// a source, no tiles outside of the given bounds are requested by
+  /// MapLibre.
   ///
   /// Type: array
   ///   default: [-180, -85.051129, 180, 85.051129]
