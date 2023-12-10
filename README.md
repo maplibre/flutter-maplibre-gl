@@ -78,6 +78,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 | Circle | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
+| Fill Extrusion | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 
 
 ## Map Styles
