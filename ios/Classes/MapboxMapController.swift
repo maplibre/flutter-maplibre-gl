@@ -989,9 +989,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
-        if let feature = firstFeatureOnLayers(at: point), let id = feature.identifier {
+        if let feature = firstFeatureOnLayers(at: point) {
             channel?.invokeMethod("feature#onTap", arguments: [
-                        "id": id,
+                        "id": feature.identifier,
                         "x": point.x,
                         "y": point.y,
                         "lng": coordinate.longitude,
