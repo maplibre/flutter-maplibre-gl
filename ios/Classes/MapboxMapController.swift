@@ -70,9 +70,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         {
             longPress.require(toFail: recognizer)
         }
-        mapView.addGestureRecognizer(longPress)
+        var longPressRecognizerAdded = false
         
         if let args = args as? [String: Any] {
+            
             Convert.interpretMapboxMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
                let camera = MGLMapCamera.fromDict(initialCameraPosition, mapView: mapView),
@@ -98,6 +99,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             if let enabled = args["dragEnabled"] as? Bool {
                 dragEnabled = enabled
             }
+
+            if let iosLongClickDurationMilliseconds = args["iosLongClickDurationMilliseconds"] as? Int {
+                longPress.minimumPressDuration = TimeInterval(iosLongClickDurationMilliseconds) / 1000
+                mapView.addGestureRecognizer(longPress)
+                longPressRecognizerAdded = true
+            }
         }
         if dragEnabled {
             let pan = UIPanGestureRecognizer(
@@ -106,6 +113,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             )
             pan.delegate = self
             mapView.addGestureRecognizer(pan)
+        }
+
+        if(!longPressRecognizerAdded) {
+            mapView.addGestureRecognizer(longPress)
+            longPressRecognizerAdded = true
         }
     }
 
@@ -440,6 +452,34 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             let filter = arguments["filter"] as? String
 
             let addResult = addFillLayer(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
+                minimumZoomLevel: minzoom,
+                maximumZoomLevel: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: properties
+            )
+            switch addResult {
+            case .success: result(nil)
+            case let .failure(error): result(error.flutterError)
+            }
+
+        case "fillExtrusionLayer#add":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
+            let minzoom = arguments["minzoom"] as? Double
+            let maxzoom = arguments["maxzoom"] as? Double
+            let filter = arguments["filter"] as? String
+
+            let addResult = addFillExtrusionLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
@@ -949,9 +989,9 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
-        if let feature = firstFeatureOnLayers(at: point), let id = feature.identifier {
+        if let feature = firstFeatureOnLayers(at: point) {
             channel?.invokeMethod("feature#onTap", arguments: [
-                        "id": id,
+                        "id": feature.identifier,
                         "x": point.x,
                         "y": point.y,
                         "lng": coordinate.longitude,
@@ -1234,6 +1274,51 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             if let source = style.source(withIdentifier: sourceId) {
                 let layer = MGLFillStyleLayer(identifier: layerId, source: source)
                 LayerPropertyConverter.addFillProperties(fillLayer: layer, properties: properties)
+                if let sourceLayerIdentifier = sourceLayerIdentifier {
+                    layer.sourceLayerIdentifier = sourceLayerIdentifier
+                }
+                if let minimumZoomLevel = minimumZoomLevel {
+                    layer.minimumZoomLevel = Float(minimumZoomLevel)
+                }
+                if let maximumZoomLevel = maximumZoomLevel {
+                    layer.maximumZoomLevel = Float(maximumZoomLevel)
+                }
+                if let filter = filter {
+                    if case let .failure(error) = setFilter(layer, filter) {
+                        return .failure(error)
+                    }
+                }
+                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                    style.insertLayer(layer, below: belowLayer)
+                } else {
+                    style.addLayer(layer)
+                }
+                if enableInteraction {
+                    interactiveFeatureLayerIds.insert(layerId)
+                }
+            }
+        }
+        return .success(())
+    }
+
+    func addFillExtrusionLayer(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayerIdentifier: String?,
+        minimumZoomLevel: Double?,
+        maximumZoomLevel: Double?,
+        filter: String?,
+        enableInteraction: Bool,
+        properties: [String: String]
+    ) -> Result<Void, MethodCallError> {
+        if let style = mapView.style {
+            if let source = style.source(withIdentifier: sourceId) {
+                let layer = MGLFillExtrusionStyleLayer(identifier: layerId, source: source)
+                LayerPropertyConverter.addFillExtrusionProperties(
+                    fillExtrusionLayer: layer,
+                    properties: properties
+                )
                 if let sourceLayerIdentifier = sourceLayerIdentifier {
                     layer.sourceLayerIdentifier = sourceLayerIdentifier
                 }

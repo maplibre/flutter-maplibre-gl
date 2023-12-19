@@ -5,32 +5,32 @@ import Mapbox
 
 class LayerPropertyConverter {
 {{#layerTypes}}
-    class func add{{typePascal}}Properties({{type}}Layer: MGL{{typePascal}}StyleLayer, properties: [String: String]) {
+    class func add{{typePascal}}Properties({{typeCamel}}Layer: MGL{{typePascal}}StyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
             let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
             switch propertyName {
                 {{#paint_properties}}
                 case "{{{value}}}":
                 {{#isIosAsCamelCase}}
-                    {{type}}Layer.{{iosAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{type}}Layer.{{valueAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{valueAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{/paint_properties}}
                 {{#layout_properties}}
                 case "{{{value}}}":
                 {{^isVisibilityProperty}}
                 {{#isIosAsCamelCase}}
-                    {{type}}Layer.{{iosAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{type}}Layer.{{valueAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{valueAsCamelCase}} = expression
                 {{/isIosAsCamelCase}}
                 {{/isVisibilityProperty}}
                 {{#isVisibilityProperty}}
                     let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    {{type}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
                 {{/isVisibilityProperty}}
                 {{/layout_properties}}
              
