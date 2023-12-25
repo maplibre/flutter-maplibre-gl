@@ -78,6 +78,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 | Circle | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
+| Fill Extrusion | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 
 
 ## Map Styles
@@ -142,6 +143,10 @@ if you plan on committing from the Codespace.
 
 
 ## Fixing common issues
+
+### Loading .mbtiles tile files or sprites/glyphs from the assets shipped with the app
+One approach that has been used successfully to do that is to copy the files from the app's assets directory to another directory, e.g. the app's cache directory, and then reference that location.
+See e.g. issues https://github.com/maplibre/flutter-maplibre-gl/issues/338 and https://github.com/maplibre/flutter-maplibre-gl/issues/318
 ### Avoid Android UnsatisfiedLinkError
 
 Update buildTypes in `android\app\build.gradle`

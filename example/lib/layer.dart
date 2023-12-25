@@ -181,6 +181,25 @@ class LayerState extends State {
       filter: ['==', 'id', filteredId],
     );
 
+    await controller.addFillExtrusionLayer(
+      "fills",
+      "fills-extrusion",
+      const FillExtrusionLayerProperties(
+        fillExtrusionHeight: 300,
+        fillExtrusionColor: [
+          Expressions.interpolate,
+          ['exponential', 0.5],
+          [Expressions.zoom],
+          11,
+          'red',
+          18,
+          'blue'
+        ],
+      ),
+      belowLayerId: "water",
+      filter: ['==', 'id', 2],
+    );
+
     await controller.addLineLayer(
       "fills",
       "lines",
@@ -312,6 +331,23 @@ final _fills = {
             [151.162657925954278, -33.879168932438581]
           ]
         ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": <String, dynamic>{'id': 2},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [151.121824791363, -33.885947459842846],
+            [151.121824791363, -33.89768020458625],
+            [151.13561641336742, -33.89768020458625],
+            [151.13561641336742, -33.885947459842846],
+            [151.121824791363, -33.885947459842846]
+          ]
+        ],
       }
     },
     {

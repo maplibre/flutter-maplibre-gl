@@ -78,7 +78,7 @@ jobs:
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Runner.app
           path: example/build/ios/iphonesimulator

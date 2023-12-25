@@ -36,6 +36,7 @@ class MaplibreMap extends StatefulWidget {
     this.compassViewMargins,
     this.attributionButtonPosition = AttributionButtonPosition.BottomRight,
     this.attributionButtonMargins,
+    this.iosLongClickDuration,
     this.onMapClick,
     this.onUserLocationUpdated,
     this.onMapLongClick,
@@ -87,6 +88,11 @@ class MaplibreMap extends StatefulWidget {
 
   /// The initial position of the map's camera.
   final CameraPosition initialCameraPosition;
+
+  /// How long a user has to click the map **on iOS** until a long click is registered.
+  /// Has no effect on web or Android. Can not be changed at runtime, only the initial value is used.
+  /// If null, the default value of the native MapLibre library / of the OS is used.
+  final Duration? iosLongClickDuration;
 
   /// True if the map should show a compass when rotated.
   final bool compassEnabled;
@@ -260,6 +266,9 @@ class _MaplibreMapState extends State<MaplibreMap> {
       'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
       //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
+      if (widget.iosLongClickDuration != null)
+        'iosLongClickDurationMilliseconds':
+            widget.iosLongClickDuration!.inMilliseconds,
     };
     return _maplibreGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
