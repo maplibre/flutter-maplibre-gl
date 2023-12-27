@@ -320,7 +320,7 @@ final class MapboxMapController
                 if (internalListener != null) {
                   internalListener.onSurfaceTextureUpdated(surface);
                 }
-                mapView.invalidate();
+                mapView.postInvalidate();
               }
             });
   }
