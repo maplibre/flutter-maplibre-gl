@@ -951,6 +951,21 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
+  Future<void> addHeatmapLayer(
+      String sourceId, String layerId, Map<String, dynamic> properties,
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
+    return _addLayer(sourceId, layerId, properties, "heatmap",
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        enableInteraction: false);
+  }
+
+  @override
   Future<void> addRasterLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,

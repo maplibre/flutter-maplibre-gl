@@ -158,6 +158,83 @@ class FullMapState extends State<FullMap> {
     );
   }
 
+  static Future<void> addHeatMap(MaplibreMapController controller) async {
+    await controller.addSource(
+        'earthquakes-heatmap-source',
+        const GeojsonSourceProperties(
+            data:
+                'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson'));
+
+    await controller.addLayer(
+      'earthquakes-heatmap-source',
+      'earthquakes-heatmap-layer',
+      const HeatmapLayerProperties(
+        // Increase the heatmap weight based on frequency and property magnitude
+        heatmapWeight: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.get, 'mag'],
+          0,
+          0,
+          6,
+          1,
+        ],
+        // Increase the heatmap color weight weight by zoom level
+        // heatmap-intensity is a multiplier on top of heatmap-weight
+        heatmapIntensity: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.zoom],
+          0,
+          1,
+          9,
+          3
+        ],
+        // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+        // Begin color ramp at 0-stop with a 0-transparancy color
+        // to create a blur-like effect.
+        heatmapColor: [
+          Expressions.interpolate,
+          ['linear'],
+          ['heatmap-density'],
+          0,
+          'rgba(33.0, 102.0, 172.0, 0.0)',
+          0.2,
+          'rgb(103.0, 169.0, 207.0)',
+          0.4,
+          'rgb(209.0, 229.0, 240.0)',
+          0.6,
+          'rgb(253.0, 219.0, 119.0)',
+          0.8,
+          'rgb(239.0, 138.0, 98.0)',
+          1,
+          'rgb(178.0, 24.0, 43.0)',
+        ],
+        // Adjust the heatmap radius by zoom level
+        heatmapRadius: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.zoom],
+          0,
+          2,
+          9,
+          20,
+        ],
+        // Transition from heatmap to circle layer by zoom level
+        heatmapOpacity: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.zoom],
+          7,
+          1,
+          9,
+          0
+        ],
+      ),
+      maxzoom: 9,
+    );
+  }
+
   static Future<void> addDem(MaplibreMapController controller) async {
     // TODO: adapt example?
     // await controller.addSource(
@@ -174,14 +251,14 @@ class FullMapState extends State<FullMap> {
     // );
   }
 
-  static const _stylesAndLoaders = [
-    StyleInfo(
+  final _stylesAndLoaders = [
+    const StyleInfo(
       name: "Vector",
       baseStyle: MaplibreStyles.DEMO,
       addDetails: addVector,
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
-    StyleInfo(
+    const StyleInfo(
       name: "Default style",
       // Using the raw github file version of MaplibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
@@ -191,29 +268,36 @@ class FullMapState extends State<FullMap> {
       addDetails: addDem,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 8),
     ),
-    StyleInfo(
+    const StyleInfo(
       name: "Geojson cluster",
       baseStyle: MaplibreStyles.DEMO,
       addDetails: addGeojsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
-    StyleInfo(
+    const StyleInfo(
       name: "Raster",
       baseStyle:
           "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
       addDetails: addRaster,
       position: CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
-    StyleInfo(
+    const StyleInfo(
       name: "Image",
       baseStyle:
           "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json?",
       addDetails: addImage,
       position: CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
+    const StyleInfo(
+      name: "Heatmap",
+      baseStyle:
+          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+      addDetails: addHeatMap,
+      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
+    ),
     //video only supported on web
     if (kIsWeb)
-      StyleInfo(
+      const StyleInfo(
         name: "Video",
         baseStyle:
             "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
