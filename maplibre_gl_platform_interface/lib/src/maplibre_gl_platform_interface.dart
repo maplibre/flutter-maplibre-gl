@@ -217,3 +217,14 @@ abstract class MapLibreGlPlatform {
     onUserLocationUpdatedPlatform.clear();
   }
 }
+
+// Ideas for improvment:
+//   - Use a record instead
+//   - Make the class equatble
+/// Data class that represent a pair of `sourceId` and `geojsonFeature`.
+class Source {
+  const Source({required this.id, required this.geojsonFeature});
+
+  final String id;
+  final Map<String, dynamic> geojsonFeature;
+}
