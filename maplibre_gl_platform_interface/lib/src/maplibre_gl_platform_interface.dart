@@ -130,6 +130,8 @@ abstract class MapLibreGlPlatform {
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature);
 
+  Future<void> setFeatureForGeoJsonSources(List<Source> sources);
+
   Future<void> removeSource(String sourceId);
 
   Future<void> addSymbolLayer(
