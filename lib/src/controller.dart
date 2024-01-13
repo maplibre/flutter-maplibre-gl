@@ -861,6 +861,24 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Updates the specified list of [line] with the given [changes]. The lines must
+  /// be current members of the [lines] set.‚
+  ///
+  /// Change listeners are notified once the line has been updated on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> updateLines(Map<Line, LineOptions> lines) async {
+    final updatedLines = lines.entries.map((entry) {
+      var line = entry.key;
+      final options = entry.value;
+      line.options = line.options.copyWith(options);
+      return line;
+    }).toList();
+    await lineManager!.setAll(updatedLines);
+    notifyListeners();
+  }
+
   /// Retrieves the current position of the line.
   /// This may be different from the value of `line.options.geometry` if the line is draggable.
   /// In that case this method provides the line's actual position, and `line.options.geometry` the last programmatically set position.
