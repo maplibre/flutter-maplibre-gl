@@ -1095,20 +1095,24 @@ class MaplibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Query rendered features at a point in screen cooridnates
+  /// Query rendered (i.e. visible) features at a point in screen coordinates
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     return _maplibreGlPlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
-  /// Query rendered features in a Rect in screen coordinates
+  /// Query rendered (i.e. visible) features in a Rect in screen coordinates
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
     return _maplibreGlPlatform.queryRenderedFeaturesInRect(
         rect, layerIds, filter);
   }
 
-  /// Query rendered features at a point in screen coordinates
+  /// Query features contained in the source with the specified [sourceId].
+  ///
+  /// In contrast to [queryRenderedFeatures], this returns all features in the source,
+  /// regardless of whether they are currently rendered by the current style.
+  ///
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
