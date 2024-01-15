@@ -632,6 +632,37 @@ class MaplibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a heatmap layer to the map with the given properties
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [sourceLayer] is used to selected a specific source layer from
+  /// Raster source.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  Future<void> addHeatmapLayer(
+      String sourceId, String layerId, HeatmapLayerProperties properties,
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
+    await _maplibreGlPlatform.addHeatmapLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
   /// Updates user location tracking mode.
   ///
   /// The returned [Future] completes after the change has been made on the
@@ -1358,6 +1389,12 @@ class MaplibreMapController extends ChangeNotifier {
         throw UnimplementedError("HillShadeLayer does not support filter");
       }
       addHillshadeLayer(sourceId, layerId, properties,
+          belowLayerId: belowLayerId,
+          sourceLayer: sourceLayer,
+          minzoom: minzoom,
+          maxzoom: maxzoom);
+    } else if (properties is HeatmapLayerProperties) {
+      addHeatmapLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,

@@ -328,6 +328,30 @@ class LayerPropertyConverter {
         }
     }
 
+    class func addHeatmapProperties(heatmapLayer: MGLHeatmapStyleLayer, properties: [String: String]) {
+        for (propertyName, propertyValue) in properties {
+            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            switch propertyName {
+                case "heatmap-radius":
+                    heatmapLayer.heatmapRadius = expression
+                case "heatmap-weight":
+                    heatmapLayer.heatmapWeight = expression
+                case "heatmap-intensity":
+                    heatmapLayer.heatmapIntensity = expression
+                case "heatmap-color":
+                    heatmapLayer.heatmapColor = expression
+                case "heatmap-opacity":
+                    heatmapLayer.heatmapOpacity = expression
+                case "visibility":
+                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                    heatmapLayer.isVisible = trimmedPropertyValue == "visible"
+             
+                default:
+                    break
+            }
+        }
+    }
+
     private class func interpretExpression(propertyName: String, expression: String) -> NSExpression? {
         let isColor = propertyName.contains("color");
 
