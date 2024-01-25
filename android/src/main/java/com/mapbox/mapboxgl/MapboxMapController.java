@@ -1505,7 +1505,9 @@ final class MapboxMapController
 
           Layer layer = style.getLayer(layerId);
 
-          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer != null) {
+            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          }
 
           result.success(null);
           break;
