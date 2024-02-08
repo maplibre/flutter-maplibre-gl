@@ -7,8 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'page.dart';
 
 class LocalStylePage extends ExamplePage {
-  const LocalStylePage({super.key})
-      : super(const Icon(Icons.map), 'Local style');
+  const LocalStylePage({super.key}) : super(const Icon(Icons.map), 'Local style');
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +54,8 @@ class LocalStyleState extends State<LocalStyle> {
 
   @override
   Widget build(BuildContext context) {
+    final styleAbsoluteFilePath = this.styleAbsoluteFilePath;
+
     if (styleAbsoluteFilePath == null) {
       return const Scaffold(
         body: Center(child: Text('Creating local style file...')),
