@@ -23,6 +23,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
+    namespace 'com.mapbox.mapboxgl'
 
     compileSdkVersion 31
     ndkVersion "20.1.5948944"
