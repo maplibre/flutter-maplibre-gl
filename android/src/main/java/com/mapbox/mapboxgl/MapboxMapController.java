@@ -1624,7 +1624,24 @@ final class MapboxMapController
   @Override
   public void onCameraTrackingChanged(int currentMode) {
     final Map<String, Object> arguments = new HashMap<>(2);
-    arguments.put("mode", currentMode);
+    switch (currentMode) {
+        case CameraMode.NONE:
+            arguments.put("mode", 0);
+            break;
+        case CameraMode.TRACKING:
+            arguments.put("mode", 1);
+            break;
+        case CameraMode.TRACKING_COMPASS:
+            arguments.put("mode", 2);
+            break;
+        case CameraMode.TRACKING_GPS:
+            arguments.put("mode", 3);
+            break;
+        default:
+            Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
+            return;
+    }
+
     methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
   }
 
