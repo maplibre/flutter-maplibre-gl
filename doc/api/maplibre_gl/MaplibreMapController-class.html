@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the MaplibreMapController class from the maplibre_gl library, for the Dart programming language.">
+  <title>MaplibreMapController class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl.dart</a></li>
+    <li class="self-crumb">MaplibreMapController class</li>
+  </ol>
+  <div class="self-name">MaplibreMapController</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="maplibre_gl&#47;maplibre_gl-library-sidebar.html"
+    data-below-sidebar="maplibre_gl&#47;MaplibreMapController-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">MaplibreMapController</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Controller for a single <a href="../maplibre_gl/MaplibreMap-class.html">MaplibreMap</a> instance running on the host platform.</p>
+<p>Some of its methods can only be called after the <code>onStyleLoaded</code> callback has been invoked.</p>
+<p>To add annotations (<a href="../maplibre_gl/Circle-class.html">Circle</a>s, <a href="../maplibre_gl/Line-class.html">Line</a>s, <a href="../maplibre_gl/Symbol-class.html">Symbol</a>s and <a href="../maplibre_gl/Fill-class.html">Fill</a>s) on the map, there are two ways:</p>
+<ol>
+<li><em>Simple way to add annotations</em>: Use the corresponding add* methods (<a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a>, <a href="../maplibre_gl/MaplibreMapController/addLine.html">addLine</a>, <a href="../maplibre_gl/MaplibreMapController/addSymbol.html">addSymbol</a> and <a href="../maplibre_gl/MaplibreMapController/addFill.html">addFill</a>) on the MaplibreMapController to add one annotation at a time to the map.
+There are also corresponding <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a>, <a href="../maplibre_gl/MaplibreMapController/addLines.html">addLines</a> etc. methods which work the same but add multiple annotations at a time.</li>
+</ol>
+<p>(If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations.
+An annotation manager performs the steps from the advanced way, but hides the complexity from the developer.
+E.g. the <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> method uses the <a href="../maplibre_gl/CircleManager-class.html">CircleManager</a>, which in turn adds a GeoJson source to the map's style with the circle's locations as features.
+The CircleManager also adds a circle style layer to the map's style that references that GeoJson source, therefore rendering all circles added with <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> on the map.)</p>
+<p>There are also corresponding clear* methods like <a href="../maplibre_gl/MaplibreMapController/clearCircles.html">clearCircles</a> to remove all circles from the map, which had been added with <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> or <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a>.</p>
+<p>There are also properties like <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a> to get the current set of circles on the map, which had been added with <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> or <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a>.</p>
+<p>Click events on annotations that are added this way (with the <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a>, <a href="../maplibre_gl/MaplibreMapController/addLine.html">addLine</a> etc. methods) can be received by adding callbacks to <a href="../maplibre_gl/MaplibreMapController/onCircleTapped.html">onCircleTapped</a>, <a href="../maplibre_gl/MaplibreMapController/onLineTapped.html">onLineTapped</a> etc.</p>
+<p>Note: <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a>, <a href="../maplibre_gl/MaplibreMapController/clearCircles.html">clearCircles</a> and <a href="../maplibre_gl/MaplibreMapController/onCircleTapped.html">onCircleTapped</a> only work for circles added with <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> or <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a>,
+not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
+The same of course applies for fills, lines and symbols.</p>
+<ol start="2">
+<li><em>Advanced way to add annotations</em>: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the <a href="../maplibre_gl/MaplibreMapController/addSource.html">addSource</a> method or the more specific methods like <a href="../maplibre_gl/MaplibreMapController/addGeoJsonSource.html">addGeoJsonSource</a>)
+and add a new layer to display the data of that source on the map (either with the <a href="../maplibre_gl/MaplibreMapController/addLayer.html">addLayer</a> method or with the more specific methods like <a href="../maplibre_gl/MaplibreMapController/addCircleLayer.html">addCircleLayer</a>, <a href="../maplibre_gl/MaplibreMapController/addLineLayer.html">addLineLayer</a> etc.).
+For more information about Maplibre Styles, see the documentation of <a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a> as well as the specification at <code>https://maplibre.org/maplibre-style-spec/</code>.</li>
+</ol>
+<p>A MaplibreMapController is also a <a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier-class.html">ChangeNotifier</a>. Subscribers (change listeners) are notified upon changes to any of</p>
+<ul>
+<li>the configuration options of the <a href="../maplibre_gl/MaplibreMap-class.html">MaplibreMap</a> widget</li>
+<li>the <a href="../maplibre_gl/MaplibreMapController/symbols.html">symbols</a>, <a href="../maplibre_gl/MaplibreMapController/lines.html">lines</a>, <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a> or <a href="../maplibre_gl/MaplibreMapController/fills.html">fills</a> properties
+(i.e. the collection of <a href="../maplibre_gl/Symbol-class.html">Symbol</a>s, <a href="../maplibre_gl/Line-class.html">Line</a>s, <a href="../maplibre_gl/Circle-class.html">Circle</a>s and <a href="../maplibre_gl/Fill-class.html">Fill</a>s added to this map via the "simple way" (see above))</li>
+<li>the <a href="../maplibre_gl/MaplibreMapController/isCameraMoving.html">isCameraMoving</a> property</li>
+<li>the <a href="../maplibre_gl/MaplibreMapController/cameraPosition.html">cameraPosition</a> property</li>
+</ul>
+<p>Listeners are notified after changes have been applied on the platform side.</p>
+</section>
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+  <dt>Inheritance</dt>
+  <dd>
+    <ul class="gt-separated dark clazz-relationships">
+      <li><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></li>
+        <li><a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier-class.html">ChangeNotifier</a></li>
+      <li>MaplibreMapController</li>
+    </ul>
+  </dd>
+
+        
+        
+
+
+
+        
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+
+    <dl class="constructor-summary-list">
+        <dt id="MaplibreMapController" class="callable">
+          <span class="name"><a href="../maplibre_gl/MaplibreMapController/MaplibreMapController.html">MaplibreMapController</a></span><span class="signature">(<span class="parameter" id="-param-maplibreGlPlatform">{<span>required</span> <span class="type-annotation"><a href="../maplibre_gl/MapLibreGlPlatform-class.html">MapLibreGlPlatform</a></span> <span class="parameter-name">maplibreGlPlatform</span>, </span><span class="parameter" id="-param-initialCameraPosition"><span>required</span> <span class="type-annotation"><a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a></span> <span class="parameter-name">initialCameraPosition</span>, </span><span class="parameter" id="-param-annotationOrder"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> <span class="parameter-name">annotationOrder</span>, </span><span class="parameter" id="-param-annotationConsumeTapEvents"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/AnnotationType.html">AnnotationType</a></span>&gt;</span></span> <span class="parameter-name">annotationConsumeTapEvents</span>, </span><span class="parameter" id="-param-onStyleLoadedCallback"><span class="type-annotation"><a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a>?</span> <span class="parameter-name">onStyleLoadedCallback</span>, </span><span class="parameter" id="-param-onMapClick"><span class="type-annotation"><a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span> <span class="parameter-name">onMapClick</span>, </span><span class="parameter" id="-param-onMapLongClick"><span class="type-annotation"><a href="../maplibre_gl/OnMapLongClickCallback.html">OnMapLongClickCallback</a>?</span> <span class="parameter-name">onMapLongClick</span>, </span><span class="parameter" id="-param-onCameraTrackingDismissed"><span class="type-annotation"><a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a>?</span> <span class="parameter-name">onCameraTrackingDismissed</span>, </span><span class="parameter" id="-param-onCameraTrackingChanged"><span class="type-annotation"><a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a>?</span> <span class="parameter-name">onCameraTrackingChanged</span>, </span><span class="parameter" id="-param-onMapIdle"><span class="type-annotation"><a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a>?</span> <span class="parameter-name">onMapIdle</span>, </span><span class="parameter" id="-param-onUserLocationUpdated"><span class="type-annotation"><a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a>?</span> <span class="parameter-name">onUserLocationUpdated</span>, </span><span class="parameter" id="-param-onCameraIdle"><span class="type-annotation"><a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a>?</span> <span class="parameter-name">onCameraIdle</span>}</span>)</span>
+        </dt>
+        <dd>
+          
+        </dd>
+    </dl>
+  </section>
+
+    <section class="summary offset-anchor" id="instance-properties">
+      <h2>Properties</h2>
+
+      <dl class="properties">
+        <dt id="cameraPosition" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/cameraPosition.html">cameraPosition</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/CameraPosition-class.html">CameraPosition</a>?</span>
+  
+
+</dt>
+<dd>
+  Returns the most recent camera position reported by the platform side.
+Will be null, if <a href="../maplibre_gl/MaplibreMap/trackCameraPosition.html">MaplibreMap.trackCameraPosition</a> is false.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="circleManager" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/circleManager.html">circleManager</a></span>
+  <span class="signature">&#8596; <a href="../maplibre_gl/CircleManager-class.html">CircleManager</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="circles" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Circle-class.html">Circle</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The current set of circles on this map added with the <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> or <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a> methods.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="fillManager" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/fillManager.html">fillManager</a></span>
+  <span class="signature">&#8596; <a href="../maplibre_gl/FillManager-class.html">FillManager</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="fills" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/fills.html">fills</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Fill-class.html">Fill</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The current set of fills on this map added with the <a href="../maplibre_gl/MaplibreMapController/addFill.html">addFill</a> or <a href="../maplibre_gl/MaplibreMapController/addFills.html">addFills</a> methods.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasListeners" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier/hasListeners.html">hasListeners</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether any listeners are currently registered.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="isCameraMoving" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/isCameraMoving.html">isCameraMoving</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  True if the map camera is currently moving.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="lineManager" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/lineManager.html">lineManager</a></span>
+  <span class="signature">&#8596; <a href="../maplibre_gl/LineManager-class.html">LineManager</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="lines" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/lines.html">lines</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Line-class.html">Line</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The current set of lines on this map added with the <a href="../maplibre_gl/MaplibreMapController/addLine.html">addLine</a> or <a href="../maplibre_gl/MaplibreMapController/addLines.html">addLines</a> methods.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="onCameraIdle" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onCameraIdle.html">onCameraIdle</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraIdleCallback.html">OnCameraIdleCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onCameraTrackingChanged" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onCameraTrackingChanged.html">onCameraTrackingChanged</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraTrackingChangedCallback.html">OnCameraTrackingChangedCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onCameraTrackingDismissed" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onCameraTrackingDismissed.html">onCameraTrackingDismissed</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnCameraTrackingDismissedCallback.html">OnCameraTrackingDismissedCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onCircleTapped" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onCircleTapped.html">onCircleTapped</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Circle-class.html">Circle</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for symbols placed on this map.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onFeatureDrag" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onFeatureDrag.html">onFeatureDrag</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OnFeatureDragnCallback.html">OnFeatureDragnCallback</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onFeatureTapped" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onFeatureTapped.html">onFeatureTapped</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/OnFeatureInteractionCallback.html">OnFeatureInteractionCallback</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for features (geojson layer) placed on this map.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onFillTapped" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onFillTapped.html">onFillTapped</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Fill-class.html">Fill</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for fills placed on this map.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onInfoWindowTapped" class="property">
+  <span class="name"><a class="deprecated" href="../maplibre_gl/MaplibreMapController/onInfoWindowTapped.html">onInfoWindowTapped</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for info windows on symbols
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onLineTapped" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onLineTapped.html">onLineTapped</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Line-class.html">Line</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for lines placed on this map.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onMapClick" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onMapClick.html">onMapClick</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapClickCallback.html">OnMapClickCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onMapIdle" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onMapIdle.html">onMapIdle</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapIdleCallback.html">OnMapIdleCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onMapLongClick" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onMapLongClick.html">onMapLongClick</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnMapLongClickCallback.html">OnMapLongClickCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onStyleLoadedCallback" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onStyleLoadedCallback.html">onStyleLoadedCallback</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnStyleLoadedCallback.html">OnStyleLoadedCallback</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onSymbolTapped" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onSymbolTapped.html">onSymbolTapped</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/ArgumentCallbacks-class.html">ArgumentCallbacks</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Callbacks to receive tap events for symbols placed on this map.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="onUserLocationUpdated" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/onUserLocationUpdated.html">onUserLocationUpdated</a></span>
+  <span class="signature">&#8594; <a href="../maplibre_gl/OnUserLocationUpdated.html">OnUserLocationUpdated</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="symbolManager" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/symbolManager.html">symbolManager</a></span>
+  <span class="signature">&#8596; <a href="../maplibre_gl/SymbolManager-class.html">SymbolManager</a>?</span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">getter/setter pair</span></div>
+
+</dd>
+
+        <dt id="symbols" class="property">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/symbols.html">symbols</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  The current set of symbols on this map added with the <a href="../maplibre_gl/MaplibreMapController/addSymbol.html">addSymbol</a> or <a href="../maplibre_gl/MaplibreMapController/addSymbols.html">addSymbols</a> methods.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+      </dl>
+    </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="addCircle" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a></span><span class="signature">(<wbr><span class="parameter" id="addCircle-param-options"><span class="type-annotation"><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addCircle-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Circle-class.html">Circle</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a circle to the map, configured using the specified custom <code>options</code>.
+  
+
+</dd>
+
+        <dt id="addCircleLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addCircleLayer.html">addCircleLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addCircleLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addCircleLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addCircleLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/CircleLayerProperties-class.html">CircleLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addCircleLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addCircleLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addCircleLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addCircleLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addCircleLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>, </span><span class="parameter" id="addCircleLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a circle layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addCircles" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a></span><span class="signature">(<wbr><span class="parameter" id="addCircles-param-options"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></span>&gt;</span></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addCircles-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a></span>&gt;</span>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Circle-class.html">Circle</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds multiple circles to the map, configured using the specified custom
+<code>options</code>.
+  
+
+</dd>
+
+        <dt id="addFill" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addFill.html">addFill</a></span><span class="signature">(<wbr><span class="parameter" id="addFill-param-options"><span class="type-annotation"><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addFill-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Fill-class.html">Fill</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a fill to the map, configured using the specified custom <code>options</code>.
+  
+
+</dd>
+
+        <dt id="addFillExtrusionLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addFillExtrusionLayer.html">addFillExtrusionLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addFillExtrusionLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/FillExtrusionLayerProperties-class.html">FillExtrusionLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>, </span><span class="parameter" id="addFillExtrusionLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a fill extrusion layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addFillLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addFillLayer.html">addFillLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addFillLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addFillLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addFillLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/FillLayerProperties-class.html">FillLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addFillLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addFillLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addFillLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addFillLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addFillLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>, </span><span class="parameter" id="addFillLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a fill layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addFills" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addFills.html">addFills</a></span><span class="signature">(<wbr><span class="parameter" id="addFills-param-options"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></span>&gt;</span></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addFills-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a></span>&gt;</span>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Fill-class.html">Fill</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds multiple fills to the map, configured using the specified custom
+<code>options</code>.
+  
+
+</dd>
+
+        <dt id="addGeoJsonSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addGeoJsonSource.html">addGeoJsonSource</a></span><span class="signature">(<wbr><span class="parameter" id="addGeoJsonSource-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addGeoJsonSource-param-geojson"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">geojson</span>, </span><span class="parameter" id="addGeoJsonSource-param-promoteId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">promoteId</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a new geojson source
+  
+
+</dd>
+
+        <dt id="addHeatmapLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addHeatmapLayer.html">addHeatmapLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addHeatmapLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addHeatmapLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addHeatmapLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/HeatmapLayerProperties-class.html">HeatmapLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addHeatmapLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addHeatmapLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addHeatmapLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addHeatmapLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a heatmap layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addHillshadeLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addHillshadeLayer.html">addHillshadeLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addHillshadeLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addHillshadeLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addHillshadeLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/HillshadeLayerProperties-class.html">HillshadeLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addHillshadeLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addHillshadeLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addHillshadeLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addHillshadeLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a hillshade layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addImage" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addImage.html">addImage</a></span><span class="signature">(<wbr><span class="parameter" id="addImage-param-name"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span>, </span><span class="parameter" id="addImage-param-bytes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">bytes</span>, </span><span class="parameter" id="addImage-param-sdf">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">sdf</span> = <span class="default-value">false</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an image to the style currently displayed in the map, so that it can later be referred to by the provided name.
+  
+
+</dd>
+
+        <dt id="addImageLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addImageLayer.html">addImageLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addImageLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addImageLayer-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span>, </span><span class="parameter" id="addImageLayer-param-minzoom">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addImageLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an image layer to the map's style at render time.
+  
+
+</dd>
+
+        <dt id="addImageLayerBelow" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addImageLayerBelow.html">addImageLayerBelow</a></span><span class="signature">(<wbr><span class="parameter" id="addImageLayerBelow-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addImageLayerBelow-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addImageLayerBelow-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span>, </span><span class="parameter" id="addImageLayerBelow-param-minzoom">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addImageLayerBelow-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
+  
+
+</dd>
+
+        <dt id="addImageSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addImageSource.html">addImageSource</a></span><span class="signature">(<wbr><span class="parameter" id="addImageSource-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span>, </span><span class="parameter" id="addImageSource-param-bytes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">bytes</span>, </span><span class="parameter" id="addImageSource-param-coordinates"><span class="type-annotation"><a href="../maplibre_gl/LatLngQuad-class.html">LatLngQuad</a></span> <span class="parameter-name">coordinates</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
+Not implemented on web.
+  
+
+</dd>
+
+        <dt id="addLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addLayer.html">addLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/LayerProperties-class.html">LayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>, </span><span class="parameter" id="addLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addLayerBelow" class="callable">
+  <span class="name deprecated"><a class="deprecated" href="../maplibre_gl/MaplibreMapController/addLayerBelow.html">addLayerBelow</a></span><span class="signature">(<wbr><span class="parameter" id="addLayerBelow-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addLayerBelow-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addLayerBelow-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span>, </span><span class="parameter" id="addLayerBelow-param-minzoom">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addLayerBelow-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
+  
+
+</dd>
+
+        <dt id="addLine" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addLine.html">addLine</a></span><span class="signature">(<wbr><span class="parameter" id="addLine-param-options"><span class="type-annotation"><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addLine-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Line-class.html">Line</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a line to the map, configured using the specified custom <code>options</code>.
+  
+
+</dd>
+
+        <dt id="addLineLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addLineLayer.html">addLineLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addLineLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addLineLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addLineLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/LineLayerProperties-class.html">LineLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addLineLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addLineLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addLineLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addLineLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addLineLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>, </span><span class="parameter" id="addLineLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a line layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addLines" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addLines.html">addLines</a></span><span class="signature">(<wbr><span class="parameter" id="addLines-param-options"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></span>&gt;</span></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addLines-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a></span>&gt;</span>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Line-class.html">Line</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds multiple lines to the map, configured using the specified custom <code>options</code>.
+  
+
+</dd>
+
+        <dt id="addListener" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier/addListener.html">addListener</a></span><span class="signature">(<wbr><span class="parameter" id="addListener-param-listener"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/VoidCallback.html">VoidCallback</a></span> <span class="parameter-name">listener</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Register a closure to be called when the object changes.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="addRasterLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addRasterLayer.html">addRasterLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addRasterLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addRasterLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addRasterLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/RasterLayerProperties-class.html">RasterLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addRasterLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addRasterLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addRasterLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addRasterLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a raster layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addSource.html">addSource</a></span><span class="signature">(<wbr><span class="parameter" id="addSource-param-sourceid"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceid</span>, </span><span class="parameter" id="addSource-param-properties"><span class="type-annotation"><a href="../maplibre_gl/SourceProperties-class.html">SourceProperties</a></span> <span class="parameter-name">properties</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a new source to the map
+  
+
+</dd>
+
+        <dt id="addSymbol" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addSymbol.html">addSymbol</a></span><span class="signature">(<wbr><span class="parameter" id="addSymbol-param-options"><span class="type-annotation"><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addSymbol-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a symbol to the map, configured using the specified custom <code>options</code>.
+  
+
+</dd>
+
+        <dt id="addSymbolLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addSymbolLayer.html">addSymbolLayer</a></span><span class="signature">(<wbr><span class="parameter" id="addSymbolLayer-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="addSymbolLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="addSymbolLayer-param-properties"><span class="type-annotation"><a href="../maplibre_gl/SymbolLayerProperties-class.html">SymbolLayerProperties</a></span> <span class="parameter-name">properties</span>, </span><span class="parameter" id="addSymbolLayer-param-belowLayerId">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">belowLayerId</span>, </span><span class="parameter" id="addSymbolLayer-param-sourceLayer"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayer</span>, </span><span class="parameter" id="addSymbolLayer-param-minzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">minzoom</span>, </span><span class="parameter" id="addSymbolLayer-param-maxzoom"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a>?</span> <span class="parameter-name">maxzoom</span>, </span><span class="parameter" id="addSymbolLayer-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span>, </span><span class="parameter" id="addSymbolLayer-param-enableInteraction"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableInteraction</span> = <span class="default-value">true</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Add a symbol layer to the map with the given properties
+  
+
+</dd>
+
+        <dt id="addSymbols" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/addSymbols.html">addSymbols</a></span><span class="signature">(<wbr><span class="parameter" id="addSymbols-param-options"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></span>&gt;</span></span> <span class="parameter-name">options</span>, </span><span class="parameter" id="addSymbols-param-data">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a></span>&gt;</span>?</span> <span class="parameter-name">data</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds multiple symbols to the map, configured using the specified custom
+<code>options</code>.
+  
+
+</dd>
+
+        <dt id="animateCamera" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/animateCamera.html">animateCamera</a></span><span class="signature">(<wbr><span class="parameter" id="animateCamera-param-cameraUpdate"><span class="type-annotation"><a href="../maplibre_gl/CameraUpdate-class.html">CameraUpdate</a></span> <span class="parameter-name">cameraUpdate</span>, </span><span class="parameter" id="animateCamera-param-duration">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Duration-class.html">Duration</a>?</span> <span class="parameter-name">duration</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Starts an animated change of the map camera position.
+  
+
+</dd>
+
+        <dt id="clearCircles" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/clearCircles.html">clearCircles</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes all <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a> from the map added with the <a href="../maplibre_gl/MaplibreMapController/addCircle.html">addCircle</a> or <a href="../maplibre_gl/MaplibreMapController/addCircles.html">addCircles</a> methods.
+  
+
+</dd>
+
+        <dt id="clearFills" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/clearFills.html">clearFills</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes all <a href="../maplibre_gl/MaplibreMapController/fills.html">fills</a> from the map added with the <a href="../maplibre_gl/MaplibreMapController/addFill.html">addFill</a> or <a href="../maplibre_gl/MaplibreMapController/addFills.html">addFills</a> methods.
+  
+
+</dd>
+
+        <dt id="clearLines" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/clearLines.html">clearLines</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes all <a href="../maplibre_gl/MaplibreMapController/lines.html">lines</a> from the map added with the <a href="../maplibre_gl/MaplibreMapController/addLine.html">addLine</a> or <a href="../maplibre_gl/MaplibreMapController/addLines.html">addLines</a> methods.
+  
+
+</dd>
+
+        <dt id="clearSymbols" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/clearSymbols.html">clearSymbols</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes all <a href="../maplibre_gl/MaplibreMapController/symbols.html">symbols</a> from the map added with the <a href="../maplibre_gl/MaplibreMapController/addSymbol.html">addSymbol</a> or <a href="../maplibre_gl/MaplibreMapController/addSymbols.html">addSymbols</a> methods.
+  
+
+</dd>
+
+        <dt id="dispose" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/dispose.html">dispose</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Discards any resources used by the object. After this is called, the
+object is not in a usable state and should be discarded (calls to
+<a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier/addListener.html">addListener</a> will throw after the object is disposed).
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="forceResizeWebMap" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/forceResizeWebMap.html">forceResizeWebMap</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Triggers a hard map resize event on web and does not check if it is required or not.
+  
+
+</dd>
+
+        <dt id="getCircleLatLng" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getCircleLatLng.html">getCircleLatLng</a></span><span class="signature">(<wbr><span class="parameter" id="getCircleLatLng-param-circle"><span class="type-annotation"><a href="../maplibre_gl/Circle-class.html">Circle</a></span> <span class="parameter-name">circle</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves the current position of the circle.
+This may be different from the value of <code>circle.options.geometry</code> if the circle is draggable.
+In that case this method provides the circle's actual position, and <code>circle.options.geometry</code> the last programmatically set position.
+  
+
+</dd>
+
+        <dt id="getFilter" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getFilter.html">getFilter</a></span><span class="signature">(<wbr><span class="parameter" id="getFilter-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="getLayerIds" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getLayerIds.html">getLayerIds</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="getLineLatLngs" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getLineLatLngs.html">getLineLatLngs</a></span><span class="signature">(<wbr><span class="parameter" id="getLineLatLngs-param-line"><span class="type-annotation"><a href="../maplibre_gl/Line-class.html">Line</a></span> <span class="parameter-name">line</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves the current position of the line.
+This may be different from the value of <code>line.options.geometry</code> if the line is draggable.
+In that case this method provides the line's actual position, and <code>line.options.geometry</code> the last programmatically set position.
+  
+
+</dd>
+
+        <dt id="getMetersPerPixelAtLatitude" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getMetersPerPixelAtLatitude.html">getMetersPerPixelAtLatitude</a></span><span class="signature">(<wbr><span class="parameter" id="getMetersPerPixelAtLatitude-param-latitude"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">latitude</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the distance spanned by one pixel at the specified <code>latitude</code> and current zoom level.
+The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
+  
+
+</dd>
+
+        <dt id="getSourceIds" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getSourceIds.html">getSourceIds</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieve every source ids of the map as a <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a> list, including the ones added internally
+  
+
+</dd>
+
+        <dt id="getSymbolLatLng" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getSymbolLatLng.html">getSymbolLatLng</a></span><span class="signature">(<wbr><span class="parameter" id="getSymbolLatLng-param-symbol"><span class="type-annotation"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span> <span class="parameter-name">symbol</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves the current position of the symbol.
+This may be different from the value of <code>symbol.options.geometry</code> if the symbol is draggable.
+In that case this method provides the symbol's actual position, and <code>symbol.options.geometry</code> the last programmatically set position.
+  
+
+</dd>
+
+        <dt id="getTelemetryEnabled" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getTelemetryEnabled.html">getTelemetryEnabled</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves whether collection of anonymized telemetry data is enabled.
+  
+
+</dd>
+
+        <dt id="getVisibleRegion" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/getVisibleRegion.html">getVisibleRegion</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLngBounds-class.html">LatLngBounds</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  This method returns the boundaries of the region currently displayed in the map.
+  
+
+</dd>
+
+        <dt id="invalidateAmbientCache" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/invalidateAmbientCache.html">invalidateAmbientCache</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="matchMapLanguageWithDeviceDefault" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/matchMapLanguageWithDeviceDefault.html">matchMapLanguageWithDeviceDefault</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the language of the map labels to match the device's language.
+  
+
+</dd>
+
+        <dt id="moveCamera" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/moveCamera.html">moveCamera</a></span><span class="signature">(<wbr><span class="parameter" id="moveCamera-param-cameraUpdate"><span class="type-annotation"><a href="../maplibre_gl/CameraUpdate-class.html">CameraUpdate</a></span> <span class="parameter-name">cameraUpdate</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Instantaneously re-position the camera.
+Note: moveCamera() quickly moves the camera, which can be visually jarring for a user. Strongly consider using the animateCamera() methods instead because it's less abrupt.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="notifyListeners" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier/notifyListeners.html">notifyListeners</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Call all the registered listeners.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="queryRenderedFeatures" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/queryRenderedFeatures.html">queryRenderedFeatures</a></span><span class="signature">(<wbr><span class="parameter" id="queryRenderedFeatures-param-point"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span>&gt;</span></span> <span class="parameter-name">point</span>, </span><span class="parameter" id="queryRenderedFeatures-param-layerIds"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">layerIds</span>, </span><span class="parameter" id="queryRenderedFeatures-param-filter"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span>&gt;</span>?</span> <span class="parameter-name">filter</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Query rendered (i.e. visible) features at a point in screen coordinates
+  
+
+</dd>
+
+        <dt id="queryRenderedFeaturesInRect" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/queryRenderedFeaturesInRect.html">queryRenderedFeaturesInRect</a></span><span class="signature">(<wbr><span class="parameter" id="queryRenderedFeaturesInRect-param-rect"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Rect-class.html">Rect</a></span> <span class="parameter-name">rect</span>, </span><span class="parameter" id="queryRenderedFeaturesInRect-param-layerIds"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">layerIds</span>, </span><span class="parameter" id="queryRenderedFeaturesInRect-param-filter"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">filter</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Query rendered (i.e. visible) features in a Rect in screen coordinates
+  
+
+</dd>
+
+        <dt id="querySourceFeatures" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/querySourceFeatures.html">querySourceFeatures</a></span><span class="signature">(<wbr><span class="parameter" id="querySourceFeatures-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="querySourceFeatures-param-sourceLayerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceLayerId</span>, </span><span class="parameter" id="querySourceFeatures-param-filter"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span>&gt;</span>?</span> <span class="parameter-name">filter</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Query features contained in the source with the specified <code>sourceId</code>.
+  
+
+</dd>
+
+        <dt id="removeCircle" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeCircle.html">removeCircle</a></span><span class="signature">(<wbr><span class="parameter" id="removeCircle-param-circle"><span class="type-annotation"><a href="../maplibre_gl/Circle-class.html">Circle</a></span> <span class="parameter-name">circle</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>circle</code> from the map. The circle must be a current
+member of the <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a> set.
+  
+
+</dd>
+
+        <dt id="removeCircles" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeCircles.html">removeCircles</a></span><span class="signature">(<wbr><span class="parameter" id="removeCircles-param-circles"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Circle-class.html">Circle</a></span>&gt;</span></span> <span class="parameter-name">circles</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>circles</code> from the map. The circles must be current
+members of the <code>circles</code> set.
+  
+
+</dd>
+
+        <dt id="removeFill" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeFill.html">removeFill</a></span><span class="signature">(<wbr><span class="parameter" id="removeFill-param-fill"><span class="type-annotation"><a href="../maplibre_gl/Fill-class.html">Fill</a></span> <span class="parameter-name">fill</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>fill</code> from the map. The fill must be a current
+member of the <a href="../maplibre_gl/MaplibreMapController/fills.html">fills</a> set.
+  
+
+</dd>
+
+        <dt id="removeFills" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeFills.html">removeFills</a></span><span class="signature">(<wbr><span class="parameter" id="removeFills-param-fills"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Fill-class.html">Fill</a></span>&gt;</span></span> <span class="parameter-name">fills</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>fills</code> from the map. The fills must be current
+members of the <code>fills</code> set.
+  
+
+</dd>
+
+        <dt id="removeImageSource" class="callable">
+  <span class="name deprecated"><a class="deprecated" href="../maplibre_gl/MaplibreMapController/removeImageSource.html">removeImageSource</a></span><span class="signature">(<wbr><span class="parameter" id="removeImageSource-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes previously added image source by id
+  
+
+</dd>
+
+        <dt id="removeLayer" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeLayer.html">removeLayer</a></span><span class="signature">(<wbr><span class="parameter" id="removeLayer-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes a MapLibre style layer
+  
+
+</dd>
+
+        <dt id="removeLine" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeLine.html">removeLine</a></span><span class="signature">(<wbr><span class="parameter" id="removeLine-param-line"><span class="type-annotation"><a href="../maplibre_gl/Line-class.html">Line</a></span> <span class="parameter-name">line</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>line</code> from the map. The line must be a current
+member of the <a href="../maplibre_gl/MaplibreMapController/lines.html">lines</a> set.
+  
+
+</dd>
+
+        <dt id="removeLines" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeLines.html">removeLines</a></span><span class="signature">(<wbr><span class="parameter" id="removeLines-param-lines"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Line-class.html">Line</a></span>&gt;</span></span> <span class="parameter-name">lines</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>lines</code> from the map. The lines must be current
+members of the <code>lines</code> set.
+  
+
+</dd>
+
+        <dt id="removeListener" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/foundation/ChangeNotifier/removeListener.html">removeListener</a></span><span class="signature">(<wbr><span class="parameter" id="removeListener-param-listener"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/VoidCallback.html">VoidCallback</a></span> <span class="parameter-name">listener</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Remove a previously registered closure from the list of closures that are
+notified when the object changes.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="removeSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeSource.html">removeSource</a></span><span class="signature">(<wbr><span class="parameter" id="removeSource-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes previously added source by id
+  
+
+</dd>
+
+        <dt id="removeSymbol" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeSymbol.html">removeSymbol</a></span><span class="signature">(<wbr><span class="parameter" id="removeSymbol-param-symbol"><span class="type-annotation"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span> <span class="parameter-name">symbol</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>symbol</code> from the map. The symbol must be a current
+member of the <a href="../maplibre_gl/MaplibreMapController/symbols.html">symbols</a> set.
+  
+
+</dd>
+
+        <dt id="removeSymbols" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/removeSymbols.html">removeSymbols</a></span><span class="signature">(<wbr><span class="parameter" id="removeSymbols-param-symbols"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span>&gt;</span></span> <span class="parameter-name">symbols</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Removes the specified <code>symbols</code> from the map. The symbols must be current
+members of the <code>symbols</code> set.
+  
+
+</dd>
+
+        <dt id="requestMyLocationLatLng" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/requestMyLocationLatLng.html">requestMyLocationLatLng</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Get last my location
+  
+
+</dd>
+
+        <dt id="resizeWebMap" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/resizeWebMap.html">resizeWebMap</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Triggers a resize event for the map on web (ignored on Android or iOS).
+  
+
+</dd>
+
+        <dt id="setCameraBounds" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setCameraBounds.html">setCameraBounds</a></span><span class="signature">(<wbr><span class="parameter" id="setCameraBounds-param-west">{<span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">west</span>, </span><span class="parameter" id="setCameraBounds-param-north"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">north</span>, </span><span class="parameter" id="setCameraBounds-param-south"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">south</span>, </span><span class="parameter" id="setCameraBounds-param-east"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">east</span>, </span><span class="parameter" id="setCameraBounds-param-padding"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">padding</span>}</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Pans and zooms the map to contain its visible area within the specified geographical bounds.
+  
+
+</dd>
+
+        <dt id="setFilter" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setFilter.html">setFilter</a></span><span class="signature">(<wbr><span class="parameter" id="setFilter-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="setFilter-param-filter"><span class="type-annotation">dynamic</span> <span class="parameter-name">filter</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="setGeoJsonFeature" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setGeoJsonFeature.html">setGeoJsonFeature</a></span><span class="signature">(<wbr><span class="parameter" id="setGeoJsonFeature-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="setGeoJsonFeature-param-geojsonFeature"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">geojsonFeature</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Sets new geojson data to and existing source
+  
+
+</dd>
+
+        <dt id="setGeoJsonSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setGeoJsonSource.html">setGeoJsonSource</a></span><span class="signature">(<wbr><span class="parameter" id="setGeoJsonSource-param-sourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">sourceId</span>, </span><span class="parameter" id="setGeoJsonSource-param-geojson"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">geojson</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Sets new geojson data to and existing source
+  
+
+</dd>
+
+        <dt id="setLayerProperties" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setLayerProperties.html">setLayerProperties</a></span><span class="signature">(<wbr><span class="parameter" id="setLayerProperties-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="setLayerProperties-param-properties"><span class="type-annotation"><a href="../maplibre_gl/LayerProperties-class.html">LayerProperties</a></span> <span class="parameter-name">properties</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Set one or multiple properties of a layer.
+You can only use properties that are supported for the layer's type.
+So you can e.g. only use LineLayerProperties on a line layer.
+  
+
+</dd>
+
+        <dt id="setLayerVisibility" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setLayerVisibility.html">setLayerVisibility</a></span><span class="signature">(<wbr><span class="parameter" id="setLayerVisibility-param-layerId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">layerId</span>, </span><span class="parameter" id="setLayerVisibility-param-visible"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">visible</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="setMapLanguage" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setMapLanguage.html">setMapLanguage</a></span><span class="signature">(<wbr><span class="parameter" id="setMapLanguage-param-language"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">language</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the language of the map labels to match the specified language.
+This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
+This naming schema is used by OpenStreetMap (see <code>https://wiki.openstreetmap.org/wiki/Multilingual_names</code>),
+and is also used by some other vector tile generation software and vector tile providers.
+Commonly, (and according to the OSM wiki) <code>language</code> should be
+"a lowercase language's ISO 639-1 alpha2 code (second column), a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist, or a ISO 639-3 code if neither of those exist".
+  
+
+</dd>
+
+        <dt id="setSymbolIconAllowOverlap" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setSymbolIconAllowOverlap.html">setSymbolIconAllowOverlap</a></span><span class="signature">(<wbr><span class="parameter" id="setSymbolIconAllowOverlap-param-enable"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enable</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  If true, the icon will be visible even if it collides with other previously drawn symbols.
+  
+
+</dd>
+
+        <dt id="setSymbolIconIgnorePlacement" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setSymbolIconIgnorePlacement.html">setSymbolIconIgnorePlacement</a></span><span class="signature">(<wbr><span class="parameter" id="setSymbolIconIgnorePlacement-param-enable"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enable</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  If true, other symbols can be visible even if they collide with the icon.
+  
+
+</dd>
+
+        <dt id="setSymbolTextAllowOverlap" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setSymbolTextAllowOverlap.html">setSymbolTextAllowOverlap</a></span><span class="signature">(<wbr><span class="parameter" id="setSymbolTextAllowOverlap-param-enable"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enable</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  If true, the text will be visible even if it collides with other previously drawn symbols.
+  
+
+</dd>
+
+        <dt id="setSymbolTextIgnorePlacement" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setSymbolTextIgnorePlacement.html">setSymbolTextIgnorePlacement</a></span><span class="signature">(<wbr><span class="parameter" id="setSymbolTextIgnorePlacement-param-enable"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enable</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  If true, other symbols can be visible even if they collide with the text.
+  
+
+</dd>
+
+        <dt id="setTelemetryEnabled" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/setTelemetryEnabled.html">setTelemetryEnabled</a></span><span class="signature">(<wbr><span class="parameter" id="setTelemetryEnabled-param-enabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enabled</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Enables or disables the collection of anonymized telemetry data.
+  
+
+</dd>
+
+        <dt id="toLatLng" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/toLatLng.html">toLatLng</a></span><span class="signature">(<wbr><span class="parameter" id="toLatLng-param-screenLocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span></span> <span class="parameter-name">screenLocation</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the geographic location (as <code>LatLng</code>) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
+  
+
+</dd>
+
+        <dt id="toScreenLocation" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/toScreenLocation.html">toScreenLocation</a></span><span class="signature">(<wbr><span class="parameter" id="toScreenLocation-param-latLng"><span class="type-annotation"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span> <span class="parameter-name">latLng</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the point on the screen that corresponds to a geographical coordinate (<code>latLng</code>). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
+  
+
+</dd>
+
+        <dt id="toScreenLocationBatch" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/toScreenLocationBatch.html">toScreenLocationBatch</a></span><span class="signature">(<wbr><span class="parameter" id="toScreenLocationBatch-param-latLngs"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../maplibre_gl/LatLng-class.html">LatLng</a></span>&gt;</span></span> <span class="parameter-name">latLngs</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-math/Point-class.html">Point</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/num-class.html">num</a></span>&gt;</span></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="updateCircle" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateCircle.html">updateCircle</a></span><span class="signature">(<wbr><span class="parameter" id="updateCircle-param-circle"><span class="type-annotation"><a href="../maplibre_gl/Circle-class.html">Circle</a></span> <span class="parameter-name">circle</span>, </span><span class="parameter" id="updateCircle-param-changes"><span class="type-annotation"><a href="../maplibre_gl/CircleOptions-class.html">CircleOptions</a></span> <span class="parameter-name">changes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the specified <code>circle</code> with the given <code>changes</code>. The circle must
+be a current member of the <a href="../maplibre_gl/MaplibreMapController/circles.html">circles</a> set.
+  
+
+</dd>
+
+        <dt id="updateContentInsets" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateContentInsets.html">updateContentInsets</a></span><span class="signature">(<wbr><span class="parameter" id="updateContentInsets-param-insets"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/EdgeInsets-class.html">EdgeInsets</a></span> <span class="parameter-name">insets</span>, </span><span class="parameter" id="updateContentInsets-param-animated">[<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">animated</span> = <span class="default-value">false</span>]</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the distance from the edges of the map view’s frame to the edges
+of the map view’s logical viewport, optionally animating the change.
+  
+
+</dd>
+
+        <dt id="updateFill" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateFill.html">updateFill</a></span><span class="signature">(<wbr><span class="parameter" id="updateFill-param-fill"><span class="type-annotation"><a href="../maplibre_gl/Fill-class.html">Fill</a></span> <span class="parameter-name">fill</span>, </span><span class="parameter" id="updateFill-param-changes"><span class="type-annotation"><a href="../maplibre_gl/FillOptions-class.html">FillOptions</a></span> <span class="parameter-name">changes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the specified <code>fill</code> with the given <code>changes</code>. The fill must
+be a current member of the <a href="../maplibre_gl/MaplibreMapController/fills.html">fills</a> set.
+  
+
+</dd>
+
+        <dt id="updateImageSource" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateImageSource.html">updateImageSource</a></span><span class="signature">(<wbr><span class="parameter" id="updateImageSource-param-imageSourceId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">imageSourceId</span>, </span><span class="parameter" id="updateImageSource-param-bytes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span> <span class="parameter-name">bytes</span>, </span><span class="parameter" id="updateImageSource-param-coordinates"><span class="type-annotation"><a href="../maplibre_gl/LatLngQuad-class.html">LatLngQuad</a>?</span> <span class="parameter-name">coordinates</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Update the image and/or coordinates of an image source.
+Not implemented on web.
+  
+
+</dd>
+
+        <dt id="updateLine" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateLine.html">updateLine</a></span><span class="signature">(<wbr><span class="parameter" id="updateLine-param-line"><span class="type-annotation"><a href="../maplibre_gl/Line-class.html">Line</a></span> <span class="parameter-name">line</span>, </span><span class="parameter" id="updateLine-param-changes"><span class="type-annotation"><a href="../maplibre_gl/LineOptions-class.html">LineOptions</a></span> <span class="parameter-name">changes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the specified <code>line</code> with the given <code>changes</code>. The line must
+be a current member of the <a href="../maplibre_gl/MaplibreMapController/lines.html">lines</a> set.‚
+  
+
+</dd>
+
+        <dt id="updateMyLocationTrackingMode" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateMyLocationTrackingMode.html">updateMyLocationTrackingMode</a></span><span class="signature">(<wbr><span class="parameter" id="updateMyLocationTrackingMode-param-myLocationTrackingMode"><span class="type-annotation"><a href="../maplibre_gl/MyLocationTrackingMode.html">MyLocationTrackingMode</a></span> <span class="parameter-name">myLocationTrackingMode</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates user location tracking mode.
+  
+
+</dd>
+
+        <dt id="updateSymbol" class="callable">
+  <span class="name"><a href="../maplibre_gl/MaplibreMapController/updateSymbol.html">updateSymbol</a></span><span class="signature">(<wbr><span class="parameter" id="updateSymbol-param-symbol"><span class="type-annotation"><a href="../maplibre_gl/Symbol-class.html">Symbol</a></span> <span class="parameter-name">symbol</span>, </span><span class="parameter" id="updateSymbol-param-changes"><span class="type-annotation"><a href="../maplibre_gl/SymbolOptions-class.html">SymbolOptions</a></span> <span class="parameter-name">changes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Updates the specified <code>symbol</code> with the given <code>changes</code>. The symbol must
+be a current member of the <a href="../maplibre_gl/MaplibreMapController/symbols.html">symbols</a> set.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li class="self-crumb">MaplibreMapController class</li>
+</ol>
+
+
+    <h5>maplibre_gl library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.18.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+

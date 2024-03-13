@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="maplibre_gl API docs, for the Dart programming language.">
+  <title>maplibre_gl - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://github.com/maplibre/flutter-maplibre-gl">maplibre_gl package</a></li>
+  </ol>
+  <div class="self-name">maplibre_gl</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="flutter-maplibre-gl">Flutter Maplibre GL</h1>
+<p><a href="https://github.com/maplibre/flutter-maplibre-gl/actions/workflows/flutter_ci.yml"><img src="https://github.com/maplibre/flutter-maplibre-gl/actions/workflows/flutter_ci.yml/badge.svg" alt="Flutter CI"></a>
+<a href="https://github.com/maplibre/flutter-maplibre-gl/actions/workflows/generate_docs.yml"><img src="https://github.com/maplibre/flutter-maplibre-gl/actions/workflows/generate_docs.yml/badge.svg" alt="Generate docs"></a></p>
+<blockquote>
+<p><code>⚠️</code> Current notice: the repository has been transferred to the @maplibre organization. You shouldn't see any negative effects, as GitHub automatically redirects references from the old URL to the new URL. Please see <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/221">#221</a> for more information.</p>
+</blockquote>
+<p>This Flutter plugin allows to show <strong>embedded interactive and customizable vector maps</strong> as a Flutter widget.</p>
+<p>For the Android and iOS integration, we use <a href="https://github.com/maplibre/maplibre-gl-native">maplibre-gl-native</a>. For web, we rely on <a href="https://github.com/maplibre/maplibre-gl-js">maplibre-gl-js</a>. This project only supports a subset of the API exposed by these libraries.</p>
+<p>This project is a fork of <a href="https://github.com/tobrun/flutter-mapbox-gl">https://github.com/tobrun/flutter-mapbox-gl</a>, replacing its usage of Mapbox GL libraries with the open source <a href="https://github.com/maplibre">Maplibre GL</a> libraries.</p>
+<p><strong>Please note that this project is community driven and is not affiliated with the company Mapbox.</strong> <br>
+It does use some of their amazing open source libraries/tools, though. Thank you, Mapbox, for all the open-source work you do!</p>
+<h2 id="using-the-plugin-in-your-project">Using the plugin in your project</h2>
+<p>This project is not yet available on pub.dev.
+You can use it by referencing it in your <code>pubspec.yaml</code> like this:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+    ...
+    maplibre_gl:
+      git:
+        url: https://github.com/maplibre/flutter-maplibre-gl.git
+        ref: main
+</code></pre>
+<p>This will get you the very latest changes from the main branch.
+You can replace <code>main</code> with the name of the <a href="https://github.com/maplibre/flutter-maplibre-gl/releases">latest release</a>
+to get a more stable version.</p>
+<p>Compared to flutter-mapbox-gl, the only breaking API changes are:</p>
+<ul>
+<li><code>MapboxMap</code> &lt;--&gt; <code>MaplibreMap</code></li>
+<li><code>MapboxMapController</code> &lt;--&gt; <code>MaplibreMapController</code></li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<p>Documentation is available on the docs branch in the doc/api folder and automatically updated on each push to the main branch. You can easily preview the <a href="https://htmlpreview.github.io/?https://github.com/maplibre/flutter-maplibre-gl/blob/docs/doc/api/index.html">documentation / API reference here.</a></p>
+<p>Please visit <a href="https://github.com/maplibre/maplibre-gl-js">https://github.com/maplibre/maplibre-gl-js</a> and <a href="https://github.com/maplibre/maplibre-gl-native">https://github.com/maplibre/maplibre-gl-native</a> for more information about the Maplibre libraries.</p>
+<h3 id="ios">iOS</h3>
+<p>To use this plugin with iOS, you <strong>do not</strong> need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should actually remove these lines from your Podfile to avoid build errors:</p>
+<details>
+<summary>View obsolete code</summary>
+<pre class="language-ruby"><code class="language-ruby">source 'https://cdn.cocoapods.org/'
+source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
+
+pod 'MapLibre'
+pod 'MapLibreAnnotationExtension'
+</code></pre>
+</details>
+You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
+<h3 id="web">Web</h3>
+<p>Include the following JavaScript and CSS files in the <code>&lt;head&gt;</code> of the <code>web/index.html</code> file.</p>
+<pre class="language-html"><code class="language-html">&lt;script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'&gt;&lt;/script&gt;
+&lt;link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' /&gt;
+</code></pre>
+<h2 id="supported-api">Supported API</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th align="center">Android</th>
+<th align="center">iOS</th>
+<th align="center">Web</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Style</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Gesture</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>User Location</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Symbol</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Circle</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Line</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Fill</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Fill Extrusion</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+<tr>
+<td>Heatmap Layer</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+<td align="center">:white_check_mark:</td>
+</tr>
+</tbody>
+</table>
+<h2 id="map-styles">Map Styles</h2>
+<p>Map styles can be supplied by setting the <code>styleString</code> in the <code>MaplibreMap</code> constructor. The following formats are supported:</p>
+<ol>
+<li>Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'</li>
+<li>Passing the style as a local asset. Create a JSON file in the <code>assets</code> and add a reference in <code>pubspec.yml</code>. Set the style string to the relative path for this asset in order to load it into the map.</li>
+<li>Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.</li>
+<li>Passing the raw JSON of the map style. This is only supported on Android.</li>
+</ol>
+<h3 id="tile-sources-requiring-an-api-key">Tile sources requiring an API key</h3>
+<p>If your tile source requires an API key, we recommend directly specifying a source url with the API key included.
+For example:</p>
+<p><code>https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key={your_key}</code></p>
+<h2 id="location-features">Location features</h2>
+<h3 id="android">Android</h3>
+<p>Add the <code>ACCESS_COARSE_LOCATION</code> or <code>ACCESS_FINE_LOCATION</code> permission in the application manifest <code>android/app/src/main/AndroidManifest.xml</code> to enable location features in an <strong>Android</strong> application:</p>
+<pre class="language-dart"><code>&lt;manifest ...
+    &lt;uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /&gt;
+</code></pre>
+<p>Starting from Android API level 23 you also need to request it at runtime. This plugin does not handle this for you. The example app uses the flutter <a href="https://pub.dev/packages/location">'location' plugin</a> for this.</p>
+<h3 id="ios-2">iOS</h3>
+<p>To enable location features in an <strong>iOS</strong> application:</p>
+<p>If you access your users' location, you should also add the following key to <code>ios/Runner/Info.plist</code> to explain why you need access to their location data:</p>
+<pre class="language-dart"><code>xml ...
+    &lt;key&gt;NSLocationWhenInUseUsageDescription&lt;/key&gt;
+    &lt;string&gt;[Your explanation here]&lt;/string&gt;
+</code></pre>
+<p>A possible explanation could be: "Shows your location on the map".</p>
+<h2 id="getting-help">Getting Help</h2>
+<ul>
+<li><strong>Need help with your code?</strong>: Check the <a href="https://github.com/maplibre/flutter-maplibre-gl/discussions">discussions</a> on this repo or open a new one.
+ Or look for previous questions on the <a href="https://stackoverflow.com/questions/tagged/maplibre">#maplibre tag</a> — or <a href="https://stackoverflow.com/questions/tagged/maplibre">ask a new question</a>.</li>
+<li><strong>Have a bug to report?</strong> <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/new">Open an issue</a>. If possible, include a full log and information which shows the issue.</li>
+<li><strong>Have a feature request?</strong> <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/new">Open an issue</a>. Tell us what the feature should do and why you want the feature.</li>
+</ul>
+<h2 id="running-in-github-codespaces">Running in GitHub Codespaces</h2>
+<p>When you open this project in GitHub Codespaces, you can run the example app on web with the command</p>
+<pre class="language-dart"><code>$ cd example
+$ flutter run -d web-server --web-hostname=0.0.0.0
+</code></pre>
+<p>Codespaces should automatically take care of the necessary port forwarding, so that you can view the running web app on your local device or in a new tab.</p>
+<p><strong>Please note:</strong> the Docker image used to setup the Codespace is from CirrusCI and sets the Git username and email to CirrusCI default values. You should set these correctly,
+if you plan on committing from the Codespace.</p>
+<h2 id="fixing-common-issues">Fixing common issues</h2>
+<h3 id="loading-mbtiles-tile-files-or-spritesglyphs-from-the-assets-shipped-with-the-app">Loading .mbtiles tile files or sprites/glyphs from the assets shipped with the app</h3>
+<p>One approach that has been used successfully to do that is to copy the files from the app's assets directory to another directory, e.g. the app's cache directory, and then reference that location.
+See e.g. issues <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/338">https://github.com/maplibre/flutter-maplibre-gl/issues/338</a> and <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/318">https://github.com/maplibre/flutter-maplibre-gl/issues/318</a></p>
+<h3 id="avoid-android-unsatisfiedlinkerror">Avoid Android UnsatisfiedLinkError</h3>
+<p>Update buildTypes in <code>android\app\build.gradle</code></p>
+<pre class="language-gradle"><code class="language-gradle">buildTypes {
+    release {
+        // other configs
+        ndk {
+            abiFilters 'armeabi-v7a','arm64-v8a','x86_64', 'x86'
+        }
+    }
+}
+</code></pre>
+<h3 id="ios-app-crashes-when-using-location-based-features">iOS app crashes when using location based features</h3>
+<p>Please include the <code>NSLocationWhenInUseUsageDescription</code> as described <a href="#location-features">here</a></p>
+<h3 id="layer-is-not-displayed-on-ios-but-no-error">Layer is not displayed on IOS, but no error</h3>
+<p>Have a look in your <code>LayerProperties</code> object, if you supply a <code>lineColor</code> argument, (or any color argument) the issue might come from here.
+Android supports the following format : <code>'rgba(192, 192, 255, 1.0)'</code>,  but on iOS, this doesn't work!</p>
+<p>You have to have the color in the following format : <code>#C0C0FF</code></p>
+<h3 id="ios-crashes-with-error-nsinvalidargumentexception-reason-invalid-filter-value-filter-property-must-be-a-string">iOS crashes with error: <code>'NSInvalidArgumentException', reason: 'Invalid filter value: filter property must be a string'</code></h3>
+<p>Check if one of your expression is : <code>["!has", "value"]</code>. Android support this format, but iOS does not.
+You can replace your expression with :   <code>["!",["has", "value"] ]</code> which works both in Android and iOS.</p>
+<p>Note : iOS will display the error : <code>NSPredicate: Use of 'mgl_does:have:' as an NSExpression function is forbidden</code>, but it seems like the expression still works well.</p>
+<h2 id="contributing">Contributing</h2>
+<p><a href="https://github.com/maplibre/flutter-maplibre-gl/issues">Feedback</a> and contributions are very welcome!</p>
+<p>RELEASE.md contains information on how we cut releases.</p>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="maplibre_gl">
+  <span class="name"><a href="maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></span> 
+
+</dt>
+<dd>This library contains the Maplibre GL plugin for Flutter.
+</dd>
+
+        </dl>
+      </section>
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://github.com/maplibre/flutter-maplibre-gl">maplibre_gl package</a></li>
+</ol>
+
+
+    <h5 class="hidden-xs"><span class="package-name">maplibre_gl</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+</ol>
+
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.18.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+

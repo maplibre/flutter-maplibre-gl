@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the allLayerProperties property from the SymbolManager class, for the Dart programming language.">
+  <title>allLayerProperties property - SymbolManager class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl.dart</a></li>
+    <li><a href="../../maplibre_gl/SymbolManager-class.html">SymbolManager</a></li>
+    <li class="self-crumb">allLayerProperties property</li>
+  </ol>
+  <div class="self-name">allLayerProperties</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="maplibre_gl&#47;SymbolManager-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-property">allLayerProperties</span> property 
+</h1></div>
+
+
+        
+  <section id="getter">
+
+    <section class="multi-line-signature">
+      
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://api.flutter.dev/flutter/dart-core/override-constant.html">override</a></li>
+    </ol>
+  </div>
+      <span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../maplibre_gl/LayerProperties-class.html">LayerProperties</a></span>&gt;</span></span>
+      <span class="name ">allLayerProperties</span>
+      <div class="features"><span class="feature">override</span></div>
+
+    </section>
+
+    
+<section class="desc markdown">
+  <p>implemented to define the layer properties</p>
+</section>
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">@override
+List&lt;LayerProperties&gt; get allLayerProperties =&gt; [
+      SymbolLayerProperties(
+        iconSize: [Expressions.get, &#39;iconSize&#39;],
+        iconImage: [Expressions.get, &#39;iconImage&#39;],
+        iconRotate: [Expressions.get, &#39;iconRotate&#39;],
+        iconOffset: [Expressions.get, &#39;iconOffset&#39;],
+        iconAnchor: [Expressions.get, &#39;iconAnchor&#39;],
+        iconOpacity: [Expressions.get, &#39;iconOpacity&#39;],
+        iconColor: [Expressions.get, &#39;iconColor&#39;],
+        iconHaloColor: [Expressions.get, &#39;iconHaloColor&#39;],
+        iconHaloWidth: [Expressions.get, &#39;iconHaloWidth&#39;],
+        iconHaloBlur: [Expressions.get, &#39;iconHaloBlur&#39;],
+        &#47;&#47; note that web does not support setting this in a fully data driven
+        &#47;&#47; way this is a upstream issue
+        textFont: kIsWeb
+            ? null
+            : [
+                Expressions.caseExpression,
+                [Expressions.has, &#39;fontNames&#39;],
+                [Expressions.get, &#39;fontNames&#39;],
+                [
+                  Expressions.literal,
+                  [&quot;Open Sans Regular&quot;, &quot;Arial Unicode MS Regular&quot;]
+                ],
+              ],
+        textField: [Expressions.get, &#39;textField&#39;],
+        textSize: [Expressions.get, &#39;textSize&#39;],
+        textMaxWidth: [Expressions.get, &#39;textMaxWidth&#39;],
+        textLetterSpacing: [Expressions.get, &#39;textLetterSpacing&#39;],
+        textJustify: [Expressions.get, &#39;textJustify&#39;],
+        textAnchor: [Expressions.get, &#39;textAnchor&#39;],
+        textRotate: [Expressions.get, &#39;textRotate&#39;],
+        textTransform: [Expressions.get, &#39;textTransform&#39;],
+        textOffset: [Expressions.get, &#39;textOffset&#39;],
+        textOpacity: [Expressions.get, &#39;textOpacity&#39;],
+        textColor: [Expressions.get, &#39;textColor&#39;],
+        textHaloColor: [Expressions.get, &#39;textHaloColor&#39;],
+        textHaloWidth: [Expressions.get, &#39;textHaloWidth&#39;],
+        textHaloBlur: [Expressions.get, &#39;textHaloBlur&#39;],
+        symbolSortKey: [Expressions.get, &#39;zIndex&#39;],
+        iconAllowOverlap: _iconAllowOverlap,
+        iconIgnorePlacement: _iconIgnorePlacement,
+        textAllowOverlap: _textAllowOverlap,
+        textIgnorePlacement: _textIgnorePlacement,
+      )
+    ];</code></pre>
+</section>
+
+  </section>
+
+
+</div> <!-- /.main-content -->
+
+<div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+  <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/SymbolManager-class.html">SymbolManager</a></li>
+    <li class="self-crumb">allLayerProperties property</li>
+</ol>
+
+
+  <h5>SymbolManager class</h5>
+  <div id="dartdoc-sidebar-left-content"></div>
+</div><!--/.sidebar-offcanvas-->
+
+<div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.18.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+

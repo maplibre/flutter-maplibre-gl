@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the SymbolLayerProperties class from the maplibre_gl library, for the Dart programming language.">
+  <title>SymbolLayerProperties class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl.dart</a></li>
+    <li class="self-crumb">SymbolLayerProperties class</li>
+  </ol>
+  <div class="self-name">SymbolLayerProperties</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="maplibre_gl&#47;maplibre_gl-library-sidebar.html"
+    data-below-sidebar="maplibre_gl&#47;SymbolLayerProperties-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">SymbolLayerProperties</span> class 
+ 
+</h1></div>
+
+    
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+
+        
+  <dt>Implemented types</dt>
+  <dd>
+    <ul class="comma-separated clazz-relationships">
+        <li><a href="../maplibre_gl/LayerProperties-class.html">LayerProperties</a></li>
+    </ul>
+  </dd>
+        
+
+
+
+        
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+
+    <dl class="constructor-summary-list">
+        <dt id="SymbolLayerProperties" class="callable">
+          <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/SymbolLayerProperties.html">SymbolLayerProperties</a></span><span class="signature">(<span class="parameter" id="-param-iconOpacity">{<span class="type-annotation">dynamic</span> <span class="parameter-name">iconOpacity</span>, </span><span class="parameter" id="-param-iconColor"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconColor</span>, </span><span class="parameter" id="-param-iconHaloColor"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconHaloColor</span>, </span><span class="parameter" id="-param-iconHaloWidth"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconHaloWidth</span>, </span><span class="parameter" id="-param-iconHaloBlur"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconHaloBlur</span>, </span><span class="parameter" id="-param-iconTranslate"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconTranslate</span>, </span><span class="parameter" id="-param-iconTranslateAnchor"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconTranslateAnchor</span>, </span><span class="parameter" id="-param-textOpacity"><span class="type-annotation">dynamic</span> <span class="parameter-name">textOpacity</span>, </span><span class="parameter" id="-param-textColor"><span class="type-annotation">dynamic</span> <span class="parameter-name">textColor</span>, </span><span class="parameter" id="-param-textHaloColor"><span class="type-annotation">dynamic</span> <span class="parameter-name">textHaloColor</span>, </span><span class="parameter" id="-param-textHaloWidth"><span class="type-annotation">dynamic</span> <span class="parameter-name">textHaloWidth</span>, </span><span class="parameter" id="-param-textHaloBlur"><span class="type-annotation">dynamic</span> <span class="parameter-name">textHaloBlur</span>, </span><span class="parameter" id="-param-textTranslate"><span class="type-annotation">dynamic</span> <span class="parameter-name">textTranslate</span>, </span><span class="parameter" id="-param-textTranslateAnchor"><span class="type-annotation">dynamic</span> <span class="parameter-name">textTranslateAnchor</span>, </span><span class="parameter" id="-param-symbolPlacement"><span class="type-annotation">dynamic</span> <span class="parameter-name">symbolPlacement</span>, </span><span class="parameter" id="-param-symbolSpacing"><span class="type-annotation">dynamic</span> <span class="parameter-name">symbolSpacing</span>, </span><span class="parameter" id="-param-symbolAvoidEdges"><span class="type-annotation">dynamic</span> <span class="parameter-name">symbolAvoidEdges</span>, </span><span class="parameter" id="-param-symbolSortKey"><span class="type-annotation">dynamic</span> <span class="parameter-name">symbolSortKey</span>, </span><span class="parameter" id="-param-symbolZOrder"><span class="type-annotation">dynamic</span> <span class="parameter-name">symbolZOrder</span>, </span><span class="parameter" id="-param-iconAllowOverlap"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconAllowOverlap</span>, </span><span class="parameter" id="-param-iconIgnorePlacement"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconIgnorePlacement</span>, </span><span class="parameter" id="-param-iconOptional"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconOptional</span>, </span><span class="parameter" id="-param-iconRotationAlignment"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconRotationAlignment</span>, </span><span class="parameter" id="-param-iconSize"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconSize</span>, </span><span class="parameter" id="-param-iconTextFit"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconTextFit</span>, </span><span class="parameter" id="-param-iconTextFitPadding"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconTextFitPadding</span>, </span><span class="parameter" id="-param-iconImage"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconImage</span>, </span><span class="parameter" id="-param-iconRotate"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconRotate</span>, </span><span class="parameter" id="-param-iconPadding"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconPadding</span>, </span><span class="parameter" id="-param-iconKeepUpright"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconKeepUpright</span>, </span><span class="parameter" id="-param-iconOffset"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconOffset</span>, </span><span class="parameter" id="-param-iconAnchor"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconAnchor</span>, </span><span class="parameter" id="-param-iconPitchAlignment"><span class="type-annotation">dynamic</span> <span class="parameter-name">iconPitchAlignment</span>, </span><span class="parameter" id="-param-textPitchAlignment"><span class="type-annotation">dynamic</span> <span class="parameter-name">textPitchAlignment</span>, </span><span class="parameter" id="-param-textRotationAlignment"><span class="type-annotation">dynamic</span> <span class="parameter-name">textRotationAlignment</span>, </span><span class="parameter" id="-param-textField"><span class="type-annotation">dynamic</span> <span class="parameter-name">textField</span>, </span><span class="parameter" id="-param-textFont"><span class="type-annotation">dynamic</span> <span class="parameter-name">textFont</span>, </span><span class="parameter" id="-param-textSize"><span class="type-annotation">dynamic</span> <span class="parameter-name">textSize</span>, </span><span class="parameter" id="-param-textMaxWidth"><span class="type-annotation">dynamic</span> <span class="parameter-name">textMaxWidth</span>, </span><span class="parameter" id="-param-textLineHeight"><span class="type-annotation">dynamic</span> <span class="parameter-name">textLineHeight</span>, </span><span class="parameter" id="-param-textLetterSpacing"><span class="type-annotation">dynamic</span> <span class="parameter-name">textLetterSpacing</span>, </span><span class="parameter" id="-param-textJustify"><span class="type-annotation">dynamic</span> <span class="parameter-name">textJustify</span>, </span><span class="parameter" id="-param-textRadialOffset"><span class="type-annotation">dynamic</span> <span class="parameter-name">textRadialOffset</span>, </span><span class="parameter" id="-param-textVariableAnchor"><span class="type-annotation">dynamic</span> <span class="parameter-name">textVariableAnchor</span>, </span><span class="parameter" id="-param-textAnchor"><span class="type-annotation">dynamic</span> <span class="parameter-name">textAnchor</span>, </span><span class="parameter" id="-param-textMaxAngle"><span class="type-annotation">dynamic</span> <span class="parameter-name">textMaxAngle</span>, </span><span class="parameter" id="-param-textWritingMode"><span class="type-annotation">dynamic</span> <span class="parameter-name">textWritingMode</span>, </span><span class="parameter" id="-param-textRotate"><span class="type-annotation">dynamic</span> <span class="parameter-name">textRotate</span>, </span><span class="parameter" id="-param-textPadding"><span class="type-annotation">dynamic</span> <span class="parameter-name">textPadding</span>, </span><span class="parameter" id="-param-textKeepUpright"><span class="type-annotation">dynamic</span> <span class="parameter-name">textKeepUpright</span>, </span><span class="parameter" id="-param-textTransform"><span class="type-annotation">dynamic</span> <span class="parameter-name">textTransform</span>, </span><span class="parameter" id="-param-textOffset"><span class="type-annotation">dynamic</span> <span class="parameter-name">textOffset</span>, </span><span class="parameter" id="-param-textAllowOverlap"><span class="type-annotation">dynamic</span> <span class="parameter-name">textAllowOverlap</span>, </span><span class="parameter" id="-param-textIgnorePlacement"><span class="type-annotation">dynamic</span> <span class="parameter-name">textIgnorePlacement</span>, </span><span class="parameter" id="-param-textOptional"><span class="type-annotation">dynamic</span> <span class="parameter-name">textOptional</span>, </span><span class="parameter" id="-param-visibility"><span class="type-annotation">dynamic</span> <span class="parameter-name">visibility</span>}</span>)</span>
+        </dt>
+        <dd>
+          
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="SymbolLayerProperties.fromJson" class="callable">
+          <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/SymbolLayerProperties.fromJson.html">SymbolLayerProperties.fromJson</a></span><span class="signature">(<span class="parameter" id="fromJson-param-json"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">json</span></span>)</span>
+        </dt>
+        <dd>
+          
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+
+    <section class="summary offset-anchor" id="instance-properties">
+      <h2>Properties</h2>
+
+      <dl class="properties">
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="iconAllowOverlap" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconAllowOverlap.html">iconAllowOverlap</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, the icon will be visible even if it collides with other
+previously drawn symbols.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconAnchor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconAnchor.html">iconAnchor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Part of the icon placed closest to the anchor.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconColor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconColor.html">iconColor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The color of the icon. This can only be used with sdf icons.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconHaloBlur" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconHaloBlur.html">iconHaloBlur</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Fade out the halo towards the outside.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconHaloColor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconHaloColor.html">iconHaloColor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The color of the icon's halo. Icon halos can only be used with SDF
+icons.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconHaloWidth" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconHaloWidth.html">iconHaloWidth</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Distance of halo to the icon outline.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconIgnorePlacement" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconIgnorePlacement.html">iconIgnorePlacement</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, other symbols can be visible even if they collide with the
+icon.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconImage" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconImage.html">iconImage</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Name of image in sprite to use for drawing an image background.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconKeepUpright" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconKeepUpright.html">iconKeepUpright</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, the icon may be flipped to prevent it from being rendered
+upside-down.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconOffset" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconOffset.html">iconOffset</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Offset distance of icon from its anchor. Positive values indicate
+right and down, while negative values indicate left and up. Each
+component is multiplied by the value of <code>icon-size</code> to obtain the
+final offset in pixels. When combined with <code>icon-rotate</code> the offset
+will be as if the rotated direction was up.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconOpacity" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconOpacity.html">iconOpacity</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The opacity at which the icon will be drawn.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconOptional" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconOptional.html">iconOptional</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, text will display without their corresponding icons when the
+icon collides with other symbols and the text does not.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconPadding" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconPadding.html">iconPadding</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Size of the additional area around the icon bounding box used for
+detecting symbol collisions.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconPitchAlignment" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconPitchAlignment.html">iconPitchAlignment</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Orientation of icon when map is pitched.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconRotate" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconRotate.html">iconRotate</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Rotates the icon clockwise.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconRotationAlignment" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconRotationAlignment.html">iconRotationAlignment</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  In combination with <code>symbol-placement</code>, determines the rotation
+behavior of icons.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconSize" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconSize.html">iconSize</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Scales the original size of the icon by the provided factor. The new
+pixel size of the image will be the original pixel size multiplied by
+<code>icon-size</code>. 1 is the original size; 3 triples the size of the image.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconTextFit" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconTextFit.html">iconTextFit</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Scales the icon to fit around the associated text.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconTextFitPadding" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconTextFitPadding.html">iconTextFitPadding</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Size of the additional area added to dimensions determined by
+<code>icon-text-fit</code>, in clockwise order: top, right, bottom, left.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconTranslate" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconTranslate.html">iconTranslate</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Distance that the icon's anchor is moved from its original placement.
+Positive values indicate right and down, while negative values
+indicate left and up.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="iconTranslateAnchor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/iconTranslateAnchor.html">iconTranslateAnchor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Controls the frame of reference for <code>icon-translate</code>.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="symbolAvoidEdges" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/symbolAvoidEdges.html">symbolAvoidEdges</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, the symbols will not cross tile edges to avoid mutual
+collisions. Recommended in layers that don't have enough padding in
+the vector tile to prevent collisions, or if it is a point symbol
+layer placed after a line symbol layer. When using a client that
+supports global collision detection, like MapLibre GL JS, enabling
+this property is not needed to prevent clipped labels at tile
+boundaries.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="symbolPlacement" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/symbolPlacement.html">symbolPlacement</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Label placement relative to its geometry.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="symbolSortKey" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/symbolSortKey.html">symbolSortKey</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Sorts features in ascending order based on this value. Features with
+lower sort keys are drawn and placed first.  When <code>icon-allow-overlap</code>
+or <code>text-allow-overlap</code> is <code>false</code>, features with a lower sort key
+will have priority during placement. When <code>icon-allow-overlap</code> or
+<code>text-allow-overlap</code> is set to <code>true</code>, features with a higher sort key
+will overlap over features with a lower sort key.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="symbolSpacing" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/symbolSpacing.html">symbolSpacing</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Distance between two symbol anchors.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="symbolZOrder" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/symbolZOrder.html">symbolZOrder</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Controls the order in which overlapping symbols in the same layer are
+rendered
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textAllowOverlap" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textAllowOverlap.html">textAllowOverlap</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, the text will be visible even if it collides with other
+previously drawn symbols.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textAnchor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textAnchor.html">textAnchor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Part of the text placed closest to the anchor.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textColor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textColor.html">textColor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The color with which the text will be drawn.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textField" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textField.html">textField</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Value to use for a text label. If a plain <code>string</code> is provided, it
+will be treated as a <code>formatted</code> with default/inherited formatting
+options.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textFont" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textFont.html">textFont</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Font stack to use for displaying text.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textHaloBlur" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textHaloBlur.html">textHaloBlur</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The halo's fadeout distance towards the outside.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textHaloColor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textHaloColor.html">textHaloColor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The color of the text's halo, which helps it stand out from
+backgrounds.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textHaloWidth" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textHaloWidth.html">textHaloWidth</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Distance of halo to the font outline. Max text halo width is 1/4 of
+the font-size.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textIgnorePlacement" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textIgnorePlacement.html">textIgnorePlacement</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, other symbols can be visible even if they collide with the
+text.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textJustify" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textJustify.html">textJustify</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Text justification options.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textKeepUpright" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textKeepUpright.html">textKeepUpright</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, the text may be flipped vertically to prevent it from being
+rendered upside-down.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textLetterSpacing" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textLetterSpacing.html">textLetterSpacing</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Text tracking amount.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textLineHeight" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textLineHeight.html">textLineHeight</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Text leading value for multi-line text.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textMaxAngle" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textMaxAngle.html">textMaxAngle</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Maximum angle change between adjacent characters.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textMaxWidth" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textMaxWidth.html">textMaxWidth</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The maximum line width for text wrapping.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textOffset" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textOffset.html">textOffset</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Offset distance of text from its anchor. Positive values indicate
+right and down, while negative values indicate left and up. If used
+with text-variable-anchor, input values will be taken as absolute
+values. Offsets along the x- and y-axis will be applied automatically
+based on the anchor position.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textOpacity" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textOpacity.html">textOpacity</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The opacity at which the text will be drawn.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textOptional" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textOptional.html">textOptional</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  If true, icons will display without their corresponding text when the
+text collides with other symbols and the icon does not.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textPadding" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textPadding.html">textPadding</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Size of the additional area around the text bounding box used for
+detecting symbol collisions.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textPitchAlignment" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textPitchAlignment.html">textPitchAlignment</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Orientation of text when map is pitched.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textRadialOffset" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textRadialOffset.html">textRadialOffset</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Radial offset of text, in the direction of the symbol's anchor. Useful
+in combination with <code>text-variable-anchor</code>, which defaults to using
+the two-dimensional <code>text-offset</code> if present.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textRotate" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textRotate.html">textRotate</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Rotates the text clockwise.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textRotationAlignment" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textRotationAlignment.html">textRotationAlignment</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  In combination with <code>symbol-placement</code>, determines the rotation
+behavior of the individual glyphs forming the text.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textSize" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textSize.html">textSize</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Font size.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textTransform" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textTransform.html">textTransform</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Specifies how to capitalize text, similar to the CSS <code>text-transform</code>
+property.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textTranslate" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textTranslate.html">textTranslate</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Distance that the text's anchor is moved from its original placement.
+Positive values indicate right and down, while negative values
+indicate left and up.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textTranslateAnchor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textTranslateAnchor.html">textTranslateAnchor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Controls the frame of reference for <code>text-translate</code>.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textVariableAnchor" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textVariableAnchor.html">textVariableAnchor</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  To increase the chance of placing high-priority labels on the map, you
+can provide an array of <code>text-anchor</code> locations: the renderer will
+attempt to place the label at each location, in order, before moving
+onto the next label. Use <code>text-justify: auto</code> to choose justification
+based on anchor position. To apply an offset, use the
+<code>text-radial-offset</code> or the two-dimensional <code>text-offset</code>.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="textWritingMode" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/textWritingMode.html">textWritingMode</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  The property allows control over a symbol's orientation. Note that the
+property values act as a hint, so that a symbol whose language doesn’t
+support the provided orientation will be laid out in its natural
+orientation. Example: English point symbol will be rendered
+horizontally even if array value contains single 'vertical' enum
+value. The order of elements in an array define priority order for the
+placement of an orientation variant.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="visibility" class="property">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/visibility.html">visibility</a></span>
+  <span class="signature">&#8594; dynamic</span>
+  
+
+</dt>
+<dd>
+  Whether this layer is displayed.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+      </dl>
+    </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="copyWith" class="callable">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/copyWith.html">copyWith</a></span><span class="signature">(<wbr><span class="parameter" id="copyWith-param-changes"><span class="type-annotation"><a href="../maplibre_gl/SymbolLayerProperties-class.html">SymbolLayerProperties</a></span> <span class="parameter-name">changes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../maplibre_gl/SymbolLayerProperties-class.html">SymbolLayerProperties</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toJson" class="callable">
+  <span class="name"><a href="../maplibre_gl/SymbolLayerProperties/toJson.html">toJson</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">maplibre_gl</a></li>
+    <li><a href="../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li class="self-crumb">SymbolLayerProperties class</li>
+</ol>
+
+
+    <h5>maplibre_gl library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.18.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+

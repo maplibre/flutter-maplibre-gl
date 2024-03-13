@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the toJson method from the SymbolLayerProperties class, for the Dart programming language.">
+  <title>toJson method - SymbolLayerProperties class - maplibre_gl library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl.dart</a></li>
+    <li><a href="../../maplibre_gl/SymbolLayerProperties-class.html">SymbolLayerProperties</a></li>
+    <li class="self-crumb">toJson method</li>
+  </ol>
+  <div class="self-name">toJson</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="maplibre_gl&#47;SymbolLayerProperties-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">toJson</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+<span class="name ">toJson</span>(<wbr>)
+
+      <div class="features"><span class="feature">override</span></div>
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Map&lt;String, dynamic&gt; toJson() {
+  final Map&lt;String, dynamic&gt; json = &lt;String, dynamic&gt;{};
+
+  void addIfPresent(String fieldName, dynamic value) {
+    if (value != null) {
+      json[fieldName] = value;
+    }
+  }
+
+  addIfPresent(&#39;icon-opacity&#39;, iconOpacity);
+  addIfPresent(&#39;icon-color&#39;, iconColor);
+  addIfPresent(&#39;icon-halo-color&#39;, iconHaloColor);
+  addIfPresent(&#39;icon-halo-width&#39;, iconHaloWidth);
+  addIfPresent(&#39;icon-halo-blur&#39;, iconHaloBlur);
+  addIfPresent(&#39;icon-translate&#39;, iconTranslate);
+  addIfPresent(&#39;icon-translate-anchor&#39;, iconTranslateAnchor);
+  addIfPresent(&#39;text-opacity&#39;, textOpacity);
+  addIfPresent(&#39;text-color&#39;, textColor);
+  addIfPresent(&#39;text-halo-color&#39;, textHaloColor);
+  addIfPresent(&#39;text-halo-width&#39;, textHaloWidth);
+  addIfPresent(&#39;text-halo-blur&#39;, textHaloBlur);
+  addIfPresent(&#39;text-translate&#39;, textTranslate);
+  addIfPresent(&#39;text-translate-anchor&#39;, textTranslateAnchor);
+  addIfPresent(&#39;symbol-placement&#39;, symbolPlacement);
+  addIfPresent(&#39;symbol-spacing&#39;, symbolSpacing);
+  addIfPresent(&#39;symbol-avoid-edges&#39;, symbolAvoidEdges);
+  addIfPresent(&#39;symbol-sort-key&#39;, symbolSortKey);
+  addIfPresent(&#39;symbol-z-order&#39;, symbolZOrder);
+  addIfPresent(&#39;icon-allow-overlap&#39;, iconAllowOverlap);
+  addIfPresent(&#39;icon-ignore-placement&#39;, iconIgnorePlacement);
+  addIfPresent(&#39;icon-optional&#39;, iconOptional);
+  addIfPresent(&#39;icon-rotation-alignment&#39;, iconRotationAlignment);
+  addIfPresent(&#39;icon-size&#39;, iconSize);
+  addIfPresent(&#39;icon-text-fit&#39;, iconTextFit);
+  addIfPresent(&#39;icon-text-fit-padding&#39;, iconTextFitPadding);
+  addIfPresent(&#39;icon-image&#39;, iconImage);
+  addIfPresent(&#39;icon-rotate&#39;, iconRotate);
+  addIfPresent(&#39;icon-padding&#39;, iconPadding);
+  addIfPresent(&#39;icon-keep-upright&#39;, iconKeepUpright);
+  addIfPresent(&#39;icon-offset&#39;, iconOffset);
+  addIfPresent(&#39;icon-anchor&#39;, iconAnchor);
+  addIfPresent(&#39;icon-pitch-alignment&#39;, iconPitchAlignment);
+  addIfPresent(&#39;text-pitch-alignment&#39;, textPitchAlignment);
+  addIfPresent(&#39;text-rotation-alignment&#39;, textRotationAlignment);
+  addIfPresent(&#39;text-field&#39;, textField);
+  addIfPresent(&#39;text-font&#39;, textFont);
+  addIfPresent(&#39;text-size&#39;, textSize);
+  addIfPresent(&#39;text-max-width&#39;, textMaxWidth);
+  addIfPresent(&#39;text-line-height&#39;, textLineHeight);
+  addIfPresent(&#39;text-letter-spacing&#39;, textLetterSpacing);
+  addIfPresent(&#39;text-justify&#39;, textJustify);
+  addIfPresent(&#39;text-radial-offset&#39;, textRadialOffset);
+  addIfPresent(&#39;text-variable-anchor&#39;, textVariableAnchor);
+  addIfPresent(&#39;text-anchor&#39;, textAnchor);
+  addIfPresent(&#39;text-max-angle&#39;, textMaxAngle);
+  addIfPresent(&#39;text-writing-mode&#39;, textWritingMode);
+  addIfPresent(&#39;text-rotate&#39;, textRotate);
+  addIfPresent(&#39;text-padding&#39;, textPadding);
+  addIfPresent(&#39;text-keep-upright&#39;, textKeepUpright);
+  addIfPresent(&#39;text-transform&#39;, textTransform);
+  addIfPresent(&#39;text-offset&#39;, textOffset);
+  addIfPresent(&#39;text-allow-overlap&#39;, textAllowOverlap);
+  addIfPresent(&#39;text-ignore-placement&#39;, textIgnorePlacement);
+  addIfPresent(&#39;text-optional&#39;, textOptional);
+  addIfPresent(&#39;visibility&#39;, visibility);
+  return json;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/maplibre_gl-library.html">maplibre_gl</a></li>
+    <li><a href="../../maplibre_gl/SymbolLayerProperties-class.html">SymbolLayerProperties</a></li>
+    <li class="self-crumb">toJson method</li>
+</ol>
+
+
+    <h5>SymbolLayerProperties class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    maplibre_gl
+      0.18.0
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+
