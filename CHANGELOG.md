@@ -1,3 +1,6 @@
+* Use Gradle's namespace configuration instead of Manifest package entry
+* Add JVM target for Kotlin
+
 ## 0.18.0
 ### Breaking Change:
 Already since 0.17.0, developers do not need to adapt their Podfile for iOS apps anymore as it was previously described in the Readme. Developers who previously added these lines should remove them, since not removing these lines may cause a build failure on iOS. (This change actually already landed in 0.17.0, but it may not have been sufficiently clear that not removing these lines might break builds).
