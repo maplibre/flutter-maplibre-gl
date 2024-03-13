@@ -1138,6 +1138,17 @@ class MaplibreMapController extends MapLibreGlPlatform
     }
   }
 
+  Future<void> setFeatureForGeoJsonSources(List<Source> sources) async {
+    await Future.wait(
+      sources.map(
+        (source) => setFeatureForGeoJsonSource(
+          source.id,
+          source.geojsonFeature,
+        ),
+      ),
+    );
+  }
+
   @override
   void resizeWebMap() {
     _onMapResize();

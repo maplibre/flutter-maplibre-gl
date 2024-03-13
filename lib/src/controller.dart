@@ -359,6 +359,27 @@ class MaplibreMapController extends ChangeNotifier {
         sourceId, geojsonFeature);
   }
 
+  /// Sets new geojson data to multiple existing sources
+  ///
+  /// This only works as exected if the source shas been created with
+  /// [addGeoJsonSource] before. This is very useful if you want to update
+  /// existing sources with modified data.
+  ///
+  /// The json in [geojson] has to comply with the schema for FeatureCollection
+  /// as specified in https://datatracker.ietf.org/doc/html/rfc7946#section-3.3
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// This use isolates to encode the data before sending it to natif through
+  /// platform channel. Unlike [setGeoJsonFeature], it will not block the thread
+  /// when encoding the data.
+  /// But, spawning multiple isolates is expensive and can cause an the program
+  /// to crash. Never call this method multiple times in parallel.
+  Future<void> setGeoJsonFeatures(List<Source> sources) async {
+    await _maplibreGlPlatform.setFeatureForGeoJsonSources(sources);
+  }
+
   /// Add a symbol layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.
@@ -868,6 +889,24 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> updateLine(Line line, LineOptions changes) async {
     line.options = line.options.copyWith(changes);
     await lineManager!.set(line);
+    notifyListeners();
+  }
+
+  /// Updates the specified list of [line] with the given [changes]. The lines must
+  /// be current members of the [lines] set.‚
+  ///
+  /// Change listeners are notified once the line has been updated on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> updateLines(Map<Line, LineOptions> lines) async {
+    final updatedLines = lines.entries.map((entry) {
+      var line = entry.key;
+      final options = entry.value;
+      line.options = line.options.copyWith(options);
+      return line;
+    }).toList();
+    await lineManager!.setAll(updatedLines);
     notifyListeners();
   }
 

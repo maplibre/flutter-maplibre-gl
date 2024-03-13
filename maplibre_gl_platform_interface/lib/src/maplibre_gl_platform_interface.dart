@@ -130,6 +130,8 @@ abstract class MapLibreGlPlatform {
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature);
 
+  Future<void> setFeatureForGeoJsonSources(List<Source> sources);
+
   Future<void> removeSource(String sourceId);
 
   Future<void> addSymbolLayer(
@@ -223,4 +225,15 @@ abstract class MapLibreGlPlatform {
     onMapIdlePlatform.clear();
     onUserLocationUpdatedPlatform.clear();
   }
+}
+
+// Ideas for improvment:
+//   - Use a record instead
+//   - Make the class equatble
+/// Data class that represent a pair of `sourceId` and `geojsonFeature`.
+class Source {
+  const Source({required this.id, required this.geojsonFeature});
+
+  final String id;
+  final Map<String, dynamic> geojsonFeature;
 }

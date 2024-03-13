@@ -796,6 +796,16 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     });
   }
 
+  Future<void> setFeatureForGeoJsonSources(List<Source> sources) async {
+    final encodedSources = await compute(_encodeSources, sources);
+    await Future.wait(
+      encodedSources.map(
+        (encodedSource) =>
+            _channel.invokeMethod('source#setFeature', encodedSource),
+      ),
+    );
+  }
+
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
@@ -832,3 +842,15 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     }
   }
 }
+
+List<Map<String, String>> _encodeSources(
+  List<Source> sources,
+) =>
+    sources
+        .map(
+          (source) => {
+            'sourceId': source.id,
+            'geojsonFeature': jsonEncode(source.geojsonFeature),
+          },
+        )
+        .toList();

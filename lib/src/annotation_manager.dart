@@ -165,6 +165,34 @@ abstract class AnnotationManager<T extends Annotation> {
           _makeLayerId(layerIndex), anntotation.toGeoJson());
     }
   }
+
+  /// Set existing anntotations to the map. Use this to do a fast update for a
+  /// multiple annotation
+  Future<void> setAll(List<T> annotations) async {
+    assert(
+        annotations
+            .map((e) => _idToAnnotation.containsKey(e.id))
+            .every((e) => e),
+        "you can only set existing annotations");
+    List<Source> sources = [];
+    for (final annotation in annotations) {
+      _idToAnnotation[annotation.id] = annotation;
+      final oldLayerIndex = _idToLayerIndex[annotation.id];
+      final layerIndex = selectLayer != null ? selectLayer!(annotation) : 0;
+      if (oldLayerIndex != layerIndex) {
+        // if the annotation has to be moved to another layer/source we have to
+        // set all
+        return await _setAll();
+      }
+      sources.add(
+        Source(
+          id: _makeLayerId(layerIndex),
+          geojsonFeature: annotation.toGeoJson(),
+        ),
+      );
+    }
+    await controller.setGeoJsonFeatures(sources);
+  }
 }
 
 class LineManager extends AnnotationManager<Line> {
