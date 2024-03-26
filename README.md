@@ -29,7 +29,7 @@ dependencies:
 ```
 This will get you the very latest changes from the main branch.
 You can replace `main` with the name of the [latest release](https://github.com/maplibre/flutter-maplibre-gl/releases)
-to get a more stable version.
+to get a more stable version (e.g. `git-release-0.18.0`).
 
 
 
