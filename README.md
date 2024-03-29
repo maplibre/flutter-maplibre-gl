@@ -79,6 +79,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill Extrusion | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
+ Heatmap Layer   | :white_check_mark:  | :white_check_mark:  | :white_check_mark:  |
 
 
 ## Map Styles

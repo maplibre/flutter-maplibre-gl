@@ -17,7 +17,8 @@ main() async {
     "fill",
     "fill-extrusion",
     "raster",
-    "hillshade"
+    "hillshade",
+    "heatmap",
   ];
   final sourceTypes = [
     "vector",

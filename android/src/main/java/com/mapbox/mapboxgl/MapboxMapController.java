@@ -630,6 +630,29 @@ final class MapboxMapController
     }
   }
 
+  private void addHeatmapLayer(
+      String layerName,
+      String sourceName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties,
+      Expression filter) {
+    HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+  }
+
   private Feature firstFeatureOnLayers(RectF in) {
     if (style != null) {
       final List<Layer> layers = style.getLayers();
@@ -1176,6 +1199,28 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+      case "heatmapLayer#add":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
+          addHeatmapLayer(
+              layerId,
+              sourceId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties,
+              null);
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
       case "locationComponent#getLastLocation":
         {
           Log.e(TAG, "location component: getLastLocation");
@@ -1460,7 +1505,9 @@ final class MapboxMapController
 
           Layer layer = style.getLayer(layerId);
 
-          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer != null) {
+            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          }
 
           result.success(null);
           break;
@@ -1577,7 +1624,24 @@ final class MapboxMapController
   @Override
   public void onCameraTrackingChanged(int currentMode) {
     final Map<String, Object> arguments = new HashMap<>(2);
-    arguments.put("mode", currentMode);
+    switch (currentMode) {
+        case CameraMode.NONE:
+            arguments.put("mode", 0);
+            break;
+        case CameraMode.TRACKING:
+            arguments.put("mode", 1);
+            break;
+        case CameraMode.TRACKING_COMPASS:
+            arguments.put("mode", 2);
+            break;
+        case CameraMode.TRACKING_GPS:
+            arguments.put("mode", 3);
+            break;
+        default:
+            Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
+            return;
+    }
+
     methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
   }
 

@@ -69,7 +69,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          style: 'https://demotiles.maplibre.org/style.json',
+          style: _creationParams["styleString"],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
@@ -943,6 +943,21 @@ class MaplibreMapController extends MapLibreGlPlatform
       double? minzoom,
       double? maxzoom}) async {
     return _addLayer(sourceId, layerId, properties, "hillshade",
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        enableInteraction: false);
+  }
+
+  @override
+  Future<void> addHeatmapLayer(
+      String sourceId, String layerId, Map<String, dynamic> properties,
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
+    return _addLayer(sourceId, layerId, properties, "heatmap",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
