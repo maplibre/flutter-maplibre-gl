@@ -201,7 +201,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// For exemple, there is no other way to update the onMapClick callback after the map is created.
   ///
   /// This is a low level access to the platform implementation. Every communication with native code is done through this object.
-  MapLibreGlPlatform get platform => _maplibreGlPlatform;
+  MapLibrePlatform get platform => _maplibrePlatform;
 
   FillManager? fillManager;
   LineManager? lineManager;
