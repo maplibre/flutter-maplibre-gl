@@ -55,7 +55,6 @@ class CameraPosition {
         'zoom': zoom,
       };
 
-  @visibleForTesting
   static CameraPosition? fromMap(dynamic json) {
     if (json == null) {
       return null;
