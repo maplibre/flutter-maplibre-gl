@@ -110,7 +110,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          style: 'https://demotiles.maplibre.org/style.json',
+          style: _creationParams["styleString"],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],

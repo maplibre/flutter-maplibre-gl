@@ -17,7 +17,7 @@ class MaplibreMap extends StatefulWidget {
     this.gestureRecognizers,
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
-    this.styleString,
+    this.styleString = "https://demotiles.maplibre.org/style.json",
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
@@ -113,7 +113,7 @@ class MaplibreMap extends StatefulWidget {
   /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
   /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
   /// 4. Passing the raw JSON of the map style. This is only supported on Android.
-  final String? styleString;
+  final String styleString;
 
   /// Preferred bounds for the camera zoom level.
   ///
@@ -261,7 +261,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
-      //'onAttributionClickOverride': widget.onAttributionClick != null,
+      'styleString': widget.styleString,
       'dragEnabled': widget.dragEnabled,
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
@@ -342,7 +342,7 @@ class _MaplibreMapOptions {
   _MaplibreMapOptions({
     this.compassEnabled,
     this.cameraTargetBounds,
-    this.styleString,
+    required this.styleString,
     this.minMaxZoomPreference,
     required this.rotateGesturesEnabled,
     required this.scrollGesturesEnabled,
@@ -388,7 +388,7 @@ class _MaplibreMapOptions {
 
   final CameraTargetBounds? cameraTargetBounds;
 
-  final String? styleString;
+  final String styleString;
 
   final MinMaxZoomPreference? minMaxZoomPreference;
 
