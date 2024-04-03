@@ -51,15 +51,11 @@ flutter:
   plugin:
     platforms:
       android:
-        default_package: geolocator_android
+        default_package: maplibre_gl_mobile
       ios:
-        default_package: geolocator_apple
-      macos:
-        default_package: geolocator_apple
+        default_package: maplibre_gl_mobile
       web:
-        default_package: geolocator_web
-      windows:
-        default_package: geolocator_windows
+        default_package: maplibre_gl_web
 
   # To add assets to your package, add an assets section, like this:
   # assets:
