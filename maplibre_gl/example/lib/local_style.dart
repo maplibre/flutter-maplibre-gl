@@ -63,7 +63,7 @@ class LocalStyleState extends State<LocalStyle> {
 
     return Scaffold(
         body: MaplibreMap(
-      styleString: styleAbsoluteFilePath,
+      styleString: styleAbsoluteFilePath!,
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
       onStyleLoadedCallback: onStyleLoadedCallback,
