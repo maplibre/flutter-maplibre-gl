@@ -11,7 +11,7 @@ public class SwiftMapLibreGlPlugin: NSObject, FlutterPlugin {
         registrar.register(instance, withId: "plugins.flutter.io/maplibre_gl_ios")
 
         let channel = FlutterMethodChannel(
-            name: "plugins.flutter.io/maplibre_gl_ios",
+            name: "plugins.flutter.io/maplibre_gl",
             binaryMessenger: registrar.messenger()
         )
 

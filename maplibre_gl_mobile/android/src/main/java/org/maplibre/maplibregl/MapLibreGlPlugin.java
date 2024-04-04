@@ -38,7 +38,7 @@ public class MapLibreGlPlugin implements FlutterPlugin, ActivityAware {
     flutterAssets = binding.getFlutterAssets();
 
     MethodChannel methodChannel =
-        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl_android");
+        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl");
     methodChannel.setMethodCallHandler(new GlobalMethodHandler(binding));
 
     binding
