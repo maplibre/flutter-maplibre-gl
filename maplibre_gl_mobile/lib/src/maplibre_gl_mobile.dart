@@ -1,55 +1,7 @@
 part of maplibre_gl_mobile;
 
-class MapLibreIos extends MapLibreMobile {
-  static void registerWith() {
-    MapLibreGlPlatform.instance = MapLibreIos();
-  }
-
-  @override
-  Widget buildView(
-    Map<String, dynamic> creationParams,
-    OnPlatformViewCreatedCallback onPlatformViewCreated,
-    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
-  ) {
-    return UiKitView(
-      viewType: 'plugins.flutter.io/maplibre_gl_mobile',
-      onPlatformViewCreated: onPlatformViewCreated,
-      gestureRecognizers: gestureRecognizers,
-      creationParams: creationParams,
-      creationParamsCodec: const StandardMessageCodec(),
-    );
-  }
-}
-
-class MapLibreAndroid extends MapLibreMobile {
-  static void registerWith() {
-    MapLibreGlPlatform.instance = MapLibreAndroid();
-  }
-
-  @override
-  Widget buildView(
-    Map<String, dynamic> creationParams,
-    OnPlatformViewCreatedCallback onPlatformViewCreated,
-    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
-  ) {
-    return AndroidView(
-      viewType: 'plugins.flutter.io/maplibre_gl_mobile',
-      onPlatformViewCreated: onPlatformViewCreated,
-      gestureRecognizers: gestureRecognizers,
-      creationParams: creationParams,
-      creationParamsCodec: const StandardMessageCodec(),
-    );
-  }
-}
-
-class MapLibreMobile extends MapLibreGlPlatform {
+class _MapLibreMobile extends MapLibreGlPlatform {
   late MethodChannel _channel;
-  static bool useHybridComposition = false;
-
-  /// Registers this class as the default instance of [GeolocatorPlatform].
-  static void registerWith() {
-    MapLibreGlPlatform.instance = MapLibreMobile();
-  }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
@@ -173,20 +125,15 @@ class MapLibreMobile extends MapLibreGlPlatform {
   }
 
   @override
-  Future<void> initPlatform(int id) async {
-    _channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
-    _channel.setMethodCallHandler(_handleMethodCall);
-    await _channel.invokeMethod('map#waitForMap');
-  }
-
-  @override
   Widget buildView(
     Map<String, dynamic> creationParams,
     OnPlatformViewCreatedCallback onPlatformViewCreated,
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
-  ) {
-    throw UnimplementedError();
-  }
+  ) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> initPlatform(int id) => throw UnimplementedError();
 
   @override
   Future<CameraPosition?> updateMapOptions(
@@ -276,7 +223,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -297,7 +244,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -315,7 +262,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -325,7 +272,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       await _channel.invokeMethod('map#invalidateAmbientCache');
       return null;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -343,7 +290,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       }
       return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -359,7 +306,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         northeast: LatLng(northeast[0], northeast[1]),
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -374,7 +321,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'sdf': sdf
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -390,7 +337,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'coordinates': coordinates.toList()
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -406,7 +353,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'coordinates': coordinates?.toList()
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -420,7 +367,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       });
       return Point(screenPosMap['x'], screenPosMap['y']);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -441,7 +388,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
 
       return points;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -453,7 +400,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         <String, Object>{'sourceId': sourceId},
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -468,7 +415,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -485,7 +432,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -495,7 +442,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       return await _channel.invokeMethod(
           'style#removeLayer', <String, Object>{'layerId': layerId});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -505,7 +452,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       return await _channel.invokeMethod('style#setFilter',
           <String, Object>{'layerId': layerId, 'filter': jsonEncode(filter)});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -519,7 +466,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       final filter = reply["filter"];
       return filter != null ? jsonDecode(filter) : null;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -533,7 +480,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       });
       return LatLng(latLngMap['latitude'], latLngMap['longitude']);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -546,7 +493,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
       });
       return latLngMap['metersperpixel'];
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -568,6 +515,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
     });
   }
 
+  @override
   Future setCameraBounds({
     required double west,
     required double north,
@@ -584,7 +532,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
         'padding': padding,
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -781,6 +729,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
     });
   }
 
+  @override
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature) async {
     await _channel.invokeMethod('source#setFeature', <String, dynamic>{
@@ -810,7 +759,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
           await _channel.invokeMethod('style#getLayerIds');
       return reply['layers'].map((it) => it.toString()).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -821,7 +770,7 @@ class MapLibreMobile extends MapLibreGlPlatform {
           await _channel.invokeMethod('style#getSourceIds');
       return reply['sources'].map((it) => it.toString()).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 }

@@ -22,7 +22,7 @@ import io.flutter.plugin.common.MethodChannel;
  */
 public class MapLibreGlPlugin implements FlutterPlugin, ActivityAware {
 
-  private static final String VIEW_TYPE = "plugins.flutter.io/maplibre_gl_mobile";
+  private static final String VIEW_TYPE = "plugins.flutter.io/maplibre_gl_android";
 
   static FlutterAssets flutterAssets;
   private Lifecycle lifecycle;
@@ -38,13 +38,13 @@ public class MapLibreGlPlugin implements FlutterPlugin, ActivityAware {
     flutterAssets = binding.getFlutterAssets();
 
     MethodChannel methodChannel =
-        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl_mobile");
+        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl_android");
     methodChannel.setMethodCallHandler(new GlobalMethodHandler(binding));
 
     binding
         .getPlatformViewRegistry()
         .registerViewFactory(
-            "plugins.flutter.io/maplibre_gl_mobile",
+            "plugins.flutter.io/maplibre_gl_android",
             new MapLibreMapFactory(
                 binding.getBinaryMessenger(),
                 new LifecycleProvider() {
