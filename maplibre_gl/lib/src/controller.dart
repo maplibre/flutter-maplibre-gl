@@ -718,22 +718,6 @@ class MaplibreMapController extends ChangeNotifier {
     return _maplibreGlPlatform.setMapLanguage(language);
   }
 
-  /// Enables or disables the collection of anonymized telemetry data.
-  ///
-  /// The returned [Future] completes after the change has been made on the
-  /// platform side.
-  Future<void> setTelemetryEnabled(bool enabled) async {
-    return _maplibreGlPlatform.setTelemetryEnabled(enabled);
-  }
-
-  /// Retrieves whether collection of anonymized telemetry data is enabled.
-  ///
-  /// The returned [Future] completes after the query has been made on the
-  /// platform side.
-  Future<bool> getTelemetryEnabled() async {
-    return _maplibreGlPlatform.getTelemetryEnabled();
-  }
-
   /// Adds a symbol to the map, configured using the specified custom [options].
   ///
   /// Change listeners are notified once the symbol has been added on the

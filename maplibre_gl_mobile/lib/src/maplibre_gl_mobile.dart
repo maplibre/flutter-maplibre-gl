@@ -197,18 +197,6 @@ class _MapLibreMobile extends MapLibreGlPlatform {
   }
 
   @override
-  Future<void> setTelemetryEnabled(bool enabled) async {
-    await _channel.invokeMethod('map#setTelemetryEnabled', <String, dynamic>{
-      'enabled': enabled,
-    });
-  }
-
-  @override
-  Future<bool> getTelemetryEnabled() async {
-    return await _channel.invokeMethod('map#getTelemetryEnabled');
-  }
-
-  @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     try {

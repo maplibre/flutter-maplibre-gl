@@ -68,9 +68,6 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
 
   Future<void> updateContentInsets(EdgeInsets insets, bool animated);
   Future<void> setMapLanguage(String language);
-  Future<void> setTelemetryEnabled(bool enabled);
-
-  Future<bool> getTelemetryEnabled();
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter);
 

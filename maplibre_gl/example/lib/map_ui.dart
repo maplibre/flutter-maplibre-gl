@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '_shared/page.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
@@ -64,7 +64,6 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _tiltGesturesEnabled = true;
   bool _zoomGesturesEnabled = true;
   bool _myLocationEnabled = true;
-  bool _telemetryEnabled = true;
   bool _countriesVisible = true;
   MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
   List<Object>? _featureQueryFilter;
@@ -265,18 +264,6 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  Widget _telemetryToggler() {
-    return TextButton(
-      child: Text('${_telemetryEnabled ? 'disable' : 'enable'} telemetry'),
-      onPressed: () {
-        setState(() {
-          _telemetryEnabled = !_telemetryEnabled;
-        });
-        mapController?.setTelemetryEnabled(_telemetryEnabled);
-      },
-    );
-  }
-
   Widget _visibleRegionGetter() {
     return TextButton(
       child: const Text('get currently visible region'),
@@ -433,7 +420,6 @@ class MapUiBodyState extends State<MapUiBody> {
           _tiltToggler(),
           _zoomToggler(),
           _myLocationToggler(),
-          _telemetryToggler(),
           _visibleRegionGetter(),
           _layerVisibilityToggler(),
           _sourceFeaturesGetter(),
@@ -463,9 +449,5 @@ class MapUiBodyState extends State<MapUiBody> {
     mapController = controller;
     mapController!.addListener(_onMapChanged);
     _extractMapInfo();
-
-    mapController!.getTelemetryEnabled().then((isEnabled) => setState(() {
-          _telemetryEnabled = isEnabled;
-        }));
   }
 }

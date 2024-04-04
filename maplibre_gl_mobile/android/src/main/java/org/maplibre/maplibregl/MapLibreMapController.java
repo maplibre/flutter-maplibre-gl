@@ -905,16 +905,6 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-      case "map#setTelemetryEnabled":
-        {
-          result.success(null);
-          break;
-        }
-      case "map#getTelemetryEnabled":
-        {
-          result.success(false);
-          break;
-        }
       case "map#invalidateAmbientCache":
         {
           OfflineManager fileSource = OfflineManager.Companion.getInstance(context);

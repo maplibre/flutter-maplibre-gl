@@ -252,14 +252,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
             }
             reply["features"] = featuresJson as NSObject
             result(reply)
-        case "map#setTelemetryEnabled":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            let telemetryEnabled = arguments["enabled"] as? Bool
-            UserDefaults.standard.set(telemetryEnabled, forKey: "MLNMapboxMetricsEnabled")
-            result(nil)
-        case "map#getTelemetryEnabled":
-            let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
-            result(telemetryEnabled)
         case "map#getVisibleRegion":
             var reply = [String: NSObject]()
             let visibleRegion = mapView.visibleCoordinateBounds

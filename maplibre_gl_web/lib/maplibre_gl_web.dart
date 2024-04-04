@@ -76,8 +76,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, hashCode);
-    return HtmlElementView(
-        viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
+    return HtmlElementView(viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
   }
 
   @override
@@ -306,18 +305,6 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
 
       _map.setLayoutProperty(layer.id, 'text-field', newProperties);
     }
-  }
-
-  @override
-  Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
-    return;
-  }
-
-  @override
-  Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
-    return false;
   }
 
   @override

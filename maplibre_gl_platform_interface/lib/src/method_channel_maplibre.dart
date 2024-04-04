@@ -186,12 +186,6 @@ class MethodChannelMaplibre extends MapLibreGlPlatform {
   }
 
   @override
-  Future<bool> getTelemetryEnabled() {
-    // TODO: implement getTelemetryEnabled
-    throw UnimplementedError();
-  }
-
-  @override
   Future<LatLngBounds> getVisibleRegion() {
     // TODO: implement getVisibleRegion
     throw UnimplementedError();
@@ -311,12 +305,6 @@ class MethodChannelMaplibre extends MapLibreGlPlatform {
   @override
   Future<void> setMapLanguage(String language) {
     // TODO: implement setMapLanguage
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> setTelemetryEnabled(bool enabled) {
-    // TODO: implement setTelemetryEnabled
     throw UnimplementedError();
   }
 
