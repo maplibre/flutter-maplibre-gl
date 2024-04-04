@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
-import 'util.dart';
+import '../_shared/page.dart';
+import '../util.dart';
 
 class AnnotationOrderPage extends ExamplePage {
   const AnnotationOrderPage({super.key})

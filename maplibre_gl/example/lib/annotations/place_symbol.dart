@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '../_shared/page.dart';
 
 class PlaceSymbolPage extends ExamplePage {
   const PlaceSymbolPage({super.key})

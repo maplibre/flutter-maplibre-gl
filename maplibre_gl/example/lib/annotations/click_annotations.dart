@@ -5,8 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
-import 'util.dart';
+import '../_shared/page.dart';
+import '../util.dart';
 
 class ClickAnnotationPage extends ExamplePage {
   const ClickAnnotationPage({super.key})
