@@ -7,7 +7,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:maplibre_gl_example/attribution.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
@@ -33,7 +32,6 @@ import 'custom_marker.dart';
 import 'place_batch.dart';
 import 'layer.dart';
 import 'sources.dart';
-
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),
@@ -75,8 +73,8 @@ class _MapsDemoState extends State<MapsDemo> {
   /// !!! Hybrid composition is currently broken do no use !!!
   Future<void> initHybridComposition() async {
     if (!kIsWeb && Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      final sdkVersion = androidInfo.version.sdkInt;
+      // final androidInfo = await DeviceInfoPlugin().androidInfo;
+      // final sdkVersion = androidInfo.version.sdkInt;
       // if (sdkVersion >= 29) {
       //   MaplibreMap.useHybridComposition = true;
       // } else {
@@ -95,6 +93,7 @@ class _MapsDemoState extends State<MapsDemo> {
     }
     if (!mounted) return;
 
+    // ignore: use_build_context_synchronously
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
               appBar: AppBar(title: Text(page.title)),
