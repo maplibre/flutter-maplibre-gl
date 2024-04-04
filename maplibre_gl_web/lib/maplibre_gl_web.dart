@@ -37,7 +37,7 @@ part 'src/convert.dart';
 
 part 'src/options_sink.dart';
 
-final _maplibreGlCssUrl =
+const _maplibreGlCssUrl =
     'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
 
 class MapLibreGlPlugin extends MapLibreGlPlatform
@@ -58,7 +58,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
   bool _dragEnabled = true;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
 
-  final _interactiveFeatureLayerIds = Set<String>();
+  final _interactiveFeatureLayerIds = <String>{};
 
   bool _trackCameraPosition = false;
   GeolocateControl? _geolocateControl;
@@ -75,9 +75,9 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
       OnPlatformViewCreatedCallback onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
-    _registerViewFactory(onPlatformViewCreated, this.hashCode);
+    _registerViewFactory(onPlatformViewCreated, hashCode);
     return HtmlElementView(
-        viewType: 'plugins.flutter.io/mapbox_gl_${this.hashCode}');
+        viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
   }
 
   @override
@@ -143,7 +143,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
       lastResizeObserverTimer?.cancel();
-      lastResizeObserverTimer = Timer(Duration(milliseconds: 50), () {
+      lastResizeObserverTimer = Timer(const Duration(milliseconds: 50), () {
         _onMapResize();
       });
     });
@@ -174,7 +174,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
           'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
           'origin': _dragOrigin,
           'current': current,
-          'delta': LatLng(0, 0),
+          'delta': const LatLng(0, 0),
           'eventType': 'start'
         };
         onFeatureDraggedPlatform(payload);
@@ -324,7 +324,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     Map<String, dynamic> options = {};
-    if (layerIds.length > 0) {
+    if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
     if (filter != null) {
@@ -352,7 +352,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
     Map<String, dynamic> options = {};
-    if (layerIds.length > 0) {
+    if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
     if (filter != null) {
@@ -472,7 +472,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
   }
 
   void _onMapResize() {
-    Timer(Duration(), () {
+    Timer(const Duration(), () {
       var container = _map.getContainer();
       var canvas = _map.getCanvas();
       var widthMismatch = canvas.clientWidth != container.clientWidth;
@@ -611,7 +611,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
     }
 
     bool newShowComapss = compassEnabled ?? prevShowCompass ?? false;
-    String? newPosition = positionString ?? prevPosition ?? null;
+    String? newPosition = positionString ?? prevPosition;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(
@@ -857,6 +857,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
     source.setData(data);
   }
 
+  @override
   Future setCameraBounds({
     required double west,
     required double north,
@@ -940,6 +941,7 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
         enableInteraction: enableInteraction);
   }
 
+  @override
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
@@ -1127,12 +1129,14 @@ class MapLibreGlPlugin extends MapLibreGlPlatform
     _map.addSource(sourceId, source.toJson());
   }
 
+  @override
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     // TODO: implement addImageSource
     throw UnimplementedError();
   }
 
+  @override
   Future<void> updateImageSource(
       String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
     // TODO: implement updateImageSource

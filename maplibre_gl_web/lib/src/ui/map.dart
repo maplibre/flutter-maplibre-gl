@@ -52,6 +52,7 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  ```
 ///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 class MapLibreMap extends Camera {
+  @override
   final MapLibreMapJsImpl jsObject;
 
   factory MapLibreMap(MapOptions options) =>

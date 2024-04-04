@@ -130,6 +130,7 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
 }
 
 class Camera extends Evented {
+  @override
   final CameraJsImpl jsObject;
 
   ///  Returns the map's geographical centerpoint.
