@@ -6,21 +6,7 @@ part of maplibre_gl_platform_interface;
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibreGlPlatform extends PlatformInterface {
-  // static late MapLibreGlPlatform _instance;
-
-  // /// The default instance of [MaplibreGlPlatform] to use.
-  // ///
-  // /// Defaults to [MethodChannelMaplibreGl].
-  // ///
-  // /// Platform-specific plugins should set this with their own platform-specific
-  // /// class that extends [MapLibreGlPlatform] when they register themselves.
-  // static MapLibreGlPlatform Function() createInstance = () => _instance;
-
-  // static set instance(MapLibreGlPlatform instance) {
-  //   _instance = instance;
-  // }
-
-  /// Constructs a GeolocatorPlatform.
+  /// Constructs a MapLibreGlPlatform.
   MapLibreGlPlatform() : super(token: _token);
 
   static final Object _token = Object();
@@ -30,7 +16,7 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
   static MapLibreGlPlatform get instance => _instance;
 
   /// Platform-specific plugins should set this with their own
-  /// platform-specific class that extends [GeolocatorPlatform] when they
+  /// platform-specific class that extends [MapLibreGlPlatform] when they
   /// register themselves.
   static set instance(MapLibreGlPlatform instance) {
     PlatformInterface.verify(instance, _token);

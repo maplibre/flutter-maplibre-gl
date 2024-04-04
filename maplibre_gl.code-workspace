@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "name": "maplibre_gl",
+            "path": "./maplibre_gl"
+        },
+        {
+            "name": "maplibre_gl_platform_interface",
+            "path": "./maplibre_gl_platform_interface"
+        },
+        {
+            "name": "maplibre_gl_mobile",
+            "path": "./maplibre_gl_mobile"
+        },
+        {
+            "name": "maplibre_gl_web",
+            "path": "./maplibre_gl_web"
+        },
+    ]
+}

@@ -9,6 +9,9 @@ dependencies:
   meta: ^1.0.5
   plugin_platform_interface: ^2.1.8
 
+dev_dependencies: 
+  flutter_lints: ^3.0.2
+
 environment:
   sdk: '>=2.14.0 <3.0.0'
   flutter: '>=2.10.0'

@@ -18,6 +18,7 @@ dependencies:
 
 dev_dependencies: 
   plugin_platform_interface: ^2.1.8
+  flutter_lints: ^3.0.2
 
 dependency_overrides:
   maplibre_gl_platform_interface:
