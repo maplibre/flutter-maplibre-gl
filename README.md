@@ -11,8 +11,9 @@ For the Android and iOS integration, we use [maplibre-gl-native](https://github.
 
 This project is a fork of [https://github.com/tobrun/flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), replacing its usage of Mapbox GL libraries with the open source [Maplibre GL](https://github.com/maplibre) libraries.
 
-**Please note that this project is community driven and is not affiliated with the company Mapbox.** <br>
-It does use some of their amazing open source libraries/tools, though. Thank you, Mapbox, for all the open-source work you do!
+**Please note that this project is community driven and is not affiliated with the company Mapbox.**
+
+It does use some of their amazing open source libraries/tools, Thank though. you, Mapbox, for all the open-source work you do!
 
 ## Using the plugin in your project
 
@@ -26,6 +27,7 @@ dependencies:
       git:
         url: https://github.com/maplibre/flutter-maplibre-gl.git
         ref: main
+        path: maplibre_gl
 ```
 
 This will get you the very latest changes from the main branch.
@@ -37,29 +39,6 @@ Compared to flutter-mapbox-gl, the only breaking API changes are:
 - `MapboxMap` <--> `MaplibreMap`
 - `MapboxMapController` <--> `MaplibreMapController`
 
-### Documentation
-
-Documentation is available on the docs branch in the doc/api folder and automatically updated on each push to the main branch. You can easily preview the [documentation / API reference here.](https://htmlpreview.github.io/?https://github.com/maplibre/flutter-maplibre-gl/blob/docs/doc/api/index.html)
-
-Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
-
-### iOS
-
-To use this plugin with iOS, you **do not** need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should actually remove these lines from your Podfile to avoid build errors:
-<details>
-<summary>View obsolete code</summary>
-
-```ruby
-source 'https://cdn.cocoapods.org/'
-source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
-
-pod 'MapLibre'
-pod 'MapLibreAnnotationExtension'
-```
-
-</details>
-You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
-
 ### Web
 
 Include the following JavaScript and CSS files in the `<head>` of the `web/index.html` file.
@@ -68,6 +47,15 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
 <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
 ```
+
+### Documentation
+
+Documentation is available on the docs branch in the doc/api folder and automatically updated on each push to the main branch. You can easily preview the [documentation / API reference here.](https://htmlpreview.github.io/?https://github.com/maplibre/flutter-maplibre-gl/blob/docs/doc/api/index.html)
+
+For more information about the Maplibre libraries please visit:
+
+- [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)
+- [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native)
 
 ## Supported API
 
@@ -82,7 +70,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 | Line | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
 | Fill Extrusion | :white_check_mark:   | :white_check_mark: | :white_check_mark: |
- Heatmap Layer   | :white_check_mark:  | :white_check_mark:  | :white_check_mark:  |
+| Heatmap Layer   | :white_check_mark:  | :white_check_mark:  | :white_check_mark:  |
 
 ## Map Styles
 
@@ -98,7 +86,7 @@ Map styles can be supplied by setting the `styleString` in the `MaplibreMap` con
 If your tile source requires an API key, we recommend directly specifying a source url with the API key included.
 For example:
 
- `https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key={your_key}`
+`https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key={your_key}`
 
 ## Location features
 
@@ -106,10 +94,13 @@ For example:
 
 Add the `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION` permission in the application manifest `android/app/src/main/AndroidManifest.xml` to enable location features in an **Android** application:
 
-```
-<manifest ...
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    ...
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    ...
+</manifest>
 ```
 
 Starting from Android API level 23 you also need to request it at runtime. This plugin does not handle this for you. The example app uses the flutter ['location' plugin](https://pub.dev/packages/location) for this.
@@ -118,15 +109,16 @@ Starting from Android API level 23 you also need to request it at runtime. This 
 
 To enable location features in an **iOS** application:
 
-If you access your users' location, you should also add the following key to `ios/Runner/Info.plist` to explain why you need access to their location data:
+If you access your users location, you should also add the following key to `ios/Runner/Info.plist` to explain why you need access to their location data:
 
-```
-xml ...
+```plist
+<dict>
+    ...
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>[Your explanation here]</string>
+    <string>Shows your location on the map and helps improve the map</string>
+    ...
+</dict>
 ```
-
-A possible explanation could be: "Shows your location on the map".
 
 ## Getting Help
 
@@ -139,7 +131,7 @@ A possible explanation could be: "Shows your location on the map".
 
 When you open this project in GitHub Codespaces, you can run the example app on web with the command
 
-```
+```bash
 cd example
 flutter run -d web-server --web-hostname=0.0.0.0
 ```
