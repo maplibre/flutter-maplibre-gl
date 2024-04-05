@@ -83,7 +83,6 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   void dispose() {
-    mapController?.removeListener(_onMapChanged);
     super.dispose();
   }
 
@@ -447,7 +446,6 @@ class MapUiBodyState extends State<MapUiBody> {
 
   void onMapCreated(MaplibreMapController controller) {
     mapController = controller;
-    mapController!.addListener(_onMapChanged);
     _extractMapInfo();
   }
 }

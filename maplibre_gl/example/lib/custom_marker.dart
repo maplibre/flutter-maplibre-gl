@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '_shared/page.dart';
 
 const randomMarkerNum = 100;
 
@@ -40,10 +40,8 @@ class CustomMarkerState extends State<CustomMarker> {
 
   void _onMapCreated(MaplibreMapController controller) {
     _mapController = controller;
-    controller.addListener(() {
-      if (controller.isCameraMoving) {
-        _updateMarkerPosition();
-      }
+    controller.cameraPosition.listen((_) {
+      _updateMarkerPosition();
     });
   }
 

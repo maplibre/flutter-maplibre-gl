@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'page.dart';
+import '_shared/page.dart';
 
 class LocalStylePage extends ExamplePage {
   const LocalStylePage({super.key})

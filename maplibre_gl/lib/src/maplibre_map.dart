@@ -41,6 +41,8 @@ class MaplibreMap extends StatefulWidget {
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
     this.onCameraIdle,
+    this.onCameraMove,
+    this.onCameraMoveStarted,
     this.onMapIdle,
     this.annotationOrder = const [
       AnnotationType.line,
@@ -224,6 +226,8 @@ class MaplibreMap extends StatefulWidget {
 
   // Called when camera movement has ended.
   final OnCameraIdleCallback? onCameraIdle;
+  final Function()? onCameraMoveStarted;
+  final Function(CameraPosition)? onCameraMove;
 
   /// Called when map view is entering an idle state, and no more drawing will
   /// be necessary until new data is loaded or there is some interaction with
@@ -322,6 +326,8 @@ class _MaplibreMapState extends State<MaplibreMap> {
       onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
       onCameraTrackingChanged: widget.onCameraTrackingChanged,
       onCameraIdle: widget.onCameraIdle,
+      onCameraMove: widget.onCameraMove,
+      onCameraMoveStarted: widget.onCameraMoveStarted,
       onMapIdle: widget.onMapIdle,
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,

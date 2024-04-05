@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-import 'package:maplibre_gl_example/page.dart';
+import 'package:maplibre_gl_example/_shared/page.dart';
 
 import 'util.dart';
 

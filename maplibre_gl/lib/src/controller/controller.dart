@@ -4,6 +4,8 @@
 
 part of maplibre_gl;
 
+enum CameraState { idle, moving }
+
 typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
@@ -69,7 +71,8 @@ typedef OnMapIdleCallback = void Function();
 /// * the [cameraPosition] property
 ///
 /// Listeners are notified after changes have been applied on the platform side.
-class MaplibreMapController extends ChangeNotifier {
+
+class MaplibreMapController {
   MaplibreMapController({
     required MapLibreGlPlatform maplibreGlPlatform,
     required CameraPosition initialCameraPosition,
@@ -78,14 +81,15 @@ class MaplibreMapController extends ChangeNotifier {
     this.onStyleLoadedCallback,
     this.onMapClick,
     this.onMapLongClick,
-    //this.onAttributionClick,
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
+    this.onCameraMove,
+    this.onCameraMoveStarted,
   }) : _maplibreGlPlatform = maplibreGlPlatform {
-    _cameraPosition = initialCameraPosition;
+    _cameraPosition = CameraPositionController(initialCameraPosition);
 
     _maplibreGlPlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
@@ -108,24 +112,18 @@ class MaplibreMapController extends ChangeNotifier {
     });
 
     _maplibreGlPlatform.onCameraMoveStartedPlatform.add((_) {
-      _isCameraMoving = true;
-      notifyListeners();
+      onCameraMoveStarted?.call();
     });
 
-    _maplibreGlPlatform.onCameraMovePlatform.add((cameraPosition) {
-      _cameraPosition = cameraPosition;
-      notifyListeners();
-    });
+    _maplibreGlPlatform.onCameraMovePlatform.add(_cameraPosition._set);
 
     _maplibreGlPlatform.onCameraIdlePlatform.add((cameraPosition) {
-      _isCameraMoving = false;
       if (cameraPosition != null) {
-        _cameraPosition = cameraPosition;
+        _cameraPosition._set(cameraPosition);
       }
       if (onCameraIdle != null) {
         onCameraIdle!();
       }
-      notifyListeners();
     });
 
     _maplibreGlPlatform.onMapStyleLoadedPlatform.add((_) {
@@ -135,19 +133,21 @@ class MaplibreMapController extends ChangeNotifier {
         switch (type) {
           case AnnotationType.fill:
             fillManager = FillManager(this,
-                onTap: onFillTapped, enableInteraction: enableInteraction);
+                onTap: onFillTapped.call, enableInteraction: enableInteraction);
             break;
           case AnnotationType.line:
             lineManager = LineManager(this,
-                onTap: onLineTapped, enableInteraction: enableInteraction);
+                onTap: onLineTapped.call, enableInteraction: enableInteraction);
             break;
           case AnnotationType.circle:
             circleManager = CircleManager(this,
-                onTap: onCircleTapped, enableInteraction: enableInteraction);
+                onTap: onCircleTapped.call,
+                enableInteraction: enableInteraction);
             break;
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped, enableInteraction: enableInteraction);
+                onTap: onSymbolTapped.call,
+                enableInteraction: enableInteraction);
             break;
           default:
         }
@@ -206,6 +206,8 @@ class MaplibreMapController extends ChangeNotifier {
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
   final OnCameraIdleCallback? onCameraIdle;
+  final Function()? onCameraMoveStarted;
+  final Function(CameraPosition)? onCameraMove;
 
   final OnMapIdleCallback? onMapIdle;
 
@@ -257,8 +259,8 @@ class MaplibreMapController extends ChangeNotifier {
 
   /// Returns the most recent camera position reported by the platform side.
   /// Will be null, if [MaplibreMap.trackCameraPosition] is false.
-  CameraPosition? get cameraPosition => _cameraPosition;
-  CameraPosition? _cameraPosition;
+  CameraPositionController get cameraPosition => _cameraPosition;
+  late CameraPositionController _cameraPosition;
 
   final MapLibreGlPlatform _maplibreGlPlatform; //ignore: unused_field
 
@@ -269,8 +271,10 @@ class MaplibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
-    _cameraPosition = await _maplibreGlPlatform.updateMapOptions(optionsUpdate);
-    notifyListeners();
+    final camera = await _maplibreGlPlatform.updateMapOptions(optionsUpdate);
+    if (camera != null) {
+      _cameraPosition._set(camera);
+    }
   }
 
   /// Triggers a resize event for the map on web (ignored on Android or iOS).
@@ -729,7 +733,6 @@ class MaplibreMapController extends ChangeNotifier {
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
     await symbolManager!.add(symbol);
-    notifyListeners();
     return symbol;
   }
 
@@ -750,7 +753,6 @@ class MaplibreMapController extends ChangeNotifier {
     ];
     await symbolManager!.addAll(symbols);
 
-    notifyListeners();
     return symbols;
   }
 
@@ -764,8 +766,6 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
     await symbolManager!
         .set(symbol..options = symbol.options.copyWith(changes));
-
-    notifyListeners();
   }
 
   /// Retrieves the current position of the symbol.
@@ -784,7 +784,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbol(Symbol symbol) async {
     await symbolManager!.remove(symbol);
-    notifyListeners();
   }
 
   /// Removes the specified [symbols] from the map. The symbols must be current
@@ -796,7 +795,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbols(Iterable<Symbol> symbols) async {
     await symbolManager!.removeAll(symbols);
-    notifyListeners();
   }
 
   /// Removes all [symbols] from the map added with the [addSymbol] or [addSymbols] methods.
@@ -807,7 +805,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearSymbols() async {
     symbolManager!.clear();
-    notifyListeners();
   }
 
   /// Adds a line to the map, configured using the specified custom [options].
@@ -821,7 +818,7 @@ class MaplibreMapController extends ChangeNotifier {
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
     await lineManager!.add(line);
-    notifyListeners();
+
     return line;
   }
 
@@ -841,7 +838,6 @@ class MaplibreMapController extends ChangeNotifier {
     ];
     await lineManager!.addAll(lines);
 
-    notifyListeners();
     return lines;
   }
 
@@ -855,7 +851,6 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> updateLine(Line line, LineOptions changes) async {
     line.options = line.options.copyWith(changes);
     await lineManager!.set(line);
-    notifyListeners();
   }
 
   /// Retrieves the current position of the line.
@@ -874,7 +869,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLine(Line line) async {
     await lineManager!.remove(line);
-    notifyListeners();
   }
 
   /// Removes the specified [lines] from the map. The lines must be current
@@ -886,7 +880,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLines(Iterable<Line> lines) async {
     await lineManager!.removeAll(lines);
-    notifyListeners();
   }
 
   /// Removes all [lines] from the map added with the [addLine] or [addLines] methods.
@@ -897,7 +890,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearLines() async {
     await lineManager!.clear();
-    notifyListeners();
   }
 
   /// Adds a circle to the map, configured using the specified custom [options].
@@ -912,7 +904,7 @@ class MaplibreMapController extends ChangeNotifier {
         CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
     await circleManager!.add(circle);
-    notifyListeners();
+
     return circle;
   }
 
@@ -933,7 +925,6 @@ class MaplibreMapController extends ChangeNotifier {
     ];
     await circleManager!.addAll(cricles);
 
-    notifyListeners();
     return cricles;
   }
 
@@ -947,8 +938,6 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> updateCircle(Circle circle, CircleOptions changes) async {
     circle.options = circle.options.copyWith(changes);
     await circleManager!.set(circle);
-
-    notifyListeners();
   }
 
   /// Retrieves the current position of the circle.
@@ -967,8 +956,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircle(Circle circle) async {
     circleManager!.remove(circle);
-
-    notifyListeners();
   }
 
   /// Removes the specified [circles] from the map. The circles must be current
@@ -980,7 +967,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircles(Iterable<Circle> circles) async {
     await circleManager!.removeAll(circles);
-    notifyListeners();
   }
 
   /// Removes all [circles] from the map added with the [addCircle] or [addCircles] methods.
@@ -991,8 +977,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearCircles() async {
     circleManager!.clear();
-
-    notifyListeners();
   }
 
   /// Adds a fill to the map, configured using the specified custom [options].
@@ -1007,7 +991,7 @@ class MaplibreMapController extends ChangeNotifier {
         FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
     await fillManager!.add(fill);
-    notifyListeners();
+
     return fill;
   }
 
@@ -1028,7 +1012,6 @@ class MaplibreMapController extends ChangeNotifier {
     ];
     await fillManager!.addAll(fills);
 
-    notifyListeners();
     return fills;
   }
 
@@ -1042,8 +1025,6 @@ class MaplibreMapController extends ChangeNotifier {
   Future<void> updateFill(Fill fill, FillOptions changes) async {
     fill.options = fill.options.copyWith(changes);
     await fillManager!.set(fill);
-
-    notifyListeners();
   }
 
   /// Removes all [fills] from the map added with the [addFill] or [addFills] methods.
@@ -1054,8 +1035,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearFills() async {
     await fillManager!.clear();
-
-    notifyListeners();
   }
 
   /// Removes the specified [fill] from the map. The fill must be a current
@@ -1067,7 +1046,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFill(Fill fill) async {
     await fillManager!.remove(fill);
-    notifyListeners();
   }
 
   /// Removes the specified [fills] from the map. The fills must be current
@@ -1079,7 +1057,6 @@ class MaplibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFills(Iterable<Fill> fills) async {
     await fillManager!.removeAll(fills);
-    notifyListeners();
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
@@ -1408,9 +1385,7 @@ class MaplibreMapController extends ChangeNotifier {
         .toList();
   }
 
-  @override
   void dispose() {
-    super.dispose();
     _maplibreGlPlatform.dispose();
   }
 }
