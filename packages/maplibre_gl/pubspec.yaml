@@ -25,16 +25,7 @@ dependencies:
     git:
       url: https://github.com/maplibre/flutter-maplibre-gl.git
       path: maplibre_gl_web
-      ref: main
-
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
-  maplibre_gl_mobile:
-    path: ../maplibre_gl_mobile
-  maplibre_gl_web:
-    path: ../maplibre_gl_web
-    
+      ref: main    
 
 dev_dependencies:
   flutter_test:

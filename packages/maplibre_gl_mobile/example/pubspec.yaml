@@ -1,4 +1,4 @@
-name: maplibre_gl_example
+name: maplibre_gl_mobile_example
 description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
 version: 1.0.0+1

@@ -25,10 +25,6 @@ dependencies:
       ref: main
   image: ^4.0.17
 
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

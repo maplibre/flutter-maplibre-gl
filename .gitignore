@@ -113,3 +113,6 @@ app.*.symbols
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
 google-java-format-1.13.0-all-deps.jar
+
+# melos
+pubspec_overrides.yaml

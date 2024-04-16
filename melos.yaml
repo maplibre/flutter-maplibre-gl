@@ -1,0 +1,14 @@
+name: my_project
+repository: https://github.com/maplibre/flutter-maplibre-gl
+
+packages:
+  - packages/*
+
+ignore:
+  # e.g. ignore example apps
+  - 'packages/**/example'
+
+scripts:
+  analyze:
+    exec: dart analyze .
+
