@@ -19,15 +19,12 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -36,7 +33,21 @@ import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformView;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -78,24 +89,6 @@ import org.maplibre.android.style.sources.ImageSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.platform.PlatformView;
-
-
 /** Controller of a single MapboxMaps MapView instance. */
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
@@ -119,10 +112,11 @@ final class MapLibreMapController
   private final Context context;
   private final String styleStringInitial;
   /**
-   * This container is returned as the final platform view instead of returning `mapView`.
-   * See {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
+   * This container is returned as the final platform view instead of returning `mapView`. See
+   * {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
    */
   private FrameLayout mapViewContainer;
+
   private MapView mapView;
   private MapLibreMap mapLibreMap;
   private boolean trackCameraPosition = false;
@@ -284,8 +278,6 @@ final class MapLibreMapController
     }
   }
 
-
-
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
     if (hasLocationPermission()) {
@@ -293,10 +285,9 @@ final class MapLibreMapController
       locationComponent = mapLibreMap.getLocationComponent();
 
       LocationComponentActivationOptions options =
-              LocationComponentActivationOptions
-                      .builder(context, style)
-                      .locationComponentOptions(buildLocationComponentOptions(style))
-                      .build();
+          LocationComponentActivationOptions.builder(context, style)
+              .locationComponentOptions(buildLocationComponentOptions(style))
+              .build();
 
       locationComponent.activateLocationComponent(options);
       locationComponent.setLocationComponentEnabled(true);
@@ -513,15 +504,15 @@ final class MapLibreMapController
   }
 
   private void addFillExtrusionLayer(
-          String layerName,
-          String sourceName,
-          String belowLayerId,
-          String sourceLayer,
-          Float minZoom,
-          Float maxZoom,
-          PropertyValue[] properties,
-          boolean enableInteraction,
-          Expression filter) {
+      String layerName,
+      String sourceName,
+      String belowLayerId,
+      String sourceLayer,
+      Float minZoom,
+      Float maxZoom,
+      PropertyValue[] properties,
+      boolean enableInteraction,
+      Expression filter) {
     FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -749,11 +740,13 @@ final class MapLibreMapController
           reply.put(
               "sw",
               Arrays.asList(
-                  visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
+                  visibleRegion.latLngBounds.getLatSouth(),
+                  visibleRegion.latLngBounds.getLonWest()));
           reply.put(
               "ne",
               Arrays.asList(
-                    visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
+                  visibleRegion.latLngBounds.getLatNorth(),
+                  visibleRegion.latLngBounds.getLonEast()));
 
           result.success(reply);
           break;
@@ -845,17 +838,17 @@ final class MapLibreMapController
           final Integer duration = call.argument("duration");
 
           final MapLibreMap.CancelableCallback onCameraMoveFinishedListener =
-                  new MapLibreMap.CancelableCallback() {
-                    @Override
-                    public void onFinish() {
-                      result.success(true);
-                    }
+              new MapLibreMap.CancelableCallback() {
+                @Override
+                public void onFinish() {
+                  result.success(true);
+                }
 
-                    @Override
-                    public void onCancel() {
-                      result.success(false);
-                    }
-                  };
+                @Override
+                public void onCancel() {
+                  result.success(false);
+                }
+              };
           if (cameraUpdate != null && duration != null) {
             // camera transformation not handled yet
             mapLibreMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
@@ -1007,7 +1000,8 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-        case "layer#setProperties": {
+      case "layer#setProperties":
+        {
           final String layerId = call.argument("layerId");
 
           if (style == null) {
@@ -1023,23 +1017,27 @@ final class MapLibreMapController
             final PropertyValue[] properties;
 
             if (layer instanceof LineLayer) {
-              properties = LayerPropertyConverter
-                  .interpretLineLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretLineLayerProperties(call.argument("properties"));
             } else if (layer instanceof FillLayer) {
-              properties = LayerPropertyConverter
-                  .interpretFillLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretFillLayerProperties(call.argument("properties"));
             } else if (layer instanceof CircleLayer) {
-              properties = LayerPropertyConverter
-                  .interpretCircleLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretCircleLayerProperties(
+                      call.argument("properties"));
             } else if (layer instanceof SymbolLayer) {
-              properties = LayerPropertyConverter
-                  .interpretSymbolLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretSymbolLayerProperties(
+                      call.argument("properties"));
             } else if (layer instanceof RasterLayer) {
-              properties = LayerPropertyConverter
-                  .interpretRasterLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretRasterLayerProperties(
+                      call.argument("properties"));
             } else if (layer instanceof HillshadeLayer) {
-              properties = LayerPropertyConverter
-                  .interpretHillshadeLayerProperties(call.argument("properties"));
+              properties =
+                  LayerPropertyConverter.interpretHillshadeLayerProperties(
+                      call.argument("properties"));
             } else {
               result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
               return;
@@ -1083,36 +1081,36 @@ final class MapLibreMapController
           break;
         }
       case "fillExtrusionLayer#add":
-      {
-        final String sourceId = call.argument("sourceId");
-        final String layerId = call.argument("layerId");
-        final String belowLayerId = call.argument("belowLayerId");
-        final String sourceLayer = call.argument("sourceLayer");
-        final Double minzoom = call.argument("minzoom");
-        final Double maxzoom = call.argument("maxzoom");
-        final String filter = call.argument("filter");
-        final boolean enableInteraction = call.argument("enableInteraction");
-        final PropertyValue[] properties =
-                LayerPropertyConverter.interpretFillExtrusionLayerProperties(
-                        call.argument("properties"));
+        {
+          final String sourceId = call.argument("sourceId");
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final String filter = call.argument("filter");
+          final boolean enableInteraction = call.argument("enableInteraction");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretFillExtrusionLayerProperties(
+                  call.argument("properties"));
 
-        Expression filterExpression = parseFilter(filter);
+          Expression filterExpression = parseFilter(filter);
 
-        addFillExtrusionLayer(
-                layerId,
-                sourceId,
-                belowLayerId,
-                sourceLayer,
-                minzoom != null ? minzoom.floatValue() : null,
-                maxzoom != null ? maxzoom.floatValue() : null,
-                properties,
-                enableInteraction,
-                filterExpression);
-        updateLocationComponentLayer();
+          addFillExtrusionLayer(
+              layerId,
+              sourceId,
+              belowLayerId,
+              sourceLayer,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              properties,
+              enableInteraction,
+              filterExpression);
+          updateLocationComponentLayer();
 
-        result.success(null);
-        break;
-      }
+          result.success(null);
+          break;
+        }
       case "circleLayer#add":
         {
           final String sourceId = call.argument("sourceId");
@@ -1215,26 +1213,29 @@ final class MapLibreMapController
           if (this.myLocationEnabled && locationComponent != null) {
             Map<String, Object> reply = new HashMap<>();
 
-            mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
-                new LocationEngineCallback<LocationEngineResult>() {
-                  @Override
-                  public void onSuccess(LocationEngineResult locationEngineResult) {
-                    Location lastLocation = locationEngineResult.getLastLocation();
-                    if (lastLocation != null) {
-                      reply.put("latitude", lastLocation.getLatitude());
-                      reply.put("longitude", lastLocation.getLongitude());
-                      reply.put("altitude", lastLocation.getAltitude());
-                      result.success(reply);
-                    } else {
-                      result.error("", "", null); // ???
-                    }
-                  }
+            mapLibreMap
+                .getLocationComponent()
+                .getLocationEngine()
+                .getLastLocation(
+                    new LocationEngineCallback<LocationEngineResult>() {
+                      @Override
+                      public void onSuccess(LocationEngineResult locationEngineResult) {
+                        Location lastLocation = locationEngineResult.getLastLocation();
+                        if (lastLocation != null) {
+                          reply.put("latitude", lastLocation.getLatitude());
+                          reply.put("longitude", lastLocation.getLongitude());
+                          reply.put("altitude", lastLocation.getAltitude());
+                          result.success(reply);
+                        } else {
+                          result.error("", "", null); // ???
+                        }
+                      }
 
-                  @Override
-                  public void onFailure(@NonNull Exception exception) {
-                    result.error("", "", null); // ???
-                  }
-                });
+                      @Override
+                      public void onFailure(@NonNull Exception exception) {
+                        result.error("", "", null); // ???
+                      }
+                    });
           }
           break;
         }
@@ -1275,7 +1276,7 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-        case "style#updateImageSource":
+      case "style#updateImageSource":
         {
           if (style == null) {
             result.error(
@@ -1393,12 +1394,12 @@ final class MapLibreMapController
 
           LatLng locationOne = new LatLng(north, east);
           LatLng locationTwo = new LatLng(south, west);
-          LatLngBounds latLngBounds = new LatLngBounds.Builder()
+          LatLngBounds latLngBounds =
+              new LatLngBounds.Builder()
                   .include(locationOne) // Northeast
                   .include(locationTwo) // Southwest
                   .build();
-          mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-                  padding), 200);
+          mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, padding), 200);
 
           break;
         }
@@ -1442,13 +1443,13 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-        case "style#getFilter":
+      case "style#getFilter":
         {
           if (style == null) {
             result.error(
-                    "STYLE IS NULL",
-                    "The style is null. Has onStyleLoaded() already been invoked?",
-                    null);
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
           }
           Map<String, Object> reply = new HashMap<>();
           String layerId = call.argument("layerId");
@@ -1469,9 +1470,9 @@ final class MapLibreMapController
             filter = ((SymbolLayer) layer).getFilter();
           } else {
             result.error(
-                    "INVALID LAYER TYPE",
-                    String.format("Layer '%s' does not support filtering.", layerId),
-                    null);
+                "INVALID LAYER TYPE",
+                String.format("Layer '%s' does not support filtering.", layerId),
+                null);
             break;
           }
 
@@ -1479,9 +1480,8 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-        case "layer#setVisibility":
+      case "layer#setVisibility":
         {
-
           if (style == null) {
             result.error(
                 "STYLE IS NULL",
@@ -1494,14 +1494,14 @@ final class MapLibreMapController
           Layer layer = style.getLayer(layerId);
 
           if (layer != null) {
-            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+            layer.setProperties(
+                PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
           }
 
           result.success(null);
           break;
-
         }
-        case "map#querySourceFeatures":
+      case "map#querySourceFeatures":
         {
           Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
@@ -1517,8 +1517,7 @@ final class MapLibreMapController
             jsonArray = jsonElement.getAsJsonArray();
           }
           Expression filterExpression =
-                  jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-
+              jsonArray == null ? null : Expression.Converter.convert(jsonArray);
 
           Source source = style.getSource(sourceId);
           if (source instanceof GeoJsonSource) {
@@ -1526,7 +1525,9 @@ final class MapLibreMapController
           } else if (source instanceof CustomGeometrySource) {
             features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
           } else if (source instanceof VectorSource && sourceLayerId != null) {
-            features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
+            features =
+                ((VectorSource) source)
+                    .querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
           } else {
             features = Collections.emptyList();
           }
@@ -1539,13 +1540,13 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-        case "style#getLayerIds":
+      case "style#getLayerIds":
         {
           if (style == null) {
             result.error(
-                    "STYLE IS NULL",
-                    "The style is null. Has onStyleLoaded() already been invoked?",
-                    null);
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
           }
           Map<String, Object> reply = new HashMap<>();
 
@@ -1559,24 +1560,24 @@ final class MapLibreMapController
           break;
         }
       case "style#getSourceIds":
-      {
-        if (style == null) {
-          result.error(
-                  "STYLE IS NULL",
-                  "The style is null. Has onStyleLoaded() already been invoked?",
-                  null);
-        }
-        Map<String, Object> reply = new HashMap<>();
+        {
+          if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          }
+          Map<String, Object> reply = new HashMap<>();
 
-        List<String> sourceIds = new ArrayList<>();
-        for (Source source : style.getSources()) {
-          sourceIds.add(source.getId());
-        }
+          List<String> sourceIds = new ArrayList<>();
+          for (Source source : style.getSources()) {
+            sourceIds.add(source.getId());
+          }
 
-        reply.put("sources", sourceIds);
-        result.success(reply);
-        break;
-      }
+          reply.put("sources", sourceIds);
+          result.success(reply);
+          break;
+        }
       default:
         result.notImplemented();
     }
@@ -1614,25 +1615,24 @@ final class MapLibreMapController
     final Map<String, Object> arguments = new HashMap<>(2);
     arguments.put("mode", currentMode);
     switch (currentMode) {
-        case CameraMode.NONE:
-            arguments.put("mode", 0);
-            break;
-        case CameraMode.TRACKING:
-            arguments.put("mode", 1);
-            break;
-        case CameraMode.TRACKING_COMPASS:
-            arguments.put("mode", 2);
-            break;
-        case CameraMode.TRACKING_GPS:
-            arguments.put("mode", 3);
-            break;
-        default:
-            Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
-            return;
+      case CameraMode.NONE:
+        arguments.put("mode", 0);
+        break;
+      case CameraMode.TRACKING:
+        arguments.put("mode", 1);
+        break;
+      case CameraMode.TRACKING_COMPASS:
+        arguments.put("mode", 2);
+        break;
+      case CameraMode.TRACKING_GPS:
+        arguments.put("mode", 3);
+        break;
+      default:
+        Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
+        return;
     }
 
     methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
-
   }
 
   @Override
@@ -1740,18 +1740,18 @@ final class MapLibreMapController
   }
 
   /**
-   * Destroy the MapView and cleans up listeners.
-   * It's very important to call mapViewContainer.removeView(mapView) to make sure
-   * that {@link TextureView()} is called which releases the
-   * underlying surface.
-   * This is required due to an FlutterEngine change that was introduce when updating from
-   * Flutter 2.10.5 to Flutter 3.10.0.
-   * This FlutterEngine change is not calling `removeView` on a PlatformView which causes the issue.
-   * <p>
-   * For more information check out:
-   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>
-   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter Engine commit that introduced the issue</a>
-   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the MapLibre repo</a>
+   * Destroy the MapView and cleans up listeners. It's very important to call
+   * mapViewContainer.removeView(mapView) to make sure that {@link TextureView()} is called which
+   * releases the underlying surface. This is required due to an FlutterEngine change that was
+   * introduce when updating from Flutter 2.10.5 to Flutter 3.10.0. This FlutterEngine change is not
+   * calling `removeView` on a PlatformView which causes the issue.
+   *
+   * <p>For more information check out: <a
+   * href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a> <a
+   * href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter
+   * Engine commit that introduced the issue</a> <a
+   * href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the
+   * MapLibre repo</a>
    */
   private void destroyMapViewIfNecessary() {
     if (mapView == null) {

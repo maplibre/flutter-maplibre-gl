@@ -1,7 +1,6 @@
 package org.maplibre.maplibregl;
 
 import android.content.Context;
-
 import org.maplibre.android.MapLibre;
 
 abstract class MapLibreUtils {

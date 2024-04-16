@@ -1,12 +1,12 @@
 package org.maplibre.maplibregl;
 
 import android.content.Context;
-import org.maplibre.android.camera.CameraPosition;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 import java.util.Map;
+import org.maplibre.android.camera.CameraPosition;
 
 public class MapLibreMapFactory extends PlatformViewFactory {
 
@@ -34,7 +34,7 @@ public class MapLibreMapFactory extends PlatformViewFactory {
       boolean dragEnabled = Convert.toBoolean(params.get("dragEnabled"));
       builder.setDragEnabled(dragEnabled);
     }
-    if(params.containsKey("styleString")) {
+    if (params.containsKey("styleString")) {
       String styleString = Convert.toString(params.get("styleString"));
       builder.setStyleString(styleString);
     }

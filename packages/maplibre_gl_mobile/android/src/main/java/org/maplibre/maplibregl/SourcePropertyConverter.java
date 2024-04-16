@@ -3,6 +3,11 @@ package org.maplibre.maplibregl;
 import android.net.Uri;
 import com.google.gson.Gson;
 import com.mapbox.geojson.FeatureCollection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
 import org.maplibre.android.maps.Style;
@@ -14,11 +19,6 @@ import org.maplibre.android.style.sources.RasterSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.TileSet;
 import org.maplibre.android.style.sources.VectorSource;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 class SourcePropertyConverter {
   private static final String TAG = "SourcePropertyConverter";

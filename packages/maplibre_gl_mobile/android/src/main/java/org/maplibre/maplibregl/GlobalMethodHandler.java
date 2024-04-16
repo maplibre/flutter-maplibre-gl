@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import org.maplibre.android.net.ConnectivityReceiver;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import org.maplibre.android.net.ConnectivityReceiver;
 
 class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   private static final String TAG = GlobalMethodHandler.class.getSimpleName();
@@ -107,9 +107,9 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
 
         if (downloadOfflineRegionChannelHandler == null) {
           result.error(
-                  "downloadOfflineRegion#setup NOT CALLED",
-                  "The setup has not been called, please call downloadOfflineRegion#setup before",
-                  null);
+              "downloadOfflineRegion#setup NOT CALLED",
+              "The setup has not been called, please call downloadOfflineRegion#setup before",
+              null);
           break;
         }
 

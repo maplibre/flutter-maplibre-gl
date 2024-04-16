@@ -1,4 +1,4 @@
 #import <Flutter/Flutter.h>
 
-@interface MapLibreGlPlugin : NSObject<FlutterPlugin>
+@interface MapLibreGlPlugin : NSObject <FlutterPlugin>
 @end

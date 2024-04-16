@@ -5,13 +5,11 @@ package org.maplibre.maplibregl;
 
 import static org.maplibre.maplibregl.Convert.toMap;
 
-
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
@@ -105,9 +103,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconTextFitPadding(expression));
           break;
         case "icon-image":
-          if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()){
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
-          }else{
+          } else {
             properties.add(PropertyFactory.iconImage(expression));
           }
           break;
@@ -196,7 +194,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textOptional(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -252,7 +252,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -320,7 +322,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -364,7 +368,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillSortKey(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -408,7 +414,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionVerticalGradient(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -452,7 +460,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.rasterFadeDuration(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -490,7 +500,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.hillshadeAccentColor(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -525,7 +537,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.heatmapOpacity(expression));
           break;
         case "visibility":
-          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          properties.add(
+              PropertyFactory.visibility(
+                  entry.getValue().substring(1, entry.getValue().length() - 1)));
           break;
         default:
           break;
@@ -534,5 +548,4 @@ class LayerPropertyConverter {
 
     return properties.toArray(new PropertyValue[properties.size()]);
   }
-
 }

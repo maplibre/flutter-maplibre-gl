@@ -7,11 +7,10 @@ package org.maplibre.maplibregl;
 import android.content.Context;
 import android.view.Gravity;
 import androidx.annotation.NonNull;
+import io.flutter.plugin.common.BinaryMessenger;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMapOptions;
-
-import io.flutter.plugin.common.BinaryMessenger;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
