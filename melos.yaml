@@ -1,4 +1,4 @@
-name: my_project
+name: flutter_maplibre_gl
 repository: https://github.com/maplibre/flutter-maplibre-gl
 
 packages:
