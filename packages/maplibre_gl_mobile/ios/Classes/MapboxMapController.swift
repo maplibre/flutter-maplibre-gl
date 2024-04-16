@@ -975,9 +975,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
         guard let style = mapView.style else { return nil }
 
         // get layers in order (interactiveFeatureLayerIds is unordered)
-        let clickableLayers = style.layers.filter { layer in
-            interactiveFeatureLayerIds.contains(layer.identifier)
-        }
+        let clickableLayers = style.layers;
 
         for layer in clickableLayers.reversed() {
             let features = mapView.visibleFeatures(

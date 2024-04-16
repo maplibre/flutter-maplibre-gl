@@ -652,7 +652,8 @@ final class MapLibreMapController
       final List<String> layersInOrder = new ArrayList<String>();
       for (Layer layer : layers) {
         String id = layer.getId();
-        if (interactiveFeatureLayerIds.contains(id)) layersInOrder.add(id);
+        // if (interactiveFeatureLayerIds.contains(id)) 
+        layersInOrder.add(id);
       }
       Collections.reverse(layersInOrder);
 
