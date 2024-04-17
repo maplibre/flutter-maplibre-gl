@@ -10,14 +10,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.maplibre.android.geometry.LatLng;
-import org.maplibre.android.geometry.LatLngBounds;
-import org.maplibre.android.offline.OfflineManager;
-import org.maplibre.android.offline.OfflineRegion;
-import org.maplibre.android.offline.OfflineRegionDefinition;
-import org.maplibre.android.offline.OfflineRegionError;
-import org.maplibre.android.offline.OfflineRegionStatus;
-import org.maplibre.android.offline.OfflineTilePyramidRegionDefinition;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.offline.OfflineManager;
+import com.mapbox.mapboxsdk.offline.OfflineRegion;
+import com.mapbox.mapboxsdk.offline.OfflineRegionDefinition;
+import com.mapbox.mapboxsdk.offline.OfflineRegionError;
+import com.mapbox.mapboxsdk.offline.OfflineRegionStatus;
+import com.mapbox.mapboxsdk.offline.OfflineTilePyramidRegionDefinition;
 
 abstract class OfflineManagerUtils {
   private static final String TAG = "OfflineManagerUtils";

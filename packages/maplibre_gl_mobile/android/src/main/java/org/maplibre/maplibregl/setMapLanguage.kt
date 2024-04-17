@@ -2,12 +2,12 @@
 
 package org.maplibre.maplibregl
 
-import org.maplibre.android.maps.MapLibreMap
-import org.maplibre.android.style.expressions.Expression
-import org.maplibre.android.style.layers.PropertyFactory
-import org.maplibre.android.style.layers.SymbolLayer
+import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.style.expressions.Expression
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 
-fun MapLibreMap.setMapLanguage(language: String) {
+fun MapboxMap.setMapLanguage(language: String) {
     val layers = this.style?.layers ?: emptyList()
 
     val languageRegex = Regex("(name:[a-z]+)")

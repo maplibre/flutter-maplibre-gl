@@ -6,7 +6,7 @@ import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 import java.util.Map;
-import org.maplibre.android.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 
 public class MapLibreMapFactory extends PlatformViewFactory {
 

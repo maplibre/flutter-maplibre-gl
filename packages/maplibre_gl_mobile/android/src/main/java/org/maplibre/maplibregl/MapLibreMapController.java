@@ -19,6 +19,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
@@ -48,57 +49,57 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import org.maplibre.android.camera.CameraPosition;
-import org.maplibre.android.camera.CameraUpdate;
-import org.maplibre.android.camera.CameraUpdateFactory;
-import org.maplibre.android.constants.MapLibreConstants;
-import org.maplibre.android.geometry.LatLng;
-import org.maplibre.android.geometry.LatLngBounds;
-import org.maplibre.android.geometry.LatLngQuad;
-import org.maplibre.android.geometry.VisibleRegion;
-import org.maplibre.android.location.LocationComponent;
-import org.maplibre.android.location.LocationComponentActivationOptions;
-import org.maplibre.android.location.LocationComponentOptions;
-import org.maplibre.android.location.OnCameraTrackingChangedListener;
-import org.maplibre.android.location.engine.LocationEngineCallback;
-import org.maplibre.android.location.engine.LocationEngineResult;
-import org.maplibre.android.location.modes.CameraMode;
-import org.maplibre.android.location.modes.RenderMode;
-import org.maplibre.android.maps.MapLibreMap;
-import org.maplibre.android.maps.MapLibreMapOptions;
-import org.maplibre.android.maps.MapView;
-import org.maplibre.android.maps.OnMapReadyCallback;
-import org.maplibre.android.maps.Style;
-import org.maplibre.android.offline.OfflineManager;
-import org.maplibre.android.style.expressions.Expression;
-import org.maplibre.android.style.layers.CircleLayer;
-import org.maplibre.android.style.layers.FillExtrusionLayer;
-import org.maplibre.android.style.layers.FillLayer;
-import org.maplibre.android.style.layers.HeatmapLayer;
-import org.maplibre.android.style.layers.HillshadeLayer;
-import org.maplibre.android.style.layers.Layer;
-import org.maplibre.android.style.layers.LineLayer;
-import org.maplibre.android.style.layers.Property;
-import org.maplibre.android.style.layers.PropertyFactory;
-import org.maplibre.android.style.layers.PropertyValue;
-import org.maplibre.android.style.layers.RasterLayer;
-import org.maplibre.android.style.layers.SymbolLayer;
-import org.maplibre.android.style.sources.CustomGeometrySource;
-import org.maplibre.android.style.sources.GeoJsonSource;
-import org.maplibre.android.style.sources.ImageSource;
-import org.maplibre.android.style.sources.Source;
-import org.maplibre.android.style.sources.VectorSource;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdate;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.constants.MapboxConstants;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.geometry.LatLngQuad;
+import com.mapbox.mapboxsdk.geometry.VisibleRegion;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.LocationComponentOptions;
+import com.mapbox.mapboxsdk.location.OnCameraTrackingChangedListener;
+import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback;
+import com.mapbox.mapboxsdk.location.engine.LocationEngineResult;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.offline.OfflineManager;
+import com.mapbox.mapboxsdk.style.expressions.Expression;
+import com.mapbox.mapboxsdk.style.layers.CircleLayer;
+import com.mapbox.mapboxsdk.style.layers.FillExtrusionLayer;
+import com.mapbox.mapboxsdk.style.layers.FillLayer;
+import com.mapbox.mapboxsdk.style.layers.HeatmapLayer;
+import com.mapbox.mapboxsdk.style.layers.HillshadeLayer;
+import com.mapbox.mapboxsdk.style.layers.Layer;
+import com.mapbox.mapboxsdk.style.layers.LineLayer;
+import com.mapbox.mapboxsdk.style.layers.Property;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.layers.PropertyValue;
+import com.mapbox.mapboxsdk.style.layers.RasterLayer;
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
 
 /** Controller of a single MapboxMaps MapView instance. */
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
     implements DefaultLifecycleObserver,
-        MapLibreMap.OnCameraIdleListener,
-        MapLibreMap.OnCameraMoveListener,
-        MapLibreMap.OnCameraMoveStartedListener,
+        MapboxMap.OnCameraIdleListener,
+        MapboxMap.OnCameraMoveListener,
+        MapboxMap.OnCameraMoveStartedListener,
         MapView.OnDidBecomeIdleListener,
-        MapLibreMap.OnMapClickListener,
-        MapLibreMap.OnMapLongClickListener,
+        MapboxMap.OnMapClickListener,
+        MapboxMap.OnMapLongClickListener,
         MapLibreMapOptionsSink,
         MethodChannel.MethodCallHandler,
         OnMapReadyCallback,
@@ -118,7 +119,7 @@ final class MapLibreMapController
   private FrameLayout mapViewContainer;
 
   private MapView mapView;
-  private MapLibreMap mapLibreMap;
+  private MapboxMap mapLibreMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private int myLocationTrackingMode = 0;
@@ -169,7 +170,7 @@ final class MapLibreMapController
       Context context,
       BinaryMessenger messenger,
       MapLibreGlPlugin.LifecycleProvider lifecycleProvider,
-      MapLibreMapOptions options,
+      MapboxMapOptions options,
       String styleStringInitial,
       boolean dragEnabled) {
     MapLibreUtils.getMapbox(context);
@@ -215,7 +216,7 @@ final class MapLibreMapController
   }
 
   @Override
-  public void onMapReady(MapLibreMap mapboxMap) {
+  public void onMapReady(MapboxMap mapboxMap) {
     this.mapLibreMap = mapboxMap;
     if (mapReadyResult != null) {
       mapReadyResult.success(null);
@@ -814,7 +815,7 @@ final class MapLibreMapController
             // camera transformation not handled yet
             mapLibreMap.moveCamera(
                 cameraUpdate,
-                new MapLibreMap.CancelableCallback() {
+                new MapboxMap.CancelableCallback() {
                   @Override
                   public void onFinish() {
                     result.success(true);
@@ -838,8 +839,8 @@ final class MapLibreMapController
               Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
           final Integer duration = call.argument("duration");
 
-          final MapLibreMap.CancelableCallback onCameraMoveFinishedListener =
-              new MapLibreMap.CancelableCallback() {
+          final MapboxMap.CancelableCallback onCameraMoveFinishedListener =
+              new MapboxMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
                   result.success(true);
@@ -1587,7 +1588,7 @@ final class MapLibreMapController
   @Override
   public void onCameraMoveStarted(int reason) {
     final Map<String, Object> arguments = new HashMap<>(2);
-    boolean isGesture = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
+    boolean isGesture = reason == MapboxMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
     arguments.put("isGesture", isGesture);
     methodChannel.invokeMethod("camera#onMoveStarted", arguments);
   }
@@ -1697,7 +1698,7 @@ final class MapLibreMapController
       // camera transformation not handled yet
       mapLibreMap.moveCamera(
           cameraUpdate,
-          new MapLibreMap.CancelableCallback() {
+          new MapboxMap.CancelableCallback() {
             @Override
             public void onFinish() {
               result.success(true);
@@ -1717,8 +1718,8 @@ final class MapLibreMapController
 
   private void animateCamera(
       CameraUpdate cameraUpdate, Integer duration, MethodChannel.Result result) {
-    final MapLibreMap.CancelableCallback onCameraMoveFinishedListener =
-        new MapLibreMap.CancelableCallback() {
+    final MapboxMap.CancelableCallback onCameraMoveFinishedListener =
+        new MapboxMap.CancelableCallback() {
           @Override
           public void onFinish() {
             result.success(true);
@@ -1742,7 +1743,7 @@ final class MapLibreMapController
 
   /**
    * Destroy the MapView and cleans up listeners. It's very important to call
-   * mapViewContainer.removeView(mapView) to make sure that {@link TextureView()} is called which
+   * mapViewContainer.removeView(mapView) to make sure that {@link TextureView ()} is called which
    * releases the underlying surface. This is required due to an FlutterEngine change that was
    * introduce when updating from Flutter 2.10.5 to Flutter 3.10.0. This FlutterEngine change is not
    * calling `removeView` on a PlatformView which causes the issue.
@@ -1856,8 +1857,8 @@ final class MapLibreMapController
 
   @Override
   public void setMinMaxZoomPreference(Float min, Float max) {
-    mapLibreMap.setMinZoomPreference(min != null ? min : MapLibreConstants.MINIMUM_ZOOM);
-    mapLibreMap.setMaxZoomPreference(max != null ? max : MapLibreConstants.MAXIMUM_ZOOM);
+    mapLibreMap.setMinZoomPreference(min != null ? min : MapboxConstants.MINIMUM_ZOOM);
+    mapLibreMap.setMaxZoomPreference(max != null ? max : MapboxConstants.MAXIMUM_ZOOM);
   }
 
   @Override

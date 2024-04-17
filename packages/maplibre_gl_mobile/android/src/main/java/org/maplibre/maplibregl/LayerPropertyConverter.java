@@ -10,9 +10,9 @@ import com.google.gson.JsonParser;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.maplibre.android.style.expressions.Expression;
-import org.maplibre.android.style.layers.PropertyFactory;
-import org.maplibre.android.style.layers.PropertyValue;
+import com.mapbox.mapboxsdk.style.expressions.Expression;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 
 class LayerPropertyConverter {
   static PropertyValue[] interpretSymbolLayerProperties(Object o) {

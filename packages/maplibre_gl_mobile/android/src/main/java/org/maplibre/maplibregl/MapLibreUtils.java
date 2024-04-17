@@ -1,12 +1,12 @@
 package org.maplibre.maplibregl;
 
 import android.content.Context;
-import org.maplibre.android.MapLibre;
+import com.mapbox.mapboxsdk.Mapbox;
 
 abstract class MapLibreUtils {
   private static final String TAG = "MapboxMapController";
 
-  static MapLibre getMapbox(Context context) {
-    return MapLibre.getInstance(context);
+  static Mapbox getMapbox(Context context) {
+    return Mapbox.getInstance(context);
   }
 }

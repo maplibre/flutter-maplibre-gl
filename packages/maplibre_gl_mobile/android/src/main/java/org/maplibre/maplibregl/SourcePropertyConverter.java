@@ -8,17 +8,17 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.maplibre.android.geometry.LatLng;
-import org.maplibre.android.geometry.LatLngQuad;
-import org.maplibre.android.maps.Style;
-import org.maplibre.android.style.sources.GeoJsonOptions;
-import org.maplibre.android.style.sources.GeoJsonSource;
-import org.maplibre.android.style.sources.ImageSource;
-import org.maplibre.android.style.sources.RasterDemSource;
-import org.maplibre.android.style.sources.RasterSource;
-import org.maplibre.android.style.sources.Source;
-import org.maplibre.android.style.sources.TileSet;
-import org.maplibre.android.style.sources.VectorSource;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngQuad;
+import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.style.sources.RasterDemSource;
+import com.mapbox.mapboxsdk.style.sources.RasterSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
+import com.mapbox.mapboxsdk.style.sources.TileSet;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
 
 class SourcePropertyConverter {
   private static final String TAG = "SourcePropertyConverter";

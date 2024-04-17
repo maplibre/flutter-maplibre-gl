@@ -8,14 +8,14 @@ import android.content.Context;
 import android.view.Gravity;
 import androidx.annotation.NonNull;
 import io.flutter.plugin.common.BinaryMessenger;
-import org.maplibre.android.camera.CameraPosition;
-import org.maplibre.android.geometry.LatLngBounds;
-import org.maplibre.android.maps.MapLibreMapOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
-  private final MapLibreMapOptions options =
-      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
+  private final MapboxMapOptions options =
+      new MapboxMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
@@ -55,7 +55,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
-  public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
+ public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
     this.bounds = bounds;
   }
 
