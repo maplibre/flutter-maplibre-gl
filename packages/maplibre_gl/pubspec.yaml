@@ -11,21 +11,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface:
+  maplibre_gl_ios:
     git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_platform_interface
-      ref: main
-  maplibre_gl_mobile:
+      url: https://github.com/XanderD99/flutter-maplibre-gl
+      path: packages/maplibre_gl_ios
+      ref: refactor-maplibre-gl-lib
+  maplibre_gl_android:
     git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_mobile
-      ref: main
+      url: https://github.com/XanderD99/flutter-maplibre-gl
+      path: packages/maplibre_gl_android
+      ref: refactor-maplibre-gl-lib
   maplibre_gl_web:
     git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_web
-      ref: main    
+      url: https://github.com/XanderD99/flutter-maplibre-gl
+      path: packages/maplibre_gl_web
+      ref: refactor-maplibre-gl-lib    
 
 dev_dependencies:
   flutter_test:
@@ -42,9 +42,9 @@ flutter:
   plugin:
     platforms:
       android:
-        default_package: maplibre_gl_mobile
+        default_package: maplibre_gl_ios
       ios:
-        default_package: maplibre_gl_mobile
+        default_package: maplibre_gl_android
       web:
         default_package: maplibre_gl_web
 
