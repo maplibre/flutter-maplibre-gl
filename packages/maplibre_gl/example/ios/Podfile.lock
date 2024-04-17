@@ -5,7 +5,7 @@ PODS:
   - location (0.0.1):
     - Flutter
   - MapLibre (6.3.0)
-  - maplibre_gl_mobile (0.0.1):
+  - maplibre_gl_ios (0.0.1):
     - Flutter
     - MapLibre (= 6.3.0)
   - path_provider_foundation (0.0.1):
@@ -16,7 +16,7 @@ DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - location (from `.symlinks/plugins/location/ios`)
-  - maplibre_gl_mobile (from `.symlinks/plugins/maplibre_gl_mobile/ios`)
+  - maplibre_gl_ios (from `.symlinks/plugins/maplibre_gl_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 SPEC REPOS:
@@ -30,8 +30,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   location:
     :path: ".symlinks/plugins/location/ios"
-  maplibre_gl_mobile:
-    :path: ".symlinks/plugins/maplibre_gl_mobile/ios"
+  maplibre_gl_ios:
+    :path: ".symlinks/plugins/maplibre_gl_ios/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
@@ -40,7 +40,7 @@ SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
   MapLibre: f95f2258754e952a82c1cdf55f315815be8571fc
-  maplibre_gl_mobile: 0d0704a00c3c201656a3e8314063f3feebdca90c
+  maplibre_gl_ios: c03064821c2d01ca219aa1aa1abfd6a16071b8cd
   path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
 
 PODFILE CHECKSUM: 92058e2eb58f26601341b6713a5031956f40168f
