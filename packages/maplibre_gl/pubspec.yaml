@@ -42,9 +42,9 @@ flutter:
   plugin:
     platforms:
       android:
-        default_package: maplibre_gl_ios
-      ios:
         default_package: maplibre_gl_android
+      ios:
+        default_package: maplibre_gl_ios
       web:
         default_package: maplibre_gl_web
 
