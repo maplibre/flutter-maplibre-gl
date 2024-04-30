@@ -18,7 +18,7 @@ part 'src/annotations/symbol.dart';
 part 'src/annotations/fill.dart';
 part 'src/ui.dart';
 part 'src/maplibre_gl_platform_interface.dart';
-part 'src/method_channel_maplibre.dart';
+part 'src/maplibre_gl_platform_interface_impl.dart';
 
 part 'src/offline/download_region_status.dart';
 part 'src/offline/offline_region.dart';

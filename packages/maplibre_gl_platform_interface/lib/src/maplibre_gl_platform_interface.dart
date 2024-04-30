@@ -11,7 +11,7 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static MapLibreGlPlatform _instance = MethodChannelMaplibre();
+  static MapLibreGlPlatform _instance = MapLibreGlPlatformImpl();
 
   static MapLibreGlPlatform get instance => _instance;
 
@@ -62,9 +62,6 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
       MyLocationTrackingMode myLocationTrackingMode);
 
   Future<void> matchMapLanguageWithDeviceDefault();
-
-  void resizeWebMap();
-  void forceResizeWebMap();
 
   Future<void> updateContentInsets(EdgeInsets insets, bool animated);
   Future<void> setMapLanguage(String language);

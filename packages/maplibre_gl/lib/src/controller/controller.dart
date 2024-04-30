@@ -284,12 +284,16 @@ class MaplibreMapController {
   ///
   /// To force resize map (without any checks) have a look at forceResizeWebMap()
   void resizeWebMap() {
-    _maplibreGlPlatform.resizeWebMap();
+    if (_maplibreGlPlatform is MapLibreGlWeb) {
+      _maplibreGlPlatform.resizeWebMap();
+    }
   }
 
   /// Triggers a hard map resize event on web and does not check if it is required or not.
   void forceResizeWebMap() {
-    _maplibreGlPlatform.forceResizeWebMap();
+    if (_maplibreGlPlatform is MapLibreGlWeb) {
+      _maplibreGlPlatform.forceResizeWebMap();
+    }
   }
 
   /// Starts an animated change of the map camera position.

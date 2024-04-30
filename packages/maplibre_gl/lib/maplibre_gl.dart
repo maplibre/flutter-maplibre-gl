@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
+import 'package:maplibre_gl_web/maplibre_gl_web.dart';
 export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 part 'src/annotation_manager.dart';

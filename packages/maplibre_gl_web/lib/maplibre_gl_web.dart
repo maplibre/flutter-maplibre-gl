@@ -40,13 +40,13 @@ part 'src/options_sink.dart';
 const _maplibreGlCssUrl =
     'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
 
-class MapLibreGlPlugin extends MapLibreGlPlatform
+class MapLibreGlWeb extends MapLibreGlPlatform
     implements MapLibreMapOptionsSink {
   late html.DivElement _mapElement;
 
   /// Registers this class as the default instance of [GeolocatorPlatform].
   static void registerWith(Registrar registrar) {
-    MapLibreGlPlatform.instance = MapLibreGlPlugin();
+    MapLibreGlPlatform.instance = MapLibreGlWeb();
   }
 
   late Map<String, dynamic> _creationParams;
