@@ -5,10 +5,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: "22600aa1e926be775fa5fe7e6894e7fb3df9efda8891c73f70fb3262399a432d"
+      sha256: ecf4273855368121b1caed0d10d4513c7241dfc813f7d3c8933b36622ae9b265
       url: "https://pub.dev"
     source: hosted
-    version: "3.4.10"
+    version: "3.5.1"
   async:
     dependency: transitive
     description:
@@ -49,14 +49,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.18.0"
-  convert:
-    dependency: transitive
-    description:
-      name: convert
-      sha256: "0f08b14755d163f6e2134cb58222dd25ea2a2ee8a195e53983d57c075324d592"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.1"
   crypto:
     dependency: transitive
     description:
@@ -69,10 +61,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_icons
-      sha256: d57953e10f9f8327ce64a508a355f0b1ec902193f66288e8cb5070e7c47eeb2d
+      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.6"
+    version: "1.0.8"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -297,10 +289,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_foundation
-      sha256: "5a7999be66e000916500be4f15a3633ebceb8302719b47b9cc49ce924125350f"
+      sha256: f234384a3fdd67f989b4d54a5d73ca2a6c422fa55ae694381ae0f4375cd1ea16
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.2"
+    version: "2.4.0"
   path_provider_linux:
     dependency: transitive
     description:
@@ -349,14 +341,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-  pointycastle:
-    dependency: transitive
-    description:
-      name: pointycastle
-      sha256: "70fe966348fe08c34bf929582f1d8247d9d9408130723206472b4687227e4333"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.8.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -446,10 +430,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "0a989dc7ca2bb51eac91e8fd00851297cfffd641aa7538b165c62637ca0eaa4a"
+      sha256: "0eaf06e3446824099858367950a813472af675116bf63f008a4c2a75ae13e9cb"
       url: "https://pub.dev"
     source: hosted
-    version: "5.4.0"
+    version: "5.5.0"
   win32_registry:
     dependency: transitive
     description:
@@ -476,4 +460,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.3.0 <4.0.0"
-  flutter: ">=3.16.0"
+  flutter: ">=3.16.6"
