@@ -33,10 +33,10 @@ class _AttributionBodyState extends State<AttributionBody> {
           children: [
             buildDefaultPositionButton(),
             buildPositionButton(null),
-            buildPositionButton(AttributionButtonPosition.TopRight),
-            buildPositionButton(AttributionButtonPosition.TopLeft),
-            buildPositionButton(AttributionButtonPosition.BottomRight),
-            buildPositionButton(AttributionButtonPosition.BottomLeft),
+            buildPositionButton(AttributionButtonPosition.topRight),
+            buildPositionButton(AttributionButtonPosition.topLeft),
+            buildPositionButton(AttributionButtonPosition.bottomRight),
+            buildPositionButton(AttributionButtonPosition.bottomLeft),
           ],
         ),
         Expanded(

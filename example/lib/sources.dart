@@ -254,7 +254,7 @@ class FullMapState extends State<FullMap> {
   final _stylesAndLoaders = [
     const StyleInfo(
       name: "Vector",
-      baseStyle: MaplibreStyles.DEMO,
+      baseStyle: MaplibreStyles.demo,
       addDetails: addVector,
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
@@ -270,7 +270,7 @@ class FullMapState extends State<FullMap> {
     ),
     const StyleInfo(
       name: "Geojson cluster",
-      baseStyle: MaplibreStyles.DEMO,
+      baseStyle: MaplibreStyles.demo,
       addDetails: addGeojsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
