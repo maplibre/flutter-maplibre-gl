@@ -6,43 +6,43 @@ part of '../maplibre_gl_platform_interface.dart';
 
 class MaplibreStyles {
   /// A very simple MapLibre demo style
-  static const String DEMO = "https://demotiles.maplibre.org/style.json";
+  static const String demo = "https://demotiles.maplibre.org/style.json";
 }
 
 /// The camera mode, which determines how the map camera will track the rendered location.
 enum MyLocationTrackingMode {
-  None,
-  Tracking,
-  TrackingCompass,
-  TrackingGPS,
+  none,
+  tracking,
+  trackingCompass,
+  trackingGps,
 }
 
 /// Specifies if and how the user's heading/bearing is rendered in the user location indicator.
 enum MyLocationRenderMode {
   /// Do not show the user's heading/bearing.
-  NORMAL,
+  normal,
 
   /// Show the user's heading/bearing as determined by the device's compass. On iOS, this causes the user's location to be shown on the map.
-  COMPASS,
+  compass,
 
   /// Show the user's heading/bearing as determined by the device's GPS sensor. Not supported on iOS.
-  GPS,
+  gps,
 }
 
 /// Compass View Position
 enum CompassViewPosition {
-  TopLeft,
-  TopRight,
-  BottomLeft,
-  BottomRight,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
 }
 
 /// Attribution Button Position
 enum AttributionButtonPosition {
-  TopLeft,
-  TopRight,
-  BottomLeft,
-  BottomRight,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
 }
 
 /// Bounds for the map camera target.

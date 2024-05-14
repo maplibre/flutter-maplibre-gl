@@ -1,4 +1,4 @@
-part of maplibre_gl_web;
+part of '../maplibre_gl_web.dart';
 
 class Convert {
   static void interpretMapLibreMapOptions(
@@ -71,7 +71,7 @@ class Convert {
           .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
     } else {
-      sink.setAttributionButtonAlignment(AttributionButtonPosition.BottomRight);
+      sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
       sink.setAttributionButtonMargins(options['attributionButtonMargins'][0],
