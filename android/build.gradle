@@ -1,4 +1,4 @@
-group 'com.maplibre.maplibregl'
+group 'org.maplibre.maplibregl'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -26,7 +26,7 @@ android {
 
     compileSdkVersion 34
     ndkVersion "25.1.8937393"
-    namespace "com.maplibre.maplibregl"
+    namespace "org.maplibre.maplibregl"
 
     defaultConfig {
         minSdkVersion 21
@@ -41,7 +41,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     dependencies {
-        implementation 'org.maplibre.gl:android-sdk:10.2.0'
+        implementation 'org.maplibre.gl:android-sdk:11.0.0'
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:2.0.0'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:2.0.0'
         implementation 'com.squareup.okhttp3:okhttp:4.10.0'

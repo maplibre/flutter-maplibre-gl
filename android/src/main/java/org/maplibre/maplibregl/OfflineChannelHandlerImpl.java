@@ -1,4 +1,4 @@
-package com.mapbox.mapboxgl;
+package org.maplibre.maplibregl;
 
 import androidx.annotation.Nullable;
 import com.google.gson.Gson;

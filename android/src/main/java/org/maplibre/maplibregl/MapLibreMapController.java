@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package com.mapbox.mapboxgl;
+package org.maplibre.maplibregl;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -33,49 +33,48 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.mapboxsdk.camera.CameraPosition;
-import com.mapbox.mapboxsdk.camera.CameraUpdate;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
-import com.mapbox.mapboxsdk.constants.MapboxConstants;
-import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
-import com.mapbox.mapboxsdk.geometry.LatLngQuad;
-import com.mapbox.mapboxsdk.geometry.VisibleRegion;
-import com.mapbox.mapboxsdk.location.LocationComponent;
-import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
-import com.mapbox.mapboxsdk.location.LocationComponentOptions;
-import com.mapbox.mapboxsdk.location.OnCameraTrackingChangedListener;
-import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback;
-import com.mapbox.mapboxsdk.location.engine.LocationEngineResult;
-import com.mapbox.mapboxsdk.location.modes.CameraMode;
-import com.mapbox.mapboxsdk.location.modes.RenderMode;
-import com.mapbox.mapboxsdk.maps.MapView;
-import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.Style;
-import com.mapbox.mapboxsdk.offline.OfflineManager;
-import com.mapbox.mapboxsdk.style.expressions.Expression;
-import com.mapbox.mapboxsdk.style.layers.CircleLayer;
-import com.mapbox.mapboxsdk.style.layers.FillExtrusionLayer;
-import com.mapbox.mapboxsdk.style.layers.FillLayer;
-import com.mapbox.mapboxsdk.style.layers.HeatmapLayer;
-import com.mapbox.mapboxsdk.style.layers.HillshadeLayer;
-import com.mapbox.mapboxsdk.style.layers.Layer;
-import com.mapbox.mapboxsdk.style.layers.LineLayer;
-import com.mapbox.mapboxsdk.style.layers.Property;
-import com.mapbox.mapboxsdk.style.layers.PropertyValue;
-import com.mapbox.mapboxsdk.style.layers.RasterLayer;
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
-import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource;
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
-import com.mapbox.mapboxsdk.style.sources.ImageSource;
-import com.mapbox.mapboxsdk.style.sources.Source;
-import com.mapbox.mapboxsdk.style.sources.VectorSource;
-import com.mapbox.mapboxsdk.style.types.Formatted;
+import org.maplibre.geojson.Feature;
+import org.maplibre.geojson.FeatureCollection;
+import org.maplibre.android.camera.CameraPosition;
+import org.maplibre.android.camera.CameraUpdate;
+import org.maplibre.android.camera.CameraUpdateFactory;
+import org.maplibre.android.constants.MapLibreConstants;
+import org.maplibre.android.geometry.LatLng;
+import org.maplibre.android.geometry.LatLngBounds;
+import org.maplibre.android.geometry.LatLngQuad;
+import org.maplibre.android.geometry.VisibleRegion;
+import org.maplibre.android.location.LocationComponent;
+import org.maplibre.android.location.LocationComponentActivationOptions;
+import org.maplibre.android.location.LocationComponentOptions;
+import org.maplibre.android.location.OnCameraTrackingChangedListener;
+import org.maplibre.android.location.engine.LocationEngineCallback;
+import org.maplibre.android.location.engine.LocationEngineResult;
+import org.maplibre.android.location.modes.CameraMode;
+import org.maplibre.android.location.modes.RenderMode;
+import org.maplibre.android.maps.MapView;
+import org.maplibre.android.maps.MapLibreMap;
+import org.maplibre.android.maps.MapLibreMapOptions;
+import org.maplibre.android.maps.OnMapReadyCallback;
+import org.maplibre.android.maps.Style;
+import org.maplibre.android.offline.OfflineManager;
+import org.maplibre.android.style.expressions.Expression;
+import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.FillExtrusionLayer;
+import org.maplibre.android.style.layers.FillLayer;
+import org.maplibre.android.style.layers.HeatmapLayer;
+import org.maplibre.android.style.layers.HillshadeLayer;
+import org.maplibre.android.style.layers.Layer;
+import org.maplibre.android.style.layers.LineLayer;
+import org.maplibre.android.style.layers.Property;
+import org.maplibre.android.style.layers.PropertyValue;
+import org.maplibre.android.style.layers.RasterLayer;
+import org.maplibre.android.style.layers.SymbolLayer;
+import org.maplibre.android.style.layers.PropertyFactory;
+import org.maplibre.android.style.sources.CustomGeometrySource;
+import org.maplibre.android.style.sources.GeoJsonSource;
+import org.maplibre.android.style.sources.ImageSource;
+import org.maplibre.android.style.sources.Source;
+import org.maplibre.android.style.sources.VectorSource;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -94,35 +93,35 @@ import java.util.Map;
 import java.util.Set;
 
 
-/** Controller of a single MapboxMaps MapView instance. */
+/** Controller of a single MapLibreMaps MapView instance. */
 @SuppressLint("MissingPermission")
-final class MapboxMapController
+final class MapLibreMapController
     implements DefaultLifecycleObserver,
-        MapboxMap.OnCameraIdleListener,
-        MapboxMap.OnCameraMoveListener,
-        MapboxMap.OnCameraMoveStartedListener,
+        MapLibreMap.OnCameraIdleListener,
+        MapLibreMap.OnCameraMoveListener,
+        MapLibreMap.OnCameraMoveStartedListener,
         MapView.OnDidBecomeIdleListener,
-        MapboxMap.OnMapClickListener,
-        MapboxMap.OnMapLongClickListener,
-        MapboxMapOptionsSink,
+        MapLibreMap.OnMapClickListener,
+        MapLibreMap.OnMapLongClickListener,
+        MapLibreMapOptionsSink,
         MethodChannel.MethodCallHandler,
         OnMapReadyCallback,
         OnCameraTrackingChangedListener,
         PlatformView {
-  private static final String TAG = "MapboxMapController";
+  private static final String TAG = "MapLibreMapController";
   private final int id;
   private final MethodChannel methodChannel;
-  private final MapboxMapsPlugin.LifecycleProvider lifecycleProvider;
+  private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
   private final float density;
   private final Context context;
   private final String styleStringInitial;
   /**
    * This container is returned as the final platform view instead of returning `mapView`.
-   * See {@link MapboxMapController#destroyMapViewIfNecessary()} for details.
+   * See {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
    */
   private FrameLayout mapViewContainer;
   private MapView mapView;
-  private MapboxMap mapboxMap;
+  private MapLibreMap mapboxMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private int myLocationTrackingMode = 0;
@@ -147,7 +146,7 @@ final class MapboxMapController
       new Style.OnStyleLoaded() {
         @Override
         public void onStyleLoaded(@NonNull Style style) {
-          MapboxMapController.this.style = style;
+          MapLibreMapController.this.style = style;
 
           // commented out while cherry-picking upstream956
           // if (myLocationEnabled) {
@@ -161,22 +160,22 @@ final class MapboxMapController
             mapboxMap.setLatLngBoundsForCameraTarget(bounds);
           }
 
-          mapboxMap.addOnMapClickListener(MapboxMapController.this);
-          mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
+          mapboxMap.addOnMapClickListener(MapLibreMapController.this);
+          mapboxMap.addOnMapLongClickListener(MapLibreMapController.this);
 
           methodChannel.invokeMethod("map#onStyleLoaded", null);
         }
       };
 
-  MapboxMapController(
+  MapLibreMapController(
       int id,
       Context context,
       BinaryMessenger messenger,
-      MapboxMapsPlugin.LifecycleProvider lifecycleProvider,
-      MapboxMapOptions options,
+      MapLibreMapsPlugin.LifecycleProvider lifecycleProvider,
+      MapLibreMapOptions options,
       String styleStringInitial,
       boolean dragEnabled) {
-    MapBoxUtils.getMapbox(context);
+    MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
     this.dragEnabled = dragEnabled;
@@ -219,7 +218,7 @@ final class MapboxMapController
   }
 
   @Override
-  public void onMapReady(MapboxMap mapboxMap) {
+  public void onMapReady(MapLibreMap mapboxMap) {
     this.mapboxMap = mapboxMap;
     if (mapReadyResult != null) {
       mapReadyResult.success(null);
@@ -275,7 +274,7 @@ final class MapboxMapController
         && !styleString.startsWith("https://")
         && !styleString.startsWith("mapbox://")) {
       // We are assuming that the style will be loaded from an asset here.
-      String key = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(styleString);
+      String key = MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(styleString);
       mapboxMap.setStyle(new Style.Builder().fromUri("asset://" + key), onStyleLoadedCallback);
     } else {
       mapboxMap.setStyle(new Style.Builder().fromUri(styleString), onStyleLoadedCallback);
@@ -686,7 +685,7 @@ final class MapboxMapController
         break;
       case "map#update":
         {
-          Convert.interpretMapboxMapOptions(call.argument("options"), this, context);
+          Convert.interpretMapLibreMapOptions(call.argument("options"), this, context);
           result.success(Convert.toJson(getCameraPosition()));
           break;
         }
@@ -701,7 +700,7 @@ final class MapboxMapController
         {
           try {
             final Locale deviceLocale = Locale.getDefault();
-            MapboxMapUtils.setMapLanguage(mapboxMap, deviceLocale.getLanguage());
+            MapLibreMapUtils.setMapLanguage(mapboxMap, deviceLocale.getLanguage());
 
             result.success(null);
           } catch (RuntimeException exception) {
@@ -731,7 +730,7 @@ final class MapboxMapController
         {
           final String language = call.argument("language");
           try {
-            MapboxMapUtils.setMapLanguage(mapboxMap, language);
+            MapLibreMapUtils.setMapLanguage(mapboxMap, language);
 
             result.success(null);
           } catch (RuntimeException exception) {
@@ -1597,7 +1596,7 @@ final class MapboxMapController
   @Override
   public void onCameraMoveStarted(int reason) {
     final Map<String, Object> arguments = new HashMap<>(2);
-    boolean isGesture = reason == MapboxMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
+    boolean isGesture = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
     arguments.put("isGesture", isGesture);
     methodChannel.invokeMethod("camera#onMoveStarted", arguments);
   }
@@ -1835,7 +1834,7 @@ final class MapboxMapController
     destroyMapViewIfNecessary();
   }
 
-  // MapboxMapOptionsSink methods
+  // MapLibreMapOptionsSink methods
 
   @Override
   public void setCameraTargetBounds(LatLngBounds bounds) {
@@ -1869,8 +1868,8 @@ final class MapboxMapController
 
   @Override
   public void setMinMaxZoomPreference(Float min, Float max) {
-    mapboxMap.setMinZoomPreference(min != null ? min : MapboxConstants.MINIMUM_ZOOM);
-    mapboxMap.setMaxZoomPreference(max != null ? max : MapboxConstants.MAXIMUM_ZOOM);
+    mapboxMap.setMinZoomPreference(min != null ? min : MapLibreConstants.MINIMUM_ZOOM);
+    mapboxMap.setMaxZoomPreference(max != null ? max : MapLibreConstants.MAXIMUM_ZOOM);
   }
 
   @Override
@@ -2090,7 +2089,7 @@ final class MapboxMapController
       String assetPath;
       if (i == 1) {
         // If density is 1.0x then simply take the default asset path
-        assetPath = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(imageId);
+        assetPath = MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(imageId);
       } else {
         // Build a resolution aware asset path as follows:
         // <directory asset>/<ratio>/<image name>
@@ -2103,7 +2102,7 @@ final class MapboxMapController
         stringBuilder.append(((float) i) + "x");
         stringBuilder.append("/");
         stringBuilder.append(imagePathList.get(imagePathList.size() - 1));
-        assetPath = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(stringBuilder.toString());
+        assetPath = MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(stringBuilder.toString());
       }
       // Build up a list of resolution aware asset paths.
       assetPathList.add(assetPath);
@@ -2203,7 +2202,7 @@ final class MapboxMapController
   }
 
   /** Simple Listener to listen for the status of camera movements. */
-  public class OnCameraMoveFinishedListener implements MapboxMap.CancelableCallback {
+  public class OnCameraMoveFinishedListener implements MapLibreMap.CancelableCallback {
     @Override
     public void onFinish() {}
 
@@ -2215,17 +2214,17 @@ final class MapboxMapController
 
     @Override
     public boolean onMoveBegin(MoveGestureDetector detector) {
-      return MapboxMapController.this.onMoveBegin(detector);
+      return MapLibreMapController.this.onMoveBegin(detector);
     }
 
     @Override
     public boolean onMove(MoveGestureDetector detector, float distanceX, float distanceY) {
-      return MapboxMapController.this.onMove(detector);
+      return MapLibreMapController.this.onMove(detector);
     }
 
     @Override
     public void onMoveEnd(MoveGestureDetector detector, float velocityX, float velocityY) {
-      MapboxMapController.this.onMoveEnd(detector);
+      MapLibreMapController.this.onMoveEnd(detector);
     }
   }
 }
