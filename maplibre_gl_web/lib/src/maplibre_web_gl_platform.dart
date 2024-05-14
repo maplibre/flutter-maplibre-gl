@@ -269,13 +269,13 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
+    debugPrint('Telemetry not available in web');
     return;
   }
 
   @override
   Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
+    debugPrint('Telemetry not available in web');
     return false;
   }
 
@@ -347,7 +347,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    print(parameters);
+    debugPrint(parameters.toString());
 
     return _map
         .querySourceFeatures(sourceId, parameters)
@@ -366,7 +366,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future invalidateAmbientCache() async {
-    print('Offline storage not available in web');
+    debugPrint('Offline storage not available in web');
   }
 
   @override
@@ -630,7 +630,7 @@ class MaplibreMapController extends MapLibreGlPlatform
    */
   @override
   void setAttributionButtonMargins(int x, int y) {
-    print('setAttributionButtonMargins not available in web');
+    debugPrint('setAttributionButtonMargins not available in web');
   }
 
   @override
@@ -670,12 +670,12 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   void setCompassViewMargins(int x, int y) {
-    print('setCompassViewMargins not available in web');
+    debugPrint('setCompassViewMargins not available in web');
   }
 
   @override
   void setLogoViewMargins(int x, int y) {
-    print('setLogoViewMargins not available in web');
+    debugPrint('setLogoViewMargins not available in web');
   }
 
   @override
@@ -696,7 +696,7 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   void setMyLocationRenderMode(int myLocationRenderMode) {
-    print('myLocationRenderMode not available in web');
+    debugPrint('myLocationRenderMode not available in web');
   }
 
   @override
@@ -708,7 +708,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     if (myLocationTrackingMode == 0) {
       _addGeolocateControl(trackUserLocation: false);
     } else {
-      print('Only one tracking mode available in web');
+      debugPrint('Only one tracking mode available in web');
       _addGeolocateControl(trackUserLocation: true);
     }
   }
@@ -909,12 +909,12 @@ class MaplibreMapController extends MapLibreGlPlatform
       try {
         _map.setLayoutProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        debugPrint('Caught exception (usually safe to ignore): $e');
       }
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        debugPrint('Caught exception (usually safe to ignore): $e');
       }
     }
   }
