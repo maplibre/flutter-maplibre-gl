@@ -281,7 +281,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
   }
 
   @override
-  void dispose() async {
+  Future<void> dispose() async {
     super.dispose();
     if (_controller.isCompleted) {
       final controller = await _controller.future;
@@ -300,7 +300,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
     _maplibreMapOptions = newOptions;
   }
 
-  void _updateOptions(Map<String, dynamic> updates) async {
+  Future<void> _updateOptions(Map<String, dynamic> updates) async {
     if (updates.isEmpty) {
       return;
     }
@@ -331,9 +331,7 @@ class _MaplibreMapState extends State<MaplibreMap> {
     );
     await _maplibreGlPlatform.initPlatform(id);
     _controller.complete(controller);
-    if (widget.onMapCreated != null) {
-      widget.onMapCreated!(controller);
-    }
+    widget.onMapCreated?.call(controller);
   }
 }
 

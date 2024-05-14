@@ -157,7 +157,7 @@ class LayerState extends State {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  void _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     await addImageFromAsset(
         controller, "custom-marker", "assets/symbols/custom-marker.png");
     await controller.addGeoJsonSource("points", _points);

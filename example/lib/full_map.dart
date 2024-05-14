@@ -24,11 +24,11 @@ class FullMapState extends State<FullMap> {
   MaplibreMapController? mapController;
   var isLight = true;
 
-  _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     mapController = controller;
   }
 
-  _onStyleLoadedCallback() {
+  void _onStyleLoadedCallback() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text("Style loaded :)"),

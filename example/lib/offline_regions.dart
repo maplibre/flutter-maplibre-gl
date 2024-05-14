@@ -128,7 +128,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     return Stack(
       children: <Widget>[
         ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+          padding: EdgeInsets.zero,
           itemCount: _items.length,
           itemBuilder: (context, index) => Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -157,22 +157,23 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
                 ],
               ),
               const Spacer(),
-              _items[index].isDownloading
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        _items[index].isDownloaded
-                            ? Icons.delete
-                            : Icons.file_download,
-                      ),
-                      onPressed: _items[index].isDownloaded
-                          ? () => _deleteRegion(_items[index], index)
-                          : () => _downloadRegion(_items[index], index),
-                    ),
+              if (_items[index].isDownloading)
+                const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(),
+                )
+              else
+                IconButton(
+                  icon: Icon(
+                    _items[index].isDownloaded
+                        ? Icons.delete
+                        : Icons.file_download,
+                  ),
+                  onPressed: _items[index].isDownloaded
+                      ? () => _deleteRegion(_items[index], index)
+                      : () => _downloadRegion(_items[index], index),
+                ),
             ],
           ),
         ),
@@ -180,10 +181,10 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     );
   }
 
-  void _updateListOfRegions() async {
-    List<OfflineRegion> offlineRegions = await getListOfRegions();
-    List<OfflineRegionListItem> regionItems = [];
-    for (var item in allRegions) {
+  Future<void> _updateListOfRegions() async {
+    final List<OfflineRegion> offlineRegions = await getListOfRegions();
+    final List<OfflineRegionListItem> regionItems = [];
+    for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
           (offlineRegion) => offlineRegion.metadata['name'] == item.name);
       if (offlineRegion != null) {
@@ -193,12 +194,13 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
       }
     }
     setState(() {
-      _items.clear();
-      _items.addAll(regionItems);
+      _items
+        ..clear()
+        ..addAll(regionItems);
     });
   }
 
-  void _downloadRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _downloadRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -222,19 +224,15 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
       });
     } on Exception catch (_) {
       setState(() {
-        _items.removeAt(index);
-        _items.insert(
-            index,
-            item.copyWith(
-              isDownloading: false,
-              downloadedId: null,
-            ));
+        _items
+          ..removeAt(index)
+          ..insert(index, item.copyWith(isDownloading: false));
       });
       return;
     }
   }
 
-  void _deleteRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _deleteRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -245,17 +243,13 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     );
 
     setState(() {
-      _items.removeAt(index);
-      _items.insert(
-          index,
-          item.copyWith(
-            isDownloading: false,
-            downloadedId: null,
-          ));
+      _items
+        ..removeAt(index)
+        ..insert(index, item.copyWith(isDownloading: false));
     });
   }
 
-  _goToMap(OfflineRegionListItem item) {
+  void _goToMap(OfflineRegionListItem item) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => OfflineRegionMap(item),

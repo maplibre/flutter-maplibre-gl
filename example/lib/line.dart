@@ -54,7 +54,7 @@ class LineBodyState extends State<LineBody> {
     return controller!.addImage(name, list);
   }
 
-  _onLineTapped(Line line) async {
+  Future<void> _onLineTapped(Line line) async {
     await _updateSelectedLine(
       const LineOptions(lineColor: "#ff0000"),
     );
@@ -66,7 +66,7 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _updateSelectedLine(LineOptions changes) async {
+  Future<void> _updateSelectedLine(LineOptions changes) async {
     if (_selectedLine != null) controller!.updateLine(_selectedLine!, changes);
   }
 
@@ -89,7 +89,7 @@ class LineBodyState extends State<LineBody> {
     });
   }
 
-  _move() async {
+  Future<void> _move() async {
     final currentStart = _selectedLine!.options.geometry![0];
     final currentEnd = _selectedLine!.options.geometry![1];
     final end =
@@ -109,7 +109,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _changeLinePattern() async {
-    String? current =
+    final String? current =
         _selectedLine!.options.linePattern == null ? "assetImage" : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
@@ -133,7 +133,7 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     addImageFromAsset("assetImage", _linePatternImage);
     await controller!.addLine(
       const LineOptions(
@@ -213,9 +213,9 @@ class LineBodyState extends State<LineBody> {
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  var latLngs = await controller!
+                                  final latLngs = await controller!
                                       .getLineLatLngs(_selectedLine!);
-                                  for (var latLng in latLngs) {
+                                  for (final latLng in latLngs) {
                                     debugPrint(latLng.toString());
                                   }
                                 },

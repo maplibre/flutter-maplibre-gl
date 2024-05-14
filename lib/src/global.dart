@@ -36,7 +36,7 @@ Future<void> setHttpHeaders(Map<String, String> headers) {
 }
 
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
       'path': path,
@@ -47,7 +47,7 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
     <String, dynamic>{},
   );
@@ -88,7 +88,7 @@ Future<OfflineRegion> downloadOfflineRegion(
   Map<String, dynamic> metadata = const {},
   Function(DownloadRegionStatus event)? onEvent,
 }) async {
-  String channelName =
+  final String channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
   await _globalChannel
@@ -102,7 +102,7 @@ Future<OfflineRegion> downloadOfflineRegion(
         onEvent(Error(error));
         return Error(error);
       }
-      var unknownError = Error(
+      final unknownError = Error(
         PlatformException(
           code: 'UnknowException',
           message:
@@ -137,7 +137,7 @@ Future<OfflineRegion> downloadOfflineRegion(
           status = Success();
           break;
       }
-      onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
+      onEvent(status ?? (throw Exception('Invalid event status ${jsonData['status']}')));
     });
   }
 

@@ -122,15 +122,13 @@ class MaplibreMapController extends ChangeNotifier {
       if (cameraPosition != null) {
         _cameraPosition = cameraPosition;
       }
-      if (onCameraIdle != null) {
-        onCameraIdle!();
-      }
+      onCameraIdle?.call();
       notifyListeners();
     });
 
     _maplibreGlPlatform.onMapStyleLoadedPlatform.add((_) {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (var type in annotationOrder.toSet()) {
+      for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
         switch (type) {
           case AnnotationType.fill:
@@ -149,42 +147,29 @@ class MaplibreMapController extends ChangeNotifier {
             symbolManager = SymbolManager(this,
                 onTap: onSymbolTapped.call, enableInteraction: enableInteraction);
             break;
-          default:
         }
       }
-      if (onStyleLoadedCallback != null) {
-        onStyleLoadedCallback!();
-      }
+      onStyleLoadedCallback?.call();
     });
 
     _maplibreGlPlatform.onMapClickPlatform.add((dict) {
-      if (onMapClick != null) {
-        onMapClick!(dict['point'], dict['latLng']);
-      }
+      onMapClick?.call(dict['point'], dict['latLng']);
     });
 
     _maplibreGlPlatform.onMapLongClickPlatform.add((dict) {
-      if (onMapLongClick != null) {
-        onMapLongClick!(dict['point'], dict['latLng']);
-      }
+      onMapLongClick?.call(dict['point'], dict['latLng']);
     });
 
     _maplibreGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
-      if (onCameraTrackingChanged != null) {
-        onCameraTrackingChanged!(mode);
-      }
+      onCameraTrackingChanged?.call(mode);
     });
 
     _maplibreGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
-      if (onCameraTrackingDismissed != null) {
-        onCameraTrackingDismissed!();
-      }
+      onCameraTrackingDismissed?.call();
     });
 
     _maplibreGlPlatform.onMapIdlePlatform.add((_) {
-      if (onMapIdle != null) {
-        onMapIdle!();
-      }
+      onMapIdle?.call();
     });
     _maplibreGlPlatform.onUserLocationUpdatedPlatform.add((location) {
       onUserLocationUpdated?.call(location);

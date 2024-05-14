@@ -67,7 +67,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds a network image to the currently displayed style
   Future<void> addImageFromUrl(String name, Uri uri) async {
-    var response = await http.get(uri);
+    final response = await http.get(uri);
     return controller!.addImage(name, response.bodyBytes);
   }
 
@@ -85,13 +85,13 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) async {
+  Future<void> _updateSelectedSymbol(SymbolOptions changes) async {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
   void _add(String iconImage) {
-    List<int> availableNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    final List<int> availableNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
     if (availableNumbers.isNotEmpty) {
@@ -105,7 +105,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   SymbolOptions _getSymbolOptions(String iconImage, int symbolCount) {
-    LatLng geometry = LatLng(
+    final LatLng geometry = LatLng(
       center.latitude + sin(symbolCount * pi / 6.0) / 20.0,
       center.longitude + cos(symbolCount * pi / 6.0) / 20.0,
     );
@@ -133,8 +133,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _addAll(String iconImage) async {
-    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    final List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
       symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']);
     }
 
@@ -185,7 +185,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   void _changeIconOffset() {
     Offset? currentAnchor = _selectedSymbol!.options.iconOffset;
-    currentAnchor ??= const Offset(0.0, 0.0);
+    currentAnchor ??= Offset.zero;
     final Offset newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
     _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
   }
@@ -245,7 +245,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _getLatLng() async {
+  Future<void> _getLatLng() async {
     final latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
     if (!mounted) return;
 

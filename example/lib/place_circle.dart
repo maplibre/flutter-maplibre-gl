@@ -115,8 +115,8 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     );
   }
 
-  void _getLatLng() async {
-    LatLng latLng = await controller!.getCircleLatLng(_selectedCircle!);
+  Future<void> _getLatLng() async {
+    final LatLng latLng = await controller!.getCircleLatLng(_selectedCircle!);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(

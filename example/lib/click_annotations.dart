@@ -49,7 +49,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     super.dispose();
   }
 
-  _showSnackBar(String type, String id) {
+  void _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
         content: Text(
           'Tapped $type $id',
@@ -79,62 +79,63 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     _showSnackBar('symbol', symbol.id);
   }
 
-  void _onStyleLoaded() async {
+  Future<void> _onStyleLoaded() async {
     await addImageFromAsset(
         controller!, "custom-marker", "assets/symbols/custom-marker.png");
-    controller!.addCircle(
-      const CircleOptions(
-        geometry: LatLng(-33.881979408447314, 151.171361438502117),
-        circleStrokeColor: "#00FF00",
-        circleStrokeWidth: 2,
-        circleRadius: 16,
+    await Future.wait([
+      controller!.addCircle(
+        const CircleOptions(
+          geometry: LatLng(-33.881979408447314, 151.171361438502117),
+          circleStrokeColor: "#00FF00",
+          circleStrokeWidth: 2,
+          circleRadius: 16,
+        ),
       ),
-    );
-    controller!.addCircle(
-      const CircleOptions(
-        geometry: LatLng(-33.894372606072309, 151.17576679759523),
-        circleStrokeColor: "#00FF00",
-        circleStrokeWidth: 2,
-        circleRadius: 30,
-      ),
-    );
-    controller!.addSymbol(
-      const SymbolOptions(
+      controller!.addCircle(
+        const CircleOptions(
           geometry: LatLng(-33.894372606072309, 151.17576679759523),
-          iconImage: "custom-marker", //"fast-food-15",
-          iconSize: 2),
-    );
-    controller!.addLine(
-      const LineOptions(
-        geometry: [
-          LatLng(-33.874867744475786, 151.170627211986584),
-          LatLng(-33.881979408447314, 151.171361438502117),
-          LatLng(-33.887058805548882, 151.175032571079726),
-          LatLng(-33.894372606072309, 151.17576679759523),
-          LatLng(-33.900060683994681, 151.15765587687909),
-        ],
-        lineColor: "#0000FF",
-        lineWidth: 20,
+          circleStrokeColor: "#00FF00",
+          circleStrokeWidth: 2,
+          circleRadius: 30,
+        ),
       ),
-    );
-
-    controller!.addFill(
-      const FillOptions(
-        geometry: [
-          [
-            LatLng(-33.901517742631846, 151.178099204457737),
-            LatLng(-33.872845324482071, 151.179025547977773),
-            LatLng(-33.868230472039514, 151.147000529140399),
-            LatLng(-33.883172899638311, 151.150838238009328),
-            LatLng(-33.894158309528244, 151.14223647675135),
-            LatLng(-33.904812805307806, 151.155999294764086),
-            LatLng(-33.901517742631846, 151.178099204457737),
+      controller!.addSymbol(
+        const SymbolOptions(
+            geometry: LatLng(-33.894372606072309, 151.17576679759523),
+            iconImage: "custom-marker", //"fast-food-15",
+            iconSize: 2),
+      ),
+      controller!.addLine(
+        const LineOptions(
+          geometry: [
+            LatLng(-33.874867744475786, 151.170627211986584),
+            LatLng(-33.881979408447314, 151.171361438502117),
+            LatLng(-33.887058805548882, 151.175032571079726),
+            LatLng(-33.894372606072309, 151.17576679759523),
+            LatLng(-33.900060683994681, 151.15765587687909),
           ],
-        ],
-        fillColor: "#FF0000",
-        fillOutlineColor: "#000000",
+          lineColor: "#0000FF",
+          lineWidth: 20,
+        ),
       ),
-    );
+      controller!.addFill(
+        const FillOptions(
+          geometry: [
+            [
+              LatLng(-33.901517742631846, 151.178099204457737),
+              LatLng(-33.872845324482071, 151.179025547977773),
+              LatLng(-33.868230472039514, 151.147000529140399),
+              LatLng(-33.883172899638311, 151.150838238009328),
+              LatLng(-33.894158309528244, 151.14223647675135),
+              LatLng(-33.904812805307806, 151.155999294764086),
+              LatLng(-33.901517742631846, 151.178099204457737),
+            ],
+          ],
+          fillColor: "#FF0000",
+          fillOutlineColor: "#000000",
+        ),
+      ),
+    ]);
   }
 
   @override

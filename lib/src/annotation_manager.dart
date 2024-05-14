@@ -55,7 +55,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onFeatureTapped(dynamic id, Point<double> point, LatLng coordinates) {
+  void _onFeatureTapped(dynamic id, Point<double> point, LatLng coordinates) {
     final annotation = _idToAnnotation[id];
     if (annotation != null) {
       onTap!(annotation);
@@ -91,7 +91,7 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Adds a multiple annotations to the map. This much faster than calling add
   /// multiple times
   Future<void> addAll(Iterable<T> annotations) async {
-    for (var a in annotations) {
+    for (final a in annotations) {
       _idToAnnotation[a.id] = a;
     }
     await _setAll();
@@ -105,7 +105,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Removes multiple annotations from the map
   Future<void> removeAll(Iterable<T> annotations) async {
-    for (var a in annotations) {
+    for (final a in annotations) {
       _idToAnnotation.remove(a.id);
     }
     await _setAll();
@@ -135,7 +135,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(dynamic id,
+  void _onDrag(dynamic id,
       {required Point<double> point,
       required LatLng origin,
       required LatLng current,

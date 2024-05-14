@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 import 'page.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 class StyleInfo {
   final String name;
@@ -39,7 +39,7 @@ class FullMapState extends State<FullMap> {
   final watercolorRasterId = "watercolorRaster";
   int selectedStyleId = 0;
 
-  _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
   }
 
@@ -63,13 +63,14 @@ class FullMapState extends State<FullMap> {
     await controller.addSource(
         "earthquakes",
         const GeojsonSourceProperties(
-            data:
-                'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
-            cluster: true,
-            clusterMaxZoom: 14, // Max zoom to cluster points on
-            clusterRadius:
-                50 // Radius of each cluster when clustering points (defaults to 50)
-            ));
+          data:
+              'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
+          cluster: true,
+          // Max zoom to cluster points on
+          clusterMaxZoom: 14,
+          // Radius of each cluster when clustering points (defaults to 50)
+          clusterRadius: 50,
+        ));
     await controller.addLayer(
         "earthquakes",
         "earthquakes-circles",
@@ -307,7 +308,7 @@ class FullMapState extends State<FullMap> {
       ),
   ];
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     final styleInfo = _stylesAndLoaders[selectedStyleId];
     styleInfo.addDetails(controller!);
     controller!

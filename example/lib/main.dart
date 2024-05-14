@@ -85,7 +85,7 @@ class _MapsDemoState extends State<MapsDemo> {
     }
   }
 
-  void _pushPage(BuildContext context, ExamplePage page) async {
+  Future<void> _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb && page.needsLocationPermission) {
       final location = Location();
       final hasPermissions = await location.hasPermission();
@@ -94,7 +94,7 @@ class _MapsDemoState extends State<MapsDemo> {
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
+      await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           appBar: AppBar(title: Text(page.title)),
           body: page,
