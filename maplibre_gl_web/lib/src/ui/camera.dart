@@ -8,7 +8,7 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 
-///  Options common to {@link MapLibreMap#jumpTo}, {@link MapLibreMap#easeTo}, and {@link MapLibreMap#flyTo}, controlling the desired location,
+///  Options common to {@link MapLibreMap#jumpTo}, [MapLibreMap.easeTo], and {@link MapLibreMap#flyTo}, controlling the desired location,
 ///  zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
 ///  camera value for that property will remain unchanged.
 ///
@@ -52,7 +52,7 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 }
 
 ///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
-///  {@link MapLibreMap#easeTo}, controlling the duration and easing function of the animation. All properties
+///  [MapLibreMap.easeTo], controlling the duration and easing function of the animation. All properties
 ///  are optional.
 ///
 ///  @typedef {Object} AnimationOptions
@@ -130,6 +130,7 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
 }
 
 class Camera extends Evented {
+  @override
   final CameraJsImpl jsObject;
 
   ///  Returns the map's geographical centerpoint.
@@ -373,7 +374,7 @@ class Camera extends Evented {
   ///  @param {Object} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
   ///  @param {number | PaddingOptions} `options.padding` The amount of padding in pixels to add to the given bounds.
   ///  @param {boolean} `options.linear=false` If `true`, the map transitions using
-  ///      {@link MapLibreMap#easeTo}. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
+  ///      [MapLibreMap.easeTo]. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
   ///      those functions and {@link AnimationOptions} for information about options available.
   ///  @param {Function} `options.easing` An easing function for the animated transition. See {@link AnimationOptions}.
   ///  @param {PointLike} `options.offset=[0, 0]` The center of the given bounds relative to the map's center, measured in pixels.
@@ -404,7 +405,7 @@ class Camera extends Evented {
   ///  @param options
   ///  @param {number | PaddingOptions} `options.padding` The amount of padding in pixels to add to the given bounds.
   ///  @param {boolean} `options.linear=false` If `true`, the map transitions using
-  ///      {@link MapLibreMap#easeTo}. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
+  ///      [MapLibreMap.easeTo]. If `false`, the map transitions using {@link MapLibreMap#flyTo}. See
   ///      those functions and {@link AnimationOptions} for information about options available.
   ///  @param {Function} `options.easing` An easing function for the animated transition. See {@link AnimationOptions}.
   ///  @param {PointLike} `options.offset=[0, 0]` The center of the given bounds relative to the map's center, measured in pixels.
@@ -485,7 +486,7 @@ class Camera extends Evented {
   ///      and the following additional options.
   ///  @param {number} [options.curve=1.42] The zooming "curve" that will occur along the
   ///      flight path. A high value maximizes zooming for an exaggerated animation, while a low
-  ///      value minimizes zooming for an effect closer to {@link MapLibreMap#easeTo}. 1.42 is the average
+  ///      value minimizes zooming for an effect closer to [MapLibreMap.easeTo]. 1.42 is the average
   ///      value selected by participants in the user study discussed in
   ///      [van Wijk (2003)](https://www.win.tue.nl/~vanwijk/zoompan.pdf). A value of
   ///      `Math.pow(6, 0.25)` would be equivalent to the root mean squared average velocity. A

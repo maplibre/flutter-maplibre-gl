@@ -1,4 +1,4 @@
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 /// Description of region to be downloaded. Identifier will be generated when
 /// the download is initiated.
@@ -22,7 +22,7 @@ class OfflineRegionDefinition {
       "$runtimeType, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom";
 
   Map<String, dynamic> toMap() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['bounds'] = bounds.toList();
     data['mapStyleUrl'] = mapStyleUrl;
     data['minZoom'] = minZoom;
