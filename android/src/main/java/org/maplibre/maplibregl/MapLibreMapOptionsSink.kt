@@ -1,12 +1,12 @@
 // Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-package com.mapbox.mapboxgl
+package org.maplibre.maplibregl
 
-import com.mapbox.mapboxsdk.geometry.LatLngBounds
+import org.maplibre.android.geometry.LatLngBounds
 
-/** Receiver of MapboxMap configuration options.  */
-internal interface MapboxMapOptionsSink {
+/** Receiver of MapLibreMap configuration options.  */
+internal interface MapLibreMapOptionsSink {
     // todo: dddd replace with CameraPosition.Builder target
     fun setCameraTargetBounds(bounds: LatLngBounds)
 
