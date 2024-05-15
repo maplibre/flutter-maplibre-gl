@@ -137,7 +137,8 @@ Future<OfflineRegion> downloadOfflineRegion(
           status = Success();
           break;
       }
-      onEvent(status ?? (throw Exception('Invalid event status ${jsonData['status']}')));
+      onEvent(status ??
+          (throw Exception('Invalid event status ${jsonData['status']}')));
     });
   }
 

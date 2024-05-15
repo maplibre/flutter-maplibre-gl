@@ -283,8 +283,7 @@ class MapUiBodyState extends State<MapUiBody> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              "SW: ${result.southwest} NE: ${result.northeast}"),
+          content: Text("SW: ${result.southwest} NE: ${result.northeast}"),
         ));
       },
     );
@@ -382,7 +381,8 @@ class MapUiBodyState extends State<MapUiBody> {
       onMapLongClick: (point, latLng) async {
         debugPrint(
             "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        final Point convertedPoint = await mapController!.toScreenLocation(latLng);
+        final Point convertedPoint =
+            await mapController!.toScreenLocation(latLng);
         final LatLng convertedLatLng = await mapController!.toLatLng(point);
         debugPrint(
             "Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}");
