@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Mapbox
+import MapLibre
 
 extension MGLMapView {
     func setMapLanguage(_ language: String) {

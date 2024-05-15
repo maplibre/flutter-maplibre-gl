@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Mapbox
+import MapLibre
 
 class OfflineRegion {
     let id: Int

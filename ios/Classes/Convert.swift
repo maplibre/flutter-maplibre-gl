@@ -1,4 +1,4 @@
-import Mapbox
+import MapLibre
 
 class Convert {
     class func interpretMapboxMapOptions(options: Any?, delegate: MapboxMapOptionsSink) {

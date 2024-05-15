@@ -1,5 +1,5 @@
 import Flutter
-import Mapbox
+import MapLibre
 
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink,
     UIGestureRecognizerDelegate

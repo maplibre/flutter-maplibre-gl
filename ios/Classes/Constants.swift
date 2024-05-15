@@ -1,4 +1,4 @@
-import Mapbox
+import MapLibre
 
 /*
  * The mapping is based on the values defined here:

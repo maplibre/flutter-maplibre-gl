@@ -1,4 +1,4 @@
-import Mapbox
+import MapLibre
 
 extension MGLMapCamera {
     func toDict(mapView: MGLMapView) -> [String: Any] {

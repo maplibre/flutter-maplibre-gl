@@ -1,5 +1,5 @@
 
-import Mapbox
+import MapLibre
 
 protocol MapboxMapOptionsSink {
     func setCameraTargetBounds(bounds: MGLCoordinateBounds?)

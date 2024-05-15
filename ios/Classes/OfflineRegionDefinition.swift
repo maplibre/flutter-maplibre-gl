@@ -1,5 +1,5 @@
 import Foundation
-import Mapbox
+import MapLibre
 
 class OfflineRegionDefinition {
     let bounds: [[Double]]
