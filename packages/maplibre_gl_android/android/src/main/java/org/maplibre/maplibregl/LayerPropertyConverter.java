@@ -7,12 +7,12 @@ import static org.maplibre.maplibregl.Convert.toMap;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.PropertyValue;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 class LayerPropertyConverter {
   static PropertyValue[] interpretSymbolLayerProperties(Object o) {

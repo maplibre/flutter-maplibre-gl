@@ -7,10 +7,10 @@ package org.maplibre.maplibregl;
 import android.content.Context;
 import android.view.Gravity;
 import androidx.annotation.NonNull;
-import io.flutter.plugin.common.BinaryMessenger;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
+import io.flutter.plugin.common.BinaryMessenger;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
@@ -55,7 +55,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
- public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
+  public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
     this.bounds = bounds;
   }
 

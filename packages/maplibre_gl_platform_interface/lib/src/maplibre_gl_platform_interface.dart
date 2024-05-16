@@ -79,27 +79,21 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
   Future<LatLngBounds> getVisibleRegion();
 
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]);
-
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates);
-
   Future<void> updateImageSource(
       String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates);
 
   Future<void> addLayer(String imageLayerId, String imageSourceId,
       double? minzoom, double? maxzoom);
-
   Future<void> addLayerBelow(String imageLayerId, String imageSourceId,
       String belowLayerId, double? minzoom, double? maxzoom);
-
   Future<void> removeLayer(String imageLayerId);
 
   Future<List> getLayerIds();
-
   Future<List> getSourceIds();
 
   Future<void> setFilter(String layerId, dynamic filter);
-
   Future<dynamic> getFilter(String layerId);
 
   Future<Point> toScreenLocation(LatLng latLng);
@@ -112,7 +106,6 @@ abstract class MapLibreGlPlatform extends PlatformInterface {
 
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId});
-
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson);
 
   Future<void> setCameraBounds({

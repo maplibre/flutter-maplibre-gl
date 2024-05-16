@@ -1,10 +1,10 @@
 package org.maplibre.maplibregl;
 
+import com.mapbox.mapboxsdk.module.http.HttpRequestUtil;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.Map;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import com.mapbox.mapboxsdk.module.http.HttpRequestUtil;
 
 abstract class MapLibreHttpRequestUtil {
 

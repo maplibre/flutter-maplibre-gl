@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.mapbox.mapboxsdk.net.ConnectivityReceiver;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import com.mapbox.mapboxsdk.net.ConnectivityReceiver;
 
 class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   private static final String TAG = GlobalMethodHandler.class.getSimpleName();
