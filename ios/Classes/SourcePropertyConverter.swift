@@ -7,7 +7,7 @@ class SourcePropertyConverter {
 
         if let bounds = properties["bounds"] as? [Double] {
             options[.coordinateBounds] =
-                NSValue(mglCoordinateBounds: boundsFromArray(coordinates: bounds))
+                NSValue(mlnCoordinateBounds: boundsFromArray(coordinates: bounds))
         }
         if let minzoom = properties["minzoom"] as? Double {
             options[.minimumZoomLevel] = minzoom
