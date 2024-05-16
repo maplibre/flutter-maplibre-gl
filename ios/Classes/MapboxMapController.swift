@@ -85,9 +85,6 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
                     direction: camera.heading,
                     animated: false
                 )
-                if let bounds = cameraTargetBounds {
-                    mapView.setLatLngBounds(bounds)
-                }
                 initialTilt = camera.pitch
             }
             // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
