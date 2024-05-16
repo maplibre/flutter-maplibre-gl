@@ -16,7 +16,6 @@ dependencies:
       url: https://github.com/XanderD99/flutter-maplibre-gl
       path: packages/maplibre_gl_platform_interface
       ref: refactor-maplibre-gl-lib
-
   maplibre_gl_ios:
     git:
       url: https://github.com/XanderD99/flutter-maplibre-gl

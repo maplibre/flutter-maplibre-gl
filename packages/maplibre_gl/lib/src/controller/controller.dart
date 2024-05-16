@@ -277,25 +277,6 @@ class MaplibreMapController {
     }
   }
 
-  /// Triggers a resize event for the map on web (ignored on Android or iOS).
-  ///
-  /// Checks first if a resize is required or if it looks like it is already correctly resized.
-  /// If it looks good, the resize call will be skipped.
-  ///
-  /// To force resize map (without any checks) have a look at forceResizeWebMap()
-  void resizeWebMap() {
-    if (_maplibreGlPlatform is MapLibreGlWeb) {
-      _maplibreGlPlatform.resizeWebMap();
-    }
-  }
-
-  /// Triggers a hard map resize event on web and does not check if it is required or not.
-  void forceResizeWebMap() {
-    if (_maplibreGlPlatform is MapLibreGlWeb) {
-      _maplibreGlPlatform.forceResizeWebMap();
-    }
-  }
-
   /// Starts an animated change of the map camera position.
   ///
   /// [duration] is the amount of time, that the transition animation should take.
