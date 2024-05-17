@@ -1,4 +1,4 @@
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 abstract class Annotation {
   String get id;

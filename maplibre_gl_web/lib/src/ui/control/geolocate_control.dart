@@ -86,6 +86,7 @@ class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
 /// }));
 /// @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
 class GeolocateControl extends Evented {
+  @override
   final GeolocateControlJsImpl jsObject;
   GeolocateControlOptions get options =>
       GeolocateControlOptions.fromJsObject(jsObject.options);

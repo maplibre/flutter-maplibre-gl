@@ -1,4 +1,4 @@
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 class MethodChannelMaplibreGl extends MapLibreGlPlatform {
   late MethodChannel _channel;
@@ -283,7 +283,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -304,7 +304,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -322,7 +322,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       );
       return reply['features'].map((feature) => jsonDecode(feature)).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -332,7 +332,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       await _channel.invokeMethod('map#invalidateAmbientCache');
       return null;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -350,7 +350,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       }
       return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -366,7 +366,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         northeast: LatLng(northeast[0], northeast[1]),
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -381,7 +381,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'sdf': sdf
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -397,7 +397,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'coordinates': coordinates.toList()
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -413,7 +413,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'coordinates': coordinates?.toList()
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -427,7 +427,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       });
       return Point(screenPosMap['x'], screenPosMap['y']);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -448,7 +448,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
       return points;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -460,7 +460,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         <String, Object>{'sourceId': sourceId},
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -475,7 +475,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -492,17 +492,17 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<void> removeLayer(String layerId) async {
+  Future<void> removeLayer(String imageLayerId) async {
     try {
       return await _channel.invokeMethod(
-          'style#removeLayer', <String, Object>{'layerId': layerId});
+          'style#removeLayer', <String, Object>{'layerId': imageLayerId});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -512,7 +512,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       return await _channel.invokeMethod('style#setFilter',
           <String, Object>{'layerId': layerId, 'filter': jsonEncode(filter)});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -526,7 +526,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       final filter = reply["filter"];
       return filter != null ? jsonDecode(filter) : null;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -540,7 +540,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       });
       return LatLng(latLngMap['latitude'], latLngMap['longitude']);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -553,7 +553,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       });
       return latLngMap['metersperpixel'];
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -575,6 +575,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     });
   }
 
+  @override
   Future setCameraBounds({
     required double west,
     required double north,
@@ -591,7 +592,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         'padding': padding,
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -788,6 +789,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     });
   }
 
+  @override
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature) async {
     await _channel.invokeMethod('source#setFeature', <String, dynamic>{
@@ -817,7 +819,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
           await _channel.invokeMethod('style#getLayerIds');
       return reply['layers'].map((it) => it.toString()).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -828,7 +830,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
           await _channel.invokeMethod('style#getSourceIds');
       return reply['sources'].map((it) => it.toString()).toList();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 }

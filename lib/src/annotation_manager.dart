@@ -1,4 +1,4 @@
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 abstract class AnnotationManager<T extends Annotation> {
   final MaplibreMapController controller;
@@ -186,11 +186,12 @@ class LineManager extends AnnotationManager<Line> {
     lineOffset: [Expressions.get, 'lineOffset'],
     lineBlur: [Expressions.get, 'lineBlur'],
   );
+
   @override
   List<LayerProperties> get allLayerProperties => [
         _baseProperties,
-        _baseProperties.copyWith(
-            LineLayerProperties(linePattern: [Expressions.get, 'linePattern'])),
+        _baseProperties.copyWith(const LineLayerProperties(
+            linePattern: [Expressions.get, 'linePattern'])),
       ];
 }
 
@@ -205,6 +206,7 @@ class FillManager extends AnnotationManager<Fill> {
           enableInteraction: enableInteraction,
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
+
   @override
   List<LayerProperties> get allLayerProperties => const [
         FillLayerProperties(
@@ -231,6 +233,7 @@ class CircleManager extends AnnotationManager<Circle> {
           enableInteraction: enableInteraction,
           onTap: onTap,
         );
+
   @override
   List<LayerProperties> get allLayerProperties => const [
         CircleLayerProperties(

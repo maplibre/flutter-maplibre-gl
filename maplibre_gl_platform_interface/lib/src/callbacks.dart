@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 /// Callback function taking a single argument.
-typedef void ArgumentCallback<T>(T argument);
+typedef ArgumentCallback<T> = void Function(T argument);
 
 /// Mutable collection of [ArgumentCallback] instances, itself an [ArgumentCallback].
 ///
