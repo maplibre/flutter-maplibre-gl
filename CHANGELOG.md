@@ -1,6 +1,6 @@
 ## 0.19.0
 
-* Bump min Dart SDK to 3.0.0
+* Bump min Dart SDK to 3.0.0 (this was already implicitly required by transitive dependencies)
 * Publish all packages to pub.dev
 * Add support for Gradle/AGP namespace configuration
 * Bump Android `compileSdkVersion` to 34
