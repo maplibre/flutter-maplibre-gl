@@ -2,21 +2,14 @@ name: Flutter CI
 
 on: [push, pull_request, workflow_dispatch]
 
-env:
-  FLUTTER_CHANNEL: 'stable'
-  FLUTTER_VERSION: '3.10.5'
-
 jobs:
   format:
     name: "Check formatting"
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - name: Lint analysis
         run: dart format --set-exit-if-changed .
@@ -24,13 +17,10 @@ jobs:
   lint:
     name: "Static code analysis"
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - run: flutter pub get
       - run: |
@@ -46,23 +36,30 @@ jobs:
     defaults:
       run:
         working-directory: example
-
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [ '3.10.5', '' ]
     steps:
       - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ matrix.sdk }}
+          cache: true
       - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
           cache: 'gradle'
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
       - run: flutter pub get
       - name: Build example APK
         run: flutter build apk
-          # We might want to add a flutter test step in the future, when there actually are tests for this plugin
+      - name: Upload apk as artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ matrix.sdk == '' }}
+        with:
+          name: maplibre-flutter-demo.apk
+          path: example/build/app/outputs/flutter-apk/app-release.apk
 
   build-iOS:
     name: Build iOS package
@@ -70,13 +67,15 @@ jobs:
     defaults:
       run:
         working-directory: example
-
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [ '3.10.5', '' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ matrix.sdk }}
           cache: true
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
@@ -85,9 +84,10 @@ jobs:
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
+        if: ${{ matrix.sdk == '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: Runner.app
+          name: maplibre-flutter-demo.app
           path: example/build/ios/iphonesimulator
 
   build-web:
@@ -96,13 +96,15 @@ jobs:
     defaults:
       run:
         working-directory: example
-
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [ '3.10.5', '' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ matrix.sdk }}
           cache: true
       - run: flutter pub get
       - name: Build web
