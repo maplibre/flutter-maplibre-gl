@@ -8,7 +8,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2.13.0
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
