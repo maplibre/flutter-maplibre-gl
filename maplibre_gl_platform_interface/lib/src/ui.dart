@@ -67,9 +67,9 @@ class CameraTargetBounds {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is CameraTargetBounds &&
-              runtimeType == other.runtimeType &&
-              bounds == other.bounds;
+      other is CameraTargetBounds &&
+          runtimeType == other.runtimeType &&
+          bounds == other.bounds;
 
   @override
   int get hashCode => bounds.hashCode;
@@ -103,10 +103,10 @@ class MinMaxZoomPreference {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is MinMaxZoomPreference &&
-              runtimeType == other.runtimeType &&
-              minZoom == other.minZoom &&
-              maxZoom == other.maxZoom;
+      other is MinMaxZoomPreference &&
+          runtimeType == other.runtimeType &&
+          minZoom == other.minZoom &&
+          maxZoom == other.maxZoom;
 
   @override
   int get hashCode => Object.hash(minZoom, maxZoom);

@@ -71,12 +71,12 @@ class CameraPosition {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is CameraPosition &&
-              runtimeType == other.runtimeType &&
-              bearing == other.bearing &&
-              target == other.target &&
-              tilt == other.tilt &&
-              zoom == other.zoom;
+      other is CameraPosition &&
+          runtimeType == other.runtimeType &&
+          bearing == other.bearing &&
+          target == other.target &&
+          tilt == other.tilt &&
+          zoom == other.zoom;
 
   @override
   int get hashCode => Object.hash(bearing, target, tilt, zoom);

@@ -49,7 +49,9 @@ class LatLng {
 
   @override
   bool operator ==(Object other) {
-    return other is LatLng && other.latitude == latitude && other.longitude == longitude;
+    return other is LatLng &&
+        other.latitude == latitude &&
+        other.longitude == longitude;
   }
 
   @override

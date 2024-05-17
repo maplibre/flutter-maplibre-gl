@@ -35,8 +35,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, hashCode);
-    return HtmlElementView(
-        viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
+    return HtmlElementView(viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
   }
 
   @override

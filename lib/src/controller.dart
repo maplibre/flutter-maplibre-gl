@@ -143,11 +143,13 @@ class MaplibreMapController extends ChangeNotifier {
             break;
           case AnnotationType.circle:
             circleManager = CircleManager(this,
-                onTap: onCircleTapped.call, enableInteraction: enableInteraction);
+                onTap: onCircleTapped.call,
+                enableInteraction: enableInteraction);
             break;
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped.call, enableInteraction: enableInteraction);
+                onTap: onSymbolTapped.call,
+                enableInteraction: enableInteraction);
             break;
           default:
         }
