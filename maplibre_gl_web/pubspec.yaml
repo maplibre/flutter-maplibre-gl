@@ -11,7 +11,7 @@ flutter:
         fileName: maplibre_gl_web.dart
 
 dependencies:
-  js: ^0.6.7
+  js: ">=0.6.7 <0.8.0"
   flutter:
     sdk: flutter
   flutter_web_plugins:
