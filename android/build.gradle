@@ -23,8 +23,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.mapbox.mapboxgl'
+    }
 
-    compileSdkVersion 31
+    compileSdkVersion 34
     ndkVersion "20.1.5948944"
 
     defaultConfig {
@@ -39,15 +42,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
     dependencies {
         implementation 'org.maplibre.gl:android-sdk:10.2.0'
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:2.0.0'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:2.0.0'
         implementation 'com.squareup.okhttp3:okhttp:4.10.0'
-    }
-    compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
     }
 }
 

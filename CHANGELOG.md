@@ -1,6 +1,8 @@
-## 0.18.1
+## UNRELEASED
 
-- Loosen the dependency constraint of [js](https://pub.dev/packages/js) to allow `0.6.x` and `0.7.x`.
+* Add support for Gradle/AGP namespace configuration
+* Bump Android `compileSdkVersion` to 34
+* Loosen the dependency constraint of [js](https://pub.dev/packages/js) to allow `0.6.x` and `0.7.x`.
 
 ## 0.18.0
 ### Breaking Change:
