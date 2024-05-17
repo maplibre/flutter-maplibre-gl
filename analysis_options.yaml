@@ -1,3 +1,5 @@
+include: package:flutter_lints/flutter.yaml
+
 analyzer:
   errors:
     # remove once git dependencies have been removed
