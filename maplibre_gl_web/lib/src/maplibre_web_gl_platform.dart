@@ -1,9 +1,5 @@
 part of maplibre_gl_web;
 
-//TODO Url taken from the Maptiler tutorial; use official and stable release once available
-final _maplibreGlCssUrl =
-    'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
-
 class MaplibreMapController extends MapLibreGlPlatform
     implements MapLibreMapOptionsSink {
   late html.DivElement _mapElement;
@@ -61,7 +57,6 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> initPlatform(int id) async {
-    await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
@@ -174,15 +169,6 @@ class MaplibreMapController extends MapLibreGlPlatform
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
     }
-  }
-
-  Future<void> _addStylesheetToShadowRoot(html.HtmlElement e) async {
-    final link = html.LinkElement()
-      ..href = _maplibreGlCssUrl
-      ..rel = 'stylesheet';
-    e.append(link);
-
-    await link.onLoad.first;
   }
 
   @override
