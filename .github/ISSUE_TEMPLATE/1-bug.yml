@@ -1,0 +1,63 @@
+name: Bug Report
+description: Report a bug
+title: "[BUG] <title>"
+labels: [ "bug" ]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platforms
+      description: On what platforms does the bug happen?
+      options: [ "all", "android", "iOS", "web" ]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version of flutter maplibre_gl
+      description: What version of maplibre_gl are you using? (e.g. `0.18` or `master branch`)
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Bug Description
+      description: Please give a quick description about the bug want to report.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Please list the steps required to reproduce the problem one by one.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Results
+      description: Please describe what is expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Results
+      description: Please describe what is actually happening. You can add logs, screenshots or videos.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Code Sample
+      description: |
+        Please paste the code of how you use the package below between the lines with the backticks.
+        
+        Note: Please do not upload screenshots of code. Instead, use code blocks
+        or share a link to a GitHub Gist or Repository.
+      value: |
+        ```dart
+        // Paste your code here
+        ```
+    validations:
+      required: true
