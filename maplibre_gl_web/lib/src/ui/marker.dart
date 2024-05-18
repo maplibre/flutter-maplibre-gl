@@ -155,6 +155,5 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
       ));
 
   /// Creates a new MarkerOptions from a [jsObject].
-  MarkerOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  MarkerOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }

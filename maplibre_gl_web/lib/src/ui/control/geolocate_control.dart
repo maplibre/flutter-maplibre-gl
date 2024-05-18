@@ -29,8 +29,7 @@ class GeolocateControlOptions
       ));
 
   /// Creates a new MapOptions from a [jsObject].
-  GeolocateControlOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  GeolocateControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
@@ -50,8 +49,7 @@ class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
       ));
 
   /// Creates a new MapOptions from a [jsObject].
-  PositionOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  PositionOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 /// A `GeolocateControl` control provides a button that uses the browser's geolocation

@@ -46,6 +46,5 @@ class ScrollZoomHandler extends JsObjectWrapper<ScrollZoomHandlerJsImpl> {
   onWheel(WheelEvent e) => jsObject.onWheel(e);
 
   /// Creates a new ScrollZoomHandler from a [jsObject].
-  ScrollZoomHandler.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  ScrollZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

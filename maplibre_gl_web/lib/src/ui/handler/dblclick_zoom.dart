@@ -32,6 +32,5 @@ class DoubleClickZoomHandler
   onDblClick(MapMouseEvent e) => jsObject.onDblClick(e.jsObject);
 
   /// Creates a new DoubleClickZoomHandler from a [jsObject].
-  DoubleClickZoomHandler.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  DoubleClickZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

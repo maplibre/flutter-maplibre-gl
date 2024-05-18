@@ -20,8 +20,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   }
 
   /// Creates a new FeatureCollection from a [jsObject].
-  FeatureCollection.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  FeatureCollection.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Feature extends JsObjectWrapper<FeatureJsImpl> {

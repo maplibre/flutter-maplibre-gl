@@ -30,6 +30,5 @@ class BoxZoomHandler extends JsObjectWrapper<BoxZoomHandlerJsImpl> {
   onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 
   /// Creates a new BoxZoomHandler from a [jsObject].
-  BoxZoomHandler.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  BoxZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

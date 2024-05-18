@@ -47,8 +47,7 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
       ));
 
   /// Creates a new CameraOptions from a [jsObject].
-  CameraOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  CameraOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
@@ -90,8 +89,7 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
       ));
 
   /// Creates a new AnimationOptions from a [jsObject].
-  AnimationOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  AnimationOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Options for setting padding on a call to {@link MapLibreMap#fitBounds}. All properties of this object must be
@@ -125,8 +123,7 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
       ));
 
   /// Creates a new PaddingOptions from a [jsObject].
-  PaddingOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  PaddingOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Camera extends Evented {

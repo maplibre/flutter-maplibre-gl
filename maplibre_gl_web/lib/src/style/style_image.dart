@@ -12,8 +12,7 @@ class StyleImage extends JsObjectWrapper<StyleImageJsImpl> {
       StyleImageInterface.fromJsObject(jsObject.userImage);
 
   /// Creates a new EvaluationParameters from a [jsObject].
-  StyleImage.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  StyleImage.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class StyleImageInterface extends JsObjectWrapper<StyleImageInterfaceJsImpl> {
@@ -26,6 +25,5 @@ class StyleImageInterface extends JsObjectWrapper<StyleImageInterfaceJsImpl> {
   Function get onRemove => jsObject.onRemove;
 
   /// Creates a new EvaluationParameters from a [jsObject].
-  StyleImageInterface.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  StyleImageInterface.fromJsObject(super.jsObject) : super.fromJsObject();
 }

@@ -23,8 +23,7 @@ class NavigationControlOptions
       ));
 
   /// Creates a new NavigationControlOptions from a [jsObject].
-  NavigationControlOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  NavigationControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 /// A `NavigationControl` control contains zoom buttons and a compass.
@@ -51,6 +50,5 @@ class NavigationControl extends JsObjectWrapper<NavigationControlJsImpl> {
   onRemove() => jsObject.onRemove();
 
   /// Creates a new MapOptions from a [jsObject].
-  NavigationControl.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  NavigationControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

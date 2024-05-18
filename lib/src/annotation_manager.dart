@@ -168,8 +168,7 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(super.controller,
-      {super.onTap, super.enableInteraction = true})
+  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
       : super(
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );

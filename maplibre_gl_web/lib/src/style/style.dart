@@ -9,8 +9,7 @@ class StyleSetterOptions extends JsObjectWrapper<StyleSetterOptionsJsImpl> {
   bool get validate => jsObject.validate;
 
   /// Creates a new StyleSetterOptions from a [jsObject].
-  StyleSetterOptions.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  StyleSetterOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Style extends JsObjectWrapper<StyleJsImpl> {
@@ -173,6 +172,5 @@ class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
       StyleFunction.fromJsObject(StyleFunctionJsImpl(base: base, stops: stops));
 
   /// Creates a new StyleFunction from a [jsObject].
-  StyleFunction.fromJsObject(super.jsObject)
-      : super.fromJsObject();
+  StyleFunction.fromJsObject(super.jsObject) : super.fromJsObject();
 }
