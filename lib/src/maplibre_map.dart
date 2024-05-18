@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 enum AnnotationType { fill, line, circle, symbol }
 
-typedef void MapCreatedCallback(MaplibreMapController controller);
+typedef MapCreatedCallback = void Function(MaplibreMapController controller);
 
 /// Shows a MapLibre map.
 /// Also refer to the documentation of [maplibre_gl] and [MaplibreMapController].

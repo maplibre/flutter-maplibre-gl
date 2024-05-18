@@ -373,8 +373,10 @@ class MapUiBodyState extends State<MapUiBody> {
         debugPrint('# features: ${features.length}');
         _clearFill();
         if (features.isEmpty && _featureQueryFilter != null) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('QueryRenderedFeatures: No features found!')));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('QueryRenderedFeatures: No features found!')));
+          }
         } else if (features.isNotEmpty) {
           _drawFill(features);
         }

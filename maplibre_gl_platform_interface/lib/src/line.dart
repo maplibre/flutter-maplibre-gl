@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 class Line implements Annotation {
   Line(this._id, this.options, [this._data]);
@@ -14,6 +14,7 @@ class Line implements Annotation {
   /// The identifier is an arbitrary unique string.
   final String _id;
 
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -27,6 +28,7 @@ class Line implements Annotation {
   /// touch events. Add listeners to the owning map controller to track those.
   LineOptions options;
 
+  @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
     geojson["id"] = id;
@@ -38,7 +40,7 @@ class Line implements Annotation {
   @override
   void translate(LatLng delta) {
     options = options.copyWith(LineOptions(
-        geometry: this.options.geometry?.map((e) => e + delta).toList()));
+        geometry: options.geometry?.map((e) => e + delta).toList()));
   }
 }
 

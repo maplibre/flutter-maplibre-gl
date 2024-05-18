@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 /// A pair of latitude and longitude coordinates, stored as degrees.
 class LatLng {
@@ -48,8 +48,10 @@ class LatLng {
   String toString() => '$runtimeType($latitude, $longitude)';
 
   @override
-  bool operator ==(Object o) {
-    return o is LatLng && o.latitude == latitude && o.longitude == longitude;
+  bool operator ==(Object other) {
+    return other is LatLng &&
+        other.latitude == latitude &&
+        other.longitude == longitude;
   }
 
   @override
@@ -99,10 +101,10 @@ class LatLngBounds {
   }
 
   @override
-  bool operator ==(Object o) {
-    return o is LatLngBounds &&
-        o.southwest == southwest &&
-        o.northeast == northeast;
+  bool operator ==(Object other) {
+    return other is LatLngBounds &&
+        other.southwest == southwest &&
+        other.northeast == northeast;
   }
 
   @override
@@ -155,12 +157,12 @@ class LatLngQuad {
   }
 
   @override
-  bool operator ==(Object o) {
-    return o is LatLngQuad &&
-        o.topLeft == topLeft &&
-        o.topRight == topRight &&
-        o.bottomRight == bottomRight &&
-        o.bottomLeft == bottomLeft;
+  bool operator ==(Object other) {
+    return other is LatLngQuad &&
+        other.topLeft == topLeft &&
+        other.topRight == topRight &&
+        other.bottomRight == bottomRight &&
+        other.bottomLeft == bottomLeft;
   }
 
   @override

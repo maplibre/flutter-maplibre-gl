@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 class MaplibreStyles {
   /// A very simple MapLibre demo style
@@ -46,9 +46,9 @@ enum AttributionButtonPosition {
 }
 
 /// Bounds for the map camera target.
-// Used with [_MaplibreMapOptions] to wrap a [LatLngBounds] value. This allows
-// distinguishing between specifying an unbounded target (null `LatLngBounds`)
-// from not specifying anything (null `CameraTargetBounds`).
+/// Used with [_MaplibreMapOptions] to wrap a [LatLngBounds] value. This allows
+/// distinguishing between specifying an unbounded target (null `LatLngBounds`)
+/// from not specifying anything (null `CameraTargetBounds`).
 class CameraTargetBounds {
   /// Creates a camera target bounds with the specified bounding box, or null
   /// to indicate that the camera target is not bounded.
@@ -65,12 +65,11 @@ class CameraTargetBounds {
   dynamic toJson() => <dynamic>[bounds?.toList()];
 
   @override
-  bool operator ==(dynamic other) {
-    if (identical(this, other)) return true;
-    if (runtimeType != other.runtimeType) return false;
-    final CameraTargetBounds typedOther = other;
-    return bounds == typedOther.bounds;
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CameraTargetBounds &&
+          runtimeType == other.runtimeType &&
+          bounds == other.bounds;
 
   @override
   int get hashCode => bounds.hashCode;
@@ -82,9 +81,9 @@ class CameraTargetBounds {
 }
 
 /// Preferred bounds for map camera zoom level.
-// Used with [_MaplibreMapOptions] to wrap min and max zoom. This allows
-// distinguishing between specifying unbounded zooming (null `minZoom` and
-// `maxZoom`) from not specifying anything (null `MinMaxZoomPreference`).
+/// Used with [_MaplibreMapOptions] to wrap min and max zoom. This allows
+/// distinguishing between specifying unbounded zooming (null [minZoom] and
+/// [maxZoom]) from not specifying anything (null [MinMaxZoomPreference]).
 class MinMaxZoomPreference {
   const MinMaxZoomPreference(this.minZoom, this.maxZoom)
       : assert(minZoom == null || maxZoom == null || minZoom <= maxZoom);
@@ -102,12 +101,12 @@ class MinMaxZoomPreference {
   dynamic toJson() => <dynamic>[minZoom, maxZoom];
 
   @override
-  bool operator ==(dynamic other) {
-    if (identical(this, other)) return true;
-    if (runtimeType != other.runtimeType) return false;
-    final MinMaxZoomPreference typedOther = other;
-    return minZoom == typedOther.minZoom && maxZoom == typedOther.maxZoom;
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MinMaxZoomPreference &&
+          runtimeType == other.runtimeType &&
+          minZoom == other.minZoom &&
+          maxZoom == other.maxZoom;
 
   @override
   int get hashCode => Object.hash(minZoom, maxZoom);
