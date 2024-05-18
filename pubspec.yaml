@@ -14,6 +14,9 @@ dependencies:
   maplibre_gl_platform_interface: ^0.19.0
   maplibre_gl_web: ^0.19.0
 
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
 flutter:
   plugin:
     platforms:

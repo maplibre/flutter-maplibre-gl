@@ -20,7 +20,7 @@ import 'package:flutter/material.dart' hide Element;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:image/image.dart' hide Point;
-import 'package:maplibre_gl_web/src/geo/point.dart' as geoPoint;
+import 'package:maplibre_gl_web/src/geo/point.dart' as geo_point;
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';

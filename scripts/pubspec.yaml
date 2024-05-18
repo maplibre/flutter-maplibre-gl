@@ -10,3 +10,6 @@ environment:
 dependencies:
   mustache_template: ^2.0.0
   recase: ^4.0.0
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
