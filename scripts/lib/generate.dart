@@ -8,7 +8,7 @@ import 'conversions.dart';
 
 main() async {
   var styleJson =
-      jsonDecode(await new File('scripts/input/style.json').readAsString());
+      jsonDecode(await File('scripts/input/style.json').readAsString());
 
   final layerTypes = [
     "symbol",
@@ -52,10 +52,10 @@ main() async {
   };
 
   // required for deduplication
-  renderContext["all_layout_properties"] = [
+  renderContext["all_layout_properties"] = <dynamic>{
     for (final type in renderContext["layerTypes"]!)
-      ...type["layout_properties"].map((p) => p["value"]).toList()
-  ].toSet().map((p) => {"property": p}).toList();
+      ...type["layout_properties"].map((p) => p["value"])
+  }.map((p) => {"property": p}).toList();
 
   const templates = [
     "android/src/main/java/com/mapbox/mapboxgl/LayerPropertyConverter.java",
@@ -66,7 +66,9 @@ main() async {
     "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
-  for (var template in templates) await render(renderContext, template);
+  for (var template in templates) {
+    await render(renderContext, template);
+  }
 }
 
 Future<void> render(
@@ -131,7 +133,7 @@ Map<String, dynamic> buildSourceProperty(
 
   var defaultValue = value["default"];
   if (defaultValue is List) {
-    defaultValue = "const" + defaultValue.toString();
+    defaultValue = "const$defaultValue";
   } else if (defaultValue is String) {
     defaultValue = '"$defaultValue"';
   }
@@ -180,10 +182,10 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
     result.add("");
     result.add("Sdk Support:");
     if (basic != null && basic.isNotEmpty) {
-      result.add("  basic functionality with " + basic.keys.join(", "));
+      result.add("  basic functionality with ${basic.keys.join(", ")}");
     }
     if (dataDriven != null && dataDriven.isNotEmpty) {
-      result.add("  data-driven styling with " + dataDriven.keys.join(", "));
+      result.add("  data-driven styling with ${dataDriven.keys.join(", ")}");
     }
   }
 
@@ -197,7 +199,7 @@ List<String> splitIntoChunks(String input, int lineLength,
 
   String chunk = "";
   for (var word in words) {
-    final nextChunk = chunk.length == 0 ? prefix + word : chunk + " " + word;
+    final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
     if (nextChunk.length > lineLength || chunk.endsWith("\n")) {
       chunks.add(chunk.replaceAll("\n", ""));
       chunk = prefix + word;
@@ -239,7 +241,7 @@ List<Map<String, dynamic>> buildExpressionProperties(
             'value': e.key,
             'doc': e.value["doc"],
             'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
-            'valueAsCamelCase': new ReCase(renamed[e.key] ?? e.key).camelCase
+            'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase
           })
       .toList();
 }

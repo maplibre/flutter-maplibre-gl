@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {
@@ -28,6 +28,7 @@ class Fill implements Annotation {
   ///
   /// The identifier is an arbitrary unique string.
   final String _id;
+  @override
   String get id => _id;
 
   final Map? _data;

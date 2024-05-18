@@ -1,4 +1,4 @@
-part of maplibre_gl_web;
+part of '../maplibre_gl_web.dart';
 
 abstract class MapLibreMapOptionsSink {
   // TODO: dddd replace with CameraPosition.Builder target

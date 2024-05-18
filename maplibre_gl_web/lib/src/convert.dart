@@ -1,4 +1,4 @@
-part of maplibre_gl_web;
+part of '../maplibre_gl_web.dart';
 
 class Convert {
   static void interpretMapLibreMapOptions(
@@ -135,7 +135,7 @@ class Convert {
         final point = mapLibreMap.project(mapLibreMap.getCenter());
         return CameraOptions(
           center:
-              mapLibreMap.unproject(geoPoint.Point(point.x + x, point.y + y)),
+              mapLibreMap.unproject(geo_point.Point(point.x + x, point.y + y)),
           zoom: mapLibreMap.getZoom(),
           pitch: mapLibreMap.getPitch(),
           bearing: mapLibreMap.getBearing(),
@@ -153,7 +153,7 @@ class Convert {
         }
         final point = json[2];
         return CameraOptions(
-          center: mapLibreMap.unproject(geoPoint.Point(point[0], point[1])),
+          center: mapLibreMap.unproject(geo_point.Point(point[0], point[1])),
           zoom: mapLibreMap.getZoom() + zoom,
           pitch: mapLibreMap.getPitch(),
           bearing: mapLibreMap.getBearing(),

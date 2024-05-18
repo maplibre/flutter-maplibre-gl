@@ -1,4 +1,4 @@
-library maplibre.ui.control.Attribution_control;
+library maplibre.ui.control.attribution_control;
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/control/attribution_control_interop.dart';
