@@ -2,32 +2,35 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
-typedef void OnMapClickCallback(Point<double> point, LatLng coordinates);
+typedef OnMapClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
-typedef void OnFeatureInteractionCallback(
+typedef OnFeatureInteractionCallback = void Function(
     dynamic id, Point<double> point, LatLng coordinates);
 
-typedef void OnFeatureDragnCallback(dynamic id,
+typedef OnFeatureDragnCallback = void Function(dynamic id,
     {required Point<double> point,
     required LatLng origin,
     required LatLng current,
     required LatLng delta,
     required DragEventType eventType});
 
-typedef void OnMapLongClickCallback(Point<double> point, LatLng coordinates);
+typedef OnMapLongClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
-typedef void OnStyleLoadedCallback();
+typedef OnStyleLoadedCallback = void Function();
 
-typedef void OnUserLocationUpdated(UserLocation location);
+typedef OnUserLocationUpdated = void Function(UserLocation location);
 
-typedef void OnCameraTrackingDismissedCallback();
-typedef void OnCameraTrackingChangedCallback(MyLocationTrackingMode mode);
+typedef OnCameraTrackingDismissedCallback = void Function();
+typedef OnCameraTrackingChangedCallback = void Function(
+    MyLocationTrackingMode mode);
 
-typedef void OnCameraIdleCallback();
+typedef OnCameraIdleCallback = void Function();
 
-typedef void OnMapIdleCallback();
+typedef OnMapIdleCallback = void Function();
 
 /// Controller for a single [MaplibreMap] instance running on the host platform.
 ///
@@ -132,19 +135,21 @@ class MaplibreMapController extends ChangeNotifier {
         switch (type) {
           case AnnotationType.fill:
             fillManager = FillManager(this,
-                onTap: onFillTapped, enableInteraction: enableInteraction);
+                onTap: onFillTapped.call, enableInteraction: enableInteraction);
             break;
           case AnnotationType.line:
             lineManager = LineManager(this,
-                onTap: onLineTapped, enableInteraction: enableInteraction);
+                onTap: onLineTapped.call, enableInteraction: enableInteraction);
             break;
           case AnnotationType.circle:
             circleManager = CircleManager(this,
-                onTap: onCircleTapped, enableInteraction: enableInteraction);
+                onTap: onCircleTapped.call,
+                enableInteraction: enableInteraction);
             break;
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped, enableInteraction: enableInteraction);
+                onTap: onSymbolTapped.call,
+                enableInteraction: enableInteraction);
             break;
           default:
         }

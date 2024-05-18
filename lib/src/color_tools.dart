@@ -1,4 +1,4 @@
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 extension MapLibreColorConversion on Color {
   String toHexStringRGB() {

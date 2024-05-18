@@ -320,7 +320,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
   ///  either a single point or southwest and northeast points describing a bounding box.
-  ///  Omitting this parameter (i.e. calling {@link MapLibreMap#queryRenderedFeatures} with zero arguments,
+  ///  Omitting this parameter (i.e. calling [MapLibreMap.queryRenderedFeatures] with zero arguments,
   ///  or with only a [options] argument) is equivalent to passing a bounding box encompassing the entire
   ///  map viewport.
   ///  @param {Object} [options]
@@ -409,7 +409,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
   ///
-  ///  In contrast to {@link MapLibreMap#queryRenderedFeatures}, this function returns all features matching the query parameters,
+  ///  In contrast to [MapLibreMap.queryRenderedFeatures], this function returns all features matching the query parameters,
   ///  whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
   ///  vector tiles and GeoJSON source tiles: this function does not check tiles outside the currently
   ///  visible viewport.
@@ -477,7 +477,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} id The ID of the source to add. Must not conflict with existing sources.
   ///  @param {Object} source The source object, conforming to the
   ///  MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
-  ///  {@link CanvasSourceOptions}.
+  ///  [CanvasSourceOptions].
   ///  @fires source.add
   ///  @returns {MapLibreMap} `this`
   ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
@@ -502,7 +502,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   external bool areTilesLoaded();
 
   ///  Adds a/// *custom source type**(#Custom Sources), making it available for use with
-  ///  {@link MapLibreMap#addSource}.
+  ///  [MapLibreMap.addSource].
   ///  @private
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
@@ -808,7 +808,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  [MapLibreMap.queryRenderedFeatures] or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -828,7 +828,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
   ///  cast to an integer.
   ///  @param {Object} target Identifier of where to set state: can be a source, a feature, or a specific key of feature.
-  ///  Feature objects returned from {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  Feature objects returned from [MapLibreMap.queryRenderedFeatures] or event handlers can be used as feature identifiers.
   ///  @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
   ///  @param {string} target.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
@@ -841,7 +841,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  cast to an integer.
   ///
   ///  @param {Object} feature Feature identifier. Feature objects returned from
-  ///  {@link MapLibreMap#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+  ///  [MapLibreMap.queryRenderedFeatures] or event handlers can be used as feature identifiers.
   ///  @param {string | number} feature.id Unique id of the feature.
   ///  @param {string} feature.source The Id of the vector source or GeoJSON source for the feature.
   ///  @param {string} `feature.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is

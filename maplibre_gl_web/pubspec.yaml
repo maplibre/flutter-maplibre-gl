@@ -30,8 +30,7 @@ dependency_overrides:
     path: ../maplibre_gl_platform_interface
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
+  flutter_lints: ^3.0.0
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
