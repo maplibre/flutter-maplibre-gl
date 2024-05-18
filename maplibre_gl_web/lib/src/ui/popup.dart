@@ -215,6 +215,6 @@ class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {
       ));
 
   /// Creates a new PopupOptions from a [jsObject].
-  PopupOptions.fromJsObject(PopupOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  PopupOptions.fromJsObject(super.jsObject)
+      : super.fromJsObject();
 }

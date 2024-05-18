@@ -20,6 +20,6 @@ class EvaluationParameters extends JsObjectWrapper<EvaluationParametersJsImpl> {
   dynamic getCrossfadeParameters() => jsObject.getCrossfadeParameters();
 
   /// Creates a new EvaluationParameters from a [jsObject].
-  EvaluationParameters.fromJsObject(EvaluationParametersJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  EvaluationParameters.fromJsObject(super.jsObject)
+      : super.fromJsObject();
 }

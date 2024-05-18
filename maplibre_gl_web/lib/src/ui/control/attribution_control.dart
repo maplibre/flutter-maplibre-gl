@@ -17,8 +17,8 @@ class AttributionControlOptions
 
   /// Creates a new AttributionControlOptions from a [jsObject].
   AttributionControlOptions.fromJsObject(
-      AttributionControlOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+      super.jsObject)
+      : super.fromJsObject();
 }
 
 /// A `AttributionControl` control contains zoom buttons and a compass.
@@ -44,6 +44,6 @@ class AttributionControl extends JsObjectWrapper<AttributionControlJsImpl> {
   onRemove() => jsObject.onRemove();
 
   /// Creates a new MapOptions from a [jsObject].
-  AttributionControl.fromJsObject(AttributionControlJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  AttributionControl.fromJsObject(super.jsObject)
+      : super.fromJsObject();
 }

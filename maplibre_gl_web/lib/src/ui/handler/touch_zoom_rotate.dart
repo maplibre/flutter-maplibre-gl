@@ -44,6 +44,6 @@ class TouchZoomRotateHandler
   onStart(TouchEvent e) => jsObject.onStart(e);
 
   /// Creates a new TouchZoomRotateHandler from a [jsObject].
-  TouchZoomRotateHandler.fromJsObject(TouchZoomRotateHandlerJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  TouchZoomRotateHandler.fromJsObject(super.jsObject)
+      : super.fromJsObject();
 }
