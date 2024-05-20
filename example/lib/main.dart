@@ -114,7 +114,7 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
       childAspectRatio: 3,
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('MapLibre Examples')),
+      appBar: AppBar(title: const Text('MapLibre Example App')),
       body: CustomScrollView(
         slivers: [
           const SliverToBoxAdapter(child: ListSectionTitle('General')),
