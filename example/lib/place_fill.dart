@@ -12,7 +12,7 @@ import 'page.dart';
 
 class PlaceFillPage extends ExamplePage {
   const PlaceFillPage({super.key})
-      : super(const Icon(Icons.check_circle), 'Place fill');
+      : super(const Icon(Icons.format_shapes_outlined), 'Place fill');
 
   @override
   Widget build(BuildContext context) {

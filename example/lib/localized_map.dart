@@ -7,7 +7,7 @@ import 'page.dart';
 
 class LocalizedMapPage extends ExamplePage {
   const LocalizedMapPage({super.key})
-      : super(const Icon(Icons.map), 'Localized screen map');
+      : super(const Icon(Icons.language), 'Localized screen map');
 
   @override
   Widget build(BuildContext context) {

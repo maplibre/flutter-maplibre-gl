@@ -8,7 +8,7 @@ import 'page.dart';
 
 class LocalStylePage extends ExamplePage {
   const LocalStylePage({super.key})
-      : super(const Icon(Icons.map), 'Local style');
+      : super(const Icon(Icons.language), 'Local style');
 
   @override
   Widget build(BuildContext context) {

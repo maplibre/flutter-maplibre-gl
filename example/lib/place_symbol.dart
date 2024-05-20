@@ -15,7 +15,7 @@ import 'page.dart';
 
 class PlaceSymbolPage extends ExamplePage {
   const PlaceSymbolPage({super.key})
-      : super(const Icon(Icons.place), 'Place symbol');
+      : super(const Icon(Icons.place_outlined), 'Place symbol');
 
   @override
   Widget build(BuildContext context) {

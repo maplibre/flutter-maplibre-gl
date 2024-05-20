@@ -14,6 +14,7 @@ import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
 import 'package:maplibre_gl_example/localized_map.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -35,40 +36,43 @@ import 'place_symbol.dart';
 import 'scrolling_map.dart';
 import 'sources.dart';
 
-final List<ExamplePage> _allPages = <ExamplePage>[
+final List<ExamplePage> _generalPages = <ExamplePage>[
   const MapUiPage(),
   const FullMapPage(),
   const LocalizedMapPage(),
   const AnimateCameraPage(),
   const MoveCameraPage(),
-  const PlaceSymbolPage(),
-  const PlaceSourcePage(),
-  const LinePage(),
   const LocalStylePage(),
-  const LayerPage(),
-  const PlaceCirclePage(),
-  const PlaceFillPage(),
   const ScrollingMapPage(),
   const OfflineRegionsPage(),
-  const AnnotationOrderPage(),
-  const CustomMarkerPage(),
-  const BatchAddPage(),
-  const ClickAnnotationPage(),
-  const Sources(),
   const GivenBoundsPage(),
   const GetMapInfoPage(),
   const NoLocationPermissionPage(),
+];
+
+final List<ExamplePage> _featurePages = <ExamplePage>[
+  const PlaceSymbolPage(),
+  const PlaceSourcePage(),
+  const LinePage(),
+  const LayerPage(),
+  const PlaceCirclePage(),
+  const PlaceFillPage(),
+  const BatchAddPage(),
+  const AnnotationOrderPage(),
+  const CustomMarkerPage(),
+  const ClickAnnotationPage(),
+  const Sources(),
   const AttributionPage(),
 ];
 
-class MapsDemo extends StatefulWidget {
-  const MapsDemo({super.key});
+class MapLibreDemo extends StatefulWidget {
+  const MapLibreDemo({super.key});
 
   @override
-  State<MapsDemo> createState() => _MapsDemoState();
+  State<MapLibreDemo> createState() => _MapLibreDemoState();
 }
 
-class _MapsDemoState extends State<MapsDemo> {
+class _MapLibreDemoState extends State<MapLibreDemo> {
   /// Determine the android version of the phone and turn off HybridComposition
   /// on older sdk versions to improve performance for these
   ///
@@ -105,24 +109,97 @@ class _MapsDemoState extends State<MapsDemo> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Maplibre examples')),
-      body: ListView.builder(
-        itemCount: _allPages.length + 1,
-        itemBuilder: (_, int index) => index == _allPages.length
-            ? const AboutListTile(
-                applicationName: "flutter-maplibre-gl example",
-              )
-            : ListTile(
-                leading: _allPages[index].leading,
-                title: Text(_allPages[index].title),
-                onTap: () => _pushPage(context, _allPages[index]),
+      appBar: AppBar(title: const Text('MapLibre Examples')),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: ListTile(
+              title: Text(
+                'Map Control',
+                style: TextStyle(fontSize: 18, color: theme.primaryColor),
               ),
+            ),
+          ),
+          SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 300,
+              childAspectRatio: 3,
+            ),
+            itemCount: _generalPages.length,
+            itemBuilder: (_, int index) => ListTile(
+              leading: _generalPages[index].leading,
+              title: Text(_generalPages[index].title),
+              onTap: () => _pushPage(context, _generalPages[index]),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: ListTile(
+              title: Text(
+                'Map Features',
+                style: TextStyle(fontSize: 18, color: theme.primaryColor),
+              ),
+            ),
+          ),
+          SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 300,
+              childAspectRatio: 3,
+            ),
+            itemCount: _featurePages.length,
+            itemBuilder: (_, int index) => ListTile(
+              leading: _featurePages[index].leading,
+              title: Text(_featurePages[index].title),
+              onTap: () => _pushPage(context, _featurePages[index]),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: ListTile(
+              title: Text(
+                'About this app',
+                style: TextStyle(fontSize: 18, color: theme.primaryColor),
+              ),
+            ),
+          ),
+          SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 300,
+              childAspectRatio: 3,
+            ),
+            delegate: SliverChildListDelegate([
+              ListTile(
+                title: const Text("Show licenses"),
+                leading: const Icon(Icons.info_outline),
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'MapLibre Example App',
+                ),
+              ),
+              ListTile(
+                title: const Text("View on pub.dev"),
+                leading: const Icon(Icons.flutter_dash),
+                onTap: () => launchUrlString("https://pub.dev/packages/maplibre-gl"),
+              ),
+              ListTile(
+                title: const Text("View source code"),
+                leading: const Icon(Icons.code),
+                onTap: () => launchUrlString("https://github.com/maplibre/flutter-maplibre-gl"),
+              ),
+            ]),
+          ),
+        ],
       ),
     );
   }
 }
 
 void main() {
-  runApp(const MaterialApp(home: MapsDemo()));
+  const mapLibreBlue = Color(0x00295daa);
+  final materialTheme = ThemeData(
+    useMaterial3: true,
+    colorSchemeSeed: mapLibreBlue,
+  );
+
+  runApp(MaterialApp(home: const MapLibreDemo(), theme: materialTheme));
 }

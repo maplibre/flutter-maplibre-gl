@@ -4,8 +4,8 @@
 
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
@@ -16,7 +16,11 @@ final LatLngBounds sydneyBounds = LatLngBounds(
 );
 
 class MapUiPage extends ExamplePage {
-  const MapUiPage({super.key}) : super(const Icon(Icons.map), 'User interface');
+  const MapUiPage({super.key})
+      : super(
+          const Icon(Icons.accessibility_new_outlined),
+          'User interface',
+        );
 
   @override
   Widget build(BuildContext context) {

@@ -9,7 +9,7 @@ import 'page.dart';
 
 class AnimateCameraPage extends ExamplePage {
   const AnimateCameraPage({super.key})
-      : super(const Icon(Icons.map), 'Camera control, animated');
+      : super(const Icon(Icons.animation), 'Camera control, animated');
 
   @override
   Widget build(BuildContext context) {

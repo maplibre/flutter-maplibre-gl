@@ -12,7 +12,7 @@ const randomMarkerNum = 100;
 
 class CustomMarkerPage extends ExamplePage {
   const CustomMarkerPage({super.key})
-      : super(const Icon(Icons.place), 'Custom marker');
+      : super(const Icon(Icons.place_outlined), 'Custom marker');
 
   @override
   Widget build(BuildContext context) {

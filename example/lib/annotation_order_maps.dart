@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
@@ -7,7 +6,7 @@ import 'util.dart';
 
 class AnnotationOrderPage extends ExamplePage {
   const AnnotationOrderPage({super.key})
-      : super(const Icon(Icons.layers), 'Annotation order maps');
+      : super(const Icon(Icons.layers_outlined), 'Annotation order maps');
 
   @override
   Widget build(BuildContext context) => const AnnotationOrderBody();

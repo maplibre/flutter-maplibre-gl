@@ -19,7 +19,7 @@ class StyleInfo {
 }
 
 class Sources extends ExamplePage {
-  const Sources({super.key}) : super(const Icon(Icons.map), 'Various Sources');
+  const Sources({super.key}) : super(const Icon(Icons.layers_outlined), 'Various Sources');
 
   @override
   Widget build(BuildContext context) {

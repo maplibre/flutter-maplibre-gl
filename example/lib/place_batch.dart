@@ -46,7 +46,7 @@ const fillOptions = [
 
 class BatchAddPage extends ExamplePage {
   const BatchAddPage({super.key})
-      : super(const Icon(Icons.check_circle), 'Batch add/remove');
+      : super(const Icon(Icons.list_alt), 'Batch add/remove');
 
   @override
   Widget build(BuildContext context) {

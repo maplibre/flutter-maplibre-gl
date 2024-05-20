@@ -31,6 +31,7 @@ dependencies:
   # temporary fix:
   platform: ^3.1.0
   device_info_plus: ^9.0.2
+  url_launcher: ^6.0.0
 
 # The following lines can be useful if you make changes to this plugin (specifically to the two sub-plugins), 
 # e.g. because you contribute to the project.

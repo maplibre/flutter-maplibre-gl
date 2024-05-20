@@ -12,7 +12,7 @@ import 'page.dart';
 
 class PlaceCirclePage extends ExamplePage {
   const PlaceCirclePage({super.key})
-      : super(const Icon(Icons.check_circle), 'Place circle');
+      : super(const Icon(Icons.circle_outlined), 'Place circle');
 
   @override
   Widget build(BuildContext context) {

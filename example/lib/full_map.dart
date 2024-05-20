@@ -5,7 +5,7 @@ import 'page.dart';
 
 class FullMapPage extends ExamplePage {
   const FullMapPage({super.key})
-      : super(const Icon(Icons.map), 'Full screen map');
+      : super(const Icon(Icons.fullscreen), 'Full screen map');
 
   @override
   Widget build(BuildContext context) {

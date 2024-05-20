@@ -13,7 +13,7 @@ import 'page.dart';
 
 class ScrollingMapPage extends ExamplePage {
   const ScrollingMapPage({super.key})
-      : super(const Icon(Icons.map), 'Scrolling map');
+      : super(const Icon(Icons.map_outlined), 'Scrolling map');
 
   @override
   Widget build(BuildContext context) {

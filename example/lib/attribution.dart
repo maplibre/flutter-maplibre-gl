@@ -5,7 +5,7 @@ import 'page.dart';
 
 class AttributionPage extends ExamplePage {
   const AttributionPage({super.key})
-      : super(const Icon(Icons.thumb_up), 'Attribution');
+      : super(const Icon(Icons.thumb_up_alt_outlined), 'Map Attribution');
 
   @override
   Widget build(BuildContext context) {

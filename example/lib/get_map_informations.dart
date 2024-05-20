@@ -5,7 +5,7 @@ import 'page.dart';
 
 class GetMapInfoPage extends ExamplePage {
   const GetMapInfoPage({super.key})
-      : super(const Icon(Icons.info), 'Get map state');
+      : super(const Icon(Icons.info_outline), 'Get map state');
 
   @override
   Widget build(BuildContext context) {

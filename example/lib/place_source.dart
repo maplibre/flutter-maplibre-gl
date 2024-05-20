@@ -12,7 +12,7 @@ import 'page.dart';
 
 class PlaceSourcePage extends ExamplePage {
   const PlaceSourcePage({super.key})
-      : super(const Icon(Icons.place), 'Place source');
+      : super(const Icon(Icons.place_outlined), 'Place source');
 
   @override
   Widget build(BuildContext context) {

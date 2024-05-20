@@ -10,7 +10,7 @@ import 'util.dart';
 
 class ClickAnnotationPage extends ExamplePage {
   const ClickAnnotationPage({super.key})
-      : super(const Icon(Icons.check_circle), 'Annotation tap');
+      : super(const Icon(Icons.touch_app_outlined), 'Annotation tap');
 
   @override
   Widget build(BuildContext context) {
