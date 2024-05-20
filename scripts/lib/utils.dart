@@ -1,3 +1,22 @@
+const layerTypes = [
+  "symbol",
+  "circle",
+  "line",
+  "fill",
+  "fill-extrusion",
+  "raster",
+  "hillshade",
+  "heatmap",
+];
+const sourceTypes = [
+  "vector",
+  "raster",
+  "raster_dem",
+  "geojson",
+  "video",
+  "image"
+];
+
 const renamedIosProperties = {
   "iconImage": "iconImageName",
   "iconRotate": "iconRotation",
@@ -58,4 +77,24 @@ const swiftTypeMappingTable = {
   "promoteId": "String",
   "boolean": "Bool",
   "*": "Object"
+};
+
+const renamedExpressions = {
+  "var": "varExpression",
+  "in": "inExpression",
+  "case": "caseExpression",
+  "to-string": "toStringExpression",
+  "+": "plus",
+  "*": "multiply",
+  "-": "minus",
+  "%": "percent",
+  ">": "larger",
+  ">=": "largerOrEqual",
+  "<": "smaller",
+  "<=": "smallerOrEqual",
+  "!=": "notEqual",
+  "==": "equal",
+  "/": "divide",
+  "^": "xor",
+  "!": "not",
 };
