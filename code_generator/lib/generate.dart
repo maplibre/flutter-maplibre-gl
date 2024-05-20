@@ -65,8 +65,8 @@ Future<void> render(
   final outputPath = pathItems.join("/");
 
   print("Rendering $filename");
-  var templateFile =
-      await File('./code_generator/templates/$filename.template').readAsString();
+  var templateFile = await File('./code_generator/templates/$filename.template')
+      .readAsString();
 
   var template = Template(templateFile);
   var outputFile = File('$outputPath/$filename');
@@ -218,7 +218,8 @@ List<Map<String, dynamic>> buildExpressionProperties(
             'value': e.key,
             'doc': e.value["doc"],
             'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
-            'valueAsCamelCase': ReCase(renamedExpressions[e.key] ?? e.key).camelCase
+            'valueAsCamelCase':
+                ReCase(renamedExpressions[e.key] ?? e.key).camelCase
           })
       .toList();
 }
