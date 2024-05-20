@@ -1,5 +1,5 @@
-name: mapbox_code_gen
-description: code generation for flutter-mapbox-gl
+name: code_generator
+description: code generation for flutter-maplibre-gl
 publish_to: 'none'
 
 version: 0.0.1
