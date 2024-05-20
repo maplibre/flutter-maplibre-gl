@@ -22,7 +22,6 @@ class LinePage extends ExamplePage {
 class LineBody extends StatefulWidget {
   const LineBody({super.key});
 
-
   @override
   State<StatefulWidget> createState() => LineBodyState();
 }
