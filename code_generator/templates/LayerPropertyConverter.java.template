@@ -22,11 +22,9 @@ class LayerPropertyConverter {
 {{#layerTypes}}
   static PropertyValue[] interpret{{typePascal}}LayerProperties(Object o) {
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
-
+    final List<PropertyValue> properties = new LinkedList<>();
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      final JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         {{#paint_properties}}
