@@ -153,7 +153,7 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
                 title: const Text("View on pub.dev"),
                 leading: const Icon(Icons.flutter_dash),
                 onTap: () =>
-                    launchUrlString("https://pub.dev/packages/maplibre-gl"),
+                    launchUrlString("https://pub.dev/packages/maplibre_gl"),
               ),
               ListTile(
                 title: const Text("View source code"),
