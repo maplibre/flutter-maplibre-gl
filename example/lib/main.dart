@@ -109,24 +109,17 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    const gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 300,
+      childAspectRatio: 3,
+    );
     return Scaffold(
       appBar: AppBar(title: const Text('MapLibre Examples')),
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: ListTile(
-              title: Text(
-                'Map Control',
-                style: TextStyle(fontSize: 18, color: theme.primaryColor),
-              ),
-            ),
-          ),
+          const SliverToBoxAdapter(child: ListSectionTitle('General')),
           SliverGrid.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 300,
-              childAspectRatio: 3,
-            ),
+            gridDelegate: gridDelegate,
             itemCount: _generalPages.length,
             itemBuilder: (_, int index) => ListTile(
               leading: _generalPages[index].leading,
@@ -134,19 +127,9 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
               onTap: () => _pushPage(context, _generalPages[index]),
             ),
           ),
-          SliverToBoxAdapter(
-            child: ListTile(
-              title: Text(
-                'Map Features',
-                style: TextStyle(fontSize: 18, color: theme.primaryColor),
-              ),
-            ),
-          ),
+          const SliverToBoxAdapter(child: ListSectionTitle('Map Features')),
           SliverGrid.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 300,
-              childAspectRatio: 3,
-            ),
+            gridDelegate: gridDelegate,
             itemCount: _featurePages.length,
             itemBuilder: (_, int index) => ListTile(
               leading: _featurePages[index].leading,
@@ -154,19 +137,9 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
               onTap: () => _pushPage(context, _featurePages[index]),
             ),
           ),
-          SliverToBoxAdapter(
-            child: ListTile(
-              title: Text(
-                'About this app',
-                style: TextStyle(fontSize: 18, color: theme.primaryColor),
-              ),
-            ),
-          ),
+          const SliverToBoxAdapter(child: ListSectionTitle('About this App')),
           SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 300,
-              childAspectRatio: 3,
-            ),
+            gridDelegate: gridDelegate,
             delegate: SliverChildListDelegate([
               ListTile(
                 title: const Text("Show licenses"),
@@ -179,16 +152,34 @@ class _MapLibreDemoState extends State<MapLibreDemo> {
               ListTile(
                 title: const Text("View on pub.dev"),
                 leading: const Icon(Icons.flutter_dash),
-                onTap: () => launchUrlString("https://pub.dev/packages/maplibre-gl"),
+                onTap: () =>
+                    launchUrlString("https://pub.dev/packages/maplibre-gl"),
               ),
               ListTile(
                 title: const Text("View source code"),
                 leading: const Icon(Icons.code),
-                onTap: () => launchUrlString("https://github.com/maplibre/flutter-maplibre-gl"),
+                onTap: () => launchUrlString(
+                    "https://github.com/maplibre/flutter-maplibre-gl"),
               ),
             ]),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ListSectionTitle extends StatelessWidget {
+  final String title;
+
+  const ListSectionTitle(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 18, color: Theme.of(context).primaryColor),
       ),
     );
   }
