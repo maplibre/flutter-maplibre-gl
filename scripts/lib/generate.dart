@@ -94,14 +94,18 @@ Future<void> render(
 }
 
 List<Map<String, dynamic>> buildStyleProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
 }
 
 Map<String, dynamic> buildStyleProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   return <String, dynamic>{
     'value': key,
@@ -116,7 +120,9 @@ Map<String, dynamic> buildStyleProperty(
 }
 
 List<Map<String, dynamic>> buildSourceProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries
@@ -126,7 +132,9 @@ List<Map<String, dynamic>> buildSourceProperties(
 }
 
 Map<String, dynamic> buildSourceProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
@@ -196,8 +204,11 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
   return result;
 }
 
-List<String> splitIntoChunks(String input, int lineLength,
-    {String prefix = ""}) {
+List<String> splitIntoChunks(
+  String input,
+  int lineLength, {
+  String prefix = "",
+}) {
   final words = input.split(" ");
   final chunks = <String>[];
 
@@ -217,10 +228,11 @@ List<String> splitIntoChunks(String input, int lineLength,
 }
 
 List<Map<String, dynamic>> buildExpressionProperties(
-    Map<String, dynamic> styleJson) {
+  Map<String, dynamic> styleJson,
+) {
   final Map<String, dynamic> items = styleJson["expression_name"]["values"];
 
-  final renamed = {
+  const renamed = {
     "var": "varExpression",
     "in": "inExpression",
     "case": "caseExpression",
@@ -228,7 +240,7 @@ List<Map<String, dynamic>> buildExpressionProperties(
     "+": "plus",
     "*": "multiply",
     "-": "minus",
-    "%": "precent",
+    "%": "percent",
     ">": "larger",
     ">=": "largerOrEqual",
     "<": "smaller",
