@@ -1,33 +1,37 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
 
 import 'conversions.dart';
 
-main() async {
-  var styleJson =
-      jsonDecode(await File('scripts/input/style.json').readAsString());
+const styleUrl =
+    'https://raw.githubusercontent.com/maplibre/maplibre-style-spec/main/src/reference/v8.json';
 
-  final layerTypes = [
-    "symbol",
-    "circle",
-    "line",
-    "fill",
-    "fill-extrusion",
-    "raster",
-    "hillshade",
-    "heatmap",
-  ];
-  final sourceTypes = [
-    "vector",
-    "raster",
-    "raster_dem",
-    "geojson",
-    "video",
-    "image"
-  ];
+const layerTypes = [
+  "symbol",
+  "circle",
+  "line",
+  "fill",
+  "fill-extrusion",
+  "raster",
+  "hillshade",
+  "heatmap",
+];
+const sourceTypes = [
+  "vector",
+  "raster",
+  "raster_dem",
+  "geojson",
+  "video",
+  "image"
+];
+
+Future<void> main() async {
+  var styleJson = jsonDecode((await http.get(Uri.parse(styleUrl))).body);
+  print('Style specification downloaded');
 
   final renderContext = {
     "layerTypes": [
