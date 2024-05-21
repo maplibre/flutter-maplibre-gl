@@ -1,11 +1,38 @@
 ## 0.19.0
 
-* Bump min Dart SDK to 3.0.0 (this was already implicitly required by transitive dependencies)
-* Publish all packages to pub.dev
-* Add support for Gradle/AGP namespace configuration
-* Bump Android `compileSdkVersion` to 34
-* Loosen the dependency constraint of [js](https://pub.dev/packages/js) to
+This is the first version where all packages are published on pub.dev. Please
+use the `maplibre_gl` package directly from pub.dev from now on. Check the
+`README` documentation on how to include it in your project.
+
+### Changes
+
+* Bump min Dart SDK to 3.0.0 (this was already implicitly required by transitive
+  dependencies)
+* Prepare all packages for publishing
+  to [pub.dev](https://pub.dev/packages/maplibre_gl)
+* Add support for
+  the [Fill Extrusion layer](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion)
+* Add support for
+  the [Heatmap layer](https://maplibre.org/maplibre-style-spec/layers/#heatmap)
+* Update documentation
+* (android) Bump Android `compileSdkVersion` to 34
+* (iOS) Add `iosLongClickDuration` as parameter to customize the long click
+  duration.
+* (web) Loosen the dependency constraint of [js](https://pub.dev/packages/js) to
   allow `0.6.x` and `0.7.x`.
+
+### Bug Fixes
+
+* (android) Fix support for newer gradle versions (Add support for Gradle/AGP
+  namespace configuration)
+* (android) Fix `NullPointerException` when changing the visibility of a layer (
+  layer#setVisibility)
+* (android) Fix enum parsing for the `onCameraTracking` callback
+* (iOS) Fix tap detection on features if the feature id is null
+* (web) Fix flickering when the style takes time to load
+
+**Full Changelog**:
+[0.18.0...0.19.0](https://github.com/maplibre/flutter-maplibre-gl/compare/0.17.0...0.18.0)
 
 ## 0.18.0
 
@@ -21,30 +48,29 @@ builds).
 ### Other Changes:
 
 * new feature: set arbitrary layer properties by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/303
+  in [#303](https://github.com/maplibre/flutter-maplibre-gl/pull/303)
 * Update release process by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/315
+  in [#315](https://github.com/maplibre/flutter-maplibre-gl/pull/315)
 * Add workflows for automated publishing to pub.dev by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/328
+  in [#328](https://github.com/maplibre/flutter-maplibre-gl/pull/328)
 * Fix example app pubspec by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/329
+  in [#329](https://github.com/maplibre/flutter-maplibre-gl/pull/329)
 * Updated location plugin version for example app by @varunlohade
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/334
+  in [#334](https://github.com/maplibre/flutter-maplibre-gl/pull/334)
 * Housekeeping: Improve docs and update outdated references to point to MapLibre
-  by @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/330
+  by @m0nac0 in [#330](https://github.com/maplibre/flutter-maplibre-gl/pull/330)
 
-**Full Changelog
-**: https://github.com/maplibre/flutter-maplibre-gl/compare/0.17.0...0.18.0
+**Full Changelog**:
+[0.17.0...0.18.0](https://github.com/maplibre/flutter-maplibre-gl/compare/0.17.0...0.18.0)
 
 ## 0.17.0
 
-**Repository transfer**: The project repository was transferred to the MapLibre
+* **Repository transfer**: The project repository was transferred to the MapLibre
 GitHub organization. More information
-at  https://github.com/maplibre/flutter-maplibre-gl/issues/221
-
+at [#221](https://github.com/maplibre/flutter-maplibre-gl/issues/221)
 * Developers do not need to adapt their Podfile for iOS apps anymore as it was
   previously described in the
-  Readme.  [https://github.com/maplibre/flutter-maplibre-gl/pull/278](https://github.com/maplibre/flutter-maplibre-gl/pull/278)
+  Readme. [#278](https://github.com/maplibre/flutter-maplibre-gl/pull/278)
 
 ### Breaking Change:
 
@@ -52,12 +78,13 @@ at  https://github.com/maplibre/flutter-maplibre-gl/issues/221
   You can do a replace-all from `import 'package:maplibre_gl/mapbox_gl.dart';`
   to `import 'package:maplibre_gl/maplibre_gl.dart';`
 * `useDelayedDisposal` was removed since its now fixed
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/259
+  in [#259](https://github.com/maplibre/flutter-maplibre-gl/pull/259)
 * `useHybridCompositionOverride` was removed since it was added in the following
-  fix: https://github.com/maplibre/flutter-maplibre-gl/pull/203 and we reverted
+  fix: [#203](https://github.com/maplibre/flutter-maplibre-gl/pull/203) and we
+  reverted
   the fix and used another approach to fix the actual issue.
 * The default for `myLocationRenderMode` was changed from `COMPASS` to `NORMAL`
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/244, since the
+  in [#244](https://github.com/maplibre/flutter-maplibre-gl/pull/244), since the
   previous default value of `COMPASS` implicitly enables displaying the location
   on iOS, which could crash apps that didn't want to display the device
   location. If you want to continue to use `MyLocationRenderMode.COMPASS`,
@@ -87,75 +114,75 @@ those that e.g. only affect the GitHub Actions CI or documentation. See the link
 at the end for a full changelog.
 
 * feat: add support for reading style json from file in ios by @TimAlber
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/132
+  in [#132](https://github.com/maplibre/flutter-maplibre-gl/pull/132)
 * Add podspecs in correct Cocoapods layout by @kuhnroyal
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/128
+  in [#128](https://github.com/maplibre/flutter-maplibre-gl/pull/128)
 * fix: fix the queryRenderedFeatures code on iOS by @TimAlber
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/137
+  in [#137](https://github.com/maplibre/flutter-maplibre-gl/pull/137)
 * feat: Set layer visibility by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/138
+  in [#138](https://github.com/maplibre/flutter-maplibre-gl/pull/138)
 * feat: add support for changing the receiver’s viewport to fit given bounds by
-  @TimAlber in https://github.com/maplibre/flutter-maplibre-gl/pull/133
+  @TimAlber in [#133](https://github.com/maplibre/flutter-maplibre-gl/pull/133)
 * Change feature JSON encoding from .ascii to .utf8 by @SunBro-Marko
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/142
+  in [#142](https://github.com/maplibre/flutter-maplibre-gl/pull/142)
 * web: implement setCameraBounds by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/145
+  in [#145](https://github.com/maplibre/flutter-maplibre-gl/pull/145)
 * Use offical maplibre-gl.js and add README info by @Robbendebiene
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/163
+  in [#163](https://github.com/maplibre/flutter-maplibre-gl/pull/163)
 * android: adding tileSize to raster source by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/166
+  in [#166](https://github.com/maplibre/flutter-maplibre-gl/pull/166)
 * Readme: document git default values for codespaces by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/170
+  in [#170](https://github.com/maplibre/flutter-maplibre-gl/pull/170)
 * query source features by @Grodien
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/154
+  in [#154](https://github.com/maplibre/flutter-maplibre-gl/pull/154)
 * Trimming styleString to simplify the JSON detection by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/175
+  in [#175](https://github.com/maplibre/flutter-maplibre-gl/pull/175)
 * Fix getVisibleRegion method by @BartoszStasiurka
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/179
+  in [#179](https://github.com/maplibre/flutter-maplibre-gl/pull/179)
 * Reenable textureMode which was disabled in f8b2d1 by @maxammann
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/194
+  in [#194](https://github.com/maplibre/flutter-maplibre-gl/pull/194)
 * android: Bump Maplibre SDK to 9.6.0 & OkHttp to 4.9.3 by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/184
+  in [#184](https://github.com/maplibre/flutter-maplibre-gl/pull/184)
 * Added getSourceIds to the controller by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/197
+  in [#197](https://github.com/maplibre/flutter-maplibre-gl/pull/197)
 * Moved EventChannel creation in the downloadOfflineRegion method by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/205
+  in [#205](https://github.com/maplibre/flutter-maplibre-gl/pull/205)
 * Fix crash android dispose nullpointerdereference by @GaelleJoubert
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/203
+  in [#203](https://github.com/maplibre/flutter-maplibre-gl/pull/203)
 * Migrate links in README, pubspec to Maplibre by @kuhnroyal
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/224
+  in [#224](https://github.com/maplibre/flutter-maplibre-gl/pull/224)
 * Update LICENSE file by @mariusvn
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/230
+  in [#230](https://github.com/maplibre/flutter-maplibre-gl/pull/230)
 * upgrade dependency image by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/248
+  in [#248](https://github.com/maplibre/flutter-maplibre-gl/pull/248)
 * fix-example-app by @JulianBissekkou
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/261
+  in [#261](https://github.com/maplibre/flutter-maplibre-gl/pull/261)
 * 162-animate-camera-on-web-fix by @JulianBissekkou
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/254
+  in [#254](https://github.com/maplibre/flutter-maplibre-gl/pull/254)
 * 243-fix-crash-when-no-location-permission by @JulianBissekkou
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/244
+  in [#244](https://github.com/maplibre/flutter-maplibre-gl/pull/244)
 * 182-disposal-null-ref-crash by @JulianBissekkou
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/259
+  in [#259](https://github.com/maplibre/flutter-maplibre-gl/pull/259)
 * New android sdk version by @stefanschaller
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/270
+  in [#270](https://github.com/maplibre/flutter-maplibre-gl/pull/270)
 * 250-change-language-fixes by @stefanschaller
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/275
+  in [#275](https://github.com/maplibre/flutter-maplibre-gl/pull/275)
 * upgrade-ios-version by @JulianBissekkou
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/277
+  in [#277](https://github.com/maplibre/flutter-maplibre-gl/pull/277)
 * Simplify iOS usage instructions and example podfile by @m0nac0
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/278
+  in [#278](https://github.com/maplibre/flutter-maplibre-gl/pull/278)
 * Add opportunity to use map in widget tests by @ManoyloK
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/281
+  in [#281](https://github.com/maplibre/flutter-maplibre-gl/pull/281)
 * fix-layers-prod-build by @stefanschaller
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/291
+  in [#291](https://github.com/maplibre/flutter-maplibre-gl/pull/291)
 * Fix the codespace by upgrading the docker image by @ouvreboite
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/297
+  in [#297](https://github.com/maplibre/flutter-maplibre-gl/pull/297)
 * Add `updateImageSource`. by @CaviarChen
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/271
+  in [#271](https://github.com/maplibre/flutter-maplibre-gl/pull/271)
 * fix "unexpected null value" error when onStyleLoadedCallback is null by
-  @m0nac0 in https://github.com/maplibre/flutter-maplibre-gl/pull/307
+  @m0nac0 in [#307](https://github.com/maplibre/flutter-maplibre-gl/pull/307)
 * attributionButtonPosition for web by @ouvreboite
-  in https://github.com/maplibre/flutter-maplibre-gl/pull/304
+  in [#304](https://github.com/maplibre/flutter-maplibre-gl/pull/304)
 
 **Full Changelog
 **: https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
@@ -178,22 +205,22 @@ at the end for a full changelog.
 ## 0.15.0, Oct 26, 2021
 
 * Fix bug when changing line color (see #448) by @vberthet
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/15
+  in [#15](https://github.com/m0nac0/flutter-maplibre-gl/pull/15)
 * Remove unnecessary imports by @m0nac0
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/34
+  in [#34](https://github.com/m0nac0/flutter-maplibre-gl/pull/34)
 * Update example with Flutter 2.5.3 by @kuhnroyal
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/35
+  in [#35](https://github.com/m0nac0/flutter-maplibre-gl/pull/35)
 * CI: Use separate scheduled pipeline for Flutter beta builds by @kuhnroyal
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/28
+  in [#28](https://github.com/m0nac0/flutter-maplibre-gl/pull/28)
 * Null safety (cherry-pick from upstream) by @m0nac0
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/31
+  in [#31](https://github.com/m0nac0/flutter-maplibre-gl/pull/31)
 * [web] add missing removeLines, removeCircles and removeFills (cherry-pick
   tobrun#622) by @m0nac0
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/32
+  in [#32](https://github.com/m0nac0/flutter-maplibre-gl/pull/32)
 * Replace style string in local style example by @m0nac0
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/33
+  in [#33](https://github.com/m0nac0/flutter-maplibre-gl/pull/33)
 * [web] add getSymbolLatLng and getLineLatLngs by @m0nac0
-  in https://github.com/m0nac0/flutter-maplibre-gl/pull/37
+  in [#37](https://github.com/m0nac0/flutter-maplibre-gl/pull/37)
 
 ## 0.14.0
 
