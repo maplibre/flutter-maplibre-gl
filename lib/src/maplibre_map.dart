@@ -12,7 +12,7 @@ typedef MapCreatedCallback = void Function(MaplibreMapController controller);
 /// Also refer to the documentation of [maplibre_gl] and [MaplibreMapController].
 class MaplibreMap extends StatefulWidget {
   const MaplibreMap({
-    Key? key,
+    super.key,
     required this.initialCameraPosition,
     this.styleString = "https://demotiles.maplibre.org/style.json",
     this.onMapCreated,
@@ -63,8 +63,7 @@ class MaplibreMap extends StatefulWidget {
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
         assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0),
-        super(key: key);
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// Defines the layer order of annotations displayed on map
   ///

@@ -1,8 +1,12 @@
 name: maplibre_gl_platform_interface
 description: A common platform interface for the maplibre_gl plugin.
-version: 0.18.0
+version: 0.19.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
 
 dependencies:
   flutter:
@@ -11,7 +15,3 @@ dependencies:
 
 dev_dependencies:
   flutter_lints: '>=3.0.0 <5.0.0'
-
-environment:
-  sdk: '>=2.14.0 <3.0.0'
-  flutter: '>=2.10.0'

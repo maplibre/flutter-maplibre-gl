@@ -17,5 +17,5 @@ class Point extends JsObjectWrapper<PointJsImpl> {
       ));
 
   /// Creates a new LngLat from a [jsObject].
-  Point.fromJsObject(PointJsImpl jsObject) : super.fromJsObject(jsObject);
+  Point.fromJsObject(super.jsObject) : super.fromJsObject();
 }

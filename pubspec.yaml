@@ -1,31 +1,21 @@
 name: maplibre_gl
 description: A Flutter plugin for integrating Maplibre Maps inside a Flutter application on Android, iOS and web platforms.
-version: 0.18.0
+version: 0.19.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface:
-    git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_platform_interface
-      ref: main
-  maplibre_gl_web:
-    git:
-      url: https://github.com/maplibre/flutter-maplibre-gl.git
-      path: maplibre_gl_web
-      ref: main
+  maplibre_gl_platform_interface: ^0.19.0
+  maplibre_gl_web: ^0.19.0
 
 dev_dependencies:
   flutter_lints: '>=3.0.0 <5.0.0'
-
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ./maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ./maplibre_gl_web
 
 flutter:
   plugin:
@@ -38,8 +28,7 @@ flutter:
       web:
         default_package: maplibre_gl_web
 
-environment:
-  # Flutter 2.15 is the required min to be able to use Enum.name
-  sdk: '>=2.15.0 <3.0.0'
-  flutter: ">=2.8.1"
-
+platforms:
+  android:
+  ios:
+  web:
