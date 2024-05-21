@@ -113,3 +113,11 @@ app.*.symbols
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
 google-java-format-1.13.0-all-deps.jar
+
+# Ruby/CocoaPods
+Gemfile*
+.ruby-version
+
+# FVM Version Cache
+.fvm/
+.fvmrc

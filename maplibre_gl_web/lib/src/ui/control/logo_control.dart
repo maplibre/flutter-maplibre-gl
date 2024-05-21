@@ -14,6 +14,5 @@ class LogoControl extends JsObjectWrapper<LogoControlJsImpl> {
   getDefaultPosition() => jsObject.getDefaultPosition();
 
   /// Creates a new LogoControl from a [jsObject].
-  LogoControl.fromJsObject(LogoControlJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  LogoControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

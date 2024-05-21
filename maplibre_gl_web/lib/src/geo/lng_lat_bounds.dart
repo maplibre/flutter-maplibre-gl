@@ -143,6 +143,5 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
       LngLatBounds.fromJsObject(LngLatBoundsJsImpl.convert(input));
 
   /// Creates a new LngLatBounds from a [jsObject].
-  LngLatBounds.fromJsObject(LngLatBoundsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();
 }

@@ -28,8 +28,7 @@ class VectorSource extends Source<VectorSourceJsImpl> {
   }
 
   /// Creates a new VectorSource from a [jsObject].
-  VectorSource.fromJsObject(VectorSourceJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  VectorSource.fromJsObject(super.jsObject) : super.fromJsObject();
 
   @override
   get dict {

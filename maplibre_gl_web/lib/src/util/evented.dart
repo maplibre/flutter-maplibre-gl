@@ -43,7 +43,7 @@ class Event extends JsObjectWrapper<EventJsImpl> {
   preventDefault() => jsObject.preventDefault();
 
   /// Creates a new Event from a [jsObject].
-  Event.fromJsObject(EventJsImpl jsObject) : super.fromJsObject(jsObject);
+  Event.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Evented extends JsObjectWrapper<EventedJsImpl> {
@@ -138,5 +138,5 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
       jsObject.setEventedParent(parent?.jsObject, data);
 
   /// Creates a new Evented from a [jsObject].
-  Evented.fromJsObject(EventedJsImpl jsObject) : super.fromJsObject(jsObject);
+  Evented.fromJsObject(super.jsObject) : super.fromJsObject();
 }
