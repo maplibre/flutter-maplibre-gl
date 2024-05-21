@@ -20,11 +20,7 @@ jobs:
     if: github.repository_owner == 'josxha'
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          cache: true
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: dart-lang/setup-dart@v1
         # --force skips the y/N confirmation
       - name: Publish to pub.dev
-        run: flutter pub publish --force
+        run: dart pub publish --force
