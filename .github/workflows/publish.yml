@@ -10,16 +10,16 @@ permissions:
 
 jobs:
   publish_maplibre_gl_platform_interface:
-    uses: maplibre/flutter-maplibre-gl/.github/workflows/publish-single.yml@main
+    uses: josxha/flutter-maplibre-gl/.github/workflows/publish-single.yml@test/publish
     with:
       working-directory: maplibre_gl_platform_interface
   publish_maplibre_gl_web:
     needs: [publish_maplibre_gl_platform_interface]
-    uses: maplibre/flutter-maplibre-gl/.github/workflows/publish-single.yml@main
+    uses: josxha/flutter-maplibre-gl/.github/workflows/publish-single.yml@test/publish
     with:
       working-directory: maplibre_gl_web
   publish_maplibre_gl:
     needs: [publish_maplibre_gl_platform_interface, publish_maplibre_gl_web]
-    uses: maplibre/flutter-maplibre-gl/.github/workflows/publish-single.yml@main
+    uses: josxha/flutter-maplibre-gl/.github/workflows/publish-single.yml@test/publish
     with:
       working-directory: .
