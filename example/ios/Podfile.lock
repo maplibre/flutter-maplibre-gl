@@ -16,7 +16,6 @@ DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - location (from `.symlinks/plugins/location/ios`)
-  - MapLibre
   - maplibre_gl (from `.symlinks/plugins/maplibre_gl/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
@@ -37,13 +36,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
-  device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
+  device_info_plus: c6fb39579d0f423935b0c9ce7ee2f44b71b9fce6
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
+  location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
   MapLibre: 620fc933c1d6029b33738c905c1490d024e5d4ef
-  maplibre_gl: 249958f57ed5cca73baf413ad6cbdbc64be69658
-  path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
+  maplibre_gl: a2efec727dd340e4c65e26d2b03b584f14881fd9
+  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
 
-PODFILE CHECKSUM: 00bbce151cce7e3542226c3dbb2422a2cb667d7a
+PODFILE CHECKSUM: 76b02dc813a095e7650def38e0c540365f37c732
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.15.2

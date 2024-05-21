@@ -22,8 +22,7 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
       GeoJsonSource.fromJsObject(jsObject.setData(featureCollection.jsObject));
 
   /// Creates a new GeoJsonSource from a [jsObject].
-  GeoJsonSource.fromJsObject(GeoJsonSourceJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  GeoJsonSource.fromJsObject(super.jsObject) : super.fromJsObject();
 
   @override
   get dict => {

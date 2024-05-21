@@ -32,6 +32,5 @@ class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
   onTouchStart(TouchEvent e) => jsObject.onTouchStart(e);
 
   /// Creates a new DragPanHandler from a [jsObject].
-  DragPanHandler.fromJsObject(DragPanHandlerJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  DragPanHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }
