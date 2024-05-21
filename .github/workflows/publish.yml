@@ -1,4 +1,4 @@
-name: Publish maplibre_gl packages to pub.dev
+name: Publish packages to pub.dev
 
 on:
   push:
