@@ -20,14 +20,11 @@ jobs:
     if: github.repository_owner == 'josxha'
     steps:
       - uses: actions/checkout@v4
-      # Setup Dart SDK with JWT token
-      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           cache: true
       - name: Install dependencies
         run: flutter pub get
-      # Publishing...
-      # skip validation due to https://github.com/dart-lang/setup-dart/issues/68
+        # --force skips the y/N confirmation
       - name: Publish to pub.dev
-        run: flutter pub publish
+        run: flutter pub publish --force
