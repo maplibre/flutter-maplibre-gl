@@ -22,5 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
         # --force skips the y/N confirmation
+        # --skip-validation because of "Because maplibre_gl requires the Flutter SDK, version solving failed. Flutter users should use `flutter pub` instead of `dart pub`."
+        # see https://github.com/dart-lang/setup-dart/issues/68
       - name: Publish to pub.dev
-        run: dart pub publish --force
+        run: dart pub publish --force --skip-validation
