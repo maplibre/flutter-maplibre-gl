@@ -17,7 +17,7 @@ jobs:
     permissions:
       id-token: write # This is required for requesting the OIDC
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'josxha'
+    if: github.repository_owner == 'maplibre'
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
