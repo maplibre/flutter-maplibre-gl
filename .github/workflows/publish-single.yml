@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Setup Dart SDK with JWT token
-      - uses: dart-lang/setup-dart@f0ead981b4d9a35b37f30d36160575d60931ec30
+      - uses: dart-lang/setup-dart@v1
       - name: Install dependencies
         run: dart pub get
       # Publishing...
