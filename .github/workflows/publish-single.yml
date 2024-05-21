@@ -20,10 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Setup Dart SDK with JWT token
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
       - name: Install dependencies
         run: dart pub get
       # Publishing...
       # skip validation due to https://github.com/dart-lang/setup-dart/issues/68
       - name: Publish to pub.dev
-        run: dart pub publish --force --skip-validation
+        run: flutter pub publish
