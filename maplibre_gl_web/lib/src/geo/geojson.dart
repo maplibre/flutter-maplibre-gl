@@ -20,8 +20,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   }
 
   /// Creates a new FeatureCollection from a [jsObject].
-  FeatureCollection.fromJsObject(FeatureCollectionJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  FeatureCollection.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Feature extends JsObjectWrapper<FeatureJsImpl> {
@@ -69,7 +68,7 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
       ));
 
   /// Creates a new Feature from a [jsObject].
-  Feature.fromJsObject(FeatureJsImpl jsObject) : super.fromJsObject(jsObject);
+  Feature.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Geometry extends JsObjectWrapper<GeometryJsImpl> {
@@ -87,5 +86,5 @@ class Geometry extends JsObjectWrapper<GeometryJsImpl> {
       ));
 
   /// Creates a new Geometry from a [jsObject].
-  Geometry.fromJsObject(GeometryJsImpl jsObject) : super.fromJsObject(jsObject);
+  Geometry.fromJsObject(super.jsObject) : super.fromJsObject();
 }

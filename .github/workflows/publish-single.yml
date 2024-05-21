@@ -1,0 +1,29 @@
+name: Publish a package to pub.dev
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Directory of the package to publish
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+
+jobs:
+  publish:
+    name: 'Publish to pub.dev'
+    permissions:
+      id-token: write # This is required for requesting the OIDC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Setup Dart SDK with JWT token
+      - uses: dart-lang/setup-dart@v1
+      - name: Install dependencies
+        run: dart pub get
+      # Publishing...
+      # skip validation due to https://github.com/dart-lang/setup-dart/issues/68
+      - name: Publish to pub.dev
+        run: dart pub publish --force --skip-validation

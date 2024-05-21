@@ -1,4 +1,4 @@
-name: mapbox_code_gen
+name: maplibre_code_gen
 description: code generation for flutter-mapbox-gl
 publish_to: 'none'
 

@@ -30,6 +30,5 @@ class DragRotateHandler extends JsObjectWrapper<DragRotateHandlerJsImpl> {
   onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 
   /// Creates a new DragPanHandler from a [jsObject].
-  DragRotateHandler.fromJsObject(DragRotateHandlerJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  DragRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

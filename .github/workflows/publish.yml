@@ -1,0 +1,25 @@
+name: Publish maplibre_gl packages to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  id-token: write
+
+jobs:
+  publish_maplibre_gl_platform_interface:
+    uses: ./.github/workflows/publish_single.yml
+    with:
+      working-directory: maplibre_gl_platform_interface
+  publish_maplibre_gl_web:
+    needs: [publish_maplibre_gl_platform_interface]
+    uses: ./.github/workflows/publish_single.yml
+    with:
+      working-directory: maplibre_gl_web
+  publish_maplibre_gl:
+    needs: [publish_maplibre_gl_platform_interface, publish_maplibre_gl_web]
+    uses: ./.github/workflows/publish_single.yml
+    with:
+      working-directory: .

@@ -168,12 +168,8 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(MaplibreMapController controller,
-      {void Function(Line)? onTap, bool enableInteraction = true})
+  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
       : super(
-          controller,
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
 
@@ -197,13 +193,10 @@ class LineManager extends AnnotationManager<Line> {
 
 class FillManager extends AnnotationManager<Fill> {
   FillManager(
-    MaplibreMapController controller, {
-    void Function(Fill)? onTap,
-    bool enableInteraction = true,
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
   }) : super(
-          controller,
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
 
@@ -225,14 +218,10 @@ class FillManager extends AnnotationManager<Fill> {
 
 class CircleManager extends AnnotationManager<Circle> {
   CircleManager(
-    MaplibreMapController controller, {
-    void Function(Circle)? onTap,
-    bool enableInteraction = true,
-  }) : super(
-          controller,
-          enableInteraction: enableInteraction,
-          onTap: onTap,
-        );
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
+  });
 
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -250,22 +239,17 @@ class CircleManager extends AnnotationManager<Circle> {
 
 class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
-    MaplibreMapController controller, {
-    void Function(Symbol)? onTap,
+    super.controller, {
+    super.onTap,
     bool iconAllowOverlap = false,
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
-    bool enableInteraction = true,
+    super.enableInteraction = true,
   })  : _iconAllowOverlap = iconAllowOverlap,
         _textAllowOverlap = textAllowOverlap,
         _iconIgnorePlacement = iconIgnorePlacement,
-        _textIgnorePlacement = textIgnorePlacement,
-        super(
-          controller,
-          enableInteraction: enableInteraction,
-          onTap: onTap,
-        );
+        _textIgnorePlacement = textIgnorePlacement;
 
   bool _iconAllowOverlap;
   bool _textAllowOverlap;
