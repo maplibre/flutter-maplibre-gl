@@ -27,5 +27,5 @@ jobs:
       - name: Publish to pub.dev
         working-directory: ./${{ inputs.working-directory }}
         run: |
-          cd ./${{ inputs.working-directory }} && \
+          ls -la && \
           dart pub publish --force --skip-validation
