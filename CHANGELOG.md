@@ -184,8 +184,8 @@ at the end for a full changelog.
 * attributionButtonPosition for web by @ouvreboite
   in [#304](https://github.com/maplibre/flutter-maplibre-gl/pull/304)
 
-**Full Changelog
-**: https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
+**Full Changelog**: 
+https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
 
 ## 0.16.0, Jun 28, 2022
 
