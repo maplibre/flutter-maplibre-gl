@@ -32,7 +32,7 @@ use the `maplibre_gl` package directly from pub.dev from now on. Check the
 * (web) Fix flickering when the style takes time to load
 
 **Full Changelog**:
-[0.18.0...0.19.0](https://github.com/maplibre/flutter-maplibre-gl/compare/0.18.0...0.19.0)
+[0.18.0...v0.19.0](https://github.com/maplibre/flutter-maplibre-gl/compare/0.18.0...v0.19.0)
 
 ## 0.18.0
 
@@ -184,8 +184,8 @@ at the end for a full changelog.
 * attributionButtonPosition for web by @ouvreboite
   in [#304](https://github.com/maplibre/flutter-maplibre-gl/pull/304)
 
-**Full Changelog
-**: https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
+**Full Changelog**: 
+https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
 
 ## 0.16.0, Jun 28, 2022
 

@@ -20,11 +20,10 @@ jobs:
     if: github.repository_owner == 'maplibre'
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          cache: true
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: dart-lang/setup-dart@v1
         # --force skips the y/N confirmation
+        # --skip-validation because of "Because maplibre_gl requires the Flutter SDK, version solving failed. Flutter users should use `flutter pub` instead of `dart pub`."
+        # see https://github.com/dart-lang/setup-dart/issues/68
       - name: Publish to pub.dev
-        run: flutter pub publish --force
+        working-directory: ${{ inputs.working-directory }}
+        run: dart pub publish --force --skip-validation
