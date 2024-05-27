@@ -1,6 +1,6 @@
 name: maplibre_gl_web
 description: Web platform implementation of maplibre_gl
-version: 0.19.0
+version: 0.19.0+2
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
@@ -22,7 +22,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   meta: ^1.3.0
-  maplibre_gl_platform_interface: ^0.19.0
+  maplibre_gl_platform_interface: ^0.19.0+2
   image: ^4.0.17
 
 dev_dependencies:
