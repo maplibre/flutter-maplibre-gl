@@ -37,8 +37,7 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
   bool get defaultPrevented => jsObject.defaultPrevented;
 
   /// Creates a new MapMouseEvent from a [jsObject].
-  MapMouseEvent.fromJsObject(MapMouseEventJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  MapMouseEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
@@ -80,6 +79,5 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
   bool get defaultPrevented => jsObject.defaultPrevented;
 
   /// Creates a new MapTouchEvent from a [jsObject].
-  MapTouchEvent.fromJsObject(MapTouchEventJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  MapTouchEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }
