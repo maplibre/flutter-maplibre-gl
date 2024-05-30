@@ -205,6 +205,9 @@ abstract class MapLibreGlPlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
+  /// Method to set style string
+  Future<void> setStyle(String styleString);
+
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs

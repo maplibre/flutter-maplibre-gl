@@ -932,7 +932,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             var reply = [String: NSObject]()
             reply["filter"] = currentLayerFilter as NSObject
             result(reply)
-            
+
+        case "style#setStyle":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let style = arguments["style"] as? String else { return }
+            setStyleString(styleString: style)
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
