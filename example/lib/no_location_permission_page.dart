@@ -7,7 +7,7 @@ class NoLocationPermissionPage extends ExamplePage {
   const NoLocationPermissionPage({super.key})
       : super(
           const Icon(Icons.gps_off),
-          'Map without user location/permission',
+          'No user location permission',
           needsLocationPermission: false,
         );
 
