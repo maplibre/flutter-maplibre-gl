@@ -1,8 +1,8 @@
 name: Flutter Beta CI
 
 on:
-  schedule:
-    - cron:  '0 0 * * *'
+  schedule: [ cron:  '0 0 * * *' ]
+  workflow_dispatch:
 
 env:
   FLUTTER_CHANNEL: 'beta'
@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-java@v4
       with:
-        java-version: '11'
+        java-version: '17'
         distribution: 'temurin'
         cache: 'gradle'
     - uses: subosito/flutter-action@v2
