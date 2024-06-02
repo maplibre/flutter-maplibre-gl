@@ -5,6 +5,7 @@ analyzer:
     # temporary rules
     strict-casts: false
     strict-raw-types: false
+    strict-inference: false
 
 linter:
   rules:
@@ -29,6 +30,10 @@ linter:
     avoid_redundant_argument_values: false
     unawaited_futures: false
     overridden_fields: false
+    avoid_setters_without_getters: false
+    cast_nullable_to_non_nullable: false
+    only_throw_errors: false
+    no_runtimeType_toString: false
     always_put_required_named_parameters_first: false
     leading_newlines_in_multiline_strings: false
     prefer_constructors_over_static_methods: false
