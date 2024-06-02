@@ -82,6 +82,8 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         MethodChannelMaplibreGl,
         OnPlatformViewCreatedCallback;
 
+export 'src/maplibre_styles.dart';
+
 part 'src/controller.dart';
 
 part 'src/maplibre_map.dart';
