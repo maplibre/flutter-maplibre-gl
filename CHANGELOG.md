@@ -1,3 +1,9 @@
+## UNRELEASED
+
+### Breaking changes
+
+* All Dart enums have been migrated from mixed cases to lower camelcase according to the `camel_case_types` lint rule.
+
 ## 0.19.0
 
 This is the first version where all packages are published on pub.dev. Please
