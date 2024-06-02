@@ -113,6 +113,7 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  @example
   ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
   ///  llb.toString(); // = "LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))"
+  @override
   String toString() => jsObject.toString();
 
   ///  Check if the bounding box is an empty/`null`-type box.
@@ -142,6 +143,5 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
       LngLatBounds.fromJsObject(LngLatBoundsJsImpl.convert(input));
 
   /// Creates a new LngLatBounds from a [jsObject].
-  LngLatBounds.fromJsObject(LngLatBoundsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();
 }

@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 enum AnnotationType { fill, line, circle, symbol }
 
-typedef void MapCreatedCallback(MaplibreMapController controller);
+typedef MapCreatedCallback = void Function(MaplibreMapController controller);
 
 /// Shows a MapLibre map.
 /// Also refer to the documentation of [maplibre_gl] and [MaplibreMapController].
 class MaplibreMap extends StatefulWidget {
   const MaplibreMap({
-    Key? key,
+    super.key,
     required this.initialCameraPosition,
     this.styleString = "https://demotiles.maplibre.org/style.json",
     this.onMapCreated,
@@ -29,12 +29,12 @@ class MaplibreMap extends StatefulWidget {
     this.dragEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
-    this.myLocationTrackingMode = MyLocationTrackingMode.None,
-    this.myLocationRenderMode = MyLocationRenderMode.NORMAL,
+    this.myLocationTrackingMode = MyLocationTrackingMode.none,
+    this.myLocationRenderMode = MyLocationRenderMode.normal,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
-    this.attributionButtonPosition = AttributionButtonPosition.BottomRight,
+    this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
     this.iosLongClickDuration,
     this.onMapClick,
@@ -57,14 +57,13 @@ class MaplibreMap extends StatefulWidget {
       AnnotationType.circle,
     ],
   })  : assert(
-          myLocationRenderMode != MyLocationRenderMode.NORMAL
+          myLocationRenderMode != MyLocationRenderMode.normal
               ? myLocationEnabled
               : true,
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
         assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0),
-        super(key: key);
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -177,7 +176,7 @@ class MaplibreMap extends StatefulWidget {
 
   /// Specifies if and how the user's heading/bearing is rendered in the user location indicator.
   /// See the documentation of [MyLocationRenderMode] for details.
-  /// If this is set to a value other than [MyLocationRenderMode.NORMAL], [myLocationEnabled] needs to be true.
+  /// If this is set to a value other than [MyLocationRenderMode.normal], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
   /// Set the layout margins for the Logo

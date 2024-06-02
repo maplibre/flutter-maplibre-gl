@@ -56,6 +56,7 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
   ///  @example
   ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toString(); // = "LngLat(-73.9749, 40.7736)"
+  @override
   String toString() => jsObject.toString();
 
   ///  Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
@@ -83,5 +84,5 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
       LngLat.fromJsObject(LngLatJsImpl.convert(input));
 
   /// Creates a new LngLat from a [jsObject].
-  LngLat.fromJsObject(LngLatJsImpl jsObject) : super.fromJsObject(jsObject);
+  LngLat.fromJsObject(super.jsObject) : super.fromJsObject();
 }

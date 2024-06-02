@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
-final MethodChannel _globalChannel =
-    MethodChannel('plugins.flutter.io/mapbox_gl');
+const _globalChannel = MethodChannel('plugins.flutter.io/mapbox_gl');
 
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.

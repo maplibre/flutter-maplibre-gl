@@ -54,6 +54,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 class Popup extends Evented {
   dynamic get options => jsObject.options;
 
+  @override
   final PopupJsImpl jsObject;
 
   factory Popup([PopupOptions? options]) {
@@ -214,6 +215,5 @@ class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {
       ));
 
   /// Creates a new PopupOptions from a [jsObject].
-  PopupOptions.fromJsObject(PopupOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  PopupOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }

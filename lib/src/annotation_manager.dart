@@ -1,4 +1,4 @@
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 abstract class AnnotationManager<T extends Annotation> {
   final MaplibreMapController controller;
@@ -168,12 +168,8 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(MaplibreMapController controller,
-      {void Function(Line)? onTap, bool enableInteraction = true})
+  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
       : super(
-          controller,
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
 
@@ -186,25 +182,24 @@ class LineManager extends AnnotationManager<Line> {
     lineOffset: [Expressions.get, 'lineOffset'],
     lineBlur: [Expressions.get, 'lineBlur'],
   );
+
   @override
   List<LayerProperties> get allLayerProperties => [
         _baseProperties,
-        _baseProperties.copyWith(
-            LineLayerProperties(linePattern: [Expressions.get, 'linePattern'])),
+        _baseProperties.copyWith(const LineLayerProperties(
+            linePattern: [Expressions.get, 'linePattern'])),
       ];
 }
 
 class FillManager extends AnnotationManager<Fill> {
   FillManager(
-    MaplibreMapController controller, {
-    void Function(Fill)? onTap,
-    bool enableInteraction = true,
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
   }) : super(
-          controller,
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
+
   @override
   List<LayerProperties> get allLayerProperties => const [
         FillLayerProperties(
@@ -223,14 +218,11 @@ class FillManager extends AnnotationManager<Fill> {
 
 class CircleManager extends AnnotationManager<Circle> {
   CircleManager(
-    MaplibreMapController controller, {
-    void Function(Circle)? onTap,
-    bool enableInteraction = true,
-  }) : super(
-          controller,
-          enableInteraction: enableInteraction,
-          onTap: onTap,
-        );
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
+  });
+
   @override
   List<LayerProperties> get allLayerProperties => const [
         CircleLayerProperties(
@@ -247,22 +239,17 @@ class CircleManager extends AnnotationManager<Circle> {
 
 class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
-    MaplibreMapController controller, {
-    void Function(Symbol)? onTap,
+    super.controller, {
+    super.onTap,
     bool iconAllowOverlap = false,
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
-    bool enableInteraction = true,
+    super.enableInteraction = true,
   })  : _iconAllowOverlap = iconAllowOverlap,
         _textAllowOverlap = textAllowOverlap,
         _iconIgnorePlacement = iconIgnorePlacement,
-        _textIgnorePlacement = textIgnorePlacement,
-        super(
-          controller,
-          enableInteraction: enableInteraction,
-          onTap: onTap,
-        );
+        _textIgnorePlacement = textIgnorePlacement;
 
   bool _iconAllowOverlap;
   bool _textAllowOverlap;

@@ -54,6 +54,7 @@ class LngLatJsImpl {
   ///  @example
   ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toString(); // = "LngLat(-73.9749, 40.7736)"
+  @override
   external String toString();
 
   ///  Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.

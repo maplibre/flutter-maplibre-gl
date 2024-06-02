@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 /// The position of the map "camera", the view point from which the world is
 /// shown in the map view. Aggregates the camera's [target] geographical
@@ -69,15 +69,14 @@ class CameraPosition {
   }
 
   @override
-  bool operator ==(dynamic other) {
-    if (identical(this, other)) return true;
-    if (runtimeType != other.runtimeType) return false;
-    final CameraPosition typedOther = other;
-    return bearing == typedOther.bearing &&
-        target == typedOther.target &&
-        tilt == typedOther.tilt &&
-        zoom == typedOther.zoom;
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CameraPosition &&
+          runtimeType == other.runtimeType &&
+          bearing == other.bearing &&
+          target == other.target &&
+          tilt == other.tilt &&
+          zoom == other.zoom;
 
   @override
   int get hashCode => Object.hash(bearing, target, tilt, zoom);

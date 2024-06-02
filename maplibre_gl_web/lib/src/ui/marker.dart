@@ -26,6 +26,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 /// @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
 /// @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
 class Marker extends Evented {
+  @override
   final MarkerJsImpl jsObject;
 
   factory Marker([MarkerOptions? options]) =>
@@ -154,6 +155,5 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
       ));
 
   /// Creates a new MarkerOptions from a [jsObject].
-  MarkerOptions.fromJsObject(MarkerOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  MarkerOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }

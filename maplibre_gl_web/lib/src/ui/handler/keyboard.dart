@@ -21,6 +21,5 @@ class KeyboardHandler extends JsObjectWrapper<KeyboardHandlerJsImpl> {
   bool disable() => jsObject.disable();
 
   /// Creates a new KeyboardHandler from a [jsObject].
-  KeyboardHandler.fromJsObject(KeyboardHandlerJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  KeyboardHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 class Circle implements Annotation {
   Circle(this._id, this.options, [this._data]);
@@ -13,9 +13,12 @@ class Circle implements Annotation {
   ///
   /// The identifier is an arbitrary unique string.
   final String _id;
+
+  @override
   String get id => _id;
 
   final Map? _data;
+
   Map? get data => _data;
 
   /// The circle configuration options most recently applied programmatically
@@ -36,8 +39,8 @@ class Circle implements Annotation {
 
   @override
   void translate(LatLng delta) {
-    options = options
-        .copyWith(CircleOptions(geometry: this.options.geometry! + delta));
+    options =
+        options.copyWith(CircleOptions(geometry: options.geometry! + delta));
   }
 }
 
