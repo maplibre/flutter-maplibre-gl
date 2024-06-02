@@ -1,5 +1,1 @@
-include: package:flutter_lints/flutter.yaml
-
-linter:
-  rules:
-    constant_identifier_names: false
+include: ../analysis_options.yaml
