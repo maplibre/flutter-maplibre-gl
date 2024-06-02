@@ -2,7 +2,10 @@
 
 ### Breaking changes
 
-* All Dart enums have been migrated from mixed cases to lower camelcase according to the `camel_case_types` lint rule.
+* All Dart enums have been migrated from mixed cases to lower camelcase 
+  according to the `camel_case_types` lint rule.
+* Move `MaplibreStyles` to the main `maplibre_gl` package. You can now use the  
+  demo style without adding `maplibre_gl_platform_interface` as a dependency.
 
 ## 0.19.0
 
