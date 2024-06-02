@@ -9,12 +9,12 @@ analyzer:
 
 linter:
   rules:
-    flutter_style_todos: false
     # temporary rules
     avoid_escaping_inner_quotes: false
     prefer_interpolation_to_compose_strings: false
     prefer_if_elements_to_conditional_expressions: false
     constant_identifier_names: false
+    flutter_style_todos: false
     one_member_abstracts: false
     lines_longer_than_80_chars: false
     prefer_int_literals: false
