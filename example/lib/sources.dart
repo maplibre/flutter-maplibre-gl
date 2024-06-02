@@ -103,7 +103,7 @@ class FullMapState extends State<FullMap> {
     await controller.addSource(
         "terrain",
         const VectorSourceProperties(
-          url: "https://demotiles.maplibre.org/tiles/tiles.json",
+          url: MaplibreStyles.demo,
         ));
 
     await controller.addLayer(

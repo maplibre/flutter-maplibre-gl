@@ -14,7 +14,7 @@ class MaplibreMap extends StatefulWidget {
   const MaplibreMap({
     super.key,
     required this.initialCameraPosition,
-    this.styleString = "https://demotiles.maplibre.org/style.json",
+    this.styleString = MaplibreStyles.demo,
     this.onMapCreated,
     this.onStyleLoadedCallback,
     this.gestureRecognizers,

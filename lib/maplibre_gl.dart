@@ -43,6 +43,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
@@ -82,8 +83,6 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         MethodChannelMaplibreGl,
         OnPlatformViewCreatedCallback;
 
-export 'src/maplibre_styles.dart';
-
 part 'src/controller.dart';
 
 part 'src/maplibre_map.dart';
@@ -103,3 +102,5 @@ part 'src/color_tools.dart';
 part 'src/annotation_manager.dart';
 
 part 'src/util.dart';
+
+part 'src/maplibre_styles.dart';
