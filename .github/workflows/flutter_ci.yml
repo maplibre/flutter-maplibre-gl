@@ -53,7 +53,7 @@ jobs:
           cache: true
       - uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
       - run: flutter pub get
