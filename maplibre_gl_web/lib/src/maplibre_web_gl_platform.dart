@@ -477,9 +477,9 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onCameraTrackingChanged(bool isTracking) {
     if (isTracking) {
-      onCameraTrackingChangedPlatform(MyLocationTrackingMode.Tracking);
+      onCameraTrackingChangedPlatform(MyLocationTrackingMode.tracking);
     } else {
-      onCameraTrackingChangedPlatform(MyLocationTrackingMode.None);
+      onCameraTrackingChangedPlatform(MyLocationTrackingMode.none);
     }
   }
 
@@ -538,16 +538,16 @@ class MaplibreMapController extends MapLibreGlPlatform
 
     String? positionString;
     switch (position) {
-      case CompassViewPosition.TopRight:
+      case CompassViewPosition.topRight:
         positionString = 'top-right';
         break;
-      case CompassViewPosition.TopLeft:
+      case CompassViewPosition.topLeft:
         positionString = 'top-left';
         break;
-      case CompassViewPosition.BottomRight:
+      case CompassViewPosition.bottomRight:
         positionString = 'bottom-right';
         break;
-      case CompassViewPosition.BottomLeft:
+      case CompassViewPosition.bottomLeft:
         positionString = 'bottom-left';
         break;
       default:
@@ -584,16 +584,16 @@ class MaplibreMapController extends MapLibreGlPlatform
   ) {
     String? positionString;
     switch (position) {
-      case AttributionButtonPosition.TopRight:
+      case AttributionButtonPosition.topRight:
         positionString = 'top-right';
         break;
-      case AttributionButtonPosition.TopLeft:
+      case AttributionButtonPosition.topLeft:
         positionString = 'top-left';
         break;
-      case AttributionButtonPosition.BottomRight:
+      case AttributionButtonPosition.bottomRight:
         positionString = 'bottom-right';
         break;
-      case AttributionButtonPosition.BottomLeft:
+      case AttributionButtonPosition.bottomLeft:
         positionString = 'bottom-left';
         break;
     }
