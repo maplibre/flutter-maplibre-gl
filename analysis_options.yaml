@@ -7,5 +7,4 @@ analyzer:
 
 linter:
   rules:
-    camel_case_types: false
     constant_identifier_names: false

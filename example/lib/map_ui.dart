@@ -66,7 +66,7 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _myLocationEnabled = true;
   bool _telemetryEnabled = true;
   bool _countriesVisible = true;
-  MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
+  MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.none;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
 
@@ -361,7 +361,7 @@ class MapUiBodyState extends State<MapUiBody> {
       doubleClickZoomEnabled: _doubleClickToZoomEnabled,
       myLocationEnabled: _myLocationEnabled,
       myLocationTrackingMode: _myLocationTrackingMode,
-      myLocationRenderMode: MyLocationRenderMode.GPS,
+      myLocationRenderMode: MyLocationRenderMode.gps,
       onMapClick: (point, latLng) async {
         debugPrint(
             "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
@@ -402,7 +402,7 @@ class MapUiBodyState extends State<MapUiBody> {
       },
       onCameraTrackingDismissed: () {
         setState(() {
-          _myLocationTrackingMode = MyLocationTrackingMode.None;
+          _myLocationTrackingMode = MyLocationTrackingMode.none;
         });
       },
       onUserLocationUpdated: (location) {
