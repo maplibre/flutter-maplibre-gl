@@ -26,7 +26,7 @@ dependencies:
   image: ^4.0.17
 
 dev_dependencies:
-  very_good_analysis: ^5.1.0
+  very_good_analysis: ^5.0.0
 
 platforms:
   web:
