@@ -1589,6 +1589,27 @@ final class MapboxMapController
         result.success(reply);
         break;
       }
+      case "style#setStyle":
+      {
+        // Getting style json, url, path etc. from the flutter side
+        String styleString = call.argument("style");
+
+        // Checking if style is null or not
+        if (styleString != null) {
+          // If style is not null setting style
+          setStyleString(styleString);
+          result.success(null);
+        } else {
+
+          // else throwing error
+          result.error(
+                  "STYLE STRING IS NULL",
+                  "The style string is null.",
+                  null
+          );
+        }
+        break;
+      }
       default:
         result.notImplemented();
     }

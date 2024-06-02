@@ -55,8 +55,6 @@ class LocalStyleState extends State<LocalStyle> {
 
   @override
   Widget build(BuildContext context) {
-    final styleAbsoluteFilePath = this.styleAbsoluteFilePath;
-
     if (styleAbsoluteFilePath == null) {
       return const Scaffold(
         body: Center(child: Text('Creating local style file...')),
@@ -64,12 +62,19 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
+        floatingActionButton: FloatingActionButton.small(
+          child: const Icon(Icons.layers_outlined),
+          onPressed: () async {
+            if (styleAbsoluteFilePath != null) {
+              await mapController?.setStyle(styleAbsoluteFilePath!);
+            }
+          },
+        ),
         body: MaplibreMap(
-      styleString: styleAbsoluteFilePath,
-      onMapCreated: _onMapCreated,
-      initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
-      onStyleLoadedCallback: onStyleLoadedCallback,
-    ));
+          onMapCreated: _onMapCreated,
+          initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
+          onStyleLoadedCallback: onStyleLoadedCallback,
+        ));
   }
 
   void onStyleLoadedCallback() {}

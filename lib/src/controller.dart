@@ -1426,6 +1426,12 @@ class MaplibreMapController extends ChangeNotifier {
         .toList();
   }
 
+  /// Method to set style string
+  /// [styleString] -> It will take json, url, absolute path or asset path
+  Future<void> setStyle(String styleString) async {
+    return await _maplibreGlPlatform.setStyle(styleString);
+  }
+
   @override
   void dispose() {
     super.dispose();

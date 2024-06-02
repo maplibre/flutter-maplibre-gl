@@ -49,26 +49,35 @@ abstract class MapLibreGlPlatform {
   final onUserLocationUpdatedPlatform = ArgumentCallbacks<UserLocation>();
 
   Future<void> initPlatform(int id);
+
   Widget buildView(
       Map<String, dynamic> creationParams,
       OnPlatformViewCreatedCallback onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers);
+
   Future<CameraPosition?> updateMapOptions(Map<String, dynamic> optionsUpdate);
+
   Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration});
+
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
+
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode);
 
   Future<void> matchMapLanguageWithDeviceDefault();
 
   void resizeWebMap();
+
   void forceResizeWebMap();
 
   Future<void> updateContentInsets(EdgeInsets insets, bool animated);
+
   Future<void> setMapLanguage(String language);
+
   Future<void> setTelemetryEnabled(bool enabled);
 
   Future<bool> getTelemetryEnabled();
+
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter);
 
@@ -77,7 +86,9 @@ abstract class MapLibreGlPlatform {
 
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter);
+
   Future invalidateAmbientCache();
+
   Future<LatLng?> requestMyLocationLatLng();
 
   Future<LatLngBounds> getVisibleRegion();
@@ -204,6 +215,10 @@ abstract class MapLibreGlPlatform {
   Future<void> addSource(String sourceId, SourceProperties properties);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
+
+  /// Method to set style string
+  /// [styleString] -> It will take json, url, absolute path or asset path
+  Future<void> setStyle(String styleString);
 
   @mustCallSuper
   void dispose() {

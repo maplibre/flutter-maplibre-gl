@@ -833,4 +833,21 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       return Future.error(e);
     }
   }
+
+  /// Method to set style string
+  /// [styleString] -> It will take json, url, absolute path or asset path
+  ///
+  @override
+  Future<void> setStyle(String styleString) async {
+    try {
+      await _channel.invokeMethod(
+        'style#setStyle',
+        <String, dynamic>{
+          'style': styleString,
+        },
+      );
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
 }

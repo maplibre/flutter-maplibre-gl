@@ -1156,4 +1156,16 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<List> getSourceIds() async {
     throw UnimplementedError();
   }
+
+  /// Method to set style string
+  /// [styleString] -> It will take json, url, absolute path or asset path
+  ///
+  @override
+  Future<void> setStyle(String styleString) async {
+    try {
+      _map.setStyle(styleString);
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
 }
