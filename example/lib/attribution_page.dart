@@ -1,51 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class AttributionPage extends ExamplePage {
-  const AttributionPage({super.key})
-      : super(const Icon(Icons.thumb_up_alt_outlined), 'Map Attribution');
-
-  @override
-  Widget build(BuildContext context) {
-    return const AttributionBody();
-  }
-}
-
-class AttributionBody extends StatefulWidget {
-  const AttributionBody({super.key});
+class AttributionPage extends StatefulWidget {
+  const AttributionPage({super.key});
 
   @override
-  State<AttributionBody> createState() => _AttributionBodyState();
+  State<AttributionPage> createState() => _AttributionPageState();
 }
 
-class _AttributionBodyState extends State<AttributionBody> {
+class _AttributionPageState extends State<AttributionPage> {
   AttributionButtonPosition? attributionButtonPosition;
   bool useDefaultAttributionPosition = true;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text("Set attribution position"),
-        Wrap(
-          children: [
-            buildDefaultPositionButton(),
-            buildPositionButton(null),
-            buildPositionButton(AttributionButtonPosition.topRight),
-            buildPositionButton(AttributionButtonPosition.topLeft),
-            buildPositionButton(AttributionButtonPosition.bottomRight),
-            buildPositionButton(AttributionButtonPosition.bottomLeft),
-          ],
-        ),
-        Expanded(
-          child: buildMap(
-            attributionButtonPosition,
-            useDefaultAttributionPosition,
+    return ExampleScaffold(
+      page: ExamplePage.attribution,
+      body: Column(
+        children: [
+          const Text("Set attribution position"),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                buildDefaultPositionButton(),
+                buildPositionButton(null),
+                buildPositionButton(AttributionButtonPosition.topRight),
+                buildPositionButton(AttributionButtonPosition.topLeft),
+                buildPositionButton(AttributionButtonPosition.bottomRight),
+                buildPositionButton(AttributionButtonPosition.bottomLeft),
+              ],
+            ),
           ),
-        ),
-      ],
+          Expanded(
+            child: buildMap(
+              attributionButtonPosition,
+              useDefaultAttributionPosition,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

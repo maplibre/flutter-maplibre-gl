@@ -7,29 +7,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class LinePage extends ExamplePage {
-  const LinePage({super.key}) : super(const Icon(Icons.share), 'Line');
-
-  @override
-  Widget build(BuildContext context) {
-    return const LineBody();
-  }
-}
-
-class LineBody extends StatefulWidget {
-  const LineBody({super.key});
+class AnnotationLinePage extends StatefulWidget {
+  const AnnotationLinePage({super.key});
 
   @override
-  State<StatefulWidget> createState() => LineBodyState();
+  State<AnnotationLinePage> createState() => _AnnotationLinePageState();
 }
 
-class LineBodyState extends State<LineBody> {
-  LineBodyState();
-
-  static const LatLng center = LatLng(-33.86711, 151.1947171);
+class _AnnotationLinePageState extends State<AnnotationLinePage> {
+  _AnnotationLinePageState();
 
   MaplibreMapController? controller;
   int _lineCount = 0;
@@ -147,89 +136,78 @@ class LineBodyState extends State<LineBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            height: 400.0,
+    return ExampleScaffold(
+      page: ExamplePage.annotationLine,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              TextButton(
+                onPressed: (_lineCount == 12) ? null : _add,
+                child: const Text('add'),
+              ),
+              TextButton(
+                onPressed: (_selectedLine == null) ? null : _remove,
+                child: const Text('remove'),
+              ),
+              TextButton(
+                onPressed: (_selectedLine == null)
+                    ? null
+                    : () async {
+                        await _move();
+                      },
+                child: const Text('move'),
+              ),
+              TextButton(
+                onPressed: (_selectedLine == null)
+                    ? null
+                    : _changeLinePattern,
+                child: const Text('change line-pattern'),
+              ),
+            ],
+          ),
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              TextButton(
+                onPressed:
+                    (_selectedLine == null) ? null : _changeAlpha,
+                child: const Text('change alpha'),
+              ),
+              TextButton(
+                onPressed:
+                    (_selectedLine == null) ? null : _toggleVisible,
+                child: const Text('toggle visible'),
+              ),
+              TextButton(
+                onPressed: (_selectedLine == null)
+                    ? null
+                    : () async {
+                        var latLngs = await controller!
+                            .getLineLatLngs(_selectedLine!);
+                        for (var latLng in latLngs) {
+                          debugPrint(latLng.toString());
+                        }
+                      },
+                child: const Text('print current LatLng'),
+              ),
+            ],
+          ),
+          Expanded(
             child: MaplibreMap(
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoadedCallback,
               initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
+                target: LatLng(-33, 151),
+                zoom: 7,
               ),
             ),
           ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Column(
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        TextButton(
-                          onPressed: (_lineCount == 12) ? null : _add,
-                          child: const Text('add'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null) ? null : _remove,
-                          child: const Text('remove'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () async {
-                                  await _move();
-                                },
-                          child: const Text('move'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : _changeLinePattern,
-                          child: const Text('change line-pattern'),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _changeAlpha,
-                          child: const Text('change alpha'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _toggleVisible,
-                          child: const Text('toggle visible'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () async {
-                                  var latLngs = await controller!
-                                      .getLineLatLngs(_selectedLine!);
-                                  for (var latLng in latLngs) {
-                                    debugPrint(latLng.toString());
-                                  }
-                                },
-                          child: const Text('print current LatLng'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

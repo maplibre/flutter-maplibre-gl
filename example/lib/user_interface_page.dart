@@ -7,36 +7,23 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
+import 'package:maplibre_gl_example/main.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
   northeast: const LatLng(-33.571835, 151.325952),
 );
 
-class MapUiPage extends ExamplePage {
-  const MapUiPage({super.key})
-      : super(
-          const Icon(Icons.accessibility_new_outlined),
-          'User interface',
-        );
+class UserInterfacePage extends StatefulWidget {
+  const UserInterfacePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MapUiBody();
-  }
+  State<UserInterfacePage> createState() => _UserInterfacePageState();
 }
 
-class MapUiBody extends StatefulWidget {
-  const MapUiBody({super.key});
-
-  @override
-  State<StatefulWidget> createState() => MapUiBodyState();
-}
-
-class MapUiBodyState extends State<MapUiBody> {
-  MapUiBodyState();
+class _UserInterfacePageState extends State<UserInterfacePage> {
+  _UserInterfacePageState();
 
   static const CameraPosition _kInitialPosition = CameraPosition(
     target: LatLng(-33.852, 151.211),
@@ -417,12 +404,6 @@ class MapUiBodyState extends State<MapUiBody> {
     if (mapController != null) {
       listViewChildren.addAll(
         <Widget>[
-          Text('camera bearing: ${_position.bearing}'),
-          Text('camera target: ${_position.target.latitude.toStringAsFixed(4)},'
-              '${_position.target.longitude.toStringAsFixed(4)}'),
-          Text('camera zoom: ${_position.zoom}'),
-          Text('camera tilt: ${_position.tilt}'),
-          Text(_isMoving ? '(Camera moving)' : '(Camera idle)'),
           _mapSizeToggler(),
           _queryFilterToggler(),
           _compassToggler(),
@@ -443,22 +424,52 @@ class MapUiBodyState extends State<MapUiBody> {
         ],
       );
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Center(
-          child: SizedBox(
-            width: _mapExpanded ? null : 300.0,
-            height: 200.0,
-            child: maplibreMap,
+    return ExampleScaffold(
+      page: ExamplePage.userInterface,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              children: listViewChildren,
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView(
-            children: listViewChildren,
+          Expanded(
+            child: Stack(
+              children: [
+                SizedBox(
+                  width: _mapExpanded ? null : 300.0,
+                  child: maplibreMap,
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  alignment: Alignment.topCenter,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Camera',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'bearing: ${_position.bearing}, target: ${_position.target.latitude.toStringAsFixed(4)},'
+                                '${_position.target.longitude.toStringAsFixed(4)}\n'
+                                'zoom: ${_position.zoom}, camera tilt: ${_position.tilt}',
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(_isMoving ? '(Camera moving)' : '(Camera idle)'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        )
-      ],
+        ],
+      ),
     );
   }
 

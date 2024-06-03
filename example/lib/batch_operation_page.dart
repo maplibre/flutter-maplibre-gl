@@ -4,9 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-import 'util.dart';
+import 'common/util.dart';
 
 const fillOptions = [
   FillOptions(
@@ -44,32 +45,18 @@ const fillOptions = [
   ], fillColor: "#FF0000"),
 ];
 
-class BatchAddPage extends ExamplePage {
-  const BatchAddPage({super.key})
-      : super(const Icon(Icons.list_alt), 'Batch add/remove');
+class BatchOperationPage extends StatefulWidget {
+  const BatchOperationPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const BatchAddBody();
-  }
+  State<StatefulWidget> createState() => _BatchOperationPageState();
 }
 
-class BatchAddBody extends StatefulWidget {
-  const BatchAddBody({super.key});
-
-  @override
-  State<StatefulWidget> createState() => BatchAddBodyState();
-}
-
-class BatchAddBodyState extends State<BatchAddBody> {
-  BatchAddBodyState();
-
+class _BatchOperationPageState extends State<BatchOperationPage> {
   List<Fill> _fills = [];
   List<Circle> _circles = [];
   List<Line> _lines = [];
   List<Symbol> _symbols = [];
-
-  static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   late MaplibreMapController controller;
 
@@ -141,13 +128,23 @@ class BatchAddBodyState extends State<BatchAddBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            height: 200.0,
+    return ExampleScaffold(
+      page: ExamplePage.batchOperation,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              TextButton(
+                  onPressed: _add, child: const Text('batch add')),
+              TextButton(
+                  onPressed: _remove,
+                  child: const Text('batch remove')),
+            ],
+          ),
+          Expanded(
             child: MaplibreMap(
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: () => addImageFromAsset(controller,
@@ -164,30 +161,8 @@ class BatchAddBodyState extends State<BatchAddBody> {
               ],
             ),
           ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        TextButton(
-                            onPressed: _add, child: const Text('batch add')),
-                        TextButton(
-                            onPressed: _remove,
-                            child: const Text('batch remove')),
-                      ],
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

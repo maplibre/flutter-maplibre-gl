@@ -4,29 +4,21 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-import 'util.dart';
+import 'common/util.dart';
 
-class ClickAnnotationPage extends ExamplePage {
-  const ClickAnnotationPage({super.key})
-      : super(const Icon(Icons.touch_app_outlined), 'Annotation tap');
 
-  @override
-  Widget build(BuildContext context) {
-    return const ClickAnnotationBody();
-  }
-}
-
-class ClickAnnotationBody extends StatefulWidget {
-  const ClickAnnotationBody({super.key});
+class ClickAnnotationPage extends StatefulWidget {
+  const ClickAnnotationPage({super.key});
 
   @override
-  State<StatefulWidget> createState() => ClickAnnotationBodyState();
+  State<ClickAnnotationPage> createState() => _ClickAnnotationPageState();
 }
 
-class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
-  ClickAnnotationBodyState();
+class _ClickAnnotationPageState extends State<ClickAnnotationPage> {
+  _ClickAnnotationPageState();
 
   static const LatLng center = LatLng(-33.88, 151.16);
 
@@ -52,7 +44,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
   _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
         content: Text(
-          'Tapped $type $id',
+          'Tapped $type with id "$id"',
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -139,18 +131,21 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   @override
   Widget build(BuildContext context) {
-    return MaplibreMap(
-      annotationOrder: const [
-        AnnotationType.fill,
-        AnnotationType.line,
-        AnnotationType.circle,
-        AnnotationType.symbol,
-      ],
-      onMapCreated: _onMapCreated,
-      onStyleLoadedCallback: _onStyleLoaded,
-      initialCameraPosition: const CameraPosition(
-        target: center,
-        zoom: 12.0,
+    return ExampleScaffold(
+      page: ExamplePage.clickAnnotation,
+      body: MaplibreMap(
+        annotationOrder: const [
+          AnnotationType.fill,
+          AnnotationType.line,
+          AnnotationType.circle,
+          AnnotationType.symbol,
+        ],
+        onMapCreated: _onMapCreated,
+        onStyleLoadedCallback: _onStyleLoaded,
+        initialCameraPosition: const CameraPosition(
+          target: center,
+          zoom: 12.0,
+        ),
       ),
     );
   }

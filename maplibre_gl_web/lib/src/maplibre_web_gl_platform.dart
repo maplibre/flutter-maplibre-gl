@@ -344,7 +344,7 @@ class MaplibreMapController extends MapLibreGlPlatform
                 'coordinates': feature.geometry.coordinates,
               },
               'properties': feature.properties,
-              'source': feature.source,
+              'source': feature.annotationSource,
             })
         .toList();
   }

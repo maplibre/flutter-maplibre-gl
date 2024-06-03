@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
+import 'package:maplibre_gl_example/main.dart';
 
-import 'page.dart';
-import 'util.dart';
+import 'common/util.dart';
 
-class AnnotationOrderPage extends ExamplePage {
-  const AnnotationOrderPage({super.key})
-      : super(const Icon(Icons.layers_outlined), 'Annotation order maps');
-
-  @override
-  Widget build(BuildContext context) => const AnnotationOrderBody();
-}
-
-class AnnotationOrderBody extends StatefulWidget {
-  const AnnotationOrderBody({super.key});
+class AnnotationOrderPage extends StatefulWidget {
+  const AnnotationOrderPage({super.key});
 
   @override
-  State<AnnotationOrderBody> createState() => _AnnotationOrderBodyState();
+  State<AnnotationOrderPage> createState() => _AnnotationOrderPageState();
 }
 
-class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
+class _AnnotationOrderPageState extends State<AnnotationOrderPage> {
   late MaplibreMapController controllerOne;
   late MaplibreMapController controllerTwo;
 
@@ -27,22 +20,21 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: Column(
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 5.0),
-                  child: Text(
-                      'This map has polygones (fill) above all other anotations (default behavior)'),
-                ),
-                Center(
-                  child: SizedBox(
-                    width: 250.0,
-                    height: 250.0,
+    return ExampleScaffold(
+      page: ExamplePage.annotationOrder,
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0.0),
+              child: Column(
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.0),
+                    child: Text(
+                        'This map has polygons (fill) above all other annotations (default behavior)'),
+                  ),
+                  Flexible(
                     child: MaplibreMap(
                       onMapCreated: onMapCreatedOne,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
@@ -58,25 +50,21 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: Column(
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
-                  child: Text(
-                      'This map has polygones (fill) under all other anotations'),
-                ),
-                Center(
-                  child: SizedBox(
-                    width: 250.0,
-                    height: 250.0,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0.0),
+              child: Column(
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
+                    child: Text(
+                        'This map has polygones (fill) under all other anotations'),
+                  ),
+                  Flexible(
                     child: MaplibreMap(
                       onMapCreated: onMapCreatedTwo,
                       onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
@@ -92,12 +80,12 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

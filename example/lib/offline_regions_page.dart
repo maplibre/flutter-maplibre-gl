@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'offline_region_map.dart';
-import 'page.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/offline_region_map_page.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
 final LatLngBounds hawaiiBounds = LatLngBounds(
   southwest: const LatLng(17.26672, -161.14746),
@@ -44,7 +44,7 @@ final List<OfflineRegionDefinition> regionDefinitions = [
 final List<String> regionNames = ['Hawaii', 'Santiago', 'Auckland'];
 
 class OfflineRegionListItem {
-  OfflineRegionListItem({
+  const OfflineRegionListItem({
     required this.offlineRegionDefinition,
     required this.downloadedId,
     required this.isDownloading,
@@ -97,25 +97,14 @@ final List<OfflineRegionListItem> allRegions = [
   ),
 ];
 
-class OfflineRegionsPage extends ExamplePage {
-  const OfflineRegionsPage({super.key})
-      : super(
-            const Icon(Icons.download_for_offline_outlined), 'Offline Regions');
+class OfflineRegionsPage extends StatefulWidget {
+  const OfflineRegionsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const OfflineRegionBody();
-  }
+  State<OfflineRegionsPage> createState() => _OfflineRegionsBodyState();
 }
 
-class OfflineRegionBody extends StatefulWidget {
-  const OfflineRegionBody({super.key});
-
-  @override
-  State<OfflineRegionBody> createState() => _OfflineRegionsBodyState();
-}
-
-class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
+class _OfflineRegionsBodyState extends State<OfflineRegionsPage> {
   final List<OfflineRegionListItem> _items = [];
 
   @override
@@ -126,58 +115,61 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-          itemCount: _items.length,
-          itemBuilder: (context, index) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.map),
-                onPressed: () => _goToMap(_items[index]),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    _items[index].name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  Text(
-                    'Est. tiles: ${_items[index].estimatedTiles}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              _items[index].isDownloading
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        _items[index].isDownloaded
-                            ? Icons.delete
-                            : Icons.file_download,
+    return ExampleScaffold(
+      page: ExamplePage.offlineRegions,
+      body: Stack(
+        children: <Widget>[
+          ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+            itemCount: _items.length,
+            itemBuilder: (context, index) => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.map),
+                  onPressed: () => _goToMap(_items[index]),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      _items[index].name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
-                      onPressed: _items[index].isDownloaded
-                          ? () => _deleteRegion(_items[index], index)
-                          : () => _downloadRegion(_items[index], index),
                     ),
-            ],
+                    Text(
+                      'Est. tiles: ${_items[index].estimatedTiles}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                _items[index].isDownloading
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(),
+                      )
+                    : IconButton(
+                        icon: Icon(
+                          _items[index].isDownloaded
+                              ? Icons.delete
+                              : Icons.file_download,
+                        ),
+                        onPressed: _items[index].isDownloaded
+                            ? () => _deleteRegion(_items[index], index)
+                            : () => _downloadRegion(_items[index], index),
+                      ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -259,7 +251,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
   _goToMap(OfflineRegionListItem item) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => OfflineRegionMap(item),
+        builder: (_) => OfflineRegionMapPage(item),
       ),
     );
   }

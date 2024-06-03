@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
 class StyleInfo {
   final String name;
@@ -10,31 +10,22 @@ class StyleInfo {
   final Future<void> Function(MaplibreMapController) addDetails;
   final CameraPosition position;
 
-  const StyleInfo(
-      {required this.name,
-      required this.baseStyle,
-      required this.addDetails,
-      required this.position});
+  const StyleInfo({
+    required this.name,
+    required this.baseStyle,
+    required this.addDetails,
+    required this.position,
+  });
 }
 
-class Sources extends ExamplePage {
-  const Sources({super.key})
-      : super(const Icon(Icons.layers_outlined), 'Various Sources');
+class VariousSourcesPage extends StatefulWidget {
+  const VariousSourcesPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const FullMap();
-  }
+  State createState() => _VariousSourcesPageState();
 }
 
-class FullMap extends StatefulWidget {
-  const FullMap({super.key});
-
-  @override
-  State createState() => FullMapState();
-}
-
-class FullMapState extends State<FullMap> {
+class _VariousSourcesPageState extends State<VariousSourcesPage> {
   MaplibreMapController? controller;
   final watercolorRasterId = "watercolorRaster";
   int selectedStyleId = 0;
@@ -320,41 +311,43 @@ class FullMapState extends State<FullMap> {
     final nextName =
         _stylesAndLoaders[(selectedStyleId + 1) % _stylesAndLoaders.length]
             .name;
-    return Scaffold(
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: FloatingActionButton.extended(
-            icon: const Icon(Icons.swap_horiz),
-            label: SizedBox(
-                width: 120, child: Center(child: Text("To $nextName"))),
-            onPressed: () => setState(
-              () => selectedStyleId =
-                  (selectedStyleId + 1) % _stylesAndLoaders.length,
-            ),
+    return ExampleScaffold(
+      page: ExamplePage.variousSources,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: FloatingActionButton.extended(
+          icon: const Icon(Icons.swap_horiz),
+          label:
+              SizedBox(width: 120, child: Center(child: Text("To $nextName"))),
+          onPressed: () => setState(
+            () => selectedStyleId =
+                (selectedStyleId + 1) % _stylesAndLoaders.length,
           ),
         ),
-        body: Stack(
-          children: [
-            MaplibreMap(
-              styleString: styleInfo.baseStyle,
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: styleInfo.position,
-              onStyleLoadedCallback: _onStyleLoadedCallback,
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.topCenter,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Current source: ${styleInfo.name}",
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+      ),
+      body: Stack(
+        children: [
+          MaplibreMap(
+            styleString: styleInfo.baseStyle,
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: styleInfo.position,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            alignment: Alignment.topCenter,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Current source: ${styleInfo.name}",
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -1,39 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class NoLocationPermissionPage extends ExamplePage {
-  const NoLocationPermissionPage({super.key})
-      : super(
-          const Icon(Icons.gps_off),
-          'No user location permission',
-          needsLocationPermission: false,
-        );
+class NoLocationPermissionPage extends StatefulWidget {
+  const NoLocationPermissionPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const NoLocationPermissionBody();
-  }
+  State<NoLocationPermissionPage> createState() =>
+      _NoLocationPermissionPageState();
 }
 
-class NoLocationPermissionBody extends StatefulWidget {
-  const NoLocationPermissionBody({super.key});
-
-  @override
-  State<NoLocationPermissionBody> createState() =>
-      _NoLocationPermissionBodyState();
-}
-
-class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
+class _NoLocationPermissionPageState extends State<NoLocationPermissionPage> {
   @override
   Widget build(BuildContext context) {
-    return MaplibreMap(
-      initialCameraPosition: const CameraPosition(
-        target: LatLng(-33.852, 151.211),
-        zoom: 11.0,
+    return ExampleScaffold(
+      page: ExamplePage.noLocationPermission,
+      body: MaplibreMap(
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(-33.852, 151.211),
+          zoom: 11.0,
+        ),
+        styleString: "assets/osm_style.json",
       ),
-      styleString: "assets/osm_style.json",
     );
   }
 }

@@ -4,27 +4,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
+import 'package:maplibre_gl_example/main.dart';
 
-import 'page.dart';
-
-class AnimateCameraPage extends ExamplePage {
-  const AnimateCameraPage({super.key})
-      : super(const Icon(Icons.animation), 'Camera control, animated');
-
-  @override
-  Widget build(BuildContext context) {
-    return const AnimateCamera();
-  }
-}
-
-class AnimateCamera extends StatefulWidget {
-  const AnimateCamera({super.key});
+class AnimateCameraPage extends StatefulWidget {
+  const AnimateCameraPage({super.key});
 
   @override
-  State createState() => AnimateCameraState();
+  State createState() => _AnimateCameraPageState();
 }
 
-class AnimateCameraState extends State<AnimateCamera> {
+class _AnimateCameraPageState extends State<AnimateCameraPage> {
   late MaplibreMapController mapController;
 
   void _onMapCreated(MaplibreMapController controller) {
@@ -33,43 +23,34 @@ class AnimateCameraState extends State<AnimateCamera> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MaplibreMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition:
-                  const CameraPosition(target: LatLng(0.0, 0.0)),
-            ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Column(
+    return ExampleScaffold(
+      page: ExamplePage.moveCameraAnimated,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Wrap(
+              alignment: WrapAlignment.center,
               children: <Widget>[
                 TextButton(
                   onPressed: () {
                     mapController
                         .animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            const CameraPosition(
-                              bearing: 270.0,
-                              target: LatLng(51.5160895, -0.1294527),
-                              tilt: 30.0,
-                              zoom: 17.0,
-                            ),
-                          ),
-                        )
+                      CameraUpdate.newCameraPosition(
+                        const CameraPosition(
+                          bearing: 270.0,
+                          target: LatLng(51.5160895, -0.1294527),
+                          tilt: 30.0,
+                          zoom: 17.0,
+                        ),
+                      ),
+                    )
                         .then(
                           (result) => debugPrint(
-                              "mapController.animateCamera() returned $result"),
-                        );
+                          "mapController.animateCamera() returned $result"),
+                    );
                   },
                   child: const Text('newCameraPosition'),
                 ),
@@ -77,13 +58,13 @@ class AnimateCameraState extends State<AnimateCamera> {
                   onPressed: () {
                     mapController
                         .animateCamera(
-                          CameraUpdate.newLatLng(
-                            const LatLng(56.1725505, 10.1850512),
-                          ),
-                          duration: const Duration(seconds: 5),
-                        )
+                      CameraUpdate.newLatLng(
+                        const LatLng(56.1725505, 10.1850512),
+                      ),
+                      duration: const Duration(seconds: 5),
+                    )
                         .then((result) => debugPrint(
-                            "mapController.animateCamera() returned $result"));
+                        "mapController.animateCamera() returned $result"));
                   },
                   child: const Text('newLatLng'),
                 ),
@@ -122,10 +103,6 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('scrollBy'),
                 ),
-              ],
-            ),
-            Column(
-              children: <Widget>[
                 TextButton(
                   onPressed: () {
                     mapController.animateCamera(
@@ -196,9 +173,17 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
               ],
             ),
-          ],
-        )
-      ],
+          ),
+          Expanded(
+            child: MaplibreMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition:
+              const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
+              styleString: "assets/osm_style.json",
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2,34 +2,25 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class LocalizedMapPage extends ExamplePage {
-  const LocalizedMapPage({super.key})
-      : super(const Icon(Icons.language), 'Localized screen map');
-
-  @override
-  Widget build(BuildContext context) {
-    return const LocalizedMap();
-  }
-}
-
-class LocalizedMap extends StatefulWidget {
-  const LocalizedMap({super.key});
+class LocalizedMapPage extends StatefulWidget {
+  const LocalizedMapPage({super.key});
 
   @override
-  State createState() => LocalizedMapState();
+  State<LocalizedMapPage> createState() => _LocalizedMapPageState();
 }
 
-class LocalizedMapState extends State<LocalizedMap> {
+class _LocalizedMapPageState extends State<LocalizedMapPage> {
   final _mapReadyCompleter = Completer<MaplibreMapController>();
 
   var _mapLanguage = "en";
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ExampleScaffold(
+      page: ExamplePage.localized,
       body: Column(
         children: [
           DropdownButton<String>(

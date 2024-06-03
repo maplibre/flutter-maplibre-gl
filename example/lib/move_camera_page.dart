@@ -4,27 +4,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class MoveCameraPage extends ExamplePage {
-  const MoveCameraPage({super.key})
-      : super(const Icon(Icons.control_camera), 'Camera control');
-
-  @override
-  Widget build(BuildContext context) {
-    return const MoveCamera();
-  }
-}
-
-class MoveCamera extends StatefulWidget {
-  const MoveCamera({super.key});
+class MoveCameraPage extends StatefulWidget {
+  const MoveCameraPage({super.key});
 
   @override
-  State createState() => MoveCameraState();
+  State createState() => _MoveCameraPageState();
 }
 
-class MoveCameraState extends State<MoveCamera> {
+class _MoveCameraPageState extends State<MoveCameraPage> {
   late MaplibreMapController mapController;
 
   void _onMapCreated(MaplibreMapController controller) {
@@ -33,26 +23,16 @@ class MoveCameraState extends State<MoveCamera> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MaplibreMap(
-              onMapCreated: _onMapCreated,
-              onCameraIdle: () => debugPrint("onCameraIdle"),
-              initialCameraPosition:
-                  const CameraPosition(target: LatLng(0.0, 0.0)),
-            ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Column(
+    return ExampleScaffold(
+      page: ExamplePage.moveCamera,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Wrap(
+              alignment: WrapAlignment.center,
               children: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -114,10 +94,6 @@ class MoveCameraState extends State<MoveCamera> {
                   },
                   child: const Text('scrollBy'),
                 ),
-              ],
-            ),
-            Column(
-              children: <Widget>[
                 TextButton(
                   onPressed: () {
                     mapController.moveCamera(
@@ -179,9 +155,18 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
               ],
             ),
-          ],
-        )
-      ],
+          ),
+          Expanded(
+            child: MaplibreMap(
+              onMapCreated: _onMapCreated,
+              onCameraIdle: () => debugPrint("onCameraIdle"),
+              initialCameraPosition:
+              const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
+              styleString: "assets/osm_style.json",
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

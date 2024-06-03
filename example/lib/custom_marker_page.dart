@@ -5,29 +5,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
+import 'package:maplibre_gl_example/main.dart';
 
-import 'page.dart';
-
-const randomMarkerNum = 100;
-
-class CustomMarkerPage extends ExamplePage {
-  const CustomMarkerPage({super.key})
-      : super(const Icon(Icons.place_outlined), 'Custom marker');
+class CustomMarkerPage extends StatefulWidget {
+  const CustomMarkerPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const CustomMarker();
-  }
+  State<CustomMarkerPage> createState() => _CustomMarkerPageState();
 }
 
-class CustomMarker extends StatefulWidget {
-  const CustomMarker({super.key});
-
-  @override
-  State createState() => CustomMarkerState();
-}
-
-class CustomMarkerState extends State<CustomMarker> {
+class _CustomMarkerPageState extends State<CustomMarkerPage> {
+  static const randomMarkerNum = 100;
   final _rnd = Random();
 
   late MaplibreMapController _mapController;
@@ -60,11 +49,9 @@ class CustomMarkerState extends State<CustomMarker> {
   }
 
   void _updateMarkerPosition() {
-    final coordinates = <LatLng>[];
-
-    for (final markerState in _markerStates) {
-      coordinates.add(markerState.getCoordinate());
-    }
+    final coordinates = _markerStates
+        .map((markerState) => markerState.getCoordinate())
+        .toList(growable: false);
 
     _mapController.toScreenLocationBatch(coordinates).then((points) {
       _markerStates.asMap().forEach((i, value) {
@@ -88,7 +75,8 @@ class CustomMarkerState extends State<CustomMarker> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ExampleScaffold(
+      page: ExamplePage.customMarker,
       body: Stack(children: [
         MaplibreMap(
           trackCameraPosition: true,
