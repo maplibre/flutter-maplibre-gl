@@ -7,7 +7,7 @@
 
 import Flutter
 import Foundation
-import Mapbox
+import MapLibre
 
 class OfflinePackDownloader {
     // MARK: Properties
@@ -18,7 +18,7 @@ class OfflinePackDownloader {
     private let metadata: [String: Any]
 
     /// Currently managed pack
-    private var pack: MGLOfflinePack?
+    private var pack: MLNOfflinePack?
 
     /// This variable is set to true when this downloader has finished downloading and called the result method. It is used to prevent
     /// the result method being called multiple times
@@ -48,12 +48,12 @@ class OfflinePackDownloader {
     // MARK: Public methods
 
     func download() -> Int {
-        let storage = MGLOfflineStorage.shared
+        let storage = MLNOfflineStorage.shared
         // While the Android SDK generates a region ID in createOfflineRegion, the iOS
         // SDK does not have this feature. Therefore, we generate a region ID here.
         let id = UUID().hashValue
         let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
-        let tilePyramidRegion = regionDefinition.toMGLTilePyramidOfflineRegion()
+        let tilePyramidRegion = regionDefinition.toMLNTilePyramidOfflineRegion()
         storage
             .addPack(for: tilePyramidRegion,
                      withContext: regionData.prepareContext()) { [weak self] pack, error in
@@ -68,7 +68,7 @@ class OfflinePackDownloader {
 
     // MARK: Pack management
 
-    private func onPackCreated(pack: MGLOfflinePack) {
+    private func onPackCreated(pack: MLNOfflinePack) {
         if let region = OfflineRegion.fromOfflinePack(pack),
            let regionData = try? JSONSerialization.data(withJSONObject: region.toDictionary())
         {
@@ -101,7 +101,7 @@ class OfflinePackDownloader {
 
     @objc private func onPackDownloadProgress(notification: NSNotification) {
         // Verify if correct pack is checked
-        guard let pack = notification.object as? MGLOfflinePack,
+        guard let pack = notification.object as? MLNOfflinePack,
               verifyPack(pack: pack) else { return }
         // Calculate progress of downloading
         let packProgress = pack.progress
@@ -129,9 +129,9 @@ class OfflinePackDownloader {
     }
 
     @objc private func onPackDownloadError(notification: NSNotification) {
-        guard let pack = notification.object as? MGLOfflinePack,
+        guard let pack = notification.object as? MLNOfflinePack,
               verifyPack(pack: pack) else { return }
-        let error = notification.userInfo?[MGLOfflinePackUserInfoKey.error] as? NSError
+        let error = notification.userInfo?[MLNOfflinePackUserInfoKey.error] as? NSError
         print("Pack download error: \(String(describing: error?.localizedDescription))")
         // set download state to inactive
         isCompleted = true
@@ -151,9 +151,9 @@ class OfflinePackDownloader {
     }
 
     @objc private func onMaximumAllowedMapboxTiles(notification: NSNotification) {
-        guard let pack = notification.object as? MGLOfflinePack,
+        guard let pack = notification.object as? MLNOfflinePack,
               verifyPack(pack: pack) else { return }
-        let maximumCount = (notification.userInfo?[MGLOfflinePackUserInfoKey.maximumCount]
+        let maximumCount = (notification.userInfo?[MLNOfflinePackUserInfoKey.maximumCount]
             as AnyObject).uint64Value ?? 0
         print("Mapbox tile count limit exceeded: \(maximumCount)")
         // set download state to inactive
@@ -179,19 +179,19 @@ class OfflinePackDownloader {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onPackDownloadProgress(notification:)),
-            name: NSNotification.Name.MGLOfflinePackProgressChanged,
+            name: NSNotification.Name.MLNOfflinePackProgressChanged,
             object: nil
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onPackDownloadError(notification:)),
-            name: NSNotification.Name.MGLOfflinePackError,
+            name: NSNotification.Name.MLNOfflinePackError,
             object: nil
         )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onMaximumAllowedMapboxTiles(notification:)),
-            name: NSNotification.Name.MGLOfflinePackMaximumMapboxTilesReached,
+            name: NSNotification.Name.MLNOfflinePackMaximumMapboxTilesReached,
             object: nil
         )
     }
@@ -199,7 +199,7 @@ class OfflinePackDownloader {
     /// Since NotificationCenter will send notifications about all packs downloads we need to make sure we only handle packs
     /// managed by this downloader. So this method checks if the pack we got from a notification is the same as the pack being
     /// managed by this downloader and if it is it returns true. Otherwise it returns false
-    private func verifyPack(pack: MGLOfflinePack) -> Bool {
+    private func verifyPack(pack: MLNOfflinePack) -> Bool {
         guard let currentlyManagedPack = self.pack else {
             // No pack is being managed yet
             return false

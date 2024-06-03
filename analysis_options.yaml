@@ -1,10 +1,69 @@
-include: package:flutter_lints/flutter.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
 analyzer:
-  errors:
-    # remove once git dependencies have been removed
-    invalid_dependency: ignore
+  language:
+    # temporary rules
+    strict-casts: false
+    strict-raw-types: false
+    strict-inference: false
 
 linter:
   rules:
+    # temporary rules
+    avoid_escaping_inner_quotes: false
+    prefer_interpolation_to_compose_strings: false
+    prefer_if_elements_to_conditional_expressions: false
     constant_identifier_names: false
+    flutter_style_todos: false
+    one_member_abstracts: false
+    lines_longer_than_80_chars: false
+    prefer_int_literals: false
+    unnecessary_lambdas: false
+    avoid_print: false
+    noop_primitive_operations: false
+    avoid_bool_literals_in_conditional_expressions: false
+    avoid_unused_constructor_parameters: false
+    no_default_cases: false
+    sort_pub_dependencies: false
+    unnecessary_breaks: false
+    avoid_redundant_argument_values: false
+    unawaited_futures: false
+    overridden_fields: false
+    avoid_setters_without_getters: false
+    cast_nullable_to_non_nullable: false
+    only_throw_errors: false
+    no_runtimeType_toString: false
+    always_put_required_named_parameters_first: false
+    leading_newlines_in_multiline_strings: false
+    prefer_constructors_over_static_methods: false
+    prefer_null_aware_method_calls: false
+    directives_ordering: false
+    unnecessary_await_in_return: false
+    avoid_multiple_declarations_per_line: false
+    unnecessary_string_escapes: false
+    parameter_assignments: false
+    combinators_ordering: false
+    use_setters_to_change_properties: false
+    avoid_equals_and_hash_code_on_mutable_classes: false
+    type_annotate_public_apis: false
+    unnecessary_library_directive: false
+    prefer_asserts_with_message: false
+    public_member_api_docs: false
+    require_trailing_commas: false
+    avoid_dynamic_calls: false
+    avoid_void_async: false
+    always_use_package_imports: false
+    prefer_single_quotes: false
+    always_declare_return_types: false
+    sort_constructors_first: false
+    avoid_relative_lib_imports: false
+    avoid_positional_boolean_parameters: false
+    prefer_final_fields: false
+    prefer_final_locals: false
+    prefer_final_in_for_each: false
+    implicit_call_tearoffs: false
+    comment_references: false
+    cascade_invocations: false
+    avoid_type_to_string: false
+    omit_local_variable_types: false
+    use_named_constants: false
