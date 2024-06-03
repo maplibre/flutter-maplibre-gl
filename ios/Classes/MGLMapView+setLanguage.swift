@@ -6,16 +6,16 @@
 //
 
 import Foundation
-import Mapbox
+import MapLibre
 
-extension MGLMapView {
+extension MLNMapView {
     func setMapLanguage(_ language: String) {
         guard let style = style else { return }
         
         let layers = style.layers
         
         for layer in layers {
-            if let symbolLayer = layer as? MGLSymbolStyleLayer {
+            if let symbolLayer = layer as? MLNSymbolStyleLayer {
                 if symbolLayer.text == nil {
                     continue
                 }
