@@ -12,6 +12,9 @@
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#600)
   for more information.
 
+### Other changes
+* Updated example app
+
 ## 0.19.0
 
 This is the first version where all packages are published on pub.dev. Please
