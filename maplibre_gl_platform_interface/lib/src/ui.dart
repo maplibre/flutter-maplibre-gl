@@ -4,11 +4,6 @@
 
 part of '../maplibre_gl_platform_interface.dart';
 
-class MaplibreStyles {
-  /// A very simple MapLibre demo style
-  static const String demo = "https://demotiles.maplibre.org/style.json";
-}
-
 /// The camera mode, which determines how the map camera will track the rendered location.
 enum MyLocationTrackingMode {
   none,

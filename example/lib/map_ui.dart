@@ -50,10 +50,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  final List<String> _styleStrings = [
-    "https://demotiles.maplibre.org/style.json",
-    "assets/style.json"
-  ];
+  final List<String> _styleStrings = [MaplibreStyles.demo, "assets/style.json"];
   final List<String> _styleStringLabels = [
     "Maplibre demo style",
     "Local style file"
