@@ -2,7 +2,13 @@
 
 ### Breaking changes
 
-* All Dart enums have been migrated from mixed cases to lower camelcase according to the `camel_case_types` lint rule.
+* All Dart enums have been migrated from mixed cases to lower camelcase
+  according to the `camel_case_types` lint rule.
+* Updated maplibre-native for ios to v6.4.2. This introduces the new
+  iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only 
+  iOS Devices with an Apple A7 GPU or later are supported onwards. See the
+  [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#600)
+  for more information.
 
 ## 0.19.0
 
@@ -71,9 +77,9 @@ builds).
 
 ## 0.17.0
 
-* **Repository transfer**: The project repository was transferred to the MapLibre
-GitHub organization. More information
-at [#221](https://github.com/maplibre/flutter-maplibre-gl/issues/221)
+* **Repository transfer**: The project repository was transferred to the
+  MapLibre GitHub organization. More information
+  at [#221](https://github.com/maplibre/flutter-maplibre-gl/issues/221)
 * Developers do not need to adapt their Podfile for iOS apps anymore as it was
   previously described in the
   Readme. [#278](https://github.com/maplibre/flutter-maplibre-gl/pull/278)
@@ -190,7 +196,7 @@ at the end for a full changelog.
 * attributionButtonPosition for web by @ouvreboite
   in [#304](https://github.com/maplibre/flutter-maplibre-gl/pull/304)
 
-**Full Changelog**: 
+**Full Changelog**:
 https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
 
 ## 0.16.0, Jun 28, 2022
