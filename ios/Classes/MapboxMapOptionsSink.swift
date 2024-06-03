@@ -1,8 +1,8 @@
 
-import Mapbox
+import MapLibre
 
 protocol MapboxMapOptionsSink {
-    func setCameraTargetBounds(bounds: MGLCoordinateBounds?)
+    func setCameraTargetBounds(bounds: MLNCoordinateBounds?)
     func setCompassEnabled(compassEnabled: Bool)
     func setStyleString(styleString: String)
     func setMinMaxZoomPreference(min: Double, max: Double)
@@ -12,11 +12,11 @@ protocol MapboxMapOptionsSink {
     func setTrackCameraPosition(trackCameraPosition: Bool)
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool)
     func setMyLocationEnabled(myLocationEnabled: Bool)
-    func setMyLocationTrackingMode(myLocationTrackingMode: MGLUserTrackingMode)
+    func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode)
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode)
     func setLogoViewMargins(x: Double, y: Double)
-    func setCompassViewPosition(position: MGLOrnamentPosition)
+    func setCompassViewPosition(position: MLNOrnamentPosition)
     func setCompassViewMargins(x: Double, y: Double)
     func setAttributionButtonMargins(x: Double, y: Double)
-    func setAttributionButtonPosition(position: MGLOrnamentPosition)
+    func setAttributionButtonPosition(position: MLNOrnamentPosition)
 }

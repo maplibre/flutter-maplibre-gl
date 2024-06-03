@@ -7,7 +7,7 @@
 
 import Flutter
 import Foundation
-import Mapbox
+import MapLibre
 
 class OfflineManagerUtils {
     static var activeDownloaders: [Int: OfflinePackDownloader] = [:]
@@ -34,7 +34,7 @@ class OfflineManagerUtils {
     }
 
     static func regionsList(result: @escaping FlutterResult) {
-        let offlineStorage = MGLOfflineStorage.shared
+        let offlineStorage = MLNOfflineStorage.shared
         guard let packs = offlineStorage.packs else {
             result("[]")
             return
@@ -52,13 +52,13 @@ class OfflineManagerUtils {
     }
 
     static func setOfflineTileCountLimit(result: @escaping FlutterResult, maximumCount: UInt64) {
-        let offlineStorage = MGLOfflineStorage.shared
+        let offlineStorage = MLNOfflineStorage.shared
         offlineStorage.setMaximumAllowedMapboxTiles(maximumCount)
         result(nil)
     }
 
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
-        let offlineStorage = MGLOfflineStorage.shared
+        let offlineStorage = MLNOfflineStorage.shared
         guard let pacs = offlineStorage.packs else { return }
         let packToRemove = pacs.first(where: { pack -> Bool in
             let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)

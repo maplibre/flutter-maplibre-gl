@@ -1,11 +1,11 @@
-import Mapbox
+import MapLibre
 
 class Convert {
     class func interpretMapboxMapOptions(options: Any?, delegate: MapboxMapOptionsSink) {
         guard let options = options as? [String: Any] else { return }
         if let cameraTargetBounds = options["cameraTargetBounds"] as? [[[Double]]] {
             delegate
-                .setCameraTargetBounds(bounds: MGLCoordinateBounds.fromArray(cameraTargetBounds[0]))
+                .setCameraTargetBounds(bounds: MLNCoordinateBounds.fromArray(cameraTargetBounds[0]))
         }
         if let compassEnabled = options["compassEnabled"] as? Bool {
             delegate.setCompassEnabled(compassEnabled: compassEnabled)
@@ -38,7 +38,7 @@ class Convert {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
         }
         if let myLocationTrackingMode = options["myLocationTrackingMode"] as? UInt,
-           let trackingMode = MGLUserTrackingMode(rawValue: myLocationTrackingMode)
+           let trackingMode = MLNUserTrackingMode(rawValue: myLocationTrackingMode)
         {
             delegate.setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
         }
@@ -51,7 +51,7 @@ class Convert {
             delegate.setLogoViewMargins(x: logoViewMargins[0], y: logoViewMargins[1])
         }
         if let compassViewPosition = options["compassViewPosition"] as? UInt,
-           let position = MGLOrnamentPosition(rawValue: compassViewPosition)
+           let position = MLNOrnamentPosition(rawValue: compassViewPosition)
         {
             delegate.setCompassViewPosition(position: position)
         }
@@ -65,7 +65,7 @@ class Convert {
             )
         }
         if let attributionButtonPosition = options["attributionButtonPosition"] as? UInt,
-           let position = MGLOrnamentPosition(rawValue: attributionButtonPosition)
+           let position = MLNOrnamentPosition(rawValue: attributionButtonPosition)
         {
             delegate.setAttributionButtonPosition(position: position)
         }
@@ -86,12 +86,12 @@ class Convert {
         return UIEdgeInsets(top: paddingTop, left: paddingLeft, bottom: paddingBottom, right: paddingRight)
     }
 
-    class func parseCameraUpdate(cameraUpdate: [Any], mapView: MGLMapView) -> MGLMapCamera? {
+    class func parseCameraUpdate(cameraUpdate: [Any], mapView: MLNMapView) -> MLNMapCamera? {
         guard let type = cameraUpdate[0] as? String else { return nil }
         switch type {
         case "newCameraPosition":
             guard let cameraPosition = cameraUpdate[1] as? [String: Any] else { return nil }
-            return MGLMapCamera.fromDict(cameraPosition, mapView: mapView)
+            return MLNMapCamera.fromDict(cameraPosition, mapView: mapView)
         case "newLatLng":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             let camera = mapView.camera
@@ -102,12 +102,12 @@ class Convert {
             
             if let padding = parseLatLngBoundsPadding(cameraUpdate) {
                 return mapView.cameraThatFitsCoordinateBounds(
-                    MGLCoordinateBounds.fromArray(bounds),
+                    MLNCoordinateBounds.fromArray(bounds),
                     edgePadding: padding
                 )
             }
             
-            return mapView.cameraThatFitsCoordinateBounds(MGLCoordinateBounds.fromArray(bounds))
+            return mapView.cameraThatFitsCoordinateBounds(MLNCoordinateBounds.fromArray(bounds))
             
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
@@ -115,7 +115,7 @@ class Convert {
             let camera = mapView.camera
             camera.centerCoordinate = CLLocationCoordinate2D.fromArray(coordinate)
             let altitude = getAltitude(zoom: zoom, mapView: mapView)
-            return MGLMapCamera(
+            return MLNMapCamera(
                 lookingAtCenter: camera.centerCoordinate,
                 altitude: altitude,
                 pitch: camera.pitch,
@@ -178,8 +178,8 @@ class Convert {
         return nil
     }
 
-    class func getZoom(mapView: MGLMapView) -> Double {
-        return MGLZoomLevelForAltitude(
+    class func getZoom(mapView: MLNMapView) -> Double {
+        return MLNZoomLevelForAltitude(
             mapView.camera.altitude,
             mapView.camera.pitch,
             mapView.camera.centerCoordinate.latitude,
@@ -187,8 +187,8 @@ class Convert {
         )
     }
 
-    class func getAltitude(zoom: Double, mapView: MGLMapView) -> Double {
-        return MGLAltitudeForZoomLevel(
+    class func getAltitude(zoom: Double, mapView: MLNMapView) -> Double {
+        return MLNAltitudeForZoomLevel(
             zoom,
             mapView.camera.pitch,
             mapView.camera.centerCoordinate.latitude,
