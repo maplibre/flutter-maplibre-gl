@@ -455,8 +455,8 @@ class _UserInterfacePageState extends State<UserInterfacePage> {
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           Text(
                             'bearing: ${_position.bearing}, target: ${_position.target.latitude.toStringAsFixed(4)},'
-                                '${_position.target.longitude.toStringAsFixed(4)}\n'
-                                'zoom: ${_position.zoom}, camera tilt: ${_position.tilt}',
+                            '${_position.target.longitude.toStringAsFixed(4)}\n'
+                            'zoom: ${_position.zoom}, camera tilt: ${_position.tilt}',
                             textAlign: TextAlign.center,
                           ),
                           Text(_isMoving ? '(Camera moving)' : '(Camera idle)'),

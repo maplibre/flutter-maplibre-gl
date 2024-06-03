@@ -124,9 +124,8 @@ class _AnnotationSourcePageState extends State<AnnotationSourcePage> {
                 child: const Text('Remove source (asset image)'),
               ),
               TextButton(
-                onPressed: sourceAdded
-                    ? () => addLayer(layerId, sourceId)
-                    : null,
+                onPressed:
+                    sourceAdded ? () => addLayer(layerId, sourceId) : null,
                 child: const Text('Show layer'),
               ),
               TextButton(
@@ -136,8 +135,7 @@ class _AnnotationSourcePageState extends State<AnnotationSourcePage> {
                 child: const Text('Show layer below water'),
               ),
               TextButton(
-                onPressed:
-                    sourceAdded ? () => removeLayer(layerId) : null,
+                onPressed: sourceAdded ? () => removeLayer(layerId) : null,
                 child: const Text('Hide layer'),
               ),
               TextButton(

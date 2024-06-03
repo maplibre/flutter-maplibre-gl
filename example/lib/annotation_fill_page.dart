@@ -10,7 +10,6 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl_example/main.dart';
 import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-
 class AnnotationFillPage extends StatefulWidget {
   const AnnotationFillPage({super.key});
 
@@ -47,12 +46,14 @@ class _AnnotationFillPageState extends State<AnnotationFillPage> {
     this.controller!.onFeatureDrag.add(_onFeatureDrag);
   }
 
-  void _onFeatureDrag(id,
-      {required current,
-      required delta,
-      required origin,
-      required point,
-      required eventType,}) {
+  void _onFeatureDrag(
+    id, {
+    required current,
+    required delta,
+    required origin,
+    required point,
+    required eventType,
+  }) {
     DragEventType type = eventType;
     switch (type) {
       case DragEventType.start:
@@ -195,36 +196,28 @@ class _AnnotationFillPageState extends State<AnnotationFillPage> {
             alignment: WrapAlignment.center,
             children: <Widget>[
               TextButton(
-                onPressed: (_selectedFill == null)
-                    ? null
-                    : _changeFillOpacity,
+                onPressed: (_selectedFill == null) ? null : _changeFillOpacity,
                 child: const Text('change fill-opacity'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedFill == null) ? null : _changeFillColor,
+                onPressed: (_selectedFill == null) ? null : _changeFillColor,
                 child: const Text('change fill-color'),
               ),
               TextButton(
-                onPressed: (_selectedFill == null)
-                    ? null
-                    : _changeFillOutlineColor,
+                onPressed:
+                    (_selectedFill == null) ? null : _changeFillOutlineColor,
                 child: const Text('change fill-outline-color'),
               ),
               TextButton(
-                onPressed: (_selectedFill == null)
-                    ? null
-                    : _changeFillPattern,
+                onPressed: (_selectedFill == null) ? null : _changeFillPattern,
                 child: const Text('change fill-pattern'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedFill == null) ? null : _changePosition,
+                onPressed: (_selectedFill == null) ? null : _changePosition,
                 child: const Text('change position'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedFill == null) ? null : _changeDraggable,
+                onPressed: (_selectedFill == null) ? null : _changeDraggable,
                 child: const Text('toggle draggable'),
               ),
             ],

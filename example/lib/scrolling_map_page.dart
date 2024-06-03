@@ -45,7 +45,8 @@ class _ScrollingMapPageState extends State<ScrollingMapPage> {
                       height: 300.0,
                       child: MaplibreMap(
                         onMapCreated: onMapCreatedOne,
-                        onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
+                        onStyleLoadedCallback: () =>
+                            onStyleLoaded(controllerOne),
                         initialCameraPosition: CameraPosition(
                           target: center,
                           zoom: 11.0,
@@ -71,8 +72,8 @@ class _ScrollingMapPageState extends State<ScrollingMapPage> {
                   const Text('This map doesn\'t consume the vertical drags.'),
                   const Padding(
                     padding: EdgeInsets.only(bottom: 12.0),
-                    child:
-                        Text('It still gets other gestures (e.g scale or tap).'),
+                    child: Text(
+                        'It still gets other gestures (e.g scale or tap).'),
                   ),
                   Center(
                     child: SizedBox(
@@ -80,7 +81,8 @@ class _ScrollingMapPageState extends State<ScrollingMapPage> {
                       height: 300.0,
                       child: MaplibreMap(
                         onMapCreated: onMapCreatedTwo,
-                        onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
+                        onStyleLoadedCallback: () =>
+                            onStyleLoaded(controllerTwo),
                         initialCameraPosition: CameraPosition(
                           target: center,
                           zoom: 11.0,

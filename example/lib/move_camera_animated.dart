@@ -38,19 +38,19 @@ class _AnimateCameraPageState extends State<AnimateCameraPage> {
                   onPressed: () {
                     mapController
                         .animateCamera(
-                      CameraUpdate.newCameraPosition(
-                        const CameraPosition(
-                          bearing: 270.0,
-                          target: LatLng(51.5160895, -0.1294527),
-                          tilt: 30.0,
-                          zoom: 17.0,
-                        ),
-                      ),
-                    )
+                          CameraUpdate.newCameraPosition(
+                            const CameraPosition(
+                              bearing: 270.0,
+                              target: LatLng(51.5160895, -0.1294527),
+                              tilt: 30.0,
+                              zoom: 17.0,
+                            ),
+                          ),
+                        )
                         .then(
                           (result) => debugPrint(
-                          "mapController.animateCamera() returned $result"),
-                    );
+                              "mapController.animateCamera() returned $result"),
+                        );
                   },
                   child: const Text('newCameraPosition'),
                 ),
@@ -58,13 +58,13 @@ class _AnimateCameraPageState extends State<AnimateCameraPage> {
                   onPressed: () {
                     mapController
                         .animateCamera(
-                      CameraUpdate.newLatLng(
-                        const LatLng(56.1725505, 10.1850512),
-                      ),
-                      duration: const Duration(seconds: 5),
-                    )
+                          CameraUpdate.newLatLng(
+                            const LatLng(56.1725505, 10.1850512),
+                          ),
+                          duration: const Duration(seconds: 5),
+                        )
                         .then((result) => debugPrint(
-                        "mapController.animateCamera() returned $result"));
+                            "mapController.animateCamera() returned $result"));
                   },
                   child: const Text('newLatLng'),
                 ),
@@ -178,7 +178,7 @@ class _AnimateCameraPageState extends State<AnimateCameraPage> {
             child: MaplibreMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition:
-              const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
+                  const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
               styleString: "assets/osm_style.json",
             ),
           ),

@@ -137,11 +137,8 @@ class _BatchOperationPageState extends State<BatchOperationPage> {
           Wrap(
             alignment: WrapAlignment.center,
             children: <Widget>[
-              TextButton(
-                  onPressed: _add, child: const Text('batch add')),
-              TextButton(
-                  onPressed: _remove,
-                  child: const Text('batch remove')),
+              TextButton(onPressed: _add, child: const Text('batch add')),
+              TextButton(onPressed: _remove, child: const Text('batch remove')),
             ],
           ),
           Expanded(

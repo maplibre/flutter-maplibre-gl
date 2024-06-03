@@ -161,7 +161,7 @@ class _MoveCameraPageState extends State<MoveCameraPage> {
               onMapCreated: _onMapCreated,
               onCameraIdle: () => debugPrint("onCameraIdle"),
               initialCameraPosition:
-              const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
+                  const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
               styleString: "assets/osm_style.json",
             ),
           ),

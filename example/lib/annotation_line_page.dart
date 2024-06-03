@@ -162,9 +162,7 @@ class _AnnotationLinePageState extends State<AnnotationLinePage> {
                 child: const Text('move'),
               ),
               TextButton(
-                onPressed: (_selectedLine == null)
-                    ? null
-                    : _changeLinePattern,
+                onPressed: (_selectedLine == null) ? null : _changeLinePattern,
                 child: const Text('change line-pattern'),
               ),
             ],
@@ -173,21 +171,19 @@ class _AnnotationLinePageState extends State<AnnotationLinePage> {
             alignment: WrapAlignment.center,
             children: <Widget>[
               TextButton(
-                onPressed:
-                    (_selectedLine == null) ? null : _changeAlpha,
+                onPressed: (_selectedLine == null) ? null : _changeAlpha,
                 child: const Text('change alpha'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedLine == null) ? null : _toggleVisible,
+                onPressed: (_selectedLine == null) ? null : _toggleVisible,
                 child: const Text('toggle visible'),
               ),
               TextButton(
                 onPressed: (_selectedLine == null)
                     ? null
                     : () async {
-                        var latLngs = await controller!
-                            .getLineLatLngs(_selectedLine!);
+                        var latLngs =
+                            await controller!.getLineLatLngs(_selectedLine!);
                         for (var latLng in latLngs) {
                           debugPrint(latLng.toString());
                         }

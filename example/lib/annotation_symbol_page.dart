@@ -267,15 +267,13 @@ class _AnnotationSymbolPageState extends State<AnnotationSymbolPage> {
             children: <Widget>[
               TextButton(
                 child: const Text('add'),
-                onPressed: () => (_symbolCount == 12)
-                    ? null
-                    : _add("custom-marker"),
+                onPressed: () =>
+                    (_symbolCount == 12) ? null : _add("custom-marker"),
               ),
               TextButton(
                 child: const Text('add all'),
-                onPressed: () => (_symbolCount == 12)
-                    ? null
-                    : _addAll("custom-marker"),
+                onPressed: () =>
+                    (_symbolCount == 12) ? null : _addAll("custom-marker"),
               ),
               TextButton(
                 child: const Text('add (custom icon)'),
@@ -321,53 +319,39 @@ class _AnnotationSymbolPageState extends State<AnnotationSymbolPage> {
             alignment: WrapAlignment.center,
             children: <Widget>[
               TextButton(
-                onPressed:
-                    (_selectedSymbol == null) ? null : _changeAlpha,
+                onPressed: (_selectedSymbol == null) ? null : _changeAlpha,
                 child: const Text('change alpha'),
               ),
               TextButton(
-                onPressed: (_selectedSymbol == null)
-                    ? null
-                    : _changeIconOffset,
+                onPressed: (_selectedSymbol == null) ? null : _changeIconOffset,
                 child: const Text('change icon offset'),
               ),
               TextButton(
-                onPressed: (_selectedSymbol == null)
-                    ? null
-                    : _changeIconAnchor,
+                onPressed: (_selectedSymbol == null) ? null : _changeIconAnchor,
                 child: const Text('change icon anchor'),
               ),
               TextButton(
-                onPressed: (_selectedSymbol == null)
-                    ? null
-                    : _toggleDraggable,
+                onPressed: (_selectedSymbol == null) ? null : _toggleDraggable,
                 child: const Text('toggle draggable'),
               ),
               TextButton(
-                onPressed: (_selectedSymbol == null)
-                    ? null
-                    : _changePosition,
+                onPressed: (_selectedSymbol == null) ? null : _changePosition,
                 child: const Text('change position'),
               ),
               TextButton(
-                onPressed: (_selectedSymbol == null)
-                    ? null
-                    : _changeRotation,
+                onPressed: (_selectedSymbol == null) ? null : _changeRotation,
                 child: const Text('change rotation'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedSymbol == null) ? null : _toggleVisible,
+                onPressed: (_selectedSymbol == null) ? null : _toggleVisible,
                 child: const Text('toggle visible'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedSymbol == null) ? null : _changeZIndex,
+                onPressed: (_selectedSymbol == null) ? null : _changeZIndex,
                 child: const Text('change zIndex'),
               ),
               TextButton(
-                onPressed:
-                    (_selectedSymbol == null) ? null : _getLatLng,
+                onPressed: (_selectedSymbol == null) ? null : _getLatLng,
                 child: const Text('get current LatLng'),
               ),
             ],

@@ -197,39 +197,32 @@ class _AnnotationCirclePageState extends State<AnnotationCirclePage> {
             alignment: WrapAlignment.center,
             children: <Widget>[
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleOpacity,
+                onPressed:
+                    (_selectedCircle == null) ? null : _changeCircleOpacity,
                 child: const Text('change circle-opacity'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleRadius,
+                onPressed:
+                    (_selectedCircle == null) ? null : _changeCircleRadius,
                 child: const Text('change circle-radius'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleColor,
+                onPressed:
+                    (_selectedCircle == null) ? null : _changeCircleColor,
                 child: const Text('change circle-color'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleBlur,
+                onPressed: (_selectedCircle == null) ? null : _changeCircleBlur,
                 child: const Text('change circle-blur'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleStrokeWidth,
+                onPressed:
+                    (_selectedCircle == null) ? null : _changeCircleStrokeWidth,
                 child: const Text('change circle-stroke-width'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeCircleStrokeColor,
+                onPressed:
+                    (_selectedCircle == null) ? null : _changeCircleStrokeColor,
                 child: const Text('change circle-stroke-color'),
               ),
               TextButton(
@@ -239,20 +232,15 @@ class _AnnotationCirclePageState extends State<AnnotationCirclePage> {
                 child: const Text('change circle-stroke-opacity'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changePosition,
+                onPressed: (_selectedCircle == null) ? null : _changePosition,
                 child: const Text('change position'),
               ),
               TextButton(
-                onPressed: (_selectedCircle == null)
-                    ? null
-                    : _changeDraggable,
+                onPressed: (_selectedCircle == null) ? null : _changeDraggable,
                 child: const Text('toggle draggable'),
               ),
               TextButton(
-                onPressed:
-                (_selectedCircle == null) ? null : _getLatLng,
+                onPressed: (_selectedCircle == null) ? null : _getLatLng,
                 child: const Text('get current LatLng'),
               ),
             ],

@@ -9,7 +9,6 @@ import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
 import 'common/util.dart';
 
-
 class ClickAnnotationPage extends StatefulWidget {
   const ClickAnnotationPage({super.key});
 
