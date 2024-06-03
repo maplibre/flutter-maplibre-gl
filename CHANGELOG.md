@@ -2,8 +2,10 @@
 
 ### Breaking changes
 
-* All Dart enums have been migrated from mixed cases to lower camelcase
+* All Dart enums have been migrated from mixed cases to lower camelcase 
   according to the `camel_case_types` lint rule.
+* Move `MaplibreStyles` to the main `maplibre_gl` package. You can now use the  
+  demo style without adding `maplibre_gl_platform_interface` as a dependency.
 * Updated maplibre-native for ios to v6.4.2. This introduces the new
   iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only 
   iOS Devices with an Apple A7 GPU or later are supported onwards. See the
