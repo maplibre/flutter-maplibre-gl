@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Mapbox
+import MapLibre
 
 class OfflineRegion {
     let id: Int
@@ -37,8 +37,8 @@ class OfflineRegion {
         ]
     }
 
-    static func fromOfflinePack(_ pack: MGLOfflinePack) -> OfflineRegion? {
-        guard let region = pack.region as? MGLTilePyramidOfflineRegion,
+    static func fromOfflinePack(_ pack: MLNOfflinePack) -> OfflineRegion? {
+        guard let region = pack.region as? MLNTilePyramidOfflineRegion,
               let dataObject = try? JSONSerialization.jsonObject(with: pack.context, options: []),
               let dict = dataObject as? [String: Any],
               let id = dict["id"] as? Int,

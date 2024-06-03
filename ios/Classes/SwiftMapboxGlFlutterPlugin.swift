@@ -1,6 +1,6 @@
 import Flutter
 import Foundation
-import Mapbox
+import MapLibre
 import UIKit
 
 public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
@@ -31,7 +31,7 @@ public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
                 }
                 let sessionConfig = URLSessionConfiguration.default
                 sessionConfig.httpAdditionalHeaders = headers // your headers here
-                MGLNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
+                MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
                 result(nil)
             case "installOfflineMapTiles":
                 guard let arguments = methodCall.arguments as? [String: String] else { return }
