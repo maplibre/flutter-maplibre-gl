@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl_example/common/example_scaffold.dart';
 import 'package:maplibre_gl_example/main.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:path_provider/path_provider.dart';
 
 class LocalStylePage extends StatefulWidget {
