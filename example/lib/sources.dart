@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 class StyleInfo {
   final String name;
@@ -104,7 +103,7 @@ class FullMapState extends State<FullMap> {
     await controller.addSource(
         "terrain",
         const VectorSourceProperties(
-          url: "https://demotiles.maplibre.org/tiles/tiles.json",
+          url: MaplibreStyles.demo,
         ));
 
     await controller.addLayer(

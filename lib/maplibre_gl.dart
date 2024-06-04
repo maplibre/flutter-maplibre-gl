@@ -101,3 +101,5 @@ part 'src/color_tools.dart';
 part 'src/annotation_manager.dart';
 
 part 'src/util.dart';
+
+part 'src/maplibre_styles.dart';
