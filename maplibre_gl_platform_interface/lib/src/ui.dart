@@ -41,7 +41,7 @@ enum AttributionButtonPosition {
 }
 
 /// Bounds for the map camera target.
-/// Used with [_MaplibreMapOptions] to wrap a [LatLngBounds] value. This allows
+/// Used with [_MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
 /// from not specifying anything (null `CameraTargetBounds`).
 class CameraTargetBounds {
@@ -76,7 +76,7 @@ class CameraTargetBounds {
 }
 
 /// Preferred bounds for map camera zoom level.
-/// Used with [_MaplibreMapOptions] to wrap min and max zoom. This allows
+/// Used with [_MapLibreMapOptions] to wrap min and max zoom. This allows
 /// distinguishing between specifying unbounded zooming (null [minZoom] and
 /// [maxZoom]) from not specifying anything (null [MinMaxZoomPreference]).
 class MinMaxZoomPreference {

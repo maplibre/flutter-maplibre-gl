@@ -31,12 +31,12 @@ class LineBodyState extends State<LineBody> {
 
   static const LatLng center = LatLng(-33.86711, 151.1947171);
 
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
   int _lineCount = 0;
   Line? _selectedLine;
   final String _linePatternImage = "assets/fill/cat_silhouette_pattern.png";
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onLineTapped.add(_onLineTapped);
   }
@@ -154,7 +154,7 @@ class LineBodyState extends State<LineBody> {
         Center(
           child: SizedBox(
             height: 400.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoadedCallback,
               initialCameraPosition: const CameraPosition(

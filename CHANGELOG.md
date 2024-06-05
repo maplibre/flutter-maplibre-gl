@@ -2,18 +2,23 @@
 
 ### Breaking changes
 
-* All Dart enums have been migrated from mixed cases to lower camelcase 
+* All Dart enums have been migrated from mixed cases to lower camelcase
   according to the `camel_case_types` lint rule.
-* Move `MaplibreStyles` to the main `maplibre_gl` package. You can now use the  
+* Move `MapLibreStyles` to the main `maplibre_gl` package. You can now use the  
   demo style without adding `maplibre_gl_platform_interface` as a dependency.
 * Updated maplibre-native for ios to v6.4.2. This introduces the new
-  iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only 
+  iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only
   iOS Devices with an Apple A7 GPU or later are supported onwards. See the
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#600)
   for more information.
-* Updated maplibre-native for android to v11.0.0. This version uses 
-  OpenGL ES 3.0.
-* Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all packages.
+* Updated maplibre-native for android to v11.0.0. This version uses
+  OpenGL ES 3.0. See the
+  [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1100)
+  for more information.
+* Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all
+  packages.
+* Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
+  (affects for example the classes MaplibreMap and MaplibreMapController).
 
 ## 0.19.0
 
@@ -110,7 +115,7 @@ builds).
 ```dart
 @override
 Widget build() {
-  return MaplibreMap(
+  return MapLibreMap(
     myLocationRenderMode: MyLocationRenderMode.COMPASS,
     // ...
   );
@@ -158,7 +163,7 @@ at the end for a full changelog.
   in [#179](https://github.com/maplibre/flutter-maplibre-gl/pull/179)
 * Reenable textureMode which was disabled in f8b2d1 by @maxammann
   in [#194](https://github.com/maplibre/flutter-maplibre-gl/pull/194)
-* android: Bump Maplibre SDK to 9.6.0 & OkHttp to 4.9.3 by @mariusvn
+* android: Bump MapLibre SDK to 9.6.0 & OkHttp to 4.9.3 by @mariusvn
   in [#184](https://github.com/maplibre/flutter-maplibre-gl/pull/184)
 * Added getSourceIds to the controller by @mariusvn
   in [#197](https://github.com/maplibre/flutter-maplibre-gl/pull/197)
@@ -166,7 +171,7 @@ at the end for a full changelog.
   in [#205](https://github.com/maplibre/flutter-maplibre-gl/pull/205)
 * Fix crash android dispose nullpointerdereference by @GaelleJoubert
   in [#203](https://github.com/maplibre/flutter-maplibre-gl/pull/203)
-* Migrate links in README, pubspec to Maplibre by @kuhnroyal
+* Migrate links in README, pubspec to MapLibre by @kuhnroyal
   in [#224](https://github.com/maplibre/flutter-maplibre-gl/pull/224)
 * Update LICENSE file by @mariusvn
   in [#230](https://github.com/maplibre/flutter-maplibre-gl/pull/230)
@@ -209,7 +214,7 @@ https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
 * cherry-picked all commits from upstream up
   to [https://github.com/flutter-mapbox-gl/maps/commit/3496907955cd4b442e4eb905d67e8d46692174f1),
   including up to release 0.16.0 from upstream
-* updated Maplibre GL JS for web
+* updated MapLibre GL JS for web
 
 ## 0.15.1, May 24, 2022
 
@@ -267,11 +272,11 @@ https://github.com/maplibre/flutter-maplibre-gl/compare/0.16.0...0.17.0
 ## 0.13.0, Oct 6, 2021
 
 🎉 The first release of flutter-maplibre-gl with the complete transition to
-Maplibre libraries. 🎉
+MapLibre libraries. 🎉
 
 Further improvements:
 
-* Update to Maplibre-Android-SDK 9.4.2
+* Update to MapLibre-Android-SDK 9.4.2
 * Update to MapLibre-iOS-SDK 5.12.0
 * Fix onUserLocationUpdated not firing on
   android [#14](https://github.com/m0nac0/flutter-maplibre-gl/pull/14)

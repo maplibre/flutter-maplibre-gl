@@ -23,7 +23,7 @@ class LocalizedMap extends StatefulWidget {
 }
 
 class LocalizedMapState extends State<LocalizedMap> {
-  final _mapReadyCompleter = Completer<MaplibreMapController>();
+  final _mapReadyCompleter = Completer<MapLibreMapController>();
 
   var _mapLanguage = "en";
 
@@ -51,7 +51,7 @@ class LocalizedMapState extends State<LocalizedMap> {
             }).toList(),
           ),
           Expanded(
-            child: MaplibreMap(
+            child: MapLibreMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
@@ -63,7 +63,7 @@ class LocalizedMapState extends State<LocalizedMap> {
     );
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     _mapReadyCompleter.complete(controller);
   }
 
