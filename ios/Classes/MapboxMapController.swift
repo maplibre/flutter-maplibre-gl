@@ -44,7 +44,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
         super.init()
 
         channel = FlutterMethodChannel(
-            name: "plugins.flutter.io/mapbox_maps_\(viewId)",
+            name: "plugins.flutter.io/maplibre_gl_\(viewId)",
             binaryMessenger: registrar.messenger()
         )
         channel!
