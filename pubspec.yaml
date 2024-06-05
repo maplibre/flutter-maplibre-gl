@@ -1,6 +1,6 @@
 name: maplibre_gl
 description: A Flutter plugin for integrating MapLibre Maps inside a Flutter application on Android, iOS and web platforms.
-version: 0.19.0+2
+version: 0.20.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
@@ -11,8 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.19.0+2
-  maplibre_gl_web: ^0.19.0+2
+  maplibre_gl_platform_interface: ^0.20.0
+  maplibre_gl_web: ^0.20.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0
