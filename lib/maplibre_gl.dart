@@ -78,7 +78,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         GeojsonSourceProperties,
         VideoSourceProperties,
         ImageSourceProperties,
-        MapLibreGlPlatform,
+        MapLibrePlatform,
         MapLibreMethodChannel,
         OnPlatformViewCreatedCallback;
 

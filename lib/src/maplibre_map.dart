@@ -255,8 +255,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
       Completer<MapLibreMapController>();
 
   late _MapLibreMapOptions _maplibreMapOptions;
-  final MapLibreGlPlatform _maplibreGlPlatform =
-      MapLibreGlPlatform.createInstance();
+  final MapLibrePlatform _maplibrePlatform =
+      MapLibrePlatform.createInstance();
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +272,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
         'iosLongClickDurationMilliseconds':
             widget.iosLongClickDuration!.inMilliseconds,
     };
-    return _maplibreGlPlatform.buildView(
+    return _maplibrePlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
   }
 
@@ -312,7 +312,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
 
   Future<void> onPlatformViewCreated(int id) async {
     final MapLibreMapController controller = MapLibreMapController(
-      maplibreGlPlatform: _maplibreGlPlatform,
+      maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         if (_controller.isCompleted) {
@@ -331,7 +331,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
-    await _maplibreGlPlatform.initPlatform(id);
+    await _maplibrePlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated!(controller);

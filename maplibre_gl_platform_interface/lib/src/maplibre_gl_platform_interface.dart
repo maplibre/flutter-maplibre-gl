@@ -2,19 +2,19 @@
 
 part of '../maplibre_gl_platform_interface.dart';
 
-/// The default instance of [MapLibreGlPlatform] to use.
+/// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
-abstract class MapLibreGlPlatform {
+abstract class MapLibrePlatform {
   static MapLibreMethodChannel? _instance;
 
-  /// The default instance of [MapLibreGlPlatform] to use.
+  /// The default instance of [MapLibrePlatform] to use.
   ///
   /// Defaults to [MapLibreMethodChannel].
   ///
   /// Platform-specific plugins should set this with their own platform-specific
-  /// class that extends [MapLibreGlPlatform] when they register themselves.
-  static MapLibreGlPlatform Function() createInstance =
+  /// class that extends [MapLibrePlatform] when they register themselves.
+  static MapLibrePlatform Function() createInstance =
       () => _instance ?? MapLibreMethodChannel();
 
   static set instance(MapLibreMethodChannel instance) {
