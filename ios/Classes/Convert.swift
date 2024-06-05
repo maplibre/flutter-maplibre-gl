@@ -1,7 +1,7 @@
 import MapLibre
 
 class Convert {
-    class func interpretMapboxMapOptions(options: Any?, delegate: MapboxMapOptionsSink) {
+    class func interpretMapLibreMapOptions(options: Any?, delegate: MapLibreMapOptionsSink) {
         guard let options = options as? [String: Any] else { return }
         if let cameraTargetBounds = options["cameraTargetBounds"] as? [[[Double]]] {
             delegate

@@ -19,6 +19,7 @@
   packages.
 * Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
   (affects for example the classes MaplibreMap and MaplibreMapController).
+* Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
 
 ## 0.19.0
 
