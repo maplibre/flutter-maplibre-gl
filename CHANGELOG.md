@@ -13,6 +13,7 @@
   for more information.
 * Updated maplibre-native for android to v11.0.0. This version uses 
   OpenGL ES 3.0.
+* Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all packages.
 
 ## 0.19.0
 
