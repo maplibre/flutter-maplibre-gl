@@ -1,4 +1,4 @@
-group 'com.mapbox.mapboxgl'
+group 'org.maplibre.maplibregl'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -24,7 +24,7 @@ apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace 'com.mapbox.mapboxgl'
+        namespace 'org.maplibre.maplibregl'
     }
 
     compileSdkVersion 34
@@ -46,10 +46,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
     dependencies {
-        implementation 'org.maplibre.gl:android-sdk:10.2.0'
-        implementation 'org.maplibre.gl:android-plugin-annotation-v9:2.0.0'
-        implementation 'org.maplibre.gl:android-plugin-offline-v9:2.0.0'
-        implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+        implementation 'org.maplibre.gl:android-sdk:11.0.0'
+        implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.0'
+        implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.0'
+        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     }
 }
 

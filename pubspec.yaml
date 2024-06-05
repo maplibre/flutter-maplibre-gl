@@ -21,8 +21,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.mapbox.mapboxgl
-        pluginClass: MapboxMapsPlugin
+        package: org.maplibre.maplibregl
+        pluginClass: MapLibreMapsPlugin
       ios:
         pluginClass: MapboxMapsPlugin
       web:
