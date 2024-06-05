@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package com.mapbox.mapboxgl;
+package org.maplibre.maplibregl;
 
 import android.app.Activity;
 import android.app.Application;
@@ -20,19 +20,19 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
- * Plugin for controlling a set of MapboxMap views to be shown as overlays on top of the Flutter
+ * Plugin for controlling a set of MapLibreMap views to be shown as overlays on top of the Flutter
  * view. The overlay should be hidden during transformations or while Flutter is rendering on top of
- * the map. A Texture drawn using MapboxMap bitmap snapshots can then be shown instead of the
+ * the map. A Texture drawn using MapLibreMap bitmap snapshots can then be shown instead of the
  * overlay.
  */
-public class MapboxMapsPlugin implements FlutterPlugin, ActivityAware {
+public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
   private static final String VIEW_TYPE = "plugins.flutter.io/mapbox_gl";
 
   static FlutterAssets flutterAssets;
   private Lifecycle lifecycle;
 
-  public MapboxMapsPlugin() {
+  public MapLibreMapsPlugin() {
     // no-op
   }
 
@@ -50,7 +50,7 @@ public class MapboxMapsPlugin implements FlutterPlugin, ActivityAware {
         .getPlatformViewRegistry()
         .registerViewFactory(
             "plugins.flutter.io/mapbox_gl",
-            new MapboxMapFactory(
+            new MapLibreMapFactory(
                 binding.getBinaryMessenger(),
                 new LifecycleProvider() {
                   @Nullable
