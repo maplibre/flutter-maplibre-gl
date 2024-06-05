@@ -255,8 +255,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       Completer<MapLibreMapController>();
 
   late _MapLibreMapOptions _maplibreMapOptions;
-  final MapLibrePlatform _maplibrePlatform =
-      MapLibrePlatform.createInstance();
+  final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
 
   @override
   Widget build(BuildContext context) {

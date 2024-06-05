@@ -1207,8 +1207,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Not implemented on web.
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
-    return _maplibrePlatform.addImageSource(
-        imageSourceId, bytes, coordinates);
+    return _maplibrePlatform.addImageSource(imageSourceId, bytes, coordinates);
   }
 
   /// Update the image and/or coordinates of an image source.
@@ -1233,8 +1232,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Adds an image layer to the map's style at render time.
   Future<void> addImageLayer(String layerId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
-    return _maplibrePlatform.addLayer(
-        layerId, imageSourceId, minzoom, maxzoom);
+    return _maplibrePlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
