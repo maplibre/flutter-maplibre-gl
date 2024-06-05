@@ -1,1 +1,1 @@
-Contains the web platform implementation for the [Flutter Maplibre GL plugin](https://github.com/maplibre/flutter-maplibre-gl).
+Contains the web platform implementation for the [Flutter MapLibre GL plugin](https://github.com/maplibre/flutter-maplibre-gl).

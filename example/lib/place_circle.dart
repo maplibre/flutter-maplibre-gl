@@ -32,11 +32,11 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
   static const LatLng center = LatLng(-33.86711, 151.1947171);
 
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
   int _circleCount = 0;
   Circle? _selectedCircle;
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onCircleTapped.add(_onCircleTapped);
   }
@@ -196,7 +196,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-33.852, 151.211),

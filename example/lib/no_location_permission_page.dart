@@ -28,7 +28,7 @@ class NoLocationPermissionBody extends StatefulWidget {
 class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
   @override
   Widget build(BuildContext context) {
-    return MaplibreMap(
+    return MapLibreMap(
       initialCameraPosition: const CameraPosition(
         target: LatLng(-33.852, 151.211),
         zoom: 11.0,

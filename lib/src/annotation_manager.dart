@@ -1,7 +1,7 @@
 part of '../maplibre_gl.dart';
 
 abstract class AnnotationManager<T extends Annotation> {
-  final MaplibreMapController controller;
+  final MapLibreMapController controller;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 

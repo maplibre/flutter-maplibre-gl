@@ -1,4 +1,4 @@
-# Flutter Maplibre GL
+# Flutter MapLibre GL
 
 [![Pub Version](https://img.shields.io/pub/v/maplibre_gl)](https://pub.dev/packages/maplibre_gl)
 [![likes](https://img.shields.io/pub/likes/maplibre_gl?logo=flutter)](https://pub.dev/packages/maplibre_gl)
@@ -126,7 +126,7 @@ your `web/index.html` file:
 
 ## Map Styles
 
-Map styles can be supplied by setting the `styleString` in the `MaplibreMap`
+Map styles can be supplied by setting the `styleString` in the `MapLibreMap`
 constructor. The following formats are supported:
 
 1. Passing the URL of the map style. This should be a custom map style served
