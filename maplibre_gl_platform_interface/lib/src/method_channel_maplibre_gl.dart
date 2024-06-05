@@ -127,7 +127,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
   @override
   Future<void> initPlatform(int id) async {
-    _channel = MethodChannel('plugins.flutter.io/mapbox_maps_$id');
+    _channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
     _channel.setMethodCallHandler(_handleMethodCall);
     await _channel.invokeMethod('map#waitForMap');
   }
