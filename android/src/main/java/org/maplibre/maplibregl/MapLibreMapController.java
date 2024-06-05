@@ -32,6 +32,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+<<<<<<<< HEAD:maplibre_gl/android/src/main/java/org/maplibre/maplibregl/MapLibreMapController.java
 
 import org.maplibre.android.gestures.AndroidGesturesManager;
 import org.maplibre.android.gestures.MoveGestureDetector;
@@ -39,6 +40,10 @@ import org.maplibre.android.location.engine.LocationEngine;
 import org.maplibre.android.location.engine.LocationEngineDefault;
 import org.maplibre.android.location.engine.LocationEngineProxy;
 import org.maplibre.android.location.engine.LocationEngineRequest;
+========
+import com.mapbox.android.gestures.AndroidGesturesManager;
+import com.mapbox.android.gestures.MoveGestureDetector;
+>>>>>>>> 547c457 (feat!: migrate `maplibre-native` for android to version `11.0.0` (take 2) (#406)):android/src/main/java/org/maplibre/maplibregl/MapLibreMapController.java
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.camera.CameraPosition;
