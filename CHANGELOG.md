@@ -2,18 +2,21 @@
 
 ### Breaking changes
 
-* All Dart enums have been migrated from mixed cases to lower camelcase 
+* All Dart enums have been migrated from mixed cases to lower camelcase
   according to the `camel_case_types` lint rule.
 * Move `MapLibreStyles` to the main `maplibre_gl` package. You can now use the  
   demo style without adding `maplibre_gl_platform_interface` as a dependency.
 * Updated maplibre-native for ios to v6.4.2. This introduces the new
-  iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only 
+  iOS Metal renderer and the OpenGL ES renderer now uses OpenGL ES 3.0. Only
   iOS Devices with an Apple A7 GPU or later are supported onwards. See the
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#600)
   for more information.
-* Updated maplibre-native for android to v11.0.0. This version uses 
-  OpenGL ES 3.0.
+* Updated maplibre-native for android to v11.0.0. This version uses
+  OpenGL ES 3.0. See the
+  [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1100)
+  for more information.
 * Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all packages.
+* Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native.
 
 ## 0.19.0
 

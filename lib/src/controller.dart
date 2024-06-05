@@ -32,6 +32,9 @@ typedef OnCameraIdleCallback = void Function();
 
 typedef OnMapIdleCallback = void Function();
 
+@Deprecated('MaplibreMapController was renamed to MapLibreMapController.')
+typedef MaplibreMapController = MapLibreMapController;
+
 /// Controller for a single [MapLibreMap] instance running on the host platform.
 ///
 /// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.

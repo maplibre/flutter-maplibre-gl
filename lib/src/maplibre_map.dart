@@ -8,6 +8,9 @@ enum AnnotationType { fill, line, circle, symbol }
 
 typedef MapCreatedCallback = void Function(MapLibreMapController controller);
 
+@Deprecated('MaplibreMap was renamed to MapLibreMap. ')
+typedef MaplibreMap = MapLibreMap;
+
 /// Shows a MapLibre map.
 /// Also refer to the documentation of [maplibre_gl] and [MapLibreMapController].
 class MapLibreMap extends StatefulWidget {
