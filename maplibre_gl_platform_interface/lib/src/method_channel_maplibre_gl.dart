@@ -1,6 +1,6 @@
 part of '../maplibre_gl_platform_interface.dart';
 
-class MethodChannelMapLibreGl extends MapLibreGlPlatform {
+class MapLibreMethodChannel extends MapLibreGlPlatform {
   late MethodChannel _channel;
   static bool useHybridComposition = false;
 

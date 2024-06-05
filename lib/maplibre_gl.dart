@@ -79,7 +79,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         VideoSourceProperties,
         ImageSourceProperties,
         MapLibreGlPlatform,
-        MethodChannelMapLibreGl,
+        MapLibreMethodChannel,
         OnPlatformViewCreatedCallback;
 
 part 'src/controller.dart';
