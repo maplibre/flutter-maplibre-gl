@@ -15,6 +15,9 @@
   OpenGL ES 3.0.
 * Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all packages.
 
+### Other changes
+* Updated example app
+
 ## 0.19.0
 
 This is the first version where all packages are published on pub.dev. Please

@@ -4,27 +4,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/main.dart';
+import 'package:maplibre_gl_example/common/example_scaffold.dart';
 
-import 'page.dart';
-
-class AnimateCameraPage extends ExamplePage {
-  const AnimateCameraPage({super.key})
-      : super(const Icon(Icons.map), 'Camera control, animated');
-
-  @override
-  Widget build(BuildContext context) {
-    return const AnimateCamera();
-  }
-}
-
-class AnimateCamera extends StatefulWidget {
-  const AnimateCamera({super.key});
+class MoveCameraPage extends StatefulWidget {
+  const MoveCameraPage({super.key});
 
   @override
-  State createState() => AnimateCameraState();
+  State createState() => _MoveCameraPageState();
 }
 
-class AnimateCameraState extends State<AnimateCamera> {
+class _MoveCameraPageState extends State<MoveCameraPage> {
   late MaplibreMapController mapController;
 
   void _onMapCreated(MaplibreMapController controller) {
@@ -33,63 +23,45 @@ class AnimateCameraState extends State<AnimateCamera> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MaplibreMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition:
-                  const CameraPosition(target: LatLng(0.0, 0.0)),
-            ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Column(
+    return ExampleScaffold(
+      page: ExamplePage.moveCamera,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Wrap(
+              alignment: WrapAlignment.center,
               children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    mapController
-                        .animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            const CameraPosition(
-                              bearing: 270.0,
-                              target: LatLng(51.5160895, -0.1294527),
-                              tilt: 30.0,
-                              zoom: 17.0,
-                            ),
-                          ),
-                        )
-                        .then(
-                          (result) => debugPrint(
-                              "mapController.animateCamera() returned $result"),
-                        );
+                    mapController.moveCamera(
+                      CameraUpdate.newCameraPosition(
+                        const CameraPosition(
+                          bearing: 270.0,
+                          target: LatLng(51.5160895, -0.1294527),
+                          tilt: 30.0,
+                          zoom: 17.0,
+                        ),
+                      ),
+                    );
                   },
                   child: const Text('newCameraPosition'),
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController
-                        .animateCamera(
-                          CameraUpdate.newLatLng(
-                            const LatLng(56.1725505, 10.1850512),
-                          ),
-                          duration: const Duration(seconds: 5),
-                        )
-                        .then((result) => debugPrint(
-                            "mapController.animateCamera() returned $result"));
+                    mapController.moveCamera(
+                      CameraUpdate.newLatLng(
+                        const LatLng(56.1725505, 10.1850512),
+                      ),
+                    );
                   },
                   child: const Text('newLatLng'),
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.newLatLngBounds(
                         LatLngBounds(
                           southwest: const LatLng(-38.483935, 113.248673),
@@ -105,7 +77,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.newLatLngZoom(
                         const LatLng(37.4231613, -122.087159),
                         11.0,
@@ -116,19 +88,15 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.scrollBy(150.0, -225.0),
                     );
                   },
                   child: const Text('scrollBy'),
                 ),
-              ],
-            ),
-            Column(
-              children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.zoomBy(
                         -0.5,
                         const Offset(30.0, 20.0),
@@ -139,16 +107,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
-                      CameraUpdate.newLatLngZoom(const LatLng(48, 11), 5),
-                      duration: const Duration(milliseconds: 300),
-                    );
-                  },
-                  child: const Text('latlngZoom'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.zoomBy(-0.5),
                     );
                   },
@@ -156,7 +115,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.zoomIn(),
                     );
                   },
@@ -164,7 +123,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.zoomOut(),
                     );
                   },
@@ -172,7 +131,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.zoomTo(16.0),
                     );
                   },
@@ -180,7 +139,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.bearingTo(45.0),
                     );
                   },
@@ -188,7 +147,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.animateCamera(
+                    mapController.moveCamera(
                       CameraUpdate.tiltTo(30.0),
                     );
                   },
@@ -196,9 +155,18 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
               ],
             ),
-          ],
-        )
-      ],
+          ),
+          Expanded(
+            child: MaplibreMap(
+              onMapCreated: _onMapCreated,
+              onCameraIdle: () => debugPrint("onCameraIdle"),
+              initialCameraPosition:
+                  const CameraPosition(target: LatLng(0.0, 0.0), zoom: 2),
+              styleString: "assets/osm_style.json",
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

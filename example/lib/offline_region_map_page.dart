@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/offline_regions_page.dart';
 
-import 'offline_regions.dart';
-
-class OfflineRegionMap extends StatefulWidget {
-  const OfflineRegionMap(this.item, {super.key});
+class OfflineRegionMapPage extends StatefulWidget {
+  const OfflineRegionMapPage(this.item, {super.key});
 
   final OfflineRegionListItem item;
 
   @override
-  State<OfflineRegionMap> createState() => _OfflineRegionMapState();
+  State<OfflineRegionMapPage> createState() => _OfflineRegionMapPageState();
 }
 
-class _OfflineRegionMapState extends State<OfflineRegionMap> {
+class _OfflineRegionMapPageState extends State<OfflineRegionMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Offline Region: ${widget.item.name}'),
-      ),
+      appBar: AppBar(title: Text('Offline Region: ${widget.item.name}')),
       body: MaplibreMap(
         initialCameraPosition: CameraPosition(
           target: _center,

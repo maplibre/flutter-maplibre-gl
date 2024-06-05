@@ -12,6 +12,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
   maplibre_gl: ^0.19.0
   location: ^5.0.3
@@ -19,6 +21,7 @@ dependencies:
   http: ^1.1.0
   collection: ^1.17.1
   device_info_plus: ^9.0.2
+  url_launcher: ^6.0.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0
