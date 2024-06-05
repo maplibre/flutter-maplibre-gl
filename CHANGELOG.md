@@ -15,8 +15,10 @@
   OpenGL ES 3.0. See the
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1100)
   for more information.
-* Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all packages.
-* Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native.
+* Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all
+  packages.
+* Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
+  (affects for example the classes MaplibreMap and MaplibreMapController).
 
 ## 0.19.0
 
