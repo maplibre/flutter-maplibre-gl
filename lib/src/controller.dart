@@ -32,13 +32,13 @@ typedef OnCameraIdleCallback = void Function();
 
 typedef OnMapIdleCallback = void Function();
 
-/// Controller for a single [MaplibreMap] instance running on the host platform.
+/// Controller for a single [MapLibreMap] instance running on the host platform.
 ///
 /// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.
 ///
 /// To add annotations ([Circle]s, [Line]s, [Symbol]s and [Fill]s) on the map, there are two ways:
 ///
-/// 1. *Simple way to add annotations*: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MaplibreMapController to add one annotation at a time to the map.
+/// 1. *Simple way to add annotations*: Use the corresponding add* methods ([addCircle], [addLine], [addSymbol] and [addFill]) on the MapLibreMapController to add one annotation at a time to the map.
 /// There are also corresponding [addCircles], [addLines] etc. methods which work the same but add multiple annotations at a time.
 ///
 /// (If you are interested how this works: under the hood, this uses AnnotationManagers to manage the annotations.
@@ -56,21 +56,21 @@ typedef OnMapIdleCallback = void Function();
 /// not for circles that are already contained in the map's style when the map is loaded or are added to that map's style with the methods from the advanced way (see below).
 /// The same of course applies for fills, lines and symbols.
 ///
-/// 2. *Advanced way to add annotations*: Modify the underlying Maplibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource])
+/// 2. *Advanced way to add annotations*: Modify the underlying MapLibre Style of the map to add a new data source (e.g. with the [addSource] method or the more specific methods like [addGeoJsonSource])
 /// and add a new layer to display the data of that source on the map (either with the [addLayer] method or with the more specific methods like [addCircleLayer], [addLineLayer] etc.).
-/// For more information about Maplibre Styles, see the documentation of [maplibre_gl] as well as the specification at [https://maplibre.org/maplibre-style-spec/].
+/// For more information about MapLibre Styles, see the documentation of [maplibre_gl] as well as the specification at [https://maplibre.org/maplibre-style-spec/].
 ///
-/// A MaplibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
+/// A MapLibreMapController is also a [ChangeNotifier]. Subscribers (change listeners) are notified upon changes to any of
 ///
-/// * the configuration options of the [MaplibreMap] widget
+/// * the configuration options of the [MapLibreMap] widget
 /// * the [symbols], [lines], [circles] or [fills] properties
 /// (i.e. the collection of [Symbol]s, [Line]s, [Circle]s and [Fill]s added to this map via the "simple way" (see above))
 /// * the [isCameraMoving] property
 /// * the [cameraPosition] property
 ///
 /// Listeners are notified after changes have been applied on the platform side.
-class MaplibreMapController extends ChangeNotifier {
-  MaplibreMapController({
+class MapLibreMapController extends ChangeNotifier {
+  MapLibreMapController({
     required MapLibreGlPlatform maplibreGlPlatform,
     required CameraPosition initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
@@ -258,7 +258,7 @@ class MaplibreMapController extends ChangeNotifier {
   bool _isCameraMoving = false;
 
   /// Returns the most recent camera position reported by the platform side.
-  /// Will be null, if [MaplibreMap.trackCameraPosition] is false.
+  /// Will be null, if [MapLibreMap.trackCameraPosition] is false.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
@@ -710,7 +710,7 @@ class MaplibreMapController extends ChangeNotifier {
   /// "a lowercase language's ISO 639-1 alpha2 code (second column), a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist, or a ISO 639-3 code if neither of those exist".
   ///
   /// If your vector tiles do not follow this schema of having labels with "name:$language" for different language, this method will not work for you.
-  /// In that case, you need to adapt your Maplibre style accordingly yourself to use labels in your preferred language.
+  /// In that case, you need to adapt your MapLibre style accordingly yourself to use labels in your preferred language.
   ///
   /// Attention: This may only be called after onStyleLoaded() has been invoked.
   ///

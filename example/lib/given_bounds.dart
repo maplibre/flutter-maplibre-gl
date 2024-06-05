@@ -25,9 +25,9 @@ class GivenBounds extends StatefulWidget {
 }
 
 class GivenBoundsState extends State<GivenBounds> {
-  late MaplibreMapController mapController;
+  late MapLibreMapController mapController;
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
 
@@ -41,7 +41,7 @@ class GivenBoundsState extends State<GivenBounds> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),

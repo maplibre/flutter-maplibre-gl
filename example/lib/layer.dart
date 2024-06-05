@@ -24,7 +24,7 @@ class LayerBody extends StatefulWidget {
 class LayerState extends State {
   static const LatLng center = LatLng(-33.86711, 151.1947171);
 
-  late MaplibreMapController controller;
+  late MapLibreMapController controller;
   Timer? bikeTimer;
   Timer? filterTimer;
   int filteredId = 0;
@@ -43,7 +43,7 @@ class LayerState extends State {
       Center(
         child: SizedBox(
             height: 400.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               dragEnabled: false,
               myLocationEnabled: true,
               onMapCreated: _onMapCreated,
@@ -139,7 +139,7 @@ class LayerState extends State {
     ]);
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
 
     controller.onFeatureTapped.add(onFeatureTap);

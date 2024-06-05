@@ -23,7 +23,7 @@ see top-level CHANGELOG.md
 ## 0.13.0, Oct 6, 2021
 
 🎉 The first release of flutter-maplibre-gl with the complete transition to
-Maplibre libraries. 🎉
+MapLibre libraries. 🎉
 
 ### Changes cherry-picked/ported from tobrun/flutter-mapbox-gl:0.12.0
 

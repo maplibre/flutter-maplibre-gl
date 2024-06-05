@@ -1,6 +1,6 @@
 part of '../maplibre_gl_web.dart';
 
-class MaplibreMapController extends MapLibreGlPlatform
+class MapLibreMapController extends MapLibreGlPlatform
     implements MapLibreMapOptionsSink {
   late html.DivElement _mapElement;
 

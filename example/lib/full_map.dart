@@ -21,10 +21,10 @@ class FullMap extends StatefulWidget {
 }
 
 class FullMapState extends State<FullMap> {
-  MaplibreMapController? mapController;
+  MapLibreMapController? mapController;
   var isLight = true;
 
-  _onMapCreated(MaplibreMapController controller) {
+  _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
 
@@ -52,7 +52,7 @@ class FullMapState extends State<FullMap> {
         // ),
         // ),
         // ),
-        body: MaplibreMap(
+        body: MapLibreMap(
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
       onStyleLoadedCallback: _onStyleLoadedCallback,
