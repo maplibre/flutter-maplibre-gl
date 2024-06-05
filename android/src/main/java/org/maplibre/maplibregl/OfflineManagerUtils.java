@@ -1,16 +1,16 @@
-package com.mapbox.mapboxgl;
+package org.maplibre.maplibregl;
 
 import android.content.Context;
 import android.util.Log;
 import com.google.gson.Gson;
-import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
-import com.mapbox.mapboxsdk.offline.OfflineManager;
-import com.mapbox.mapboxsdk.offline.OfflineRegion;
-import com.mapbox.mapboxsdk.offline.OfflineRegionDefinition;
-import com.mapbox.mapboxsdk.offline.OfflineRegionError;
-import com.mapbox.mapboxsdk.offline.OfflineRegionStatus;
-import com.mapbox.mapboxsdk.offline.OfflineTilePyramidRegionDefinition;
+import org.maplibre.android.geometry.LatLng;
+import org.maplibre.android.geometry.LatLngBounds;
+import org.maplibre.android.offline.OfflineManager;
+import org.maplibre.android.offline.OfflineRegion;
+import org.maplibre.android.offline.OfflineRegionDefinition;
+import org.maplibre.android.offline.OfflineRegionError;
+import org.maplibre.android.offline.OfflineRegionStatus;
+import org.maplibre.android.offline.OfflineTilePyramidRegionDefinition;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,15 +121,15 @@ abstract class OfflineManagerUtils {
 
                       @Override
                       public void mapboxTileCountLimitExceeded(long limit) {
-                        Log.e(TAG, "Mapbox tile count" + " limit exceeded: " + limit);
+                        Log.e(TAG, "MapLibre tile count" + " limit exceeded: " + limit);
                         // Reset downloading state
                         _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
                         isComplete.set(true);
                         channelHandler.onError(
                             "mapboxTileCountLimitExceeded",
-                            "Mapbox tile count " + "limit " + "exceeded: " + limit,
+                            "MapLibre tile count " + "limit " + "exceeded: " + limit,
                             null);
-                        // Mapbox even after crash
+                        // MapLibre even after crash
                         // and not downloading fully
                         // region still keeps part
                         // of it in database, so we

@@ -11,6 +11,8 @@
   iOS Devices with an Apple A7 GPU or later are supported onwards. See the
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#600)
   for more information.
+* Updated maplibre-native for android to v11.0.0. This version uses 
+  OpenGL ES 3.0.
 
 ## 0.19.0
 
