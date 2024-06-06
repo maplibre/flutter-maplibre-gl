@@ -154,7 +154,6 @@ class MapLibreMapController extends ChangeNotifier {
                 onTap: onSymbolTapped.call,
                 enableInteraction: enableInteraction);
             break;
-          default:
         }
       }
       if (onStyleLoadedCallback != null) {

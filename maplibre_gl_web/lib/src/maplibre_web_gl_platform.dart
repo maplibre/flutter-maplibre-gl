@@ -537,23 +537,13 @@ class MapLibreMapController extends MapLibrePlatform
     }
     String? prevPosition = _navigationControlPosition;
 
-    String? positionString;
-    switch (position) {
-      case CompassViewPosition.topRight:
-        positionString = 'top-right';
-        break;
-      case CompassViewPosition.topLeft:
-        positionString = 'top-left';
-        break;
-      case CompassViewPosition.bottomRight:
-        positionString = 'bottom-right';
-        break;
-      case CompassViewPosition.bottomLeft:
-        positionString = 'bottom-left';
-        break;
-      default:
-        positionString = null;
-    }
+    String? positionString = switch (position) {
+      CompassViewPosition.topRight => 'top-right',
+      CompassViewPosition.topLeft => 'top-left',
+      CompassViewPosition.bottomRight => 'bottom-right',
+      CompassViewPosition.bottomLeft => 'bottom-left',
+      _ => null,
+    };
 
     bool newShowCompass = compassEnabled ?? prevShowCompass ?? false;
     String? newPosition = positionString ?? prevPosition;
