@@ -910,8 +910,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.
   Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
-    final effectiveOptions =
-        CircleOptions.defaultOptions.copyWith(options);
+    final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
     await circleManager!.add(circle);
     notifyListeners();
@@ -1005,8 +1004,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.
   Future<Fill> addFill(FillOptions options, [Map? data]) async {
-    final effectiveOptions =
-        FillOptions.defaultOptions.copyWith(options);
+    final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
     await fillManager!.add(fill);
     notifyListeners();

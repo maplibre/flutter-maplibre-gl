@@ -324,8 +324,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<LatLng> requestMyLocationLatLng() async {
     try {
-      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
-          'locationComponent#getLastLocation');
+      final Map<dynamic, dynamic> reply =
+          await _channel.invokeMethod('locationComponent#getLastLocation');
       var latitude = 0.0;
       var longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {

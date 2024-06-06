@@ -52,7 +52,7 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.symbol,
       AnnotationType.circle,
       AnnotationType.fill,
-},
+    },
     this.annotationConsumeTapEvents = const {
       AnnotationType.symbol,
       AnnotationType.fill,
@@ -294,10 +294,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   void didUpdateWidget(MapLibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newOptions =
-        _MapLibreMapOptions.fromWidget(widget);
-    final updates =
-        _maplibreMapOptions.updatesMap(newOptions);
+    final newOptions = _MapLibreMapOptions.fromWidget(widget);
+    final updates = _maplibreMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
     _maplibreMapOptions = newOptions;
   }

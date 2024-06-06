@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -281,8 +280,7 @@ class MapUiBodyState extends State<MapUiBody> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              "SW: ${result.southwest} NE: ${result.northeast}"),
+          content: Text("SW: ${result.southwest} NE: ${result.northeast}"),
         ));
       },
     );
