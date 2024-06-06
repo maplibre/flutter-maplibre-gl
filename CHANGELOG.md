@@ -1,5 +1,8 @@
 ## 0.20.0
 
+A lot of files/classes have been renamed and moved around in this release.
+If you notice any build errors, please make sure to run `flutter clean`.
+
 ### Breaking changes
 
 * All Dart enums have been migrated from mixed cases to lower camelcase
@@ -19,6 +22,12 @@
   packages.
 * Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
   (affects for example the classes MaplibreMap and MaplibreMapController).
+
+### Changes
+
+* Added support for Swift Package Manager usage on iOS.
+* Migrated main iOS plugin class from Objective-C to Swift.
+* Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
 
 **Full Changelog**:
 [v0.19.0+2...v0.20.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.19.0+2...v0.20.0)
