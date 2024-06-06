@@ -21,7 +21,6 @@ linter:
     always_put_required_named_parameters_first: false
     leading_newlines_in_multiline_strings: false
     directives_ordering: false
-    avoid_multiple_declarations_per_line: false
     unnecessary_string_escapes: false
     parameter_assignments: false
     combinators_ordering: false

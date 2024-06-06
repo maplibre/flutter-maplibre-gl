@@ -326,7 +326,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
           'locationComponent#getLastLocation');
-      double latitude = 0.0, longitude = 0.0;
+      double latitude = 0.0;
+      double longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
       }
