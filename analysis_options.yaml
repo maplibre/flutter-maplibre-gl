@@ -16,7 +16,6 @@ linter:
     prefer_int_literals: false
     unnecessary_lambdas: false
     avoid_print: false
-    avoid_redundant_argument_values: false
     unawaited_futures: false
     overridden_fields: false
     avoid_setters_without_getters: false

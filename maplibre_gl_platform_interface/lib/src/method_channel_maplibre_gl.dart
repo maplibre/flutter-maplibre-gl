@@ -325,7 +325,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<LatLng> requestMyLocationLatLng() async {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
-          'locationComponent#getLastLocation', null);
+          'locationComponent#getLastLocation');
       double latitude = 0.0, longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
@@ -343,7 +343,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<LatLngBounds> getVisibleRegion() async {
     try {
       final Map<dynamic, dynamic> reply =
-          await _channel.invokeMethod('map#getVisibleRegion', null);
+          await _channel.invokeMethod('map#getVisibleRegion');
       final southwest = reply['sw'] as List<dynamic>;
       final northeast = reply['ne'] as List<dynamic>;
       return LatLngBounds(

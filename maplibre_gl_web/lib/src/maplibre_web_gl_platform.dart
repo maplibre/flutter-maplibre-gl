@@ -660,7 +660,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   void setMyLocationEnabled(bool myLocationEnabled) {
     if (myLocationEnabled) {
-      _addGeolocateControl(trackUserLocation: false);
+      _addGeolocateControl();
     } else {
       _removeGeolocateControl();
     }
@@ -678,7 +678,7 @@ class MapLibreMapController extends MapLibrePlatform
       return;
     }
     if (myLocationTrackingMode == 0) {
-      _addGeolocateControl(trackUserLocation: false);
+      _addGeolocateControl();
     } else {
       print('Only one tracking mode available in web');
       _addGeolocateControl(trackUserLocation: true);
