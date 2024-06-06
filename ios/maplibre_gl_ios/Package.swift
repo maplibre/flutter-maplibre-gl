@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         // When updating the dependency version,
-        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.4.2"),
+        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.5.0"),
     ],
     targets: [
         .target(

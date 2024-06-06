@@ -16,7 +16,7 @@ A new Flutter plugin.
   s.dependency 'Flutter'
   # When updating the dependency version,
   # make sure to also update the version Package.swift.
-  s.dependency 'MapLibre', '6.4.2'
+  s.dependency 'MapLibre', '6.5.0'
   s.swift_version = '5.0'
   s.ios.deployment_target = '12.0'
 end
