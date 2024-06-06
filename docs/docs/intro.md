@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Let's discover **Docusaurus in less than 5 minutes**.
 
-<iframe src="demo" title="Demo" width="100%" height="500px">
+<iframe src="/flutter-maplibre-gl/demo/" title="Demo" width="100%" height="500px">
 </iframe>
 ## Getting Started
 
