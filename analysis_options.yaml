@@ -35,6 +35,5 @@ linter:
     avoid_positional_boolean_parameters: false
     comment_references: false
     cascade_invocations: false
-    avoid_type_to_string: false
     omit_local_variable_types: false
     use_named_constants: false
