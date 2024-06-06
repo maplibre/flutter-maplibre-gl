@@ -16,7 +16,6 @@ linter:
     prefer_int_literals: false
     unnecessary_lambdas: false
     avoid_print: false
-    avoid_bool_literals_in_conditional_expressions: false
     avoid_unused_constructor_parameters: false
     no_default_cases: false
     sort_pub_dependencies: false

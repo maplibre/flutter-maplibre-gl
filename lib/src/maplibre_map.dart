@@ -60,9 +60,8 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.circle,
     ],
   })  : assert(
-          myLocationRenderMode != MyLocationRenderMode.normal
-              ? myLocationEnabled
-              : true,
+          myLocationRenderMode == MyLocationRenderMode.normal ||
+              myLocationEnabled,
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
         assert(annotationOrder.length <= 4),
