@@ -8,10 +8,10 @@ public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = MapboxMapFactory(withRegistrar: registrar)
-        registrar.register(instance, withId: "plugins.flutter.io/mapbox_gl")
+        registrar.register(instance, withId: "plugins.flutter.io/maplibre_gl")
 
         let channel = FlutterMethodChannel(
-            name: "plugins.flutter.io/mapbox_gl",
+            name: "plugins.flutter.io/maplibre_gl",
             binaryMessenger: registrar.messenger()
         )
 
