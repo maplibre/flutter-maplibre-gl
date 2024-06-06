@@ -40,9 +40,7 @@ class LatLng {
     return <double>[longitude, latitude];
   }
 
-  static LatLng _fromJson(List<dynamic> json) {
-    return LatLng(json[0], json[1]);
-  }
+  LatLng._fromJson(List<dynamic> json) : this(json[0], json[1]);
 
   @override
   String toString() => 'LatLng($latitude, $longitude)';
@@ -235,6 +233,7 @@ class UserHeading {
 
   /// Returns a timestamp for when the magnetic heading was determined.
   final DateTime timestamp;
+
   const UserHeading(
       {required this.magneticHeading,
       required this.trueHeading,

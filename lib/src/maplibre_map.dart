@@ -363,29 +363,28 @@ class _MapLibreMapOptions {
     this.attributionButtonMargins,
   });
 
-  static _MapLibreMapOptions fromWidget(MapLibreMap map) {
-    return _MapLibreMapOptions(
-      compassEnabled: map.compassEnabled,
-      cameraTargetBounds: map.cameraTargetBounds,
-      styleString: map.styleString,
-      minMaxZoomPreference: map.minMaxZoomPreference,
-      rotateGesturesEnabled: map.rotateGesturesEnabled,
-      scrollGesturesEnabled: map.scrollGesturesEnabled,
-      tiltGesturesEnabled: map.tiltGesturesEnabled,
-      trackCameraPosition: map.trackCameraPosition,
-      zoomGesturesEnabled: map.zoomGesturesEnabled,
-      doubleClickZoomEnabled:
-          map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
-      myLocationEnabled: map.myLocationEnabled,
-      myLocationTrackingMode: map.myLocationTrackingMode,
-      myLocationRenderMode: map.myLocationRenderMode,
-      logoViewMargins: map.logoViewMargins,
-      compassViewPosition: map.compassViewPosition,
-      compassViewMargins: map.compassViewMargins,
-      attributionButtonPosition: map.attributionButtonPosition,
-      attributionButtonMargins: map.attributionButtonMargins,
-    );
-  }
+  _MapLibreMapOptions.fromWidget(MapLibreMap map)
+      : this(
+          compassEnabled: map.compassEnabled,
+          cameraTargetBounds: map.cameraTargetBounds,
+          styleString: map.styleString,
+          minMaxZoomPreference: map.minMaxZoomPreference,
+          rotateGesturesEnabled: map.rotateGesturesEnabled,
+          scrollGesturesEnabled: map.scrollGesturesEnabled,
+          tiltGesturesEnabled: map.tiltGesturesEnabled,
+          trackCameraPosition: map.trackCameraPosition,
+          zoomGesturesEnabled: map.zoomGesturesEnabled,
+          doubleClickZoomEnabled:
+              map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+          myLocationEnabled: map.myLocationEnabled,
+          myLocationTrackingMode: map.myLocationTrackingMode,
+          myLocationRenderMode: map.myLocationRenderMode,
+          logoViewMargins: map.logoViewMargins,
+          compassViewPosition: map.compassViewPosition,
+          compassViewMargins: map.compassViewMargins,
+          attributionButtonPosition: map.attributionButtonPosition,
+          attributionButtonMargins: map.attributionButtonMargins,
+        );
 
   final bool? compassEnabled;
 
