@@ -19,7 +19,8 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
 
 enum DragEventType { start, drag, end }
 
-Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
+Future<dynamic> setOffline(bool offline) =>
+    _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{
         'offline': offline,
@@ -55,8 +56,8 @@ Future<List<OfflineRegion>> getListOfRegions() async {
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
-Future<OfflineRegion> updateOfflineRegionMetadata(
-    int id, Map<String, dynamic> metadata) async {
+Future<OfflineRegion> updateOfflineRegionMetadata(int id,
+    Map<String, dynamic> metadata) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{
@@ -76,20 +77,23 @@ Future<dynamic> setOfflineTileCountLimit(int limit) =>
       },
     );
 
-Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
+Future<dynamic> deleteOfflineRegion(int id) =>
+    _globalChannel.invokeMethod(
       'deleteOfflineRegion',
       <String, dynamic>{
         'id': id,
       },
     );
 
-Future<OfflineRegion> downloadOfflineRegion(
-  OfflineRegionDefinition definition, {
-  Map<String, dynamic> metadata = const {},
-  Function(DownloadRegionStatus event)? onEvent,
-}) async {
+Future<OfflineRegion> downloadOfflineRegion(OfflineRegionDefinition definition,
+    {
+      Map<String, dynamic> metadata = const {},
+      Function(DownloadRegionStatus event)? onEvent,
+    }) async {
   String channelName =
-      'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
+      'downloadOfflineRegion_${DateTime
+      .now()
+      .microsecondsSinceEpoch}';
 
   await _globalChannel
       .invokeMethod('downloadOfflineRegion#setup', <String, dynamic>{
@@ -106,35 +110,21 @@ Future<OfflineRegion> downloadOfflineRegion(
         PlatformException(
           code: 'UnknowException',
           message:
-              'This error is unhandled by plugin. Please contact us if needed.',
+          'This error is unhandled by plugin. Please contact us if needed.',
           details: error,
         ),
       );
       onEvent(unknownError);
       return unknownError;
     }).listen((data) {
-      final Map<String, dynamic> jsonData = json.decode(data);
-      DownloadRegionStatus? status;
-      switch (jsonData['status']) {
-        case 'start':
-          status = InProgress(0.0);
-        case 'progress':
-          final dynamic value = jsonData['progress'];
-          double progress = 0.0;
-
-          if (value is int) {
-            progress = value.toDouble();
-          }
-
-          if (value is double) {
-            progress = value;
-          }
-
-          status = InProgress(progress);
-        case 'success':
-          status = Success();
-      }
-      onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
+      final Map<String, Object?> jsonData = json.decode(data);
+      final status = switch (jsonData['status']) {
+        'start' => InProgress(0.0),
+        'progress' => InProgress((jsonData['progress']! as num).toDouble()),
+        'success' => Success(),
+      _ => throw Exception('Invalid event status ${jsonData['status']}'),
+      };
+      onEvent(status);
     });
   }
 
