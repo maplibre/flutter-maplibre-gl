@@ -10,7 +10,6 @@ analyzer:
 linter:
   rules:
     # temporary rules
-    avoid_escaping_inner_quotes: false
     prefer_interpolation_to_compose_strings: false
     prefer_if_elements_to_conditional_expressions: false
     constant_identifier_names: false
