@@ -65,7 +65,7 @@ Future<void> render(
   final outputPath = pathItems.join("/");
 
   print("Rendering $filename");
-  var templateFile = await File('./code_generator/templates/$filename.template')
+  var templateFile = await File('./scripts/templates/$filename.template')
       .readAsString();
 
   var template = Template(templateFile);

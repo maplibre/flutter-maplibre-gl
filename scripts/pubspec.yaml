@@ -1,4 +1,4 @@
-name: code_generator
+name: scripts
 description: code generation for flutter-maplibre-gl
 publish_to: 'none'
 
