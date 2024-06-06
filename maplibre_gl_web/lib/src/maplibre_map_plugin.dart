@@ -1,8 +1,8 @@
 part of '../maplibre_gl_web.dart';
 
 class MapLibreMapPlugin {
-  /// Registers this class as the default instance of [MapLibreGlPlatform].
+  /// Registers this class as the default instance of [MapLibrePlatform].
   static void registerWith(Registrar registrar) {
-    MapLibreGlPlatform.createInstance = () => MaplibreMapController();
+    MapLibrePlatform.createInstance = () => MapLibreMapController();
   }
 }

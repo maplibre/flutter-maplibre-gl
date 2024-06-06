@@ -73,12 +73,12 @@ class _AttributionBodyState extends State<AttributionBody> {
     );
   }
 
-  MaplibreMap buildMap(
+  MapLibreMap buildMap(
     AttributionButtonPosition? attributionButtonPosition,
     bool useDefaultAttributionPosition,
   ) {
     if (useDefaultAttributionPosition) {
-      return MaplibreMap(
+      return MapLibreMap(
         key: UniqueKey(),
         initialCameraPosition: const CameraPosition(
           target: LatLng(-33.852, 151.211),
@@ -87,7 +87,7 @@ class _AttributionBodyState extends State<AttributionBody> {
         styleString: "assets/osm_style.json",
       );
     } else {
-      return MaplibreMap(
+      return MapLibreMap(
         key: UniqueKey(),
         initialCameraPosition: const CameraPosition(
           target: LatLng(-33.852, 151.211),

@@ -30,9 +30,9 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   static const LatLng center = LatLng(-33.88, 151.16);
 
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onFillTapped.add(_onFillTapped);
     controller.onCircleTapped.add(_onCircleTapped);
@@ -139,7 +139,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   @override
   Widget build(BuildContext context) {
-    return MaplibreMap(
+    return MapLibreMap(
       annotationOrder: const [
         AnnotationType.fill,
         AnnotationType.line,

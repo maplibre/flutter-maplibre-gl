@@ -39,7 +39,7 @@ class MapUiBodyState extends State<MapUiBody> {
     zoom: 11.0,
   );
 
-  MaplibreMapController? mapController;
+  MapLibreMapController? mapController;
   CameraPosition _position = _kInitialPosition;
   bool _isMoving = false;
   bool _compassEnabled = true;
@@ -50,9 +50,9 @@ class MapUiBodyState extends State<MapUiBody> {
 
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  final List<String> _styleStrings = [MaplibreStyles.demo, "assets/style.json"];
+  final List<String> _styleStrings = [MapLibreStyles.demo, "assets/style.json"];
   final List<String> _styleStringLabels = [
-    "Maplibre demo style",
+    "MapLibre demo style",
     "Local style file"
   ];
   bool _rotateGesturesEnabled = true;
@@ -343,7 +343,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   Widget build(BuildContext context) {
-    final MaplibreMap maplibreMap = MaplibreMap(
+    final MapLibreMap maplibreMap = MapLibreMap(
       onMapCreated: onMapCreated,
       initialCameraPosition: _kInitialPosition,
       trackCameraPosition: true,
@@ -458,7 +458,7 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  void onMapCreated(MaplibreMapController controller) {
+  void onMapCreated(MapLibreMapController controller) {
     mapController = controller;
     mapController!.addListener(_onMapChanged);
     _extractMapInfo();

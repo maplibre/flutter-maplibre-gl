@@ -1,12 +1,12 @@
-package com.mapbox.mapboxgl;
+package org.maplibre.maplibregl;
 
-import com.mapbox.mapboxsdk.module.http.HttpRequestUtil;
+import org.maplibre.android.module.http.HttpRequestUtil;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.Map;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-abstract class MapboxHttpRequestUtil {
+abstract class MapLibreHttpRequestUtil {
 
   public static void setHttpHeaders(Map<String, String> headers, MethodChannel.Result result) {
     HttpRequestUtil.setOkHttpClient(getOkHttpClient(headers, result).build());
