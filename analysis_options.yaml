@@ -35,4 +35,3 @@ linter:
     avoid_positional_boolean_parameters: false
     comment_references: false
     cascade_invocations: false
-    use_named_constants: false

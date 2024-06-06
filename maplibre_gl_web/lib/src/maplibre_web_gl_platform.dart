@@ -417,7 +417,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onMapResize() {
-    Timer(const Duration(), () {
+    Timer(Duration.zero, () {
       final container = _map.getContainer();
       final canvas = _map.getCanvas();
       final widthMismatch = canvas.clientWidth != container.clientWidth;

@@ -185,7 +185,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   void _changeIconOffset() {
     var currentAnchor = _selectedSymbol!.options.iconOffset;
-    currentAnchor ??= const Offset(0.0, 0.0);
+    currentAnchor ??= Offset.zero;
     final newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
     _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
   }
