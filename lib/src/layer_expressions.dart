@@ -58,7 +58,7 @@ class Expressions {
   /// be found. Accepts an optional index from where to begin the search.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios
+  ///   basic functionality with js, android, ios
   static const indexOf = "index-of";
 
   /// Returns an item from an array or a substring from a string from a
@@ -67,7 +67,7 @@ class Expressions {
   /// end index.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios
+  ///   basic functionality with js, android, ios
   static const slice = "slice";
 
   /// Selects the first output whose corresponding test condition evaluates

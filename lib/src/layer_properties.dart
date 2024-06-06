@@ -291,7 +291,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      overlap mode, the new icon is visible.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js, android, ios
   final dynamic iconOverlap;
 
   /// If true, other symbols can be visible even if they collide with the
@@ -836,7 +836,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      overlap mode, the new text is visible.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js, android, ios
   final dynamic textOverlap;
 
   /// If true, other symbols can be visible even if they collide with the

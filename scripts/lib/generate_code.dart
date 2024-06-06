@@ -11,7 +11,7 @@ const styleUrl =
     'https://raw.githubusercontent.com/maplibre/maplibre-style-spec/main/src/reference/v8.json';
 
 const templates = [
-  "android/src/main/java/com/mapbox/mapboxgl/LayerPropertyConverter.java",
+  "android/src/main/java/org/maplibre/maplibregl/LayerPropertyConverter.java",
   "ios/Classes/LayerPropertyConverter.swift",
   "lib/src/layer_expressions.dart",
   "lib/src/layer_properties.dart",
@@ -65,8 +65,8 @@ Future<void> render(
   final outputPath = pathItems.join("/");
 
   print("Rendering $filename");
-  var templateFile = await File('./scripts/templates/$filename.template')
-      .readAsString();
+  var templateFile =
+      await File('./scripts/templates/$filename.template').readAsString();
 
   var template = Template(templateFile);
   var outputFile = File('$outputPath/$filename');
