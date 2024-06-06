@@ -31,7 +31,7 @@ main() async {
 
   final renderContext = {
     "layerTypes": [
-      for (var type in layerTypes)
+      for (final type in layerTypes)
         {
           "type": type,
           "typePascal": ReCase(type).pascalCase,
@@ -41,7 +41,7 @@ main() async {
         },
     ],
     "sourceTypes": [
-      for (var type in sourceTypes)
+      for (final type in sourceTypes)
         {
           "type": type.replaceAll("_", "-"),
           "typePascal": ReCase(type).pascalCase,
@@ -66,7 +66,7 @@ main() async {
     "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
-  for (var template in templates) {
+  for (final template in templates) {
     await render(renderContext, template);
   }
 }
@@ -168,7 +168,7 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
     if (maxValue != null) result.add("  maximum: $maxValue");
     if (values != null) {
       result.add("Options:");
-      for (var value in values.entries) {
+      for (final value in values.entries) {
         result.add('  "${value.key}"');
         result.addAll(
             splitIntoChunks("${value.value["doc"]}", 70, prefix: "     "));
@@ -198,7 +198,7 @@ List<String> splitIntoChunks(String input, int lineLength,
   final chunks = <String>[];
 
   String chunk = "";
-  for (var word in words) {
+  for (final word in words) {
     final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
     if (nextChunk.length > lineLength || chunk.endsWith("\n")) {
       chunks.add(chunk.replaceAll("\n", ""));

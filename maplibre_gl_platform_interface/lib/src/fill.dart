@@ -9,9 +9,9 @@ part of '../maplibre_gl_platform_interface.dart';
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {
     final List<List<LatLng>> newGeometry = [];
-    for (var ring in options.geometry!) {
+    for (final ring in options.geometry!) {
       final List<LatLng> newRing = [];
-      for (var coords in ring) {
+      for (final coords in ring) {
         newRing.add(coords + delta);
       }
       newGeometry.add(newRing);

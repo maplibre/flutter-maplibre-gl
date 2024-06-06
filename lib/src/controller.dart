@@ -131,7 +131,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (var type in annotationOrder.toSet()) {
+      for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
         switch (type) {
           case AnnotationType.fill:

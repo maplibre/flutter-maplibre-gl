@@ -215,7 +215,7 @@ class LineBodyState extends State<LineBody> {
                               : () async {
                                   final latLngs = await controller!
                                       .getLineLatLngs(_selectedLine!);
-                                  for (var latLng in latLngs) {
+                                  for (final latLng in latLngs) {
                                     debugPrint(latLng.toString());
                                   }
                                 },

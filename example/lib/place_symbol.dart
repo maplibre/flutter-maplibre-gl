@@ -91,7 +91,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   void _add(String iconImage) {
     final List<int> availableNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    for (final s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
     if (availableNumbers.isNotEmpty) {
@@ -134,7 +134,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _addAll(String iconImage) async {
     final List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    for (final s in controller!.symbols) {
       symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']);
     }
 

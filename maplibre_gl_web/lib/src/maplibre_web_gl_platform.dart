@@ -688,7 +688,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   void setStyleString(String? styleString) {
     //remove old mouseenter callbacks to avoid multicalling
-    for (var layerId in _interactiveFeatureLayerIds) {
+    for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _onMouseEnterFeature);
       _map.off('mousemouve', layerId, _onMouseEnterFeature);
       _map.off('mouseleave', layerId, _onMouseLeaveFeature);
