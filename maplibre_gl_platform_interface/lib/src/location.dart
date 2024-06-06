@@ -5,6 +5,7 @@
 part of '../maplibre_gl_platform_interface.dart';
 
 /// A pair of latitude and longitude coordinates, stored as degrees.
+@immutable
 class LatLng {
   /// Creates a geographical location specified in degrees [latitude] and
   /// [longitude].
@@ -64,6 +65,7 @@ class LatLng {
 ///   if `southwest.longitude` ≤ `northeast.longitude`,
 /// * lng ∈ [-180, `northeast.longitude`] ∪ [`southwest.longitude`, 180[,
 ///   if `northeast.longitude` < `southwest.longitude`
+@immutable
 class LatLngBounds {
   /// Creates geographical bounding box with the specified corners.
   ///
@@ -111,6 +113,7 @@ class LatLngBounds {
 
 /// A geographical area representing a non-aligned quadrilateral
 /// This class does not wrap values to the world bounds
+@immutable
 class LatLngQuad {
   const LatLngQuad({
     required this.topLeft,

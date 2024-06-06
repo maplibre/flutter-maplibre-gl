@@ -44,6 +44,7 @@ enum AttributionButtonPosition {
 /// Used with [_MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
 /// from not specifying anything (null `CameraTargetBounds`).
+@immutable
 class CameraTargetBounds {
   /// Creates a camera target bounds with the specified bounding box, or null
   /// to indicate that the camera target is not bounded.
@@ -79,6 +80,7 @@ class CameraTargetBounds {
 /// Used with [_MapLibreMapOptions] to wrap min and max zoom. This allows
 /// distinguishing between specifying unbounded zooming (null [minZoom] and
 /// [maxZoom]) from not specifying anything (null [MinMaxZoomPreference]).
+@immutable
 class MinMaxZoomPreference {
   const MinMaxZoomPreference(this.minZoom, this.maxZoom)
       : assert(minZoom == null || maxZoom == null || minZoom <= maxZoom);

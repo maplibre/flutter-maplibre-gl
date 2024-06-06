@@ -23,7 +23,6 @@ linter:
     directives_ordering: false
     parameter_assignments: false
     use_setters_to_change_properties: false
-    avoid_equals_and_hash_code_on_mutable_classes: false
     type_annotate_public_apis: false
     unnecessary_library_directive: false
     prefer_asserts_with_message: false
