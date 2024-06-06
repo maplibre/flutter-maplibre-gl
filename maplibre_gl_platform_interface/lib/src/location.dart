@@ -45,7 +45,7 @@ class LatLng {
   }
 
   @override
-  String toString() => '$runtimeType($latitude, $longitude)';
+  String toString() => 'LatLng($latitude, $longitude)';
 
   @override
   bool operator ==(Object other) {
@@ -97,7 +97,7 @@ class LatLngBounds {
 
   @override
   String toString() {
-    return '$runtimeType($southwest, $northeast)';
+    return 'LatLngBounds($southwest, $northeast)';
   }
 
   @override
@@ -153,7 +153,7 @@ class LatLngQuad {
 
   @override
   String toString() {
-    return '$runtimeType($topLeft, $topRight, $bottomRight, $bottomLeft)';
+    return 'LatLngQuad($topLeft, $topRight, $bottomRight, $bottomLeft)';
   }
 
   @override
