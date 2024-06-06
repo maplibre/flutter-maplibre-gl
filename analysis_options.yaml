@@ -33,7 +33,6 @@ linter:
     sort_constructors_first: false
     avoid_relative_lib_imports: false
     avoid_positional_boolean_parameters: false
-    implicit_call_tearoffs: false
     comment_references: false
     cascade_invocations: false
     avoid_type_to_string: false
