@@ -139,21 +139,17 @@ class MapLibreMapController extends ChangeNotifier {
           case AnnotationType.fill:
             fillManager = FillManager(this,
                 onTap: onFillTapped.call, enableInteraction: enableInteraction);
-            break;
           case AnnotationType.line:
             lineManager = LineManager(this,
                 onTap: onLineTapped.call, enableInteraction: enableInteraction);
-            break;
           case AnnotationType.circle:
             circleManager = CircleManager(this,
                 onTap: onCircleTapped.call,
                 enableInteraction: enableInteraction);
-            break;
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
                 onTap: onSymbolTapped.call,
                 enableInteraction: enableInteraction);
-            break;
         }
       }
       if (onStyleLoadedCallback != null) {

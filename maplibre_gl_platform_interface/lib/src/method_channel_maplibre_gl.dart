@@ -11,7 +11,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         if (symbolId != null) {
           onInfoWindowTappedPlatform(symbolId);
         }
-        break;
 
       case 'feature#onTap':
         final id = call.arguments['id'];
@@ -24,7 +23,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'point': Point<double>(x, y),
           'latLng': LatLng(lat, lng)
         });
-        break;
       case 'feature#onDrag':
         final id = call.arguments['id'];
         final double x = call.arguments['x'];
@@ -47,24 +45,18 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'delta': LatLng(deltaLat, deltaLng),
           'eventType': eventType,
         });
-        break;
-
       case 'camera#onMoveStarted':
         onCameraMoveStartedPlatform(null);
-        break;
       case 'camera#onMove':
         final cameraPosition =
             CameraPosition.fromMap(call.arguments['position'])!;
         onCameraMovePlatform(cameraPosition);
-        break;
       case 'camera#onIdle':
         final cameraPosition =
             CameraPosition.fromMap(call.arguments['position']);
         onCameraIdlePlatform(cameraPosition);
-        break;
       case 'map#onStyleLoaded':
         onMapStyleLoadedPlatform(null);
-        break;
       case 'map#onMapClick':
         final double x = call.arguments['x'];
         final double y = call.arguments['y'];
@@ -72,7 +64,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         final double lat = call.arguments['lat'];
         onMapClickPlatform(
             {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
-        break;
       case 'map#onMapLongClick':
         final double x = call.arguments['x'];
         final double y = call.arguments['y'];
@@ -80,18 +71,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         final double lat = call.arguments['lat'];
         onMapLongClickPlatform(
             {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
-
-        break;
       case 'map#onCameraTrackingChanged':
         final int mode = call.arguments['mode'];
         onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode]);
-        break;
       case 'map#onCameraTrackingDismissed':
         onCameraTrackingDismissedPlatform(null);
-        break;
       case 'map#onIdle':
         onMapIdlePlatform(null);
-        break;
       case 'map#onUserLocationUpdated':
         final dynamic userLocation = call.arguments['userLocation'];
         final dynamic heading = call.arguments['heading'];
@@ -119,7 +105,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
                   ),
             timestamp: DateTime.fromMillisecondsSinceEpoch(
                 userLocation['timestamp'])));
-        break;
       default:
         throw MissingPluginException();
     }

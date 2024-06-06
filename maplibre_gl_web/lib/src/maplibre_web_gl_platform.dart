@@ -577,16 +577,12 @@ class MapLibreMapController extends MapLibrePlatform
     switch (position) {
       case AttributionButtonPosition.topRight:
         positionString = 'top-right';
-        break;
       case AttributionButtonPosition.topLeft:
         positionString = 'top-left';
-        break;
       case AttributionButtonPosition.bottomRight:
         positionString = 'bottom-right';
-        break;
       case AttributionButtonPosition.bottomLeft:
         positionString = 'bottom-left';
-        break;
     }
 
     _removeAttributionButton();

@@ -118,7 +118,6 @@ Future<OfflineRegion> downloadOfflineRegion(
       switch (jsonData['status']) {
         case 'start':
           status = InProgress(0.0);
-          break;
         case 'progress':
           final dynamic value = jsonData['progress'];
           double progress = 0.0;
@@ -132,10 +131,8 @@ Future<OfflineRegion> downloadOfflineRegion(
           }
 
           status = InProgress(progress);
-          break;
         case 'success':
           status = Success();
-          break;
       }
       onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
     });
