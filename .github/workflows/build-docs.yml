@@ -2,7 +2,7 @@ name: Generate documentation
 
 on:
   push:
-    branches: [ "docs/add-docusaurus" ]
+    branches: [ "feat/add-docusaurus" ]
 
 #permissions:
 #  id-token: write
@@ -27,3 +27,9 @@ jobs:
         run: yarn install --frozen-lockfile --non-interactive
       - name: Build
         run: yarn build
+      - name: Deploy to GitHub Pages
+        if: matrix.sdk == '' && github.repository_owner == 'josxha' && github.ref == 'refs/heads/feat/add-docusaurus'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build
