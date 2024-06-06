@@ -1430,7 +1430,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Method to set style string
   /// [styleString] -> It will take json, url, absolute path or asset path
   Future<void> setStyle(String styleString) async {
-    return await _maplibreGlPlatform.setStyle(styleString);
+    return await _maplibrePlatform.setStyle(styleString);
   }
 
   @override
