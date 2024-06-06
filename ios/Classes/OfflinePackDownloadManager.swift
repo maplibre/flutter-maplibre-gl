@@ -155,17 +155,17 @@ class OfflinePackDownloader {
               verifyPack(pack: pack) else { return }
         let maximumCount = (notification.userInfo?[MLNOfflinePackUserInfoKey.maximumCount]
             as AnyObject).uint64Value ?? 0
-        print("Mapbox tile count limit exceeded: \(maximumCount)")
+        print("MapLibre tile count limit exceeded: \(maximumCount)")
         // set download state to inactive
         isCompleted = true
         channelHandler.onError(
             errorCode: "mapboxTileCountLimitExceeded",
-            errorMessage: "Mapbox tile count limit exceeded: \(maximumCount)",
+            errorMessage: "MapLibre tile count limit exceeded: \(maximumCount)",
             errorDetails: nil
         )
         result(FlutterError(
             code: "mapboxTileCountLimitExceeded",
-            message: "Mapbox tile count limit exceeded: \(maximumCount)",
+            message: "MapLibre tile count limit exceeded: \(maximumCount)",
             details: nil
         ))
         if let region = OfflineRegion.fromOfflinePack(pack) {

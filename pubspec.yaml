@@ -24,7 +24,7 @@ flutter:
         package: org.maplibre.maplibregl
         pluginClass: MapLibreMapsPlugin
       ios:
-        pluginClass: MapboxMapsPlugin
+        pluginClass: MapLibreMapsPlugin
       web:
         default_package: maplibre_gl_web
 
