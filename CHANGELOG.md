@@ -22,6 +22,7 @@
 
 ### Changes
 
+* Migrated main iOS plugin class from Objective-C to Swift.
 * Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
 
 ## 0.19.0

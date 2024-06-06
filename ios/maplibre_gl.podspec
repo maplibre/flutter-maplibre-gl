@@ -13,10 +13,9 @@ A new Flutter plugin.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'MapLibre', '6.4.2'
   s.swift_version = '4.2'
-  s.ios.deployment_target = '11.0'
+  s.ios.deployment_target = '12.0'
 end
 
