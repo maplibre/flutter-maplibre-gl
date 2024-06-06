@@ -1,5 +1,8 @@
 ## UNRELEASED
 
+A lot of files/classes have been renamed and moved around in this release.
+If you notice any build errors, please make sure to run `flutter clean`.
+
 ### Breaking changes
 
 * All Dart enums have been migrated from mixed cases to lower camelcase
@@ -22,6 +25,7 @@
 
 ### Changes
 
+* Added support for Swift Package Manager usage on iOS.
 * Migrated main iOS plugin class from Objective-C to Swift.
 * Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
 
