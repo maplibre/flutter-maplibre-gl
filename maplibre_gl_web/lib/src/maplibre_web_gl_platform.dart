@@ -101,7 +101,7 @@ class MapLibreMapController extends MapLibrePlatform
         _onMapResize();
       });
     });
-    resizeObserver.observe(html.document.body as html.Element);
+    resizeObserver.observe(html.document.body!);
   }
 
   void _loadFromAssets(Event event) async {

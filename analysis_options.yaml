@@ -18,7 +18,6 @@ linter:
     avoid_print: false
     unawaited_futures: false
     overridden_fields: false
-    cast_nullable_to_non_nullable: false
     only_throw_errors: false
     no_runtimeType_toString: false
     always_put_required_named_parameters_first: false
