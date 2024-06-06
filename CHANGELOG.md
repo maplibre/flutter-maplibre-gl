@@ -19,6 +19,7 @@
   packages.
 * Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
   (affects for example the classes MaplibreMap and MaplibreMapController).
+* Remove the parameter `hash` from `MapOptions` because it was not used.
 
 ### Changes
 
