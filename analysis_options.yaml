@@ -24,7 +24,6 @@ linter:
     parameter_assignments: false
     use_setters_to_change_properties: false
     type_annotate_public_apis: false
-    unnecessary_library_directive: false
     prefer_asserts_with_message: false
     public_member_api_docs: false
     require_trailing_commas: false

@@ -1,5 +1,3 @@
-library maplibre.ui.events;
-
 import 'dart:html';
 
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';

@@ -1,5 +1,3 @@
-library maplibre.style.sources.vector_source;
-
 import 'package:maplibre_gl_web/src/interop/style/sources/vector_source_interop.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
 

@@ -1,5 +1,3 @@
-library maplibre.geo.lng_lat;
-
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

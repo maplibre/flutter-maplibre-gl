@@ -1,5 +1,3 @@
-library maplibre.ui.map;
-
 import 'dart:html';
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';

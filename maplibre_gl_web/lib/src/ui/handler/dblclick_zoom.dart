@@ -1,5 +1,3 @@
-library maplibre.ui.handler.dbclick_zoom;
-
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/events.dart';
 

@@ -1,5 +1,3 @@
-library maplibre.interop.style.layers.symbol_layer;
-
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/symbol_layer.dart';
 
