@@ -10,7 +10,6 @@ analyzer:
 linter:
   rules:
     # temporary rules
-    prefer_if_elements_to_conditional_expressions: false
     constant_identifier_names: false
     flutter_style_todos: false
     one_member_abstracts: false

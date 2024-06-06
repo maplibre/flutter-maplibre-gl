@@ -157,22 +157,23 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
                 ],
               ),
               const Spacer(),
-              _items[index].isDownloading
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        _items[index].isDownloaded
-                            ? Icons.delete
-                            : Icons.file_download,
-                      ),
-                      onPressed: _items[index].isDownloaded
-                          ? () => _deleteRegion(_items[index], index)
-                          : () => _downloadRegion(_items[index], index),
-                    ),
+              if (_items[index].isDownloading)
+                const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(),
+                )
+              else
+                IconButton(
+                  icon: Icon(
+                    _items[index].isDownloaded
+                        ? Icons.delete
+                        : Icons.file_download,
+                  ),
+                  onPressed: _items[index].isDownloaded
+                      ? () => _deleteRegion(_items[index], index)
+                      : () => _downloadRegion(_items[index], index),
+                ),
             ],
           ),
         ),
