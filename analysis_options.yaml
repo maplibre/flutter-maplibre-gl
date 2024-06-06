@@ -22,7 +22,6 @@ linter:
     leading_newlines_in_multiline_strings: false
     directives_ordering: false
     parameter_assignments: false
-    combinators_ordering: false
     use_setters_to_change_properties: false
     avoid_equals_and_hash_code_on_mutable_classes: false
     type_annotate_public_apis: false
