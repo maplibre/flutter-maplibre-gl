@@ -1002,6 +1002,7 @@ class SymbolLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1334,6 +1335,7 @@ class CircleLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1639,6 +1641,7 @@ class LineLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1827,6 +1830,7 @@ class FillLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2009,6 +2013,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2188,6 +2193,7 @@ class RasterLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2339,6 +2345,7 @@ class HillshadeLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2470,6 +2477,7 @@ class HeatmapLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
