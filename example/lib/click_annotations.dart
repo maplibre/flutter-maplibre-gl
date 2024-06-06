@@ -140,12 +140,12 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
   @override
   Widget build(BuildContext context) {
     return MapLibreMap(
-      annotationOrder: const [
+      annotationOrder: const {
         AnnotationType.fill,
         AnnotationType.line,
         AnnotationType.circle,
         AnnotationType.symbol,
-      ],
+      },
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: _onStyleLoaded,
       initialCameraPosition: const CameraPosition(

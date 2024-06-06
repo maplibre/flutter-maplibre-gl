@@ -156,12 +156,12 @@ class BatchAddBodyState extends State<BatchAddBody> {
                 target: LatLng(-33.8, 151.511),
                 zoom: 8.2,
               ),
-              annotationOrder: const [
+              annotationOrder: const {
                 AnnotationType.fill,
                 AnnotationType.line,
                 AnnotationType.circle,
                 AnnotationType.symbol,
-              ],
+              },
             ),
           ),
         ),

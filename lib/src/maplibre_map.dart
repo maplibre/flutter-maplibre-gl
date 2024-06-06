@@ -47,25 +47,27 @@ class MapLibreMap extends StatefulWidget {
     this.onCameraTrackingChanged,
     this.onCameraIdle,
     this.onMapIdle,
-    this.annotationOrder = const [
+    this.annotationOrder = const {
       AnnotationType.line,
       AnnotationType.symbol,
       AnnotationType.circle,
       AnnotationType.fill,
-    ],
-    this.annotationConsumeTapEvents = const [
+},
+    this.annotationConsumeTapEvents = const {
       AnnotationType.symbol,
       AnnotationType.fill,
       AnnotationType.line,
       AnnotationType.circle,
-    ],
+    },
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
-        assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0);
+        assert(
+          annotationConsumeTapEvents.length > 0,
+          'annotationConsumeTapEvents must contain at least 1 annotation type',
+        );
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -73,12 +75,12 @@ class MapLibreMap extends StatefulWidget {
   ///
   /// Note that setting this to be empty gives a big perfomance boost for
   /// android. However if you do so annotations will not work.
-  final List<AnnotationType> annotationOrder;
+  final Set<AnnotationType> annotationOrder;
 
   /// Defines the layer order of click annotations
   ///
   /// (must contain at least 1 annotation type, 4 items max)
-  final List<AnnotationType> annotationConsumeTapEvents;
+  final Set<AnnotationType> annotationConsumeTapEvents;
 
   /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
   final MapCreatedCallback? onMapCreated;
