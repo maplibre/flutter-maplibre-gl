@@ -1,33 +1,27 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
 
-import 'conversions.dart';
+import 'utils.dart';
 
-main() async {
-  var styleJson =
-      jsonDecode(await File('scripts/input/style.json').readAsString());
+const styleUrl =
+    'https://raw.githubusercontent.com/maplibre/maplibre-style-spec/main/src/reference/v8.json';
 
-  final layerTypes = [
-    "symbol",
-    "circle",
-    "line",
-    "fill",
-    "fill-extrusion",
-    "raster",
-    "hillshade",
-    "heatmap",
-  ];
-  final sourceTypes = [
-    "vector",
-    "raster",
-    "raster_dem",
-    "geojson",
-    "video",
-    "image"
-  ];
+const templates = [
+  "android/src/main/java/org/maplibre/maplibregl/LayerPropertyConverter.java",
+  "ios/Classes/LayerPropertyConverter.swift",
+  "lib/src/layer_expressions.dart",
+  "lib/src/layer_properties.dart",
+  "maplibre_gl_web/lib/src/layer_tools.dart",
+  "maplibre_gl_platform_interface/lib/src/source_properties.dart",
+];
+
+Future<void> main() async {
+  var styleJson = jsonDecode((await http.get(Uri.parse(styleUrl))).body);
+  print('Style specification downloaded');
 
   final renderContext = {
     "layerTypes": [
@@ -57,15 +51,6 @@ main() async {
       ...type["layout_properties"].map((p) => p["value"])
   }.map((p) => {"property": p}).toList();
 
-  const templates = [
-    "android/src/main/java/com/mapbox/mapboxgl/LayerPropertyConverter.java",
-    "ios/Classes/LayerPropertyConverter.swift",
-    "lib/src/layer_expressions.dart",
-    "lib/src/layer_properties.dart",
-    "maplibre_gl_web/lib/src/layer_tools.dart",
-    "maplibre_gl_platform_interface/lib/src/source_properties.dart",
-  ];
-
   for (var template in templates) {
     await render(renderContext, template);
   }
@@ -90,14 +75,18 @@ Future<void> render(
 }
 
 List<Map<String, dynamic>> buildStyleProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
 }
 
 Map<String, dynamic> buildStyleProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   return <String, dynamic>{
     'value': key,
@@ -112,7 +101,9 @@ Map<String, dynamic> buildStyleProperty(
 }
 
 List<Map<String, dynamic>> buildSourceProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries
@@ -122,7 +113,9 @@ List<Map<String, dynamic>> buildSourceProperties(
 }
 
 Map<String, dynamic> buildSourceProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
@@ -192,8 +185,11 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
   return result;
 }
 
-List<String> splitIntoChunks(String input, int lineLength,
-    {String prefix = ""}) {
+List<String> splitIntoChunks(
+  String input,
+  int lineLength, {
+  String prefix = "",
+}) {
   final words = input.split(" ");
   final chunks = <String>[];
 
@@ -213,35 +209,17 @@ List<String> splitIntoChunks(String input, int lineLength,
 }
 
 List<Map<String, dynamic>> buildExpressionProperties(
-    Map<String, dynamic> styleJson) {
+  Map<String, dynamic> styleJson,
+) {
   final Map<String, dynamic> items = styleJson["expression_name"]["values"];
-
-  final renamed = {
-    "var": "varExpression",
-    "in": "inExpression",
-    "case": "caseExpression",
-    "to-string": "toStringExpression",
-    "+": "plus",
-    "*": "multiply",
-    "-": "minus",
-    "%": "precent",
-    ">": "larger",
-    ">=": "largerOrEqual",
-    "<": "smaller",
-    "<=": "smallerOrEqual",
-    "!=": "notEqual",
-    "==": "equal",
-    "/": "divide",
-    "^": "xor",
-    "!": "not",
-  };
 
   return items.entries
       .map((e) => <String, dynamic>{
             'value': e.key,
             'doc': e.value["doc"],
             'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
-            'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase
+            'valueAsCamelCase':
+                ReCase(renamedExpressions[e.key] ?? e.key).camelCase
           })
       .toList();
 }
