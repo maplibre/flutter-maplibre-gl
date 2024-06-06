@@ -12,6 +12,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
