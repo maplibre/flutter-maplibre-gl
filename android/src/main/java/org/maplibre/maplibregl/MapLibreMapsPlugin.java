@@ -27,7 +27,7 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  */
 public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
-  private static final String VIEW_TYPE = "plugins.flutter.io/mapbox_gl";
+  private static final String VIEW_TYPE = "plugins.flutter.io/maplibre_gl";
 
   static FlutterAssets flutterAssets;
   private Lifecycle lifecycle;
@@ -43,13 +43,13 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     flutterAssets = binding.getFlutterAssets();
 
     MethodChannel methodChannel =
-        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/mapbox_gl");
+        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl");
     methodChannel.setMethodCallHandler(new GlobalMethodHandler(binding));
 
     binding
         .getPlatformViewRegistry()
         .registerViewFactory(
-            "plugins.flutter.io/mapbox_gl",
+            "plugins.flutter.io/maplibre_gl",
             new MapLibreMapFactory(
                 binding.getBinaryMessenger(),
                 new LifecycleProvider() {
