@@ -10,7 +10,6 @@ analyzer:
 linter:
   rules:
     # temporary rules
-    constant_identifier_names: false
     flutter_style_todos: false
     one_member_abstracts: false
     lines_longer_than_80_chars: false
