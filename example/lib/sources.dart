@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 class StyleInfo {
   final String name;
   final String baseStyle;
-  final Future<void> Function(MaplibreMapController) addDetails;
+  final Future<void> Function(MapLibreMapController) addDetails;
   final CameraPosition position;
 
   const StyleInfo(
@@ -35,15 +34,15 @@ class FullMap extends StatefulWidget {
 }
 
 class FullMapState extends State<FullMap> {
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
   final watercolorRasterId = "watercolorRaster";
   int selectedStyleId = 0;
 
-  _onMapCreated(MaplibreMapController controller) {
+  _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
   }
 
-  static Future<void> addRaster(MaplibreMapController controller) async {
+  static Future<void> addRaster(MapLibreMapController controller) async {
     await controller.addSource(
       "watercolor",
       const RasterSourceProperties(
@@ -59,7 +58,7 @@ class FullMapState extends State<FullMap> {
   }
 
   static Future<void> addGeojsonCluster(
-      MaplibreMapController controller) async {
+      MapLibreMapController controller) async {
     await controller.addSource(
         "earthquakes",
         const GeojsonSourceProperties(
@@ -100,11 +99,11 @@ class FullMapState extends State<FullMap> {
         ));
   }
 
-  static Future<void> addVector(MaplibreMapController controller) async {
+  static Future<void> addVector(MapLibreMapController controller) async {
     await controller.addSource(
         "terrain",
         const VectorSourceProperties(
-          url: "https://demotiles.maplibre.org/tiles/tiles.json",
+          url: MapLibreStyles.demo,
         ));
 
     await controller.addLayer(
@@ -119,7 +118,7 @@ class FullMapState extends State<FullMap> {
         sourceLayer: "countries");
   }
 
-  static Future<void> addImage(MaplibreMapController controller) async {
+  static Future<void> addImage(MapLibreMapController controller) async {
     await controller.addSource(
         "radar",
         const ImageSourceProperties(
@@ -138,7 +137,7 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  static Future<void> addVideo(MaplibreMapController controller) async {
+  static Future<void> addVideo(MapLibreMapController controller) async {
     await controller.addSource(
         "video",
         const VideoSourceProperties(urls: [
@@ -158,7 +157,7 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  static Future<void> addHeatMap(MaplibreMapController controller) async {
+  static Future<void> addHeatMap(MapLibreMapController controller) async {
     await controller.addSource(
         'earthquakes-heatmap-source',
         const GeojsonSourceProperties(
@@ -235,7 +234,7 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  static Future<void> addDem(MaplibreMapController controller) async {
+  static Future<void> addDem(MapLibreMapController controller) async {
     // TODO: adapt example?
     // await controller.addSource(
     //     "dem",
@@ -254,13 +253,13 @@ class FullMapState extends State<FullMap> {
   final _stylesAndLoaders = [
     const StyleInfo(
       name: "Vector",
-      baseStyle: MaplibreStyles.DEMO,
+      baseStyle: MapLibreStyles.demo,
       addDetails: addVector,
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
     const StyleInfo(
       name: "Default style",
-      // Using the raw github file version of MaplibreStyles.DEMO here, because we need to
+      // Using the raw github file version of MapLibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
       // otherwise the map will not update
       baseStyle:
@@ -270,7 +269,7 @@ class FullMapState extends State<FullMap> {
     ),
     const StyleInfo(
       name: "Geojson cluster",
-      baseStyle: MaplibreStyles.DEMO,
+      baseStyle: MapLibreStyles.demo,
       addDetails: addGeojsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
@@ -335,7 +334,7 @@ class FullMapState extends State<FullMap> {
         ),
         body: Stack(
           children: [
-            MaplibreMap(
+            MapLibreMap(
               styleString: styleInfo.baseStyle,
               onMapCreated: _onMapCreated,
               initialCameraPosition: styleInfo.position,

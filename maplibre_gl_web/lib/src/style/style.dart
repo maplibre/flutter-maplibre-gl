@@ -9,8 +9,7 @@ class StyleSetterOptions extends JsObjectWrapper<StyleSetterOptionsJsImpl> {
   bool get validate => jsObject.validate;
 
   /// Creates a new StyleSetterOptions from a [jsObject].
-  StyleSetterOptions.fromJsObject(StyleSetterOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  StyleSetterOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Style extends JsObjectWrapper<StyleJsImpl> {
@@ -160,7 +159,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
       jsObject.getResource(mapId, params.jsObject, callback);
 
   /// Creates a new Style from a [jsObject].
-  Style.fromJsObject(StyleJsImpl jsObject) : super.fromJsObject(jsObject);
+  Style.fromJsObject(super.jsObject) : super.fromJsObject();
 
   List<dynamic> get layers => jsObject.layers;
 }
@@ -173,6 +172,5 @@ class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
       StyleFunction.fromJsObject(StyleFunctionJsImpl(base: base, stops: stops));
 
   /// Creates a new StyleFunction from a [jsObject].
-  StyleFunction.fromJsObject(StyleFunctionJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  StyleFunction.fromJsObject(super.jsObject) : super.fromJsObject();
 }

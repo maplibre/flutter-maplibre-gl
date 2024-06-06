@@ -84,5 +84,5 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
       LngLat.fromJsObject(LngLatJsImpl.convert(input));
 
   /// Creates a new LngLat from a [jsObject].
-  LngLat.fromJsObject(LngLatJsImpl jsObject) : super.fromJsObject(jsObject);
+  LngLat.fromJsObject(super.jsObject) : super.fromJsObject();
 }

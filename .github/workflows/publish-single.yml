@@ -1,0 +1,29 @@
+name: Publish a package to pub.dev
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Directory of the package to publish
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+
+jobs:
+  publish:
+    name: 'Publish to pub.dev'
+    permissions:
+      id-token: write # This is required for requesting the OIDC
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'maplibre'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        # --force skips the y/N confirmation
+        # --skip-validation because of "Because maplibre_gl requires the Flutter SDK, version solving failed. Flutter users should use `flutter pub` instead of `dart pub`."
+        # see https://github.com/dart-lang/setup-dart/issues/68
+      - name: Publish to pub.dev
+        working-directory: ${{ inputs.working-directory }}
+        run: dart pub publish --force --skip-validation

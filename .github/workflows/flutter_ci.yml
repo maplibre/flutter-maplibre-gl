@@ -2,6 +2,11 @@ name: Flutter CI
 
 on: [push, pull_request, workflow_dispatch]
 
+# Ensure that new pushes/updates cancel running jobs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   format:
     name: "Check formatting"
@@ -48,7 +53,7 @@ jobs:
           cache: true
       - uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
       - run: flutter pub get

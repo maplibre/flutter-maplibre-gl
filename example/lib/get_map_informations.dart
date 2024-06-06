@@ -21,10 +21,10 @@ class GetMapInfoBody extends StatefulWidget {
 }
 
 class _GetMapInfoBodyState extends State<GetMapInfoBody> {
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
   String data = '';
 
-  void onMapCreated(MaplibreMapController controller) {
+  void onMapCreated(MapLibreMapController controller) {
     setState(() {
       this.controller = controller;
     });
@@ -60,7 +60,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-33.852, 151.211),
                 zoom: 11.0,

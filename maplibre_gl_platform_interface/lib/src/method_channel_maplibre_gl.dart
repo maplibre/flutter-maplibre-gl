@@ -1,6 +1,6 @@
 part of '../maplibre_gl_platform_interface.dart';
 
-class MethodChannelMaplibreGl extends MapLibreGlPlatform {
+class MapLibreMethodChannel extends MapLibrePlatform {
   late MethodChannel _channel;
   static bool useHybridComposition = false;
 
@@ -127,7 +127,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
 
   @override
   Future<void> initPlatform(int id) async {
-    _channel = MethodChannel('plugins.flutter.io/mapbox_maps_$id');
+    _channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
     _channel.setMethodCallHandler(_handleMethodCall);
     await _channel.invokeMethod('map#waitForMap');
   }
@@ -140,7 +140,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
     if (defaultTargetPlatform == TargetPlatform.android) {
       if (useHybridComposition) {
         return PlatformViewLink(
-          viewType: 'plugins.flutter.io/mapbox_gl',
+          viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (
             BuildContext context,
             PlatformViewController controller,
@@ -155,7 +155,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
           onCreatePlatformView: (PlatformViewCreationParams params) {
             final controller = PlatformViewsService.initAndroidView(
               id: params.id,
-              viewType: 'plugins.flutter.io/mapbox_gl',
+              viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
               creationParams: creationParams,
               creationParamsCodec: const StandardMessageCodec(),
@@ -175,7 +175,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
         );
       } else {
         return AndroidView(
-          viewType: 'plugins.flutter.io/mapbox_gl',
+          viewType: 'plugins.flutter.io/maplibre_gl',
           onPlatformViewCreated: onPlatformViewCreated,
           gestureRecognizers: gestureRecognizers,
           creationParams: creationParams,
@@ -184,7 +184,7 @@ class MethodChannelMaplibreGl extends MapLibreGlPlatform {
       }
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
-        viewType: 'plugins.flutter.io/mapbox_gl',
+        viewType: 'plugins.flutter.io/maplibre_gl',
         onPlatformViewCreated: onPlatformViewCreated,
         gestureRecognizers: gestureRecognizers,
         creationParams: creationParams,

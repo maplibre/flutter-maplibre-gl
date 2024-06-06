@@ -1,6 +1,6 @@
 part of '../maplibre_gl_web.dart';
 
-class MaplibreMapController extends MapLibreGlPlatform
+class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
   late html.DivElement _mapElement;
 
@@ -31,7 +31,8 @@ class MaplibreMapController extends MapLibreGlPlatform
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, hashCode);
-    return HtmlElementView(viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
+    return HtmlElementView(
+        viewType: 'plugins.flutter.io/maplibre_gl_$hashCode');
   }
 
   @override
@@ -43,7 +44,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   void _registerViewFactory(Function(int) callback, int identifier) {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
-        'plugins.flutter.io/mapbox_gl_$identifier', (int viewId) {
+        'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
       _mapElement = html.DivElement()
         ..style.position = 'absolute'
         ..style.top = '0'
@@ -477,9 +478,9 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   void _onCameraTrackingChanged(bool isTracking) {
     if (isTracking) {
-      onCameraTrackingChangedPlatform(MyLocationTrackingMode.Tracking);
+      onCameraTrackingChangedPlatform(MyLocationTrackingMode.tracking);
     } else {
-      onCameraTrackingChangedPlatform(MyLocationTrackingMode.None);
+      onCameraTrackingChangedPlatform(MyLocationTrackingMode.none);
     }
   }
 
@@ -538,16 +539,16 @@ class MaplibreMapController extends MapLibreGlPlatform
 
     String? positionString;
     switch (position) {
-      case CompassViewPosition.TopRight:
+      case CompassViewPosition.topRight:
         positionString = 'top-right';
         break;
-      case CompassViewPosition.TopLeft:
+      case CompassViewPosition.topLeft:
         positionString = 'top-left';
         break;
-      case CompassViewPosition.BottomRight:
+      case CompassViewPosition.bottomRight:
         positionString = 'bottom-right';
         break;
-      case CompassViewPosition.BottomLeft:
+      case CompassViewPosition.bottomLeft:
         positionString = 'bottom-left';
         break;
       default:
@@ -584,16 +585,16 @@ class MaplibreMapController extends MapLibreGlPlatform
   ) {
     String? positionString;
     switch (position) {
-      case AttributionButtonPosition.TopRight:
+      case AttributionButtonPosition.topRight:
         positionString = 'top-right';
         break;
-      case AttributionButtonPosition.TopLeft:
+      case AttributionButtonPosition.topLeft:
         positionString = 'top-left';
         break;
-      case AttributionButtonPosition.BottomRight:
+      case AttributionButtonPosition.bottomRight:
         positionString = 'bottom-right';
         break;
-      case AttributionButtonPosition.BottomLeft:
+      case AttributionButtonPosition.bottomLeft:
         positionString = 'bottom-left';
         break;
     }

@@ -49,11 +49,11 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     ]
   ];
 
-  MaplibreMapController? controller;
+  MapLibreMapController? controller;
   int _fillCount = 0;
   Fill? _selectedFill;
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onFillTapped.add(_onFillTapped);
     this.controller!.onFeatureDrag.add(_onFeatureDrag);
@@ -194,7 +194,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
           child: SizedBox(
             width: 300.0,
             height: 200.0,
-            child: MaplibreMap(
+            child: MapLibreMap(
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoaded,
               initialCameraPosition: const CameraPosition(

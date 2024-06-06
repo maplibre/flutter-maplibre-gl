@@ -24,7 +24,7 @@ class LocalStyle extends StatefulWidget {
 }
 
 class LocalStyleState extends State<LocalStyle> {
-  MaplibreMapController? mapController;
+  MapLibreMapController? mapController;
   String? styleAbsoluteFilePath;
 
   @override
@@ -49,7 +49,7 @@ class LocalStyleState extends State<LocalStyle> {
     });
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
 
@@ -64,7 +64,7 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
-        body: MaplibreMap(
+        body: MapLibreMap(
       styleString: styleAbsoluteFilePath,
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),

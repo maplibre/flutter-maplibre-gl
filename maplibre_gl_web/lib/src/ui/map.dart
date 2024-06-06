@@ -1296,8 +1296,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
       ));
 
   /// Creates a new MapOptions from a [jsObject].
-  MapOptions.fromJsObject(MapOptionsJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  MapOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
@@ -1327,8 +1326,7 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
       ));
 
   /// Creates a new RequestParameters from a [jsObject].
-  RequestParameters.fromJsObject(RequestParametersJsImpl jsObject)
-      : super.fromJsObject(jsObject);
+  RequestParameters.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Interface for interactive controls added to the map. This is a
@@ -1379,5 +1377,5 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
   String getDefaultPosition() => jsObject.getDefaultPosition();
 
   /// Creates a new IControl from a [jsObject].
-  IControl.fromJsObject(IControlJsImpl jsObject) : super.fromJsObject(jsObject);
+  IControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

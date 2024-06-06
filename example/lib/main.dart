@@ -78,9 +78,9 @@ class _MapsDemoState extends State<MapsDemo> {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
       final sdkVersion = androidInfo.version.sdkInt;
       if (sdkVersion >= 29) {
-        MaplibreMap.useHybridComposition = true;
+        MapLibreMap.useHybridComposition = true;
       } else {
-        MaplibreMap.useHybridComposition = false;
+        MapLibreMap.useHybridComposition = false;
       }
     }
   }
@@ -106,7 +106,7 @@ class _MapsDemoState extends State<MapsDemo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Maplibre examples')),
+      appBar: AppBar(title: const Text('MapLibre examples')),
       body: ListView.builder(
         itemCount: _allPages.length + 1,
         itemBuilder: (_, int index) => index == _allPages.length
