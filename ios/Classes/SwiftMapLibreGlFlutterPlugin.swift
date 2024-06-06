@@ -3,11 +3,11 @@ import Foundation
 import MapLibre
 import UIKit
 
-public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
+public class SwiftMapLibreGlFlutterPlugin: NSObject, FlutterPlugin {
     static var downloadOfflineRegionChannelHandler: OfflineChannelHandler? = nil
 
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let instance = MapboxMapFactory(withRegistrar: registrar)
+        let instance = MapLibreMapFactory(withRegistrar: registrar)
         registrar.register(instance, withId: "plugins.flutter.io/maplibre_gl")
 
         let channel = FlutterMethodChannel(
@@ -131,7 +131,7 @@ public class SwiftMapboxGlFlutterPlugin: NSObject, FlutterPlugin {
         return cachesUrl
     }
 
-    // Copies the "offline" tiles to where Mapbox expects them
+    // Copies the "offline" tiles to where MapLibre expects them
     private static func installOfflineMapTiles(registrar: FlutterPluginRegistrar, tilesdb: String) {
         var tilesUrl = getTilesUrl()
         let bundlePath = getTilesDbPath(registrar: registrar, tilesdb: tilesdb)
