@@ -104,7 +104,7 @@ class MapLibreMapController extends MapLibrePlatform
     resizeObserver.observe(html.document.body!);
   }
 
-  void _loadFromAssets(Event event) async {
+  Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
     final ByteData bytes = await rootBundle.load(imagePath);
     await addImage(imagePath, bytes.buffer.asUint8List());

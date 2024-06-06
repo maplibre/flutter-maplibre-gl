@@ -110,7 +110,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     controllerTwo = controller;
   }
 
-  void onStyleLoaded(MapLibreMapController controller) async {
+  Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
         controller, "custom-marker", "assets/symbols/custom-marker.png");
     controller.addSymbol(

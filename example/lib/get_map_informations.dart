@@ -30,7 +30,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
     });
   }
 
-  void displaySources() async {
+  Future<void> displaySources() async {
     if (controller == null) {
       return;
     }
@@ -40,7 +40,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
     });
   }
 
-  void displayLayers() async {
+  Future<void> displayLayers() async {
     if (controller == null) {
       return;
     }

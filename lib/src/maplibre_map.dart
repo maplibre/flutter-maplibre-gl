@@ -283,7 +283,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   @override
-  void dispose() async {
+  Future<void> dispose() async {
     super.dispose();
     if (_controller.isCompleted) {
       final controller = await _controller.future;
@@ -302,7 +302,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
     _maplibreMapOptions = newOptions;
   }
 
-  void _updateOptions(Map<String, dynamic> updates) async {
+  Future<void> _updateOptions(Map<String, dynamic> updates) async {
     if (updates.isEmpty) {
       return;
     }

@@ -27,7 +27,6 @@ linter:
     public_member_api_docs: false
     require_trailing_commas: false
     avoid_dynamic_calls: false
-    avoid_void_async: false
     always_use_package_imports: false
     prefer_single_quotes: false
     always_declare_return_types: false

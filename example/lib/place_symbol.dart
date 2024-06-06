@@ -85,7 +85,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) async {
+  Future<void> _updateSelectedSymbol(SymbolOptions changes) async {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
@@ -245,7 +245,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _getLatLng() async {
+  Future<void> _getLatLng() async {
     final latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
     if (!mounted) return;
 

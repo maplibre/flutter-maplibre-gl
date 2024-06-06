@@ -181,7 +181,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     );
   }
 
-  void _updateListOfRegions() async {
+  Future<void> _updateListOfRegions() async {
     List<OfflineRegion> offlineRegions = await getListOfRegions();
     List<OfflineRegionListItem> regionItems = [];
     for (var item in allRegions) {
@@ -199,7 +199,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     });
   }
 
-  void _downloadRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _downloadRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -235,7 +235,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     }
   }
 
-  void _deleteRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _deleteRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));

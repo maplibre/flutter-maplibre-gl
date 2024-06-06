@@ -116,7 +116,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
     return symbolOptions;
   }
 
-  void _add() async {
+  Future<void> _add() async {
     if (_fills.isEmpty) {
       _fills = await controller.addFills(fillOptions);
       _lines = await controller
