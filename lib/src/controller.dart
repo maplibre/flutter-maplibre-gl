@@ -125,9 +125,7 @@ class MapLibreMapController extends ChangeNotifier {
       if (cameraPosition != null) {
         _cameraPosition = cameraPosition;
       }
-      if (onCameraIdle != null) {
-        onCameraIdle!();
-      }
+      onCameraIdle?.call();
       notifyListeners();
     });
 
@@ -152,39 +150,27 @@ class MapLibreMapController extends ChangeNotifier {
                 enableInteraction: enableInteraction);
         }
       }
-      if (onStyleLoadedCallback != null) {
-        onStyleLoadedCallback!();
-      }
+      onStyleLoadedCallback?.call();
     });
 
     _maplibrePlatform.onMapClickPlatform.add((dict) {
-      if (onMapClick != null) {
-        onMapClick!(dict['point'], dict['latLng']);
-      }
+      onMapClick?.call(dict['point'], dict['latLng']);
     });
 
     _maplibrePlatform.onMapLongClickPlatform.add((dict) {
-      if (onMapLongClick != null) {
-        onMapLongClick!(dict['point'], dict['latLng']);
-      }
+      onMapLongClick?.call(dict['point'], dict['latLng']);
     });
 
     _maplibrePlatform.onCameraTrackingChangedPlatform.add((mode) {
-      if (onCameraTrackingChanged != null) {
-        onCameraTrackingChanged!(mode);
-      }
+      onCameraTrackingChanged?.call(mode);
     });
 
     _maplibrePlatform.onCameraTrackingDismissedPlatform.add((_) {
-      if (onCameraTrackingDismissed != null) {
-        onCameraTrackingDismissed!();
-      }
+      onCameraTrackingDismissed?.call();
     });
 
     _maplibrePlatform.onMapIdlePlatform.add((_) {
-      if (onMapIdle != null) {
-        onMapIdle!();
-      }
+      onMapIdle?.call();
     });
     _maplibrePlatform.onUserLocationUpdatedPlatform.add((location) {
       onUserLocationUpdated?.call(location);

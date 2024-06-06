@@ -20,7 +20,6 @@ linter:
     overridden_fields: false
     always_put_required_named_parameters_first: false
     leading_newlines_in_multiline_strings: false
-    prefer_null_aware_method_calls: false
     directives_ordering: false
     unnecessary_await_in_return: false
     avoid_multiple_declarations_per_line: false

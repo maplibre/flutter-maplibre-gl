@@ -331,9 +331,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
     );
     await _maplibrePlatform.initPlatform(id);
     _controller.complete(controller);
-    if (widget.onMapCreated != null) {
-      widget.onMapCreated!(controller);
-    }
+    widget.onMapCreated?.call(controller);
   }
 }
 
