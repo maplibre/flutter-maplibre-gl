@@ -26,8 +26,8 @@ bool _isBasicType(Object? value) {
 }
 
 Map<String, dynamic> dartifyMap(Object? jsObject) {
-  var keys = js.objectKeys(jsObject);
-  var map = <String, dynamic>{};
+  final keys = js.objectKeys(jsObject);
+  final map = <String, dynamic>{};
   for (var key in keys) {
     map[key] = dartify(util.getProperty(jsObject!, key));
   }

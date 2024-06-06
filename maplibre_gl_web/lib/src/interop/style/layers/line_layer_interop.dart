@@ -5,7 +5,7 @@ class LineLayerJsImpl {
   static toJs(LineLayer lineLayer) => jsify(toDict(lineLayer));
 
   static toDict(LineLayer lineLayer) {
-    Map<String, dynamic> dict = {
+    final Map<String, dynamic> dict = {
       'id': lineLayer.id,
       'type': 'line',
     };
@@ -33,7 +33,7 @@ class LinePaintJsImpl {
   static toJs(LinePaint linePaint) => jsify(toDict(linePaint));
 
   static toDict(LinePaint linePaint) {
-    Map<String, dynamic> dict = {};
+    final Map<String, dynamic> dict = {};
     if (linePaint.lineOpacity != null) {
       dict['line-opacity'] = linePaint.lineOpacity;
     }
@@ -75,7 +75,7 @@ class LineLayoutJsImpl {
   static toJs(LineLayout lineLayout) => jsify(toDict(lineLayout));
 
   static toDict(LineLayout lineLayout) {
-    Map<String, dynamic> dict = {};
+    final Map<String, dynamic> dict = {};
     if (lineLayout.lineCap != null) {
       dict['line-cap'] = lineLayout.lineCap;
     }

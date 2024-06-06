@@ -406,7 +406,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
     try {
-      var screenPosMap =
+      final screenPosMap =
           await _channel.invokeMethod('map#toScreenLocation', <String, dynamic>{
         'latitude': latLng.latitude,
         'longitude': latLng.longitude,
@@ -420,14 +420,14 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
     try {
-      var coordinates = Float64List.fromList(latLngs
+      final coordinates = Float64List.fromList(latLngs
           .map((e) => [e.latitude, e.longitude])
           .expand((e) => e)
           .toList());
-      Float64List result = await _channel.invokeMethod(
+      final Float64List result = await _channel.invokeMethod(
           'map#toScreenLocationBatch', {"coordinates": coordinates});
 
-      var points = <Point>[];
+      final points = <Point>[];
       for (int i = 0; i < result.length; i += 2) {
         points.add(Point(result[i], result[i + 1]));
       }
@@ -505,7 +505,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<dynamic> getFilter(String layerId) async {
     try {
-      Map<dynamic, dynamic> reply =
+      final Map<dynamic, dynamic> reply =
           await _channel.invokeMethod('style#getFilter', <String, dynamic>{
         'layerId': layerId,
       });
@@ -519,7 +519,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<LatLng> toLatLng(Point screenLocation) async {
     try {
-      var latLngMap =
+      final latLngMap =
           await _channel.invokeMethod('map#toLatLng', <String, dynamic>{
         'x': screenLocation.x,
         'y': screenLocation.y,
@@ -533,7 +533,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     try {
-      var latLngMap = await _channel
+      final latLngMap = await _channel
           .invokeMethod('map#getMetersPerPixelAtLatitude', <String, dynamic>{
         'latitude': latitude,
       });

@@ -65,7 +65,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
       required origin,
       required point,
       required eventType}) {
-    DragEventType type = eventType;
+    final DragEventType type = eventType;
     switch (type) {
       case DragEventType.start:
         // TODO: Handle this case.
@@ -177,7 +177,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   Future<void> _changeFillPattern() async {
-    String? current =
+    final String? current =
         _selectedFill!.options.fillPattern == null ? "assetImage" : null;
     _updateSelectedFill(
       FillOptions(fillPattern: current),

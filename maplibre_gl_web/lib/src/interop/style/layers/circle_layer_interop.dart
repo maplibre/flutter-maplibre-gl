@@ -5,7 +5,7 @@ class CircleLayerJsImpl {
   static toJs(CircleLayer circleLayer) => jsify(toDict(circleLayer));
 
   static toDict(CircleLayer circleLayer) {
-    Map<String, dynamic> dict = {
+    final Map<String, dynamic> dict = {
       'id': circleLayer.id,
       'type': 'circle',
     };
@@ -28,7 +28,7 @@ class CirclePaintJsImpl {
   static toJs(CirclePaint circlePaint) => jsify(toDict(circlePaint));
 
   static toDict(CirclePaint circlePaint) {
-    Map<String, dynamic> dict = {};
+    final Map<String, dynamic> dict = {};
     if (circlePaint.circleRadius != null) {
       dict['circle-radius'] = circlePaint.circleRadius;
     }

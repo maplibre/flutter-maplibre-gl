@@ -67,7 +67,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds a network image to the currently displayed style
   Future<void> addImageFromUrl(String name, Uri uri) async {
-    var response = await http.get(uri);
+    final response = await http.get(uri);
     return controller!.addImage(name, response.bodyBytes);
   }
 
@@ -90,7 +90,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _add(String iconImage) {
-    List<int> availableNumbers = Iterable<int>.generate(12).toList();
+    final List<int> availableNumbers = Iterable<int>.generate(12).toList();
     for (var s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
@@ -105,7 +105,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   SymbolOptions _getSymbolOptions(String iconImage, int symbolCount) {
-    LatLng geometry = LatLng(
+    final LatLng geometry = LatLng(
       center.latitude + sin(symbolCount * pi / 6.0) / 20.0,
       center.longitude + cos(symbolCount * pi / 6.0) / 20.0,
     );
@@ -133,7 +133,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _addAll(String iconImage) async {
-    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
+    final List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
     for (var s in controller!.symbols) {
       symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']);
     }

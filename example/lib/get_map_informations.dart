@@ -34,7 +34,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
     if (controller == null) {
       return;
     }
-    List<String> sources = await controller!.getSourceIds();
+    final List<String> sources = await controller!.getSourceIds();
     setState(() {
       data = 'Sources: ${sources.map((e) => '"$e"').join(', ')}';
     });
@@ -44,7 +44,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
     if (controller == null) {
       return;
     }
-    List<String> layers = (await controller!.getLayerIds()).cast<String>();
+    final List<String> layers = (await controller!.getLayerIds()).cast<String>();
     setState(() {
       data = 'Layers: ${layers.map((e) => '"$e"').join(', ')}';
     });

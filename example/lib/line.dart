@@ -109,7 +109,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _changeLinePattern() async {
-    String? current =
+    final String? current =
         _selectedLine!.options.linePattern == null ? "assetImage" : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
@@ -213,7 +213,7 @@ class LineBodyState extends State<LineBody> {
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  var latLngs = await controller!
+                                  final latLngs = await controller!
                                       .getLineLatLngs(_selectedLine!);
                                   for (var latLng in latLngs) {
                                     debugPrint(latLng.toString());

@@ -5,7 +5,7 @@ class SymbolLayerJsImpl {
   static toJs(SymbolLayer symbolLayer) => jsify(toDict(symbolLayer));
 
   static toDict(SymbolLayer symbolLayer) {
-    Map<String, dynamic> dict = {
+    final Map<String, dynamic> dict = {
       'id': symbolLayer.id,
       'type': 'symbol',
     };
@@ -43,7 +43,7 @@ class SymbolPaintJsImpl {
   static toJs(SymbolPaint symbolPaint) => jsify(toDict(symbolPaint));
 
   static toDict(SymbolPaint symbolPaint) {
-    Map<String, dynamic> dict = {};
+    final Map<String, dynamic> dict = {};
     if (symbolPaint.iconOpacity != null) {
       dict['icon-opacity'] = symbolPaint.iconOpacity;
     }
@@ -94,7 +94,7 @@ class SymbolLayoutJsImpl {
   static toJs(SymbolLayout symbolLayout) => jsify(toDict(symbolLayout));
 
   static toDict(SymbolLayout symbolLayout) {
-    Map<String, dynamic> dict = {};
+    final Map<String, dynamic> dict = {};
     if (symbolLayout.symbolAvoidEdges != null) {
       dict['symbol-avoid-edges'] = symbolLayout.symbolAvoidEdges;
     }

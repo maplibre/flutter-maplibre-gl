@@ -579,7 +579,7 @@ class MapLibreMap extends Camera {
   ///  @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
   ///  @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
   dynamic getSource(String id) {
-    var source = jsObject.getSource(id);
+    final source = jsObject.getSource(id);
     if (source is GeoJsonSourceJsImpl) {
       return GeoJsonSource.fromJsObject(source);
     }

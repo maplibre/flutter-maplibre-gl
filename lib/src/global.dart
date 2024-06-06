@@ -37,22 +37,22 @@ Future<void> setHttpHeaders(Map<String, String> headers) {
 }
 
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
       'path': path,
     },
   );
-  Iterable regions = json.decode(regionsJson);
+  final Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
     <String, dynamic>{},
   );
-  Iterable regions = json.decode(regionsJson);
+  final Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
@@ -90,7 +90,7 @@ Future<OfflineRegion> downloadOfflineRegion(OfflineRegionDefinition definition,
       Map<String, dynamic> metadata = const {},
       Function(DownloadRegionStatus event)? onEvent,
     }) async {
-  String channelName =
+  final String channelName =
       'downloadOfflineRegion_${DateTime
       .now()
       .microsecondsSinceEpoch}';
@@ -106,7 +106,7 @@ Future<OfflineRegion> downloadOfflineRegion(OfflineRegionDefinition definition,
         onEvent(Error(error));
         return Error(error);
       }
-      var unknownError = Error(
+      final unknownError = Error(
         PlatformException(
           code: 'UnknowException',
           message:

@@ -7,7 +7,7 @@ import 'package:recase/recase.dart';
 import 'conversions.dart';
 
 main() async {
-  var styleJson =
+  final styleJson =
       jsonDecode(await File('scripts/input/style.json').readAsString());
 
   final layerTypes = [
@@ -80,11 +80,11 @@ Future<void> render(
   final outputPath = pathItems.join("/");
 
   print("Rendering $filename");
-  var templateFile =
+  final templateFile =
       await File('./scripts/templates/$filename.template').readAsString();
 
-  var template = Template(templateFile);
-  var outputFile = File('$outputPath/$filename');
+  final template = Template(templateFile);
+  final outputFile = File('$outputPath/$filename');
 
   outputFile.writeAsString(template.renderString(renderContext));
 }

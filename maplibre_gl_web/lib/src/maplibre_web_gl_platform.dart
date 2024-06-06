@@ -58,7 +58,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> initPlatform(int id) async {
     if (_creationParams.containsKey('initialCameraPosition')) {
-      var camera = _creationParams['initialCameraPosition'];
+      final camera = _creationParams['initialCameraPosition'];
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
       _map = MapLibreMap(
@@ -111,13 +111,13 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   _onMouseDown(Event e) {
-    var isDraggable = e.features[0].properties['draggable'];
+    final isDraggable = e.features[0].properties['draggable'];
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
       e.preventDefault();
       _draggedFeatureId = e.features[0].id;
       _map.getCanvas().style.cursor = 'grabbing';
-      var coords = e.lngLat;
+      final coords = e.lngLat;
       _dragOrigin = LatLng(coords.lat as double, coords.lng as double);
 
       if (_draggedFeatureId != null) {
@@ -268,7 +268,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
-    Map<String, dynamic> options = {};
+    final Map<String, dynamic> options = {};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
@@ -296,7 +296,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
-    Map<String, dynamic> options = {};
+    final Map<String, dynamic> options = {};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
@@ -324,7 +324,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
-    Map<String, dynamic> parameters = {};
+    final Map<String, dynamic> parameters = {};
 
     if (sourceLayerId != null) {
       parameters['sourceLayer'] = sourceLayerId;
@@ -418,10 +418,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _onMapResize() {
     Timer(const Duration(), () {
-      var container = _map.getContainer();
-      var canvas = _map.getCanvas();
-      var widthMismatch = canvas.clientWidth != container.clientWidth;
-      var heightMismatch = canvas.clientHeight != container.clientHeight;
+      final container = _map.getContainer();
+      final canvas = _map.getCanvas();
+      final widthMismatch = canvas.clientWidth != container.clientWidth;
+      final heightMismatch = canvas.clientHeight != container.clientHeight;
       if (widthMismatch || heightMismatch) {
         _map.resize();
       }
@@ -456,7 +456,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _onCameraMove(_) {
     final center = _map.getCenter();
-    var camera = CameraPosition(
+    final camera = CameraPosition(
       bearing: _map.getBearing() as double,
       target: LatLng(center.lat as double, center.lng as double),
       tilt: _map.getPitch() as double,
@@ -467,7 +467,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _onCameraIdle(_) {
     final center = _map.getCenter();
-    var camera = CameraPosition(
+    final camera = CameraPosition(
       bearing: _map.getBearing() as double,
       target: LatLng(center.lat as double, center.lng as double),
       tilt: _map.getPitch() as double,
@@ -535,9 +535,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (_navigationControl != null) {
       prevShowCompass = _navigationControl!.options.showCompass;
     }
-    String? prevPosition = _navigationControlPosition;
+    final String? prevPosition = _navigationControlPosition;
 
-    String? positionString = switch (position) {
+    final String? positionString = switch (position) {
       CompassViewPosition.topRight => 'top-right',
       CompassViewPosition.topLeft => 'top-left',
       CompassViewPosition.bottomRight => 'bottom-right',
@@ -545,8 +545,8 @@ class MapLibreMapController extends MapLibrePlatform
       _ => null,
     };
 
-    bool newShowCompass = compassEnabled ?? prevShowCompass ?? false;
-    String? newPosition = positionString ?? prevPosition;
+    final bool newShowCompass = compassEnabled ?? prevShowCompass ?? false;
+    final String? newPosition = positionString ?? prevPosition;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(
@@ -710,14 +710,14 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<LatLng> toLatLng(Point<num> screenLocation) async {
-    var lngLat =
+    final lngLat =
         _map.unproject(geo_point.Point(screenLocation.x, screenLocation.y));
     return LatLng(lngLat.lat as double, lngLat.lng as double);
   }
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
-    var screenPosition =
+    final screenPosition =
         _map.project(LngLat(latLng.longitude, latLng.latitude));
     final point = Point(screenPosition.x.round(), screenPosition.y.round());
 
@@ -728,7 +728,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List<Point<num>>> toScreenLocationBatch(
       Iterable<LatLng> latLngs) async {
     return latLngs.map((latLng) {
-      var screenPosition =
+      final screenPosition =
           _map.project(LngLat(latLng.longitude, latLng.latitude));
       return Point(screenPosition.x.round(), screenPosition.y.round());
     }).toList(growable: false);
@@ -737,8 +737,8 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     //https://wiki.openstreetmap.org/wiki/Zoom_levels
-    var circumference = 40075017.686;
-    var zoom = _map.getZoom();
+    const circumference = 40075017.686;
+    final zoom = _map.getZoom();
     return circumference * cos(latitude * (pi / 180)) / pow(2, zoom + 9);
   }
 
