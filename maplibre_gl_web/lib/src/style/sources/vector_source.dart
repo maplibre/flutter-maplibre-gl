@@ -30,7 +30,7 @@ class VectorSource extends Source<VectorSourceJsImpl> {
 
   @override
   get dict {
-    final Map<String, dynamic> dict = {
+    final dict = <String, dynamic>{
       'type': 'vector',
     };
     if (url != null) {

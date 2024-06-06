@@ -197,7 +197,7 @@ List<String> splitIntoChunks(String input, int lineLength,
   final words = input.split(" ");
   final chunks = <String>[];
 
-  String chunk = "";
+  var chunk = "";
   for (final word in words) {
     final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
     if (nextChunk.length > lineLength || chunk.endsWith("\n")) {

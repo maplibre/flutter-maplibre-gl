@@ -378,9 +378,9 @@ class Convert {
 
   static List<List<List<double>>> fillGeometryToFeatureGeometry(
       List<List<LatLng>> geom) {
-    final List<List<List<double>>> convertedFill = [];
+    final convertedFill = <List<List<double>>>[];
     for (final ring in geom) {
-      final List<List<double>> convertedRing = [];
+      final convertedRing = <List<double>>[];
       for (final coords in ring) {
         convertedRing.add([coords.longitude, coords.latitude]);
       }
@@ -391,9 +391,9 @@ class Convert {
 
   static List<List<LatLng>> featureGeometryToFillGeometry(
       List<List<List<double>>> geom) {
-    final List<List<LatLng>> convertedFill = [];
+    final convertedFill = <List<LatLng>>[];
     for (final ring in geom) {
-      final List<LatLng> convertedRing = [];
+      final convertedRing = <LatLng>[];
       for (final coords in ring) {
         convertedRing.add(LatLng(coords[1], coords[0]));
       }

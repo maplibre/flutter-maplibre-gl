@@ -106,7 +106,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
-    final ByteData bytes = await rootBundle.load(imagePath);
+    final bytes = await rootBundle.load(imagePath);
     await addImage(imagePath, bytes.buffer.asUint8List());
   }
 
@@ -268,7 +268,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
-    final Map<String, dynamic> options = {};
+    final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
@@ -296,7 +296,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
-    final Map<String, dynamic> options = {};
+    final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
@@ -324,7 +324,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
-    final Map<String, dynamic> parameters = {};
+    final parameters = <String, dynamic>{};
 
     if (sourceLayerId != null) {
       parameters['sourceLayer'] = sourceLayerId;
@@ -535,9 +535,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (_navigationControl != null) {
       prevShowCompass = _navigationControl!.options.showCompass;
     }
-    final String? prevPosition = _navigationControlPosition;
+    final prevPosition = _navigationControlPosition;
 
-    final String? positionString = switch (position) {
+    final positionString = switch (position) {
       CompassViewPosition.topRight => 'top-right',
       CompassViewPosition.topLeft => 'top-left',
       CompassViewPosition.bottomRight => 'bottom-right',
@@ -545,8 +545,8 @@ class MapLibreMapController extends MapLibrePlatform
       _ => null,
     };
 
-    final bool newShowCompass = compassEnabled ?? prevShowCompass ?? false;
-    final String? newPosition = positionString ?? prevPosition;
+    final newShowCompass = compassEnabled ?? prevShowCompass ?? false;
+    final newPosition = positionString ?? prevPosition;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(

@@ -90,7 +90,7 @@ Future<OfflineRegion> downloadOfflineRegion(OfflineRegionDefinition definition,
       Map<String, dynamic> metadata = const {},
       Function(DownloadRegionStatus event)? onEvent,
     }) async {
-  final String channelName =
+  final channelName =
       'downloadOfflineRegion_${DateTime
       .now()
       .microsecondsSinceEpoch}';

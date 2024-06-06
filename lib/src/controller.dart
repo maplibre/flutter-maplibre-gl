@@ -99,7 +99,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
       for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
-        final DragEventType enmDragEventType = DragEventType.values
+        final enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
         fun(payload["id"],
             point: payload["point"],
@@ -910,7 +910,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.
   Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
-    final CircleOptions effectiveOptions =
+    final effectiveOptions =
         CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
     await circleManager!.add(circle);
@@ -1005,7 +1005,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.
   Future<Fill> addFill(FillOptions options, [Map? data]) async {
-    final FillOptions effectiveOptions =
+    final effectiveOptions =
         FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
     await fillManager!.add(fill);

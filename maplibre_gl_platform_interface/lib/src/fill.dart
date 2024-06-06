@@ -8,9 +8,9 @@ part of '../maplibre_gl_platform_interface.dart';
 
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {
-    final List<List<LatLng>> newGeometry = [];
+    final newGeometry = <List<LatLng>>[];
     for (final ring in options.geometry!) {
-      final List<LatLng> newRing = [];
+      final newRing = <LatLng>[];
       for (final coords in ring) {
         newRing.add(coords + delta);
       }
@@ -94,7 +94,7 @@ class FillOptions {
   }
 
   dynamic toJson([bool addGeometry = true]) {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {

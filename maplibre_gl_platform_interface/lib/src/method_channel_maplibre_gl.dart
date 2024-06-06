@@ -326,8 +326,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
           'locationComponent#getLastLocation');
-      double latitude = 0.0;
-      double longitude = 0.0;
+      var latitude = 0.0;
+      var longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
       }
@@ -428,7 +428,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'map#toScreenLocationBatch', {"coordinates": coordinates});
 
       final points = <Point>[];
-      for (int i = 0; i < result.length; i += 2) {
+      for (var i = 0; i < result.length; i += 2) {
         points.add(Point(result[i], result[i + 1]));
       }
 

@@ -22,7 +22,7 @@ class OfflineRegionDefinition {
       "OfflineRegionDefinition, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom";
 
   Map<String, dynamic> toMap() {
-    final Map<String, dynamic> data = <String, dynamic>{};
+    final data = <String, dynamic>{};
     data['bounds'] = bounds.toList();
     data['mapStyleUrl'] = mapStyleUrl;
     data['minZoom'] = minZoom;

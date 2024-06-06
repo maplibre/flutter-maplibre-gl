@@ -141,7 +141,7 @@ class CustomMarkerState extends State<CustomMarker> {
     }
 
     _mapController.toScreenLocation(const LatLng(0, 0));
-    final Stopwatch sw = Stopwatch();
+    final sw = Stopwatch();
 
     for (final batch in batches) {
       //

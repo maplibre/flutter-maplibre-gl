@@ -263,7 +263,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
     assert(
         widget.annotationOrder.toSet().length == widget.annotationOrder.length,
         "annotationOrder must not have duplicate types");
-    final Map<String, dynamic> creationParams = <String, dynamic>{
+    final creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'styleString': widget.styleString,
       'options': _MapLibreMapOptions.fromWidget(widget).toMap(),
@@ -294,9 +294,9 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   void didUpdateWidget(MapLibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final _MapLibreMapOptions newOptions =
+    final newOptions =
         _MapLibreMapOptions.fromWidget(widget);
-    final Map<String, dynamic> updates =
+    final updates =
         _maplibreMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
     _maplibreMapOptions = newOptions;
@@ -306,12 +306,12 @@ class _MapLibreMapState extends State<MapLibreMap> {
     if (updates.isEmpty) {
       return;
     }
-    final MapLibreMapController controller = await _controller.future;
+    final controller = await _controller.future;
     controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
-    final MapLibreMapController controller = MapLibreMapController(
+    final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
@@ -431,7 +431,7 @@ class _MapLibreMapOptions {
   };
 
   Map<String, dynamic> toMap() {
-    final Map<String, dynamic> optionsMap = <String, dynamic>{};
+    final optionsMap = <String, dynamic>{};
 
     void addIfNonNull(String fieldName, dynamic value) {
       if (value != null) {
@@ -472,7 +472,7 @@ class _MapLibreMapOptions {
   }
 
   Map<String, dynamic> updatesMap(_MapLibreMapOptions newOptions) {
-    final Map<String, dynamic> prevOptionsMap = toMap();
+    final prevOptionsMap = toMap();
     final newOptionsMap = newOptions.toMap();
 
     // if any gesture is updated also all other gestures have to the saved to

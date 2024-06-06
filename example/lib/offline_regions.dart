@@ -182,8 +182,8 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
   }
 
   Future<void> _updateListOfRegions() async {
-    final List<OfflineRegion> offlineRegions = await getListOfRegions();
-    final List<OfflineRegionListItem> regionItems = [];
+    final offlineRegions = await getListOfRegions();
+    final regionItems = <OfflineRegionListItem>[];
     for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
           (offlineRegion) => offlineRegion.metadata['name'] == item.name);
