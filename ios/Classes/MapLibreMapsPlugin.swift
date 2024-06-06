@@ -3,7 +3,7 @@ import Foundation
 import MapLibre
 import UIKit
 
-public class SwiftMapLibreGlFlutterPlugin: NSObject, FlutterPlugin {
+public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
     static var downloadOfflineRegionChannelHandler: OfflineChannelHandler? = nil
 
     public static func register(with registrar: FlutterPluginRegistrar) {
