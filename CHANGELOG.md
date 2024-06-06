@@ -20,6 +20,9 @@
 * Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
   (affects for example the classes MaplibreMap and MaplibreMapController).
 
+**Full Changelog**:
+[v0.19.0+2...v0.20.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.19.0+2...v0.20.0)
+
 ## 0.19.0
 
 This is the first version where all packages are published on pub.dev. Please
