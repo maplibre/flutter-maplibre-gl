@@ -54,7 +54,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
-      - run: flutter pub get
       - name: Build example APK
         run: flutter build apk
       - name: Upload apk as artifact
@@ -84,7 +83,6 @@ jobs:
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: example/ios/Podfile.lock
-      - run: flutter pub get
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
@@ -111,6 +109,5 @@ jobs:
           flutter-version: ${{ matrix.sdk }}
           cache: true
       - uses: bluefireteam/melos-action@v3
-      - run: flutter pub get
       - name: Build web
         run: flutter build web
