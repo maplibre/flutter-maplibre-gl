@@ -835,7 +835,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   /// Method to set style string
-  /// [styleString] -> It will take json, url, absolute path or asset path
   ///
   @override
   Future<void> setStyle(String styleString) async {
@@ -847,6 +846,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         },
       );
     } on PlatformException catch (e) {
+      return Future.error(e);
+    } catch (e) {
       return Future.error(e);
     }
   }

@@ -1163,10 +1163,6 @@ class MapLibreMapController extends MapLibrePlatform
   ///
   @override
   Future<void> setStyle(String styleString) async {
-    try {
-      _map.setStyle(styleString);
-    } on PlatformException catch (e) {
-      return Future.error(e);
-    }
+    _map.setStyle(styleString);
   }
 }
