@@ -51,6 +51,16 @@ class LocalStyleState extends State<LocalStyle> {
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
+
+    // Adding style to the map with some delay
+    Future.delayed(
+      const Duration(milliseconds: 250),
+      () async {
+        if (styleAbsoluteFilePath != null) {
+          await mapController?.setStyle(styleAbsoluteFilePath!);
+        }
+      },
+    );
   }
 
   @override
@@ -62,19 +72,12 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
-        floatingActionButton: FloatingActionButton.small(
-          child: const Icon(Icons.layers_outlined),
-          onPressed: () async {
-            if (styleAbsoluteFilePath != null) {
-              await mapController?.setStyle(styleAbsoluteFilePath!);
-            }
-          },
-        ),
-        body: MapLibreMap(
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
-          onStyleLoadedCallback: onStyleLoadedCallback,
-        ));
+      body: MapLibreMap(
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
+        onStyleLoadedCallback: onStyleLoadedCallback,
+      ),
+    );
   }
 
   void onStyleLoadedCallback() {}
