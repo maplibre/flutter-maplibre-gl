@@ -48,6 +48,7 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -79,6 +80,7 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: example/ios/Podfile.lock
@@ -108,6 +110,7 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - run: flutter pub get
       - name: Build web
         run: flutter build web
