@@ -18,7 +18,7 @@ jobs:
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
-        run: dart run melos format --set-exit-if-changed .
+        run: melos format --set-exit-if-changed .
 
   lint:
     name: "Static code analysis"
@@ -30,7 +30,7 @@ jobs:
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
-        run: dart run melos analyze
+        run: melos analyze
 
   build-android:
     name: "Build Android apk"
