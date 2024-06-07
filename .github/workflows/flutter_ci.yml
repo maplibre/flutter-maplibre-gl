@@ -16,9 +16,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           cache: true
-      - run: flutter pub get
-      - name: melos bootstrap
-        run: dart run melos bootstrap
+      - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
         run: dart run melos format --set-exit-if-changed .
 
@@ -30,13 +28,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           cache: true
-      - run: flutter pub get
-      - run: |
-         cd scripts
-         flutter pub get 
-         cd ..
-      - name: melos bootstrap
-        run: dart run melos bootstrap
+      - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
         run: dart run melos analyze
 
