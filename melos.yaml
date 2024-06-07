@@ -2,6 +2,7 @@ name: flutter_maplibre_gl
 
 packages:
   - example
+  - scripts
   - maplibre_gl
   - maplibre_gl_platform_interface
   - maplibre_gl_web
