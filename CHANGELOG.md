@@ -20,8 +20,8 @@ If you notice any build errors, please make sure to run `flutter clean`.
   for more information.
 * Renamed the method channel to `plugins.flutter.io/maplibre_gl_*` in all
   packages.
-* Renamed `Maplibre` to `MapLibre` to be in line with maplibre-native 
-  (affects for example the classes MaplibreMap and MaplibreMapController).
+* Renamed "Maplibre" to "MapLibre" to be in line with maplibre-native 
+  (affects for example the classes `MaplibreMap` and `MaplibreMapController`).
 
 ### Changes
 
