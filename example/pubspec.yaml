@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   maplibre_gl:
-    path: ..
+    path: ../maplibre_gl
   location: ^5.0.3
   path_provider: ^2.0.15
   http: ^1.1.0
@@ -21,9 +21,10 @@ dependencies:
   device_info_plus: ^9.0.2
 
 dev_dependencies:
-  very_good_analysis: ^5.0.0
   flutter_test:
     sdk: flutter
+  very_good_analysis: ^5.0.0
+
 
 flutter:
   uses-material-design: true

@@ -25,7 +25,7 @@ jobs:
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
         cache: true
-    - run: flutter pub get
+    - uses: bluefireteam/melos-action@v3
     - name: Build example APK
       run: flutter build apk
     - name: Upload apk as artifact
@@ -46,10 +46,10 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: example/ios/Podfile.lock
-      - run: flutter pub get
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
@@ -70,6 +70,6 @@ jobs:
       with:
         channel: ${{ env.FLUTTER_CHANNEL }}
         cache: true
-    - run: flutter pub get
+    - uses: bluefireteam/melos-action@v3
     - name: Build web
       run: flutter build web
