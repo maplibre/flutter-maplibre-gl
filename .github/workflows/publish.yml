@@ -12,14 +12,14 @@ jobs:
   publish_maplibre_gl_platform_interface:
     uses: ./.github/workflows/publish-single.yml
     with:
-      working-directory: flutter_maplibre_gl_platform_interface
+      working-directory: maplibre_gl_platform_interface
   publish_maplibre_gl_web:
     needs: [publish_maplibre_gl_platform_interface]
     uses: ./.github/workflows/publish-single.yml
     with:
-      working-directory: flutter_maplibre_gl_web
+      working-directory: maplibre_gl_web
   publish_maplibre_gl:
     needs: [publish_maplibre_gl_platform_interface, publish_maplibre_gl_web]
     uses: ./.github/workflows/publish-single.yml
     with:
-      working-directory: flutter_maplibre_gl
+      working-directory: maplibre_gl
