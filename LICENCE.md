@@ -1,1 +1,0 @@
-maplibre_gl/LICENCE.md
