@@ -1,6 +1,6 @@
 name: maplibre_gl_platform_interface
-description: A common platform interface for the maplibre_gl plugin.
-version: 0.19.0+2
+description: A common platform interface for the maplibre_gl plugin. This package is only intended to be used by the maplibre_gl package.
+version: 0.20.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
