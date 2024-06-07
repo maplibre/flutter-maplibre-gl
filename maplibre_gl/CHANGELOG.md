@@ -1,3 +1,8 @@
+## UNRELEASED
+
+* Move the `maplibre_gl` package to a subdirectory of the repository and add 
+  melos to orchestrate all packages.
+
 ## 0.20.0
 
 A lot of files/classes have been renamed and moved around in this release.
