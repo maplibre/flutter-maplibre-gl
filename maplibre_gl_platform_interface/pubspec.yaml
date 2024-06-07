@@ -8,11 +8,10 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
   flutter: ">=3.10.0"
 
-dev_dependencies:
-  very_good_analysis: ^5.0.0
-
 dependencies:
   flutter:
     sdk: flutter
   meta: ^1.0.5
 
+dev_dependencies:
+  very_good_analysis: ^5.0.0
