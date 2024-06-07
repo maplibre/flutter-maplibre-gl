@@ -1,4 +1,4 @@
-name: maplibre_gl_workspace
+name: maplibre_gl
 
 packages:
   - example

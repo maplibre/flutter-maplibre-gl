@@ -1,4 +1,4 @@
-name: maplibre_gl_workspace
+name: maplibre_gl
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
