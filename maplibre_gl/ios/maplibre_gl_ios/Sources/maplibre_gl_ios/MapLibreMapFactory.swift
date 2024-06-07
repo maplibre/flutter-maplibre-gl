@@ -1,6 +1,6 @@
 import Flutter
 
-class MapboxMapFactory: NSObject, FlutterPlatformViewFactory {
+class MapLibreMapFactory: NSObject, FlutterPlatformViewFactory {
     var registrar: FlutterPluginRegistrar
 
     init(withRegistrar registrar: FlutterPluginRegistrar) {
@@ -15,7 +15,7 @@ class MapboxMapFactory: NSObject, FlutterPlatformViewFactory {
     func create(withFrame frame: CGRect, viewIdentifier viewId: Int64,
                 arguments args: Any?) -> FlutterPlatformView
     {
-        return MapboxMapController(
+        return MapLibreMapController(
             withFrame: frame,
             viewIdentifier: viewId,
             arguments: args,
