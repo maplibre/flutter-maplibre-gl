@@ -1,8 +1,0 @@
-# melos_managed_dependency_overrides: maplibre_gl,maplibre_gl_platform_interface,maplibre_gl_web
-dependency_overrides:
-  maplibre_gl:
-    path: ../flutter_maplibre_gl
-  maplibre_gl_platform_interface:
-    path: ../flutter_maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ../flutter_maplibre_gl_web
