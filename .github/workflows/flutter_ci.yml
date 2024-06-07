@@ -18,9 +18,9 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: melos bootstrap
-        run: melos bootstrap
+        run: dart run melos bootstrap
       - name: Lint analysis
-        run: melos format --set-exit-if-changed .
+        run: dart run melos format --set-exit-if-changed .
 
   lint:
     name: "Static code analysis"
@@ -36,9 +36,9 @@ jobs:
          flutter pub get 
          cd ..
       - name: melos bootstrap
-        run: melos bootstrap
+        run: dart run melos bootstrap
       - name: Lint analysis
-        run: melos analyze
+        run: dart run melos analyze
 
   build-android:
     name: "Build Android apk"
