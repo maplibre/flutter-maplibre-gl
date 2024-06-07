@@ -1,0 +1,7 @@
+name: flutter_maplibre_gl
+
+packages:
+  - example
+  - flutter_maplibre_gl
+  - flutter_maplibre_gl_platform_interface
+  - flutter_maplibre_gl_web
