@@ -12,8 +12,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  maplibre_gl: ^0.19.0
+  maplibre_gl:
+    path: ..
   location: ^5.0.3
   path_provider: ^2.0.15
   http: ^1.1.0
