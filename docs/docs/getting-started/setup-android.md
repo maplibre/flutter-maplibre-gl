@@ -35,9 +35,6 @@ buildscript {
 }
 ```
 
-Read about the deprecation of the apply script method
-<a href="https://docs.flutter.dev/release/breaking-changes/flutter-gradle-plugin-apply">here</a>.
-
 ## Minimum SDK version
 
 If you are using a flutter version below 3.22, you need to set the minimum SDK
