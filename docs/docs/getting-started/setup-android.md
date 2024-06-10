@@ -50,8 +50,7 @@ version to 21 or higher in `android/app/build.gradle`.
 If you are using the old apply script method in gradle, `minSdk` is named
 `minSdkVersion`.
 
-Starting from flutter 3.22, the
-[minimum SDK version is set to 21 by default]((https://docs.flutter.dev/release/breaking-changes/android-kitkat-deprecation))
+Starting from flutter 3.22, the minimum SDK version is set to 21 by default
 and you can keep `flutter.minSdkVersion`.
 
 ## Use the location feature
