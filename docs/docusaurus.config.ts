@@ -134,7 +134,7 @@ const config: Config = {
                         },
                         {
                             label: 'StackOverflow',
-                            href: 'https://stackoverflow.com/questions/tagged/maplibre',
+                            href: 'https://stackoverflow.com/questions/tagged/maplibre-gl',
                         },
                         {
                             label: 'GitHub Discussions',
