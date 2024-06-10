@@ -12,12 +12,6 @@ vector maps** as a Flutter widget.
   of [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl),
   replacing its usage of Mapbox GL libraries with the open
   source [MapLibre GL](https://github.com/maplibre) libraries.
-- The repository has been transferred to
-  the [MapLibre](https://github.com/maplibre)
-  organization. You shouldn't see any negative effects, as GitHub automatically
-  redirects references from the old URL to the new URL. Please
-  see [#221](https://github.com/maplibre/flutter-maplibre-gl/issues/221) for
-  more information.
 
 ### Supported Platforms
 

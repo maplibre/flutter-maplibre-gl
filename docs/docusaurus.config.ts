@@ -117,7 +117,7 @@ const config: Config = {
                         },
                         {
                             label: 'Frequent Questions',
-                            to: '/docs/category/faq',
+                            to: '/docs/faq',
                         },
                         {
                             label: 'API Reference',

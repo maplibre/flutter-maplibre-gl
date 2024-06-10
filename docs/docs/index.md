@@ -12,4 +12,4 @@ MapLibre SDKs for iOS, Android and Web.
 - [Getting started](getting-started/add-dependency)
 - [Getting started](map-styles)
 - [Features](category/features)
-- [FAQ](category/faq)
+- [FAQ](faq)
