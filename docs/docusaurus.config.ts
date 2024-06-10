@@ -61,7 +61,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Get Started',
+          label: 'Getting Started',
         },
         {
           type: 'docSidebar',
@@ -107,8 +107,8 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Get Started',
-              to: '/get-started',
+              label: 'Getting Started',
+              to: '/docs/getting-started/add-dependency',
             },
             {
               label: 'Docs',

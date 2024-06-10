@@ -4,8 +4,6 @@ sidebar_position: 2
 
 # Setup iOS
 
-## General setup
-
 There is no longer any specific setup needed to include the package on iOS.
 
 ## Use the location feature
@@ -23,8 +21,6 @@ data:
 ```
 
 A possible explanation could be: "Shows your location on the map".
-
----
 
 ## Upgrading from a previous version
 

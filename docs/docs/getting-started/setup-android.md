@@ -10,7 +10,7 @@ Ensure that you are using Kotlin version
 **1.9.0** or newer. You can check the most recent Kotlin version on
 [kotlinlang.org](https://kotlinlang.org/docs/releases.html#release-details).
 
-### (new) Gradle with a declarative plugins block
+#### (new) Gradle with a declarative plugins block
 
 Open `android/settings.gradle` and set the Kotlin version like this:
 
@@ -21,9 +21,10 @@ plugins {
 }
 ```
 
-In case you can't find the `plugins {}` block your app still uses the old apply script method.
+In case you can't find the `plugins {}` block your app still uses the old apply
+script method.
 
-### (old) In a legacy apply script gradle file:
+#### (old) In a legacy apply script gradle file:
 
 Open `android/app/build.gradle` and set the Kotlin version like this:
 
@@ -34,8 +35,33 @@ buildscript {
 }
 ```
 
-Read about the deprecation of the apply script method 
+Read about the deprecation of the apply script method
 [here](https://docs.flutter.dev/release/breaking-changes/flutter-gradle-plugin-apply).
+
+## Minimum SDK version
+
+If you are using a flutter version below 3.22, you need to set the minimum SDK
+version to 21 or higher in `android/app/build.gradle`.
+
+If users try to build the app with an earlier flutter version, the build might
+fail, too. Because flutter changed it's minimum supported android version to
+android 5 (SDK version 21) just recently with flutter 3.22. When using an older
+flutter version (we currently support down to flutter 3.10), the user has to
+manually set the minSdk version in android/app/build.gradle like so:
+
+```gradle
+    defaultConfig {
+        minSdk = 21 // previously flutter.minSdkVersion
+        // ...
+    }
+```
+
+If you are using the old apply script method in gradle, `minSdk` is named 
+`minSdkVersion`.
+
+Starting from flutter 3.22, the 
+[minimum SDK version is set to 21 by default]((https://docs.flutter.dev/release/breaking-changes/android-kitkat-deprecation))
+and you can keep `flutter.minSdkVersion`.
 
 ## Use the location feature
 

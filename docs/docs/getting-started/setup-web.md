@@ -4,8 +4,6 @@ sidebar_position: 4
 
 # Setup Web
 
-## General setup
-
 Include the following JavaScript and CSS files in the `<head>` of
 your `web/index.html` file:
 
