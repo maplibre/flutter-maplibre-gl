@@ -8,34 +8,36 @@ type FeatureItem = {
   description: JSX.Element;
 };
 
+// icons from https://www.svgrepo.com/collection/small-flat-vectors/,
+// released under Public Domain
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Customizable Maps',
+    Svg: require('@site/static/img/map-map-marker-svgrepo-com.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        maplibre_gl supports the highly customizable Mapbox vector tiles (mvt)
+        standard. You can customize the map style, add markers, and much more.
       </>
     ),
   },
-  {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
-    description: (
-      <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
-      </>
-    ),
+    {
+        title: 'High Performance',
+        Svg: require('@site/static/img/dashboard-svgrepo-com.svg').default,
+        description: (
+            <>
+                Reliable and fast, maplibre_gl is built on top of the MapLibre GL JS
+                for Web and MapLibre Native for iOS and Android to achieve native speed.
+            </>
+        ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Open-Source and Vendor-Free',
+    Svg: require('@site/static/img/star-svgrepo-com.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        maplibre_gl is an open-source project that has no vendor lock-in. You
+        can freely choose your map data provider or host your own tiles.
       </>
     ),
   },
