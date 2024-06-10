@@ -19,16 +19,27 @@ yarn
 Then, run the following command to start the development server:
 
 ```bash
-$ yarn start
+yarn start
 ```
 
 This command starts a local development server. Most changes are reflected live 
 without having to restart the server.
 
+### Create new docs version
+
+To create a new version of the documentation, run the following command:
+
+```bash
+yarn docusaurus docs:version <version>
+```
+
+A new `versioned_docs.version-<version>` folder will be created and the version
+gets added to the `versions.json` file.
+
 ### Build
 
-```
-$ yarn build
+```bash
+yarn build
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
