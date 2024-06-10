@@ -10,6 +10,6 @@ flutter-maplibre-gl is a fork from flutter-mapbox-gl and provides a bindings to
 MapLibre SDKs for iOS, Android and Web.
 
 - [Getting started](getting-started/add-dependency)
-- [Getting started](map-styles)
+- [Map Styles](map-styles)
 - [Features](category/features)
 - [FAQ](faq)
