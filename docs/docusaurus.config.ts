@@ -1,4 +1,8 @@
-import {themes as prismThemes} from 'prism-react-renderer';
+import {
+  duotoneLight,
+  themes as prismThemes,
+  vsLight
+} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -77,6 +81,7 @@ const config: Config = {
         },
         {
           type: 'docsVersionDropdown',
+          position: 'right',
         },
         {
           href: "https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/maplibre_gl-library.html",
@@ -112,11 +117,11 @@ const config: Config = {
             },
             {
               label: 'Docs',
-              to: '/docs',
+              to: '/docs/category/features',
             },
             {
               label: 'Frequent Questions',
-              to: '/faq',
+              to: '/docs/category/faq',
             },
             {
               label: 'API Reference',
@@ -164,6 +169,7 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      additionalLanguages: ['dart', 'bash', 'gradle'],
     },
   } satisfies Preset.ThemeConfig,
 };
