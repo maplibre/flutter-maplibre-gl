@@ -3,9 +3,9 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  favicon: 'img/favicon.ico',
+  title: 'MapLibre GL Flutter',
+  tagline: 'Flutter MapLibre bindings for iOS, Android and Web',
+  favicon: 'https://maplibre.org/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://josxha.github.io',
@@ -40,13 +40,6 @@ const config: Config = {
           editUrl:
             'https://github.com/josxha/flutter-maplibre-gl/tree/main/docs/',
         },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/josxha/flutter-maplibre-gl/tree/main/docs/',
-        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -56,11 +49,11 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
+    // image: 'img/maplibre-social-card.jpg',
     navbar: {
-      title: 'My Site',
+      title: 'MapLibre GL Flutter',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'MapLibre Logo',
         src: 'img/logo.svg',
       },
       items: [
@@ -68,13 +61,42 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Get Started',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/facebook/docusaurus',
-          label: 'GitHub',
+          type: 'docSidebar',
+          sidebarId: 'tutorialSidebar',
+          position: 'left',
+          label: 'Docs',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'tutorialSidebar',
+          position: 'left',
+          label: 'FAQ',
+        },
+        {
+          type: 'docsVersionDropdown',
+        },
+        {
+          href: "https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/maplibre_gl-library.html",
           position: 'right',
+          label: 'API',
+        },
+        {
+          href: "https://maplibre.org/flutter-maplibre-gl/demo/",
+          position: 'right',
+          label: 'Demo App',
+        },
+        {
+          href: 'https://github.com/maplibre/flutter-maplibre-gl',
+          position: 'right',
+          label: 'GitHub',
+        },
+        {
+          href: 'https://pub.dev/packages/maplibre_gl',
+          position: 'right',
+          label: 'pub.dev',
         },
       ],
     },
@@ -82,11 +104,23 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Documentation',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Get Started',
+              to: '/get-started',
+            },
+            {
+              label: 'Docs',
+              to: '/docs',
+            },
+            {
+              label: 'Frequent Questions',
+              to: '/faq',
+            },
+            {
+              label: 'API Reference',
+              href: 'https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/maplibre_gl-library.html',
             },
           ],
         },
@@ -94,34 +128,38 @@ const config: Config = {
           title: 'Community',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+              label: 'OpenStreetMap US Slack',
+              href: 'https://slack.openstreetmap.us',
             },
             {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
+              label: 'StackOverflow',
+              href: 'https://stackoverflow.com/questions/tagged/flutter-maplibre-gl',
             },
             {
-              label: 'Twitter',
-              href: 'https://twitter.com/docusaurus',
+              label: 'GitHub Discussions',
+              href: 'https://github.com/maplibre/flutter-maplibre-gl/discussions',
             },
           ],
         },
         {
-          title: 'More',
+          title: 'Resources',
           items: [
             {
-              label: 'Blog',
-              to: '/blog',
+              label: 'GitHub',
+              href: 'https://github.com/maplibre/flutter-maplibre-gl',
             },
             {
-              label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              label: 'pub.dev',
+              href: 'https://pub.dev/packages/maplibre_gl',
+            },
+            {
+              label: 'Demo App',
+              href: 'https://maplibre.org/flutter-maplibre-gl/demo/',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} MapLibre contributors`,
     },
     prism: {
       theme: prismThemes.github,
