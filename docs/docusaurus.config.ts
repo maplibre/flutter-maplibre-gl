@@ -134,7 +134,7 @@ const config: Config = {
                         },
                         {
                             label: 'StackOverflow',
-                            href: 'https://stackoverflow.com/questions/tagged/flutter-maplibre-gl',
+                            href: 'https://stackoverflow.com/questions/tagged/maplibre',
                         },
                         {
                             label: 'GitHub Discussions',
