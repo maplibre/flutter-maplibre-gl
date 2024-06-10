@@ -13,7 +13,7 @@ flutter pub add maplibre_gl
 or add it directly as a dependency to your `pubspec.yaml` file and run 
 `flutter pub get`:
 
-```yaml
+```yaml title="pubspec.yaml"
 dependencies:
   maplibre_gl: ^0.20.0 # use the latest version found on pub.dev
 ```

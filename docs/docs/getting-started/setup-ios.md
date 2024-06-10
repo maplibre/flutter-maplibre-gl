@@ -12,8 +12,7 @@ If you access your users' location, you should also add the following key
 to `ios/Runner/Info.plist` to explain why you need access to their location
 data:
 
-```xml 
-
+```xml title="ios/Runner/Info.plist"
 <dict>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>[Your explanation here]</string>
@@ -31,7 +30,7 @@ or your project won't build.
 <details>
 <summary>View obsolete code</summary>
 
-```ruby
+```ruby title="ios/Podfile"
 source 'https://cdn.cocoapods.org/'
 source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 

@@ -14,7 +14,7 @@ Ensure that you are using Kotlin version
 
 Open `android/settings.gradle` and set the Kotlin version like this:
 
-```gradle
+```gradle title="android/settings.gradle"
 plugins {
     // ...
     id "org.jetbrains.kotlin.android" version "1.9.0" apply false
@@ -28,7 +28,7 @@ script method.
 
 Open `android/app/build.gradle` and set the Kotlin version like this:
 
-```gradle
+```gradle title="android/app/build.gradle"
 buildscript {
     ext.kotlin_version = '1.9.0'
     // ...
@@ -43,13 +43,7 @@ Read about the deprecation of the apply script method
 If you are using a flutter version below 3.22, you need to set the minimum SDK
 version to 21 or higher in `android/app/build.gradle`.
 
-If users try to build the app with an earlier flutter version, the build might
-fail, too. Because flutter changed it's minimum supported android version to
-android 5 (SDK version 21) just recently with flutter 3.22. When using an older
-flutter version (we currently support down to flutter 3.10), the user has to
-manually set the minSdk version in android/app/build.gradle like so:
-
-```gradle
+```gradle title="android/app/build.gradle"
     defaultConfig {
         minSdk = 21 // previously flutter.minSdkVersion
         // ...
@@ -67,10 +61,9 @@ and you can keep `flutter.minSdkVersion`.
 
 If you want to show the user's location on the map you need to add
 the `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION` permission in the
-application manifest `android/app/src/main/AndroidManifest.xml`.:
+application manifest `android/app/src/main/AndroidManifest.xml`.
 
-```xml
-
+```xml title="android/app/src/main/AndroidManifest.xml"
 <manifest>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>

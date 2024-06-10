@@ -4,10 +4,10 @@ sidebar_position: 4
 
 # Setup Web
 
-Include the following JavaScript and CSS files in the `<head>` of
+Include the following JavaScript and CSS files in the `<head>` tag of
 your `web/index.html` file:
 
-```html
+```html title="web/index.html"
 <!DOCTYPE html>
 <html>
 <head>
