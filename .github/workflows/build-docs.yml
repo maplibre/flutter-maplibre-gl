@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: yarn build
       - name: Deploy to GitHub Pages
-        if: matrix.sdk == '' && github.repository_owner == 'josxha' && github.ref == 'refs/heads/feat/add-docusaurus'
+        if: github.repository_owner == 'maplibre' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

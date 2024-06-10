@@ -15,7 +15,7 @@ const config: Config = {
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
-    organizationName: 'joshxa', // Usually your GitHub org/user name.
+    organizationName: 'maplibre', // Usually your GitHub org / username.
     projectName: 'flutter-maplibre-gl', // Usually your repo name.
 
     onBrokenLinks: 'throw',
