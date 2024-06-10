@@ -1,20 +1,29 @@
-# Website
+# Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+The documentation website is built using [Docusaurus](https://docusaurus.io/), 
+a static website generator.
+See the hosted documentation at [TODO insert url]()
 
-### Installation
+## Run locally
 
+To run the website locally, you need to have Node.js and yarn installed. 
+You can Node.js from [here](https://nodejs.org/) and install yarn by running 
+`npm install -g yarn`.
+
+Run the following commands to fetch the dependencies:
+
+```bash
+yarn
 ```
-$ yarn
-```
 
-### Local Development
+Then, run the following command to start the development server:
 
-```
+```bash
 $ yarn start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+This command starts a local development server. Most changes are reflected live 
+without having to restart the server.
 
 ### Build
 
@@ -26,16 +35,4 @@ This command generates static content into the `build` directory and can be serv
 
 ### Deployment
 
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+The website is deployed automatically to GitHub Pages via CI.
