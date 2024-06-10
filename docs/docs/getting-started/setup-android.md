@@ -36,7 +36,7 @@ buildscript {
 ```
 
 Read about the deprecation of the apply script method
-[here](https://docs.flutter.dev/release/breaking-changes/flutter-gradle-plugin-apply).
+<a href="https://docs.flutter.dev/release/breaking-changes/flutter-gradle-plugin-apply">here</a>.
 
 ## Minimum SDK version
 
@@ -50,10 +50,10 @@ version to 21 or higher in `android/app/build.gradle`.
     }
 ```
 
-If you are using the old apply script method in gradle, `minSdk` is named 
+If you are using the old apply script method in gradle, `minSdk` is named
 `minSdkVersion`.
 
-Starting from flutter 3.22, the 
+Starting from flutter 3.22, the
 [minimum SDK version is set to 21 by default]((https://docs.flutter.dev/release/breaking-changes/android-kitkat-deprecation))
 and you can keep `flutter.minSdkVersion`.
 
@@ -64,6 +64,7 @@ the `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION` permission in the
 application manifest `android/app/src/main/AndroidManifest.xml`.
 
 ```xml title="android/app/src/main/AndroidManifest.xml"
+
 <manifest>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
