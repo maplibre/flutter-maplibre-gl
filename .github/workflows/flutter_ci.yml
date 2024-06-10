@@ -16,8 +16,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
-        run: dart format --set-exit-if-changed .
+        run: melos format --set-exit-if-changed .
 
   lint:
     name: "Static code analysis"
@@ -27,13 +28,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           cache: true
-      - run: flutter pub get
-      - run: |
-         cd scripts
-         flutter pub get 
-         cd ..
+      - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
-        run: flutter analyze
+        run: melos analyze
 
   build-android:
     name: "Build Android apk"
@@ -51,12 +48,12 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
-      - run: flutter pub get
       - name: Build example APK
         run: flutter build apk
       - name: Upload apk as artifact
@@ -82,10 +79,10 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
+      - uses: bluefireteam/melos-action@v3
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: example/ios/Podfile.lock
-      - run: flutter pub get
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
@@ -111,6 +108,6 @@ jobs:
         with:
           flutter-version: ${{ matrix.sdk }}
           cache: true
-      - run: flutter pub get
+      - uses: bluefireteam/melos-action@v3
       - name: Build web
         run: flutter build web

@@ -34,3 +34,6 @@ Icon?
 .tags*
 
 /Flutter/Generated.xcconfig
+
+Package.resolved
+.swiftpm

@@ -22,4 +22,4 @@ jobs:
     needs: [publish_maplibre_gl_platform_interface, publish_maplibre_gl_web]
     uses: ./.github/workflows/publish-single.yml
     with:
-      working-directory: .
+      working-directory: maplibre_gl

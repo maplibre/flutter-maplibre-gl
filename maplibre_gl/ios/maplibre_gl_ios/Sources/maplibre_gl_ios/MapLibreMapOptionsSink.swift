@@ -1,7 +1,6 @@
-
 import MapLibre
 
-protocol MapboxMapOptionsSink {
+protocol MapLibreMapOptionsSink {
     func setCameraTargetBounds(bounds: MLNCoordinateBounds?)
     func setCompassEnabled(compassEnabled: Bool)
     func setStyleString(styleString: String)

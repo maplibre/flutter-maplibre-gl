@@ -1,7 +1,7 @@
 import Flutter
 import MapLibre
 
-class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, MapboxMapOptionsSink,
+class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, MapLibreMapOptionsSink,
     UIGestureRecognizerDelegate
 {
     private var registrar: FlutterPluginRegistrar
@@ -74,7 +74,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
         
         if let args = args as? [String: Any] {
             
-            Convert.interpretMapboxMapOptions(options: args["options"], delegate: self)
+            Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
                let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView),
                let zoom = initialCameraPosition["zoom"] as? Double
@@ -143,7 +143,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
             }
         case "map#update":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            Convert.interpretMapboxMapOptions(options: arguments["options"], delegate: self)
+            Convert.interpretMapLibreMapOptions(options: arguments["options"], delegate: self)
             if let camera = getCamera() {
                 result(camera.toDict(mapView: mapView))
             } else {
@@ -1650,7 +1650,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
     }
 
     /*
-     *  MapboxMapOptionsSink
+     *  MapLibreMapOptionsSink
      */
     func setCameraTargetBounds(bounds: MLNCoordinateBounds?) {
         cameraTargetBounds = bounds
@@ -1671,7 +1671,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, Ma
         if styleString.isEmpty {
             NSLog("setStyleString - string empty")
         } else if styleString.hasPrefix("{") || styleString.hasPrefix("[") {
-            // Currently the iOS Mapbox SDK does not have a builder for json.
+            // Currently the iOS MapLibre SDK does not have a builder for json.
             NSLog("setStyleString - JSON style currently not supported")
         } else if styleString.hasPrefix("/") {
             // Absolute path
