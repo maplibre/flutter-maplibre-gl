@@ -26,14 +26,20 @@ class MapScreenState extends State<MapScreen> {
     return Scaffold(
       body: MapLibreMap(
         onMapCreated: (controller) {
+          // Don't add additional annotations here,
+          // wait for the onStyleLoadedCallback.
           _mapController = controller;
         },
         initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
         onStyleLoadedCallback: () {
-          debugPrint('Style loaded 😎');
+          debugPrint('Map loaded 😎');
         },
       ),
     );
   }
 }
 ```
+
+The result should look something like this:
+
+![First map](../img/first_map.jpg)

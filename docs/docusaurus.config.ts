@@ -3,12 +3,12 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-    title: 'MapLibre GL Flutter',
-    tagline: 'Flutter MapLibre bindings for iOS, Android and Web',
+    title: 'Flutter MapLibre GL',
+    tagline: 'Flutter bindings for Flutter on iOS, Android and Web',
     favicon: 'https://maplibre.org/favicon.ico',
 
     // Set the production url of your site here
-    url: 'https://josxha.github.io',
+    url: 'https://maplibre.org',
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl: '/flutter-maplibre-gl/',
@@ -38,7 +38,7 @@ const config: Config = {
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
                     editUrl:
-                        'https://github.com/josxha/flutter-maplibre-gl/tree/main/docs/',
+                        'https://github.com/maplibre/flutter-maplibre-gl/tree/main/docs/',
                 },
                 theme: {
                     customCss: './src/css/custom.css',
@@ -51,7 +51,7 @@ const config: Config = {
         // Replace with your project's social card
         // image: 'img/maplibre-social-card.jpg',
         navbar: {
-            title: 'MapLibre GL Flutter',
+            title: 'Flutter MapLibre GL',
             logo: {
                 alt: 'MapLibre Logo',
                 src: 'img/logo.svg',
