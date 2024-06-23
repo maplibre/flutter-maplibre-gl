@@ -3,10 +3,7 @@ name: Generate documentation
 on: [ push, pull_request, workflow_dispatch ]
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     defaults:
       run:
         working-directory: docs
