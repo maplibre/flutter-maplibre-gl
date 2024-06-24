@@ -931,10 +931,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
 
         case "style#setStyle":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let style = arguments["style"] as? String else { return }
-            setStyleString(styleString: style)
-            result(nil)
+            if let arguments = methodCall.arguments as? [String: Any] {
+              if let style = arguments["style"] as? String {
+                setStyleString(styleString: style)
+                result(nil)
+              } else {
+                // Error for missing style key in argument
+                result(
+                    FlutterError(
+                        code: "invalidStyleString",
+                        message: "Missing style key in arguments",
+                        details: nil
+                    )
+                )
+              }
+            } else {
+              // Error for invalid arguments type
+              result(
+                  FlutterError(
+                      code: "invalidArgumentsType",
+                      message: "Arguments not of type [String: Any]",
+                      details: nil
+                  )
+              )
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
