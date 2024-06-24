@@ -52,7 +52,7 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.symbol,
       AnnotationType.circle,
       AnnotationType.fill,
-    },
+    ],
     this.annotationConsumeTapEvents = const [
       AnnotationType.symbol,
       AnnotationType.fill,
