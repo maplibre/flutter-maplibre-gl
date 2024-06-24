@@ -1,7 +1,0 @@
-dependency_overrides:
-  maplibre_gl:
-    path: ..
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ../maplibre_gl_web
