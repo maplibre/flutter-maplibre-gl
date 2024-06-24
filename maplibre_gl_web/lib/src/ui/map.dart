@@ -1205,6 +1205,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   dynamic get locale => jsObject.locale;
 
   factory MapOptions({
+    dynamic hash,
     bool? interactive,
     dynamic container,
     num? bearingSnap,

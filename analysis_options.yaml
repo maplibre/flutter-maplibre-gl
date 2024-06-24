@@ -16,6 +16,7 @@ linter:
     prefer_int_literals: false
     unnecessary_lambdas: false
     avoid_print: false
+    avoid_unused_constructor_parameters: false
     unawaited_futures: false
     overridden_fields: false
     always_put_required_named_parameters_first: false
