@@ -83,10 +83,7 @@ class CameraTargetBounds {
 @immutable
 class MinMaxZoomPreference {
   const MinMaxZoomPreference(this.minZoom, this.maxZoom)
-      : assert(
-          minZoom == null || maxZoom == null || minZoom <= maxZoom,
-          'minZoom cannot be larger than maxZoom.',
-        );
+      : assert(minZoom == null || maxZoom == null || minZoom <= maxZoom);
 
   /// The preferred minimum zoom level or null, if unbounded from below.
   final double? minZoom;

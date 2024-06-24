@@ -49,12 +49,12 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                       target: center,
                       zoom: 5.0,
                     ),
-                    annotationOrder: const {
+                    annotationOrder: const [
                       AnnotationType.line,
                       AnnotationType.symbol,
                       AnnotationType.circle,
                       AnnotationType.fill,
-                    },
+                    ],
                   ),
                 ),
               ),
@@ -80,12 +80,12 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                       target: center,
                       zoom: 5.0,
                     ),
-                    annotationOrder: const {
+                    annotationOrder: const [
                       AnnotationType.fill,
                       AnnotationType.line,
                       AnnotationType.symbol,
                       AnnotationType.circle,
-                    },
+                    ],
                   ),
                 ),
               ),

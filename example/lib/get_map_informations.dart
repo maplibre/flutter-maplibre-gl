@@ -67,7 +67,7 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
               ),
               onMapCreated: onMapCreated,
               compassEnabled: false,
-              annotationOrder: const {},
+              annotationOrder: const [],
               myLocationEnabled: false,
               styleString: '''{
                 "version": 8,
