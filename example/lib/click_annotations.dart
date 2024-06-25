@@ -79,7 +79,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     _showSnackBar('symbol', symbol.id);
   }
 
-  void _onStyleLoaded() async {
+  Future<void> _onStyleLoaded() async {
     await addImageFromAsset(
         controller!, "custom-marker", "assets/symbols/custom-marker.png");
     controller!.addCircle(

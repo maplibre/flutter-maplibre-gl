@@ -1,5 +1,3 @@
-library maplibre.geo.lng_lat_bounds;
-
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
@@ -139,8 +137,8 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  var arr = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
   ///  var llb = maplibregl.LngLatBounds.convert(arr);
   ///  llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
-  static LngLatBounds convert(dynamic input) =>
-      LngLatBounds.fromJsObject(LngLatBoundsJsImpl.convert(input));
+  LngLatBounds.convert(dynamic input)
+      : this.fromJsObject(LngLatBoundsJsImpl.convert(input));
 
   /// Creates a new LngLatBounds from a [jsObject].
   LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();

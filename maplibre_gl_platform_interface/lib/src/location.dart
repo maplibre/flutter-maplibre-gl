@@ -5,6 +5,7 @@
 part of '../maplibre_gl_platform_interface.dart';
 
 /// A pair of latitude and longitude coordinates, stored as degrees.
+@immutable
 class LatLng {
   /// Creates a geographical location specified in degrees [latitude] and
   /// [longitude].
@@ -40,12 +41,10 @@ class LatLng {
     return <double>[longitude, latitude];
   }
 
-  static LatLng _fromJson(List<dynamic> json) {
-    return LatLng(json[0], json[1]);
-  }
+  LatLng._fromJson(List<dynamic> json) : this(json[0], json[1]);
 
   @override
-  String toString() => '$runtimeType($latitude, $longitude)';
+  String toString() => 'LatLng($latitude, $longitude)';
 
   @override
   bool operator ==(Object other) {
@@ -66,6 +65,7 @@ class LatLng {
 ///   if `southwest.longitude` ≤ `northeast.longitude`,
 /// * lng ∈ [-180, `northeast.longitude`] ∪ [`southwest.longitude`, 180[,
 ///   if `northeast.longitude` < `southwest.longitude`
+@immutable
 class LatLngBounds {
   /// Creates geographical bounding box with the specified corners.
   ///
@@ -97,7 +97,7 @@ class LatLngBounds {
 
   @override
   String toString() {
-    return '$runtimeType($southwest, $northeast)';
+    return 'LatLngBounds($southwest, $northeast)';
   }
 
   @override
@@ -113,6 +113,7 @@ class LatLngBounds {
 
 /// A geographical area representing a non-aligned quadrilateral
 /// This class does not wrap values to the world bounds
+@immutable
 class LatLngQuad {
   const LatLngQuad({
     required this.topLeft,
@@ -153,7 +154,7 @@ class LatLngQuad {
 
   @override
   String toString() {
-    return '$runtimeType($topLeft, $topRight, $bottomRight, $bottomLeft)';
+    return 'LatLngQuad($topLeft, $topRight, $bottomRight, $bottomLeft)';
   }
 
   @override
@@ -235,6 +236,7 @@ class UserHeading {
 
   /// Returns a timestamp for when the magnetic heading was determined.
   final DateTime timestamp;
+
   const UserHeading(
       {required this.magneticHeading,
       required this.trueHeading,

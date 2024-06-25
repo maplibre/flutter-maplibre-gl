@@ -157,22 +157,23 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
                 ],
               ),
               const Spacer(),
-              _items[index].isDownloading
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        _items[index].isDownloaded
-                            ? Icons.delete
-                            : Icons.file_download,
-                      ),
-                      onPressed: _items[index].isDownloaded
-                          ? () => _deleteRegion(_items[index], index)
-                          : () => _downloadRegion(_items[index], index),
-                    ),
+              if (_items[index].isDownloading)
+                const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(),
+                )
+              else
+                IconButton(
+                  icon: Icon(
+                    _items[index].isDownloaded
+                        ? Icons.delete
+                        : Icons.file_download,
+                  ),
+                  onPressed: _items[index].isDownloaded
+                      ? () => _deleteRegion(_items[index], index)
+                      : () => _downloadRegion(_items[index], index),
+                ),
             ],
           ),
         ),
@@ -180,10 +181,10 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     );
   }
 
-  void _updateListOfRegions() async {
-    List<OfflineRegion> offlineRegions = await getListOfRegions();
-    List<OfflineRegionListItem> regionItems = [];
-    for (var item in allRegions) {
+  Future<void> _updateListOfRegions() async {
+    final offlineRegions = await getListOfRegions();
+    final regionItems = <OfflineRegionListItem>[];
+    for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
           (offlineRegion) => offlineRegion.metadata['name'] == item.name);
       if (offlineRegion != null) {
@@ -198,7 +199,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     });
   }
 
-  void _downloadRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _downloadRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -234,7 +235,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     }
   }
 
-  void _deleteRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _deleteRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));

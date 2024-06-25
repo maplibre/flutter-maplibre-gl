@@ -36,22 +36,22 @@ Future<void> setHttpHeaders(Map<String, String> headers) {
 }
 
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
       'path': path,
     },
   );
-  Iterable regions = json.decode(regionsJson);
+  final Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
-  String regionsJson = await _globalChannel.invokeMethod(
+  final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
     <String, dynamic>{},
   );
-  Iterable regions = json.decode(regionsJson);
+  final Iterable regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
@@ -88,7 +88,7 @@ Future<OfflineRegion> downloadOfflineRegion(
   Map<String, dynamic> metadata = const {},
   Function(DownloadRegionStatus event)? onEvent,
 }) async {
-  String channelName =
+  final channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
   await _globalChannel
@@ -102,7 +102,7 @@ Future<OfflineRegion> downloadOfflineRegion(
         onEvent(Error(error));
         return Error(error);
       }
-      var unknownError = Error(
+      final unknownError = Error(
         PlatformException(
           code: 'UnknowException',
           message:
@@ -113,31 +113,14 @@ Future<OfflineRegion> downloadOfflineRegion(
       onEvent(unknownError);
       return unknownError;
     }).listen((data) {
-      final Map<String, dynamic> jsonData = json.decode(data);
-      DownloadRegionStatus? status;
-      switch (jsonData['status']) {
-        case 'start':
-          status = InProgress(0.0);
-          break;
-        case 'progress':
-          final dynamic value = jsonData['progress'];
-          double progress = 0.0;
-
-          if (value is int) {
-            progress = value.toDouble();
-          }
-
-          if (value is double) {
-            progress = value;
-          }
-
-          status = InProgress(progress);
-          break;
-        case 'success':
-          status = Success();
-          break;
-      }
-      onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
+      final Map<String, Object?> jsonData = json.decode(data);
+      final status = switch (jsonData['status']) {
+        'start' => InProgress(0.0),
+        'progress' => InProgress((jsonData['progress']! as num).toDouble()),
+        'success' => Success(),
+        _ => throw Exception('Invalid event status ${jsonData['status']}'),
+      };
+      onEvent(status);
     });
   }
 

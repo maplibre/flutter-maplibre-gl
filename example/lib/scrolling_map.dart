@@ -76,7 +76,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
             padding: const EdgeInsets.symmetric(vertical: 30.0),
             child: Column(
               children: <Widget>[
-                const Text('This map doesn\'t consume the vertical drags.'),
+                const Text("This map doesn't consume the vertical drags."),
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12.0),
                   child:
@@ -118,7 +118,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
     controllerTwo = controller;
   }
 
-  void onStyleLoaded(MapLibreMapController controller) async {
+  Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
         controller, "custom-marker", "assets/symbols/custom-marker.png");
     controller.addSymbol(SymbolOptions(

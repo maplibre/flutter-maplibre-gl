@@ -30,21 +30,21 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
     });
   }
 
-  void displaySources() async {
+  Future<void> displaySources() async {
     if (controller == null) {
       return;
     }
-    List<String> sources = await controller!.getSourceIds();
+    final sources = await controller!.getSourceIds();
     setState(() {
       data = 'Sources: ${sources.map((e) => '"$e"').join(', ')}';
     });
   }
 
-  void displayLayers() async {
+  Future<void> displayLayers() async {
     if (controller == null) {
       return;
     }
-    List<String> layers = (await controller!.getLayerIds()).cast<String>();
+    final layers = (await controller!.getLayerIds()).cast<String>();
     setState(() {
       data = 'Layers: ${layers.map((e) => '"$e"').join(', ')}';
     });

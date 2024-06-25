@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -87,7 +85,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _myLocationTrackingModeCycler() {
-    final MyLocationTrackingMode nextType = MyLocationTrackingMode.values[
+    final nextType = MyLocationTrackingMode.values[
         (_myLocationTrackingMode.index + 1) %
             MyLocationTrackingMode.values.length];
     return TextButton(
@@ -297,12 +295,11 @@ class MapUiBodyState extends State<MapUiBody> {
     return TextButton(
       child: const Text('get currently visible region'),
       onPressed: () async {
-        var result = await mapController!.getVisibleRegion();
+        final result = await mapController!.getVisibleRegion();
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              "SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),
+          content: Text("SW: ${result.southwest} NE: ${result.northeast}"),
         ));
       },
     );
@@ -312,7 +309,7 @@ class MapUiBodyState extends State<MapUiBody> {
     return TextButton(
       child: const Text('get source features (maplibre)'),
       onPressed: () async {
-        var result = await mapController!
+        final result = await mapController!
             .querySourceFeatures("maplibre", "centroids", null);
         debugPrint(result.toString());
       },
@@ -339,16 +336,16 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   _drawFill(List<dynamic> features) async {
-    Map<String, dynamic>? feature =
+    final Map<String, dynamic>? feature =
         features.firstWhereOrNull((f) => f['geometry']['type'] == 'Polygon');
 
     if (feature != null) {
-      List<List<LatLng>> geometry = feature['geometry']['coordinates']
+      final List<List<LatLng>> geometry = feature['geometry']['coordinates']
           .map(
               (ll) => ll.map((l) => LatLng(l[1], l[0])).toList().cast<LatLng>())
           .toList()
           .cast<List<LatLng>>();
-      Fill fill = await mapController!.addFill(FillOptions(
+      final fill = await mapController!.addFill(FillOptions(
         geometry: geometry,
         fillColor: "#FF0000",
         fillOutlineColor: "#FF0000",
@@ -362,7 +359,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   Widget build(BuildContext context) {
-    final MapLibreMap maplibreMap = MapLibreMap(
+    final maplibreMap = MapLibreMap(
       onMapCreated: onMapCreated,
       initialCameraPosition: _kInitialPosition,
       trackCameraPosition: true,
@@ -382,7 +379,7 @@ class MapUiBodyState extends State<MapUiBody> {
         debugPrint(
             "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
         debugPrint("Filter $_featureQueryFilter");
-        List features = await mapController!
+        final features = await mapController!
             .queryRenderedFeatures(point, [], _featureQueryFilter);
         if (!mounted) return;
 
@@ -400,17 +397,17 @@ class MapUiBodyState extends State<MapUiBody> {
       onMapLongClick: (point, latLng) async {
         debugPrint(
             "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        Point convertedPoint = await mapController!.toScreenLocation(latLng);
-        LatLng convertedLatLng = await mapController!.toLatLng(point);
+        final convertedPoint = await mapController!.toScreenLocation(latLng);
+        final convertedLatLng = await mapController!.toLatLng(point);
         debugPrint(
             "Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}");
-        double metersPerPixel =
+        final metersPerPixel =
             await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
 
         debugPrint(
             "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
 
-        List features =
+        final features =
             await mapController!.queryRenderedFeatures(point, [], null);
         if (features.isNotEmpty) {
           debugPrint(features[0]);
@@ -427,7 +424,7 @@ class MapUiBodyState extends State<MapUiBody> {
       },
     );
 
-    final List<Widget> listViewChildren = <Widget>[];
+    final listViewChildren = <Widget>[];
 
     if (mapController != null) {
       listViewChildren.addAll(
