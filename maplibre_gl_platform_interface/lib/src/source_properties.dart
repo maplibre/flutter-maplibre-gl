@@ -105,7 +105,7 @@ class VectorSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -236,7 +236,7 @@ class RasterSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -370,7 +370,7 @@ class RasterDemSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -554,7 +554,7 @@ class GeojsonSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -624,7 +624,7 @@ class VideoSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -674,7 +674,7 @@ class ImageSourceProperties implements SourceProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {

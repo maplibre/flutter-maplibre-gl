@@ -1,5 +1,3 @@
-library maplibre.util.evented;
-
 import 'dart:js';
 
 import 'package:maplibre_gl_web/src/geo/geojson.dart';

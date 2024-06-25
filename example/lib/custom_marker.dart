@@ -111,7 +111,7 @@ class CustomMarkerState extends State<CustomMarker> {
           //_measurePerformance();
 
           // Generate random markers
-          var param = <LatLng>[];
+          final param = <LatLng>[];
           for (var i = 0; i < randomMarkerNum; i++) {
             final lat = _rnd.nextDouble() * 20 + 30;
             final lng = _rnd.nextDouble() * 20 + 125;
@@ -120,7 +120,7 @@ class CustomMarkerState extends State<CustomMarker> {
 
           _mapController.toScreenLocationBatch(param).then((value) {
             for (var i = 0; i < randomMarkerNum; i++) {
-              var point =
+              final point =
                   Point<double>(value[i].x as double, value[i].y as double);
               _addMarker(point, param[i]);
             }
@@ -141,7 +141,7 @@ class CustomMarkerState extends State<CustomMarker> {
     }
 
     _mapController.toScreenLocation(const LatLng(0, 0));
-    Stopwatch sw = Stopwatch();
+    final sw = Stopwatch();
 
     for (final batch in batches) {
       //
@@ -149,9 +149,9 @@ class CustomMarkerState extends State<CustomMarker> {
       //
       for (var i = 0; i < trial; i++) {
         sw.start();
-        var list = <Future<Point<num>>>[];
+        final list = <Future<Point<num>>>[];
         for (var j = 0; j < batch; j++) {
-          var p = _mapController
+          final p = _mapController
               .toScreenLocation(LatLng(j.toDouble() % 80, j.toDouble() % 300));
           list.add(p);
         }
@@ -166,7 +166,7 @@ class CustomMarkerState extends State<CustomMarker> {
       //
       for (var i = 0; i < trial; i++) {
         sw.start();
-        var param = <LatLng>[];
+        final param = <LatLng>[];
         for (var j = 0; j < batch; j++) {
           param.add(LatLng(j.toDouble() % 80, j.toDouble() % 300));
         }

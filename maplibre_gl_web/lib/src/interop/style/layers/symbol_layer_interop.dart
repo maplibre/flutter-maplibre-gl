@@ -1,5 +1,3 @@
-library maplibre.interop.style.layers.symbol_layer;
-
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/symbol_layer.dart';
 
@@ -7,7 +5,7 @@ class SymbolLayerJsImpl {
   static toJs(SymbolLayer symbolLayer) => jsify(toDict(symbolLayer));
 
   static toDict(SymbolLayer symbolLayer) {
-    Map<String, dynamic> dict = {
+    final dict = <String, dynamic>{
       'id': symbolLayer.id,
       'type': 'symbol',
     };
@@ -45,7 +43,7 @@ class SymbolPaintJsImpl {
   static toJs(SymbolPaint symbolPaint) => jsify(toDict(symbolPaint));
 
   static toDict(SymbolPaint symbolPaint) {
-    Map<String, dynamic> dict = {};
+    final dict = <String, dynamic>{};
     if (symbolPaint.iconOpacity != null) {
       dict['icon-opacity'] = symbolPaint.iconOpacity;
     }
@@ -96,7 +94,7 @@ class SymbolLayoutJsImpl {
   static toJs(SymbolLayout symbolLayout) => jsify(toDict(symbolLayout));
 
   static toDict(SymbolLayout symbolLayout) {
-    Map<String, dynamic> dict = {};
+    final dict = <String, dynamic>{};
     if (symbolLayout.symbolAvoidEdges != null) {
       dict['symbol-avoid-edges'] = symbolLayout.symbolAvoidEdges;
     }

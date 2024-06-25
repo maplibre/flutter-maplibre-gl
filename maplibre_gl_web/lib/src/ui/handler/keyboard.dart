@@ -1,5 +1,3 @@
-library maplibre.ui.handler.keyboard;
-
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class KeyboardHandler extends JsObjectWrapper<KeyboardHandlerJsImpl> {

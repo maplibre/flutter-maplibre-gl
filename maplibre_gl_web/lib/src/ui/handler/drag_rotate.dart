@@ -1,5 +1,3 @@
-library maplibre.ui.handler.drag_rotate;
-
 import 'dart:html';
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';

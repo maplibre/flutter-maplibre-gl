@@ -1,5 +1,3 @@
-library maplibre.style.evaluation_parameters;
-
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class EvaluationParameters extends JsObjectWrapper<EvaluationParametersJsImpl> {

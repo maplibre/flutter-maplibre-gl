@@ -1,5 +1,3 @@
-library maplibre.style.style;
-
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/style/evaluation_parameters.dart';
 import 'package:maplibre_gl_web/src/style/style_image.dart';

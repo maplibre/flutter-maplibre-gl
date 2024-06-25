@@ -92,7 +92,7 @@ class CircleOptions {
   }
 
   dynamic toJson([bool addGeometry = true]) {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {

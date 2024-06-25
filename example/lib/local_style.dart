@@ -32,14 +32,14 @@ class LocalStyleState extends State<LocalStyle> {
     super.initState();
 
     getApplicationDocumentsDirectory().then((dir) async {
-      String documentDir = dir.path;
-      String stylesDir = '$documentDir/styles';
-      String styleJSON =
+      final documentDir = dir.path;
+      final stylesDir = '$documentDir/styles';
+      const styleJSON =
           '{"version":8,"name":"Demo style","center":[50,10],"zoom":4,"sources":{"demotiles":{"type":"vector","url":"https://demotiles.maplibre.org/tiles/tiles.json"}},"sprite":"","glyphs":"https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255, 255, 255, 1)"}},{"id":"countries","type":"line","source":"demotiles","source-layer":"countries","paint":{"line-color":"rgba(0, 0, 0, 1)","line-width":1,"line-opacity":1}}]}';
 
       await Directory(stylesDir).create(recursive: true);
 
-      File styleFile = File('$stylesDir/style.json');
+      final styleFile = File('$stylesDir/style.json');
 
       await styleFile.writeAsString(styleJSON);
 
