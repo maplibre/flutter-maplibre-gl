@@ -1,5 +1,3 @@
-library maplibre.interop;
-
 export 'geo/geojson_interop.dart';
 export 'geo/lng_lat_bounds_interop.dart';
 export 'geo/lng_lat_interop.dart';

@@ -50,8 +50,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   /// Adds an asset image as a source to the currently displayed style
   Future<void> addImageSourceFromAsset(
       String imageSourceId, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
     return controller.addImageSource(
       imageSourceId,
       list,
@@ -93,8 +93,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> updateImageSourceFromAsset(
       String imageSourceId, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
     return controller.updateImageSource(imageSourceId, list, null);
   }
 

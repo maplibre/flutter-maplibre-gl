@@ -1,5 +1,3 @@
-library maplibre.style.layers.layer;
-
 abstract class Layer {
   /// JS object.
   dynamic get jsObject => throw Exception('jsObject not implemented!');

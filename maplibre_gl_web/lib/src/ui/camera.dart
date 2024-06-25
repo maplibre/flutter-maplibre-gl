@@ -1,5 +1,3 @@
-library maplibre.ui.camera;
-
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';

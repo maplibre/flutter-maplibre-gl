@@ -49,8 +49,8 @@ class LineBodyState extends State<LineBody> {
 
   /// Adds an asset image to the currently displayed style
   Future<void> addImageFromAsset(String name, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
     return controller!.addImage(name, list);
   }
 
@@ -109,7 +109,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _changeLinePattern() async {
-    String? current =
+    final current =
         _selectedLine!.options.linePattern == null ? "assetImage" : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
@@ -117,7 +117,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _changeAlpha() async {
-    double? current = _selectedLine!.options.lineOpacity;
+    var current = _selectedLine!.options.lineOpacity;
     current ??= 1.0;
 
     await _updateSelectedLine(
@@ -126,7 +126,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _toggleVisible() async {
-    double? current = _selectedLine!.options.lineOpacity;
+    var current = _selectedLine!.options.lineOpacity;
     current ??= 1.0;
     await _updateSelectedLine(
       LineOptions(lineOpacity: current == 0.0 ? 1.0 : 0.0),
@@ -213,9 +213,9 @@ class LineBodyState extends State<LineBody> {
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  var latLngs = await controller!
+                                  final latLngs = await controller!
                                       .getLineLatLngs(_selectedLine!);
-                                  for (var latLng in latLngs) {
+                                  for (final latLng in latLngs) {
                                     debugPrint(latLng.toString());
                                   }
                                 },

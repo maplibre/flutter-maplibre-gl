@@ -1,5 +1,3 @@
-library maplibre.ui.handler.scroll_zoom;
-
 import 'dart:html';
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';

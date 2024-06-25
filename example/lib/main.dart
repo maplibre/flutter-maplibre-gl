@@ -85,7 +85,7 @@ class _MapsDemoState extends State<MapsDemo> {
     }
   }
 
-  void _pushPage(BuildContext context, ExamplePage page) async {
+  Future<void> _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb && page.needsLocationPermission) {
       final location = Location();
       final hasPermissions = await location.hasPermission();

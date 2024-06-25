@@ -65,7 +65,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
       required origin,
       required point,
       required eventType}) {
-    DragEventType type = eventType;
+    final DragEventType type = eventType;
     switch (type) {
       case DragEventType.start:
         // TODO: Handle this case.
@@ -85,8 +85,8 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
 
   /// Adds an asset image to the currently displayed style
   Future<void> addImageFromAsset(String name, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
     return controller!.addImage(name, list);
   }
 
@@ -127,7 +127,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   void _changePosition() {
-    List<List<LatLng>>? geometry = _selectedFill!.options.geometry;
+    var geometry = _selectedFill!.options.geometry;
 
     geometry ??= _defaultGeometry;
 
@@ -142,7 +142,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   void _changeDraggable() {
-    bool? draggable = _selectedFill!.options.draggable;
+    var draggable = _selectedFill!.options.draggable;
     draggable ??= false;
     _updateSelectedFill(
       FillOptions(draggable: !draggable),
@@ -150,7 +150,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   Future<void> _changeFillOpacity() async {
-    double? current = _selectedFill!.options.fillOpacity;
+    var current = _selectedFill!.options.fillOpacity;
     current ??= 1.0;
 
     _updateSelectedFill(
@@ -159,7 +159,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   Future<void> _changeFillColor() async {
-    String? current = _selectedFill!.options.fillColor;
+    var current = _selectedFill!.options.fillColor;
     current ??= "#FF0000";
 
     _updateSelectedFill(
@@ -168,7 +168,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   Future<void> _changeFillOutlineColor() async {
-    String? current = _selectedFill!.options.fillOutlineColor;
+    var current = _selectedFill!.options.fillOutlineColor;
     current ??= "#FF0000";
 
     _updateSelectedFill(
@@ -177,7 +177,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   Future<void> _changeFillPattern() async {
-    String? current =
+    final current =
         _selectedFill!.options.fillPattern == null ? "assetImage" : null;
     _updateSelectedFill(
       FillOptions(fillPattern: current),
