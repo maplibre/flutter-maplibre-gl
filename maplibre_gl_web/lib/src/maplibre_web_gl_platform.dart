@@ -1160,7 +1160,6 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Method to set style string
   /// [styleString] -> It will take json, url, absolute path or asset path
-  ///
   @override
   Future<void> setStyle(String styleString) async {
     _map.setStyle(styleString);
