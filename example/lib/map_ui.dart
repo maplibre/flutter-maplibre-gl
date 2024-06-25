@@ -62,6 +62,7 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _telemetryEnabled = true;
   bool _countriesVisible = true;
   MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.none;
+  MyLocationRenderMode _myLocationRenderMode = MyLocationRenderMode.normal;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
 
@@ -94,6 +95,22 @@ class MapUiBodyState extends State<MapUiBody> {
           _myLocationTrackingMode = nextType;
         });
       },
+    );
+  }
+
+  Widget _myLocationRenderModeCycler() {
+    final MyLocationRenderMode nextType = MyLocationRenderMode.values[
+        (_myLocationRenderMode.index + 1) % MyLocationRenderMode.values.length];
+    return TextButton(
+      onPressed:
+          _myLocationEnabled == true || nextType == MyLocationRenderMode.normal
+              ? () {
+                  setState(() {
+                    _myLocationRenderMode = nextType;
+                  });
+                }
+              : null,
+      child: Text('change to $nextType'),
     );
   }
 
@@ -251,12 +268,14 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _myLocationToggler() {
     return TextButton(
+      onPressed: _myLocationRenderMode == MyLocationRenderMode.normal
+          ? () {
+              setState(() {
+                _myLocationEnabled = !_myLocationEnabled;
+              });
+            }
+          : null,
       child: Text('${_myLocationEnabled ? 'disable' : 'enable'} my location'),
-      onPressed: () {
-        setState(() {
-          _myLocationEnabled = !_myLocationEnabled;
-        });
-      },
     );
   }
 
@@ -355,7 +374,7 @@ class MapUiBodyState extends State<MapUiBody> {
       doubleClickZoomEnabled: _doubleClickToZoomEnabled,
       myLocationEnabled: _myLocationEnabled,
       myLocationTrackingMode: _myLocationTrackingMode,
-      myLocationRenderMode: MyLocationRenderMode.gps,
+      myLocationRenderMode: _myLocationRenderMode,
       onMapClick: (point, latLng) async {
         debugPrint(
             "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
@@ -420,6 +439,7 @@ class MapUiBodyState extends State<MapUiBody> {
           _queryFilterToggler(),
           _compassToggler(),
           _myLocationTrackingModeCycler(),
+          _myLocationRenderModeCycler(),
           _latLngBoundsToggler(),
           _setStyleToSatellite(),
           _zoomBoundsToggler(),
