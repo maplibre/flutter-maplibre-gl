@@ -99,7 +99,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _myLocationRenderModeCycler() {
-    final MyLocationRenderMode nextType = MyLocationRenderMode.values[
+    final nextType = MyLocationRenderMode.values[
         (_myLocationRenderMode.index + 1) % MyLocationRenderMode.values.length];
     return TextButton(
       onPressed:
