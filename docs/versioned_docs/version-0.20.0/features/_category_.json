@@ -1,0 +1,8 @@
+{
+  "label": "Features",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Dive in to the features MapLibre GL for Flutter provides."
+  }
+}
