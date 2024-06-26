@@ -30,7 +30,7 @@ jobs:
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
-        run: melos analyze
+        run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
 
   build-android:
     name: "Build Android apk"
