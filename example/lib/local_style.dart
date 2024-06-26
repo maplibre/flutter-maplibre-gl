@@ -51,12 +51,20 @@ class LocalStyleState extends State<LocalStyle> {
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
+
+    // Adding style to the map with some delay
+    Future.delayed(
+      const Duration(milliseconds: 250),
+      () async {
+        if (styleAbsoluteFilePath != null) {
+          await mapController?.setStyle(styleAbsoluteFilePath!);
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final styleAbsoluteFilePath = this.styleAbsoluteFilePath;
-
     if (styleAbsoluteFilePath == null) {
       return const Scaffold(
         body: Center(child: Text('Creating local style file...')),
@@ -64,12 +72,12 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
-        body: MapLibreMap(
-      styleString: styleAbsoluteFilePath,
-      onMapCreated: _onMapCreated,
-      initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
-      onStyleLoadedCallback: onStyleLoadedCallback,
-    ));
+      body: MapLibreMap(
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
+        onStyleLoadedCallback: onStyleLoadedCallback,
+      ),
+    );
   }
 
   void onStyleLoadedCallback() {}
