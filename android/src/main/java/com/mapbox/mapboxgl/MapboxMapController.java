@@ -1997,7 +1997,10 @@ final class MapboxMapController
 
   private void updateMyLocationEnabled() {
     if (this.locationComponent == null && myLocationEnabled) {
-      enableLocationComponent(mapboxMap.getStyle());
+      Style style = mapboxMap.getStyle();
+      if(style != null) {
+        enableLocationComponent(style);
+      }
     }
 
     if (myLocationEnabled) {
