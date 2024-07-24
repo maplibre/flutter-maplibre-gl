@@ -929,7 +929,32 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             var reply = [String: NSObject]()
             reply["filter"] = currentLayerFilter as NSObject
             result(reply)
-            
+
+        case "style#setStyle":
+            if let arguments = methodCall.arguments as? [String: Any] {
+              if let style = arguments["style"] as? String {
+                setStyleString(styleString: style)
+                result(nil)
+              } else {
+                // Error for missing style key in argument
+                result(
+                    FlutterError(
+                        code: "invalidStyleString",
+                        message: "Missing style key in arguments",
+                        details: nil
+                    )
+                )
+              }
+            } else {
+              // Error for invalid arguments type
+              result(
+                  FlutterError(
+                      code: "invalidArgumentsType",
+                      message: "Arguments not of type [String: Any]",
+                      details: nil
+                  )
+              )
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
