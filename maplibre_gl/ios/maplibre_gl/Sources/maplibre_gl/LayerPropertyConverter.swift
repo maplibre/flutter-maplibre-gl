@@ -383,7 +383,7 @@ class LayerPropertyConverter {
                         }
                     }
                 // checks on the value of properties that are arrays
-                } else if vector.count == 2, let x = vector.first as? Double, let y = vector.last as? Double {
+                } else if offset.count == 2, let x = offset.first as? Double, let y = offset.last as? Double {
                     if isOffset || isTranslate {
                         // this is required because NSExpression.init(mglJSONObject: json) fails to create
                         // a proper Expression if the data of an array is destined for a CGVector
