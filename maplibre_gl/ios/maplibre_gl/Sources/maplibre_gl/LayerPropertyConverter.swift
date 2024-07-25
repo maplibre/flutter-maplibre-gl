@@ -354,6 +354,8 @@ class LayerPropertyConverter {
 
     private class func interpretExpression(propertyName: String, expression: String) -> NSExpression? {
         let isColor = propertyName.contains("color");
+        let isOffset = propertyName.contains("offset");
+        let isTranslate = propertyName.contains("translate");
 
         do {
             let json = try JSONSerialization.jsonObject(with: expression.data(using: .utf8)!, options: .fragmentsAllowed)
@@ -364,20 +366,34 @@ class LayerPropertyConverter {
                     return NSExpression(forConstantValue: UIColor(hexString: color))
                 }
             }
-            // this is required because NSExpression.init(mglJSONObject: json) fails to create
-            // a proper Expression if the data of a literal is an array
+
             if let offset = json as? [Any]{
+                // checks on the value of property that are literal expressions
                 if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
                     if let vector = offset.last as? [Any]{
                         if(vector.count == 2) {
-                            if let x = vector.first as? Double, let y = vector.last as? Double {
+                            if isOffset || isTranslate {
+                                // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                                // a proper Expression if the data of a literal is an array destined for a CGVector
+                                if let x = vector.first as? Double, let y = vector.last as? Double {
+                                    return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
+                                }
+                            }
+                            return NSExpression.init(mglJSONObject: json)
+                        } else if vector.count == 2, let x = vector.first as? Double, let y = vector.last as? Double {
+                            if isOffset || isTranslate {
+                                // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                                // a proper Expression if the data of an array is destined for a CGVector
                                 return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
                             }
-                    
+                            // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                            // a proper Expression if the data is an array of double
+                            return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
                         }
                     }
                 }
             }
+            
             return NSExpression.init(mglJSONObject: json)
         } catch {
         }
