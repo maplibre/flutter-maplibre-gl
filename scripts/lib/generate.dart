@@ -103,9 +103,14 @@ List<Map<String, dynamic>> buildStyleProperties(
 
 Map<String, dynamic> buildStyleProperty(
     String key, Map<String, dynamic> value) {
+  final typeDart = dartTypeMappingTable[value["type"]];
+  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+      dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
+
   return <String, dynamic>{
     'value': key,
+    'isFloatArrayProperty': typeDart == "List" && nestedTypeDart == "double",
     'isVisibilityProperty': key == "visibility",
     'requiresLiteral': key == "icon-image",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),

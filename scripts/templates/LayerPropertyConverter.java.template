@@ -11,10 +11,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-
 
 import static org.maplibre.maplibregl.Convert.toMap;
 
@@ -30,22 +30,39 @@ class LayerPropertyConverter {
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         {{#paint_properties}}
+        {{^isFloatArrayProperty}}
         case "{{value}}":
           properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+        {{/isFloatArrayProperty}}
+        {{#isFloatArrayProperty}}
+        case "{{value}}":
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.{{valueAsCamelCase}}(floatArray));
+            } else {
+              properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+          }
+        {{/isFloatArrayProperty}}
           break;
         {{/paint_properties}}
         {{#layout_properties}}
+        {{^isFloatArrayProperty}}
         {{^isVisibilityProperty}}
         {{^requiresLiteral}}
         case "{{value}}":
           properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
         {{/requiresLiteral}}
         {{/isVisibilityProperty}}
+        {{/isFloatArrayProperty}}
         {{#requiresLiteral}}
         case "{{value}}":
-          if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()){
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
-          }else{
+          } else {
             properties.add(PropertyFactory.iconImage(expression));
           }
         {{/requiresLiteral}}
@@ -53,6 +70,19 @@ class LayerPropertyConverter {
         case "{{value}}":
           properties.add(PropertyFactory.{{valueAsCamelCase}}(entry.getValue().substring(1, entry.getValue().length() - 1)));
         {{/isVisibilityProperty}}
+        {{#isFloatArrayProperty}}
+        case "{{value}}":
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.{{valueAsCamelCase}}(floatArray));
+            } else {
+              properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+          }
+        {{/isFloatArrayProperty}}
           break;
         {{/layout_properties}}
         default:
@@ -64,4 +94,21 @@ class LayerPropertyConverter {
   }
 
 {{/layerTypes}}
+  private static boolean isNumber(JsonElement element) {
+    return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+  }
+
+  private static Float[] convertJsonToFloatArray(JsonElement jsonElement) {
+    final JsonArray jsonArray = jsonElement.getAsJsonArray();
+    Float[] floatArray = new Float[jsonArray.size()];
+
+    for (int i = 0; i < jsonArray.size(); i++) {
+      if (jsonArray.get(i).isJsonPrimitive() && jsonArray.get(i).getAsJsonPrimitive().isNumber()) {
+        floatArray[i] = jsonArray.get(i).getAsFloat();
+      } else {
+        return null;
+      }
+    }
+    return floatArray;
+  }
 }
