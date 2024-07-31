@@ -13,6 +13,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
+import android.view.TextureView.SurfaceTextureListener;
 import android.location.Location;
 import android.os.Build;
 import android.util.DisplayMetrics;
@@ -21,6 +23,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -220,6 +223,7 @@ final class MapLibreMapController
   @Override
   public void onMapReady(MapLibreMap mapLibreMap) {
     this.mapLibreMap = mapLibreMap;
+    installInvalidator();
     if (mapReadyResult != null) {
       mapReadyResult.success(null);
       mapReadyResult = null;
@@ -253,6 +257,72 @@ final class MapLibreMapController
     mapView.addOnDidBecomeIdleListener(this);
 
     setStyleString(styleStringInitial);
+  }
+
+  // Returns the first TextureView found in the view hierarchy.
+  private static TextureView findTextureView(ViewGroup group) {
+    final int n = group.getChildCount();
+    for (int i = 0; i < n; i++) {
+      View view = group.getChildAt(i);
+      if (view instanceof TextureView) {
+        return (TextureView) view;
+      }
+      if (view instanceof ViewGroup) {
+        TextureView r = findTextureView((ViewGroup) view);
+        if (r != null) {
+          return r;
+        }
+      }
+    }
+    return null;
+  }
+
+  // from https://github.com/maplibre/flutter-maplibre-gl/pull/364/files
+  private void installInvalidator() {
+    if (mapView == null) {
+      // This should only happen in tests.
+      return;
+    }
+    TextureView textureView = findTextureView(mapView);
+    if (textureView == null) {
+      Log.i(TAG, "No TextureView found. Likely using the LEGACY renderer.");
+      return;
+    }
+    Log.i(TAG, "Installing custom TextureView driven invalidator.");
+    SurfaceTextureListener internalListener = textureView.getSurfaceTextureListener();
+    // Override the Maps internal SurfaceTextureListener with our own. Our listener
+    // mostly just invokes the internal listener callbacks but in onSurfaceTextureUpdated
+    // the mapView is invalidated which ensures that all map updates are presented to the
+    // screen.
+    final MapView mapView = this.mapView;
+    textureView.setSurfaceTextureListener(
+            new TextureView.SurfaceTextureListener() {
+              public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                if (internalListener != null) {
+                  internalListener.onSurfaceTextureAvailable(surface, width, height);
+                }
+              }
+
+              public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                if (internalListener != null) {
+                  return internalListener.onSurfaceTextureDestroyed(surface);
+                }
+                return true;
+              }
+
+              public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                if (internalListener != null) {
+                  internalListener.onSurfaceTextureSizeChanged(surface, width, height);
+                }
+              }
+
+              public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+                if (internalListener != null) {
+                  internalListener.onSurfaceTextureUpdated(surface);
+                }
+                mapView.postInvalidate();
+              }
+            });
   }
 
   @Override
