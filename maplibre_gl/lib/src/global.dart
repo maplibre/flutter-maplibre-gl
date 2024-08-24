@@ -26,6 +26,13 @@ Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       },
     );
 
+Future<dynamic> setConnected(bool connected) => _globalChannel.invokeMethod(
+  'setConnected',
+  <String, dynamic>{
+    'connected': connected,
+  },
+);
+
 Future<void> setHttpHeaders(Map<String, String> headers) {
   return _globalChannel.invokeMethod(
     'setHttpHeaders',
