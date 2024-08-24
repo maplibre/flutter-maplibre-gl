@@ -79,8 +79,8 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         result.success(null);
         break;
       case "setOffline":
-        Boolean offline = methodCall.argument("offline");
-        ConnectivityReceiver.instance(context).setConnected(offline!=null ? !offline : null);
+        boolean offline = methodCall.argument("offline");
+        ConnectivityReceiver.instance(context).setConnected(!offline);
         result.success(null);
         break;
       case "mergeOfflineRegions":
