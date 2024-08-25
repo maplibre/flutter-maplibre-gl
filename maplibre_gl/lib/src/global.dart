@@ -19,12 +19,19 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
 
 enum DragEventType { start, drag, end }
 
-Future<dynamic> setOffline(bool? offline) => _globalChannel.invokeMethod(
+Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{
         'offline': offline,
       },
     );
+
+Future<dynamic> setConnected(bool connected) => _globalChannel.invokeMethod(
+  'setConnected',
+  <String, dynamic>{
+    'connected': connected,
+  },
+);
 
 Future<void> setHttpHeaders(Map<String, String> headers) {
   return _globalChannel.invokeMethod(
