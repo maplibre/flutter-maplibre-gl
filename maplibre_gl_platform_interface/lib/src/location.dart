@@ -84,6 +84,21 @@ class LatLngBounds {
     return <dynamic>[southwest.toJson(), northeast.toJson()];
   }
 
+  bool contains({required LatLng point}) {
+    final bool isLatitudeInBounds = point.latitude >= southwest.latitude &&
+        point.latitude <= northeast.latitude;
+
+    final bool isLongitudeInBounds;
+    if (southwest.longitude <= northeast.longitude) {
+      isLongitudeInBounds = point.longitude >= southwest.longitude &&
+          point.longitude <= northeast.longitude;
+    } else {
+      isLongitudeInBounds = point.longitude >= southwest.longitude ||
+          point.longitude <= northeast.longitude;
+    }
+
+    return isLatitudeInBounds && isLongitudeInBounds;
+  }
   @visibleForTesting
   static LatLngBounds? fromList(dynamic json) {
     if (json == null) {
