@@ -97,6 +97,12 @@ class LayerPropertyConverter {
         case "icon-rotation-alignment":
           properties.add(PropertyFactory.iconRotationAlignment(expression));
           break;
+        case "icon-allow-ovelap":
+          properties.add(PropertyFactory.iconAllowOverlap(expression));
+        case "icon-ignore-placement":
+          properties.add(PropertyFactory.iconIgnorePlacement(expression));
+        case "icon-optional":
+          properties.add(PropertyFactory.iconOptional(expression));
         case "icon-size":
           properties.add(PropertyFactory.iconSize(expression));
           break;

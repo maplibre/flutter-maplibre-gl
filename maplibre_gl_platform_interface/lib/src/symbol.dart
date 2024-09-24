@@ -61,6 +61,8 @@ class SymbolOptions {
   /// symbol defaults or current configuration.
   const SymbolOptions({
     this.iconAllowOverlap,
+    this.iconIgnorePlacement,
+    this.iconOptional,
     this.iconSize,
     this.iconImage,
     this.iconRotate,
@@ -92,6 +94,8 @@ class SymbolOptions {
   });
 
   final bool? iconAllowOverlap;
+  final bool? iconIgnorePlacement;
+  final bool? iconOptional;
   final double? iconSize;
   final String? iconImage;
   final double? iconRotate;
@@ -127,6 +131,8 @@ class SymbolOptions {
 
   SymbolOptions copyWith(SymbolOptions changes) {
     return SymbolOptions(
+      iconOptional: changes.iconOptional ?? iconOptional,
+      iconIgnorePlacement: changes.iconIgnorePlacement ?? iconIgnorePlacement,
       iconAllowOverlap: changes.iconAllowOverlap ?? iconAllowOverlap,
       iconSize: changes.iconSize ?? iconSize,
       iconImage: changes.iconImage ?? iconImage,
@@ -168,6 +174,9 @@ class SymbolOptions {
       }
     }
 
+    addIfPresent('iconOptional', iconOptional);
+    addIfPresent('iconIgnorePlacement', iconIgnorePlacement);
+    addIfPresent('iconOptional', iconOptional);
     addIfPresent('iconAllowOverlap', iconAllowOverlap);
     addIfPresent('iconSize', iconSize);
     addIfPresent('iconImage', iconImage);

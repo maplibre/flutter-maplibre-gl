@@ -931,11 +931,13 @@ class SymbolLayerProperties implements LayerProperties {
     addIfPresent('symbol-avoid-edges', symbolAvoidEdges);
     addIfPresent('symbol-sort-key', symbolSortKey);
     addIfPresent('symbol-z-order', symbolZOrder);
-    addIfPresent('icon-allow-overlap', iconAllowOverlap);
     addIfPresent('icon-ignore-placement', iconIgnorePlacement);
     addIfPresent('icon-optional', iconOptional);
     addIfPresent('icon-rotation-alignment', iconRotationAlignment);
     addIfPresent('icon-size', iconSize);
+    addIfPresent('icon-allow-overlap', iconAllowOverlap);
+    addIfPresent('icon-ignore-placement', iconIgnorePlacement);
+    addIfPresent('icon-optional', iconOptional);
     addIfPresent('icon-text-fit', iconTextFit);
     addIfPresent('icon-text-fit-padding', iconTextFitPadding);
     addIfPresent('icon-image', iconImage);

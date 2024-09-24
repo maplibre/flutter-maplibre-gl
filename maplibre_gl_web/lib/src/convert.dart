@@ -208,6 +208,15 @@ class Convert {
     if (options.iconSize != null) {
       properties['iconSize'] = options.iconSize;
     }
+    if (options.iconAllowOverlap != null) {
+      properties['iconAllowOverlap'] = options.iconAllowOverlap;
+    }
+    if (options.iconIgnorePlacement != null) {
+      properties['iconIgnorePlacement'] = options.iconIgnorePlacement;
+    }
+    if (options.iconOptional != null) {
+      properties['iconOptional'] = options.iconOptional;
+    }
     if (options.iconImage != null) {
       properties['iconImage'] = options.iconImage;
     }
