@@ -33,6 +33,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mapbox.android.gestures.AndroidGesturesManager;
 import com.mapbox.android.gestures.MoveGestureDetector;
+import org.maplibre.android.location.engine.LocationEngine;
+import org.maplibre.android.location.engine.LocationEngineDefault;
+import org.maplibre.android.location.engine.LocationEngineProxy;
+import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.camera.CameraPosition;
@@ -1841,6 +1845,20 @@ final class MapLibreMapController
   @Override
   public void setCameraTargetBounds(LatLngBounds bounds) {
     this.bounds = bounds;
+  }
+
+  @Override
+  public void setLocationEngineProperties(LocationEngineRequest locationEngineRequest){
+    if(locationComponent != null){
+        if(locationEngineRequest.getPriority() == LocationEngineRequest.PRIORITY_HIGH_ACCURACY){
+            locationComponent.setLocationEngine(new LocationEngineProxy(
+                new MapLibreGPSLocationEngine(context)));
+     } else {
+       locationComponent.setLocationEngine(
+               LocationEngineDefault.INSTANCE.getDefaultLocationEngine(context));
+            }
+      locationComponent.setLocationEngineRequest(locationEngineRequest);
+    }
   }
 
   @Override
