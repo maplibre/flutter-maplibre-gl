@@ -904,7 +904,7 @@ class SymbolLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -1229,7 +1229,7 @@ class CircleLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -1533,7 +1533,7 @@ class LineLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -1720,7 +1720,7 @@ class FillLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -1901,7 +1901,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -2078,7 +2078,7 @@ class RasterLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -2228,7 +2228,7 @@ class HillshadeLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
@@ -2358,7 +2358,7 @@ class HeatmapLayerProperties implements LayerProperties {
 
   @override
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {

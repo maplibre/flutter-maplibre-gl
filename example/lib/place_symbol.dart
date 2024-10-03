@@ -60,14 +60,14 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds an asset image to the currently displayed style
   Future<void> addImageFromAsset(String name, String assetName) async {
-    final ByteData bytes = await rootBundle.load(assetName);
-    final Uint8List list = bytes.buffer.asUint8List();
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
     return controller!.addImage(name, list);
   }
 
   /// Adds a network image to the currently displayed style
   Future<void> addImageFromUrl(String name, Uri uri) async {
-    var response = await http.get(uri);
+    final response = await http.get(uri);
     return controller!.addImage(name, response.bodyBytes);
   }
 
@@ -85,13 +85,13 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) async {
+  Future<void> _updateSelectedSymbol(SymbolOptions changes) async {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
   void _add(String iconImage) {
-    List<int> availableNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    final availableNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
     if (availableNumbers.isNotEmpty) {
@@ -105,7 +105,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   SymbolOptions _getSymbolOptions(String iconImage, int symbolCount) {
-    LatLng geometry = LatLng(
+    final geometry = LatLng(
       center.latitude + sin(symbolCount * pi / 6.0) / 20.0,
       center.longitude + cos(symbolCount * pi / 6.0) / 20.0,
     );
@@ -133,13 +133,13 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _addAll(String iconImage) async {
-    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
-    for (var s in controller!.symbols) {
+    final symbolsToAddNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
       symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']);
     }
 
     if (symbolsToAddNumbers.isNotEmpty) {
-      final List<SymbolOptions> symbolOptionsList = symbolsToAddNumbers
+      final symbolOptionsList = symbolsToAddNumbers
           .map((i) => _getSymbolOptions(iconImage, i))
           .toList();
       controller!.addSymbols(symbolOptionsList,
@@ -168,8 +168,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _changePosition() {
-    final LatLng current = _selectedSymbol!.options.geometry!;
-    final Offset offset = Offset(
+    final current = _selectedSymbol!.options.geometry!;
+    final offset = Offset(
       center.latitude - current.latitude,
       center.longitude - current.longitude,
     );
@@ -184,14 +184,14 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _changeIconOffset() {
-    Offset? currentAnchor = _selectedSymbol!.options.iconOffset;
-    currentAnchor ??= const Offset(0.0, 0.0);
-    final Offset newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
+    var currentAnchor = _selectedSymbol!.options.iconOffset;
+    currentAnchor ??= Offset.zero;
+    final newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
     _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
   }
 
   Future<void> _changeIconAnchor() async {
-    String? current = _selectedSymbol!.options.iconAnchor;
+    var current = _selectedSymbol!.options.iconAnchor;
     if (current == null || current == 'center') {
       current = 'bottom';
     } else {
@@ -203,7 +203,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _toggleDraggable() async {
-    bool? draggable = _selectedSymbol!.options.draggable;
+    var draggable = _selectedSymbol!.options.draggable;
     draggable ??= false;
 
     _updateSelectedSymbol(
@@ -212,7 +212,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _changeAlpha() async {
-    double? current = _selectedSymbol!.options.iconOpacity;
+    var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
     _updateSelectedSymbol(
@@ -221,7 +221,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _changeRotation() async {
-    double? current = _selectedSymbol!.options.iconRotate;
+    var current = _selectedSymbol!.options.iconRotate;
     current ??= 0;
     _updateSelectedSymbol(
       SymbolOptions(iconRotate: current == 330.0 ? 0.0 : current + 30.0),
@@ -229,7 +229,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _toggleVisible() async {
-    double? current = _selectedSymbol!.options.iconOpacity;
+    var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
     _updateSelectedSymbol(
@@ -238,14 +238,14 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> _changeZIndex() async {
-    int? current = _selectedSymbol!.options.zIndex;
+    var current = _selectedSymbol!.options.zIndex;
     current ??= 0;
     _updateSelectedSymbol(
       SymbolOptions(zIndex: current == 12 ? 0 : current + 1),
     );
   }
 
-  void _getLatLng() async {
+  Future<void> _getLatLng() async {
     final latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
     if (!mounted) return;
 

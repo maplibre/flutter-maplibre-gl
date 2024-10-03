@@ -23,12 +23,11 @@ class ArgumentCallbacks<T> {
   /// method and is unaffected by any changes subsequently made to this
   /// collection.
   void call(T argument) {
-    final int length = _callbacks.length;
+    final length = _callbacks.length;
     if (length == 1) {
       _callbacks[0].call(argument);
     } else if (0 < length) {
-      for (ArgumentCallback<T> callback
-          in List<ArgumentCallback<T>>.from(_callbacks)) {
+      for (final callback in List<ArgumentCallback<T>>.from(_callbacks)) {
         callback(argument);
       }
     }

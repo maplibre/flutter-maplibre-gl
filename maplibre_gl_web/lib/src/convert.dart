@@ -203,7 +203,7 @@ class Convert {
 
   static Feature interpretSymbolOptions(
       SymbolOptions options, Feature feature) {
-    var properties = feature.properties;
+    final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.iconSize != null) {
       properties['iconSize'] = options.iconSize;
@@ -299,7 +299,7 @@ class Convert {
   }
 
   static Feature interpretLineOptions(LineOptions options, Feature feature) {
-    var properties = feature.properties;
+    final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.lineJoin != null) {
       properties['lineJoin'] = options.lineJoin;
@@ -341,7 +341,7 @@ class Convert {
 
   static Feature interpretCircleOptions(
       CircleOptions options, Feature feature) {
-    var properties = feature.properties;
+    final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.circleRadius != null) {
       properties['circleRadius'] = options.circleRadius;
@@ -378,9 +378,9 @@ class Convert {
 
   static List<List<List<double>>> fillGeometryToFeatureGeometry(
       List<List<LatLng>> geom) {
-    List<List<List<double>>> convertedFill = [];
+    final convertedFill = <List<List<double>>>[];
     for (final ring in geom) {
-      List<List<double>> convertedRing = [];
+      final convertedRing = <List<double>>[];
       for (final coords in ring) {
         convertedRing.add([coords.longitude, coords.latitude]);
       }
@@ -391,9 +391,9 @@ class Convert {
 
   static List<List<LatLng>> featureGeometryToFillGeometry(
       List<List<List<double>>> geom) {
-    List<List<LatLng>> convertedFill = [];
+    final convertedFill = <List<LatLng>>[];
     for (final ring in geom) {
-      List<LatLng> convertedRing = [];
+      final convertedRing = <LatLng>[];
       for (final coords in ring) {
         convertedRing.add(LatLng(coords[1], coords[0]));
       }
@@ -403,7 +403,7 @@ class Convert {
   }
 
   static Feature intepretFillOptions(FillOptions options, Feature feature) {
-    var properties = feature.properties;
+    final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.draggable != null) {
       properties['draggable'] = options.draggable;

@@ -31,71 +31,65 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     return Column(
       children: <Widget>[
         Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: Column(
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 5.0),
-                  child: Text(
-                      'This map has polygones (fill) above all other anotations (default behavior)'),
-                ),
-                Center(
-                  child: SizedBox(
-                    width: 250.0,
-                    height: 250.0,
-                    child: MapLibreMap(
-                      onMapCreated: onMapCreatedOne,
-                      onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
-                      initialCameraPosition: CameraPosition(
-                        target: center,
-                        zoom: 5.0,
-                      ),
-                      annotationOrder: const [
-                        AnnotationType.line,
-                        AnnotationType.symbol,
-                        AnnotationType.circle,
-                        AnnotationType.fill,
-                      ],
+          child: Column(
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.only(bottom: 5.0),
+                child: Text(
+                    'This map has polygones (fill) above all other anotations (default behavior)'),
+              ),
+              Center(
+                child: SizedBox(
+                  width: 250.0,
+                  height: 250.0,
+                  child: MapLibreMap(
+                    onMapCreated: onMapCreatedOne,
+                    onStyleLoadedCallback: () => onStyleLoaded(controllerOne),
+                    initialCameraPosition: CameraPosition(
+                      target: center,
+                      zoom: 5.0,
                     ),
+                    annotationOrder: const [
+                      AnnotationType.line,
+                      AnnotationType.symbol,
+                      AnnotationType.circle,
+                      AnnotationType.fill,
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: Column(
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
-                  child: Text(
-                      'This map has polygones (fill) under all other anotations'),
-                ),
-                Center(
-                  child: SizedBox(
-                    width: 250.0,
-                    height: 250.0,
-                    child: MapLibreMap(
-                      onMapCreated: onMapCreatedTwo,
-                      onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
-                      initialCameraPosition: CameraPosition(
-                        target: center,
-                        zoom: 5.0,
-                      ),
-                      annotationOrder: const [
-                        AnnotationType.fill,
-                        AnnotationType.line,
-                        AnnotationType.symbol,
-                        AnnotationType.circle,
-                      ],
+          child: Column(
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
+                child: Text(
+                    'This map has polygones (fill) under all other anotations'),
+              ),
+              Center(
+                child: SizedBox(
+                  width: 250.0,
+                  height: 250.0,
+                  child: MapLibreMap(
+                    onMapCreated: onMapCreatedTwo,
+                    onStyleLoadedCallback: () => onStyleLoaded(controllerTwo),
+                    initialCameraPosition: CameraPosition(
+                      target: center,
+                      zoom: 5.0,
                     ),
+                    annotationOrder: const [
+                      AnnotationType.fill,
+                      AnnotationType.line,
+                      AnnotationType.symbol,
+                      AnnotationType.circle,
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -110,7 +104,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     controllerTwo = controller;
   }
 
-  void onStyleLoaded(MapLibreMapController controller) async {
+  Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
         controller, "custom-marker", "assets/symbols/custom-marker.png");
     controller.addSymbol(

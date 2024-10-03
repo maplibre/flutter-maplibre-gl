@@ -1,5 +1,3 @@
-library maplibre.style.sources.source;
-
 abstract class Source<T> {
   final T jsObject;
 
