@@ -160,12 +160,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         case "map#clearAmbientCache":
             MLNOfflineStorage.shared.clearAmbientCache {
-                 error in
-                 if let error = error {
-                     result(error)
-                 } else {
-                     result(nil)
-                 }
+                error in
+                if let error = error {
+                    result(error)
+                } else {
+                    result(nil)
+                }
             }
         case "map#updateMyLocationTrackingMode":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
