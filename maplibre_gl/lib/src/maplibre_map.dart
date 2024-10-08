@@ -343,27 +343,26 @@ class _MapLibreMapState extends State<MapLibreMap> {
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
 class _MapLibreMapOptions {
-  _MapLibreMapOptions({
-    this.compassEnabled,
-    this.cameraTargetBounds,
-    this.styleString,
-    this.minMaxZoomPreference,
-    required this.rotateGesturesEnabled,
-    required this.scrollGesturesEnabled,
-    required this.tiltGesturesEnabled,
-    required this.zoomGesturesEnabled,
-    required this.doubleClickZoomEnabled,
-    this.trackCameraPosition,
-    this.myLocationEnabled,
-    this.myLocationTrackingMode,
-    this.myLocationRenderMode,
-    this.logoViewMargins,
-    this.compassViewPosition,
-    this.compassViewMargins,
-    this.attributionButtonPosition,
-    this.attributionButtonMargins,
-    this.locationEnginePlatforms
-  });
+  _MapLibreMapOptions(
+      {this.compassEnabled,
+      this.cameraTargetBounds,
+      this.styleString,
+      this.minMaxZoomPreference,
+      required this.rotateGesturesEnabled,
+      required this.scrollGesturesEnabled,
+      required this.tiltGesturesEnabled,
+      required this.zoomGesturesEnabled,
+      required this.doubleClickZoomEnabled,
+      this.trackCameraPosition,
+      this.myLocationEnabled,
+      this.myLocationTrackingMode,
+      this.myLocationRenderMode,
+      this.logoViewMargins,
+      this.compassViewPosition,
+      this.compassViewMargins,
+      this.attributionButtonPosition,
+      this.attributionButtonMargins,
+      this.locationEnginePlatforms});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(

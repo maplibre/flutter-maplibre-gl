@@ -11,7 +11,8 @@ class LocationEnginePlatforms {
     this.androidPlatform = LocationEngineAndroidProperties.defaultProperties,
   });
 
-  static const LocationEnginePlatforms defaultPlatform = LocationEnginePlatforms();
+  static const LocationEnginePlatforms defaultPlatform =
+      LocationEnginePlatforms();
 
   List<int> toList() {
     if (Platform.isAndroid) return androidPlatform.toList();
@@ -41,7 +42,7 @@ class LocationEngineAndroidProperties {
   });
 
   static const LocationEngineAndroidProperties defaultProperties =
-  LocationEngineAndroidProperties(
+      LocationEngineAndroidProperties(
     interval: 1000,
     displacement: 0,
     priority: LocationPriority.balanced,
@@ -50,11 +51,11 @@ class LocationEngineAndroidProperties {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          (other is LocationEngineAndroidProperties &&
-              runtimeType == other.runtimeType &&
-              interval == other.interval &&
-              displacement == other.displacement &&
-              priority == other.priority);
+      (other is LocationEngineAndroidProperties &&
+          runtimeType == other.runtimeType &&
+          interval == other.interval &&
+          displacement == other.displacement &&
+          priority == other.priority);
 
   @override
   int get hashCode =>
@@ -90,10 +91,13 @@ class LocationEngineAndroidProperties {
 enum LocationPriority {
   /// High accuracy, may consume more power.
   highAccuracy,
+
   /// Balanced accuracy and power usage.
   balanced,
+
   /// Low power usage, may be less accurate.
   lowPower,
+
   /// No power usage, only receive location updates when other clients request them.
   noPower,
 }
