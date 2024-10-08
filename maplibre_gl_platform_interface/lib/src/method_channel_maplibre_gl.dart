@@ -322,6 +322,16 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future clearAmbientCache() async {
+    try {
+      await _channel.invokeMethod('map#clearAmbientCache');
+      return null;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
   Future<LatLng> requestMyLocationLatLng() async {
     try {
       final Map<dynamic, dynamic> reply =
