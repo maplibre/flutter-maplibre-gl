@@ -74,7 +74,6 @@ abstract class MapLibrePlatform {
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter);
   Future invalidateAmbientCache();
-
   Future clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 
