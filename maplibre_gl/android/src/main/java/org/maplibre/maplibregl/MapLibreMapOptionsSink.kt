@@ -4,6 +4,7 @@
 package org.maplibre.maplibregl
 
 import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.location.engine.LocationEngineRequest
 
 /** Receiver of MapLibreMap configuration options.  */
 internal interface MapLibreMapOptionsSink {
@@ -42,4 +43,6 @@ internal interface MapLibreMapOptionsSink {
     fun setAttributionButtonGravity(gravity: Int)
 
     fun setAttributionButtonMargins(x: Int, y: Int)
+
+    fun setLocationEngineProperties(locationEngineRequest: LocationEngineRequest)
 }
