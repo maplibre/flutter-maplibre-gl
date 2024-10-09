@@ -934,6 +934,24 @@ final class MapLibreMapController
               });
           break;
         }
+      case "map#clearAmbientCache":
+      {
+        OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
+
+        fileSource.clearAmbientCache(
+                new OfflineManager.FileSourceCallback() {
+                  @Override
+                  public void onSuccess() {
+                    result.success(null);
+                  }
+
+                  @Override
+                  public void onError(@NonNull String message) {
+                    result.error("MAPBOX CACHE ERROR", message, null);
+                  }
+                });
+        break;
+      }
       case "source#addGeoJson":
         {
           final String sourceId = call.argument("sourceId");
