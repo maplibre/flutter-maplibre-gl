@@ -1112,7 +1112,7 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   Future clearAmbientCache() async {
-    return _maplibrePlatform.clearAmbientCache();
+    return _maplibrePlatform.invalidateAmbientCache();//clearAmbientCache();
   }
 
   /// Get last my location
