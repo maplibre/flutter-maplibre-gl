@@ -1,5 +1,7 @@
 name: maplibre_gl_workspace
 publish_to: 'none'
+homepage: https://maplibre.org/flutter-maplibre-gl
+documentation: https://maplibre.org/flutter-maplibre-gl/docs
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 

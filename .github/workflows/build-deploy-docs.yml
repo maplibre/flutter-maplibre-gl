@@ -1,0 +1,34 @@
+name: Generate documentation
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        # Can't use cache because build fails with "Dependencies lock file is not found"
+        # with:
+        #  cache: yarn
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --non-interactive
+      - name: Build
+        run: yarn build
+      - name: Deploy to GitHub Pages
+        if: github.repository_owner == 'maplibre'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build
+          keep_files: true
