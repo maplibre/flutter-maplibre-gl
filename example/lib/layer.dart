@@ -149,7 +149,7 @@ class LayerState extends State {
       dynamic featureId, Point<double> point, LatLng latLng, String layerId) {
     final snackBar = SnackBar(
       content: Text(
-        'Tapped feature with id $featureId on payer $layerId',
+        'Tapped feature with id $featureId on layer $layerId',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Theme.of(context).primaryColor,
