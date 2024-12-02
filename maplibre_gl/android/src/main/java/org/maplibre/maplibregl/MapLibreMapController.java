@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
@@ -31,8 +32,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.mapbox.android.gestures.AndroidGesturesManager;
-import com.mapbox.android.gestures.MoveGestureDetector;
+import org.maplibre.android.gestures.AndroidGesturesManager;
+import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.camera.CameraPosition;
@@ -652,7 +653,7 @@ final class MapLibreMapController
     }
   }
 
-  private Feature firstFeatureOnLayers(RectF in) {
+  private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
     if (style != null) {
       final List<Layer> layers = style.getLayers();
       final List<String> layersInOrder = new ArrayList<String>();
@@ -665,7 +666,7 @@ final class MapLibreMapController
       for (String id : layersInOrder) {
         List<Feature> features = mapLibreMap.queryRenderedFeatures(in, id);
         if (!features.isEmpty()) {
-          return features.get(0);
+          return new Pair<Feature, String>(features.get(0), id);
         }
       }
     }
@@ -1677,14 +1678,15 @@ final class MapLibreMapController
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
     RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-    Feature feature = firstFeatureOnLayers(rectF);
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
     final Map<String, Object> arguments = new HashMap<>();
     arguments.put("x", pointf.x);
     arguments.put("y", pointf.y);
     arguments.put("lng", point.getLongitude());
     arguments.put("lat", point.getLatitude());
-    if (feature != null) {
-      arguments.put("id", feature.id());
+    if (featureLayerPair != null && featureLayerPair.first != null) {
+      arguments.put("layerId", featureLayerPair.second);
+      arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
     } else {
       methodChannel.invokeMethod("map#onMapClick", arguments);
@@ -2155,8 +2157,8 @@ final class MapLibreMapController
       PointF pointf = detector.getFocalPoint();
       LatLng origin = mapLibreMap.getProjection().fromScreenLocation(pointf);
       RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-      Feature feature = firstFeatureOnLayers(rectF);
-      if (feature != null && startDragging(feature, origin)) {
+      Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
+      if (featureLayerPair != null && featureLayerPair.first != null && startDragging(featureLayerPair.first, origin)) {
         invokeFeatureDrag(pointf, "start");
         return true;
       }
