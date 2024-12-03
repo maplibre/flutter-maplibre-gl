@@ -9,6 +9,7 @@ import android.view.Gravity;
 import androidx.annotation.NonNull;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLngBounds;
+import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.android.maps.MapLibreMapOptions;
 import io.flutter.plugin.common.BinaryMessenger;
 
@@ -23,6 +24,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private int myLocationRenderMode = 0;
   private String styleString = "";
   private LatLngBounds bounds = null;
+  private LocationEngineRequest locationEngineRequest = null;
 
   MapLibreMapController build(
       int id,
@@ -41,6 +43,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
+    }
+
+    if(null != locationEngineRequest ){
+      controller.setLocationEngineProperties(locationEngineRequest);
     }
 
     return controller;
@@ -205,5 +211,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
   public void setDragEnabled(boolean enabled) {
     this.dragEnabled = enabled;
+  }
+
+  @Override
+  public void setLocationEngineProperties(@NonNull LocationEngineRequest locationEngineRequest) {
+    this.locationEngineRequest = locationEngineRequest;
   }
 }
