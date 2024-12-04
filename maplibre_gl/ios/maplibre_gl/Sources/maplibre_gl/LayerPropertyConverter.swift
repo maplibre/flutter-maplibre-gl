@@ -8,6 +8,12 @@ class LayerPropertyConverter {
         for (propertyName, propertyValue) in properties {
             let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
             switch propertyName {
+                case "icon-allow-overlap":
+                    symbolLayer.iconAllowsOverlap = expression
+                case "icon-ignore-placement":
+                    symbolLayer.iconIgnoresPlacement = expression
+                case "icon-optional":
+                    symbolLayer.iconOptional = expression
                 case "icon-opacity":
                     symbolLayer.iconOpacity = expression
                 case "icon-color":
