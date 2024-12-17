@@ -126,6 +126,7 @@ final class MapLibreMapController
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private int myLocationTrackingMode = 0;
+  private PointF userLocationAnchorOffset = null;
   private int myLocationRenderMode = 0;
   private boolean disposed = false;
   private boolean dragEnabled = true;
@@ -688,6 +689,14 @@ final class MapLibreMapController
         {
           Convert.interpretMapLibreMapOptions(call.argument("options"), this, context);
           result.success(Convert.toJson(getCameraPosition()));
+          break;
+        }
+      case "map#setUserLocationAnchor":
+        {
+          float x = call.argument("x");
+          float y = call.argument("y");
+          setUserLocationAnchor(x, y);
+          result.success(null);
           break;
         }
       case "map#updateMyLocationTrackingMode":
@@ -1934,6 +1943,13 @@ final class MapLibreMapController
     if (mapLibreMap != null && locationComponent != null) {
       updateMyLocationRenderMode();
     }
+  }
+
+  @Override
+  public void setUserLocationAnchorOffset(float x, float y) {
+    userLocationAnchorOffset = new PointF(x, y);
+    Log.d(TAG, "setUserLocationAnchor not supported on Android");
+
   }
 
   public void setLogoViewMargins(int x, int y) {

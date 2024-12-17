@@ -691,6 +691,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setUserLocationAnchor(Point anchor) {
+    print('setUserLocationAnchor not available in web');
+  }
+
+  @override
   void setStyleString(String? styleString) {
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
