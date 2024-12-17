@@ -19,6 +19,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private var initialTilt: CGFloat?
     private var cameraTargetBounds: MLNCoordinateBounds?
+    private var userLocationAnchorOffset: CGPoint?
     private var trackCameraPosition = false
     private var myLocationEnabled = false
     private var scrollingEnabled = true
@@ -125,6 +126,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return true
     }
 
+    func mapViewUserLocationAnchorPoint(_ mapView: MLNMapView) -> CGPoint {
+        if let offset = userLocationAnchorOffset {
+            return offset
+        }
+        return CGPoint(x: mapView.bounds.midX, y: mapView.bounds.midY)
+    }
+
     func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
         switch methodCall.method {
         case "map#waitForMap":
@@ -167,6 +175,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     result(nil)
                 }
             }
+        case "map#setUserLocationAnchor":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let x = arguments["x"] as? Double else { return }
+            guard let y = arguments["y"] as? Double else { return }
+            setUserLocationAnchorOffset(x: x, y: y)
+            result(nil)
         case "map#updateMyLocationTrackingMode":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             if let myLocationTrackingMode = arguments["mode"] as? UInt,
@@ -1751,6 +1765,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case .Gps:
             NSLog("RenderMode.GPS currently not supported")
         }
+    }
+
+    func setUserLocationAnchorOffset(x: Double, y: Double) {
+        userLocationAnchorOffset = CGPoint(x: x, y: y)
     }
 
     func setLogoViewMargins(x: Double, y: Double) {
