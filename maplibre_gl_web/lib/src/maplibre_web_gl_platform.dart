@@ -691,8 +691,9 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  void setUserLocationAnchor(Point anchor) {
+  Future<void> setUserLocationAnchor(Point anchor) async {
     print('setUserLocationAnchor not available in web');
+    return;
   }
 
   @override
