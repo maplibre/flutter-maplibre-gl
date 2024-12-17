@@ -1946,7 +1946,7 @@ final class MapLibreMapController
   }
 
   @Override
-  public void setUserLocationAnchorOffset(float x, float y) {
+  public void setUserLocationAnchor(float x, float y) {
     userLocationAnchorOffset = new PointF(x, y);
     Log.d(TAG, "setUserLocationAnchor not supported on Android");
 
