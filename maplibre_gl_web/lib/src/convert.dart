@@ -62,6 +62,10 @@ class Convert {
           CompassViewPosition.values[options['compassViewPosition']];
       sink.setCompassAlignment(position);
     }
+    if (options.containsKey('userLocationAnchor')) {
+      sink.setUserLocationAnchor(
+          options['userLocationAnchor'][0], options['userLocationAnchor'][1]);
+    }
     if (options.containsKey('compassViewMargins')) {
       sink.setCompassViewMargins(
           options['compassViewMargins'][0], options['compassViewMargins'][1]);

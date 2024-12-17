@@ -256,6 +256,12 @@ class Convert {
     if (myLocationTrackingMode != null) {
       sink.setMyLocationTrackingMode(toInt(myLocationTrackingMode));
     }
+    final Object userLocationAnchor = data.get("userLocationAnchor");
+    if (userLocationAnchor != null) {
+      final List userLocationAnchorData = toList(userLocationAnchor);
+      final Point point = toPoint(userLocationAnchorData, metrics.density);
+      sink.setUserLocationAnchor(point.x, point.y);
+    }
     final Object myLocationRenderMode = data.get("myLocationRenderMode");
     if (myLocationRenderMode != null) {
       sink.setMyLocationRenderMode(toInt(myLocationRenderMode));

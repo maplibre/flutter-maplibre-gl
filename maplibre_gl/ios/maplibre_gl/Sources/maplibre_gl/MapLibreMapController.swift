@@ -179,7 +179,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let x = arguments["x"] as? Double else { return }
             guard let y = arguments["y"] as? Double else { return }
-            setUserLocationAnchorOffset(x: x, y: y)
+            setUserLocationAnchor(x: x, y: y)
             result(nil)
         case "map#updateMyLocationTrackingMode":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -1767,7 +1767,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func setUserLocationAnchorOffset(x: Double, y: Double) {
+    func setUserLocationAnchor(x: Double, y: Double) {
         userLocationAnchorOffset = CGPoint(x: x, y: y)
     }
 
