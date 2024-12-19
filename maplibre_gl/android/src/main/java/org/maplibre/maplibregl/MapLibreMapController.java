@@ -2044,7 +2044,7 @@ final class MapLibreMapController
   }
 
   private void updateMyLocationEnabled() {
-    if (this.locationComponent == null && myLocationEnabled) {
+    if (this.locationComponent == null && mapLibreMap.getStyle() != null && myLocationEnabled) {
       enableLocationComponent(mapLibreMap.getStyle());
     }
 
