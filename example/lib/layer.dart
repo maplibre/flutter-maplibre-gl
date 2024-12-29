@@ -145,11 +145,10 @@ class LayerState extends State {
     controller.onFeatureTapped.add(onFeatureTap);
   }
 
-  void onFeatureTap(
-      dynamic featureId, Point<double> point, LatLng latLng, String layerId) {
+  void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {
     final snackBar = SnackBar(
       content: Text(
-        'Tapped feature with id $featureId on layer $layerId',
+        'Tapped feature with id $featureId on layer',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Theme.of(context).primaryColor,

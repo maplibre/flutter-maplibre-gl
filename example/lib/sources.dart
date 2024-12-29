@@ -308,7 +308,9 @@ class FullMapState extends State<FullMap> {
 
   _onStyleLoadedCallback() async {
     final styleInfo = _stylesAndLoaders[selectedStyleId];
-    styleInfo.addDetails(controller!);
+    if (controller != null) {
+      styleInfo.addDetails(controller!);
+    }
     controller!
         .animateCamera(CameraUpdate.newCameraPosition(styleInfo.position));
   }

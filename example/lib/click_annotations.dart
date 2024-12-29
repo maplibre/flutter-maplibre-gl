@@ -80,8 +80,10 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
   }
 
   Future<void> _onStyleLoaded() async {
-    await addImageFromAsset(
-        controller!, "custom-marker", "assets/symbols/custom-marker.png");
+    if (controller != null) {
+      await addImageFromAsset(
+          controller!, "custom-marker", "assets/symbols/custom-marker.png");
+    }
     controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
