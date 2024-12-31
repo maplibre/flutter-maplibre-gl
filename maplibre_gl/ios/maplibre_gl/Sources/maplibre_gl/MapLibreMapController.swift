@@ -71,9 +71,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             longPress.require(toFail: recognizer)
         }
         var longPressRecognizerAdded = false
-        
+
         if let args = args as? [String: Any] {
-            
+
             Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
                let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView),
@@ -179,7 +179,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             if let langStr = Locale.current.languageCode {
                 setMapLanguage(language: langStr)
             }
-            
+
             result(nil)
         case "map#updateContentInsets":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -325,7 +325,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "camera#move":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-            
+
             if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
                 mapView.setCamera(camera, animated: false)
             }
@@ -334,12 +334,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
             guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { return }
-            
-            
+
+
             let completion = {
                 result(nil)
             }
-            
+
             if let duration = arguments["duration"] as? TimeInterval {
                 if let padding = Convert.parseLatLngBoundsPadding(cameraUpdate) {
                     mapView.fly(to: camera, edgePadding: padding, withDuration: duration / 1000, completionHandler: completion)
@@ -546,7 +546,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 properties: properties
             )
             result(nil)
-        
+
         case "heatmapLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
@@ -849,11 +849,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             layer.isVisible = visible
             result(nil)
-            
+
         case "map#querySourceFeatures":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
-            
+
             var sourceLayerId = Set<String>()
             if let layerId = arguments["sourceLayerId"] as? String {
                 sourceLayerId.insert(layerId)
@@ -862,10 +862,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             if let filter = arguments["filter"] as? [Any] {
                 filterExpression = NSPredicate(mglJSONObject: filter)
             }
-            
+
             var reply = [String: NSObject]()
             var features: [MLNFeature] = []
-            
+
             guard let style = mapView.style else { return }
             if let source = style.source(withIdentifier: sourceId) {
                 if let vectorSource = source as? MLNVectorTileSource {
@@ -874,7 +874,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     features = shapeSource.features(matching: filterExpression)
                 }
             }
-            
+
             var featuresJson = [String]()
             for feature in features {
                 let dictionary = feature.geoJSONDictionary()
@@ -892,11 +892,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         case "style#getLayerIds":
             var layerIds = [String]()
-            
+
             guard let style = mapView.style else { return }
-            
+
             style.layers.forEach { layer in layerIds.append(layer.identifier) }
-            
+
             var reply = [String: NSObject]()
             reply["layers"] = layerIds as NSObject
             result(reply)
@@ -911,18 +911,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             var reply = [String: NSObject]()
             reply["sources"] = sourceIds as NSObject
             result(reply)
-            
+
         case "style#getFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            
+
             guard let style = mapView.style else { return }
             guard let layer = style.layer(withIdentifier: layerId) else { return }
-            
+
             var currentLayerFilter : String = ""
             if let vectorLayer = layer as? MLNVectorStyleLayer {
                 if let layerFilter = vectorLayer.predicate {
-                    
+
                     let jsonExpression = layerFilter.mgl_jsonExpressionObject
                     if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
                         currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
@@ -934,11 +934,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 ).flutterError)
                 return;
             }
-            
+
             var reply = [String: NSObject]()
             reply["filter"] = currentLayerFilter as NSObject
             result(reply)
-            
+
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -976,7 +976,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private func getCamera() -> MLNMapCamera? {
         return trackCameraPosition ? mapView.camera : nil
     }
-    
+
     private func setMapLanguage(language: String) {
         self.mapView.setMapLanguage(language)
     }
@@ -984,8 +984,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /*
      *  Scan layers from top to bottom and return the first matching feature
      */
-    private func firstFeatureOnLayers(at: CGPoint) -> MLNFeature? {
-        guard let style = mapView.style else { return nil }
+    private func firstFeatureOnLayers(at: CGPoint) -> (feature: MLNFeature?, layerId: String?) {
+        guard let style = mapView.style else { return (nil, nil) }
 
         // get layers in order (interactiveFeatureLayerIds is unordered)
         let clickableLayers = style.layers.filter { layer in
@@ -998,10 +998,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 styleLayerIdentifiers: [layer.identifier]
             )
             if let feature = features.first {
-                return feature
+                return (feature, layer.identifier)
             }
         }
-        return nil
+        return (nil, nil)
     }
 
     /*
@@ -1013,13 +1013,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
-        if let feature = firstFeatureOnLayers(at: point) {
+        let result = firstFeatureOnLayers(at: point)
+        if let feature = result.feature {
             channel?.invokeMethod("feature#onTap", arguments: [
                         "id": feature.identifier,
                         "x": point.x,
                         "y": point.y,
                         "lng": coordinate.longitude,
                         "lat": coordinate.latitude,
+                        "layerId": result.layerId,
             ])
         } else {
             channel?.invokeMethod("map#onMapClick", arguments: [
@@ -1062,22 +1064,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
-        if dragFeature == nil, began, sender.numberOfTouches == 1,
-           let feature = firstFeatureOnLayers(at: point),
-           let draggable = feature.attribute(forKey: "draggable") as? Bool,
-           draggable
-        {
-            sender.state = UIGestureRecognizer.State.began
-            dragFeature = feature
-            originDragCoordinate = coordinate
-            previousDragCoordinate = coordinate
-            mapView.allowsScrolling = false
-            let eventType = "start"
-            invokeFeatureDrag(point, coordinate, eventType)
-            for gestureRecognizer in mapView.gestureRecognizers! {
-                if let _ = gestureRecognizer as? UIPanGestureRecognizer {
-                    gestureRecognizer.addTarget(self, action: #selector(handleMapPan))
-                    break
+        if dragFeature == nil, began, sender.numberOfTouches == 1 {
+            let result = firstFeatureOnLayers(at: point)
+            if let feature = result.feature,
+            let draggable = feature.attribute(forKey: "draggable") as? Bool,
+            draggable {
+                sender.state = UIGestureRecognizer.State.began
+                dragFeature = feature
+                originDragCoordinate = coordinate
+                previousDragCoordinate = coordinate
+                mapView.allowsScrolling = false
+                let eventType = "start"
+                invokeFeatureDrag(point, coordinate, eventType)
+                for gestureRecognizer in mapView.gestureRecognizers! {
+                    if let _ = gestureRecognizer as? UIPanGestureRecognizer {
+                        gestureRecognizer.addTarget(self, action: #selector(handleMapPan))
+                        break
+                    }
                 }
             }
         }
