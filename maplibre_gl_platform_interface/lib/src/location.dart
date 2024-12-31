@@ -84,6 +84,26 @@ class LatLngBounds {
     return <dynamic>[southwest.toJson(), northeast.toJson()];
   }
 
+  /// Determines whether a given geographical point (`LatLng`) is within the
+  /// bounds defined by two other geographical points: `southwest` (lower-left corner)
+  /// and `northeast` (upper-right corner).
+  ///
+  bool contains(LatLng point) {
+    final isLatitudeInBounds = point.latitude >= southwest.latitude &&
+        point.latitude <= northeast.latitude;
+
+    final bool isLongitudeInBounds;
+
+    if (southwest.longitude <= northeast.longitude) {
+      isLongitudeInBounds = point.longitude >= southwest.longitude &&
+          point.longitude <= northeast.longitude;
+    } else {
+      isLongitudeInBounds = point.longitude >= southwest.longitude ||
+          point.longitude <= northeast.longitude;
+    }
+    return isLatitudeInBounds && isLongitudeInBounds;
+  }
+
   @visibleForTesting
   static LatLngBounds? fromList(dynamic json) {
     if (json == null) {
