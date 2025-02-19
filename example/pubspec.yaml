@@ -17,7 +17,7 @@ dependencies:
   http: ^1.1.0
   location: ^5.0.3
   maplibre_gl: ^0.20.0
-  path_provider: ^2.0.15
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
