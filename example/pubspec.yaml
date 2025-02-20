@@ -6,8 +6,8 @@ repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: '>=3.10.0'
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
 
 dependencies:
   collection: ^1.17.1
@@ -17,7 +17,7 @@ dependencies:
   http: ^1.1.0
   location: ^5.0.3
   maplibre_gl: ^0.20.0
-  path_provider: ^2.0.15
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
