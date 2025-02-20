@@ -260,6 +260,17 @@ class MapLibreMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set the user location anchor point
+  ///
+  /// [anchor] is the position of the user location icon relative to
+  /// the map view.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setUserLocationAnchor(Point anchor) async {
+    await _maplibrePlatform.setUserLocationAnchor(anchor);
+  }
+
   /// Triggers a resize event for the map on web (ignored on Android or iOS).
   ///
   /// Checks first if a resize is required or if it looks like it is already correctly resized.
