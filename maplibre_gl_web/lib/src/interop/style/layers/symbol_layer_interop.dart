@@ -119,6 +119,15 @@ class SymbolLayoutJsImpl {
     if (symbolLayout.iconSize != null) {
       dict['icon-size'] = symbolLayout.iconSize;
     }
+    if (symbolLayout.iconAllowOverlap != null) {
+      dict['icon-allow-overlap'] = symbolLayout.iconAllowOverlap;
+    }
+    if (symbolLayout.iconIgnorePlacement != null) {
+      dict['icon-ignore-placement'] = symbolLayout.iconIgnorePlacement;
+    }
+    if (symbolLayout.iconOptional != null) {
+      dict['icon-optional'] = symbolLayout.iconOptional;
+    }
     if (symbolLayout.iconTextFit != null) {
       dict['icon-text-fit'] = symbolLayout.iconTextFit;
     }

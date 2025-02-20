@@ -60,6 +60,9 @@ class SymbolOptions {
   /// By default, every non-specified field is null, meaning no desire to change
   /// symbol defaults or current configuration.
   const SymbolOptions({
+    this.iconAllowOverlap,
+    this.iconIgnorePlacement,
+    this.iconOptional,
     this.iconSize,
     this.iconImage,
     this.iconRotate,
@@ -90,6 +93,9 @@ class SymbolOptions {
     this.draggable,
   });
 
+  final bool? iconAllowOverlap;
+  final bool? iconIgnorePlacement;
+  final bool? iconOptional;
   final double? iconSize;
   final String? iconImage;
   final double? iconRotate;
@@ -125,6 +131,9 @@ class SymbolOptions {
 
   SymbolOptions copyWith(SymbolOptions changes) {
     return SymbolOptions(
+      iconOptional: changes.iconOptional ?? iconOptional,
+      iconIgnorePlacement: changes.iconIgnorePlacement ?? iconIgnorePlacement,
+      iconAllowOverlap: changes.iconAllowOverlap ?? iconAllowOverlap,
       iconSize: changes.iconSize ?? iconSize,
       iconImage: changes.iconImage ?? iconImage,
       iconRotate: changes.iconRotate ?? iconRotate,
@@ -165,6 +174,10 @@ class SymbolOptions {
       }
     }
 
+    addIfPresent('iconOptional', iconOptional);
+    addIfPresent('iconIgnorePlacement', iconIgnorePlacement);
+    addIfPresent('iconOptional', iconOptional);
+    addIfPresent('iconAllowOverlap', iconAllowOverlap);
     addIfPresent('iconSize', iconSize);
     addIfPresent('iconImage', iconImage);
     addIfPresent('iconRotate', iconRotate);
