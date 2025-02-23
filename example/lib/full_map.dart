@@ -8,7 +8,8 @@ import 'page.dart';
 const _nullIsland = CameraPosition(target: LatLng(0, 0), zoom: 4.0);
 
 class FullMapPage extends ExamplePage {
-  const FullMapPage({super.key}) : super(const Icon(Icons.map), 'Full screen map');
+  const FullMapPage({super.key})
+      : super(const Icon(Icons.map), 'Full screen map');
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +31,14 @@ class FullMapState extends State<FullMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterFloat,
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniCenterFloat,
       floatingActionButton: canInteractWithMap
           ? FloatingActionButton(
-        onPressed: _moveCameraToNullIsland,
-        mini: true,
-        child: const Icon(Icons.restore),
-      )
+              onPressed: _moveCameraToNullIsland,
+              mini: true,
+              child: const Icon(Icons.restore),
+            )
           : null,
       body: MapLibreMap(
         onMapCreated: (controller) => mapController.complete(controller),
@@ -46,6 +48,6 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  void _moveCameraToNullIsland() =>
-      mapController.future.then((c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
+  void _moveCameraToNullIsland() => mapController.future.then(
+      (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
 }
