@@ -1,7 +1,27 @@
 ## UNRELEASED
 
+## 0.21.0
+
+### Added
+
+* added the `clearAmbientCache` functionality (#502).
+* added the `contains` functionality to `LatLngBounds` (#498).
+* added the possibility to set `LocationEnginePlatforms` properties for better device tracking on Android (#510).
+
+### Changed
+
+* BREAKING: `onFeatureTap` returns the `layerId` (#475).
+* Changed iOS package name to support Swift Package Manager (#467).
 * Move the `maplibre_gl` package to a subdirectory of the repository and add 
-  melos to orchestrate all packages.
+  melos to orchestrate all packages (#453).
+
+### Removed
+
+* Removed support for Kotlin versions older than `1.9.0` (#460).
+
+### Fixed
+
+* Fixed exception when destroying mapView on Android by reordering cleanup (#459).
 
 ## 0.20.0
 
