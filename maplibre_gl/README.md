@@ -19,16 +19,18 @@ vector maps** as a Flutter widget.
 <summary>Click to expand</summary>
 
 <!-- TOC -->
-
 * [Flutter MapLibre GL](#flutter-maplibre-gl)
-  * [Table of Contents](#table-of-contents)
-  * [Supported Platforms](#supported-platforms)
-  * [Supported API](#supported-api)
+    * [Table of Contents](#table-of-contents)
+    * [Supported Platforms](#supported-platforms)
+    * [Supported API](#supported-api)
   * [Getting Started](#getting-started)
     * [Platform specific setup](#platform-specific-setup)
-      * [Location feature on iOS](#location-feature-on-ios)
-      * [Location feature on Android](#location-feature-on-android)
-      * [Platform specific setup for Web](#platform-specific-setup-for-web)
+      * [iOS](#ios)
+          * [Location Feature](#location-feature)
+      * [Android](#android)
+          * [Kotlin Version](#kotlin-version)
+          * [Location Feature](#location-feature-1)
+      * [Web](#web)
     * [In code usage](#in-code-usage)
   * [Map Styles](#map-styles)
     * [Tile sources requiring an API key](#tile-sources-requiring-an-api-key)
@@ -41,7 +43,6 @@ vector maps** as a Flutter widget.
     * [Layer is not displayed on IOS, but no error](#layer-is-not-displayed-on-ios-but-no-error)
     * [iOS crashes with error:](#ios-crashes-with-error)
   * [Contributing](#contributing)
-
 <!-- TOC -->
 
 </details>
@@ -270,7 +271,7 @@ buildTypes {
   <summary>Click here to expand / hide.</summary>
 
 Please include the `NSLocationWhenInUseUsageDescription` as
-described [here](#location-features)
+described [here](#location-feature)
 
 ---
 </details>
