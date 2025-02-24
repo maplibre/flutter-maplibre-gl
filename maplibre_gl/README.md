@@ -12,17 +12,47 @@ vector maps** as a Flutter widget.
   of [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl),
   replacing its usage of Mapbox GL libraries with the open
   source [MapLibre GL](https://github.com/maplibre) libraries.
-- The repository has been transferred to
-  the [MapLibre](https://github.com/maplibre)
-  organization. You shouldn't see any negative effects, as GitHub automatically
-  redirects references from the old URL to the new URL. Please
-  see [#221](https://github.com/maplibre/flutter-maplibre-gl/issues/221) for
-  more information.
+
+### Table of Contents
+
+<details>
+<summary>Click to expand</summary>
+
+<!-- TOC -->
+* [Flutter MapLibre GL](#flutter-maplibre-gl)
+    * [Table of Contents](#table-of-contents)
+    * [Supported Platforms](#supported-platforms)
+    * [Supported API](#supported-api)
+  * [Getting Started](#getting-started)
+    * [Platform specific setup](#platform-specific-setup)
+      * [iOS](#ios)
+          * [Location Feature](#location-feature)
+      * [Android](#android)
+          * [Kotlin Version](#kotlin-version)
+          * [Location Feature](#location-feature-1)
+      * [Web](#web)
+    * [In code usage](#in-code-usage)
+  * [Map Styles](#map-styles)
+    * [Tile sources requiring an API key](#tile-sources-requiring-an-api-key)
+  * [Documentation](#documentation)
+  * [Getting Help](#getting-help)
+  * [Common problems & frequent questions](#common-problems--frequent-questions)
+    * [Loading .mbtiles tile files or sprites/glyphs from the assets shipped with the app](#loading-mbtiles-tile-files-or-spritesglyphs-from-the-assets-shipped-with-the-app)
+    * [Avoid Android UnsatisfiedLinkError](#avoid-android-unsatisfiedlinkerror)
+    * [iOS app crashes when using location based features](#ios-app-crashes-when-using-location-based-features)
+    * [Layer is not displayed on IOS, but no error](#layer-is-not-displayed-on-ios-but-no-error)
+    * [iOS crashes with error:](#ios-crashes-with-error)
+  * [Contributing](#contributing)
+<!-- TOC -->
+
+</details>
 
 ### Supported Platforms
 
-- Support for **web** through [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)
-- Support for **android** and **iOS** through [maplibre-native](https://github.com/maplibre/maplibre-native)
+- Support for **web**
+  through [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)
+- Support for **android** and **iOS**
+  through [maplibre-native](https://github.com/maplibre/maplibre-native)
 
 This project only supports a subset of the API exposed by these libraries.
 
@@ -41,71 +71,53 @@ This project only supports a subset of the API exposed by these libraries.
 | Fill Extrusion |    ✅    |  ✅  |  ✅  |
 | Heatmap Layer  |    ✅    |  ✅  |  ✅  |
 
-## Get Started
+## Getting Started
 
-#### Add as a dependency
+For installing the plugin, follow
+the [instructions on pub.dev](https://pub.dev/packages/maplibre_gl/install).
 
-Add `maplibre_gl` to your project by running this command:
+### Platform specific setup
 
-```bash
-flutter pub add maplibre_gl
-```
+#### iOS
 
-or add it directly as a dependency to your `pubspec.yaml` file:
+###### Location Feature
 
-```yaml
-dependencies:
-  maplibre_gl: ^0.19.0
-```
+In order to access the device location, you need to add the following key
+to the `ios/Runner/Info.plist` file, to explain why you need access to their
+location data:
 
-### iOS
+```xml
 
-There is no specific setup for iOS needed any more to use the package.
-If you added specific lines in an earlier version, you'll have to remove them
-or your project won't build.
-
-<details>
-<summary>View obsolete code</summary>
-
-```ruby
-source 'https://cdn.cocoapods.org/'
-source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
-
-pod 'MapLibre'
-pod 'MapLibreAnnotationExtension'
-```
-
-</details>
-
-#### Use the location feature
-
-If you access your users' location, you should also add the following key
-to `ios/Runner/Info.plist` to explain why you need access to their location
-data:
-
-```xml 
 <dict>
-  <key>NSLocationWhenInUseUsageDescription</key>
-  <string>[Your explanation here]</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>[Your explanation here]</string>
 </dict>
 ```
 
-A possible explanation could be: "Shows your location on the map".
+#### Android
 
-### Android
+###### Kotlin Version
 
-There is no specific setup for android needed to use the package.
+The minimum supported Kotlin version is `1.9.0`. Accordingly, you will have to
+set your Kotlin version in the `android/settings.gradle` file like so:
 
-#### Use the location feature
+```groovy
+plugins {
+    id "org.jetbrains.kotlin.android" version "1.9.0" apply false
+}
+```
+
+###### Location Feature
 
 If you want to show the user's location on the map you need to add
 the `ACCESS_COARSE_LOCATION` or `ACCESS_FINE_LOCATION` permission in the
-application manifest `android/app/src/main/AndroidManifest.xml`.:
+application manifest `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
+
 <manifest>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>
 ```
 
@@ -113,15 +125,57 @@ Starting from Android API level 23 you also need to request it at runtime. This
 plugin does not handle this for you. Our example app uses the
 flutter "[location](https://pub.dev/packages/location)" plugin for this.
 
-### Web
+#### Web
 
-Include the following JavaScript and CSS files in the `<head>` of
-your `web/index.html` file:
+For the map to work in the web, include the following JavaScript and CSS files
+in the `<head>` of your `web/index.html` file:
 
 ```html
+
 <script src='https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.js'></script>
 <link href='https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.css'
       rel='stylesheet'/>
+```
+
+### In code usage
+
+The following shows you how to add the map widget to your code and start
+interacting with it. For more examples, head over to
+the [example project](https://github.com/maplibre/flutter-maplibre-gl/tree/main/example).
+
+```dart
+
+class MapParentWidgetState extends State<MapParentWidget> {
+  final Completer<MapLibreMapController> mapController = Completer();
+  bool canInteractWithMap = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation
+          .miniCenterFloat,
+      floatingActionButton: canInteractWithMap
+          ? FloatingActionButton(
+        onPressed: _moveCameraToNullIsland,
+        mini: true,
+        child: const Icon(Icons.restore),
+      )
+          : null,
+      body: MapLibreMap(
+        onMapCreated: (controller) => mapController.complete(controller),
+        initialCameraPosition: _nullIsland,
+        onStyleLoadedCallback: () => setState(() => canInteractWithMap = true),
+      ),
+    );
+  }
+
+  void _moveCameraToNullIsland() =>
+      mapController.future.then((c) =>
+          c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
+}
+
+
+
 ```
 
 ## Map Styles
@@ -217,7 +271,7 @@ buildTypes {
   <summary>Click here to expand / hide.</summary>
 
 Please include the `NSLocationWhenInUseUsageDescription` as
-described [here](#location-features)
+described [here](#location-feature)
 
 ---
 </details>
@@ -237,7 +291,9 @@ You have to have the color in the following format : `#C0C0FF`
 ---
 </details>
 
-### iOS crashes with error: `'NSInvalidArgumentException', reason: 'Invalid filter value: filter property must be a string'`
+### iOS crashes with error:
+
+`'NSInvalidArgumentException', reason: 'Invalid filter value: filter property must be a string'`
 
 <details>
   <summary>Click here to expand / hide.</summary>
@@ -248,7 +304,8 @@ You can replace your expression with :   `["!",["has", "value"] ]` which works
 both in Android and iOS.
 
 Note : iOS will display the
-error : `NSPredicate: Use of 'mgl_does:have:' as an NSExpression function is forbidden`,
+error :
+`NSPredicate: Use of 'mgl_does:have:' as an NSExpression function is forbidden`,
 but it seems like the expression still works well.
 
 ---
@@ -256,7 +313,19 @@ but it seems like the expression still works well.
 
 ## Contributing
 
-[Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues),
-contributing pull requests
+Setup [melos](https://melos.invertase.dev/~melos-latest/getting-started) and run
+the
+
+```bash
+melos bootstrap
+```
+
+command in the plugin root directory. Run the example app and familiarize
+yourself with the plugin directory structure.
+
+[Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues), contributing
+pull requests
 and [bug reports](https://github.com/maplibre/flutter-maplibre-gl/issues) are
-very welcome!
+very welcome - check
+the [CONTRIBUTING.md](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CONTRIBUTING.md)
+guidelines.
