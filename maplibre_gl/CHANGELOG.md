@@ -17,6 +17,7 @@
 
 ### Removed
 
+* Removed support for Dart SDKs older than `3.4.0` (`Flutter SDK 3.22.0`) (#542)
 * Removed support for Kotlin versions older than `1.9.0` (#460).
 
 ### Fixed
