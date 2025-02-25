@@ -1,6 +1,6 @@
 ## UNRELEASED
 
-## 0.21.0
+## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
 
 ### Added
 
@@ -18,11 +18,11 @@
 ### Removed
 
 * Removed support for Dart SDKs older than `3.4.0` (`Flutter SDK 3.22.0`) (#542)
-* Removed support for Kotlin versions older than `1.9.0` (#460).
 
 ### Fixed
 
 * Fixed exception when destroying mapView on Android by reordering cleanup (#459).
+
 
 ## 0.20.0
 
@@ -54,6 +54,7 @@ If you notice any build errors, please make sure to run `flutter clean`.
 * Added support for Swift Package Manager usage on iOS.
 * Migrated main iOS plugin class from Objective-C to Swift.
 * Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
+* Removed support for Kotlin versions older than `1.9.0` (#460).
 
 **Full Changelog**:
 [v0.19.0+2...v0.20.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.19.0+2...v0.20.0)
