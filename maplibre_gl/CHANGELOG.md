@@ -1,5 +1,3 @@
-## UNRELEASED
-
 ## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
 
 ### Added
