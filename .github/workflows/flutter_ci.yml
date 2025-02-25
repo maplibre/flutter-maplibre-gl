@@ -17,6 +17,8 @@ jobs:
         with:
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          include-privat: true
       - name: Lint analysis
         run: melos format --set-exit-if-changed .
 
@@ -29,6 +31,8 @@ jobs:
         with:
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          include-privat: true
       - name: Lint analysis
         run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
 
@@ -49,6 +53,8 @@ jobs:
           flutter-version: ${{ matrix.sdk }}
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          include-privat: true
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -80,6 +86,8 @@ jobs:
           flutter-version: ${{ matrix.sdk }}
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          include-privat: true
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: example/ios/Podfile.lock
@@ -109,5 +117,7 @@ jobs:
           flutter-version: ${{ matrix.sdk }}
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          include-privat: true
       - name: Build web
         run: flutter build web
