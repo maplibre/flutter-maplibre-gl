@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
   maplibre_gl_platform_interface: ^0.20.0
   maplibre_gl_web: ^0.20.0
-
 dev_dependencies:
   very_good_analysis: ^5.0.0
 
