@@ -11,12 +11,12 @@ environment:
 
 dependencies:
   collection: ^1.17.1
-  device_info_plus: ^9.0.2
+  device_info_plus: ^11.3.0
   flutter:
     sdk: flutter
   http: ^1.1.0
   location: ^5.0.3
-  maplibre_gl: ^0.20.0
+  maplibre_gl: ^0.21.0
   path_provider: ^2.1.5
 
 dev_dependencies:
