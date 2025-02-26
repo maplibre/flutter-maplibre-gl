@@ -141,7 +141,7 @@ in the `<head>` of your `web/index.html` file:
 
 The following shows you how to add the map widget to your code and start
 interacting with it. For more examples, head over to
-the [example project](https://github.com/maplibre/flutter-maplibre-gl/tree/main/example).
+the [example project](https://github.com/maplibre/flutter-maplibre-gl/tree/main/maplibre_gl_example).
 
 ```dart
 
