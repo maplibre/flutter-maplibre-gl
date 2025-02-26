@@ -72,9 +72,9 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         installOfflineMapTiles(tilesDb);
         result.success(null);
         break;
-      case "setOffline":
-        boolean offline = methodCall.argument("offline");
-        ConnectivityReceiver.instance(context).setConnected(offline ? false : null);
+      case "setMapLibreOffline":
+        Boolean offline = (Boolean) methodCall.argument("offline");
+        ConnectivityReceiver.instance(context).setConnected(offline!=null ? !(offline) : null);
         result.success(null);
         break;
       case "mergeOfflineRegions":
