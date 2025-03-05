@@ -9,10 +9,10 @@ environment:
   flutter: '>=3.22.0'
 
 dependencies:
-  universal_platform: ^1.1.0
   flutter:
     sdk: flutter
   meta: ^1.0.5
+  universal_platform: ^1.1.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0
