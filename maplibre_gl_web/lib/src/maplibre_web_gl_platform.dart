@@ -356,6 +356,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future clearAmbientCache() async {
+    print('Offline storage not available in web');
+  }
+
+  @override
   Future<LatLng?> requestMyLocationLatLng() async {
     return _myLastLocation;
   }

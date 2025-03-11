@@ -18,10 +18,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         final double y = call.arguments['y'];
         final double lng = call.arguments['lng'];
         final double lat = call.arguments['lat'];
+        final String layerId = call.arguments['layerId'];
         onFeatureTappedPlatform({
           'id': id,
           'point': Point<double>(x, y),
-          'latLng': LatLng(lat, lng)
+          'latLng': LatLng(lat, lng),
+          'layerId': layerId
         });
       case 'feature#onDrag':
         final id = call.arguments['id'];
@@ -315,6 +317,16 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');
+      return null;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
+  Future clearAmbientCache() async {
+    try {
+      await _channel.invokeMethod('map#clearAmbientCache');
       return null;
     } on PlatformException catch (e) {
       return Future.error(e);
