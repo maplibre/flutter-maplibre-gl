@@ -201,6 +201,7 @@ abstract class MapLibrePlatform {
   Future<void> addSource(String sourceId, SourceProperties properties);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
+  Future<bool> getLayerVisibility(String layerId);
 
   @mustCallSuper
   void dispose() {

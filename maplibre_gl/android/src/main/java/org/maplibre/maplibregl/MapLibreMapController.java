@@ -261,6 +261,17 @@ final class MapLibreMapController
     setStyleString(styleStringInitial);
   }
 
+  boolean guardStyleNotLoaded(MethodChannel.Result result){
+      if (style == null) {
+            result.error(
+                "STYLE IS NULL",
+                "The style is null. Has onStyleLoaded() already been invoked?",
+                null);
+          return true;
+       }
+      return false;
+  }
+
   @Override
   public void setStyleString(@NonNull String styleString) {
     // clear old layer id from the location Component
@@ -1045,12 +1056,7 @@ final class MapLibreMapController
         case "layer#setProperties": {
           final String layerId = call.argument("layerId");
 
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
 
           Layer layer = style.getLayer(layerId);
 
@@ -1275,12 +1281,8 @@ final class MapLibreMapController
         }
       case "style#addImage":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
+    
           style.addImage(
               call.argument("name"),
               BitmapFactory.decodeByteArray(call.argument("bytes"), 0, call.argument("length")),
@@ -1290,12 +1292,7 @@ final class MapLibreMapController
         }
       case "style#addImageSource":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
           style.addSource(
               new ImageSource(
@@ -1312,12 +1309,7 @@ final class MapLibreMapController
         }
         case "style#updateImageSource":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           ImageSource imageSource = style.getSourceAs(call.argument("imageSourceId"));
           List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
           if (coordinates != null) {
@@ -1346,24 +1338,14 @@ final class MapLibreMapController
 
       case "style#removeSource":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           style.removeSource((String) call.argument("sourceId"));
           result.success(null);
           break;
         }
       case "style#addLayer":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
@@ -1381,12 +1363,7 @@ final class MapLibreMapController
         }
       case "style#addLayerBelow":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
@@ -1404,12 +1381,7 @@ final class MapLibreMapController
         }
       case "style#removeLayer":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           String layerId = call.argument("layerId");
           style.removeLayer(layerId);
           interactiveFeatureLayerIds.remove(layerId);
@@ -1439,12 +1411,7 @@ final class MapLibreMapController
         }
       case "style#setFilter":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           String layerId = call.argument("layerId");
           String filter = call.argument("filter");
 
@@ -1517,12 +1484,7 @@ final class MapLibreMapController
         case "layer#setVisibility":
         {
 
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
+          if (guardStyleNotLoaded(result)) break;
           String layerId = call.argument("layerId");
           boolean visible = call.argument("visible");
 
@@ -1536,6 +1498,24 @@ final class MapLibreMapController
           break;
 
         }
+        case "layer#getVisibility":
+        {
+          if (guardStyleNotLoaded(result)) break;
+
+          Map<String, Object> reply = new HashMap<>();
+          String layerId = call.argument("layerId");
+          Layer layer = style.getLayer(layerId);
+
+          if (layer != null) {
+            String visibility = layer.getVisibility().getValue();
+            reply.put("visibility", visibility == "visible");
+          } else{
+            reply.put("visibility", false);
+          }
+          result.success(reply);
+          break;
+        }
+
         case "map#querySourceFeatures":
         {
           Map<String, Object> reply = new HashMap<>();

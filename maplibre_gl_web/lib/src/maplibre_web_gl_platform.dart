@@ -1135,6 +1135,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<bool> getLayerVisibility(String layerId) async {
+    return _map.getLayoutProperty(layerId, 'visibility') == 'visible';
+  }
+
+  @override
   Future getFilter(String layerId) async {
     return _map.getFilter(layerId);
   }

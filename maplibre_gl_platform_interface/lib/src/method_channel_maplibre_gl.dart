@@ -805,6 +805,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<bool> getLayerVisibility(String layerId) async {
+    return await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
+      'layerId': layerId,
+    });
+  }
+
+  @override
   void forceResizeWebMap() {}
 
   @override
