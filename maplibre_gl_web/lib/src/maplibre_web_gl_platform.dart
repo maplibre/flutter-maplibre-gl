@@ -1148,4 +1148,26 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List> getSourceIds() async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() async {
+    final complete = Completer<void>();
+    _map.once('idle', (_) => complete.complete());
+    return complete.future;
+  }
+
+  @override
+  Future<ui.Size> setWebMapToCustomSize(ui.Size size) async {
+    final initialSize = ui.Size(
+      _map.getContainer().clientWidth.toDouble(),
+      _map.getContainer().clientHeight.toDouble(),
+    );
+
+    _map.getContainer().style.width = size.width.toString() + 'px';
+    _map.getContainer().style.height = size.height.toString() + 'px';
+    _map.resize();
+
+    await waitUntilMapIsIdleAfterMovement();
+    return initialSize;
+  }
 }
