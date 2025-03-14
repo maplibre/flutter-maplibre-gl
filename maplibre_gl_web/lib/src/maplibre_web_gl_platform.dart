@@ -1157,6 +1157,19 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> waitUntilMapTilesAreLoaded() async {
+    final tilesLoadedCompleter = Completer<void>();
+    if (_map.areTilesLoaded()) {
+      tilesLoadedCompleter.complete();
+    } else {
+      _map.once('sourcedata', (_) {
+        tilesLoadedCompleter.complete();
+      });
+    }
+    await tilesLoadedCompleter.future;
+  }
+
+  @override
   Future<ui.Size> setWebMapToCustomSize(ui.Size size) async {
     final initialSize = ui.Size(
       _map.getContainer().clientWidth.toDouble(),

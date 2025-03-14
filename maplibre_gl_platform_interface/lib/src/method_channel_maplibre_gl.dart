@@ -840,6 +840,11 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<void> waitUntilMapIsIdleAfterMovement() {
-    throw UnimplementedError();
+    return Future<void>.value();
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() {
+    return Future<void>.value();
   }
 }
