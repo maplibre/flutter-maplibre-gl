@@ -1414,7 +1414,7 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.waitUntilMapIsIdleAfterMovement();
   }
 
-  Future<void> waitUntilMapTilesAreLoaded(String style) {
+  Future<void> waitUntilMapTilesAreLoaded() {
     return _maplibrePlatform.waitUntilMapTilesAreLoaded();
   }
 
