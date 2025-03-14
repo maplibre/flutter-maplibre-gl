@@ -805,6 +805,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<Size> setWebMapToCustomSize(Size size) {
+    throw UnimplementedError(
+        'setWebMapToCustomSize is not implemented on this platform');
+  }
+
+  @override
   void forceResizeWebMap() {}
 
   @override
@@ -830,5 +836,15 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     } on PlatformException catch (e) {
       return Future.error(e);
     }
+  }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() {
+    return Future<void>.value();
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() {
+    return Future<void>.value();
   }
 }
