@@ -31,7 +31,6 @@ dependency_overrides:
   maplibre_gl:
     path: ../maplibre_gl
 
-
 dev_dependencies:
   very_good_analysis: ^5.0.0
 
