@@ -1406,6 +1406,18 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getLayerIds();
   }
 
+  Future<Size> setWebMapToCustomSize(Size size) {
+    return _maplibrePlatform.setWebMapToCustomSize(size);
+  }
+
+  Future<void> waitUntilMapIsIdleAfterMovement() {
+    return _maplibrePlatform.waitUntilMapIsIdleAfterMovement();
+  }
+
+  Future<void> waitUntilMapTilesAreLoaded(String style) {
+    return _maplibrePlatform.waitUntilMapTilesAreLoaded();
+  }
+
   /// Retrieve every source ids of the map as a [String] list, including the ones added internally
   ///
   /// This method is not currently implemented on the web
