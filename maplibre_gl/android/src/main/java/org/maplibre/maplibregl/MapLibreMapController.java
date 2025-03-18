@@ -272,6 +272,15 @@ final class MapLibreMapController
       return false;
   }
 
+  boolean guardSourceExist(MethodChannel.Result result, String id){
+      if (guardStyleNotLoaded(result)) return true;
+      if (style.getSource(id) != null) {
+        result.error("SOURCE ALREADY EXISTS", "The source with id " + id + " does already exist.", null);
+        return true;
+      }
+      return false;
+  }
+
   @Override
   public void setStyleString(@NonNull String styleString) {
     // clear old layer id from the location Component
@@ -600,6 +609,24 @@ final class MapLibreMapController
     return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
   }
 
+  boolean guardAddLayerImpossible(MethodChannel.Result result, String sourceId, String layerId){
+  if (style.getSource(sourceId) == null) {
+      result.error(
+          "SOURCE NOT FOUND",
+          "The source with id " + sourceId + " does not exist.",
+          null);
+      return true;
+    }
+    if (style.getLayer(layerId) != null) {
+      result.error(
+          "LAYER ALREADY EXISTS",
+          "The layer with id " + layerId + " already exists.",
+          null);
+      return true;
+    }
+    return false;
+  }
+
   private void addRasterLayer(
       String layerName,
       String sourceName,
@@ -608,6 +635,7 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+
     RasterLayer layer = new RasterLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -971,14 +999,18 @@ final class MapLibreMapController
       }
       case "source#addGeoJson":
         {
+          if (guardStyleNotLoaded(result)) break;
           final String sourceId = call.argument("sourceId");
           final String geojson = call.argument("geojson");
+          if (guardSourceExist(result, sourceId)) break;
+
           addGeoJsonSource(sourceId, geojson);
           result.success(null);
           break;
         }
       case "source#setGeoJson":
         {
+          if (guardStyleNotLoaded(result)) break;
           final String sourceId = call.argument("sourceId");
           final String geojson = call.argument("geojson");
           setGeoJsonSource(sourceId, geojson);
@@ -987,6 +1019,7 @@ final class MapLibreMapController
         }
       case "source#setFeature":
         {
+          if (guardStyleNotLoaded(result)) break;
           final String sourceId = call.argument("sourceId");
           final String geojsonFeature = call.argument("geojsonFeature");
           setGeoJsonFeature(sourceId, geojsonFeature);
@@ -1007,6 +1040,7 @@ final class MapLibreMapController
               LayerPropertyConverter.interpretSymbolLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
 
           addSymbolLayer(
               layerId,
@@ -1037,6 +1071,8 @@ final class MapLibreMapController
               LayerPropertyConverter.interpretLineLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
+
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
 
           addLineLayer(
               layerId,
@@ -1107,6 +1143,7 @@ final class MapLibreMapController
               LayerPropertyConverter.interpretFillLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
 
           addFillLayer(
               layerId,
@@ -1138,6 +1175,7 @@ final class MapLibreMapController
                         call.argument("properties"));
 
         Expression filterExpression = parseFilter(filter);
+        if(guardAddLayerImpossible(result, sourceId, layerId)) break;
 
         addFillExtrusionLayer(
                 layerId,
@@ -1168,6 +1206,7 @@ final class MapLibreMapController
               LayerPropertyConverter.interpretCircleLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
 
           addCircleLayer(
               layerId,
@@ -1193,6 +1232,8 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretRasterLayerProperties(call.argument("properties"));
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
+
           addRasterLayer(
               layerId,
               sourceId,
@@ -1215,6 +1256,8 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
+
           addHillshadeLayer(
               layerId,
               sourceId,
@@ -1237,6 +1280,8 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
+          if(guardAddLayerImpossible(result, sourceId, layerId)) break;
+
           addHeatmapLayer(
               layerId,
               sourceId,
@@ -1329,18 +1374,28 @@ final class MapLibreMapController
         }
       case "style#addSource":
         {
+          if (guardStyleNotLoaded(result)) break;
           final String id = Convert.toString(call.argument("sourceId"));
           final Map<String, Object> properties = (Map<String, Object>) call.argument("properties");
+          if (guardSourceExist(result, id)) break;
+
           SourcePropertyConverter.addSource(id, properties, style);
           result.success(null);
+         
           break;
         }
 
       case "style#removeSource":
         {
           if (guardStyleNotLoaded(result)) break;
-          style.removeSource((String) call.argument("sourceId"));
-          result.success(null);
+          final String id = Convert.toString(call.argument("sourceId"));
+          final Source source = style.getSource(id);
+          if (source != null){
+            style.removeSource(id);
+            result.success(null);
+          }else{
+            result.error("SOURCE_NOT_FOUND", "Source with id " + id + " not found", null);
+          }
           break;
         }
       case "style#addLayer":
@@ -1385,6 +1440,8 @@ final class MapLibreMapController
           String layerId = call.argument("layerId");
           style.removeLayer(layerId);
           interactiveFeatureLayerIds.remove(layerId);
+          Log.e(TAG, "Removed layer " + layerId);
+
 
           result.success(null);
           break;
@@ -1507,12 +1564,12 @@ final class MapLibreMapController
           Layer layer = style.getLayer(layerId);
 
           if (layer != null) {
-            String visibility = layer.getVisibility().getValue();
-            reply.put("visibility", visibility == "visible");
+            boolean isVisible = layer.getVisibility().value.equals("visible");
+
+            result.success(isVisible);
           } else{
-            reply.put("visibility", false);
+            result.success(null);
           }
-          result.success(reply);
           break;
         }
 

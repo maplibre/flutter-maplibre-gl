@@ -805,16 +805,22 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<bool> getLayerVisibility(String layerId) async {
-    return await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
-      'layerId': layerId,
-    });
+  Future<bool?> getLayerVisibility(String layerId) async {
+    try {
+      final result =
+          await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
+        'layerId': layerId,
+      });
+      return result;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
 
   @override
   Future<Size> setWebMapToCustomSize(Size size) {
     throw UnimplementedError(
         'setWebMapToCustomSize is not implemented on this platform');
-
   }
 
   @override

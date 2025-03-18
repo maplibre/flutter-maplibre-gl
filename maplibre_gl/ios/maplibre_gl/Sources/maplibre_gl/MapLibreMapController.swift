@@ -857,9 +857,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 result(nil)
                 return
             }
-            var reply = [String: NSObject]()
-            reply["visible"] = layer.isVisible as NSObject
-            result(reply)
+            result(layer.isVisible )
 
         case "map#querySourceFeatures":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
