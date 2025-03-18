@@ -2,6 +2,8 @@ part of '../maplibre_gl_web.dart';
 
 class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
+  static const _styleLoadedCheckBackoff = Duration(milliseconds: 100);
+
   late html.DivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
@@ -168,6 +170,21 @@ class MapLibreMapController extends MapLibrePlatform
       };
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
+    }
+  }
+
+  /// Callback for `styleData` event.
+  /// Used to handle style load after setStyle is called.
+  void _onStyleData(dynamic event) {
+    // Check if style is fully loaded
+    if (_map.isStyleLoaded()) {
+      _onStyleLoaded(event);
+    } else {
+      // Style is still being loaded, back off and try again later
+      Future.delayed(
+        _styleLoadedCheckBackoff,
+        () => _onStyleData(event),
+      );
     }
   }
 
@@ -704,7 +721,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.setStyle(styleString);
     // catch style loaded for later style changes
     if (_mapReady) {
-      _map.once("styledata", _onStyleLoaded);
+      _map.once("styledata", _onStyleData);
     }
   }
 
