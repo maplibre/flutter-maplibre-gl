@@ -8,7 +8,7 @@ typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
 typedef OnFeatureInteractionCallback = void Function(
-    dynamic id, Point<double> point, LatLng coordinates, String layerId);
+    dynamic id, Point<double> point, LatLng coordinates, String? layerId);
 
 typedef OnFeatureDragnCallback = void Function(dynamic id,
     {required Point<double> point,
