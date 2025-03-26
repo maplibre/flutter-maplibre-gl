@@ -830,6 +830,11 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   void resizeWebMap() {}
 
   @override
+  Future<String> takeWebSnapshot() {
+    return Future<String>.value('');
+  }
+
+  @override
   Future<List> getLayerIds() async {
     try {
       final Map<dynamic, dynamic> reply =

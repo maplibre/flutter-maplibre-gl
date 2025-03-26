@@ -1418,6 +1418,10 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.waitUntilMapTilesAreLoaded();
   }
 
+  Future<String> takeWebSnapshot() {
+    return _maplibrePlatform.takeWebSnapshot();
+  }
+
   /// Retrieve every source ids of the map as a [String] list, including the ones added internally
   ///
   /// This method is not currently implemented on the web

@@ -209,6 +209,8 @@ abstract class MapLibrePlatform {
 
   Future<void> waitUntilMapTilesAreLoaded();
 
+  Future<String> takeWebSnapshot();
+
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
