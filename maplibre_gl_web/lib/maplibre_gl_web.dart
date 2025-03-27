@@ -18,6 +18,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:js/js_util.dart' as js_util;
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:image/image.dart' hide Point;
 import 'package:maplibre_gl_web/src/geo/point.dart' as geo_point;
@@ -30,6 +31,7 @@ import 'package:maplibre_gl_web/src/ui/camera.dart';
 import 'package:maplibre_gl_web/src/ui/control/attribution_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/navigation_control.dart';
+import 'package:maplibre_gl_web/src/ui/control/scale_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 

@@ -86,6 +86,14 @@ class MapLibreMapController extends MapLibrePlatform
         _map.on('mousemove', _onMouseMove);
       }
 
+      final scaleControl = ScaleControl(
+        ScaleControlOptions(
+          maxWidth: 80,
+          unit: 'metric',
+        ),
+      );
+      _map.addControl(scaleControl, 'bottom-right');
+
       _initResizeObserver();
     }
     Convert.interpretMapLibreMapOptions(_creationParams['options'], this);
