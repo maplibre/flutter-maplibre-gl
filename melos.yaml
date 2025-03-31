@@ -3,3 +3,23 @@ name: maplibre_gl_workspace
 packages:
   - scripts
   - maplibre_gl*
+
+scripts:
+  test:
+    description: Run all tests
+    run: |
+      set -e
+      melos test:io
+      melos test:web
+
+  test:io:
+    description: Run IO tests
+    exec: flutter test
+    packageFilters:
+      scope: maplibre_gl_platform_interface
+
+  test:web:
+    description: Run Web tests
+    exec: flutter test --platform chrome
+    packageFilters:
+      scope: maplibre_gl_platform_interface

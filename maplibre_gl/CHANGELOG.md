@@ -10,6 +10,14 @@
   See the [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1181)
   for more information.
 
+### Changed
+
+* Added `await` to all `addLayer` calls (#558).
+
+### Fixed
+
+* Fixed `Unsupported operation` error on web (#551).
+
 ## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
 
 ### Added
