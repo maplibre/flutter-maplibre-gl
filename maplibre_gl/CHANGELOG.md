@@ -1,5 +1,15 @@
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
+### Breaking changes
+
+* Updated maplibre-native for iOS to v6.12.0. This mainly introduces PMTiles support. See the
+  [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#6121)
+  for more information.
+* Updated maplibre-native for Android to v11.8.1. This mainly introduces PMTiles support.
+  Flutter version packed with OpenGL ES 3.0 build for now, later we could probably switch to Vulkan.
+  See the [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1181)
+  for more information.
+
 ### Changed
 
 * Added `await` to all `addLayer` calls (#558).
@@ -7,7 +17,6 @@
 ### Fixed
 
 * Fixed `Unsupported operation` error on web (#551).
-
 
 ## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
 
