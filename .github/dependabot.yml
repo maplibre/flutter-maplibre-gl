@@ -6,6 +6,9 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "pub"
-    directory: "/"
+    directories:
+      - "/"
+      - "/maplibre_gl*"
+      - "/scripts"
     schedule:
       interval: "daily"
