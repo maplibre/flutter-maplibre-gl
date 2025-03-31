@@ -1,3 +1,14 @@
+## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
+
+### Changed
+
+* Added `await` to all `addLayer` calls (#558).
+
+### Fixed
+
+* Fixed `Unsupported operation` error on web (#551).
+
+
 ## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
 
 ### Added
