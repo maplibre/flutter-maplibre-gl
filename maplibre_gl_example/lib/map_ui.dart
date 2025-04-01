@@ -346,7 +346,10 @@ class MapUiBodyState extends State<MapUiBody> {
     if (feature != null) {
       final List<List<LatLng>> geometry = feature['geometry']['coordinates']
           .map(
-            (ll) => ll.map((l) => LatLng(l[1], l[0])).toList().cast<LatLng>(),
+            (dynamic ll) => ll
+                .map((dynamic l) => LatLng(l[1], l[0]))
+                .toList()
+                .cast<LatLng>(),
           )
           .toList()
           .cast<List<LatLng>>();

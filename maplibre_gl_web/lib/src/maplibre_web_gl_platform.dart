@@ -43,7 +43,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.remove();
   }
 
-  void _registerViewFactory(Function(int) callback, int identifier) {
+  void _registerViewFactory(void Function(int) callback, int identifier) {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
@@ -189,11 +189,11 @@ class MapLibreMapController extends MapLibrePlatform
   }) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
 
-    final around = getProperty(cameraOptions, 'around');
-    final bearing = getProperty(cameraOptions, 'bearing');
-    final center = getProperty(cameraOptions, 'center');
-    final pitch = getProperty(cameraOptions, 'pitch');
-    final zoom = getProperty(cameraOptions, 'zoom');
+    final around = getProperty<dynamic>(cameraOptions, 'around');
+    final bearing = getProperty<dynamic>(cameraOptions, 'bearing');
+    final center = getProperty<dynamic>(cameraOptions, 'center');
+    final pitch = getProperty<dynamic>(cameraOptions, 'pitch');
+    final zoom = getProperty<dynamic>(cameraOptions, 'zoom');
 
     _map.flyTo({
       if (around != null) 'around': around,
@@ -477,10 +477,10 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  void _onMapLongClick(e) {
+  void _onMapLongClick(Event e) {
     onMapLongClickPlatform({
-      'point': Point<double>(e.point.x, e.point.y),
-      'latLng': LatLng(e.lngLat.lat, e.lngLat.lng),
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
     });
   }
 
@@ -532,7 +532,7 @@ class MapLibreMapController extends MapLibrePlatform
         showUserLocation: true,
       ),
     );
-    _geolocateControl!.on('geolocate', (e) {
+    _geolocateControl!.on('geolocate', (dynamic e) {
       _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
       onUserLocationUpdatedPlatform(
         UserLocation(

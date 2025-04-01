@@ -53,7 +53,7 @@ Future<void> main() async {
   // required for deduplication
   renderContext['all_layout_properties'] = <dynamic>{
     for (final type in renderContext['layerTypes']!)
-      ...type['layout_properties'].map((p) => p['value']),
+      ...type['layout_properties'].map((dynamic p) => p['value']),
   }.map((p) => {'property': p}).toList();
 
   const templates = [

@@ -64,10 +64,9 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     required delta,
     required origin,
     required point,
-    required eventType,
+    required DragEventType eventType,
   }) {
-    final DragEventType type = eventType;
-    switch (type) {
+    switch (eventType) {
       case DragEventType.start:
         // TODO: Handle this case.
         break;

@@ -903,7 +903,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply =
           await _channel.invokeMethod('style#getLayerIds');
-      return reply['layers'].map((it) => it.toString()).toList();
+      return reply['layers'].map((dynamic it) => it.toString()).toList();
     } on PlatformException catch (e) {
       return Future.error(e);
     }
@@ -914,7 +914,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply =
           await _channel.invokeMethod('style#getSourceIds');
-      return reply['sources'].map((it) => it.toString()).toList();
+      return reply['sources'].map((dynamic it) => it.toString()).toList();
     } on PlatformException catch (e) {
       return Future.error(e);
     }

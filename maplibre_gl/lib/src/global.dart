@@ -88,7 +88,7 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
-  Function(DownloadRegionStatus event)? onEvent,
+  void Function(DownloadRegionStatus event)? onEvent,
 }) async {
   final channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
@@ -99,7 +99,9 @@ Future<OfflineRegion> downloadOfflineRegion(
   });
 
   if (onEvent != null) {
-    EventChannel(channelName).receiveBroadcastStream().handleError((error) {
+    EventChannel(channelName)
+        .receiveBroadcastStream()
+        .handleError((Object error) {
       if (error is PlatformException) {
         onEvent(Error(error));
         return Error(error);

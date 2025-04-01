@@ -4,7 +4,6 @@ analyzer:
   language:
     # temporary rules
     strict-casts: false
-    strict-inference: false
 
 linter:
   rules:
