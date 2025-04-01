@@ -3,6 +3,9 @@ import 'dart:html';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class ScrollZoomHandler extends JsObjectWrapper<ScrollZoomHandlerJsImpl> {
+  /// Creates a new ScrollZoomHandler from a [jsObject].
+  ScrollZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Set the zoom rate of a trackpad
   ///  @param {number} [zoomRate = 1/100]
   dynamic setZoomRate(num zoomRate) => jsObject.setZoomRate(zoomRate);
@@ -42,7 +45,4 @@ class ScrollZoomHandler extends JsObjectWrapper<ScrollZoomHandlerJsImpl> {
   dynamic disable() => jsObject.disable();
 
   dynamic onWheel(WheelEvent e) => jsObject.onWheel(e);
-
-  /// Creates a new ScrollZoomHandler from a [jsObject].
-  ScrollZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

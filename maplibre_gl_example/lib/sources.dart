@@ -4,17 +4,16 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl_example/page.dart';
 
 class StyleInfo {
-  final String name;
-  final String baseStyle;
-  final Future<void> Function(MapLibreMapController) addDetails;
-  final CameraPosition position;
-
   const StyleInfo({
     required this.name,
     required this.baseStyle,
     required this.addDetails,
     required this.position,
   });
+  final String name;
+  final String baseStyle;
+  final Future<void> Function(MapLibreMapController) addDetails;
+  final CameraPosition position;
 }
 
 class Sources extends ExamplePage {

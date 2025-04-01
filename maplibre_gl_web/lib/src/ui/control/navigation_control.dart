@@ -3,12 +3,6 @@ import 'package:maplibre_gl_web/src/ui/map.dart';
 
 class NavigationControlOptions
     extends JsObjectWrapper<NavigationControlOptionsJsImpl> {
-  bool get showCompass => jsObject.showCompass;
-
-  bool get showZoom => jsObject.showZoom;
-
-  bool get visualizePitch => jsObject.visualizePitch;
-
   factory NavigationControlOptions({
     bool? showCompass,
     bool? showZoom,
@@ -24,6 +18,11 @@ class NavigationControlOptions
 
   /// Creates a new NavigationControlOptions from a [jsObject].
   NavigationControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+  bool get showCompass => jsObject.showCompass;
+
+  bool get showZoom => jsObject.showZoom;
+
+  bool get visualizePitch => jsObject.visualizePitch;
 }
 
 /// A `NavigationControl` control contains zoom buttons and a compass.
@@ -39,16 +38,15 @@ class NavigationControlOptions
 /// @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
 /// @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
 class NavigationControl extends JsObjectWrapper<NavigationControlJsImpl> {
-  NavigationControlOptions get options =>
-      NavigationControlOptions.fromJsObject(jsObject.options);
-
   factory NavigationControl(NavigationControlOptions options) =>
       NavigationControl.fromJsObject(NavigationControlJsImpl(options.jsObject));
+
+  /// Creates a new MapOptions from a [jsObject].
+  NavigationControl.fromJsObject(super.jsObject) : super.fromJsObject();
+  NavigationControlOptions get options =>
+      NavigationControlOptions.fromJsObject(jsObject.options);
 
   dynamic onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
   dynamic onRemove() => jsObject.onRemove();
-
-  /// Creates a new MapOptions from a [jsObject].
-  NavigationControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

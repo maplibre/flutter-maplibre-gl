@@ -1,6 +1,27 @@
 part of '../maplibre_gl.dart';
 
 abstract class AnnotationManager<T extends Annotation> {
+  AnnotationManager(
+    this.controller, {
+    this.onTap,
+    this.selectLayer,
+    required this.enableInteraction,
+  }) : id = getRandomString() {
+    for (var i = 0; i < allLayerProperties.length; i++) {
+      final layerId = _makeLayerId(i);
+      controller.addGeoJsonSource(
+        layerId,
+        buildFeatureCollection([]),
+        promoteId: 'id',
+      );
+      controller.addLayer(layerId, layerId, allLayerProperties[i]);
+    }
+
+    if (onTap != null) {
+      controller.onFeatureTapped.add(_onFeatureTapped);
+    }
+    controller.onFeatureDrag.add(_onDrag);
+  }
   final MapLibreMapController controller;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
@@ -28,28 +49,6 @@ abstract class AnnotationManager<T extends Annotation> {
   T? byId(String id) => _idToAnnotation[id];
 
   Set<T> get annotations => _idToAnnotation.values.toSet();
-
-  AnnotationManager(
-    this.controller, {
-    this.onTap,
-    this.selectLayer,
-    required this.enableInteraction,
-  }) : id = getRandomString() {
-    for (var i = 0; i < allLayerProperties.length; i++) {
-      final layerId = _makeLayerId(i);
-      controller.addGeoJsonSource(
-        layerId,
-        buildFeatureCollection([]),
-        promoteId: 'id',
-      );
-      controller.addLayer(layerId, layerId, allLayerProperties[i]);
-    }
-
-    if (onTap != null) {
-      controller.onFeatureTapped.add(_onFeatureTapped);
-    }
-    controller.onFeatureDrag.add(_onDrag);
-  }
 
   /// This function can be used to rebuild all layers after their properties
   /// changed

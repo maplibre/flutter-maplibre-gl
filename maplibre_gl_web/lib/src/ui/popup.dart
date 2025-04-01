@@ -50,17 +50,19 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 /// @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
 /// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 class Popup extends Evented {
-  dynamic get options => jsObject.options;
-
-  @override
-  final PopupJsImpl jsObject;
-
   factory Popup([PopupOptions? options]) {
     if (options != null) {
       return Popup.fromJsObject(PopupJsImpl(options.jsObject));
     }
     return Popup.fromJsObject(PopupJsImpl());
   }
+
+  /// Creates a new Popup from a [jsObject].
+  Popup.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  dynamic get options => jsObject.options;
+
+  @override
+  final PopupJsImpl jsObject;
 
   /// Adds the popup to a map.
   ///
@@ -188,9 +190,6 @@ class Popup extends Evented {
   /// let popup = new maplibregl.Popup()
   /// popup.toggleClassName('toggleClass')
   bool toggleClassName(String className) => jsObject.toggleClassName(className);
-
-  /// Creates a new Popup from a [jsObject].
-  Popup.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {

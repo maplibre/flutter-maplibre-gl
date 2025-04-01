@@ -1,10 +1,6 @@
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class Point extends JsObjectWrapper<PointJsImpl> {
-  num get x => jsObject.x;
-
-  num get y => jsObject.y;
-
   factory Point(
     num x,
     num y,
@@ -18,4 +14,7 @@ class Point extends JsObjectWrapper<PointJsImpl> {
 
   /// Creates a new LngLat from a [jsObject].
   Point.fromJsObject(super.jsObject) : super.fromJsObject();
+  num get x => jsObject.x;
+
+  num get y => jsObject.y;
 }

@@ -19,16 +19,6 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 ///  @property {LngLatLike} around If `zoom` is specified, `around` determines the point around which the zoom is centered.
 
 class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
-  LngLat get center => LngLat.fromJsObject(jsObject.center);
-
-  num get zoom => jsObject.zoom;
-
-  num get bearing => jsObject.bearing;
-
-  num get pitch => jsObject.pitch;
-
-  LngLat get around => LngLat.fromJsObject(jsObject.around);
-
   factory CameraOptions({
     LngLat? center,
     num? zoom,
@@ -48,6 +38,15 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 
   /// Creates a new CameraOptions from a [jsObject].
   CameraOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+  LngLat get center => LngLat.fromJsObject(jsObject.center);
+
+  num get zoom => jsObject.zoom;
+
+  num get bearing => jsObject.bearing;
+
+  num get pitch => jsObject.pitch;
+
+  LngLat get around => LngLat.fromJsObject(jsObject.around);
 }
 
 ///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
@@ -63,16 +62,6 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 ///  @property {boolean} essential If `true`, then the animation is considered essential and will not be affected by
 ///    [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
-  num get duration => jsObject.duration;
-
-  num Function(num time) get easing => jsObject.easing;
-
-  Point get offset => Point.fromJsObject(jsObject.offset);
-
-  bool get animate => jsObject.animate;
-
-  bool get essential => jsObject.essential;
-
   factory AnimationOptions({
     num? duration,
     num Function(num time)? easing,
@@ -92,6 +81,15 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
 
   /// Creates a new AnimationOptions from a [jsObject].
   AnimationOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+  num get duration => jsObject.duration;
+
+  num Function(num time) get easing => jsObject.easing;
+
+  Point get offset => Point.fromJsObject(jsObject.offset);
+
+  bool get animate => jsObject.animate;
+
+  bool get essential => jsObject.essential;
 }
 
 ///  Options for setting padding on a call to {@link MapLibreMap#fitBounds}. All properties of this object must be
@@ -103,14 +101,6 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
 ///  @property {number} left Padding in pixels from the left of the map canvas.
 ///  @property {number} right Padding in pixels from the right of the map canvas.
 class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
-  num get top => jsObject.top;
-
-  num get bottom => jsObject.bottom;
-
-  num get left => jsObject.left;
-
-  num get right => jsObject.right;
-
   factory PaddingOptions({
     num? top,
     num? bottom,
@@ -128,9 +118,18 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
 
   /// Creates a new PaddingOptions from a [jsObject].
   PaddingOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+  num get top => jsObject.top;
+
+  num get bottom => jsObject.bottom;
+
+  num get left => jsObject.left;
+
+  num get right => jsObject.right;
 }
 
 class Camera extends Evented {
+  /// Creates a new Camera from a [jsObject].
+  Camera.fromJsObject(CameraJsImpl super.jsObject) : super.fromJsObject();
   @override
   CameraJsImpl get jsObject => super.jsObject as CameraJsImpl;
 
@@ -571,7 +570,4 @@ class Camera extends Evented {
   ///  @memberof MapLibreMap#
   ///  @returns {MapLibreMap} `this`
   MapLibreMap stop() => MapLibreMap.fromJsObject(jsObject.stop());
-
-  /// Creates a new Camera from a [jsObject].
-  Camera.fromJsObject(CameraJsImpl super.jsObject) : super.fromJsObject();
 }

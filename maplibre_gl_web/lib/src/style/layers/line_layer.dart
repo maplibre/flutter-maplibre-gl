@@ -2,6 +2,14 @@ import 'package:maplibre_gl_web/src/interop/style/layers/line_layer_interop.dart
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 
 class LineLayer extends Layer {
+  LineLayer({
+    required this.id,
+    this.source,
+    this.sourceLayer,
+    this.paint,
+    this.layout,
+    this.filter,
+  });
   String id;
 
   /// Source or String
@@ -11,15 +19,6 @@ class LineLayer extends Layer {
   LineLayout? layout;
   dynamic filter;
 
-  LineLayer({
-    required this.id,
-    this.source,
-    this.sourceLayer,
-    this.paint,
-    this.layout,
-    this.filter,
-  });
-
   @override
   dynamic get jsObject => LineLayerJsImpl.toJs(this);
 
@@ -28,18 +27,6 @@ class LineLayer extends Layer {
 }
 
 class LinePaint {
-  num? lineOpacity;
-  dynamic lineColor;
-  List<num>? lineTranslate;
-  String? lineTranslateAnchor;
-  dynamic lineWidth;
-  num? lineGapWidth;
-  num? lineOffset;
-  num? lineBlur;
-  List<num>? lineDasharray;
-  String? linePattern;
-  String? lineGradient;
-
   LinePaint({
     this.lineOpacity,
     this.lineColor,
@@ -53,6 +40,17 @@ class LinePaint {
     this.linePattern,
     this.lineGradient,
   });
+  num? lineOpacity;
+  dynamic lineColor;
+  List<num>? lineTranslate;
+  String? lineTranslateAnchor;
+  dynamic lineWidth;
+  num? lineGapWidth;
+  num? lineOffset;
+  num? lineBlur;
+  List<num>? lineDasharray;
+  String? linePattern;
+  String? lineGradient;
 
   dynamic get jsObject => LinePaintJsImpl.toJs(this);
 
@@ -60,13 +58,6 @@ class LinePaint {
 }
 
 class LineLayout {
-  String? lineCap;
-  String? lineJoin;
-  num? lineMiterLimit;
-  num? lineRoundLimit;
-  num? lineSortKey;
-  String? visibility;
-
   LineLayout({
     this.lineCap,
     this.lineJoin,
@@ -75,6 +66,12 @@ class LineLayout {
     this.lineSortKey,
     this.visibility,
   });
+  String? lineCap;
+  String? lineJoin;
+  num? lineMiterLimit;
+  num? lineRoundLimit;
+  num? lineSortKey;
+  String? visibility;
 
   dynamic get jsObject => LineLayoutJsImpl.toJs(this);
 

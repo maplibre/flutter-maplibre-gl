@@ -8,6 +8,30 @@ abstract class SourceProperties {
 }
 
 class VectorSourceProperties implements SourceProperties {
+  const VectorSourceProperties({
+    this.url,
+    this.tiles,
+    this.bounds = const [-180, -85.051129, 180, 85.051129],
+    this.scheme = 'xyz',
+    this.minzoom = 0,
+    this.maxzoom = 22,
+    this.attribution,
+    this.promoteId,
+  });
+
+  factory VectorSourceProperties.fromJson(Map<String, dynamic> json) {
+    return VectorSourceProperties(
+      url: json['url'],
+      tiles: json['tiles'],
+      bounds: json['bounds'],
+      scheme: json['scheme'],
+      minzoom: json['minzoom'],
+      maxzoom: json['maxzoom'],
+      attribution: json['attribution'],
+      promoteId: json['promoteId'],
+    );
+  }
+
   /// A URL to a TileJSON resource. Supported protocols are `http:` and
   /// `https:`
   ///
@@ -70,17 +94,6 @@ class VectorSourceProperties implements SourceProperties {
   /// Type: promoteId
   final String? promoteId;
 
-  const VectorSourceProperties({
-    this.url,
-    this.tiles,
-    this.bounds = const [-180, -85.051129, 180, 85.051129],
-    this.scheme = 'xyz',
-    this.minzoom = 0,
-    this.maxzoom = 22,
-    this.attribution,
-    this.promoteId,
-  });
-
   VectorSourceProperties copyWith(
     String? url,
     List<String>? tiles,
@@ -124,22 +137,33 @@ class VectorSourceProperties implements SourceProperties {
     addIfPresent('promoteId', promoteId);
     return json;
   }
-
-  factory VectorSourceProperties.fromJson(Map<String, dynamic> json) {
-    return VectorSourceProperties(
-      url: json['url'],
-      tiles: json['tiles'],
-      bounds: json['bounds'],
-      scheme: json['scheme'],
-      minzoom: json['minzoom'],
-      maxzoom: json['maxzoom'],
-      attribution: json['attribution'],
-      promoteId: json['promoteId'],
-    );
-  }
 }
 
 class RasterSourceProperties implements SourceProperties {
+  const RasterSourceProperties({
+    this.url,
+    this.tiles,
+    this.bounds = const [-180, -85.051129, 180, 85.051129],
+    this.minzoom = 0,
+    this.maxzoom = 22,
+    this.tileSize = 512,
+    this.scheme = 'xyz',
+    this.attribution,
+  });
+
+  factory RasterSourceProperties.fromJson(Map<String, dynamic> json) {
+    return RasterSourceProperties(
+      url: json['url'],
+      tiles: json['tiles'],
+      bounds: json['bounds'],
+      minzoom: json['minzoom'],
+      maxzoom: json['maxzoom'],
+      tileSize: json['tileSize'],
+      scheme: json['scheme'],
+      attribution: json['attribution'],
+    );
+  }
+
   /// A URL to a TileJSON resource. Supported protocols are `http:` and
   /// `https:`.
   ///
@@ -201,17 +225,6 @@ class RasterSourceProperties implements SourceProperties {
   /// Type: string
   final String? attribution;
 
-  const RasterSourceProperties({
-    this.url,
-    this.tiles,
-    this.bounds = const [-180, -85.051129, 180, 85.051129],
-    this.minzoom = 0,
-    this.maxzoom = 22,
-    this.tileSize = 512,
-    this.scheme = 'xyz',
-    this.attribution,
-  });
-
   RasterSourceProperties copyWith(
     String? url,
     List<String>? tiles,
@@ -255,22 +268,33 @@ class RasterSourceProperties implements SourceProperties {
     addIfPresent('attribution', attribution);
     return json;
   }
+}
 
-  factory RasterSourceProperties.fromJson(Map<String, dynamic> json) {
-    return RasterSourceProperties(
+class RasterDemSourceProperties implements SourceProperties {
+  const RasterDemSourceProperties({
+    this.url,
+    this.tiles,
+    this.bounds = const [-180, -85.051129, 180, 85.051129],
+    this.minzoom = 0,
+    this.maxzoom = 22,
+    this.tileSize = 512,
+    this.attribution,
+    this.encoding = 'mapbox',
+  });
+
+  factory RasterDemSourceProperties.fromJson(Map<String, dynamic> json) {
+    return RasterDemSourceProperties(
       url: json['url'],
       tiles: json['tiles'],
       bounds: json['bounds'],
       minzoom: json['minzoom'],
       maxzoom: json['maxzoom'],
       tileSize: json['tileSize'],
-      scheme: json['scheme'],
       attribution: json['attribution'],
+      encoding: json['encoding'],
     );
   }
-}
 
-class RasterDemSourceProperties implements SourceProperties {
   /// A URL to a TileJSON resource. Supported protocols are `http:` and
   /// `https:`.
   ///
@@ -335,17 +359,6 @@ class RasterDemSourceProperties implements SourceProperties {
   ///      for more info.
   final String? encoding;
 
-  const RasterDemSourceProperties({
-    this.url,
-    this.tiles,
-    this.bounds = const [-180, -85.051129, 180, 85.051129],
-    this.minzoom = 0,
-    this.maxzoom = 22,
-    this.tileSize = 512,
-    this.attribution,
-    this.encoding = 'mapbox',
-  });
-
   RasterDemSourceProperties copyWith(
     String? url,
     List<String>? tiles,
@@ -389,22 +402,41 @@ class RasterDemSourceProperties implements SourceProperties {
     addIfPresent('encoding', encoding);
     return json;
   }
-
-  factory RasterDemSourceProperties.fromJson(Map<String, dynamic> json) {
-    return RasterDemSourceProperties(
-      url: json['url'],
-      tiles: json['tiles'],
-      bounds: json['bounds'],
-      minzoom: json['minzoom'],
-      maxzoom: json['maxzoom'],
-      tileSize: json['tileSize'],
-      attribution: json['attribution'],
-      encoding: json['encoding'],
-    );
-  }
 }
 
 class GeojsonSourceProperties implements SourceProperties {
+  const GeojsonSourceProperties({
+    this.data,
+    this.maxzoom = 18,
+    this.attribution,
+    this.buffer = 128,
+    this.tolerance = 0.375,
+    this.cluster = false,
+    this.clusterRadius = 50,
+    this.clusterMaxZoom,
+    this.clusterProperties,
+    this.lineMetrics = false,
+    this.generateId = false,
+    this.promoteId,
+  });
+
+  factory GeojsonSourceProperties.fromJson(Map<String, dynamic> json) {
+    return GeojsonSourceProperties(
+      data: json['data'],
+      maxzoom: json['maxzoom'],
+      attribution: json['attribution'],
+      buffer: json['buffer'],
+      tolerance: json['tolerance'],
+      cluster: json['cluster'],
+      clusterRadius: json['clusterRadius'],
+      clusterMaxZoom: json['clusterMaxZoom'],
+      clusterProperties: json['clusterProperties'],
+      lineMetrics: json['lineMetrics'],
+      generateId: json['generateId'],
+      promoteId: json['promoteId'],
+    );
+  }
+
   /// A URL to a GeoJSON file, or inline GeoJSON.
   ///
   /// Type: *
@@ -507,21 +539,6 @@ class GeojsonSourceProperties implements SourceProperties {
   /// Type: promoteId
   final String? promoteId;
 
-  const GeojsonSourceProperties({
-    this.data,
-    this.maxzoom = 18,
-    this.attribution,
-    this.buffer = 128,
-    this.tolerance = 0.375,
-    this.cluster = false,
-    this.clusterRadius = 50,
-    this.clusterMaxZoom,
-    this.clusterProperties,
-    this.lineMetrics = false,
-    this.generateId = false,
-    this.promoteId,
-  });
-
   GeojsonSourceProperties copyWith(
     Object? data,
     double? maxzoom,
@@ -577,26 +594,21 @@ class GeojsonSourceProperties implements SourceProperties {
     addIfPresent('promoteId', promoteId);
     return json;
   }
-
-  factory GeojsonSourceProperties.fromJson(Map<String, dynamic> json) {
-    return GeojsonSourceProperties(
-      data: json['data'],
-      maxzoom: json['maxzoom'],
-      attribution: json['attribution'],
-      buffer: json['buffer'],
-      tolerance: json['tolerance'],
-      cluster: json['cluster'],
-      clusterRadius: json['clusterRadius'],
-      clusterMaxZoom: json['clusterMaxZoom'],
-      clusterProperties: json['clusterProperties'],
-      lineMetrics: json['lineMetrics'],
-      generateId: json['generateId'],
-      promoteId: json['promoteId'],
-    );
-  }
 }
 
 class VideoSourceProperties implements SourceProperties {
+  const VideoSourceProperties({
+    this.urls,
+    this.coordinates,
+  });
+
+  factory VideoSourceProperties.fromJson(Map<String, dynamic> json) {
+    return VideoSourceProperties(
+      urls: json['urls'],
+      coordinates: json['coordinates'],
+    );
+  }
+
   /// URLs to video content in order of preferred format.
   ///
   /// Type: array
@@ -606,11 +618,6 @@ class VideoSourceProperties implements SourceProperties {
   ///
   /// Type: array
   final List<List>? coordinates;
-
-  const VideoSourceProperties({
-    this.urls,
-    this.coordinates,
-  });
 
   VideoSourceProperties copyWith(
     List<String>? urls,
@@ -637,16 +644,21 @@ class VideoSourceProperties implements SourceProperties {
     addIfPresent('coordinates', coordinates);
     return json;
   }
-
-  factory VideoSourceProperties.fromJson(Map<String, dynamic> json) {
-    return VideoSourceProperties(
-      urls: json['urls'],
-      coordinates: json['coordinates'],
-    );
-  }
 }
 
 class ImageSourceProperties implements SourceProperties {
+  const ImageSourceProperties({
+    this.url,
+    this.coordinates,
+  });
+
+  factory ImageSourceProperties.fromJson(Map<String, dynamic> json) {
+    return ImageSourceProperties(
+      url: json['url'],
+      coordinates: json['coordinates'],
+    );
+  }
+
   /// URL that points to an image.
   ///
   /// Type: string
@@ -656,11 +668,6 @@ class ImageSourceProperties implements SourceProperties {
   ///
   /// Type: array
   final List<List>? coordinates;
-
-  const ImageSourceProperties({
-    this.url,
-    this.coordinates,
-  });
 
   ImageSourceProperties copyWith(
     String? url,
@@ -686,12 +693,5 @@ class ImageSourceProperties implements SourceProperties {
     addIfPresent('url', url);
     addIfPresent('coordinates', coordinates);
     return json;
-  }
-
-  factory ImageSourceProperties.fromJson(Map<String, dynamic> json) {
-    return ImageSourceProperties(
-      url: json['url'],
-      coordinates: json['coordinates'],
-    );
   }
 }

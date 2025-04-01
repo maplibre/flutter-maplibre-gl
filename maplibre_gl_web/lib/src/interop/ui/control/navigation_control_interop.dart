@@ -7,17 +7,16 @@ import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 @JS()
 @anonymous
 class NavigationControlOptionsJsImpl {
-  external bool get showCompass;
-
-  external bool get showZoom;
-
-  external bool get visualizePitch;
-
   external factory NavigationControlOptionsJsImpl({
     bool? showCompass,
     bool? showZoom,
     bool? visualizePitch,
   });
+  external bool get showCompass;
+
+  external bool get showZoom;
+
+  external bool get visualizePitch;
 }
 
 /// A `NavigationControl` control contains zoom buttons and a compass.
@@ -34,11 +33,10 @@ class NavigationControlOptionsJsImpl {
 /// @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
 @JS('NavigationControl')
 class NavigationControlJsImpl {
-  external NavigationControlOptionsJsImpl get options;
-
   external factory NavigationControlJsImpl(
     NavigationControlOptionsJsImpl options,
   );
+  external NavigationControlOptionsJsImpl get options;
 
   external dynamic onAdd(MapLibreMapJsImpl map);
 

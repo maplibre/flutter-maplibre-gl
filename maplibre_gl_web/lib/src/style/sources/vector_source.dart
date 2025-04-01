@@ -2,10 +2,6 @@ import 'package:maplibre_gl_web/src/interop/style/sources/vector_source_interop.
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
 
 class VectorSource extends Source<VectorSourceJsImpl> {
-  String? get url => jsObject.url;
-
-  List<String>? get tiles => jsObject.tiles;
-
   factory VectorSource({
     String? url,
     List<String>? tiles,
@@ -31,6 +27,9 @@ class VectorSource extends Source<VectorSourceJsImpl> {
 
   /// Creates a new VectorSource from a [jsObject].
   VectorSource.fromJsObject(super.jsObject) : super.fromJsObject();
+  String? get url => jsObject.url;
+
+  List<String>? get tiles => jsObject.tiles;
 
   @override
   Map<String, dynamic> get dict {

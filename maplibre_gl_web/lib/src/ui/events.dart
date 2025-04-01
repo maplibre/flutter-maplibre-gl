@@ -6,6 +6,9 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 
 class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
+  /// Creates a new MapMouseEvent from a [jsObject].
+  MapMouseEvent.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// The event type.
   String get type => jsObject.type;
 
@@ -33,12 +36,12 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
 
   /// `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;
-
-  /// Creates a new MapMouseEvent from a [jsObject].
-  MapMouseEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
+  /// Creates a new MapTouchEvent from a [jsObject].
+  MapTouchEvent.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// The event type.
   String get type => jsObject.type;
 
@@ -74,7 +77,4 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
 
   ///  `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;
-
-  /// Creates a new MapTouchEvent from a [jsObject].
-  MapTouchEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }

@@ -8,6 +8,13 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 @JS()
 @anonymous
 class GeolocateControlOptionsJsImpl {
+  external factory GeolocateControlOptionsJsImpl({
+    PositionOptionsJsImpl? positionOptions,
+    dynamic fitBoundsOptions,
+    bool? trackUserLocation,
+    bool? showAccuracyCircle,
+    bool? showUserLocation,
+  });
   external PositionOptionsJsImpl get positionOptions;
 
   external dynamic get fitBoundsOptions;
@@ -17,39 +24,29 @@ class GeolocateControlOptionsJsImpl {
   external bool get showAccuracyCircle;
 
   external bool get showUserLocation;
-
-  external factory GeolocateControlOptionsJsImpl({
-    PositionOptionsJsImpl? positionOptions,
-    dynamic fitBoundsOptions,
-    bool? trackUserLocation,
-    bool? showAccuracyCircle,
-    bool? showUserLocation,
-  });
 }
 
 @JS()
 @anonymous
 class PositionOptionsJsImpl {
-  external bool get enableHighAccuracy;
-
-  external num get maximumAge;
-
-  external num get timeout;
-
   external factory PositionOptionsJsImpl({
     bool? enableHighAccuracy,
     num? maximumAge,
     num? timeout,
   });
+  external bool get enableHighAccuracy;
+
+  external num get maximumAge;
+
+  external num get timeout;
 }
 
 @JS('GeolocateControl')
 abstract class GeolocateControlJsImpl extends EventedJsImpl {
-  external GeolocateControlOptionsJsImpl get options;
-
   external factory GeolocateControlJsImpl(
     GeolocateControlOptionsJsImpl options,
   );
+  external GeolocateControlOptionsJsImpl get options;
 
   external dynamic onAdd(MapLibreMapJsImpl map);
 

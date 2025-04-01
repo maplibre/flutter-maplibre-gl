@@ -22,6 +22,13 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 @JS()
 @anonymous
 class CameraOptionsJsImpl {
+  external factory CameraOptionsJsImpl({
+    LngLatJsImpl? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLatJsImpl? around,
+  });
   external LngLatJsImpl get center;
 
   external num get zoom;
@@ -31,14 +38,6 @@ class CameraOptionsJsImpl {
   external num get pitch;
 
   external LngLatJsImpl get around;
-
-  external factory CameraOptionsJsImpl({
-    LngLatJsImpl? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatJsImpl? around,
-  });
 }
 
 ///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
@@ -56,6 +55,13 @@ class CameraOptionsJsImpl {
 @JS()
 @anonymous
 class AnimationOptionsJsImpl {
+  external factory AnimationOptionsJsImpl({
+    num? duration,
+    num Function(num time)? easing,
+    PointJsImpl? offset,
+    bool? animate,
+    bool? essential,
+  });
   external num get duration;
 
   external num Function(num time) get easing;
@@ -65,14 +71,6 @@ class AnimationOptionsJsImpl {
   external bool get animate;
 
   external bool get essential;
-
-  external factory AnimationOptionsJsImpl({
-    num? duration,
-    num Function(num time)? easing,
-    PointJsImpl? offset,
-    bool? animate,
-    bool? essential,
-  });
 }
 
 ///  Options for setting padding on a call to {@link MapLibreMap#fitBounds}. All properties of this object must be
@@ -86,6 +84,12 @@ class AnimationOptionsJsImpl {
 @JS()
 @anonymous
 class PaddingOptionsJsImpl {
+  external factory PaddingOptionsJsImpl({
+    num? top,
+    num? bottom,
+    num? left,
+    num? right,
+  });
   external num get top;
 
   external num get bottom;
@@ -93,13 +97,6 @@ class PaddingOptionsJsImpl {
   external num get left;
 
   external num get right;
-
-  external factory PaddingOptionsJsImpl({
-    num? top,
-    num? bottom,
-    num? left,
-    num? right,
-  });
 }
 
 @JS('Camera')

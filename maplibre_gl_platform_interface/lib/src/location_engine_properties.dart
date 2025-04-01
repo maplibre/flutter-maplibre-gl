@@ -3,13 +3,13 @@ part of '../maplibre_gl_platform_interface.dart';
 /// iOS is not supported at the moment.
 @immutable
 class LocationEnginePlatforms {
-  /// The properties for the Android platform.
-  final LocationEngineAndroidProperties androidPlatform;
-
   /// If [androidPlatform] is not provided, it defaults to [LocationEngineAndroidProperties.defaultProperties].
   const LocationEnginePlatforms({
     this.androidPlatform = LocationEngineAndroidProperties.defaultProperties,
   });
+
+  /// The properties for the Android platform.
+  final LocationEngineAndroidProperties androidPlatform;
 
   static const LocationEnginePlatforms defaultPlatform =
       LocationEnginePlatforms();
@@ -27,6 +27,12 @@ class LocationEnginePlatforms {
 
 @immutable
 class LocationEngineAndroidProperties {
+  const LocationEngineAndroidProperties({
+    required this.interval,
+    required this.displacement,
+    required this.priority,
+  });
+
   /// The interval in milliseconds for location updates.
   final int interval;
 
@@ -39,12 +45,6 @@ class LocationEngineAndroidProperties {
   /// [LocationPriority.noPower] only receives location updates when another clients request them
   ///
   final LocationPriority priority;
-
-  const LocationEngineAndroidProperties({
-    required this.interval,
-    required this.displacement,
-    required this.priority,
-  });
 
   static const LocationEngineAndroidProperties defaultProperties =
       LocationEngineAndroidProperties(

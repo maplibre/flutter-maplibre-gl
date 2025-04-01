@@ -51,11 +51,14 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  ```
 ///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 class MapLibreMap extends Camera {
-  @override
-  MapLibreMapJsImpl get jsObject => super.jsObject as MapLibreMapJsImpl;
-
   factory MapLibreMap(MapOptions options) =>
       MapLibreMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
+
+  /// Creates a new MapLibreMap from a [jsObject].
+  MapLibreMap.fromJsObject(MapLibreMapJsImpl super.jsObject)
+      : super.fromJsObject();
+  @override
+  MapLibreMapJsImpl get jsObject => super.jsObject as MapLibreMapJsImpl;
 
   Style get style => Style.fromJsObject(jsObject.style);
 
@@ -1070,13 +1073,103 @@ class MapLibreMap extends Camera {
   ///  @memberof MapLibreMap
   ///  @var {string} version
   String get version => jsObject.version;
-
-  /// Creates a new MapLibreMap from a [jsObject].
-  MapLibreMap.fromJsObject(MapLibreMapJsImpl super.jsObject)
-      : super.fromJsObject();
 }
 
 class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
+  factory MapOptions({
+    dynamic hash,
+    bool? interactive,
+    dynamic container,
+    num? bearingSnap,
+    bool? pitchWithRotate,
+    bool? clickTolerance,
+    bool? attributionControl,
+    dynamic customAttribution,
+    String? logoPosition,
+    bool? failIfMajorPerformanceCaveat,
+    bool? preserveDrawingBuffer,
+    bool? antialias,
+    bool? refreshExpiredTiles,
+    LngLatBounds? maxBounds,
+    bool? scrollZoom,
+    num? minZoom,
+    num? maxZoom,
+    num? minPitch,
+    num? maxPitch,
+    dynamic style,
+    bool? boxZoom,
+    bool? dragRotate,
+    dynamic dragPan,
+    bool? keyboard,
+    bool? doubleClickZoom,
+    bool? touchZoomRotate,
+    bool? trackResize,
+    LngLat? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLatBounds? bounds,
+    dynamic fitBoundsOptions,
+    bool? renderWorldCopies,
+    num? maxTileCacheSize,
+    String? localIdeographFontFamily,
+    RequestTransformFunctionJsImpl? transformRequest, //TODO: Remove JsImpl
+    bool? collectResourceTiming,
+    num? fadeDuration,
+    bool? crossSourceCollisions,
+    String? accessToken,
+    dynamic locale,
+  }) =>
+      MapOptions.fromJsObject(
+        MapOptionsJsImpl(
+          //hash: hash,
+          interactive: interactive ?? true,
+          container: container,
+          bearingSnap: bearingSnap,
+          pitchWithRotate: pitchWithRotate ?? true,
+          clickTolerance: clickTolerance ?? true,
+          attributionControl: attributionControl ?? true,
+          customAttribution: customAttribution,
+          logoPosition: logoPosition ?? 'bottom-left',
+          failIfMajorPerformanceCaveat: failIfMajorPerformanceCaveat,
+          preserveDrawingBuffer: preserveDrawingBuffer,
+          antialias: antialias,
+          refreshExpiredTiles: refreshExpiredTiles,
+          maxBounds: maxBounds?.jsObject,
+          scrollZoom: scrollZoom ?? true,
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+          minPitch: minPitch,
+          maxPitch: maxPitch,
+          style: style,
+          boxZoom: boxZoom,
+          dragRotate: dragRotate,
+          dragPan: dragPan ?? true,
+          keyboard: keyboard ?? true,
+          doubleClickZoom: doubleClickZoom ?? true,
+          touchZoomRotate: touchZoomRotate ?? true,
+          trackResize: trackResize ?? true,
+          center: center?.jsObject,
+          zoom: zoom,
+          bearing: bearing,
+          pitch: pitch,
+          bounds: bounds?.jsObject,
+          fitBoundsOptions: fitBoundsOptions,
+          renderWorldCopies: renderWorldCopies,
+          maxTileCacheSize: maxTileCacheSize,
+          localIdeographFontFamily: localIdeographFontFamily,
+          transformRequest: transformRequest,
+          collectResourceTiming: collectResourceTiming,
+          fadeDuration: fadeDuration,
+          crossSourceCollisions: crossSourceCollisions,
+          accessToken: accessToken,
+          locale: locale,
+        ),
+      );
+
+  /// Creates a new MapOptions from a [jsObject].
+  MapOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
   /// For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
   /// An additional string may optionally be provided to indicate a parameter-styled hash,
@@ -1225,113 +1318,9 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
 
   /// A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
   dynamic get locale => jsObject.locale;
-
-  factory MapOptions({
-    dynamic hash,
-    bool? interactive,
-    dynamic container,
-    num? bearingSnap,
-    bool? pitchWithRotate,
-    bool? clickTolerance,
-    bool? attributionControl,
-    dynamic customAttribution,
-    String? logoPosition,
-    bool? failIfMajorPerformanceCaveat,
-    bool? preserveDrawingBuffer,
-    bool? antialias,
-    bool? refreshExpiredTiles,
-    LngLatBounds? maxBounds,
-    bool? scrollZoom,
-    num? minZoom,
-    num? maxZoom,
-    num? minPitch,
-    num? maxPitch,
-    dynamic style,
-    bool? boxZoom,
-    bool? dragRotate,
-    dynamic dragPan,
-    bool? keyboard,
-    bool? doubleClickZoom,
-    bool? touchZoomRotate,
-    bool? trackResize,
-    LngLat? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatBounds? bounds,
-    dynamic fitBoundsOptions,
-    bool? renderWorldCopies,
-    num? maxTileCacheSize,
-    String? localIdeographFontFamily,
-    RequestTransformFunctionJsImpl? transformRequest, //TODO: Remove JsImpl
-    bool? collectResourceTiming,
-    num? fadeDuration,
-    bool? crossSourceCollisions,
-    String? accessToken,
-    dynamic locale,
-  }) =>
-      MapOptions.fromJsObject(
-        MapOptionsJsImpl(
-          //hash: hash,
-          interactive: interactive ?? true,
-          container: container,
-          bearingSnap: bearingSnap,
-          pitchWithRotate: pitchWithRotate ?? true,
-          clickTolerance: clickTolerance ?? true,
-          attributionControl: attributionControl ?? true,
-          customAttribution: customAttribution,
-          logoPosition: logoPosition ?? 'bottom-left',
-          failIfMajorPerformanceCaveat: failIfMajorPerformanceCaveat,
-          preserveDrawingBuffer: preserveDrawingBuffer,
-          antialias: antialias,
-          refreshExpiredTiles: refreshExpiredTiles,
-          maxBounds: maxBounds?.jsObject,
-          scrollZoom: scrollZoom ?? true,
-          minZoom: minZoom,
-          maxZoom: maxZoom,
-          minPitch: minPitch,
-          maxPitch: maxPitch,
-          style: style,
-          boxZoom: boxZoom,
-          dragRotate: dragRotate,
-          dragPan: dragPan ?? true,
-          keyboard: keyboard ?? true,
-          doubleClickZoom: doubleClickZoom ?? true,
-          touchZoomRotate: touchZoomRotate ?? true,
-          trackResize: trackResize ?? true,
-          center: center?.jsObject,
-          zoom: zoom,
-          bearing: bearing,
-          pitch: pitch,
-          bounds: bounds?.jsObject,
-          fitBoundsOptions: fitBoundsOptions,
-          renderWorldCopies: renderWorldCopies,
-          maxTileCacheSize: maxTileCacheSize,
-          localIdeographFontFamily: localIdeographFontFamily,
-          transformRequest: transformRequest,
-          collectResourceTiming: collectResourceTiming,
-          fadeDuration: fadeDuration,
-          crossSourceCollisions: crossSourceCollisions,
-          accessToken: accessToken,
-          locale: locale,
-        ),
-      );
-
-  /// Creates a new MapOptions from a [jsObject].
-  MapOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
-  String? get url => jsObject.url;
-
-  String? get credentials => jsObject.credentials;
-
-  dynamic get headers => jsObject.headers;
-
-  String? get method => jsObject.method;
-
-  bool? get collectResourceTiming => jsObject.collectResourceTiming;
-
   factory RequestParameters({
     String? url,
     String? credentials,
@@ -1351,6 +1340,15 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 
   /// Creates a new RequestParameters from a [jsObject].
   RequestParameters.fromJsObject(super.jsObject) : super.fromJsObject();
+  String? get url => jsObject.url;
+
+  String? get credentials => jsObject.credentials;
+
+  dynamic get headers => jsObject.headers;
+
+  String? get method => jsObject.method;
+
+  bool? get collectResourceTiming => jsObject.collectResourceTiming;
 }
 
 ///  Interface for interactive controls added to the map. This is a
@@ -1384,6 +1382,9 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 /// }
 /// ```
 class IControl extends JsObjectWrapper<IControlJsImpl> {
+  /// Creates a new IControl from a [jsObject].
+  IControl.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Register a control on the map and give it a chance to register event listeners
   ///  and resources. This method is called by {@link MapLibreMap#addControl}
   ///  internally.
@@ -1399,7 +1400,4 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
   ///  parameter, the value returned by getDefaultPosition will be used as the
   ///  control's position.
   String getDefaultPosition() => jsObject.getDefaultPosition();
-
-  /// Creates a new IControl from a [jsObject].
-  IControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

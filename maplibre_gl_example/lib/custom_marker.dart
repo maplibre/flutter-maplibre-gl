@@ -185,16 +185,15 @@ class CustomMarkerState extends State<CustomMarker> {
 }
 
 class Marker extends StatefulWidget {
-  final Point initialPosition;
-  final LatLng _coordinate;
-  final void Function(MarkerState) addMarkerState;
-
   Marker(
     String key,
     this._coordinate,
     this.initialPosition,
     this.addMarkerState,
   ) : super(key: Key(key));
+  final Point initialPosition;
+  final LatLng _coordinate;
+  final void Function(MarkerState) addMarkerState;
 
   @override
   State<StatefulWidget> createState() {
@@ -203,14 +202,13 @@ class Marker extends StatefulWidget {
 }
 
 class MarkerState extends State<Marker> with TickerProviderStateMixin {
+  MarkerState();
   final _iconSize = 20.0;
 
   late Point _position;
 
   late AnimationController _controller;
   late Animation<double> _animation;
-
-  MarkerState();
 
   @override
   void initState() {

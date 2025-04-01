@@ -8,6 +8,125 @@ abstract class LayerProperties {
 }
 
 class SymbolLayerProperties implements LayerProperties {
+  const SymbolLayerProperties({
+    this.iconOpacity,
+    this.iconColor,
+    this.iconHaloColor,
+    this.iconHaloWidth,
+    this.iconHaloBlur,
+    this.iconTranslate,
+    this.iconTranslateAnchor,
+    this.textOpacity,
+    this.textColor,
+    this.textHaloColor,
+    this.textHaloWidth,
+    this.textHaloBlur,
+    this.textTranslate,
+    this.textTranslateAnchor,
+    this.symbolPlacement,
+    this.symbolSpacing,
+    this.symbolAvoidEdges,
+    this.symbolSortKey,
+    this.symbolZOrder,
+    this.iconAllowOverlap,
+    this.iconIgnorePlacement,
+    this.iconOptional,
+    this.iconRotationAlignment,
+    this.iconSize,
+    this.iconTextFit,
+    this.iconTextFitPadding,
+    this.iconImage,
+    this.iconRotate,
+    this.iconPadding,
+    this.iconKeepUpright,
+    this.iconOffset,
+    this.iconAnchor,
+    this.iconPitchAlignment,
+    this.textPitchAlignment,
+    this.textRotationAlignment,
+    this.textField,
+    this.textFont,
+    this.textSize,
+    this.textMaxWidth,
+    this.textLineHeight,
+    this.textLetterSpacing,
+    this.textJustify,
+    this.textRadialOffset,
+    this.textVariableAnchor,
+    this.textAnchor,
+    this.textMaxAngle,
+    this.textWritingMode,
+    this.textRotate,
+    this.textPadding,
+    this.textKeepUpright,
+    this.textTransform,
+    this.textOffset,
+    this.textAllowOverlap,
+    this.textIgnorePlacement,
+    this.textOptional,
+    this.visibility,
+  });
+
+  factory SymbolLayerProperties.fromJson(Map<String, dynamic> json) {
+    return SymbolLayerProperties(
+      iconOpacity: json['icon-opacity'],
+      iconColor: json['icon-color'],
+      iconHaloColor: json['icon-halo-color'],
+      iconHaloWidth: json['icon-halo-width'],
+      iconHaloBlur: json['icon-halo-blur'],
+      iconTranslate: json['icon-translate'],
+      iconTranslateAnchor: json['icon-translate-anchor'],
+      textOpacity: json['text-opacity'],
+      textColor: json['text-color'],
+      textHaloColor: json['text-halo-color'],
+      textHaloWidth: json['text-halo-width'],
+      textHaloBlur: json['text-halo-blur'],
+      textTranslate: json['text-translate'],
+      textTranslateAnchor: json['text-translate-anchor'],
+      symbolPlacement: json['symbol-placement'],
+      symbolSpacing: json['symbol-spacing'],
+      symbolAvoidEdges: json['symbol-avoid-edges'],
+      symbolSortKey: json['symbol-sort-key'],
+      symbolZOrder: json['symbol-z-order'],
+      iconAllowOverlap: json['icon-allow-overlap'],
+      iconIgnorePlacement: json['icon-ignore-placement'],
+      iconOptional: json['icon-optional'],
+      iconRotationAlignment: json['icon-rotation-alignment'],
+      iconSize: json['icon-size'],
+      iconTextFit: json['icon-text-fit'],
+      iconTextFitPadding: json['icon-text-fit-padding'],
+      iconImage: json['icon-image'],
+      iconRotate: json['icon-rotate'],
+      iconPadding: json['icon-padding'],
+      iconKeepUpright: json['icon-keep-upright'],
+      iconOffset: json['icon-offset'],
+      iconAnchor: json['icon-anchor'],
+      iconPitchAlignment: json['icon-pitch-alignment'],
+      textPitchAlignment: json['text-pitch-alignment'],
+      textRotationAlignment: json['text-rotation-alignment'],
+      textField: json['text-field'],
+      textFont: json['text-font'],
+      textSize: json['text-size'],
+      textMaxWidth: json['text-max-width'],
+      textLineHeight: json['text-line-height'],
+      textLetterSpacing: json['text-letter-spacing'],
+      textJustify: json['text-justify'],
+      textRadialOffset: json['text-radial-offset'],
+      textVariableAnchor: json['text-variable-anchor'],
+      textAnchor: json['text-anchor'],
+      textMaxAngle: json['text-max-angle'],
+      textWritingMode: json['text-writing-mode'],
+      textRotate: json['text-rotate'],
+      textPadding: json['text-padding'],
+      textKeepUpright: json['text-keep-upright'],
+      textTransform: json['text-transform'],
+      textOffset: json['text-offset'],
+      textAllowOverlap: json['text-allow-overlap'],
+      textIgnorePlacement: json['text-ignore-placement'],
+      textOptional: json['text-optional'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// The opacity at which the icon will be drawn.
   ///
@@ -780,65 +899,6 @@ class SymbolLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const SymbolLayerProperties({
-    this.iconOpacity,
-    this.iconColor,
-    this.iconHaloColor,
-    this.iconHaloWidth,
-    this.iconHaloBlur,
-    this.iconTranslate,
-    this.iconTranslateAnchor,
-    this.textOpacity,
-    this.textColor,
-    this.textHaloColor,
-    this.textHaloWidth,
-    this.textHaloBlur,
-    this.textTranslate,
-    this.textTranslateAnchor,
-    this.symbolPlacement,
-    this.symbolSpacing,
-    this.symbolAvoidEdges,
-    this.symbolSortKey,
-    this.symbolZOrder,
-    this.iconAllowOverlap,
-    this.iconIgnorePlacement,
-    this.iconOptional,
-    this.iconRotationAlignment,
-    this.iconSize,
-    this.iconTextFit,
-    this.iconTextFitPadding,
-    this.iconImage,
-    this.iconRotate,
-    this.iconPadding,
-    this.iconKeepUpright,
-    this.iconOffset,
-    this.iconAnchor,
-    this.iconPitchAlignment,
-    this.textPitchAlignment,
-    this.textRotationAlignment,
-    this.textField,
-    this.textFont,
-    this.textSize,
-    this.textMaxWidth,
-    this.textLineHeight,
-    this.textLetterSpacing,
-    this.textJustify,
-    this.textRadialOffset,
-    this.textVariableAnchor,
-    this.textAnchor,
-    this.textMaxAngle,
-    this.textWritingMode,
-    this.textRotate,
-    this.textPadding,
-    this.textKeepUpright,
-    this.textTransform,
-    this.textOffset,
-    this.textAllowOverlap,
-    this.textIgnorePlacement,
-    this.textOptional,
-    this.visibility,
-  });
-
   SymbolLayerProperties copyWith(SymbolLayerProperties changes) {
     return SymbolLayerProperties(
       iconOpacity: changes.iconOpacity ?? iconOpacity,
@@ -970,70 +1030,42 @@ class SymbolLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory SymbolLayerProperties.fromJson(Map<String, dynamic> json) {
-    return SymbolLayerProperties(
-      iconOpacity: json['icon-opacity'],
-      iconColor: json['icon-color'],
-      iconHaloColor: json['icon-halo-color'],
-      iconHaloWidth: json['icon-halo-width'],
-      iconHaloBlur: json['icon-halo-blur'],
-      iconTranslate: json['icon-translate'],
-      iconTranslateAnchor: json['icon-translate-anchor'],
-      textOpacity: json['text-opacity'],
-      textColor: json['text-color'],
-      textHaloColor: json['text-halo-color'],
-      textHaloWidth: json['text-halo-width'],
-      textHaloBlur: json['text-halo-blur'],
-      textTranslate: json['text-translate'],
-      textTranslateAnchor: json['text-translate-anchor'],
-      symbolPlacement: json['symbol-placement'],
-      symbolSpacing: json['symbol-spacing'],
-      symbolAvoidEdges: json['symbol-avoid-edges'],
-      symbolSortKey: json['symbol-sort-key'],
-      symbolZOrder: json['symbol-z-order'],
-      iconAllowOverlap: json['icon-allow-overlap'],
-      iconIgnorePlacement: json['icon-ignore-placement'],
-      iconOptional: json['icon-optional'],
-      iconRotationAlignment: json['icon-rotation-alignment'],
-      iconSize: json['icon-size'],
-      iconTextFit: json['icon-text-fit'],
-      iconTextFitPadding: json['icon-text-fit-padding'],
-      iconImage: json['icon-image'],
-      iconRotate: json['icon-rotate'],
-      iconPadding: json['icon-padding'],
-      iconKeepUpright: json['icon-keep-upright'],
-      iconOffset: json['icon-offset'],
-      iconAnchor: json['icon-anchor'],
-      iconPitchAlignment: json['icon-pitch-alignment'],
-      textPitchAlignment: json['text-pitch-alignment'],
-      textRotationAlignment: json['text-rotation-alignment'],
-      textField: json['text-field'],
-      textFont: json['text-font'],
-      textSize: json['text-size'],
-      textMaxWidth: json['text-max-width'],
-      textLineHeight: json['text-line-height'],
-      textLetterSpacing: json['text-letter-spacing'],
-      textJustify: json['text-justify'],
-      textRadialOffset: json['text-radial-offset'],
-      textVariableAnchor: json['text-variable-anchor'],
-      textAnchor: json['text-anchor'],
-      textMaxAngle: json['text-max-angle'],
-      textWritingMode: json['text-writing-mode'],
-      textRotate: json['text-rotate'],
-      textPadding: json['text-padding'],
-      textKeepUpright: json['text-keep-upright'],
-      textTransform: json['text-transform'],
-      textOffset: json['text-offset'],
-      textAllowOverlap: json['text-allow-overlap'],
-      textIgnorePlacement: json['text-ignore-placement'],
-      textOptional: json['text-optional'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class CircleLayerProperties implements LayerProperties {
+  const CircleLayerProperties({
+    this.circleRadius,
+    this.circleColor,
+    this.circleBlur,
+    this.circleOpacity,
+    this.circleTranslate,
+    this.circleTranslateAnchor,
+    this.circlePitchScale,
+    this.circlePitchAlignment,
+    this.circleStrokeWidth,
+    this.circleStrokeColor,
+    this.circleStrokeOpacity,
+    this.circleSortKey,
+    this.visibility,
+  });
+
+  factory CircleLayerProperties.fromJson(Map<String, dynamic> json) {
+    return CircleLayerProperties(
+      circleRadius: json['circle-radius'],
+      circleColor: json['circle-color'],
+      circleBlur: json['circle-blur'],
+      circleOpacity: json['circle-opacity'],
+      circleTranslate: json['circle-translate'],
+      circleTranslateAnchor: json['circle-translate-anchor'],
+      circlePitchScale: json['circle-pitch-scale'],
+      circlePitchAlignment: json['circle-pitch-alignment'],
+      circleStrokeWidth: json['circle-stroke-width'],
+      circleStrokeColor: json['circle-stroke-color'],
+      circleStrokeOpacity: json['circle-stroke-opacity'],
+      circleSortKey: json['circle-sort-key'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// Circle radius.
   ///
@@ -1191,22 +1223,6 @@ class CircleLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const CircleLayerProperties({
-    this.circleRadius,
-    this.circleColor,
-    this.circleBlur,
-    this.circleOpacity,
-    this.circleTranslate,
-    this.circleTranslateAnchor,
-    this.circlePitchScale,
-    this.circlePitchAlignment,
-    this.circleStrokeWidth,
-    this.circleStrokeColor,
-    this.circleStrokeOpacity,
-    this.circleSortKey,
-    this.visibility,
-  });
-
   CircleLayerProperties copyWith(CircleLayerProperties changes) {
     return CircleLayerProperties(
       circleRadius: changes.circleRadius ?? circleRadius,
@@ -1252,27 +1268,50 @@ class CircleLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory CircleLayerProperties.fromJson(Map<String, dynamic> json) {
-    return CircleLayerProperties(
-      circleRadius: json['circle-radius'],
-      circleColor: json['circle-color'],
-      circleBlur: json['circle-blur'],
-      circleOpacity: json['circle-opacity'],
-      circleTranslate: json['circle-translate'],
-      circleTranslateAnchor: json['circle-translate-anchor'],
-      circlePitchScale: json['circle-pitch-scale'],
-      circlePitchAlignment: json['circle-pitch-alignment'],
-      circleStrokeWidth: json['circle-stroke-width'],
-      circleStrokeColor: json['circle-stroke-color'],
-      circleStrokeOpacity: json['circle-stroke-opacity'],
-      circleSortKey: json['circle-sort-key'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class LineLayerProperties implements LayerProperties {
+  const LineLayerProperties({
+    this.lineOpacity,
+    this.lineColor,
+    this.lineTranslate,
+    this.lineTranslateAnchor,
+    this.lineWidth,
+    this.lineGapWidth,
+    this.lineOffset,
+    this.lineBlur,
+    this.lineDasharray,
+    this.linePattern,
+    this.lineGradient,
+    this.lineCap,
+    this.lineJoin,
+    this.lineMiterLimit,
+    this.lineRoundLimit,
+    this.lineSortKey,
+    this.visibility,
+  });
+
+  factory LineLayerProperties.fromJson(Map<String, dynamic> json) {
+    return LineLayerProperties(
+      lineOpacity: json['line-opacity'],
+      lineColor: json['line-color'],
+      lineTranslate: json['line-translate'],
+      lineTranslateAnchor: json['line-translate-anchor'],
+      lineWidth: json['line-width'],
+      lineGapWidth: json['line-gap-width'],
+      lineOffset: json['line-offset'],
+      lineBlur: json['line-blur'],
+      lineDasharray: json['line-dasharray'],
+      linePattern: json['line-pattern'],
+      lineGradient: json['line-gradient'],
+      lineCap: json['line-cap'],
+      lineJoin: json['line-join'],
+      lineMiterLimit: json['line-miter-limit'],
+      lineRoundLimit: json['line-round-limit'],
+      lineSortKey: json['line-sort-key'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// The opacity at which the line will be drawn.
   ///
@@ -1489,26 +1528,6 @@ class LineLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const LineLayerProperties({
-    this.lineOpacity,
-    this.lineColor,
-    this.lineTranslate,
-    this.lineTranslateAnchor,
-    this.lineWidth,
-    this.lineGapWidth,
-    this.lineOffset,
-    this.lineBlur,
-    this.lineDasharray,
-    this.linePattern,
-    this.lineGradient,
-    this.lineCap,
-    this.lineJoin,
-    this.lineMiterLimit,
-    this.lineRoundLimit,
-    this.lineSortKey,
-    this.visibility,
-  });
-
   LineLayerProperties copyWith(LineLayerProperties changes) {
     return LineLayerProperties(
       lineOpacity: changes.lineOpacity ?? lineOpacity,
@@ -1560,31 +1579,34 @@ class LineLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory LineLayerProperties.fromJson(Map<String, dynamic> json) {
-    return LineLayerProperties(
-      lineOpacity: json['line-opacity'],
-      lineColor: json['line-color'],
-      lineTranslate: json['line-translate'],
-      lineTranslateAnchor: json['line-translate-anchor'],
-      lineWidth: json['line-width'],
-      lineGapWidth: json['line-gap-width'],
-      lineOffset: json['line-offset'],
-      lineBlur: json['line-blur'],
-      lineDasharray: json['line-dasharray'],
-      linePattern: json['line-pattern'],
-      lineGradient: json['line-gradient'],
-      lineCap: json['line-cap'],
-      lineJoin: json['line-join'],
-      lineMiterLimit: json['line-miter-limit'],
-      lineRoundLimit: json['line-round-limit'],
-      lineSortKey: json['line-sort-key'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class FillLayerProperties implements LayerProperties {
+  const FillLayerProperties({
+    this.fillAntialias,
+    this.fillOpacity,
+    this.fillColor,
+    this.fillOutlineColor,
+    this.fillTranslate,
+    this.fillTranslateAnchor,
+    this.fillPattern,
+    this.fillSortKey,
+    this.visibility,
+  });
+
+  factory FillLayerProperties.fromJson(Map<String, dynamic> json) {
+    return FillLayerProperties(
+      fillAntialias: json['fill-antialias'],
+      fillOpacity: json['fill-opacity'],
+      fillColor: json['fill-color'],
+      fillOutlineColor: json['fill-outline-color'],
+      fillTranslate: json['fill-translate'],
+      fillTranslateAnchor: json['fill-translate-anchor'],
+      fillPattern: json['fill-pattern'],
+      fillSortKey: json['fill-sort-key'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// Whether or not the fill should be antialiased.
   ///
@@ -1692,18 +1714,6 @@ class FillLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const FillLayerProperties({
-    this.fillAntialias,
-    this.fillOpacity,
-    this.fillColor,
-    this.fillOutlineColor,
-    this.fillTranslate,
-    this.fillTranslateAnchor,
-    this.fillPattern,
-    this.fillSortKey,
-    this.visibility,
-  });
-
   FillLayerProperties copyWith(FillLayerProperties changes) {
     return FillLayerProperties(
       fillAntialias: changes.fillAntialias ?? fillAntialias,
@@ -1739,23 +1749,34 @@ class FillLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory FillLayerProperties.fromJson(Map<String, dynamic> json) {
-    return FillLayerProperties(
-      fillAntialias: json['fill-antialias'],
-      fillOpacity: json['fill-opacity'],
-      fillColor: json['fill-color'],
-      fillOutlineColor: json['fill-outline-color'],
-      fillTranslate: json['fill-translate'],
-      fillTranslateAnchor: json['fill-translate-anchor'],
-      fillPattern: json['fill-pattern'],
-      fillSortKey: json['fill-sort-key'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class FillExtrusionLayerProperties implements LayerProperties {
+  const FillExtrusionLayerProperties({
+    this.fillExtrusionOpacity,
+    this.fillExtrusionColor,
+    this.fillExtrusionTranslate,
+    this.fillExtrusionTranslateAnchor,
+    this.fillExtrusionPattern,
+    this.fillExtrusionHeight,
+    this.fillExtrusionBase,
+    this.fillExtrusionVerticalGradient,
+    this.visibility,
+  });
+
+  factory FillExtrusionLayerProperties.fromJson(Map<String, dynamic> json) {
+    return FillExtrusionLayerProperties(
+      fillExtrusionOpacity: json['fill-extrusion-opacity'],
+      fillExtrusionColor: json['fill-extrusion-color'],
+      fillExtrusionTranslate: json['fill-extrusion-translate'],
+      fillExtrusionTranslateAnchor: json['fill-extrusion-translate-anchor'],
+      fillExtrusionPattern: json['fill-extrusion-pattern'],
+      fillExtrusionHeight: json['fill-extrusion-height'],
+      fillExtrusionBase: json['fill-extrusion-base'],
+      fillExtrusionVerticalGradient: json['fill-extrusion-vertical-gradient'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// The opacity of the entire fill extrusion layer. This is rendered on a
   /// per-layer, not per-feature, basis, and data-driven styling is not
@@ -1868,18 +1889,6 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const FillExtrusionLayerProperties({
-    this.fillExtrusionOpacity,
-    this.fillExtrusionColor,
-    this.fillExtrusionTranslate,
-    this.fillExtrusionTranslateAnchor,
-    this.fillExtrusionPattern,
-    this.fillExtrusionHeight,
-    this.fillExtrusionBase,
-    this.fillExtrusionVerticalGradient,
-    this.visibility,
-  });
-
   FillExtrusionLayerProperties copyWith(FillExtrusionLayerProperties changes) {
     return FillExtrusionLayerProperties(
       fillExtrusionOpacity:
@@ -1926,23 +1935,34 @@ class FillExtrusionLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory FillExtrusionLayerProperties.fromJson(Map<String, dynamic> json) {
-    return FillExtrusionLayerProperties(
-      fillExtrusionOpacity: json['fill-extrusion-opacity'],
-      fillExtrusionColor: json['fill-extrusion-color'],
-      fillExtrusionTranslate: json['fill-extrusion-translate'],
-      fillExtrusionTranslateAnchor: json['fill-extrusion-translate-anchor'],
-      fillExtrusionPattern: json['fill-extrusion-pattern'],
-      fillExtrusionHeight: json['fill-extrusion-height'],
-      fillExtrusionBase: json['fill-extrusion-base'],
-      fillExtrusionVerticalGradient: json['fill-extrusion-vertical-gradient'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class RasterLayerProperties implements LayerProperties {
+  const RasterLayerProperties({
+    this.rasterOpacity,
+    this.rasterHueRotate,
+    this.rasterBrightnessMin,
+    this.rasterBrightnessMax,
+    this.rasterSaturation,
+    this.rasterContrast,
+    this.rasterResampling,
+    this.rasterFadeDuration,
+    this.visibility,
+  });
+
+  factory RasterLayerProperties.fromJson(Map<String, dynamic> json) {
+    return RasterLayerProperties(
+      rasterOpacity: json['raster-opacity'],
+      rasterHueRotate: json['raster-hue-rotate'],
+      rasterBrightnessMin: json['raster-brightness-min'],
+      rasterBrightnessMax: json['raster-brightness-max'],
+      rasterSaturation: json['raster-saturation'],
+      rasterContrast: json['raster-contrast'],
+      rasterResampling: json['raster-resampling'],
+      rasterFadeDuration: json['raster-fade-duration'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// The opacity at which the image will be drawn.
   ///
@@ -2054,18 +2074,6 @@ class RasterLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const RasterLayerProperties({
-    this.rasterOpacity,
-    this.rasterHueRotate,
-    this.rasterBrightnessMin,
-    this.rasterBrightnessMax,
-    this.rasterSaturation,
-    this.rasterContrast,
-    this.rasterResampling,
-    this.rasterFadeDuration,
-    this.visibility,
-  });
-
   RasterLayerProperties copyWith(RasterLayerProperties changes) {
     return RasterLayerProperties(
       rasterOpacity: changes.rasterOpacity ?? rasterOpacity,
@@ -2101,23 +2109,30 @@ class RasterLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory RasterLayerProperties.fromJson(Map<String, dynamic> json) {
-    return RasterLayerProperties(
-      rasterOpacity: json['raster-opacity'],
-      rasterHueRotate: json['raster-hue-rotate'],
-      rasterBrightnessMin: json['raster-brightness-min'],
-      rasterBrightnessMax: json['raster-brightness-max'],
-      rasterSaturation: json['raster-saturation'],
-      rasterContrast: json['raster-contrast'],
-      rasterResampling: json['raster-resampling'],
-      rasterFadeDuration: json['raster-fade-duration'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class HillshadeLayerProperties implements LayerProperties {
+  const HillshadeLayerProperties({
+    this.hillshadeIlluminationDirection,
+    this.hillshadeIlluminationAnchor,
+    this.hillshadeExaggeration,
+    this.hillshadeShadowColor,
+    this.hillshadeHighlightColor,
+    this.hillshadeAccentColor,
+    this.visibility,
+  });
+
+  factory HillshadeLayerProperties.fromJson(Map<String, dynamic> json) {
+    return HillshadeLayerProperties(
+      hillshadeIlluminationDirection: json['hillshade-illumination-direction'],
+      hillshadeIlluminationAnchor: json['hillshade-illumination-anchor'],
+      hillshadeExaggeration: json['hillshade-exaggeration'],
+      hillshadeShadowColor: json['hillshade-shadow-color'],
+      hillshadeHighlightColor: json['hillshade-highlight-color'],
+      hillshadeAccentColor: json['hillshade-accent-color'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// The direction of the light source used to generate the hillshading
   /// with 0 as the top of the viewport if `hillshade-illumination-anchor`
@@ -2202,16 +2217,6 @@ class HillshadeLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const HillshadeLayerProperties({
-    this.hillshadeIlluminationDirection,
-    this.hillshadeIlluminationAnchor,
-    this.hillshadeExaggeration,
-    this.hillshadeShadowColor,
-    this.hillshadeHighlightColor,
-    this.hillshadeAccentColor,
-    this.visibility,
-  });
-
   HillshadeLayerProperties copyWith(HillshadeLayerProperties changes) {
     return HillshadeLayerProperties(
       hillshadeIlluminationDirection: changes.hillshadeIlluminationDirection ??
@@ -2252,21 +2257,28 @@ class HillshadeLayerProperties implements LayerProperties {
     addIfPresent('visibility', visibility);
     return json;
   }
-
-  factory HillshadeLayerProperties.fromJson(Map<String, dynamic> json) {
-    return HillshadeLayerProperties(
-      hillshadeIlluminationDirection: json['hillshade-illumination-direction'],
-      hillshadeIlluminationAnchor: json['hillshade-illumination-anchor'],
-      hillshadeExaggeration: json['hillshade-exaggeration'],
-      hillshadeShadowColor: json['hillshade-shadow-color'],
-      hillshadeHighlightColor: json['hillshade-highlight-color'],
-      hillshadeAccentColor: json['hillshade-accent-color'],
-      visibility: json['visibility'],
-    );
-  }
 }
 
 class HeatmapLayerProperties implements LayerProperties {
+  const HeatmapLayerProperties({
+    this.heatmapRadius,
+    this.heatmapWeight,
+    this.heatmapIntensity,
+    this.heatmapColor,
+    this.heatmapOpacity,
+    this.visibility,
+  });
+
+  factory HeatmapLayerProperties.fromJson(Map<String, dynamic> json) {
+    return HeatmapLayerProperties(
+      heatmapRadius: json['heatmap-radius'],
+      heatmapWeight: json['heatmap-weight'],
+      heatmapIntensity: json['heatmap-intensity'],
+      heatmapColor: json['heatmap-color'],
+      heatmapOpacity: json['heatmap-opacity'],
+      visibility: json['visibility'],
+    );
+  }
   // Paint Properties
   /// Radius of influence of one heatmap point in pixels. Increasing the
   /// value makes the heatmap smoother, but less detailed.
@@ -2342,15 +2354,6 @@ class HeatmapLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic visibility;
 
-  const HeatmapLayerProperties({
-    this.heatmapRadius,
-    this.heatmapWeight,
-    this.heatmapIntensity,
-    this.heatmapColor,
-    this.heatmapOpacity,
-    this.visibility,
-  });
-
   HeatmapLayerProperties copyWith(HeatmapLayerProperties changes) {
     return HeatmapLayerProperties(
       heatmapRadius: changes.heatmapRadius ?? heatmapRadius,
@@ -2379,16 +2382,5 @@ class HeatmapLayerProperties implements LayerProperties {
     addIfPresent('heatmap-opacity', heatmapOpacity);
     addIfPresent('visibility', visibility);
     return json;
-  }
-
-  factory HeatmapLayerProperties.fromJson(Map<String, dynamic> json) {
-    return HeatmapLayerProperties(
-      heatmapRadius: json['heatmap-radius'],
-      heatmapWeight: json['heatmap-weight'],
-      heatmapIntensity: json['heatmap-intensity'],
-      heatmapColor: json['heatmap-color'],
-      heatmapOpacity: json['heatmap-opacity'],
-      visibility: json['visibility'],
-    );
   }
 }

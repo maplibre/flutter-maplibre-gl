@@ -4,13 +4,14 @@ import 'package:maplibre_gl_web/src/style/style_image.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 
 class StyleSetterOptions extends JsObjectWrapper<StyleSetterOptionsJsImpl> {
-  bool get validate => jsObject.validate;
-
   /// Creates a new StyleSetterOptions from a [jsObject].
   StyleSetterOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+  bool get validate => jsObject.validate;
 }
 
 class Style extends JsObjectWrapper<StyleJsImpl> {
+  /// Creates a new Style from a [jsObject].
+  Style.fromJsObject(super.jsObject) : super.fromJsObject();
   dynamic loadURL(String url, dynamic options) =>
       jsObject.loadURL(url, options);
 
@@ -175,9 +176,6 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
     Function callback,
   ) =>
       jsObject.getResource(mapId, params.jsObject, callback);
-
-  /// Creates a new Style from a [jsObject].
-  Style.fromJsObject(super.jsObject) : super.fromJsObject();
 
   List<dynamic> get layers => jsObject.layers;
 }

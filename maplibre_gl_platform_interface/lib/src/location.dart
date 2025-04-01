@@ -19,6 +19,8 @@ class LatLng {
             (latitude < -90.0 ? -90.0 : (90.0 < latitude ? 90.0 : latitude)),
         longitude = (longitude + 180.0) % 360.0 - 180.0;
 
+  LatLng._fromJson(List<dynamic> json) : this(json[0], json[1]);
+
   /// The latitude in degrees between -90.0 and 90.0, both inclusive.
   final double latitude;
 
@@ -40,8 +42,6 @@ class LatLng {
   dynamic toGeoJsonCoordinates() {
     return <double>[longitude, latitude];
   }
-
-  LatLng._fromJson(List<dynamic> json) : this(json[0], json[1]);
 
   @override
   String toString() => 'LatLng($latitude, $longitude)';
@@ -192,6 +192,17 @@ class LatLngQuad {
 
 /// User's observed location
 class UserLocation {
+  const UserLocation({
+    required this.position,
+    required this.altitude,
+    required this.bearing,
+    required this.speed,
+    required this.horizontalAccuracy,
+    required this.verticalAccuracy,
+    required this.timestamp,
+    required this.heading,
+  });
+
   /// User's position in latitude and longitude
   final LatLng position;
 
@@ -215,22 +226,21 @@ class UserLocation {
 
   /// The heading of the user location, null if not available.
   final UserHeading? heading;
-
-  const UserLocation({
-    required this.position,
-    required this.altitude,
-    required this.bearing,
-    required this.speed,
-    required this.horizontalAccuracy,
-    required this.verticalAccuracy,
-    required this.timestamp,
-    required this.heading,
-  });
 }
 
 /// Type represents a geomagnetic value, measured in microteslas, relative to a
 /// device axis in three dimensional space.
 class UserHeading {
+  const UserHeading({
+    required this.magneticHeading,
+    required this.trueHeading,
+    required this.headingAccuracy,
+    required this.x,
+    required this.y,
+    required this.z,
+    required this.timestamp,
+  });
+
   /// Represents the direction in degrees, where 0 degrees is magnetic North.
   /// The direction is referenced from the top of the device regardless of
   /// device orientation as well as the orientation of the user interface.
@@ -257,14 +267,4 @@ class UserHeading {
 
   /// Returns a timestamp for when the magnetic heading was determined.
   final DateTime timestamp;
-
-  const UserHeading({
-    required this.magneticHeading,
-    required this.trueHeading,
-    required this.headingAccuracy,
-    required this.x,
-    required this.y,
-    required this.z,
-    required this.timestamp,
-  });
 }

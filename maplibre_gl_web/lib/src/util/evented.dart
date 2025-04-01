@@ -11,17 +11,6 @@ typedef Listener = dynamic Function(Event object);
 typedef GeoListener = dynamic Function(dynamic object);
 
 class Event extends JsObjectWrapper<EventJsImpl> {
-  String get id => jsObject.id;
-
-  String get type => jsObject.type;
-
-  LngLat get lngLat => LngLat.fromJsObject(jsObject.lngLat);
-
-  List<Feature> get features =>
-      jsObject.features.map(Feature.fromJsObject).toList();
-
-  Point get point => Point.fromJsObject(jsObject.point);
-
   factory Event({
     String? id,
     String? type,
@@ -40,13 +29,26 @@ class Event extends JsObjectWrapper<EventJsImpl> {
         ),
       );
 
-  dynamic preventDefault() => jsObject.preventDefault();
-
   /// Creates a new Event from a [jsObject].
   Event.fromJsObject(super.jsObject) : super.fromJsObject();
+  String get id => jsObject.id;
+
+  String get type => jsObject.type;
+
+  LngLat get lngLat => LngLat.fromJsObject(jsObject.lngLat);
+
+  List<Feature> get features =>
+      jsObject.features.map(Feature.fromJsObject).toList();
+
+  Point get point => Point.fromJsObject(jsObject.point);
+
+  dynamic preventDefault() => jsObject.preventDefault();
 }
 
 class Evented extends JsObjectWrapper<EventedJsImpl> {
+  /// Creates a new Evented from a [jsObject].
+  Evented.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Adds a listener to a specified event type.
   ///
   ///  @param {string} type The event type to add a listen for.
@@ -162,7 +164,4 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @private
   dynamic setEventedParent([Evented? parent, dynamic data]) =>
       jsObject.setEventedParent(parent?.jsObject, data);
-
-  /// Creates a new Evented from a [jsObject].
-  Evented.fromJsObject(super.jsObject) : super.fromJsObject();
 }

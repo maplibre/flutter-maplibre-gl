@@ -25,11 +25,13 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 /// @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
 /// @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
 class Marker extends Evented {
-  @override
-  final MarkerJsImpl jsObject;
-
   factory Marker([MarkerOptions? options]) =>
       Marker.fromJsObject(MarkerJsImpl(options?.jsObject));
+
+  /// Creates a new Marker from a [jsObject].
+  Marker.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  @override
+  final MarkerJsImpl jsObject;
 
   ///  Attaches the marker to a map
   ///  @param {MapLibreMap} map
@@ -126,9 +128,6 @@ class Marker extends Evented {
   ///  Returns the current `pitchAlignment` property of the marker.
   ///  @returns {string}
   String getPitchAlignment() => jsObject.getPitchAlignment();
-
-  /// Creates a new Marker from a [jsObject].
-  Marker.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {

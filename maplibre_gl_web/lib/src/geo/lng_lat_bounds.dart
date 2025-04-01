@@ -28,6 +28,24 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
         ),
       );
 
+  ///  Converts an array to a `LngLatBounds` object.
+  ///
+  ///  If a `LngLatBounds` object is passed in, the function returns it unchanged.
+  ///
+  ///  Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
+  ///
+  ///  @param {LngLatBoundsLike} input An array of two coordinates to convert, or a `LngLatBounds` object to return.
+  ///  @returns {LngLatBounds} A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.
+  ///  @example
+  ///  var arr = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
+  ///  var llb = maplibregl.LngLatBounds.convert(arr);
+  ///  llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
+  LngLatBounds.convert(dynamic input)
+      : this.fromJsObject(LngLatBoundsJsImpl.convert(input));
+
+  /// Creates a new LngLatBounds from a [jsObject].
+  LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Set the northeast corner of the bounding box
   ///
   ///  @param {LngLatLike} ne
@@ -126,22 +144,4 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  @param {LngLatLike} lnglat geographic point to check against.
   ///  @returns {boolean} True if the point is within the bounding box.
   bool contains(LngLat lnglat) => jsObject.contains(lnglat.jsObject);
-
-  ///  Converts an array to a `LngLatBounds` object.
-  ///
-  ///  If a `LngLatBounds` object is passed in, the function returns it unchanged.
-  ///
-  ///  Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
-  ///
-  ///  @param {LngLatBoundsLike} input An array of two coordinates to convert, or a `LngLatBounds` object to return.
-  ///  @returns {LngLatBounds} A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.
-  ///  @example
-  ///  var arr = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
-  ///  var llb = maplibregl.LngLatBounds.convert(arr);
-  ///  llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
-  LngLatBounds.convert(dynamic input)
-      : this.fromJsObject(LngLatBoundsJsImpl.convert(input));
-
-  /// Creates a new LngLatBounds from a [jsObject].
-  LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();
 }

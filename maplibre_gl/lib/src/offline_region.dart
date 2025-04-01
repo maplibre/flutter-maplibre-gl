@@ -11,6 +11,17 @@ class OfflineRegionDefinition {
     this.includeIdeographs = false,
   });
 
+  factory OfflineRegionDefinition.fromMap(Map<String, dynamic> map) {
+    return OfflineRegionDefinition(
+      bounds: _latLngBoundsFromList(map['bounds']),
+      mapStyleUrl: map['mapStyleUrl'],
+      // small integers may deserialize to Int
+      minZoom: map['minZoom'].toDouble(),
+      maxZoom: map['maxZoom'].toDouble(),
+      includeIdeographs: map['includeIdeographs'] ?? false,
+    );
+  }
+
   final LatLngBounds bounds;
   final String mapStyleUrl;
   final double minZoom;
@@ -31,17 +42,6 @@ class OfflineRegionDefinition {
     return data;
   }
 
-  factory OfflineRegionDefinition.fromMap(Map<String, dynamic> map) {
-    return OfflineRegionDefinition(
-      bounds: _latLngBoundsFromList(map['bounds']),
-      mapStyleUrl: map['mapStyleUrl'],
-      // small integers may deserialize to Int
-      minZoom: map['minZoom'].toDouble(),
-      maxZoom: map['maxZoom'].toDouble(),
-      includeIdeographs: map['includeIdeographs'] ?? false,
-    );
-  }
-
   static LatLngBounds _latLngBoundsFromList(List<dynamic> json) {
     return LatLngBounds(
       southwest: LatLng(json[0][0], json[0][1]),
@@ -58,10 +58,6 @@ class OfflineRegion {
     required this.metadata,
   });
 
-  final int id;
-  final OfflineRegionDefinition definition;
-  final Map<String, dynamic> metadata;
-
   factory OfflineRegion.fromMap(Map<String, dynamic> json) {
     return OfflineRegion(
       id: json['id'],
@@ -69,6 +65,10 @@ class OfflineRegion {
       metadata: json['metadata'],
     );
   }
+
+  final int id;
+  final OfflineRegionDefinition definition;
+  final Map<String, dynamic> metadata;
 
   @override
   String toString() =>

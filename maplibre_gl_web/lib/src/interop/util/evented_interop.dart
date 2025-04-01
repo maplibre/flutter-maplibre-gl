@@ -12,12 +12,6 @@ typedef ListenerJsImpl = dynamic Function(EventJsImpl object);
 @JS()
 @anonymous
 abstract class EventJsImpl {
-  external String get id;
-  external String get type;
-  external LngLatJsImpl get lngLat;
-  external List<FeatureJsImpl> get features;
-  external PointJsImpl get point;
-
   external factory EventJsImpl({
     String? id,
     String? type,
@@ -25,6 +19,11 @@ abstract class EventJsImpl {
     List<FeatureJsImpl?>? features,
     PointJsImpl? point,
   });
+  external String get id;
+  external String get type;
+  external LngLatJsImpl get lngLat;
+  external List<FeatureJsImpl> get features;
+  external PointJsImpl get point;
 
   external dynamic preventDefault();
 }

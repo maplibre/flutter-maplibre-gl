@@ -989,6 +989,51 @@ class MapLibreMapJsImpl extends CameraJsImpl {
 @JS()
 @anonymous
 class MapOptionsJsImpl {
+  external factory MapOptionsJsImpl({
+    dynamic hash,
+    bool? interactive,
+    dynamic container,
+    num? bearingSnap,
+    bool? pitchWithRotate,
+    bool? clickTolerance,
+    bool? attributionControl,
+    dynamic customAttribution,
+    String? logoPosition,
+    bool? failIfMajorPerformanceCaveat,
+    bool? preserveDrawingBuffer,
+    bool? antialias,
+    bool? refreshExpiredTiles,
+    LngLatBoundsJsImpl? maxBounds,
+    bool? scrollZoom,
+    num? minZoom,
+    num? maxZoom,
+    num? minPitch,
+    num? maxPitch,
+    dynamic style,
+    bool? boxZoom,
+    bool? dragRotate,
+    dynamic dragPan,
+    bool? keyboard,
+    bool? doubleClickZoom,
+    bool? touchZoomRotate,
+    bool? trackResize,
+    LngLatJsImpl? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLatBoundsJsImpl? bounds,
+    dynamic fitBoundsOptions,
+    bool? renderWorldCopies,
+    num? maxTileCacheSize,
+    String? localIdeographFontFamily,
+    RequestTransformFunctionJsImpl? transformRequest,
+    bool? collectResourceTiming,
+    num? fadeDuration,
+    bool? crossSourceCollisions,
+    String? accessToken,
+    dynamic locale,
+  });
+
   /// If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
   /// For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
   /// An additional string may optionally be provided to indicate a parameter-styled hash,
@@ -1136,51 +1181,6 @@ class MapOptionsJsImpl {
 
   /// A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
   external dynamic get locale;
-
-  external factory MapOptionsJsImpl({
-    dynamic hash,
-    bool? interactive,
-    dynamic container,
-    num? bearingSnap,
-    bool? pitchWithRotate,
-    bool? clickTolerance,
-    bool? attributionControl,
-    dynamic customAttribution,
-    String? logoPosition,
-    bool? failIfMajorPerformanceCaveat,
-    bool? preserveDrawingBuffer,
-    bool? antialias,
-    bool? refreshExpiredTiles,
-    LngLatBoundsJsImpl? maxBounds,
-    bool? scrollZoom,
-    num? minZoom,
-    num? maxZoom,
-    num? minPitch,
-    num? maxPitch,
-    dynamic style,
-    bool? boxZoom,
-    bool? dragRotate,
-    dynamic dragPan,
-    bool? keyboard,
-    bool? doubleClickZoom,
-    bool? touchZoomRotate,
-    bool? trackResize,
-    LngLatJsImpl? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatBoundsJsImpl? bounds,
-    dynamic fitBoundsOptions,
-    bool? renderWorldCopies,
-    num? maxTileCacheSize,
-    String? localIdeographFontFamily,
-    RequestTransformFunctionJsImpl? transformRequest,
-    bool? collectResourceTiming,
-    num? fadeDuration,
-    bool? crossSourceCollisions,
-    String? accessToken,
-    dynamic locale,
-  });
 }
 
 typedef RequestTransformFunctionJsImpl = RequestParametersJsImpl Function(
@@ -1191,12 +1191,6 @@ typedef RequestTransformFunctionJsImpl = RequestParametersJsImpl Function(
 @JS()
 @anonymous
 class RequestParametersJsImpl {
-  String? url;
-  String? credentials;
-  dynamic headers;
-  String? method;
-  bool? collectResourceTiming;
-
   external factory RequestParametersJsImpl({
     String? url,
     String? credentials,
@@ -1204,6 +1198,11 @@ class RequestParametersJsImpl {
     String? method,
     bool? collectResourceTiming,
   });
+  String? url;
+  String? credentials;
+  dynamic headers;
+  String? method;
+  bool? collectResourceTiming;
 }
 
 ///  Interface for interactive controls added to the map. This is a

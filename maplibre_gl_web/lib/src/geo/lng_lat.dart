@@ -18,10 +18,6 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
 ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
 class LngLat extends JsObjectWrapper<LngLatJsImpl> {
-  num get lng => jsObject.lng;
-
-  num get lat => jsObject.lat;
-
   factory LngLat(
     num lng,
     num lat,
@@ -32,6 +28,26 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
           lat,
         ),
       );
+
+  ///  Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
+  ///  to a `LngLat` object.
+  ///
+  ///  If a `LngLat` object is passed in, the function returns it unchanged.
+  ///
+  ///  @param {LngLatLike} input An array of two numbers or object to convert, or a `LngLat` object to return.
+  ///  @returns {LngLat} A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
+  ///  @example
+  ///  var arr = [-73.9749, 40.7736];
+  ///  var ll = maplibregl.LngLat.convert(arr);
+  ///  ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
+  LngLat.convert(dynamic input)
+      : this.fromJsObject(LngLatJsImpl.convert(input));
+
+  /// Creates a new LngLat from a [jsObject].
+  LngLat.fromJsObject(super.jsObject) : super.fromJsObject();
+  num get lng => jsObject.lng;
+
+  num get lat => jsObject.lat;
 
   /// Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
   ///
@@ -68,21 +84,4 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
   ///  ll.toBounds(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
   LngLatBounds toBounds(num radius) =>
       LngLatBounds.fromJsObject(jsObject.toBounds(radius));
-
-  ///  Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
-  ///  to a `LngLat` object.
-  ///
-  ///  If a `LngLat` object is passed in, the function returns it unchanged.
-  ///
-  ///  @param {LngLatLike} input An array of two numbers or object to convert, or a `LngLat` object to return.
-  ///  @returns {LngLat} A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
-  ///  @example
-  ///  var arr = [-73.9749, 40.7736];
-  ///  var ll = maplibregl.LngLat.convert(arr);
-  ///  ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
-  LngLat.convert(dynamic input)
-      : this.fromJsObject(LngLatJsImpl.convert(input));
-
-  /// Creates a new LngLat from a [jsObject].
-  LngLat.fromJsObject(super.jsObject) : super.fromJsObject();
 }

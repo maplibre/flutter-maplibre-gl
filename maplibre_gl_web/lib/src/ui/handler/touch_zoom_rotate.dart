@@ -3,6 +3,9 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class TouchZoomRotateHandler
     extends JsObjectWrapper<TouchZoomRotateHandlerJsImpl> {
+  /// Creates a new TouchZoomRotateHandler from a [jsObject].
+  TouchZoomRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Returns a Boolean indicating whether the "pinch to rotate and zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "pinch to rotate and zoom" interaction is enabled.
@@ -40,7 +43,4 @@ class TouchZoomRotateHandler
   dynamic enableRotation() => jsObject.enableRotation();
 
   dynamic onStart(TouchEvent e) => jsObject.onStart(e);
-
-  /// Creates a new TouchZoomRotateHandler from a [jsObject].
-  TouchZoomRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

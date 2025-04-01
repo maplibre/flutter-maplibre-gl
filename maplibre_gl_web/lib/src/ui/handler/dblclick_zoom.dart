@@ -3,6 +3,9 @@ import 'package:maplibre_gl_web/src/ui/events.dart';
 
 class DoubleClickZoomHandler
     extends JsObjectWrapper<DoubleClickZoomHandlerJsImpl> {
+  /// Creates a new DoubleClickZoomHandler from a [jsObject].
+  DoubleClickZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Returns a Boolean indicating whether the "double click to zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "double click to zoom" interaction is enabled.
@@ -28,7 +31,4 @@ class DoubleClickZoomHandler
   dynamic onTouchStart(MapTouchEvent e) => jsObject.onTouchStart(e.jsObject);
 
   dynamic onDblClick(MapMouseEvent e) => jsObject.onDblClick(e.jsObject);
-
-  /// Creates a new DoubleClickZoomHandler from a [jsObject].
-  DoubleClickZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
 }

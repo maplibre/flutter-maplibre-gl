@@ -54,9 +54,8 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 /// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 @JS('Popup')
 class PopupJsImpl extends EventedJsImpl {
-  external dynamic get options;
-
   external factory PopupJsImpl([PopupOptionsJsImpl? options]);
+  external dynamic get options;
 
   /// Adds the popup to a map.
   ///

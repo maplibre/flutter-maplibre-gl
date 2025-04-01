@@ -22,14 +22,13 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
 ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
 @JS('LngLat')
 class LngLatJsImpl {
-  external num get lng;
-
-  external num get lat;
-
   external factory LngLatJsImpl(
     num lng,
     num lat,
   );
+  external num get lng;
+
+  external num get lat;
 
   /// Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
   ///
