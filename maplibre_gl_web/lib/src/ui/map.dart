@@ -52,7 +52,7 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 class MapLibreMap extends Camera {
   @override
-  final MapLibreMapJsImpl jsObject;
+  MapLibreMapJsImpl get jsObject => super.jsObject as MapLibreMapJsImpl;
 
   factory MapLibreMap(MapOptions options) =>
       MapLibreMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
@@ -1072,7 +1072,8 @@ class MapLibreMap extends Camera {
   String get version => jsObject.version;
 
   /// Creates a new MapLibreMap from a [jsObject].
-  MapLibreMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  MapLibreMap.fromJsObject(MapLibreMapJsImpl super.jsObject)
+      : super.fromJsObject();
 }
 
 class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {

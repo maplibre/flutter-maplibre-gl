@@ -132,7 +132,7 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
 
 class Camera extends Evented {
   @override
-  final CameraJsImpl jsObject;
+  CameraJsImpl get jsObject => super.jsObject as CameraJsImpl;
 
   ///  Returns the map's geographical centerpoint.
   ///
@@ -573,5 +573,5 @@ class Camera extends Evented {
   MapLibreMap stop() => MapLibreMap.fromJsObject(jsObject.stop());
 
   /// Creates a new Camera from a [jsObject].
-  Camera.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  Camera.fromJsObject(CameraJsImpl super.jsObject) : super.fromJsObject();
 }
