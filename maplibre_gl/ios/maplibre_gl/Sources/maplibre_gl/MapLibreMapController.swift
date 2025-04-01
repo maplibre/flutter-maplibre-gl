@@ -1618,8 +1618,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             )
             let source = MLNShapeSource(identifier: sourceId, shape: parsed, options: [:])
             addedShapesByLayer[sourceId] = parsed
-            mapView.style?.addSource(source)
-            print(source)
+            try mapView.style?.addSource(source)
         } catch {}
     }
 
