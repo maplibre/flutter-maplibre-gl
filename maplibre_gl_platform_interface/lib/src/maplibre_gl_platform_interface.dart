@@ -164,24 +164,24 @@ abstract class MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   });
 
   Future<void> addLineLayer(
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   });
 
   Future<void> setLayerProperties(
@@ -193,36 +193,36 @@ abstract class MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   });
 
   Future<void> addFillLayer(
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   });
 
   Future<void> addFillExtrusionLayer(
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   });
 
   Future<void> addRasterLayer(

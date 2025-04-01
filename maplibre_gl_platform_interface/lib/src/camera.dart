@@ -10,8 +10,8 @@ part of '../maplibre_gl_platform_interface.dart';
 @immutable
 class CameraPosition {
   const CameraPosition({
-    this.bearing = 0.0,
     required this.target,
+    this.bearing = 0.0,
     this.tilt = 0.0,
     this.zoom = 0.0,
   });

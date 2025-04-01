@@ -63,9 +63,9 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 ///    [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
   factory AnimationOptions({
+    required Point offset,
     num? duration,
     num Function(num time)? easing,
-    required Point offset,
     bool? animate,
     bool? essential,
   }) =>

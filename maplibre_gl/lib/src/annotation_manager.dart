@@ -3,9 +3,9 @@ part of '../maplibre_gl.dart';
 abstract class AnnotationManager<T extends Annotation> {
   AnnotationManager(
     this.controller, {
+    required this.enableInteraction,
     this.onTap,
     this.selectLayer,
-    required this.enableInteraction,
   }) : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);

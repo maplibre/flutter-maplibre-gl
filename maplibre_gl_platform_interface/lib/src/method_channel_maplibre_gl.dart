@@ -650,12 +650,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     await _channel.invokeMethod('symbolLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -677,12 +677,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     await _channel.invokeMethod('lineLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -717,12 +717,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     await _channel.invokeMethod('circleLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -744,12 +744,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     await _channel.invokeMethod('fillLayer#add', <String, dynamic>{
       'sourceId': sourceId,
@@ -771,12 +771,12 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     await _channel.invokeMethod('fillExtrusionLayer#add', <String, dynamic>{
       'sourceId': sourceId,

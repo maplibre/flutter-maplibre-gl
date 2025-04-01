@@ -855,12 +855,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     return _addLayer(
       sourceId,
@@ -881,12 +881,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     return _addLayer(
       sourceId,
@@ -907,12 +907,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     return _addLayer(
       sourceId,
@@ -933,12 +933,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     return _addLayer(
       sourceId,
@@ -982,12 +982,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     String layerId,
     Map<String, dynamic> properties, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     return _addLayer(
       sourceId,
@@ -1077,12 +1077,12 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
     String layerType, {
+    required bool enableInteraction,
     String? belowLayerId,
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-    required bool enableInteraction,
   }) async {
     final layout = Map.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),

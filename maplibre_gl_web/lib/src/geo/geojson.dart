@@ -24,8 +24,8 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
 
 class Feature extends JsObjectWrapper<FeatureJsImpl> {
   factory Feature({
-    dynamic id,
     required Geometry geometry,
+    dynamic id,
     Map<String, dynamic>? properties,
     String? source,
   }) =>

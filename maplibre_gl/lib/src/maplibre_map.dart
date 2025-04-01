@@ -15,8 +15,8 @@ typedef MaplibreMap = MapLibreMap;
 /// Also refer to the documentation of [maplibre_gl] and [MapLibreMapController].
 class MapLibreMap extends StatefulWidget {
   const MapLibreMap({
-    super.key,
     required this.initialCameraPosition,
+    super.key,
     this.styleString = MapLibreStyles.demo,
     this.onMapCreated,
     this.onStyleLoadedCallback,
@@ -356,15 +356,15 @@ class _MapLibreMapState extends State<MapLibreMap> {
 /// "do not change this configuration option".
 class _MapLibreMapOptions {
   _MapLibreMapOptions({
-    this.compassEnabled,
-    this.cameraTargetBounds,
-    this.styleString,
-    this.minMaxZoomPreference,
     required this.rotateGesturesEnabled,
     required this.scrollGesturesEnabled,
     required this.tiltGesturesEnabled,
     required this.zoomGesturesEnabled,
     required this.doubleClickZoomEnabled,
+    this.compassEnabled,
+    this.cameraTargetBounds,
+    this.styleString,
+    this.minMaxZoomPreference,
     this.trackCameraPosition,
     this.myLocationEnabled,
     this.myLocationTrackingMode,

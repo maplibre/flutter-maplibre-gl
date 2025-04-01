@@ -12,11 +12,11 @@ typedef GeoListener = dynamic Function(dynamic object);
 
 class Event extends JsObjectWrapper<EventJsImpl> {
   factory Event({
-    String? id,
-    String? type,
     required LngLat lngLat,
     required List<Feature> features,
     required Point point,
+    String? id,
+    String? type,
   }) =>
       Event.fromJsObject(
         EventJsImpl(
