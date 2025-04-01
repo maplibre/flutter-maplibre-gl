@@ -638,12 +638,13 @@ class MapLibreMap extends Camera {
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
   addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
+    dynamic jsImage = image;
     if (image is Map) {
-      image = jsify(image);
+      jsImage = jsify(image);
     }
     return options == null
-        ? jsObject.addImage(id, image)
-        : jsObject.addImage(id, image, jsify(options));
+        ? jsObject.addImage(id, jsImage)
+        : jsObject.addImage(id, jsImage, jsify(options));
   }
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
