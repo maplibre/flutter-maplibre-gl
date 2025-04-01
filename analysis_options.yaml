@@ -11,7 +11,6 @@ linter:
   rules:
     # temporary rules
     flutter_style_todos: false
-    one_member_abstracts: false
     lines_longer_than_80_chars: false
     use_setters_to_change_properties: false
     public_member_api_docs: false

@@ -3,6 +3,7 @@
 
 part of '../maplibre_gl_platform_interface.dart';
 
+// ignore: one_member_abstracts
 abstract class SourceProperties {
   Map<String, dynamic> toJson();
 }

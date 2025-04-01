@@ -3,6 +3,7 @@
 
 part of '../maplibre_gl.dart';
 
+// ignore: one_member_abstracts
 abstract class LayerProperties {
   Map<String, dynamic> toJson();
 }
