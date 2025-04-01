@@ -152,7 +152,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               await removeLayer(layerId);
-                              removeImageSource(sourceId).then((value) {
+                              await removeImageSource(sourceId).then((value) {
                                 setState(() => sourceAdded = false);
                               });
                             }
@@ -180,7 +180,10 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               setState(() => imageFlag = !imageFlag);
-                              updateImageSourceFromAsset(sourceId, pickImage());
+                              await updateImageSourceFromAsset(
+                                sourceId,
+                                pickImage(),
+                              );
                             }
                           : null,
                       child: const Text('Change image'),

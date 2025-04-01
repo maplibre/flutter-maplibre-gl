@@ -85,7 +85,7 @@ Future<void> render(
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
 
-  outputFile.writeAsString(template.renderString(renderContext));
+  await outputFile.writeAsString(template.renderString(renderContext));
 }
 
 List<Map<String, dynamic>> buildStyleProperties(

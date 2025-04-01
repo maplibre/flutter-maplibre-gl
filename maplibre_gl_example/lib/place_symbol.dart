@@ -140,7 +140,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
       final symbolOptionsList = symbolsToAddNumbers
           .map((i) => _getSymbolOptions(iconImage, i))
           .toList();
-      controller!.addSymbols(
+      await controller!.addSymbols(
         symbolOptionsList,
         symbolsToAddNumbers.map((i) => {'count': i}).toList(),
       );
@@ -197,7 +197,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     } else {
       current = 'center';
     }
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconAnchor: current),
     );
   }
@@ -206,7 +206,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var draggable = _selectedSymbol!.options.draggable;
     draggable ??= false;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(draggable: !draggable),
     );
   }
@@ -215,7 +215,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
@@ -223,7 +223,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeRotation() async {
     var current = _selectedSymbol!.options.iconRotate;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconRotate: current == 330.0 ? 0.0 : current + 30.0),
     );
   }
@@ -232,7 +232,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current == 0.0 ? 1.0 : 0.0),
     );
   }
@@ -240,7 +240,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeZIndex() async {
     var current = _selectedSymbol!.options.zIndex;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(zIndex: current == 12 ? 0 : current + 1),
     );
   }

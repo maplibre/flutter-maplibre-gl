@@ -884,7 +884,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearSymbols() async {
-    symbolManager!.clear();
+    await symbolManager!.clear();
     notifyListeners();
   }
 
@@ -1053,7 +1053,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircle(Circle circle) async {
-    circleManager!.remove(circle);
+    await circleManager!.remove(circle);
 
     notifyListeners();
   }
@@ -1077,7 +1077,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearCircles() async {
-    circleManager!.clear();
+    await circleManager!.clear();
 
     notifyListeners();
   }

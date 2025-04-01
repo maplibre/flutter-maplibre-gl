@@ -331,8 +331,8 @@ class FullMapState extends State<FullMap> {
 
   Future<void> _onStyleLoadedCallback() async {
     final styleInfo = _stylesAndLoaders[selectedStyleId];
-    styleInfo.addDetails(controller!);
-    controller!
+    await styleInfo.addDetails(controller!);
+    await controller!
         .animateCamera(CameraUpdate.newCameraPosition(styleInfo.position));
   }
 

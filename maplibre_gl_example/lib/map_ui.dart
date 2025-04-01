@@ -324,7 +324,10 @@ class MapUiBodyState extends State<MapUiBody> {
       child: const Text('toggle layer visibility'),
       onPressed: () async {
         _countriesVisible = !_countriesVisible;
-        mapController?.setLayerVisibility('countries-fill', _countriesVisible);
+        await mapController?.setLayerVisibility(
+          'countries-fill',
+          _countriesVisible,
+        );
       },
     );
   }
@@ -401,7 +404,7 @@ class MapUiBodyState extends State<MapUiBody> {
             );
           }
         } else if (features.isNotEmpty) {
-          _drawFill(features);
+          await _drawFill(features);
         }
       },
       onMapLongClick: (point, latLng) async {

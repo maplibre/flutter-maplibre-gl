@@ -85,7 +85,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
       'custom-marker',
       'assets/symbols/custom-marker.png',
     );
-    controller!.addCircle(
+    await controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
         circleStrokeColor: '#00FF00',
@@ -93,7 +93,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
         circleRadius: 16,
       ),
     );
-    controller!.addCircle(
+    await controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
         circleStrokeColor: '#00FF00',
@@ -101,14 +101,14 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
         circleRadius: 30,
       ),
     );
-    controller!.addSymbol(
+    await controller!.addSymbol(
       const SymbolOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
         iconImage: 'custom-marker', //"fast-food-15",
         iconSize: 2,
       ),
     );
-    controller!.addLine(
+    await controller!.addLine(
       const LineOptions(
         geometry: [
           LatLng(-33.874867744475786, 151.170627211986584),
@@ -122,7 +122,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
       ),
     );
 
-    controller!.addFill(
+    await controller!.addFill(
       const FillOptions(
         geometry: [
           [

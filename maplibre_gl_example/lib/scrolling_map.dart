@@ -122,7 +122,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
       'custom-marker',
       'assets/symbols/custom-marker.png',
     );
-    controller.addSymbol(
+    await controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude,
@@ -131,7 +131,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
         iconImage: 'custom-marker',
       ),
     );
-    controller.addLine(
+    await controller.addLine(
       const LineOptions(
         geometry: [
           LatLng(-33.86711, 151.1947171),

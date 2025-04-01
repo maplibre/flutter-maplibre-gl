@@ -66,7 +66,9 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _updateSelectedLine(LineOptions changes) async {
-    if (_selectedLine != null) controller!.updateLine(_selectedLine!, changes);
+    if (_selectedLine != null) {
+      await controller!.updateLine(_selectedLine!, changes);
+    }
   }
 
   void _add() {
@@ -134,7 +136,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _onStyleLoadedCallback() async {
-    addImageFromAsset('assetImage', _linePatternImage);
+    await addImageFromAsset('assetImage', _linePatternImage);
     await controller!.addLine(
       const LineOptions(
         geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],

@@ -72,6 +72,6 @@ class LocalizedMapState extends State<LocalizedMap> {
 
   Future<void> _setMapLanguage() async {
     final controller = await _mapReadyCompleter.future;
-    controller.setMapLanguage(_mapLanguage);
+    await controller.setMapLanguage(_mapLanguage);
   }
 }

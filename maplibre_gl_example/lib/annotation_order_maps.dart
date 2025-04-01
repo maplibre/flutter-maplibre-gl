@@ -110,7 +110,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
       'custom-marker',
       'assets/symbols/custom-marker.png',
     );
-    controller.addSymbol(
+    await controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude,
@@ -119,7 +119,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
         iconImage: 'custom-marker', // "airport-15",
       ),
     );
-    controller.addLine(
+    await controller.addLine(
       const LineOptions(
         draggable: false,
         lineColor: '#ff0000',
@@ -135,7 +135,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
         ],
       ),
     );
-    controller.addFill(
+    await controller.addFill(
       const FillOptions(
         draggable: false,
         fillColor: '#008888',

@@ -226,7 +226,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> matchMapLanguageWithDeviceDefault() async {
     // Fix in https://github.com/maplibre/flutter-maplibre-gl/issues/263
     // ignore: deprecated_member_use
-    setMapLanguage(ui.window.locale.languageCode);
+    await setMapLanguage(ui.window.locale.languageCode);
   }
 
   @override
