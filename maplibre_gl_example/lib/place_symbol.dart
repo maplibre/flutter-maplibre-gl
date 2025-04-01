@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async'; // ignore: unnecessary_import
 import 'dart:core';
 import 'dart:math';
 
@@ -10,8 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class PlaceSymbolPage extends ExamplePage {
   const PlaceSymbolPage({super.key})

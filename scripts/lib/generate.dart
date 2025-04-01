@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:maplibre_code_gen/conversions.dart';
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
-
-import 'conversions.dart';
 
 main() async {
   final styleJson =

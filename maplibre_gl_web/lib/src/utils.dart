@@ -1,5 +1,5 @@
 import 'package:js/js_util.dart' as util;
-import 'interop/js.dart' as js;
+import 'package:maplibre_gl_web/src/interop/js.dart' as js;
 
 /// Returns Dart representation from JS Object.
 dynamic dartify(Object? jsObject) {

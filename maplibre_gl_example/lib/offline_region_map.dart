@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'offline_regions.dart';
+import 'package:maplibre_gl_example/offline_regions.dart';
 
 class OfflineRegionMap extends StatefulWidget {
   const OfflineRegionMap(this.item, {super.key});

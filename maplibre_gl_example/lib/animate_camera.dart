@@ -4,8 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class AnimateCameraPage extends ExamplePage {
   const AnimateCameraPage({super.key})
