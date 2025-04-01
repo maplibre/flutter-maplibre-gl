@@ -19,7 +19,6 @@ linter:
     unawaited_futures: false
     overridden_fields: false
     always_put_required_named_parameters_first: false
-    leading_newlines_in_multiline_strings: false
     use_setters_to_change_properties: false
     type_annotate_public_apis: false
     prefer_asserts_with_message: false

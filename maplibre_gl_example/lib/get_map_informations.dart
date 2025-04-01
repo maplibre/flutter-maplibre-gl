@@ -68,7 +68,8 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
               compassEnabled: false,
               annotationOrder: const [],
               myLocationEnabled: false,
-              styleString: '''{
+              styleString: '''
+              {
                 "version": 8,
                 "sources": {
                   "OSM": {
@@ -90,7 +91,8 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
                     "type": "raster"
                   }
                 ]
-              }''',
+              }
+              ''',
             ),
           ),
         ),
