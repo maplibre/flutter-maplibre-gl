@@ -40,7 +40,7 @@ class Event extends JsObjectWrapper<EventJsImpl> {
         ),
       );
 
-  preventDefault() => jsObject.preventDefault();
+  dynamic preventDefault() => jsObject.preventDefault();
 
   /// Creates a new Event from a [jsObject].
   Event.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -145,7 +145,7 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
         ),
       );
 
-  fire(Event event, [dynamic properties]) =>
+  dynamic fire(Event event, [dynamic properties]) =>
       jsObject.fire(event.jsObject, properties);
 
   ///  Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
@@ -153,14 +153,14 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type
   ///  @returns {boolean} `true` if there is at least one registered listener for specified event type, `false` otherwise
   ///  @private
-  listens(String type) => jsObject.listens(type);
+  dynamic listens(String type) => jsObject.listens(type);
 
   ///  Bubble all events fired by this instance of Evented to this parent instance of Evented.
   ///
   ///  @private
   ///  @returns {Object} `this`
   ///  @private
-  setEventedParent([Evented? parent, dynamic data]) =>
+  dynamic setEventedParent([Evented? parent, dynamic data]) =>
       jsObject.setEventedParent(parent?.jsObject, data);
 
   /// Creates a new Evented from a [jsObject].

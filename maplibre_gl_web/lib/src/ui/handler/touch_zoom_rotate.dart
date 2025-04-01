@@ -17,29 +17,29 @@ class TouchZoomRotateHandler
   ///    map.touchZoomRotate.enable();
   ///  @example
   ///    map.touchZoomRotate.enable({ around: 'center' });
-  enable([dynamic options]) => jsObject.enable(options);
+  dynamic enable([dynamic options]) => jsObject.enable(options);
 
   ///  Disables the "pinch to rotate and zoom" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
   ///  Disables the "pinch to rotate" interaction, leaving the "pinch to zoom"
   ///  interaction enabled.
   ///
   ///  @example
   ///    map.touchZoomRotate.disableRotation();
-  disableRotation() => jsObject.disableRotation();
+  dynamic disableRotation() => jsObject.disableRotation();
 
   ///  Enables the "pinch to rotate" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.enable();
   ///    map.touchZoomRotate.enableRotation();
-  enableRotation() => jsObject.enableRotation();
+  dynamic enableRotation() => jsObject.enableRotation();
 
-  onStart(TouchEvent e) => jsObject.onStart(e);
+  dynamic onStart(TouchEvent e) => jsObject.onStart(e);
 
   /// Creates a new TouchZoomRotateHandler from a [jsObject].
   TouchZoomRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();

@@ -27,7 +27,7 @@ class LocalStyleState extends State<LocalStyle> {
   String? styleAbsoluteFilePath;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
 
     getApplicationDocumentsDirectory().then((dir) async {

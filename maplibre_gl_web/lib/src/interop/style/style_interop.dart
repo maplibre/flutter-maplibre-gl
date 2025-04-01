@@ -15,16 +15,16 @@ abstract class StyleSetterOptionsJsImpl {
 
 @JS('Style')
 abstract class StyleJsImpl extends EventedJsImpl {
-  loadURL(String url, dynamic options);
+  dynamic loadURL(String url, dynamic options);
 
-  loadJSON(dynamic json, StyleSetterOptionsJsImpl option);
+  dynamic loadJSON(dynamic json, StyleSetterOptionsJsImpl option);
 
-  loaded();
+  dynamic loaded();
 
-  hasTransitions();
+  dynamic hasTransitions();
 
   ///  Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
-  update(EvaluationParametersJsImpl parameters);
+  dynamic update(EvaluationParametersJsImpl parameters);
 
   ///  Update this style's state to match the given style JSON, performing only
   ///  the necessary mutations.
@@ -34,29 +34,33 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///
   ///  @returns {boolean} true if any changes were made; false otherwise
   ///  @private
-  setState(dynamic nextState);
+  dynamic setState(dynamic nextState);
 
-  addImage(String id, StyleImageJsImpl image);
+  dynamic addImage(String id, StyleImageJsImpl image);
 
-  updateImage(String id, StyleImageJsImpl image);
+  dynamic updateImage(String id, StyleImageJsImpl image);
 
   StyleImageJsImpl getImage(String id);
 
-  removeImage(String id);
+  dynamic removeImage(String id);
 
-  listImages();
+  dynamic listImages();
 
-  addSource(String id, dynamic source, StyleSetterOptionsJsImpl options);
+  dynamic addSource(
+    String id,
+    dynamic source,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Remove a source from this stylesheet, given its id.
   ///  @param {string} id id of the source to remove
   ///  @throws {Error} if no source is found with the given ID
-  removeSource(String id);
+  dynamic removeSource(String id);
 
   ///  Set the data of a GeoJSON source, given its id.
   ///  @param {string} id id of the source
   ///  @param {GeoJSON|string} data GeoJSON source
-  setGeoJSONSourceData(String id, dynamic data);
+  dynamic setGeoJSONSourceData(String id, dynamic data);
 
   ///  Get a source by id.
   ///  @param {string} id id of the desired source
@@ -66,7 +70,7 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  addLayer(
+  dynamic addLayer(
     dynamic layerObject, [
     String? before,
     StyleSetterOptionsJsImpl? options,
@@ -76,7 +80,7 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} id  ID of the layer to move
   ///  @param {string} [before] ID of an existing layer to insert before
-  moveLayer(String id, [String? before]);
+  dynamic moveLayer(String id, [String? before]);
 
   ///  Remove the layer with the given id from the style.
   ///
@@ -84,7 +88,7 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///
   ///  @param {string} id id of the layer to remove
   ///  @fires error
-  removeLayer(String id);
+  dynamic removeLayer(String id);
 
   ///  Return the style layer object with the given `id`.
   ///
@@ -92,16 +96,20 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///  @returns {?Object} a layer, if one with the given `id` exists
   dynamic getLayer(String id);
 
-  setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]);
+  dynamic setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]);
 
-  setFilter(String layerId, dynamic filter, StyleSetterOptionsJsImpl options);
+  dynamic setFilter(
+    String layerId,
+    dynamic filter,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Get a layer's filter object
   ///  @param {string} layer the layer to inspect
   ///  @returns {*} the layer's filter, if any
-  getFilter(String layer);
+  dynamic getFilter(String layer);
 
-  setLayoutProperty(
+  dynamic setLayoutProperty(
     String layerId,
     String name,
     dynamic value,
@@ -112,42 +120,46 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///  @param {string} layerId the layer to inspect
   ///  @param {string} name the name of the layout property
   ///  @returns {*} the property value
-  getLayoutProperty(String layerId, String name);
+  dynamic getLayoutProperty(String layerId, String name);
 
-  setPaintProperty(
+  dynamic setPaintProperty(
     String layerId,
     String name,
     dynamic value,
     StyleSetterOptionsJsImpl options,
   );
 
-  getPaintProperty(String layer, String name);
+  dynamic getPaintProperty(String layer, String name);
 
-  setFeatureState(dynamic target, dynamic state);
+  dynamic setFeatureState(dynamic target, dynamic state);
 
-  removeFeatureState(dynamic target, [String? key]);
+  dynamic removeFeatureState(dynamic target, [String? key]);
 
-  getFeatureState(dynamic target);
+  dynamic getFeatureState(dynamic target);
 
-  getTransition();
+  dynamic getTransition();
 
-  serialize();
+  dynamic serialize();
 
-  querySourceFeatures(String sourceID, dynamic params);
+  dynamic querySourceFeatures(String sourceID, dynamic params);
 
-  addSourceType(String name, dynamic sourceType, Function callback);
+  dynamic addSourceType(String name, dynamic sourceType, Function callback);
 
-  getLight();
+  dynamic getLight();
 
-  setLight(dynamic lightOptions, StyleSetterOptionsJsImpl options);
+  dynamic setLight(dynamic lightOptions, StyleSetterOptionsJsImpl options);
 
   // Callbacks from web workers
 
-  getImages(String mapId, dynamic params, Function callback);
+  dynamic getImages(String mapId, dynamic params, Function callback);
 
-  getGlyphs(String mapId, dynamic params, Function callback);
+  dynamic getGlyphs(String mapId, dynamic params, Function callback);
 
-  getResource(String mapId, RequestParametersJsImpl params, Function callback);
+  dynamic getResource(
+    String mapId,
+    RequestParametersJsImpl params,
+    Function callback,
+  );
 
   external List<dynamic> layers;
 }

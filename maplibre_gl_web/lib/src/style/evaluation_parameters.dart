@@ -14,7 +14,7 @@ class EvaluationParameters extends JsObjectWrapper<EvaluationParametersJsImpl> {
 
   bool isSupportedScript(String str) => jsObject.isSupportedScript(str);
 
-  crossFadingFactor() => jsObject.crossFadingFactor();
+  dynamic crossFadingFactor() => jsObject.crossFadingFactor();
 
   dynamic getCrossfadeParameters() => jsObject.getCrossfadeParameters();
 

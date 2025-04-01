@@ -27,10 +27,10 @@ class SymbolLayer extends Layer {
   });
 
   @override
-  get jsObject => SymbolLayerJsImpl.toJs(this);
+  dynamic get jsObject => SymbolLayerJsImpl.toJs(this);
 
   @override
-  get dict => SymbolLayerJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolLayerJsImpl.toDict(this);
 }
 
 class SymbolPaint {
@@ -66,9 +66,9 @@ class SymbolPaint {
     this.textTranslateAnchor,
   });
 
-  get jsObject => SymbolPaintJsImpl.toJs(this);
+  dynamic get jsObject => SymbolPaintJsImpl.toJs(this);
 
-  get dict => SymbolPaintJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolPaintJsImpl.toDict(this);
 }
 
 class SymbolLayout {
@@ -156,7 +156,7 @@ class SymbolLayout {
     this.visibility,
   });
 
-  get jsObject => SymbolLayoutJsImpl.toJs(this);
+  dynamic get jsObject => SymbolLayoutJsImpl.toJs(this);
 
-  get dict => SymbolLayoutJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolLayoutJsImpl.toDict(this);
 }

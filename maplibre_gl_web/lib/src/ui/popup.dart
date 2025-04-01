@@ -166,7 +166,7 @@ class Popup extends Evented {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
-  addClassName(String className) => jsObject.addClassName(className);
+  dynamic addClassName(String className) => jsObject.addClassName(className);
 
   /// Removes a CSS class from the popup container element.
   ///
@@ -175,7 +175,8 @@ class Popup extends Evented {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
-  removeClassName(String className) => jsObject.removeClassName(className);
+  dynamic removeClassName(String className) =>
+      jsObject.removeClassName(className);
 
   /// Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
   ///

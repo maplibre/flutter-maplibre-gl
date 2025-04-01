@@ -15,7 +15,7 @@ class EvaluationParametersJsImpl {
 
   external bool isSupportedScript(String str);
 
-  external crossFadingFactor();
+  external dynamic crossFadingFactor();
 
   external dynamic getCrossfadeParameters();
 }

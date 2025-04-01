@@ -113,7 +113,7 @@ class MapLibreMapController extends MapLibrePlatform
     await addImage(imagePath, bytes.buffer.asUint8List());
   }
 
-  _onMouseDown(Event e) {
+  void _onMouseDown(Event e) {
     final isDraggable = e.features[0].properties['draggable'];
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
@@ -139,7 +139,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  _onMouseUp(Event e) {
+  void _onMouseUp(Event e) {
     if (_draggedFeatureId != null) {
       final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
       final payload = {
@@ -158,7 +158,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.getCanvas().style.cursor = '';
   }
 
-  _onMouseMove(Event e) {
+  void _onMouseMove(Event e) {
     if (_draggedFeatureId != null) {
       final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
       final payload = {

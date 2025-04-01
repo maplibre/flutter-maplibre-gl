@@ -38,7 +38,7 @@ class FullMapState extends State<FullMap> {
   final watercolorRasterId = 'watercolorRaster';
   int selectedStyleId = 0;
 
-  _onMapCreated(MapLibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
   }
 
@@ -329,7 +329,7 @@ class FullMapState extends State<FullMap> {
       ),
   ];
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     final styleInfo = _stylesAndLoaders[selectedStyleId];
     styleInfo.addDetails(controller!);
     controller!

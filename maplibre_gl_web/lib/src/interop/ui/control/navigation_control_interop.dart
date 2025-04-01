@@ -40,7 +40,7 @@ class NavigationControlJsImpl {
     NavigationControlOptionsJsImpl options,
   );
 
-  external onAdd(MapLibreMapJsImpl map);
+  external dynamic onAdd(MapLibreMapJsImpl map);
 
-  external onRemove();
+  external dynamic onRemove();
 }

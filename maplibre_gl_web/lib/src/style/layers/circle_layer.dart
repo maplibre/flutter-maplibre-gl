@@ -17,10 +17,10 @@ class CircleLayer extends Layer {
   });
 
   @override
-  get jsObject => CircleLayerJsImpl.toJs(this);
+  dynamic get jsObject => CircleLayerJsImpl.toJs(this);
 
   @override
-  get dict => CircleLayerJsImpl.toDict(this);
+  Map<String, dynamic> get dict => CircleLayerJsImpl.toDict(this);
 }
 
 class CirclePaint {
@@ -32,7 +32,7 @@ class CirclePaint {
     this.circleColor,
   });
 
-  get jsObject => CirclePaintJsImpl.toJs(this);
+  dynamic get jsObject => CirclePaintJsImpl.toJs(this);
 
-  get dict => CirclePaintJsImpl.toDict(this);
+  Map<String, dynamic> get dict => CirclePaintJsImpl.toDict(this);
 }

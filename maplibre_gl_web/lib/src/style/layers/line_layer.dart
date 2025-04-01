@@ -21,10 +21,10 @@ class LineLayer extends Layer {
   });
 
   @override
-  get jsObject => LineLayerJsImpl.toJs(this);
+  dynamic get jsObject => LineLayerJsImpl.toJs(this);
 
   @override
-  get dict => LineLayerJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LineLayerJsImpl.toDict(this);
 }
 
 class LinePaint {
@@ -54,9 +54,9 @@ class LinePaint {
     this.lineGradient,
   });
 
-  get jsObject => LinePaintJsImpl.toJs(this);
+  dynamic get jsObject => LinePaintJsImpl.toJs(this);
 
-  get dict => LinePaintJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LinePaintJsImpl.toDict(this);
 }
 
 class LineLayout {
@@ -76,7 +76,7 @@ class LineLayout {
     this.visibility,
   });
 
-  get jsObject => LineLayoutJsImpl.toJs(this);
+  dynamic get jsObject => LineLayoutJsImpl.toJs(this);
 
-  get dict => LineLayoutJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LineLayoutJsImpl.toDict(this);
 }

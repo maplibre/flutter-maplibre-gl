@@ -29,7 +29,7 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
   ///  *  On `mousedown` events, the behavior of {@link DragRotateHandler}
   ///  *  On `mousedown` events, the behavior of {@link BoxZoomHandler}
   ///  *  On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-  preventDefault() => jsObject.preventDefault();
+  dynamic preventDefault() => jsObject.preventDefault();
 
   /// `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;
@@ -71,7 +71,7 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
   ///
   ///  *  On `touchstart` events, the behavior of {@link DragPanHandler}
   ///  *  On `touchstart` events, the behavior of {@link TouchZoomRotateHandler}
-  preventDefault() => jsObject.preventDefault();
+  dynamic preventDefault() => jsObject.preventDefault();
 
   ///  `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;

@@ -5,11 +5,11 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 class ScrollZoomHandler extends JsObjectWrapper<ScrollZoomHandlerJsImpl> {
   ///  Set the zoom rate of a trackpad
   ///  @param {number} [zoomRate = 1/100]
-  setZoomRate(num zoomRate) => jsObject.setZoomRate(zoomRate);
+  dynamic setZoomRate(num zoomRate) => jsObject.setZoomRate(zoomRate);
 
   ///  Set the zoom rate of a mouse wheel
   ///  @param {number} [wheelZoomRate = 1/450]
-  setWheelZoomRate(num wheelZoomRate) =>
+  dynamic setWheelZoomRate(num wheelZoomRate) =>
       jsObject.setWheelZoomRate(wheelZoomRate);
 
   ///  Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.
@@ -33,15 +33,15 @@ class ScrollZoomHandler extends JsObjectWrapper<ScrollZoomHandlerJsImpl> {
   ///    map.scrollZoom.enable();
   ///  @example
   ///   map.scrollZoom.enable({ around: 'center' })
-  enable([dynamic options]) => jsObject.enable(options);
+  dynamic enable([dynamic options]) => jsObject.enable(options);
 
   ///  Disables the "scroll to zoom" interaction.
   ///
   ///  @example
   ///    map.scrollZoom.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onWheel(WheelEvent e) => jsObject.onWheel(e);
+  dynamic onWheel(WheelEvent e) => jsObject.onWheel(e);
 
   /// Creates a new ScrollZoomHandler from a [jsObject].
   ScrollZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();

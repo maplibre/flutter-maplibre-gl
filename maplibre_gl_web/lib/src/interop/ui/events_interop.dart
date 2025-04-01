@@ -33,7 +33,7 @@ abstract class MapMouseEventJsImpl {
   ///  *  On `mousedown` events, the behavior of {@link DragRotateHandler}
   ///  *  On `mousedown` events, the behavior of {@link BoxZoomHandler}
   ///  *  On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-  external preventDefault();
+  external dynamic preventDefault();
 
   /// `true` if `preventDefault` has been called.
   external bool get defaultPrevented;
@@ -72,7 +72,7 @@ abstract class MapTouchEventJsImpl {
   ///
   ///  *  On `touchstart` events, the behavior of {@link DragPanHandler}
   ///  *  On `touchstart` events, the behavior of {@link TouchZoomRotateHandler}
-  external preventDefault();
+  external dynamic preventDefault();
 
   ///  `true` if `preventDefault` has been called.
   external bool get defaultPrevented;

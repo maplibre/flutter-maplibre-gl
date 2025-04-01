@@ -17,17 +17,17 @@ class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
   ///
   ///  @example
   ///  map.dragPan.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "drag to pan" interaction.
   ///
   ///  @example
   ///  map.dragPan.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
+  dynamic onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 
-  onTouchStart(TouchEvent e) => jsObject.onTouchStart(e);
+  dynamic onTouchStart(TouchEvent e) => jsObject.onTouchStart(e);
 
   /// Creates a new DragPanHandler from a [jsObject].
   DragPanHandler.fromJsObject(super.jsObject) : super.fromJsObject();

@@ -22,15 +22,15 @@ abstract class DragPanHandlerJsImpl {
   ///
   ///  @example
   ///  map.dragPan.enable();
-  external enable();
+  external dynamic enable();
 
   ///  Disables the "drag to pan" interaction.
   ///
   ///  @example
   ///  map.dragPan.disable();
-  external disable();
+  external dynamic disable();
 
-  external onMouseDown(MouseEvent e);
+  external dynamic onMouseDown(MouseEvent e);
 
-  external onTouchStart(TouchEvent e);
+  external dynamic onTouchStart(TouchEvent e);
 }

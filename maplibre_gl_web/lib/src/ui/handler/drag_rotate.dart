@@ -17,15 +17,15 @@ class DragRotateHandler extends JsObjectWrapper<DragRotateHandlerJsImpl> {
   ///
   ///  @example
   ///  map.dragRotate.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "drag to rotate" interaction.
   ///
   ///  @example
   ///  map.dragRotate.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
+  dynamic onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 
   /// Creates a new DragPanHandler from a [jsObject].
   DragRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();

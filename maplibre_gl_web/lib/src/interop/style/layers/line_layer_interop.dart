@@ -2,9 +2,9 @@ import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/line_layer.dart';
 
 class LineLayerJsImpl {
-  static toJs(LineLayer lineLayer) => jsify(toDict(lineLayer));
+  static dynamic toJs(LineLayer lineLayer) => jsify(toDict(lineLayer));
 
-  static toDict(LineLayer lineLayer) {
+  static Map<String, dynamic> toDict(LineLayer lineLayer) {
     final dict = <String, dynamic>{
       'id': lineLayer.id,
       'type': 'line',
@@ -30,9 +30,9 @@ class LineLayerJsImpl {
 }
 
 class LinePaintJsImpl {
-  static toJs(LinePaint linePaint) => jsify(toDict(linePaint));
+  static dynamic toJs(LinePaint linePaint) => jsify(toDict(linePaint));
 
-  static toDict(LinePaint linePaint) {
+  static Map<String, dynamic> toDict(LinePaint linePaint) {
     final dict = <String, dynamic>{};
     if (linePaint.lineOpacity != null) {
       dict['line-opacity'] = linePaint.lineOpacity;
@@ -72,9 +72,9 @@ class LinePaintJsImpl {
 }
 
 class LineLayoutJsImpl {
-  static toJs(LineLayout lineLayout) => jsify(toDict(lineLayout));
+  static dynamic toJs(LineLayout lineLayout) => jsify(toDict(lineLayout));
 
-  static toDict(LineLayout lineLayout) {
+  static Map<String, dynamic> toDict(LineLayout lineLayout) {
     final dict = <String, dynamic>{};
     if (lineLayout.lineCap != null) {
       dict['line-cap'] = lineLayout.lineCap;

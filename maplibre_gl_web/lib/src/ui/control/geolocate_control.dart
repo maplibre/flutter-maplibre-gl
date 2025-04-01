@@ -94,14 +94,14 @@ class GeolocateControl extends Evented {
   factory GeolocateControl(GeolocateControlOptions options) =>
       GeolocateControl.fromJsObject(GeolocateControlJsImpl(options.jsObject));
 
-  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
+  dynamic onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
-  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
+  dynamic onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   /// Trigger a geolocation
   ///
   /// @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
-  trigger() => jsObject.trigger();
+  dynamic trigger() => jsObject.trigger();
 
   /// Creates a new Camera from a [jsObject].
   GeolocateControl.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);

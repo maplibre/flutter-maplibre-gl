@@ -22,27 +22,27 @@ abstract class TouchZoomRotateHandlerJsImpl {
   ///    map.touchZoomRotate.enable();
   ///  @example
   ///    map.touchZoomRotate.enable({ around: 'center' });
-  external enable(dynamic options);
+  external dynamic enable(dynamic options);
 
   ///  Disables the "pinch to rotate and zoom" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.disable();
-  external disable();
+  external dynamic disable();
 
   ///  Disables the "pinch to rotate" interaction, leaving the "pinch to zoom"
   ///  interaction enabled.
   ///
   ///  @example
   ///    map.touchZoomRotate.disableRotation();
-  external disableRotation();
+  external dynamic disableRotation();
 
   ///  Enables the "pinch to rotate" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.enable();
   ///    map.touchZoomRotate.enableRotation();
-  external enableRotation();
+  external dynamic enableRotation();
 
-  external onStart(TouchEvent e);
+  external dynamic onStart(TouchEvent e);
 }

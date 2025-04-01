@@ -22,13 +22,13 @@ abstract class BoxZoomHandlerJsImpl {
   ///
   ///  @example
   ///    map.boxZoom.enable();
-  external enable();
+  external dynamic enable();
 
   ///  Disables the "box zoom" interaction.
   ///
   ///  @example
   ///    map.boxZoom.disable();
-  external disable();
+  external dynamic disable();
 
-  external onMouseDown(MouseEvent e);
+  external dynamic onMouseDown(MouseEvent e);
 }

@@ -25,7 +25,7 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
   GeoJsonSource.fromJsObject(super.jsObject) : super.fromJsObject();
 
   @override
-  get dict => {
+  Map<String, dynamic> get dict => {
         'type': 'geojson',
         'promoteId': promoteId,
         'data': data.jsObject,

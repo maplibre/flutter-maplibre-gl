@@ -26,7 +26,7 @@ abstract class EventJsImpl {
     PointJsImpl? point,
   });
 
-  external preventDefault();
+  external dynamic preventDefault();
 }
 
 @JS('Evented')
@@ -66,19 +66,19 @@ abstract class EventedJsImpl {
   ///  @returns {Object} `this`
   external MapLibreMapJsImpl once(String type, ListenerJsImpl listener);
 
-  external fire(EventJsImpl event, [dynamic properties]);
+  external dynamic fire(EventJsImpl event, [dynamic properties]);
 
   ///  Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
   ///
   ///  @param {string} type The event type
   ///  @returns {boolean} `true` if there is at least one registered listener for specified event type, `false` otherwise
   ///  @private
-  external listens(String type);
+  external dynamic listens(String type);
 
   ///  Bubble all events fired by this instance of Evented to this parent instance of Evented.
   ///
   ///  @private
   ///  @returns {Object} `this`
   ///  @private
-  external setEventedParent([EventedJsImpl? parent, dynamic data]);
+  external dynamic setEventedParent([EventedJsImpl? parent, dynamic data]);
 }

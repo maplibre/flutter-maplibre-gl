@@ -61,7 +61,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onFeatureTapped(
+  void _onFeatureTapped(
     dynamic id,
     Point<double> point,
     LatLng coordinates,
@@ -150,7 +150,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(
+  void _onDrag(
     dynamic id, {
     required Point<double> point,
     required LatLng origin,

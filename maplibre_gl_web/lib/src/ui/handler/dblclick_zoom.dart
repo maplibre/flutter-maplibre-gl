@@ -17,17 +17,17 @@ class DoubleClickZoomHandler
   ///
   ///  @example
   ///  map.doubleClickZoom.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "double click to zoom" interaction.
   ///
   ///  @example
   ///  map.doubleClickZoom.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onTouchStart(MapTouchEvent e) => jsObject.onTouchStart(e.jsObject);
+  dynamic onTouchStart(MapTouchEvent e) => jsObject.onTouchStart(e.jsObject);
 
-  onDblClick(MapMouseEvent e) => jsObject.onDblClick(e.jsObject);
+  dynamic onDblClick(MapMouseEvent e) => jsObject.onDblClick(e.jsObject);
 
   /// Creates a new DoubleClickZoomHandler from a [jsObject].
   DoubleClickZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();

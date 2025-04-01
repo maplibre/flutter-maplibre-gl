@@ -33,7 +33,7 @@ class VectorSource extends Source<VectorSourceJsImpl> {
   VectorSource.fromJsObject(super.jsObject) : super.fromJsObject();
 
   @override
-  get dict {
+  Map<String, dynamic> get dict {
     final dict = <String, dynamic>{
       'type': 'vector',
     };

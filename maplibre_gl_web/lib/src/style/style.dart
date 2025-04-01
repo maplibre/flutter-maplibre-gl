@@ -11,17 +11,18 @@ class StyleSetterOptions extends JsObjectWrapper<StyleSetterOptionsJsImpl> {
 }
 
 class Style extends JsObjectWrapper<StyleJsImpl> {
-  loadURL(String url, dynamic options) => jsObject.loadURL(url, options);
+  dynamic loadURL(String url, dynamic options) =>
+      jsObject.loadURL(url, options);
 
-  loadJSON(dynamic json, StyleSetterOptions option) =>
+  dynamic loadJSON(dynamic json, StyleSetterOptions option) =>
       jsObject.loadJSON(json, option.jsObject);
 
-  loaded() => jsObject.loaded();
+  dynamic loaded() => jsObject.loaded();
 
-  hasTransitions() => jsObject.hasTransitions();
+  dynamic hasTransitions() => jsObject.hasTransitions();
 
   ///  Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
-  update(EvaluationParameters parameters) =>
+  dynamic update(EvaluationParameters parameters) =>
       jsObject.update(parameters.jsObject);
 
   ///  Update this style's state to match the given style JSON, performing only
@@ -32,33 +33,33 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///
   ///  @returns {boolean} true if any changes were made; false otherwise
   ///  @private
-  setState(dynamic nextState) => jsObject.setState(nextState);
+  dynamic setState(dynamic nextState) => jsObject.setState(nextState);
 
-  addImage(String id, StyleImage image) =>
+  dynamic addImage(String id, StyleImage image) =>
       jsObject.addImage(id, image.jsObject);
 
-  updateImage(String id, StyleImage image) =>
+  dynamic updateImage(String id, StyleImage image) =>
       jsObject.updateImage(id, image.jsObject);
 
   StyleImage getImage(String id) =>
       StyleImage.fromJsObject(jsObject.getImage(id));
 
-  removeImage(String id) => jsObject.removeImage(id);
+  dynamic removeImage(String id) => jsObject.removeImage(id);
 
-  listImages() => jsObject.listImages();
+  dynamic listImages() => jsObject.listImages();
 
-  addSource(String id, dynamic source, StyleSetterOptions options) =>
+  dynamic addSource(String id, dynamic source, StyleSetterOptions options) =>
       jsObject.addSource(id, source, options.jsObject);
 
   ///  Remove a source from this stylesheet, given its id.
   ///  @param {string} id id of the source to remove
   ///  @throws {Error} if no source is found with the given ID
-  removeSource(String id) => jsObject.removeSource(id);
+  dynamic removeSource(String id) => jsObject.removeSource(id);
 
   ///  Set the data of a GeoJSON source, given its id.
   ///  @param {string} id id of the source
   ///  @param {GeoJSON|string} data GeoJSON source
-  setGeoJSONSourceData(String id, dynamic data) =>
+  dynamic setGeoJSONSourceData(String id, dynamic data) =>
       jsObject.setGeoJSONSourceData(id, data);
 
   ///  Get a source by id.
@@ -69,7 +70,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  addLayer(
+  dynamic addLayer(
     dynamic layerObject, [
     String? before,
     StyleSetterOptions? options,
@@ -80,7 +81,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} id  ID of the layer to move
   ///  @param {string} [before] ID of an existing layer to insert before
-  moveLayer(String id, [String? before]) => jsObject.moveLayer(id);
+  dynamic moveLayer(String id, [String? before]) => jsObject.moveLayer(id);
 
   ///  Remove the layer with the given id from the style.
   ///
@@ -88,7 +89,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///
   ///  @param {string} id id of the layer to remove
   ///  @fires error
-  removeLayer(String id) => jsObject.removeLayer(id);
+  dynamic removeLayer(String id) => jsObject.removeLayer(id);
 
   ///  Return the style layer object with the given `id`.
   ///
@@ -96,18 +97,22 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  @returns {?Object} a layer, if one with the given `id` exists
   dynamic getLayer(String id) => jsObject.getLayer(id);
 
-  setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]) =>
+  dynamic setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]) =>
       jsObject.setLayerZoomRange(layerId);
 
-  setFilter(String layerId, dynamic filter, StyleSetterOptions options) =>
+  dynamic setFilter(
+    String layerId,
+    dynamic filter,
+    StyleSetterOptions options,
+  ) =>
       jsObject.setFilter(layerId, filter, options.jsObject);
 
   ///  Get a layer's filter object
   ///  @param {string} layer the layer to inspect
   ///  @returns {*} the layer's filter, if any
-  getFilter(String layer) => jsObject.getFilter(layer);
+  dynamic getFilter(String layer) => jsObject.getFilter(layer);
 
-  setLayoutProperty(
+  dynamic setLayoutProperty(
     String layerId,
     String name,
     dynamic value,
@@ -119,10 +124,10 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  @param {string} layerId the layer to inspect
   ///  @param {string} name the name of the layout property
   ///  @returns {*} the property value
-  getLayoutProperty(String layerId, String name) =>
+  dynamic getLayoutProperty(String layerId, String name) =>
       jsObject.getLayoutProperty(layerId, name);
 
-  setPaintProperty(
+  dynamic setPaintProperty(
     String layerId,
     String name,
     dynamic value,
@@ -130,41 +135,45 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ) =>
       jsObject.setPaintProperty(layerId, name, value, options.jsObject);
 
-  getPaintProperty(String layer, String name) =>
+  dynamic getPaintProperty(String layer, String name) =>
       jsObject.getPaintProperty(layer, name);
 
-  setFeatureState(dynamic target, dynamic state) =>
+  dynamic setFeatureState(dynamic target, dynamic state) =>
       jsObject.setFeatureState(target, state);
 
-  removeFeatureState(dynamic target, [String? key]) =>
+  dynamic removeFeatureState(dynamic target, [String? key]) =>
       jsObject.removeFeatureState(target);
 
-  getFeatureState(dynamic target) => jsObject.getFeatureState(target);
+  dynamic getFeatureState(dynamic target) => jsObject.getFeatureState(target);
 
-  getTransition() => jsObject.getTransition();
+  dynamic getTransition() => jsObject.getTransition();
 
-  serialize() => jsObject.serialize();
+  dynamic serialize() => jsObject.serialize();
 
-  querySourceFeatures(String sourceID, dynamic params) =>
+  dynamic querySourceFeatures(String sourceID, dynamic params) =>
       jsObject.querySourceFeatures(sourceID, params);
 
-  addSourceType(String name, dynamic sourceType, Function callback) =>
+  dynamic addSourceType(String name, dynamic sourceType, Function callback) =>
       jsObject.addSourceType(name, sourceType, callback);
 
-  getLight() => jsObject.getLight();
+  dynamic getLight() => jsObject.getLight();
 
-  setLight(dynamic lightOptions, StyleSetterOptions options) =>
+  dynamic setLight(dynamic lightOptions, StyleSetterOptions options) =>
       jsObject.setLight(lightOptions, options.jsObject);
 
   // Callbacks from web workers
 
-  getImages(String mapId, dynamic params, Function callback) =>
+  dynamic getImages(String mapId, dynamic params, Function callback) =>
       jsObject.getImages(mapId, params, callback);
 
-  getGlyphs(String mapId, dynamic params, Function callback) =>
+  dynamic getGlyphs(String mapId, dynamic params, Function callback) =>
       jsObject.getGlyphs(mapId, params, callback);
 
-  getResource(String mapId, RequestParameters params, Function callback) =>
+  dynamic getResource(
+    String mapId,
+    RequestParameters params,
+    Function callback,
+  ) =>
       jsObject.getResource(mapId, params.jsObject, callback);
 
   /// Creates a new Style from a [jsObject].

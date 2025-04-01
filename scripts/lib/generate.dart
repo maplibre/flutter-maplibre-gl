@@ -5,7 +5,7 @@ import 'package:maplibre_code_gen/conversions.dart';
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
 
-main() async {
+Future<void> main() async {
   final styleJson =
       jsonDecode(await File('scripts/input/style.json').readAsString());
 

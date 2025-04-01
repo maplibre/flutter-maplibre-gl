@@ -48,7 +48,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     super.dispose();
   }
 
-  _showSnackBar(String type, String id) {
+  void _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
       content: Text(
         'Tapped $type $id',

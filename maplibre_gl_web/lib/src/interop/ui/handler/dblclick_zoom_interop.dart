@@ -21,15 +21,15 @@ abstract class DoubleClickZoomHandlerJsImpl {
   ///
   ///  @example
   ///  map.doubleClickZoom.enable();
-  external enable();
+  external dynamic enable();
 
   ///  Disables the "double click to zoom" interaction.
   ///
   ///  @example
   ///  map.doubleClickZoom.disable();
-  external disable();
+  external dynamic disable();
 
-  external onTouchStart(MapTouchEventJsImpl e);
+  external dynamic onTouchStart(MapTouchEventJsImpl e);
 
-  external onDblClick(MapMouseEventJsImpl e);
+  external dynamic onDblClick(MapMouseEventJsImpl e);
 }

@@ -2,9 +2,9 @@ import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/symbol_layer.dart';
 
 class SymbolLayerJsImpl {
-  static toJs(SymbolLayer symbolLayer) => jsify(toDict(symbolLayer));
+  static dynamic toJs(SymbolLayer symbolLayer) => jsify(toDict(symbolLayer));
 
-  static toDict(SymbolLayer symbolLayer) {
+  static Map<String, dynamic> toDict(SymbolLayer symbolLayer) {
     final dict = <String, dynamic>{
       'id': symbolLayer.id,
       'type': 'symbol',
@@ -40,9 +40,9 @@ class SymbolLayerJsImpl {
 }
 
 class SymbolPaintJsImpl {
-  static toJs(SymbolPaint symbolPaint) => jsify(toDict(symbolPaint));
+  static dynamic toJs(SymbolPaint symbolPaint) => jsify(toDict(symbolPaint));
 
-  static toDict(SymbolPaint symbolPaint) {
+  static Map<String, dynamic> toDict(SymbolPaint symbolPaint) {
     final dict = <String, dynamic>{};
     if (symbolPaint.iconOpacity != null) {
       dict['icon-opacity'] = symbolPaint.iconOpacity;
@@ -91,9 +91,9 @@ class SymbolPaintJsImpl {
 }
 
 class SymbolLayoutJsImpl {
-  static toJs(SymbolLayout symbolLayout) => jsify(toDict(symbolLayout));
+  static dynamic toJs(SymbolLayout symbolLayout) => jsify(toDict(symbolLayout));
 
-  static toDict(SymbolLayout symbolLayout) {
+  static Map<String, dynamic> toDict(SymbolLayout symbolLayout) {
     final dict = <String, dynamic>{};
     if (symbolLayout.symbolAvoidEdges != null) {
       dict['symbol-avoid-edges'] = symbolLayout.symbolAvoidEdges;

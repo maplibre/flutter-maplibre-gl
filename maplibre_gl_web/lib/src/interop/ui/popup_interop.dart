@@ -159,7 +159,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
-  external addClassName(String className);
+  external dynamic addClassName(String className);
 
   /// Removes a CSS class from the popup container element.
   ///
@@ -168,7 +168,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
-  external removeClassName(String className);
+  external dynamic removeClassName(String className);
 
   /// Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
   ///

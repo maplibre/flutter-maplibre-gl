@@ -562,7 +562,7 @@ class MapLibreMap extends Camera {
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
-  addSourceType(String name, dynamic sourceType, Function callback) =>
+  dynamic addSourceType(String name, dynamic sourceType, Function callback) =>
       jsObject.addSourceType(name, sourceType, callback);
 
   ///  Removes a source from the map's style.
@@ -571,7 +571,7 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
-  removeSource(String id) => jsObject.removeSource(id);
+  dynamic removeSource(String id) => jsObject.removeSource(id);
 
   ///  Returns the source with the specified ID in the map's style.
   ///
@@ -637,7 +637,7 @@ class MapLibreMap extends Camera {
   ///
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
-  addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
+  dynamic addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
     dynamic jsImage = image;
     if (image is Map) {
       jsImage = jsify(image);
@@ -662,7 +662,8 @@ class MapLibreMap extends Camera {
   ///  // If an image with the ID 'cat' already exists in the style's sprite,
   ///  // replace that image with a new image, 'other-cat-icon.png'.
   ///  if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
-  updateImage(String id, dynamic image) => jsObject.updateImage(id, image);
+  dynamic updateImage(String id, dynamic image) =>
+      jsObject.updateImage(id, image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
   ///  in the style's original [sprite]  and any images
@@ -687,7 +688,7 @@ class MapLibreMap extends Camera {
   ///  // If an image with the ID 'cat' exists in
   ///  // the style's sprite, remove it.
   ///  if (map.hasImage('cat')) map.removeImage('cat');
-  removeImage(String id) => jsObject.removeImage(id);
+  dynamic removeImage(String id) => jsObject.removeImage(id);
 
   ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
@@ -704,7 +705,7 @@ class MapLibreMap extends Camera {
   ///  });
   ///
   ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-  loadImage(String url, Function callback) =>
+  dynamic loadImage(String url, Function callback) =>
       jsObject.loadImage(url, allowInterop(callback));
 
   //////
@@ -769,7 +770,7 @@ class MapLibreMap extends Camera {
   ///  @example
   ///  // If a layer with ID 'state-data' exists, remove it.
   ///  if (map.getLayer('state-data')) map.removeLayer('state-data');
-  removeLayer(String id) => jsObject.removeLayer(id);
+  dynamic removeLayer(String id) => jsObject.removeLayer(id);
 
   ///  Returns the layer with the specified ID in the map's style.
   ///
@@ -848,7 +849,7 @@ class MapLibreMap extends Camera {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  setPaintProperty(
+  dynamic setPaintProperty(
     String layerId,
     String name,
     dynamic value, [
@@ -922,7 +923,7 @@ class MapLibreMap extends Camera {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  setFeatureState(dynamic feature, dynamic state) =>
+  dynamic setFeatureState(dynamic feature, dynamic state) =>
       jsObject.setFeatureState(feature, state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
@@ -938,7 +939,7 @@ class MapLibreMap extends Camera {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  removeFeatureState(dynamic target, [String? key]) =>
+  dynamic removeFeatureState(dynamic target, [String? key]) =>
       jsObject.removeFeatureState(target);
 
   ///  Gets the state of a feature.
@@ -997,12 +998,12 @@ class MapLibreMap extends Camera {
   ///  Use this method when you are done using the map and wish to ensure that it no
   ///  longer consumes browser resources. Afterwards, you must not call any other
   ///  methods on the map.
-  remove() => jsObject.remove();
+  dynamic remove() => jsObject.remove();
 
   ///  Trigger the rendering of a single frame. Use this method with custom layers to
   ///  repaint the map when the layer changes. Calling this multiple times before the
   ///  next frame is rendered will still result in only a single frame being rendered.
-  triggerRepaint() => jsObject.triggerRepaint();
+  dynamic triggerRepaint() => jsObject.triggerRepaint();
 
   ///  Gets and sets a Boolean indicating whether the map will render an outline
   ///  around each tile and the tile ID. These tile boundaries are useful for
@@ -1390,7 +1391,7 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
-  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
+  dynamic onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`

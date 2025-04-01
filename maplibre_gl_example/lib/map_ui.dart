@@ -329,7 +329,7 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  _clearFill() {
+  void _clearFill() {
     if (_selectedFill != null) {
       mapController!.removeFill(_selectedFill!);
       setState(() {
@@ -338,7 +338,7 @@ class MapUiBodyState extends State<MapUiBody> {
     }
   }
 
-  _drawFill(List<dynamic> features) async {
+  Future<void> _drawFill(List<dynamic> features) async {
     final Map<String, dynamic>? feature =
         features.firstWhereOrNull((f) => f['geometry']['type'] == 'Polygon');
 
