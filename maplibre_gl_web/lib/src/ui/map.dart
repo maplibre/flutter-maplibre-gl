@@ -1122,7 +1122,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   }) =>
       MapOptions.fromJsObject(
         MapOptionsJsImpl(
-          //hash: hash,
+          hash: hash,
           interactive: interactive ?? true,
           container: container,
           bearingSnap: bearingSnap,
