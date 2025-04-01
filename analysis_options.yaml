@@ -26,7 +26,6 @@ linter:
     type_annotate_public_apis: false
     prefer_asserts_with_message: false
     public_member_api_docs: false
-    require_trailing_commas: false
     avoid_dynamic_calls: false
     always_use_package_imports: false
     always_declare_return_types: false

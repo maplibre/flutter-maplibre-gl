@@ -50,5 +50,6 @@ class PMTilesMapState extends State<PMTilesMap> {
   }
 
   void _moveCameraToNullIsland() => mapController.future.then(
-      (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
+        (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)),
+      );
 }

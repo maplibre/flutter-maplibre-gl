@@ -155,7 +155,7 @@ class LatLngQuad {
       topLeft.toJson(),
       topRight.toJson(),
       bottomRight.toJson(),
-      bottomLeft.toJson()
+      bottomLeft.toJson(),
     ];
   }
 
@@ -216,15 +216,16 @@ class UserLocation {
   /// The heading of the user location, null if not available.
   final UserHeading? heading;
 
-  const UserLocation(
-      {required this.position,
-      required this.altitude,
-      required this.bearing,
-      required this.speed,
-      required this.horizontalAccuracy,
-      required this.verticalAccuracy,
-      required this.timestamp,
-      required this.heading});
+  const UserLocation({
+    required this.position,
+    required this.altitude,
+    required this.bearing,
+    required this.speed,
+    required this.horizontalAccuracy,
+    required this.verticalAccuracy,
+    required this.timestamp,
+    required this.heading,
+  });
 }
 
 /// Type represents a geomagnetic value, measured in microteslas, relative to a
@@ -257,12 +258,13 @@ class UserHeading {
   /// Returns a timestamp for when the magnetic heading was determined.
   final DateTime timestamp;
 
-  const UserHeading(
-      {required this.magneticHeading,
-      required this.trueHeading,
-      required this.headingAccuracy,
-      required this.x,
-      required this.y,
-      required this.z,
-      required this.timestamp});
+  const UserHeading({
+    required this.magneticHeading,
+    required this.trueHeading,
+    required this.headingAccuracy,
+    required this.x,
+    required this.y,
+    required this.z,
+    required this.timestamp,
+  });
 }

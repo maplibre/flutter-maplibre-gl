@@ -49,5 +49,6 @@ class FullMapState extends State<FullMap> {
   }
 
   void _moveCameraToNullIsland() => mapController.future.then(
-      (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
+        (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)),
+      );
 }

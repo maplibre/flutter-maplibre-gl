@@ -270,8 +270,9 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   Widget build(BuildContext context) {
     assert(
-        widget.annotationOrder.toSet().length == widget.annotationOrder.length,
-        'annotationOrder must not have duplicate types');
+      widget.annotationOrder.toSet().length == widget.annotationOrder.length,
+      'annotationOrder must not have duplicate types',
+    );
     final creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'styleString': widget.styleString,
@@ -284,7 +285,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
         'webPreserveDrawingBuffer': widget.webPreserveDrawingBuffer,
     };
     return _maplibrePlatform.buildView(
-        creationParams, onPlatformViewCreated, widget.gestureRecognizers);
+      creationParams,
+      onPlatformViewCreated,
+      widget.gestureRecognizers,
+    );
   }
 
   @override
@@ -351,26 +355,27 @@ class _MapLibreMapState extends State<MapLibreMap> {
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
 class _MapLibreMapOptions {
-  _MapLibreMapOptions(
-      {this.compassEnabled,
-      this.cameraTargetBounds,
-      this.styleString,
-      this.minMaxZoomPreference,
-      required this.rotateGesturesEnabled,
-      required this.scrollGesturesEnabled,
-      required this.tiltGesturesEnabled,
-      required this.zoomGesturesEnabled,
-      required this.doubleClickZoomEnabled,
-      this.trackCameraPosition,
-      this.myLocationEnabled,
-      this.myLocationTrackingMode,
-      this.myLocationRenderMode,
-      this.logoViewMargins,
-      this.compassViewPosition,
-      this.compassViewMargins,
-      this.attributionButtonPosition,
-      this.attributionButtonMargins,
-      this.locationEnginePlatforms});
+  _MapLibreMapOptions({
+    this.compassEnabled,
+    this.cameraTargetBounds,
+    this.styleString,
+    this.minMaxZoomPreference,
+    required this.rotateGesturesEnabled,
+    required this.scrollGesturesEnabled,
+    required this.tiltGesturesEnabled,
+    required this.zoomGesturesEnabled,
+    required this.doubleClickZoomEnabled,
+    this.trackCameraPosition,
+    this.myLocationEnabled,
+    this.myLocationTrackingMode,
+    this.myLocationRenderMode,
+    this.logoViewMargins,
+    this.compassViewPosition,
+    this.compassViewMargins,
+    this.attributionButtonPosition,
+    this.attributionButtonMargins,
+    this.locationEnginePlatforms,
+  });
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -439,7 +444,7 @@ class _MapLibreMapOptions {
     'scrollGesturesEnabled',
     'tiltGesturesEnabled',
     'zoomGesturesEnabled',
-    'doubleClickZoomEnabled'
+    'doubleClickZoomEnabled',
   };
 
   Map<String, dynamic> toMap() {
@@ -479,7 +484,9 @@ class _MapLibreMapOptions {
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
-        'attributionButtonMargins', pointToArray(attributionButtonMargins));
+      'attributionButtonMargins',
+      pointToArray(attributionButtonMargins),
+    );
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
     return optionsMap;
   }

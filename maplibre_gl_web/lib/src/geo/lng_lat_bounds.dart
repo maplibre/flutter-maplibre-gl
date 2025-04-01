@@ -21,10 +21,12 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
     LngLat sw,
     LngLat ne,
   ) =>
-      LngLatBounds.fromJsObject(LngLatBoundsJsImpl(
-        sw.jsObject,
-        ne.jsObject,
-      ));
+      LngLatBounds.fromJsObject(
+        LngLatBoundsJsImpl(
+          sw.jsObject,
+          ne.jsObject,
+        ),
+      );
 
   ///  Set the northeast corner of the bounding box
   ///

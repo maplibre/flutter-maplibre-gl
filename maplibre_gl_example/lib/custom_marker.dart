@@ -89,23 +89,26 @@ class CustomMarkerState extends State<CustomMarker> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: [
-        MapLibreMap(
-          trackCameraPosition: true,
-          onMapCreated: _onMapCreated,
-          onMapLongClick: _onMapLongClickCallback,
-          onCameraIdle: _onCameraIdleCallback,
-          onStyleLoadedCallback: _onStyleLoadedCallback,
-          initialCameraPosition:
-              const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
-          iosLongClickDuration: const Duration(milliseconds: 200),
-        ),
-        IgnorePointer(
+      body: Stack(
+        children: [
+          MapLibreMap(
+            trackCameraPosition: true,
+            onMapCreated: _onMapCreated,
+            onMapLongClick: _onMapLongClickCallback,
+            onCameraIdle: _onCameraIdleCallback,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            initialCameraPosition:
+                const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
+            iosLongClickDuration: const Duration(milliseconds: 200),
+          ),
+          IgnorePointer(
             ignoring: true,
             child: Stack(
               children: _markers,
-            ))
-      ]),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           //_measurePerformance();
@@ -244,12 +247,16 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
     }
 
     return Positioned(
-        left: _position.x / ratio - _iconSize / 2,
-        top: _position.y / ratio - _iconSize / 2,
-        child: RotationTransition(
-            turns: _animation,
-            child: Image.asset('assets/symbols/2.0x/custom-icon.png',
-                height: _iconSize)));
+      left: _position.x / ratio - _iconSize / 2,
+      top: _position.y / ratio - _iconSize / 2,
+      child: RotationTransition(
+        turns: _animation,
+        child: Image.asset(
+          'assets/symbols/2.0x/custom-icon.png',
+          height: _iconSize,
+        ),
+      ),
+    );
   }
 
   void updatePosition(Point<num> point) {

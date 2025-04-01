@@ -106,9 +106,13 @@ class CameraUpdate {
   /// possible zoom level. A non-zero [left], [top], [right] and [bottom] padding
   /// insets the bounding box from the map view's edges.
   /// The camera's new tilt and bearing will both be 0.0.
-  CameraUpdate.newLatLngBounds(LatLngBounds bounds,
-      {double left = 0, double top = 0, double right = 0, double bottom = 0})
-      : this._(<dynamic>[
+  CameraUpdate.newLatLngBounds(
+    LatLngBounds bounds, {
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+  }) : this._(<dynamic>[
           'newLatLngBounds',
           bounds.toList(),
           left,

@@ -64,12 +64,13 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
-        body: MapLibreMap(
-      styleString: styleAbsoluteFilePath,
-      onMapCreated: _onMapCreated,
-      initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
-      onStyleLoadedCallback: onStyleLoadedCallback,
-    ));
+      body: MapLibreMap(
+        styleString: styleAbsoluteFilePath,
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
+        onStyleLoadedCallback: onStyleLoadedCallback,
+      ),
+    );
   }
 
   void onStyleLoadedCallback() {}

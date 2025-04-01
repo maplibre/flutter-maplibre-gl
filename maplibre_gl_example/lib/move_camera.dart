@@ -180,7 +180,7 @@ class MoveCameraState extends State<MoveCamera> {
               ],
             ),
           ],
-        )
+        ),
       ],
     );
   }

@@ -95,8 +95,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     }
     if (availableNumbers.isNotEmpty) {
       controller!.addSymbol(
-          _getSymbolOptions(iconImage, availableNumbers.first),
-          {'count': availableNumbers.first});
+        _getSymbolOptions(iconImage, availableNumbers.first),
+        {'count': availableNumbers.first},
+      );
       setState(() {
         _symbolCount += 1;
       });
@@ -141,8 +142,10 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
       final symbolOptionsList = symbolsToAddNumbers
           .map((i) => _getSymbolOptions(iconImage, i))
           .toList();
-      controller!.addSymbols(symbolOptionsList,
-          symbolsToAddNumbers.map((i) => {'count': i}).toList());
+      controller!.addSymbols(
+        symbolOptionsList,
+        symbolsToAddNumbers.map((i) => {'count': i}).toList(),
+      );
 
       setState(() {
         _symbolCount += symbolOptionsList.length;
@@ -317,7 +320,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                         TextButton(
                           onPressed: _changeIconOverlap,
                           child: Text(
-                              '${_iconAllowOverlap ? 'disable' : 'enable'} icon overlap'),
+                            '${_iconAllowOverlap ? 'disable' : 'enable'} icon overlap',
+                          ),
                         ),
                         TextButton(
                           onPressed: (_symbolCount == 0) ? null : _removeAll,
@@ -328,20 +332,22 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  'assetImage'), //assetImage added to the style in _onStyleLoaded
+                                  'assetImage',
+                                ), //assetImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (network image)'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  'networkImage'), //networkImage added to the style in _onStyleLoaded
+                                  'networkImage',
+                                ), //networkImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (custom font)'),
                           onPressed: () =>
                               (_symbolCount == 12) ? null : _add('customFont'),
-                        )
+                        ),
                       ],
                     ),
                     Column(
@@ -399,7 +405,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

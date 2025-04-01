@@ -96,12 +96,14 @@ class _MapsDemoState extends State<MapsDemo> {
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: Text(page.title)),
-          body: page,
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text(page.title)),
+            body: page,
+          ),
         ),
-      ));
+      );
     }
   }
 

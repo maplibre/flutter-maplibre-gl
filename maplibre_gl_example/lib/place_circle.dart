@@ -70,11 +70,12 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
   void _add() {
     controller!.addCircle(
       CircleOptions(
-          geometry: LatLng(
-            center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
-            center.longitude + cos(_circleCount * pi / 6.0) / 20.0,
-          ),
-          circleColor: '#FF0000'),
+        geometry: LatLng(
+          center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
+          center.longitude + cos(_circleCount * pi / 6.0) / 20.0,
+        ),
+        circleColor: '#FF0000',
+      ),
     );
     setState(() {
       _circleCount += 1;
@@ -139,7 +140,8 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     var current = _selectedCircle!.options.circleStrokeWidth;
     current ??= 0;
     _updateSelectedCircle(
-        CircleOptions(circleStrokeWidth: current == 0 ? 5.0 : 0));
+      CircleOptions(circleStrokeWidth: current == 0 ? 5.0 : 0),
+    );
   }
 
   Future<void> _changeCircleStrokeColor() async {
@@ -148,7 +150,8 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
     _updateSelectedCircle(
       CircleOptions(
-          circleStrokeColor: current == '#FFFFFF' ? '#FF0000' : '#FFFFFF'),
+        circleStrokeColor: current == '#FFFFFF' ? '#FF0000' : '#FFFFFF',
+      ),
     );
   }
 
@@ -288,7 +291,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

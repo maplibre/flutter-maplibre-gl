@@ -56,7 +56,9 @@ Future<List<OfflineRegion>> getListOfRegions() async {
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(
-    int id, Map<String, dynamic> metadata) async {
+  int id,
+  Map<String, dynamic> metadata,
+) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{

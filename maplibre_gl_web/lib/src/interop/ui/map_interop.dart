@@ -91,8 +91,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  external MapLibreMapJsImpl addControl(IControlJsImpl? control,
-      [String? position]);
+  external MapLibreMapJsImpl addControl(
+    IControlJsImpl? control, [
+    String? position,
+  ]);
 
   ///  Removes the control from the map.
   ///
@@ -391,8 +393,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  external List<FeatureJsImpl> queryRenderedFeatures(dynamic geometry,
-      [dynamic options]);
+  external List<FeatureJsImpl> queryRenderedFeatures(
+    dynamic geometry, [
+    dynamic options,
+  ]);
 
   ///  Returns an array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -430,7 +434,9 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   external List<dynamic> querySourceFeatures(
-      String sourceId, dynamic parameters);
+    String sourceId,
+    dynamic parameters,
+  );
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
@@ -718,7 +724,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   external MapLibreMapJsImpl setLayerZoomRange(
-      String layerId, num minzoom, num maxzoom);
+    String layerId,
+    num minzoom,
+    num maxzoom,
+  );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -735,8 +744,11 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapLibreMapJsImpl setFilter(String layerId, dynamic filter,
-      [StyleSetterOptionsJsImpl? options]);
+  external MapLibreMapJsImpl setFilter(
+    String layerId,
+    dynamic filter, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -758,8 +770,12 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external setPaintProperty(String layerId, String name, dynamic value,
-      [StyleSetterOptionsJsImpl? options]);
+  external setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -779,8 +795,11 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, dynamic value,
-      [StyleSetterOptionsJsImpl? options]);
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -796,7 +815,9 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-      dynamic light, StyleSetterOptionsJsImpl options);
+    dynamic light,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Returns the value of the light object.
   ///
@@ -1159,7 +1180,9 @@ class MapOptionsJsImpl {
 }
 
 typedef RequestTransformFunctionJsImpl = RequestParametersJsImpl Function(
-    String url, String resourceType);
+  String url,
+  String resourceType,
+);
 
 @JS()
 @anonymous

@@ -186,7 +186,8 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     final regionItems = <OfflineRegionListItem>[];
     for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
-          (offlineRegion) => offlineRegion.metadata['name'] == item.name);
+        (offlineRegion) => offlineRegion.metadata['name'] == item.name,
+      );
       if (offlineRegion != null) {
         regionItems.add(item.copyWith(downloadedId: offlineRegion.id));
       } else {
@@ -215,21 +216,23 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
       setState(() {
         _items.removeAt(index);
         _items.insert(
-            index,
-            item.copyWith(
-              isDownloading: false,
-              downloadedId: downloadingRegion.id,
-            ));
+          index,
+          item.copyWith(
+            isDownloading: false,
+            downloadedId: downloadingRegion.id,
+          ),
+        );
       });
     } on Exception catch (_) {
       setState(() {
         _items.removeAt(index);
         _items.insert(
-            index,
-            item.copyWith(
-              isDownloading: false,
-              downloadedId: null,
-            ));
+          index,
+          item.copyWith(
+            isDownloading: false,
+            downloadedId: null,
+          ),
+        );
       });
       return;
     }
@@ -248,11 +251,12 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     setState(() {
       _items.removeAt(index);
       _items.insert(
-          index,
-          item.copyWith(
-            isDownloading: false,
-            downloadedId: null,
-          ));
+        index,
+        item.copyWith(
+          isDownloading: false,
+          downloadedId: null,
+        ),
+      );
     });
   }
 

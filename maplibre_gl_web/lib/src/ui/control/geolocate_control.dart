@@ -18,13 +18,15 @@ class GeolocateControlOptions
     bool? showAccuracyCircle,
     bool? showUserLocation,
   }) =>
-      GeolocateControlOptions.fromJsObject(GeolocateControlOptionsJsImpl(
-        positionOptions: positionOptions.jsObject,
-        fitBoundsOptions: fitBoundsOptions,
-        trackUserLocation: trackUserLocation,
-        showAccuracyCircle: showAccuracyCircle,
-        showUserLocation: showUserLocation,
-      ));
+      GeolocateControlOptions.fromJsObject(
+        GeolocateControlOptionsJsImpl(
+          positionOptions: positionOptions.jsObject,
+          fitBoundsOptions: fitBoundsOptions,
+          trackUserLocation: trackUserLocation,
+          showAccuracyCircle: showAccuracyCircle,
+          showUserLocation: showUserLocation,
+        ),
+      );
 
   /// Creates a new MapOptions from a [jsObject].
   GeolocateControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -40,11 +42,13 @@ class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
     num? maximumAge,
     num? timeout,
   }) =>
-      PositionOptions.fromJsObject(PositionOptionsJsImpl(
-        enableHighAccuracy: enableHighAccuracy,
-        maximumAge: maximumAge,
-        timeout: timeout,
-      ));
+      PositionOptions.fromJsObject(
+        PositionOptionsJsImpl(
+          enableHighAccuracy: enableHighAccuracy,
+          maximumAge: maximumAge,
+          timeout: timeout,
+        ),
+      );
 
   /// Creates a new MapOptions from a [jsObject].
   PositionOptions.fromJsObject(super.jsObject) : super.fromJsObject();

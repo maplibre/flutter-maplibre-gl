@@ -9,7 +9,8 @@ class EvaluationParameters extends JsObjectWrapper<EvaluationParametersJsImpl> {
 
   factory EvaluationParameters(num zoom, [dynamic options]) =>
       EvaluationParameters.fromJsObject(
-          EvaluationParametersJsImpl(zoom, options));
+        EvaluationParametersJsImpl(zoom, options),
+      );
 
   bool isSupportedScript(String str) => jsObject.isSupportedScript(str);
 

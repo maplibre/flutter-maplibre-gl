@@ -73,16 +73,17 @@ class LineBodyState extends State<LineBody> {
   void _add() {
     controller!.addLine(
       const LineOptions(
-          geometry: [
-            LatLng(-33.86711, 151.1947171),
-            LatLng(-33.86711, 151.1947171),
-            LatLng(-32.86711, 151.1947171),
-            LatLng(-33.86711, 152.1947171),
-          ],
-          lineColor: '#ff0000',
-          lineWidth: 14.0,
-          lineOpacity: 0.5,
-          draggable: true),
+        geometry: [
+          LatLng(-33.86711, 151.1947171),
+          LatLng(-33.86711, 151.1947171),
+          LatLng(-32.86711, 151.1947171),
+          LatLng(-33.86711, 152.1947171),
+        ],
+        lineColor: '#ff0000',
+        lineWidth: 14.0,
+        lineOpacity: 0.5,
+        draggable: true,
+      ),
     );
     setState(() {
       _lineCount += 1;

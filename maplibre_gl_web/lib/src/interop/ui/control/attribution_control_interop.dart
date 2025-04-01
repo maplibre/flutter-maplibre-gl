@@ -11,8 +11,10 @@ class AttributionControlOptionsJsImpl {
 
   external List<String>? get customAttribution;
 
-  external factory AttributionControlOptionsJsImpl(
-      {bool? compact, List<String>? customAttribution});
+  external factory AttributionControlOptionsJsImpl({
+    bool? compact,
+    List<String>? customAttribution,
+  });
 }
 
 /// A `AttributionControl` control contains attributions.
@@ -30,7 +32,8 @@ class AttributionControlJsImpl {
   external AttributionControlOptionsJsImpl get options;
 
   external factory AttributionControlJsImpl(
-      AttributionControlOptionsJsImpl options);
+    AttributionControlOptionsJsImpl options,
+  );
 
   external onAdd(MapLibreMapJsImpl map);
 

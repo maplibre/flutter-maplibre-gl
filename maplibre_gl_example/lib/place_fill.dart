@@ -59,12 +59,14 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     this.controller!.onFeatureDrag.add(_onFeatureDrag);
   }
 
-  void _onFeatureDrag(id,
-      {required current,
-      required delta,
-      required origin,
-      required point,
-      required eventType}) {
+  void _onFeatureDrag(
+    id, {
+    required current,
+    required delta,
+    required origin,
+    required point,
+    required eventType,
+  }) {
     final DragEventType type = eventType;
     switch (type) {
       case DragEventType.start:
@@ -109,9 +111,10 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   void _add() {
     controller!.addFill(
       FillOptions(
-          geometry: _defaultGeometry,
-          fillColor: '#FF0000',
-          fillOutlineColor: '#FF0000'),
+        geometry: _defaultGeometry,
+        fillColor: '#FF0000',
+        fillOutlineColor: '#FF0000',
+      ),
     );
     setState(() {
       _fillCount += 1;
@@ -131,14 +134,20 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
 
     geometry ??= _defaultGeometry;
 
-    _updateSelectedFill(FillOptions(
+    _updateSelectedFill(
+      FillOptions(
         geometry: geometry
-            .map((list) => list
-                .map(
+            .map(
+              (list) => list
+                  .map(
                     // Move to right with 0.1 degree on longitude
-                    (latLng) => LatLng(latLng.latitude, latLng.longitude + 0.1))
-                .toList())
-            .toList()));
+                    (latLng) => LatLng(latLng.latitude, latLng.longitude + 0.1),
+                  )
+                  .toList(),
+            )
+            .toList(),
+      ),
+    );
   }
 
   void _changeDraggable() {
@@ -261,7 +270,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

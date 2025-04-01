@@ -97,23 +97,24 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
         ),
         const Center(child: Text('© OpenStreetMap contributors')),
         Expanded(
-            child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 30),
-              Center(child: Text(data)),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: controller == null ? null : displayLayers,
-                child: const Text('Get map layers'),
-              ),
-              ElevatedButton(
-                onPressed: controller == null ? null : displaySources,
-                child: const Text('Get map sources'),
-              )
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
+                Center(child: Text(data)),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: controller == null ? null : displayLayers,
+                  child: const Text('Get map layers'),
+                ),
+                ElevatedButton(
+                  onPressed: controller == null ? null : displaySources,
+                  child: const Text('Get map sources'),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }

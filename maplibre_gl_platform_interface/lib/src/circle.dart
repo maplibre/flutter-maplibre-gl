@@ -120,8 +120,8 @@ class CircleOptions {
       'properties': toJson(false),
       'geometry': {
         'type': 'Point',
-        'coordinates': geometry!.toGeoJsonCoordinates()
-      }
+        'coordinates': geometry!.toGeoJsonCoordinates(),
+      },
     };
   }
 }

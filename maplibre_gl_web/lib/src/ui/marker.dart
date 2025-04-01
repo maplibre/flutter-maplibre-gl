@@ -141,16 +141,18 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
     String? rotationAlignment,
     String? pitchAlignment,
   }) =>
-      MarkerOptions.fromJsObject(MarkerOptionsJsImpl(
-        element: element,
-        offset: offset?.jsObject,
-        anchor: anchor,
-        color: color,
-        draggable: draggable,
-        rotation: rotation,
-        rotationAlignment: rotationAlignment,
-        pitchAlignment: pitchAlignment,
-      ));
+      MarkerOptions.fromJsObject(
+        MarkerOptionsJsImpl(
+          element: element,
+          offset: offset?.jsObject,
+          anchor: anchor,
+          color: color,
+          draggable: draggable,
+          rotation: rotation,
+          rotationAlignment: rotationAlignment,
+          pitchAlignment: pitchAlignment,
+        ),
+      );
 
   /// Creates a new MarkerOptions from a [jsObject].
   MarkerOptions.fromJsObject(super.jsObject) : super.fromJsObject();

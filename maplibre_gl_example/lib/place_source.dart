@@ -49,7 +49,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds an asset image as a source to the currently displayed style
   Future<void> addImageSourceFromAsset(
-      String imageSourceId, String assetName) async {
+    String imageSourceId,
+    String assetName,
+  ) async {
     final bytes = await rootBundle.load(assetName);
     final list = bytes.buffer.asUint8List();
     return controller.addImageSource(
@@ -77,13 +79,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> addLayerBelow(
-      String imageLayerId, String imageSourceId, String belowLayerId) {
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+  ) {
     if (layerAdded) {
       removeLayer(imageLayerId);
     }
     setState(() => layerAdded = true);
     return controller.addImageLayerBelow(
-        imageLayerId, imageSourceId, belowLayerId);
+      imageLayerId,
+      imageSourceId,
+      belowLayerId,
+    );
   }
 
   Future<void> removeLayer(String imageLayerId) {
@@ -92,7 +100,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> updateImageSourceFromAsset(
-      String imageSourceId, String assetName) async {
+    String imageSourceId,
+    String assetName,
+  ) async {
     final bytes = await rootBundle.load(assetName);
     final list = bytes.buffer.asUint8List();
     return controller.updateImageSource(imageSourceId, list, null);

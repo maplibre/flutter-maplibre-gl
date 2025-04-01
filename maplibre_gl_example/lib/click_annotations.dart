@@ -51,14 +51,15 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
-        content: Text(
-          'Tapped $type $id',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+      content: Text(
+        'Tapped $type $id',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
-        backgroundColor: Theme.of(context).primaryColor);
+      ),
+      backgroundColor: Theme.of(context).primaryColor,
+    );
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -81,7 +82,10 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   Future<void> _onStyleLoaded() async {
     await addImageFromAsset(
-        controller!, 'custom-marker', 'assets/symbols/custom-marker.png');
+      controller!,
+      'custom-marker',
+      'assets/symbols/custom-marker.png',
+    );
     controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
@@ -100,9 +104,10 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     );
     controller!.addSymbol(
       const SymbolOptions(
-          geometry: LatLng(-33.894372606072309, 151.17576679759523),
-          iconImage: 'custom-marker', //"fast-food-15",
-          iconSize: 2),
+        geometry: LatLng(-33.894372606072309, 151.17576679759523),
+        iconImage: 'custom-marker', //"fast-food-15",
+        iconSize: 2,
+      ),
     );
     controller!.addLine(
       const LineOptions(

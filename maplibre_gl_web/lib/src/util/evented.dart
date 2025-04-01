@@ -29,14 +29,16 @@ class Event extends JsObjectWrapper<EventJsImpl> {
     required List<Feature> features,
     required Point point,
   }) =>
-      Event.fromJsObject(EventJsImpl(
-        id: id,
-        type: type,
-        lngLat: lngLat.jsObject,
-        features: features.map((dynamic f) => f.jsObject).toList()
-            as List<FeatureJsImpl?>?,
-        point: point.jsObject,
-      ));
+      Event.fromJsObject(
+        EventJsImpl(
+          id: id,
+          type: type,
+          lngLat: lngLat.jsObject,
+          features: features.map((dynamic f) => f.jsObject).toList()
+              as List<FeatureJsImpl?>?,
+          point: point.jsObject,
+        ),
+      );
 
   preventDefault() => jsObject.preventDefault();
 
@@ -55,28 +57,39 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   MapLibreMap on(String type, [dynamic layerIdOrListener, Listener? listener]) {
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
       return MapLibreMap.fromJsObject(
-        jsObject.on(type, allowInterop(
-          (dynamic position) {
-            layerIdOrListener(position);
-          },
-        )),
+        jsObject.on(
+          type,
+          allowInterop(
+            (dynamic position) {
+              layerIdOrListener(position);
+            },
+          ),
+        ),
       );
     }
     if (layerIdOrListener is Listener) {
       return MapLibreMap.fromJsObject(
-        jsObject.on(type, allowInterop(
-          (EventJsImpl object) {
-            layerIdOrListener(Event.fromJsObject(object));
-          },
-        )),
+        jsObject.on(
+          type,
+          allowInterop(
+            (EventJsImpl object) {
+              layerIdOrListener(Event.fromJsObject(object));
+            },
+          ),
+        ),
       );
     }
     return MapLibreMap.fromJsObject(
-        jsObject.on(type, layerIdOrListener, allowInterop(
-      (EventJsImpl object) {
-        listener!(Event.fromJsObject(object));
-      },
-    )));
+      jsObject.on(
+        type,
+        layerIdOrListener,
+        allowInterop(
+          (EventJsImpl object) {
+            listener!(Event.fromJsObject(object));
+          },
+        ),
+      ),
+    );
   }
 
   ///  Removes a previously registered event listener.
@@ -84,23 +97,34 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
-  MapLibreMap off(String type,
-      [dynamic layerIdOrListener, Listener? listener]) {
+  MapLibreMap off(
+    String type, [
+    dynamic layerIdOrListener,
+    Listener? listener,
+  ]) {
     if (layerIdOrListener is Listener) {
       return MapLibreMap.fromJsObject(
-        jsObject.off(type, allowInterop(
-          (EventJsImpl object) {
-            layerIdOrListener(Event.fromJsObject(object));
-          },
-        )),
+        jsObject.off(
+          type,
+          allowInterop(
+            (EventJsImpl object) {
+              layerIdOrListener(Event.fromJsObject(object));
+            },
+          ),
+        ),
       );
     }
     return MapLibreMap.fromJsObject(
-        jsObject.off(type, layerIdOrListener, allowInterop(
-      (EventJsImpl object) {
-        listener!(Event.fromJsObject(object));
-      },
-    )));
+      jsObject.off(
+        type,
+        layerIdOrListener,
+        allowInterop(
+          (EventJsImpl object) {
+            listener!(Event.fromJsObject(object));
+          },
+        ),
+      ),
+    );
   }
 
   ///  Adds a listener that will be called only once to a specified event type.
@@ -110,12 +134,16 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to listen for.
   ///  @param {Function} listener The function to be called when the event is fired the first time.
   ///  @returns {Object} `this`
-  MapLibreMap once(String type, Listener listener) =>
-      MapLibreMap.fromJsObject(jsObject.once(type, allowInterop(
-        (EventJsImpl object) {
-          listener(Event.fromJsObject(object));
-        },
-      )));
+  MapLibreMap once(String type, Listener listener) => MapLibreMap.fromJsObject(
+        jsObject.once(
+          type,
+          allowInterop(
+            (EventJsImpl object) {
+              listener(Event.fromJsObject(object));
+            },
+          ),
+        ),
+      );
 
   fire(Event event, [dynamic properties]) =>
       jsObject.fire(event.jsObject, properties);

@@ -37,7 +37,8 @@ class NavigationControlJsImpl {
   external NavigationControlOptionsJsImpl get options;
 
   external factory NavigationControlJsImpl(
-      NavigationControlOptionsJsImpl options);
+    NavigationControlOptionsJsImpl options,
+  );
 
   external onAdd(MapLibreMapJsImpl map);
 

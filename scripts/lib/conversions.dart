@@ -47,7 +47,7 @@ const dartTypeMappingTable = {
   'enum': 'String',
   'promoteId': 'String',
   'boolean': 'bool',
-  '*': 'Object'
+  '*': 'Object',
 };
 
 const swiftTypeMappingTable = {
@@ -57,5 +57,5 @@ const swiftTypeMappingTable = {
   'enum': 'String',
   'promoteId': 'String',
   'boolean': 'Bool',
-  '*': 'Object'
+  '*': 'Object',
 };

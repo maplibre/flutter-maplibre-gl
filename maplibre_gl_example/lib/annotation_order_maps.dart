@@ -36,7 +36,8 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0),
                 child: Text(
-                    'This map has polygones (fill) above all other anotations (default behavior)'),
+                  'This map has polygones (fill) above all other anotations (default behavior)',
+                ),
               ),
               Center(
                 child: SizedBox(
@@ -67,7 +68,8 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
                 child: Text(
-                    'This map has polygones (fill) under all other anotations'),
+                  'This map has polygones (fill) under all other anotations',
+                ),
               ),
               Center(
                 child: SizedBox(
@@ -106,7 +108,10 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
 
   Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
-        controller, 'custom-marker', 'assets/symbols/custom-marker.png');
+      controller,
+      'custom-marker',
+      'assets/symbols/custom-marker.png',
+    );
     controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(

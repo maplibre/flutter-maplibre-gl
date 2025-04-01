@@ -26,7 +26,7 @@ main() async {
     'raster_dem',
     'geojson',
     'video',
-    'image'
+    'image',
   ];
 
   final renderContext = {
@@ -48,13 +48,13 @@ main() async {
           'properties': buildSourceProperties(styleJson, 'source_$type'),
         },
     ],
-    'expressions': buildExpressionProperties(styleJson)
+    'expressions': buildExpressionProperties(styleJson),
   };
 
   // required for deduplication
   renderContext['all_layout_properties'] = <dynamic>{
     for (final type in renderContext['layerTypes']!)
-      ...type['layout_properties'].map((p) => p['value'])
+      ...type['layout_properties'].map((p) => p['value']),
   }.map((p) => {'property': p}).toList();
 
   const templates = [
@@ -90,14 +90,18 @@ Future<void> render(
 }
 
 List<Map<String, dynamic>> buildStyleProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
 }
 
 Map<String, dynamic> buildStyleProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   return <String, dynamic>{
     'value': key,
@@ -107,12 +111,14 @@ Map<String, dynamic> buildStyleProperty(
     'iosAsCamelCase': renamedIosProperties[camelCase],
     'doc': value['doc'],
     'docSplit': buildDocSplit(value).map((s) => {'part': s}).toList(),
-    'valueAsCamelCase': camelCase
+    'valueAsCamelCase': camelCase,
   };
 }
 
 List<Map<String, dynamic>> buildSourceProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries
@@ -122,7 +128,9 @@ List<Map<String, dynamic>> buildSourceProperties(
 }
 
 Map<String, dynamic> buildSourceProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   final typeDart = dartTypeMappingTable[value['type']];
   final typeSwift = swiftTypeMappingTable[value['type']];
@@ -147,7 +155,7 @@ Map<String, dynamic> buildSourceProperty(
     'typeSwift':
         nestedTypeSwift == null ? typeSwift : '$typeSwift<$nestedTypeSwift>',
     'docSplit': buildDocSplit(value).map((s) => {'part': s}).toList(),
-    'valueAsCamelCase': camelCase
+    'valueAsCamelCase': camelCase,
   };
 }
 
@@ -171,7 +179,8 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
       for (final value in values.entries) {
         result.add('  "${value.key}"');
         result.addAll(
-            splitIntoChunks("${value.value["doc"]}", 70, prefix: '     '));
+          splitIntoChunks("${value.value["doc"]}", 70, prefix: '     '),
+        );
       }
     }
   }
@@ -192,8 +201,11 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
   return result;
 }
 
-List<String> splitIntoChunks(String input, int lineLength,
-    {String prefix = ''}) {
+List<String> splitIntoChunks(
+  String input,
+  int lineLength, {
+  String prefix = '',
+}) {
   final words = input.split(' ');
   final chunks = <String>[];
 
@@ -213,7 +225,8 @@ List<String> splitIntoChunks(String input, int lineLength,
 }
 
 List<Map<String, dynamic>> buildExpressionProperties(
-    Map<String, dynamic> styleJson) {
+  Map<String, dynamic> styleJson,
+) {
   final Map<String, dynamic> items = styleJson['expression_name']['values'];
 
   final renamed = {
@@ -237,11 +250,13 @@ List<Map<String, dynamic>> buildExpressionProperties(
   };
 
   return items.entries
-      .map((e) => <String, dynamic>{
-            'value': e.key,
-            'doc': e.value['doc'],
-            'docSplit': buildDocSplit(e.value).map((s) => {'part': s}).toList(),
-            'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase
-          })
+      .map(
+        (e) => <String, dynamic>{
+          'value': e.key,
+          'doc': e.value['doc'],
+          'docSplit': buildDocSplit(e.value).map((s) => {'part': s}).toList(),
+          'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase,
+        },
+      )
       .toList();
 }

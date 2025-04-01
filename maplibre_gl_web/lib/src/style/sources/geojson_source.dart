@@ -10,11 +10,13 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
     required FeatureCollection data,
     String? promoteId,
   }) =>
-      GeoJsonSource.fromJsObject(GeoJsonSourceJsImpl(
-        type: 'geojson',
-        promoteId: promoteId,
-        data: data.jsObject,
-      ));
+      GeoJsonSource.fromJsObject(
+        GeoJsonSourceJsImpl(
+          type: 'geojson',
+          promoteId: promoteId,
+          data: data.jsObject,
+        ),
+      );
 
   GeoJsonSource setData(FeatureCollection featureCollection) =>
       GeoJsonSource.fromJsObject(jsObject.setData(featureCollection.jsObject));

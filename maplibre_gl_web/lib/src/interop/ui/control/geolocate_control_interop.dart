@@ -48,7 +48,8 @@ abstract class GeolocateControlJsImpl extends EventedJsImpl {
   external GeolocateControlOptionsJsImpl get options;
 
   external factory GeolocateControlJsImpl(
-      GeolocateControlOptionsJsImpl options);
+    GeolocateControlOptionsJsImpl options,
+  );
 
   external onAdd(MapLibreMapJsImpl map);
 

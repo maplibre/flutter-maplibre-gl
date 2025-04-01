@@ -202,15 +202,17 @@ class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {
     String? className,
     String? maxWidth,
   }) =>
-      PopupOptions.fromJsObject(PopupOptionsJsImpl(
-        loseButton: loseButton,
-        closeButton: closeButton,
-        closeOnClick: closeOnClick,
-        anchor: anchor,
-        offset: offset,
-        className: className,
-        maxWidth: maxWidth,
-      ));
+      PopupOptions.fromJsObject(
+        PopupOptionsJsImpl(
+          loseButton: loseButton,
+          closeButton: closeButton,
+          closeOnClick: closeOnClick,
+          anchor: anchor,
+          offset: offset,
+          className: className,
+          maxWidth: maxWidth,
+        ),
+      );
 
   /// Creates a new PopupOptions from a [jsObject].
   PopupOptions.fromJsObject(super.jsObject) : super.fromJsObject();

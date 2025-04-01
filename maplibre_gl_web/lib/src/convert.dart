@@ -2,7 +2,9 @@ part of '../maplibre_gl_web.dart';
 
 class Convert {
   static void interpretMapLibreMapOptions(
-      Map<String, dynamic> options, MapLibreMapOptionsSink sink) {
+    Map<String, dynamic> options,
+    MapLibreMapOptionsSink sink,
+  ) {
     if (options.containsKey('cameraTargetBounds')) {
       final bounds = options['cameraTargetBounds'][0];
       if (bounds == null) {
@@ -23,8 +25,10 @@ class Convert {
       sink.setStyleString(options['styleString']);
     }
     if (options.containsKey('minMaxZoomPreference')) {
-      sink.setMinMaxZoomPreference(options['minMaxZoomPreference'][0],
-          options['minMaxZoomPreference'][1]);
+      sink.setMinMaxZoomPreference(
+        options['minMaxZoomPreference'][0],
+        options['minMaxZoomPreference'][1],
+      );
     }
     if (options['rotateGesturesEnabled'] != null &&
         options['scrollGesturesEnabled'] != null &&
@@ -32,11 +36,12 @@ class Convert {
         options['zoomGesturesEnabled'] != null &&
         options['doubleClickZoomEnabled'] != null) {
       sink.setGestures(
-          rotateGesturesEnabled: options['rotateGesturesEnabled'],
-          scrollGesturesEnabled: options['scrollGesturesEnabled'],
-          tiltGesturesEnabled: options['tiltGesturesEnabled'],
-          zoomGesturesEnabled: options['zoomGesturesEnabled'],
-          doubleClickZoomEnabled: options['doubleClickZoomEnabled']);
+        rotateGesturesEnabled: options['rotateGesturesEnabled'],
+        scrollGesturesEnabled: options['scrollGesturesEnabled'],
+        tiltGesturesEnabled: options['tiltGesturesEnabled'],
+        zoomGesturesEnabled: options['zoomGesturesEnabled'],
+        doubleClickZoomEnabled: options['doubleClickZoomEnabled'],
+      );
     }
 
     if (options.containsKey('trackCameraPosition')) {
@@ -55,7 +60,9 @@ class Convert {
     }
     if (options.containsKey('logoViewMargins')) {
       sink.setLogoViewMargins(
-          options['logoViewMargins'][0], options['logoViewMargins'][1]);
+        options['logoViewMargins'][0],
+        options['logoViewMargins'][1],
+      );
     }
     if (options.containsKey('compassViewPosition')) {
       final position =
@@ -64,7 +71,9 @@ class Convert {
     }
     if (options.containsKey('compassViewMargins')) {
       sink.setCompassViewMargins(
-          options['compassViewMargins'][0], options['compassViewMargins'][1]);
+        options['compassViewMargins'][0],
+        options['compassViewMargins'][1],
+      );
     }
     if (options.containsKey('attributionButtonPosition')) {
       final position = AttributionButtonPosition
@@ -74,13 +83,17 @@ class Convert {
       sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
-      sink.setAttributionButtonMargins(options['attributionButtonMargins'][0],
-          options['attributionButtonMargins'][1]);
+      sink.setAttributionButtonMargins(
+        options['attributionButtonMargins'][0],
+        options['attributionButtonMargins'][1],
+      );
     }
   }
 
   static CameraOptions toCameraOptions(
-      CameraUpdate cameraUpdate, MapLibreMap mapLibreMap) {
+    CameraUpdate cameraUpdate,
+    MapLibreMap mapLibreMap,
+  ) {
     final List<dynamic> json = cameraUpdate.toJson();
     final type = json[0];
     switch (type) {
@@ -117,7 +130,7 @@ class Convert {
                 'bottom': bottom,
                 'left': left,
                 'right': right,
-              }
+              },
             });
         return camera;
       case 'newLatLngZoom':
@@ -202,7 +215,9 @@ class Convert {
   }
 
   static Feature interpretSymbolOptions(
-      SymbolOptions options, Feature feature) {
+    SymbolOptions options,
+    Feature feature,
+  ) {
     final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.iconSize != null) {
@@ -217,7 +232,7 @@ class Convert {
     if (options.iconOffset != null) {
       properties['iconOffset'] = [
         options.iconOffset!.dx,
-        options.iconOffset!.dy
+        options.iconOffset!.dy,
       ];
     }
     if (options.iconAnchor != null) {
@@ -250,7 +265,7 @@ class Convert {
     if (options.textOffset != null) {
       properties['textOffset'] = [
         options.textOffset!.dx,
-        options.textOffset!.dy
+        options.textOffset!.dy,
       ];
     }
     if (options.iconOpacity != null) {
@@ -340,7 +355,9 @@ class Convert {
   }
 
   static Feature interpretCircleOptions(
-      CircleOptions options, Feature feature) {
+    CircleOptions options,
+    Feature feature,
+  ) {
     final properties = feature.properties;
     var geometry = feature.geometry;
     if (options.circleRadius != null) {
@@ -377,7 +394,8 @@ class Convert {
   }
 
   static List<List<List<double>>> fillGeometryToFeatureGeometry(
-      List<List<LatLng>> geom) {
+    List<List<LatLng>> geom,
+  ) {
     final convertedFill = <List<List<double>>>[];
     for (final ring in geom) {
       final convertedRing = <List<double>>[];
@@ -390,7 +408,8 @@ class Convert {
   }
 
   static List<List<LatLng>> featureGeometryToFillGeometry(
-      List<List<List<double>>> geom) {
+    List<List<List<double>>> geom,
+  ) {
     final convertedFill = <List<LatLng>>[];
     for (final ring in geom) {
       final convertedRing = <LatLng>[];

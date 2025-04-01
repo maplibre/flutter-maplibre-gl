@@ -69,8 +69,11 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  addLayer(dynamic layerObject,
-          [String? before, StyleSetterOptions? options]) =>
+  addLayer(
+    dynamic layerObject, [
+    String? before,
+    StyleSetterOptions? options,
+  ]) =>
       jsObject.addLayer(layerObject);
 
   ///  Moves a layer to a different z-position. The layer will be inserted before the layer with
@@ -104,8 +107,12 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  @returns {*} the layer's filter, if any
   getFilter(String layer) => jsObject.getFilter(layer);
 
-  setLayoutProperty(String layerId, String name, dynamic value,
-          StyleSetterOptions options) =>
+  setLayoutProperty(
+    String layerId,
+    String name,
+    dynamic value,
+    StyleSetterOptions options,
+  ) =>
       jsObject.setLayoutProperty(layerId, name, value, options.jsObject);
 
   ///  Get a layout property's value from a given layer
@@ -115,8 +122,12 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   getLayoutProperty(String layerId, String name) =>
       jsObject.getLayoutProperty(layerId, name);
 
-  setPaintProperty(String layerId, String name, dynamic value,
-          StyleSetterOptions options) =>
+  setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value,
+    StyleSetterOptions options,
+  ) =>
       jsObject.setPaintProperty(layerId, name, value, options.jsObject);
 
   getPaintProperty(String layer, String name) =>

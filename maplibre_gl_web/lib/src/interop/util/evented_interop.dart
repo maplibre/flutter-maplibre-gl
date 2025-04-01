@@ -39,8 +39,11 @@ abstract class EventedJsImpl {
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
   //external on(String type, Listener listener);
-  external MapLibreMapJsImpl on(String type,
-      [dynamic layerIdOrListener, ListenerJsImpl? listener]);
+  external MapLibreMapJsImpl on(
+    String type, [
+    dynamic layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Removes a previously registered event listener.
   ///
@@ -48,8 +51,11 @@ abstract class EventedJsImpl {
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
   //external off(String type, Listener listener);
-  external MapLibreMapJsImpl off(String type,
-      [dynamic layerIdOrListener, ListenerJsImpl? listener]);
+  external MapLibreMapJsImpl off(
+    String type, [
+    dynamic layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Adds a listener that will be called only once to a specified event type.
   ///
