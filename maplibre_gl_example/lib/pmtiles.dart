@@ -40,7 +40,7 @@ class PMTilesMapState extends State<PMTilesMap> {
             )
           : null,
       body: MapLibreMap(
-        onMapCreated: (controller) => mapController.complete(controller),
+        onMapCreated: mapController.complete,
         initialCameraPosition: _nullIsland,
         onStyleLoadedCallback: () => setState(() => canInteractWithMap = true),
         styleString: 'assets/pmtiles_style.json',

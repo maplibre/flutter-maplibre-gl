@@ -6,7 +6,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   String get type => jsObject.type;
 
   List<Feature> get features =>
-      jsObject.features.map((f) => Feature.fromJsObject(f)).toList();
+      jsObject.features.map(Feature.fromJsObject).toList();
 
   factory FeatureCollection({
     required List<Feature> features,

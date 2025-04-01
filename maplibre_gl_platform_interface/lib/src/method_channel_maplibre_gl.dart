@@ -282,7 +282,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'filter': filter,
         },
       );
-      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+      return reply['features'].map(jsonDecode).toList();
     } on PlatformException catch (e) {
       return Future.error(e);
     }
@@ -306,7 +306,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'filter': filter,
         },
       );
-      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+      return reply['features'].map(jsonDecode).toList();
     } on PlatformException catch (e) {
       return Future.error(e);
     }
@@ -327,7 +327,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           'filter': filter,
         },
       );
-      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+      return reply['features'].map(jsonDecode).toList();
     } on PlatformException catch (e) {
       return Future.error(e);
     }

@@ -66,9 +66,7 @@ class MapUiBodyState extends State<MapUiBody> {
   Fill? _selectedFill;
 
   void _onMapChanged() {
-    setState(() {
-      _extractMapInfo();
-    });
+    setState(_extractMapInfo);
   }
 
   void _extractMapInfo() {

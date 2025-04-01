@@ -431,12 +431,12 @@ class MapLibreMap extends Camera {
     if (options == null) {
       return jsObject
           .queryRenderedFeatures(geometry)
-          .map((dynamic f) => Feature.fromJsObject(f))
+          .map(Feature.fromJsObject)
           .toList();
     }
     return jsObject
         .queryRenderedFeatures(geometry, jsify(options))
-        .map((dynamic f) => Feature.fromJsObject(f))
+        .map(Feature.fromJsObject)
         .toList();
   }
 

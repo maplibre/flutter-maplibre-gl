@@ -14,7 +14,6 @@ linter:
     one_member_abstracts: false
     lines_longer_than_80_chars: false
     prefer_int_literals: false
-    unnecessary_lambdas: false
     avoid_unused_constructor_parameters: false
     always_put_required_named_parameters_first: false
     use_setters_to_change_properties: false

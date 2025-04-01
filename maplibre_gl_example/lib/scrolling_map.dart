@@ -56,10 +56,10 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         target: center,
                         zoom: 11.0,
                       ),
-                      gestureRecognizers: <Factory<
+                      gestureRecognizers: const <Factory<
                           OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                          EagerGestureRecognizer.new,
                         ),
                       },
                     ),
@@ -91,10 +91,10 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         target: center,
                         zoom: 11.0,
                       ),
-                      gestureRecognizers: <Factory<
+                      gestureRecognizers: const <Factory<
                           OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
-                          () => ScaleGestureRecognizer(),
+                          ScaleGestureRecognizer.new,
                         ),
                       },
                     ),

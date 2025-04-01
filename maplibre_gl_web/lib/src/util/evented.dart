@@ -18,7 +18,7 @@ class Event extends JsObjectWrapper<EventJsImpl> {
   LngLat get lngLat => LngLat.fromJsObject(jsObject.lngLat);
 
   List<Feature> get features =>
-      jsObject.features.map((dynamic f) => Feature.fromJsObject(f)).toList();
+      jsObject.features.map(Feature.fromJsObject).toList();
 
   Point get point => Point.fromJsObject(jsObject.point);
 

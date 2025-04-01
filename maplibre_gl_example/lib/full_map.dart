@@ -40,7 +40,7 @@ class FullMapState extends State<FullMap> {
             )
           : null,
       body: MapLibreMap(
-        onMapCreated: (controller) => mapController.complete(controller),
+        onMapCreated: mapController.complete,
         initialCameraPosition: _nullIsland,
         onStyleLoadedCallback: () => setState(() => canInteractWithMap = true),
       ),
