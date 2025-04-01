@@ -72,7 +72,10 @@ class LatLngBounds {
   /// The latitude of the southwest corner cannot be larger than the
   /// latitude of the northeast corner.
   LatLngBounds({required this.southwest, required this.northeast})
-      : assert(southwest.latitude <= northeast.latitude);
+      : assert(
+          southwest.latitude <= northeast.latitude,
+          'The latitude of the southwest corner cannot be larger than the latitude of the northeast corner.',
+        );
 
   /// The southwest corner of the rectangle.
   final LatLng southwest;

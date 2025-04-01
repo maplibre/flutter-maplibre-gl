@@ -66,8 +66,14 @@ class MapLibreMap extends StatefulWidget {
               myLocationEnabled,
           '$myLocationRenderMode requires [myLocationEnabled] set to true.',
         ),
-        assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0);
+        assert(
+          annotationOrder.length <= 4,
+          'annotationOrder must not have more than 4 items',
+        ),
+        assert(
+          annotationConsumeTapEvents.length > 0,
+          'annotationConsumeTapEvents must not be empty',
+        );
 
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
