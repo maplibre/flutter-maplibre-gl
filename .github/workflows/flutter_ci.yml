@@ -32,16 +32,38 @@ jobs:
       - name: Lint analysis
         run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
 
+  test:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:io
+
+  test-web:
+    name: "Run web tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:web
+
   build-android:
     name: "Build Android apk"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: example
+        working-directory: maplibre_gl_example
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.10.5', '' ]
+        sdk: [ '3.22.0', '' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -61,18 +83,18 @@ jobs:
         if: ${{ matrix.sdk == '' }}
         with:
           name: maplibre-flutter-demo.apk
-          path: example/build/app/outputs/flutter-apk/app-release.apk
+          path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
 
   build-iOS:
     name: Build iOS package
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: example
+        working-directory: maplibre_gl_example
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.10.5', '' ]
+        sdk: [ '3.22.0', '' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -82,7 +104,7 @@ jobs:
       - uses: bluefireteam/melos-action@v3
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
-          podfile-path: example/ios/Podfile.lock
+          podfile-path: maplibre_gl_example/ios/Podfile.lock
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
@@ -90,18 +112,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maplibre-flutter-demo.app
-          path: example/build/ios/iphonesimulator
+          path: maplibre_gl_example/build/ios/iphonesimulator
 
   build-web:
     name: "Build web"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: example
+        working-directory: maplibre_gl_example
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.10.5', '' ]
+        sdk: [ '3.22.0', '' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2

@@ -2,6 +2,7 @@ library maplibre_gl_platform_interface;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -20,3 +21,4 @@ part 'src/fill.dart';
 part 'src/ui.dart';
 part 'src/maplibre_gl_platform_interface.dart';
 part 'src/source_properties.dart';
+part 'src/location_engine_properties.dart';

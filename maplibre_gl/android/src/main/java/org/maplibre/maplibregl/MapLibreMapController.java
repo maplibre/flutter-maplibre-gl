@@ -32,8 +32,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+
 import org.maplibre.android.gestures.AndroidGesturesManager;
 import org.maplibre.android.gestures.MoveGestureDetector;
+import org.maplibre.android.location.engine.LocationEngine;
+import org.maplibre.android.location.engine.LocationEngineDefault;
+import org.maplibre.android.location.engine.LocationEngineProxy;
+import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.camera.CameraPosition;
@@ -1242,7 +1247,10 @@ final class MapLibreMapController
       case "locationComponent#getLastLocation":
         {
           Log.e(TAG, "location component: getLastLocation");
-          if (this.myLocationEnabled && locationComponent != null) {
+          if (this.myLocationEnabled
+              && locationComponent != null
+              && locationComponent.isLocationComponentActivated()
+              && locationComponent.getLocationEngine() != null) {
             Map<String, Object> reply = new HashMap<>();
 
             mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
@@ -1265,6 +1273,11 @@ final class MapLibreMapController
                     result.error("", "", null); // ???
                   }
                 });
+          } else {
+            result.error(
+                "LOCATION DISABLED",
+                "Location is disabled or location component is unavailable",
+                null);
           }
           break;
         }
@@ -1864,6 +1877,20 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setLocationEngineProperties(LocationEngineRequest locationEngineRequest){
+    if(locationComponent != null){
+        if(locationEngineRequest.getPriority() == LocationEngineRequest.PRIORITY_HIGH_ACCURACY){
+            locationComponent.setLocationEngine(new LocationEngineProxy(
+                new MapLibreGPSLocationEngine(context)));
+     } else {
+       locationComponent.setLocationEngine(
+               LocationEngineDefault.INSTANCE.getDefaultLocationEngine(context));
+            }
+      locationComponent.setLocationEngineRequest(locationEngineRequest);
+    }
+  }
+
+  @Override
   public void setCompassEnabled(boolean compassEnabled) {
     mapLibreMap.getUiSettings().setCompassEnabled(compassEnabled);
   }
@@ -2017,7 +2044,7 @@ final class MapLibreMapController
   }
 
   private void updateMyLocationEnabled() {
-    if (this.locationComponent == null && myLocationEnabled) {
+    if (this.locationComponent == null && mapLibreMap.getStyle() != null && myLocationEnabled) {
       enableLocationComponent(mapLibreMap.getStyle());
     }
 
@@ -2035,6 +2062,7 @@ final class MapLibreMapController
   private void startListeningForLocationUpdates() {
     if (locationEngineCallback == null
         && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
         && locationComponent.getLocationEngine() != null) {
       locationEngineCallback =
           new LocationEngineCallback<LocationEngineResult>() {
@@ -2056,6 +2084,7 @@ final class MapLibreMapController
   private void stopListeningForLocationUpdates() {
     if (locationEngineCallback != null
         && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
         && locationComponent.getLocationEngine() != null) {
       locationComponent.getLocationEngine().removeLocationUpdates(locationEngineCallback);
       locationEngineCallback = null;
