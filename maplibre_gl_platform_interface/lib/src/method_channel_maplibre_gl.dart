@@ -205,7 +205,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<bool?> animateCamera(cameraUpdate, {Duration? duration}) async {
+  Future<bool?> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
     return _channel.invokeMethod('camera#animate', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
       'duration': duration?.inMilliseconds,

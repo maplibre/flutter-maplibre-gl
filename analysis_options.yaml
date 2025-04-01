@@ -17,7 +17,6 @@ linter:
     avoid_unused_constructor_parameters: false
     always_put_required_named_parameters_first: false
     use_setters_to_change_properties: false
-    type_annotate_public_apis: false
     prefer_asserts_with_message: false
     public_member_api_docs: false
     avoid_dynamic_calls: false
