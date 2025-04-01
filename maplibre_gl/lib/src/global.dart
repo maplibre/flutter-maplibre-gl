@@ -106,7 +106,7 @@ Future<OfflineRegion> downloadOfflineRegion(
       }
       final unknownError = Error(
         PlatformException(
-          code: 'UnknowException',
+          code: 'UnknownException',
           message:
               'This error is unhandled by plugin. Please contact us if needed.',
           details: error,
@@ -117,7 +117,7 @@ Future<OfflineRegion> downloadOfflineRegion(
     }).listen((data) {
       final Map<String, Object?> jsonData = json.decode(data);
       final status = switch (jsonData['status']) {
-        'start' => InProgress(0.0),
+        'start' => InProgress(0),
         'progress' => InProgress((jsonData['progress']! as num).toDouble()),
         'success' => Success(),
         _ => throw Exception('Invalid event status ${jsonData['status']}'),
