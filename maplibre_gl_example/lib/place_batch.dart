@@ -25,7 +25,7 @@ const fillOptions = [
         LatLng(-33.762, 151.250),
       ]
     ],
-    fillColor: "#FF0000",
+    fillColor: '#FF0000',
   ),
   FillOptions(geometry: [
     [
@@ -41,7 +41,7 @@ const fillOptions = [
       LatLng(-33.833, 151.747),
       LatLng(-33.762, 151.650),
     ]
-  ], fillColor: "#FF0000"),
+  ], fillColor: '#FF0000'),
 ];
 
 class BatchAddPage extends ExamplePage {
@@ -82,7 +82,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
     final listOptions = <LineOptions>[];
     for (final option in options) {
       for (final geom in option.geometry!) {
-        listOptions.add(LineOptions(geometry: geom, lineColor: "#00FF00"));
+        listOptions.add(LineOptions(geometry: geom, lineColor: '#00FF00'));
       }
     }
     return listOptions;
@@ -95,7 +95,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
       // put circles only on the outside
       for (final latLng in option.geometry!.first) {
         circleOptions
-            .add(CircleOptions(geometry: latLng, circleColor: "#00FF00"));
+            .add(CircleOptions(geometry: latLng, circleColor: '#00FF00'));
       }
     }
     return circleOptions;
@@ -151,7 +151,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
             child: MapLibreMap(
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: () => addImageFromAsset(controller,
-                  "custom-marker", "assets/symbols/custom-marker.png"),
+                  'custom-marker', 'assets/symbols/custom-marker.png'),
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-33.8, 151.511),
                 zoom: 8.2,

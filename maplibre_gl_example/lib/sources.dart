@@ -35,7 +35,7 @@ class FullMap extends StatefulWidget {
 
 class FullMapState extends State<FullMap> {
   MapLibreMapController? controller;
-  final watercolorRasterId = "watercolorRaster";
+  final watercolorRasterId = 'watercolorRaster';
   int selectedStyleId = 0;
 
   _onMapCreated(MapLibreMapController controller) {
@@ -44,7 +44,7 @@ class FullMapState extends State<FullMap> {
 
   static Future<void> addRaster(MapLibreMapController controller) async {
     await controller.addSource(
-      "watercolor",
+      'watercolor',
       const RasterSourceProperties(
           tiles: [
             'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'
@@ -54,13 +54,13 @@ class FullMapState extends State<FullMap> {
               'Map tiles by <a target="_top" rel="noopener" href="http://stamen.com">Stamen Design</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_top" rel="noopener" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'),
     );
     await controller.addLayer(
-        "watercolor", "watercolor", const RasterLayerProperties());
+        'watercolor', 'watercolor', const RasterLayerProperties());
   }
 
   static Future<void> addGeojsonCluster(
       MapLibreMapController controller) async {
     await controller.addSource(
-        "earthquakes",
+        'earthquakes',
         const GeojsonSourceProperties(
             data:
                 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
@@ -70,8 +70,8 @@ class FullMapState extends State<FullMap> {
                 50 // Radius of each cluster when clustering points (defaults to 50)
             ));
     await controller.addLayer(
-        "earthquakes",
-        "earthquakes-circles",
+        'earthquakes',
+        'earthquakes-circles',
         const CircleLayerProperties(circleColor: [
           Expressions.step,
           [Expressions.get, 'point_count'],
@@ -90,8 +90,8 @@ class FullMapState extends State<FullMap> {
           40
         ]));
     await controller.addLayer(
-        "earthquakes",
-        "earthquakes-count",
+        'earthquakes',
+        'earthquakes-count',
         const SymbolLayerProperties(
           textField: [Expressions.get, 'point_count_abbreviated'],
           textFont: ['Open Sans Semibold'],
@@ -101,28 +101,28 @@ class FullMapState extends State<FullMap> {
 
   static Future<void> addVector(MapLibreMapController controller) async {
     await controller.addSource(
-        "terrain",
+        'terrain',
         const VectorSourceProperties(
           url: MapLibreStyles.demo,
         ));
 
     await controller.addLayer(
-        "terrain",
-        "contour",
+        'terrain',
+        'contour',
         const LineLayerProperties(
-          lineColor: "#ff69b4",
+          lineColor: '#ff69b4',
           lineWidth: 1,
-          lineCap: "round",
-          lineJoin: "round",
+          lineCap: 'round',
+          lineJoin: 'round',
         ),
-        sourceLayer: "countries");
+        sourceLayer: 'countries');
   }
 
   static Future<void> addImage(MapLibreMapController controller) async {
     await controller.addSource(
-        "radar",
+        'radar',
         const ImageSourceProperties(
-            url: "https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif",
+            url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
             coordinates: [
               [-80.425, 46.437],
               [-71.516, 46.437],
@@ -131,15 +131,15 @@ class FullMapState extends State<FullMap> {
             ]));
 
     await controller.addRasterLayer(
-      "radar",
-      "radar",
+      'radar',
+      'radar',
       const RasterLayerProperties(rasterFadeDuration: 0),
     );
   }
 
   static Future<void> addVideo(MapLibreMapController controller) async {
     await controller.addSource(
-        "video",
+        'video',
         const VideoSourceProperties(urls: [
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4',
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm'
@@ -151,8 +151,8 @@ class FullMapState extends State<FullMap> {
         ]));
 
     await controller.addRasterLayer(
-      "video",
-      "video",
+      'video',
+      'video',
       const RasterLayerProperties(),
     );
   }
@@ -252,54 +252,54 @@ class FullMapState extends State<FullMap> {
 
   final _stylesAndLoaders = [
     const StyleInfo(
-      name: "Vector",
+      name: 'Vector',
       baseStyle: MapLibreStyles.demo,
       addDetails: addVector,
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
     const StyleInfo(
-      name: "Default style",
+      name: 'Default style',
       // Using the raw github file version of MapLibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
       // otherwise the map will not update
       baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+          'https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json',
       addDetails: addDem,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 8),
     ),
     const StyleInfo(
-      name: "Geojson cluster",
+      name: 'Geojson cluster',
       baseStyle: MapLibreStyles.demo,
       addDetails: addGeojsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
     const StyleInfo(
-      name: "Raster",
+      name: 'Raster',
       baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+          'https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json',
       addDetails: addRaster,
       position: CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
     const StyleInfo(
-      name: "Image",
+      name: 'Image',
       baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json?",
+          'https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json?',
       addDetails: addImage,
       position: CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
     const StyleInfo(
-      name: "Heatmap",
+      name: 'Heatmap',
       baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+          'https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json',
       addDetails: addHeatMap,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
     ),
     //video only supported on web
     if (kIsWeb)
       const StyleInfo(
-        name: "Video",
+        name: 'Video',
         baseStyle:
-            "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+            'https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json',
         addDetails: addVideo,
         position: CameraPosition(
             target: LatLng(37.562984, -122.514426), zoom: 17, bearing: -96),
@@ -325,7 +325,7 @@ class FullMapState extends State<FullMap> {
           child: FloatingActionButton.extended(
             icon: const Icon(Icons.swap_horiz),
             label: SizedBox(
-                width: 120, child: Center(child: Text("To $nextName"))),
+                width: 120, child: Center(child: Text('To $nextName'))),
             onPressed: () => setState(
               () => selectedStyleId =
                   (selectedStyleId + 1) % _stylesAndLoaders.length,
@@ -347,7 +347,7 @@ class FullMapState extends State<FullMap> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    "Current source: ${styleInfo.name}",
+                    'Current source: ${styleInfo.name}',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),

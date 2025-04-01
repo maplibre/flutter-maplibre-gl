@@ -106,20 +106,20 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
 
   Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
-        controller, "custom-marker", "assets/symbols/custom-marker.png");
+        controller, 'custom-marker', 'assets/symbols/custom-marker.png');
     controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "custom-marker", // "airport-15",
+        iconImage: 'custom-marker', // "airport-15",
       ),
     );
     controller.addLine(
       const LineOptions(
         draggable: false,
-        lineColor: "#ff0000",
+        lineColor: '#ff0000',
         lineWidth: 7.0,
         lineOpacity: 1,
         geometry: [
@@ -135,7 +135,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     controller.addFill(
       const FillOptions(
         draggable: false,
-        fillColor: "#008888",
+        fillColor: '#008888',
         fillOpacity: 0.3,
         geometry: [
           [

@@ -28,7 +28,7 @@ class _AttributionBodyState extends State<AttributionBody> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text("Set attribution position"),
+        const Text('Set attribution position'),
         Wrap(
           children: [
             buildDefaultPositionButton(),
@@ -57,7 +57,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           useDefaultAttributionPosition = true;
         });
       },
-      child: const Text("Default"),
+      child: const Text('Default'),
     );
   }
 
@@ -69,7 +69,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           useDefaultAttributionPosition = false;
         });
       },
-      child: Text(position?.name ?? "Null (=platform default)"),
+      child: Text(position?.name ?? 'Null (=platform default)'),
     );
   }
 
@@ -84,7 +84,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "assets/osm_style.json",
+        styleString: 'assets/osm_style.json',
       );
     } else {
       return MapLibreMap(
@@ -93,7 +93,7 @@ class _AttributionBodyState extends State<AttributionBody> {
           target: LatLng(-33.852, 151.211),
           zoom: 11.0,
         ),
-        styleString: "assets/osm_style.json",
+        styleString: 'assets/osm_style.json',
         attributionButtonPosition: attributionButtonPosition,
       );
     }

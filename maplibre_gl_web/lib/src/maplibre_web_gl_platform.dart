@@ -227,9 +227,9 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setMapLanguage(String language) async {
     final layers = _map.getLayers();
 
-    final languageRegex = RegExp("(name:[a-z]+)");
+    final languageRegex = RegExp('(name:[a-z]+)');
 
-    final symbolLayers = layers.where((layer) => layer.type == "symbol");
+    final symbolLayers = layers.where((layer) => layer.type == 'symbol');
 
     for (final layer in symbolLayers) {
       final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
@@ -244,10 +244,10 @@ class MapLibreMapController extends MapLibrePlatform
       }
 
       final newProperties = [
-        "coalesce",
-        ["get", "name:$language"],
-        ["get", "name:latin"],
-        ["get", "name"],
+        'coalesce',
+        ['get', 'name:$language'],
+        ['get', 'name:latin'],
+        ['get', 'name'],
       ];
 
       _map.setLayoutProperty(layer.id, 'text-field', newProperties);
@@ -436,11 +436,11 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _onMapClick(Event e) {
     final features = _map.queryRenderedFeatures([e.point.x, e.point.y],
-        {"layers": _interactiveFeatureLayerIds.toList()});
+        {'layers': _interactiveFeatureLayerIds.toList()});
     final payload = {
       'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
-      if (features.isNotEmpty) "id": features.first.id,
+      if (features.isNotEmpty) 'id': features.first.id,
     };
     if (features.isNotEmpty) {
       onFeatureTappedPlatform(payload);
@@ -705,7 +705,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.setStyle(styleString);
     // catch style loaded for later style changes
     if (_mapReady) {
-      _map.once("styledata", _onStyleLoaded);
+      _map.once('styledata', _onStyleLoaded);
     }
   }
 
@@ -765,24 +765,24 @@ class MapLibreMapController extends MapLibrePlatform
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     _map.addSource(sourceId, {
-      "type": 'geojson',
-      "data": geojson, // pass the raw string here to avoid errors
-      if (promoteId != null) "promoteId": promoteId
+      'type': 'geojson',
+      'data': geojson, // pass the raw string here to avoid errors
+      if (promoteId != null) 'promoteId': promoteId
     });
   }
 
   Feature _makeFeature(Map<String, dynamic> geojsonFeature) {
     return Feature(
         geometry: Geometry(
-            type: geojsonFeature["geometry"]["type"],
-            coordinates: geojsonFeature["geometry"]["coordinates"]),
-        properties: geojsonFeature["properties"],
-        id: geojsonFeature["properties"]?["id"] ?? geojsonFeature["id"]);
+            type: geojsonFeature['geometry']['type'],
+            coordinates: geojsonFeature['geometry']['coordinates']),
+        properties: geojsonFeature['properties'],
+        id: geojsonFeature['properties']?['id'] ?? geojsonFeature['id']);
   }
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
     return FeatureCollection(
-        features: [for (final f in geojson["features"] ?? []) _makeFeature(f)]);
+        features: [for (final f in geojson['features'] ?? []) _makeFeature(f)]);
   }
 
   @override
@@ -815,7 +815,7 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "fill-extrusion",
+    return _addLayer(sourceId, layerId, properties, 'fill-extrusion',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -833,7 +833,7 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "circle",
+    return _addLayer(sourceId, layerId, properties, 'circle',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -851,7 +851,7 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "fill",
+    return _addLayer(sourceId, layerId, properties, 'fill',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -869,7 +869,7 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "line",
+    return _addLayer(sourceId, layerId, properties, 'line',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -908,7 +908,7 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "symbol",
+    return _addLayer(sourceId, layerId, properties, 'symbol',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -924,7 +924,7 @@ class MapLibreMapController extends MapLibrePlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    return _addLayer(sourceId, layerId, properties, "hillshade",
+    return _addLayer(sourceId, layerId, properties, 'hillshade',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -939,7 +939,7 @@ class MapLibreMapController extends MapLibrePlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    return _addLayer(sourceId, layerId, properties, "heatmap",
+    return _addLayer(sourceId, layerId, properties, 'heatmap',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -954,7 +954,7 @@ class MapLibreMapController extends MapLibrePlatform
       String? sourceLayer,
       double? minzoom,
       double? maxzoom}) async {
-    await _addLayer(sourceId, layerId, properties, "raster",
+    await _addLayer(sourceId, layerId, properties, 'raster',
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -989,7 +989,7 @@ class MapLibreMapController extends MapLibrePlatform
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
-      if (layerType == "fill") {
+      if (layerType == 'fill') {
         _map.on('mousemove', layerId, _onMouseEnterFeature);
       } else {
         _map.on('mouseenter', layerId, _onMouseEnterFeature);

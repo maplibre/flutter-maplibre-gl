@@ -74,7 +74,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
             center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
             center.longitude + cos(_circleCount * pi / 6.0) / 20.0,
           ),
-          circleColor: "#FF0000"),
+          circleColor: '#FF0000'),
     );
     setState(() {
       _circleCount += 1;
@@ -144,11 +144,11 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
   Future<void> _changeCircleStrokeColor() async {
     var current = _selectedCircle!.options.circleStrokeColor;
-    current ??= "#FFFFFF";
+    current ??= '#FFFFFF';
 
     _updateSelectedCircle(
       CircleOptions(
-          circleStrokeColor: current == "#FFFFFF" ? "#FF0000" : "#FFFFFF"),
+          circleStrokeColor: current == '#FFFFFF' ? '#FF0000' : '#FFFFFF'),
     );
   }
 
@@ -171,10 +171,10 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
   Future<void> _changeCircleColor() async {
     var current = _selectedCircle!.options.circleColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedCircle(
-      const CircleOptions(circleColor: "#FFFF00"),
+      const CircleOptions(circleColor: '#FFFF00'),
     );
   }
 

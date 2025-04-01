@@ -48,10 +48,10 @@ class MapUiBodyState extends State<MapUiBody> {
 
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  final List<String> _styleStrings = [MapLibreStyles.demo, "assets/style.json"];
+  final List<String> _styleStrings = [MapLibreStyles.demo, 'assets/style.json'];
   final List<String> _styleStringLabels = [
-    "MapLibre demo style",
-    "Local style file"
+    'MapLibre demo style',
+    'Local style file'
   ];
   bool _rotateGesturesEnabled = true;
   bool _scrollGesturesEnabled = true;
@@ -122,9 +122,9 @@ class MapUiBodyState extends State<MapUiBody> {
         setState(() {
           if (_featureQueryFilter == null) {
             _featureQueryFilter = [
-              "==",
-              ["get", "type"],
-              "zoo"
+              '==',
+              ['get', 'type'],
+              'zoo'
             ];
           } else {
             _featureQueryFilter = null;
@@ -224,7 +224,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _doubleClickToZoomToggler() {
     final stateInfo = _doubleClickToZoomEnabled == null
-        ? "disable"
+        ? 'disable'
         : _doubleClickToZoomEnabled!
             ? 'unset'
             : 'enable';
@@ -299,7 +299,7 @@ class MapUiBodyState extends State<MapUiBody> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("SW: ${result.southwest} NE: ${result.northeast}"),
+          content: Text('SW: ${result.southwest} NE: ${result.northeast}'),
         ));
       },
     );
@@ -310,7 +310,7 @@ class MapUiBodyState extends State<MapUiBody> {
       child: const Text('get source features (maplibre)'),
       onPressed: () async {
         final result = await mapController!
-            .querySourceFeatures("maplibre", "centroids", null);
+            .querySourceFeatures('maplibre', 'centroids', null);
         debugPrint(result.toString());
       },
     );
@@ -347,8 +347,8 @@ class MapUiBodyState extends State<MapUiBody> {
           .cast<List<LatLng>>();
       final fill = await mapController!.addFill(FillOptions(
         geometry: geometry,
-        fillColor: "#FF0000",
-        fillOutlineColor: "#FF0000",
+        fillColor: '#FF0000',
+        fillOutlineColor: '#FF0000',
         fillOpacity: 0.6,
       ));
       setState(() {
@@ -377,8 +377,8 @@ class MapUiBodyState extends State<MapUiBody> {
       myLocationRenderMode: _myLocationRenderMode,
       onMapClick: (point, latLng) async {
         debugPrint(
-            "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        debugPrint("Filter $_featureQueryFilter");
+            'Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}');
+        debugPrint('Filter $_featureQueryFilter');
         final features = await mapController!
             .queryRenderedFeatures(point, [], _featureQueryFilter);
         if (!mounted) return;
@@ -396,16 +396,16 @@ class MapUiBodyState extends State<MapUiBody> {
       },
       onMapLongClick: (point, latLng) async {
         debugPrint(
-            "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+            'Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}');
         final convertedPoint = await mapController!.toScreenLocation(latLng);
         final convertedLatLng = await mapController!.toLatLng(point);
         debugPrint(
-            "Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}");
+            'Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}');
         final metersPerPixel =
             await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
 
         debugPrint(
-            "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
+            'Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m');
 
         final features =
             await mapController!.queryRenderedFeatures(point, [], null);
@@ -420,7 +420,7 @@ class MapUiBodyState extends State<MapUiBody> {
       },
       onUserLocationUpdated: (location) {
         debugPrint(
-            "new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}");
+            'new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}');
       },
     );
 

@@ -31,7 +31,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   PlaceFillBodyState();
 
   static const LatLng center = LatLng(-33.86711, 151.1947171);
-  final String _fillPatternImage = "assets/fill/cat_silhouette_pattern.png";
+  final String _fillPatternImage = 'assets/fill/cat_silhouette_pattern.png';
 
   final List<List<LatLng>> _defaultGeometry = [
     [
@@ -80,7 +80,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   void _onStyleLoaded() {
-    addImageFromAsset("assetImage", _fillPatternImage);
+    addImageFromAsset('assetImage', _fillPatternImage);
   }
 
   /// Adds an asset image to the currently displayed style
@@ -110,8 +110,8 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     controller!.addFill(
       FillOptions(
           geometry: _defaultGeometry,
-          fillColor: "#FF0000",
-          fillOutlineColor: "#FF0000"),
+          fillColor: '#FF0000',
+          fillOutlineColor: '#FF0000'),
     );
     setState(() {
       _fillCount += 1;
@@ -160,25 +160,25 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
 
   Future<void> _changeFillColor() async {
     var current = _selectedFill!.options.fillColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedFill(
-      const FillOptions(fillColor: "#FFFF00"),
+      const FillOptions(fillColor: '#FFFF00'),
     );
   }
 
   Future<void> _changeFillOutlineColor() async {
     var current = _selectedFill!.options.fillOutlineColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedFill(
-      const FillOptions(fillOutlineColor: "#FFFF00"),
+      const FillOptions(fillOutlineColor: '#FFFF00'),
     );
   }
 
   Future<void> _changeFillPattern() async {
     final current =
-        _selectedFill!.options.fillPattern == null ? "assetImage" : null;
+        _selectedFill!.options.fillPattern == null ? 'assetImage' : null;
     _updateSelectedFill(
       FillOptions(fillPattern: current),
     );

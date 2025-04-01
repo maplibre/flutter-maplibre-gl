@@ -48,7 +48,7 @@ class {{typePascal}}SourceProperties implements SourceProperties {
         json[fieldName] = value;
       }
     }
-    json["type"] = "{{type}}";
+    json['type'] = '{{type}}';
     {{#properties}}
     addIfPresent('{{value}}', {{valueAsCamelCase}});
     {{/properties}}

@@ -43,7 +43,7 @@ class MoveCameraState extends State<MoveCamera> {
             height: 200.0,
             child: MapLibreMap(
               onMapCreated: _onMapCreated,
-              onCameraIdle: () => debugPrint("onCameraIdle"),
+              onCameraIdle: () => debugPrint('onCameraIdle'),
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
             ),

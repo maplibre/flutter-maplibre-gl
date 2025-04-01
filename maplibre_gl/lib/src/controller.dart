@@ -93,20 +93,20 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
           in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
-        fun(payload["id"], payload["point"], payload["latLng"],
-            payload["layerId"]);
+        fun(payload['id'], payload['point'], payload['latLng'],
+            payload['layerId']);
       }
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
       for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
         final enmDragEventType = DragEventType.values
-            .firstWhere((element) => element.name == payload["eventType"]);
-        fun(payload["id"],
-            point: payload["point"],
-            origin: payload["origin"],
-            current: payload["current"],
-            delta: payload["delta"],
+            .firstWhere((element) => element.name == payload['eventType']);
+        fun(payload['id'],
+            point: payload['point'],
+            origin: payload['origin'],
+            current: payload['current'],
+            delta: payload['delta'],
             eventType: enmDragEventType);
       }
     });
@@ -211,7 +211,7 @@ class MapLibreMapController extends ChangeNotifier {
   final onFeatureDrag = <OnFeatureDragnCallback>[];
 
   /// Callbacks to receive tap events for info windows on symbols
-  @Deprecated("InfoWindow tapped is no longer supported")
+  @Deprecated('InfoWindow tapped is no longer supported')
   final ArgumentCallbacks<Symbol> onInfoWindowTapped =
       ArgumentCallbacks<Symbol>();
 
@@ -1203,7 +1203,7 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Removes previously added image source by id
-  @Deprecated("This method was renamed to removeSource")
+  @Deprecated('This method was renamed to removeSource')
   Future<void> removeImageSource(String imageSourceId) {
     return _maplibrePlatform.removeSource(imageSourceId);
   }
@@ -1228,7 +1228,7 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
-  @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
+  @Deprecated('This method was renamed to addImageLayerBelow for clarity.')
   Future<void> addLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
@@ -1367,7 +1367,7 @@ class MapLibreMapController extends ChangeNotifier {
           filter: filter);
     } else if (properties is RasterLayerProperties) {
       if (filter != null) {
-        throw UnimplementedError("RasterLayer does not support filter");
+        throw UnimplementedError('RasterLayer does not support filter');
       }
       await addRasterLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
@@ -1376,7 +1376,7 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom);
     } else if (properties is HillshadeLayerProperties) {
       if (filter != null) {
-        throw UnimplementedError("HillShadeLayer does not support filter");
+        throw UnimplementedError('HillShadeLayer does not support filter');
       }
       await addHillshadeLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
@@ -1390,7 +1390,7 @@ class MapLibreMapController extends ChangeNotifier {
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else {
-      throw UnimplementedError("Unknown layer type $properties");
+      throw UnimplementedError('Unknown layer type $properties');
     }
   }
 

@@ -46,9 +46,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _onStyleLoaded() {
-    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-    addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
-    addImageFromUrl("networkImage", Uri.parse("https://dummyimage.com/50x50"));
+    addImageFromAsset('custom-marker', 'assets/symbols/custom-marker.png');
+    addImageFromAsset('assetImage', 'assets/symbols/custom-icon.png');
+    addImageFromUrl('networkImage', Uri.parse('https://dummyimage.com/50x50'));
   }
 
   @override
@@ -296,19 +296,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _add("custom-marker"),
+                              : _add('custom-marker'),
                         ),
                         TextButton(
                           child: const Text('add all'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _addAll("custom-marker"),
+                              : _addAll('custom-marker'),
                         ),
                         TextButton(
                           child: const Text('add (custom icon)'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _add("assets/symbols/custom-icon.png"),
+                              : _add('assets/symbols/custom-icon.png'),
                         ),
                         TextButton(
                           onPressed: (_selectedSymbol == null) ? null : _remove,
@@ -328,19 +328,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  "assetImage"), //assetImage added to the style in _onStyleLoaded
+                                  'assetImage'), //assetImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (network image)'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  "networkImage"), //networkImage added to the style in _onStyleLoaded
+                                  'networkImage'), //networkImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (custom font)'),
                           onPressed: () =>
-                              (_symbolCount == 12) ? null : _add("customFont"),
+                              (_symbolCount == 12) ? null : _add('customFont'),
                         )
                       ],
                     ),

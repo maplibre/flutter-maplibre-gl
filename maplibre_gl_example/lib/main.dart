@@ -113,7 +113,7 @@ class _MapsDemoState extends State<MapsDemo> {
         itemCount: _allPages.length + 1,
         itemBuilder: (_, int index) => index == _allPages.length
             ? const AboutListTile(
-                applicationName: "flutter-maplibre-gl example",
+                applicationName: 'flutter-maplibre-gl example',
               )
             : ListTile(
                 leading: _allPages[index].leading,

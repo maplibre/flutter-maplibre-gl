@@ -44,8 +44,8 @@ class Fill implements Annotation {
   @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    geojson['id'] = id;
+    geojson['properties']['id'] = id;
 
     return geojson;
   }
@@ -120,11 +120,11 @@ class FillOptions {
 
   Map<String, dynamic> toGeoJson() {
     return {
-      "type": "Feature",
-      "properties": toJson(false),
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": geometry!
+      'type': 'Feature',
+      'properties': toJson(false),
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': geometry!
             .map((List<LatLng> latLngList) => latLngList
                 .map((LatLng latLng) => latLng.toGeoJsonCoordinates())
                 .toList())

@@ -8,7 +8,7 @@ class Expressions {
   {{#docSplit}}
   /// {{{part}}}
   {{/docSplit}}
-  static const {{valueAsCamelCase}} = "{{{value}}}";
+  static const {{valueAsCamelCase}} = '{{{value}}}';
 
   {{/expressions}}
 }

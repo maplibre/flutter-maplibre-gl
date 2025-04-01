@@ -74,7 +74,7 @@ class VectorSourceProperties implements SourceProperties {
     this.url,
     this.tiles,
     this.bounds = const [-180, -85.051129, 180, 85.051129],
-    this.scheme = "xyz",
+    this.scheme = 'xyz',
     this.minzoom = 0,
     this.maxzoom = 22,
     this.attribution,
@@ -113,7 +113,7 @@ class VectorSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "vector";
+    json['type'] = 'vector';
     addIfPresent('url', url);
     addIfPresent('tiles', tiles);
     addIfPresent('bounds', bounds);
@@ -208,7 +208,7 @@ class RasterSourceProperties implements SourceProperties {
     this.minzoom = 0,
     this.maxzoom = 22,
     this.tileSize = 512,
-    this.scheme = "xyz",
+    this.scheme = 'xyz',
     this.attribution,
   });
 
@@ -244,7 +244,7 @@ class RasterSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "raster";
+    json['type'] = 'raster';
     addIfPresent('url', url);
     addIfPresent('tiles', tiles);
     addIfPresent('bounds', bounds);
@@ -343,7 +343,7 @@ class RasterDemSourceProperties implements SourceProperties {
     this.maxzoom = 22,
     this.tileSize = 512,
     this.attribution,
-    this.encoding = "mapbox",
+    this.encoding = 'mapbox',
   });
 
   RasterDemSourceProperties copyWith(
@@ -378,7 +378,7 @@ class RasterDemSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "raster-dem";
+    json['type'] = 'raster-dem';
     addIfPresent('url', url);
     addIfPresent('tiles', tiles);
     addIfPresent('bounds', bounds);
@@ -562,7 +562,7 @@ class GeojsonSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "geojson";
+    json['type'] = 'geojson';
     addIfPresent('data', data);
     addIfPresent('maxzoom', maxzoom);
     addIfPresent('attribution', attribution);
@@ -632,7 +632,7 @@ class VideoSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "video";
+    json['type'] = 'video';
     addIfPresent('urls', urls);
     addIfPresent('coordinates', coordinates);
     return json;
@@ -682,7 +682,7 @@ class ImageSourceProperties implements SourceProperties {
       }
     }
 
-    json["type"] = "image";
+    json['type'] = 'image';
     addIfPresent('url', url);
     addIfPresent('coordinates', coordinates);
     return json;

@@ -31,8 +31,8 @@ class Line implements Annotation {
   @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    geojson['id'] = id;
+    geojson['properties']['id'] = id;
 
     return geojson;
   }
@@ -121,11 +121,11 @@ class LineOptions {
 
   Map<String, dynamic> toGeoJson() {
     return {
-      "type": "Feature",
-      "properties": toJson(false),
-      "geometry": {
-        "type": "LineString",
-        "coordinates": geometry!.map((c) => c.toGeoJsonCoordinates()).toList()
+      'type': 'Feature',
+      'properties': toJson(false),
+      'geometry': {
+        'type': 'LineString',
+        'coordinates': geometry!.map((c) => c.toGeoJsonCoordinates()).toList()
       }
     };
   }

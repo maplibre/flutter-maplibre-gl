@@ -61,9 +61,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "lines",
+                  'lines',
                   LineLayerProperties.fromJson(
-                      {"visibility": linesVisible ? "none" : "visible"}))
+                      {'visibility': linesVisible ? 'none' : 'visible'}))
               .then((value) => setState(() => linesVisible = !linesVisible));
         },
         child: const Text('toggle line visibility'),
@@ -72,9 +72,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "lines",
+                  'lines',
                   LineLayerProperties.fromJson(
-                      {"line-color": linesRed ? "#0000ff" : "#ff0000"}))
+                      {'line-color': linesRed ? '#0000ff' : '#ff0000'}))
               .then((value) => setState(() => linesRed = !linesRed));
         },
         child: const Text('toggle line color'),
@@ -83,9 +83,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "fills",
+                  'fills',
                   FillLayerProperties.fromJson(
-                      {"visibility": fillsVisible ? "none" : "visible"}))
+                      {'visibility': fillsVisible ? 'none' : 'visible'}))
               .then((value) => setState(() => fillsVisible = !fillsVisible));
         },
         child: const Text('toggle fill visibility'),
@@ -94,9 +94,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "fills",
+                  'fills',
                   FillLayerProperties.fromJson(
-                      {"fill-color": fillsRed ? "#0000ff" : "#ff0000"}))
+                      {'fill-color': fillsRed ? '#0000ff' : '#ff0000'}))
               .then((value) => setState(() => fillsRed = !fillsRed));
         },
         child: const Text('toggle fill color'),
@@ -105,9 +105,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "circles",
+                  'circles',
                   CircleLayerProperties.fromJson(
-                      {"visibility": circlesVisible ? "none" : "visible"}))
+                      {'visibility': circlesVisible ? 'none' : 'visible'}))
               .then(
                   (value) => setState(() => circlesVisible = !circlesVisible));
         },
@@ -117,9 +117,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "circles",
+                  'circles',
                   CircleLayerProperties.fromJson(
-                      {"circle-color": circlesRed ? "#0000ff" : "#ff0000"}))
+                      {'circle-color': circlesRed ? '#0000ff' : '#ff0000'}))
               .then((value) => setState(() => circlesRed = !circlesRed));
         },
         child: const Text('toggle circle color'),
@@ -128,9 +128,9 @@ class LayerState extends State {
         onPressed: () {
           controller
               .setLayerProperties(
-                  "symbols",
+                  'symbols',
                   SymbolLayerProperties.fromJson(
-                      {"visibility": symbolsVisible ? "none" : "visible"}))
+                      {'visibility': symbolsVisible ? 'none' : 'visible'}))
               .then(
                   (value) => setState(() => symbolsVisible = !symbolsVisible));
         },
@@ -160,16 +160,16 @@ class LayerState extends State {
 
   Future<void> _onStyleLoadedCallback() async {
     await addImageFromAsset(
-        controller, "custom-marker", "assets/symbols/custom-marker.png");
-    await controller.addGeoJsonSource("points", _points);
-    await controller.addGeoJsonSource("moving", _movingFeature(0));
+        controller, 'custom-marker', 'assets/symbols/custom-marker.png');
+    await controller.addGeoJsonSource('points', _points);
+    await controller.addGeoJsonSource('moving', _movingFeature(0));
 
     //new style of adding sources
-    await controller.addSource("fills", GeojsonSourceProperties(data: _fills));
+    await controller.addSource('fills', GeojsonSourceProperties(data: _fills));
 
     await controller.addFillLayer(
-      "fills",
-      "fills",
+      'fills',
+      'fills',
       const FillLayerProperties(fillColor: [
         Expressions.interpolate,
         ['exponential', 0.5],
@@ -183,8 +183,8 @@ class LayerState extends State {
     );
 
     await controller.addFillExtrusionLayer(
-      "fills",
-      "fills-extrusion",
+      'fills',
+      'fills-extrusion',
       const FillExtrusionLayerProperties(
         fillExtrusionHeight: 300,
         fillExtrusionColor: [
@@ -197,18 +197,18 @@ class LayerState extends State {
           'blue'
         ],
       ),
-      belowLayerId: "water",
+      belowLayerId: 'water',
       filter: ['==', 'id', 2],
     );
 
     await controller.addLineLayer(
-      "fills",
-      "lines",
+      'fills',
+      'lines',
       LineLayerProperties(
           lineColor: Colors.lightBlue.toHexStringRGB(),
           lineWidth: [
             Expressions.interpolate,
-            ["linear"],
+            ['linear'],
             [Expressions.zoom],
             11.0,
             2.0,
@@ -218,8 +218,8 @@ class LayerState extends State {
     );
 
     await controller.addCircleLayer(
-      "fills",
-      "circles",
+      'fills',
+      'circles',
       CircleLayerProperties(
         circleRadius: 4,
         circleColor: Colors.blue.toHexStringRGB(),
@@ -227,20 +227,20 @@ class LayerState extends State {
     );
 
     await controller.addSymbolLayer(
-      "points",
-      "symbols",
+      'points',
+      'symbols',
       const SymbolLayerProperties(
-        iconImage: "custom-marker", //  "{type}-15",
+        iconImage: 'custom-marker', //  "{type}-15",
         iconSize: 2,
         iconAllowOverlap: true,
       ),
     );
 
     await controller.addSymbolLayer(
-      "moving",
-      "moving",
+      'moving',
+      'moving',
       SymbolLayerProperties(
-        textField: [Expressions.get, "name"],
+        textField: [Expressions.get, 'name'],
         textHaloWidth: 1,
         textSize: 10,
         textHaloColor: Colors.white.toHexStringRGB(),
@@ -248,7 +248,7 @@ class LayerState extends State {
           Expressions.literal,
           [0, 2]
         ],
-        iconImage: "custom-marker",
+        iconImage: 'custom-marker',
         // "bicycle-15",
         iconSize: 2,
         iconAllowOverlap: true,
@@ -258,7 +258,7 @@ class LayerState extends State {
     );
 
     bikeTimer = Timer.periodic(const Duration(milliseconds: 10), (t) {
-      controller.setGeoJsonSource("moving", _movingFeature(t.tick / 2000));
+      controller.setGeoJsonSource('moving', _movingFeature(t.tick / 2000));
     });
 
     filterTimer = Timer.periodic(const Duration(seconds: 3), (t) {
@@ -288,34 +288,34 @@ Map<String, dynamic> _movingFeature(double t) {
   }
 
   return {
-    "type": "FeatureCollection",
-    "features": [
+    'type': 'FeatureCollection',
+    'features': [
       {
-        "type": "Feature",
-        "properties": {"name": "POGAČAR Tadej"},
-        "id": 10,
-        "geometry": {"type": "Point", "coordinates": makeLatLong(t)}
+        'type': 'Feature',
+        'properties': {'name': 'POGAČAR Tadej'},
+        'id': 10,
+        'geometry': {'type': 'Point', 'coordinates': makeLatLong(t)}
       },
       {
-        "type": "Feature",
-        "properties": {"name": "VAN AERT Wout"},
-        "id": 11,
-        "geometry": {"type": "Point", "coordinates": makeLatLong(t + 0.15)}
+        'type': 'Feature',
+        'properties': {'name': 'VAN AERT Wout'},
+        'id': 11,
+        'geometry': {'type': 'Point', 'coordinates': makeLatLong(t + 0.15)}
       },
     ]
   };
 }
 
 final _fills = {
-  "type": "FeatureCollection",
-  "features": [
+  'type': 'FeatureCollection',
+  'features': [
     {
-      "type": "Feature",
-      "id": 0, // web currently only supports number ids
-      "properties": <String, dynamic>{'id': 0},
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+      'type': 'Feature',
+      'id': 0, // web currently only supports number ids
+      'properties': <String, dynamic>{'id': 0},
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
           [
             [151.178099204457737, -33.901517742631846],
             [151.179025547977773, -33.872845324482071],
@@ -335,12 +335,12 @@ final _fills = {
       }
     },
     {
-      "type": "Feature",
-      "id": 2,
-      "properties": <String, dynamic>{'id': 2},
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+      'type': 'Feature',
+      'id': 2,
+      'properties': <String, dynamic>{'id': 2},
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
           [
             [151.121824791363, -33.885947459842846],
             [151.121824791363, -33.89768020458625],
@@ -352,12 +352,12 @@ final _fills = {
       }
     },
     {
-      "type": "Feature",
-      "id": 1,
-      "properties": <String, dynamic>{'id': 1},
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+      'type': 'Feature',
+      'id': 1,
+      'properties': <String, dynamic>{'id': 1},
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
           [
             [151.18735077583878, -33.891143558434102],
             [151.197374605989864, -33.878357032551868],
@@ -372,50 +372,50 @@ final _fills = {
 };
 
 const _points = {
-  "type": "FeatureCollection",
-  "features": [
+  'type': 'FeatureCollection',
+  'features': [
     {
-      "type": "Feature",
-      "id": 2,
-      "properties": {
-        "type": "restaurant",
+      'type': 'Feature',
+      'id': 2,
+      'properties': {
+        'type': 'restaurant',
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.184913929732943, -33.874874486427181]
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [151.184913929732943, -33.874874486427181]
       }
     },
     {
-      "type": "Feature",
-      "id": 3,
-      "properties": {
-        "type": "airport",
+      'type': 'Feature',
+      'id': 3,
+      'properties': {
+        'type': 'airport',
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.215730044667879, -33.874616048776858]
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [151.215730044667879, -33.874616048776858]
       }
     },
     {
-      "type": "Feature",
-      "id": 4,
-      "properties": {
-        "type": "bakery",
+      'type': 'Feature',
+      'id': 4,
+      'properties': {
+        'type': 'bakery',
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.228803547973598, -33.892188026142584]
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [151.228803547973598, -33.892188026142584]
       }
     },
     {
-      "type": "Feature",
-      "id": 5,
-      "properties": {
-        "type": "college",
+      'type': 'Feature',
+      'id': 5,
+      'properties': {
+        'type': 'college',
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.186470299174118, -33.902781145804774]
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [151.186470299174118, -33.902781145804774]
       }
     }
   ]

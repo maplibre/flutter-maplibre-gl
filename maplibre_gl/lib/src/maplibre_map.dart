@@ -64,7 +64,7 @@ class MapLibreMap extends StatefulWidget {
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
-          "$myLocationRenderMode requires [myLocationEnabled] set to true.",
+          '$myLocationRenderMode requires [myLocationEnabled] set to true.',
         ),
         assert(annotationOrder.length <= 4),
         assert(annotationConsumeTapEvents.length > 0);
@@ -271,7 +271,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
   Widget build(BuildContext context) {
     assert(
         widget.annotationOrder.toSet().length == widget.annotationOrder.length,
-        "annotationOrder must not have duplicate types");
+        'annotationOrder must not have duplicate types');
     final creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'styleString': widget.styleString,

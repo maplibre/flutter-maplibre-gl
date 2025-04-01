@@ -81,11 +81,11 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   Future<void> _onStyleLoaded() async {
     await addImageFromAsset(
-        controller!, "custom-marker", "assets/symbols/custom-marker.png");
+        controller!, 'custom-marker', 'assets/symbols/custom-marker.png');
     controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
-        circleStrokeColor: "#00FF00",
+        circleStrokeColor: '#00FF00',
         circleStrokeWidth: 2,
         circleRadius: 16,
       ),
@@ -93,7 +93,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
-        circleStrokeColor: "#00FF00",
+        circleStrokeColor: '#00FF00',
         circleStrokeWidth: 2,
         circleRadius: 30,
       ),
@@ -101,7 +101,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     controller!.addSymbol(
       const SymbolOptions(
           geometry: LatLng(-33.894372606072309, 151.17576679759523),
-          iconImage: "custom-marker", //"fast-food-15",
+          iconImage: 'custom-marker', //"fast-food-15",
           iconSize: 2),
     );
     controller!.addLine(
@@ -113,7 +113,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
           LatLng(-33.894372606072309, 151.17576679759523),
           LatLng(-33.900060683994681, 151.15765587687909),
         ],
-        lineColor: "#0000FF",
+        lineColor: '#0000FF',
         lineWidth: 20,
       ),
     );
@@ -131,8 +131,8 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
             LatLng(-33.901517742631846, 151.178099204457737),
           ],
         ],
-        fillColor: "#FF0000",
-        fillOutlineColor: "#000000",
+        fillColor: '#FF0000',
+        fillOutlineColor: '#000000',
       ),
     );
   }

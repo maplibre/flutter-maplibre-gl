@@ -35,7 +35,7 @@ abstract class AnnotationManager<T extends Annotation> {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
-          promoteId: "id");
+          promoteId: 'id');
       controller.addLayer(layerId, layerId, allLayerProperties[i]);
     }
 
@@ -63,7 +63,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  String _makeLayerId(int layerIndex) => "${id}_$layerIndex";
+  String _makeLayerId(int layerIndex) => '${id}_$layerIndex';
 
   Future<void> _setAll() async {
     if (selectLayer != null) {
@@ -153,7 +153,7 @@ abstract class AnnotationManager<T extends Annotation> {
   /// single annotation
   Future<void> set(T anntotation) async {
     assert(_idToAnnotation.containsKey(anntotation.id),
-        "you can only set existing annotations");
+        'you can only set existing annotations');
     _idToAnnotation[anntotation.id] = anntotation;
     final oldLayerIndex = _idToLayerIndex[anntotation.id];
     final layerIndex = selectLayer != null ? selectLayer!(anntotation) : 0;
@@ -304,7 +304,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
                   [Expressions.get, 'fontNames'],
                   [
                     Expressions.literal,
-                    ["Open Sans Regular", "Arial Unicode MS Regular"]
+                    ['Open Sans Regular', 'Arial Unicode MS Regular']
                   ],
                 ],
           textField: [Expressions.get, 'textField'],

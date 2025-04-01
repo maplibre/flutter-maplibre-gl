@@ -25,7 +25,7 @@ class LocalizedMap extends StatefulWidget {
 class LocalizedMapState extends State<LocalizedMap> {
   final _mapReadyCompleter = Completer<MapLibreMapController>();
 
-  var _mapLanguage = "en";
+  var _mapLanguage = 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class LocalizedMapState extends State<LocalizedMap> {
               setState(() => _mapLanguage = value);
               _setMapLanguage();
             },
-            items: ["en", "de", "es", "pl"]
+            items: ['en', 'de', 'es', 'pl']
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,

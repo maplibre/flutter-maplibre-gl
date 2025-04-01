@@ -120,13 +120,13 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
 
   Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
-        controller, "custom-marker", "assets/symbols/custom-marker.png");
+        controller, 'custom-marker', 'assets/symbols/custom-marker.png');
     controller.addSymbol(SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "custom-marker"));
+        iconImage: 'custom-marker'));
     controller.addLine(
       const LineOptions(
         geometry: [
@@ -135,7 +135,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
           LatLng(-32.86711, 151.1947171),
           LatLng(-33.86711, 152.1947171),
         ],
-        lineColor: "#ff0000",
+        lineColor: '#ff0000',
         lineWidth: 7.0,
         lineOpacity: 0.5,
       ),

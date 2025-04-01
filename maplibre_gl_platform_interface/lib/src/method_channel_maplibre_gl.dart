@@ -437,7 +437,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           .expand((e) => e)
           .toList());
       final Float64List result = await _channel.invokeMethod(
-          'map#toScreenLocationBatch', {"coordinates": coordinates});
+          'map#toScreenLocationBatch', {'coordinates': coordinates});
 
       final points = <Point>[];
       for (var i = 0; i < result.length; i += 2) {
@@ -521,7 +521,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           await _channel.invokeMethod('style#getFilter', <String, dynamic>{
         'layerId': layerId,
       });
-      final filter = reply["filter"];
+      final filter = reply['filter'];
       return filter != null ? jsonDecode(filter) : null;
     } on PlatformException catch (e) {
       return Future.error(e);

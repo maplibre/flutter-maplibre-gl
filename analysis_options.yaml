@@ -29,7 +29,6 @@ linter:
     require_trailing_commas: false
     avoid_dynamic_calls: false
     always_use_package_imports: false
-    prefer_single_quotes: false
     always_declare_return_types: false
     sort_constructors_first: false
     avoid_relative_lib_imports: false
