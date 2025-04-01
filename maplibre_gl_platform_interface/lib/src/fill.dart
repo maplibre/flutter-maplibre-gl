@@ -31,8 +31,8 @@ class Fill implements Annotation {
   @override
   String get id => _id;
 
-  final Map? _data;
-  Map? get data => _data;
+  final Map<String, dynamic>? _data;
+  Map<String, dynamic>? get data => _data;
 
   /// The fill configuration options most recently applied programmatically
   /// via the map controller.

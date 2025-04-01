@@ -17,9 +17,9 @@ class Line implements Annotation {
   @override
   String get id => _id;
 
-  final Map? _data;
+  final Map<String, dynamic>? _data;
 
-  Map? get data => _data;
+  Map<String, dynamic>? get data => _data;
 
   /// The line configuration options most recently applied programmatically
   /// via the map controller.

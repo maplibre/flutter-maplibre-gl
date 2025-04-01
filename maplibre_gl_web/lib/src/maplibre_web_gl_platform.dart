@@ -272,7 +272,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<List> queryRenderedFeatures(
+  Future<List<dynamic>> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
@@ -305,7 +305,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<List> queryRenderedFeaturesInRect(
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
@@ -341,7 +341,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<List> querySourceFeatures(
+  Future<List<dynamic>> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
@@ -375,12 +375,12 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future invalidateAmbientCache() async {
+  Future<dynamic> invalidateAmbientCache() async {
     html.window.console.log('Offline storage not available in web');
   }
 
   @override
-  Future clearAmbientCache() async {
+  Future<dynamic> clearAmbientCache() async {
     html.window.console.log('Offline storage not available in web');
   }
 
@@ -837,7 +837,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future setCameraBounds({
+  Future<dynamic> setCameraBounds({
     required double west,
     required double north,
     required double south,
@@ -1275,17 +1275,17 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future getFilter(String layerId) async {
+  Future<dynamic> getFilter(String layerId) async {
     return _map.getFilter(layerId);
   }
 
   @override
-  Future<List> getLayerIds() async {
+  Future<List<dynamic>> getLayerIds() async {
     return _map.getLayers().map((e) => e.id).toList();
   }
 
   @override
-  Future<List> getSourceIds() async {
+  Future<List<dynamic>> getSourceIds() async {
     throw UnimplementedError();
   }
 }

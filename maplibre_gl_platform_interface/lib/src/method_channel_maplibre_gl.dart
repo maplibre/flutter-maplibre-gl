@@ -270,7 +270,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<List> queryRenderedFeatures(
+  Future<List<dynamic>> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
@@ -292,7 +292,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<List> queryRenderedFeaturesInRect(
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
@@ -316,7 +316,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<List> querySourceFeatures(
+  Future<List<dynamic>> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
@@ -337,7 +337,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future invalidateAmbientCache() async {
+  Future<dynamic> invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');
       return null;
@@ -347,7 +347,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future clearAmbientCache() async {
+  Future<dynamic> clearAmbientCache() async {
     try {
       await _channel.invokeMethod('map#clearAmbientCache');
       return null;
@@ -625,7 +625,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future setCameraBounds({
+  Future<dynamic> setCameraBounds({
     required double west,
     required double north,
     required double south,
@@ -899,7 +899,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   void resizeWebMap() {}
 
   @override
-  Future<List> getLayerIds() async {
+  Future<List<dynamic>> getLayerIds() async {
     try {
       final Map<dynamic, dynamic> reply =
           await _channel.invokeMethod('style#getLayerIds');
@@ -910,7 +910,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<List> getSourceIds() async {
+  Future<List<dynamic>> getSourceIds() async {
     try {
       final Map<dynamic, dynamic> reply =
           await _channel.invokeMethod('style#getSourceIds');

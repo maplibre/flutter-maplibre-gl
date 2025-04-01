@@ -71,7 +71,7 @@ Future<void> main() async {
 }
 
 Future<void> render(
-  Map<String, List> renderContext,
+  Map<String, List<dynamic>> renderContext,
   String path,
 ) async {
   final pathItems = path.split('/');

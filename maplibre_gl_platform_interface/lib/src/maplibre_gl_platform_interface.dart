@@ -67,25 +67,25 @@ abstract class MapLibrePlatform {
   Future<void> setTelemetryEnabled(bool enabled);
 
   Future<bool> getTelemetryEnabled();
-  Future<List> queryRenderedFeatures(
+  Future<List<dynamic>> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
   );
 
-  Future<List> queryRenderedFeaturesInRect(
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
   );
 
-  Future<List> querySourceFeatures(
+  Future<List<dynamic>> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
   );
-  Future invalidateAmbientCache();
-  Future clearAmbientCache();
+  Future<dynamic> invalidateAmbientCache();
+  Future<dynamic> clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 
   Future<LatLngBounds> getVisibleRegion();
@@ -121,9 +121,9 @@ abstract class MapLibrePlatform {
 
   Future<void> removeLayer(String imageLayerId);
 
-  Future<List> getLayerIds();
+  Future<List<dynamic>> getLayerIds();
 
-  Future<List> getSourceIds();
+  Future<List<dynamic>> getSourceIds();
 
   Future<void> setFilter(String layerId, dynamic filter);
 

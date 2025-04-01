@@ -798,7 +798,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.
-  Future<Symbol> addSymbol(SymbolOptions options, [Map? data]) async {
+  Future<Symbol> addSymbol(
+    SymbolOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
     await symbolManager!.add(symbol);
@@ -816,7 +819,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// been notified.
   Future<List<Symbol>> addSymbols(
     List<SymbolOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     final symbols = [
       for (var i = 0; i < options.length; i++)
@@ -895,7 +898,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added line once listeners have
   /// been notified.
-  Future<Line> addLine(LineOptions options, [Map? data]) async {
+  Future<Line> addLine(
+    LineOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
     await lineManager!.add(line);
@@ -912,7 +918,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// been notified.
   Future<List<Line>> addLines(
     List<LineOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     final lines = [
       for (var i = 0; i < options.length; i++)
@@ -990,7 +996,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.
-  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
+  Future<Circle> addCircle(
+    CircleOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
     await circleManager!.add(circle);
@@ -1008,7 +1017,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// been notified.
   Future<List<Circle>> addCircles(
     List<CircleOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     final cricles = [
       for (var i = 0; i < options.length; i++)
@@ -1089,7 +1098,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.
-  Future<Fill> addFill(FillOptions options, [Map? data]) async {
+  Future<Fill> addFill(
+    FillOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
     await fillManager!.add(fill);
@@ -1107,7 +1119,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// been notified.
   Future<List<Fill>> addFills(
     List<FillOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     final fills = [
       for (var i = 0; i < options.length; i++)
@@ -1174,7 +1186,7 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
-  Future<List> queryRenderedFeatures(
+  Future<List<dynamic>> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
@@ -1183,7 +1195,7 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features in a Rect in screen coordinates
-  Future<List> queryRenderedFeaturesInRect(
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
@@ -1201,7 +1213,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// regardless of whether they are currently rendered by the current style.
   ///
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
-  Future<List> querySourceFeatures(
+  Future<List<dynamic>> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
@@ -1213,11 +1225,11 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
-  Future invalidateAmbientCache() async {
+  Future<dynamic> invalidateAmbientCache() async {
     return _maplibrePlatform.invalidateAmbientCache();
   }
 
-  Future clearAmbientCache() async {
+  Future<dynamic> clearAmbientCache() async {
     return _maplibrePlatform.clearAmbientCache();
   }
 
@@ -1419,7 +1431,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Also consider using [animateCamera] or [moveCamera], which allow you to set camera bounds (with different padding values per side)
   /// as well as other camera properties.
-  Future setCameraBounds({
+  Future<dynamic> setCameraBounds({
     required double west,
     required double north,
     required double south,
@@ -1569,7 +1581,7 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
-  Future<List> getLayerIds() {
+  Future<List<dynamic>> getLayerIds() {
     return _maplibrePlatform.getLayerIds();
   }
 
