@@ -256,13 +256,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
+    html.window.console.log('Telemetry not available in web');
     return;
   }
 
   @override
   Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
+    html.window.console.log('Telemetry not available in web');
     return false;
   }
 
@@ -334,7 +334,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    print(parameters);
+    html.window.console.log(parameters);
 
     return _map
         .querySourceFeatures(sourceId, parameters)
@@ -353,12 +353,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future invalidateAmbientCache() async {
-    print('Offline storage not available in web');
+    html.window.console.log('Offline storage not available in web');
   }
 
   @override
   Future clearAmbientCache() async {
-    print('Offline storage not available in web');
+    html.window.console.log('Offline storage not available in web');
   }
 
   @override
@@ -608,7 +608,7 @@ class MapLibreMapController extends MapLibrePlatform
    */
   @override
   void setAttributionButtonMargins(int x, int y) {
-    print('setAttributionButtonMargins not available in web');
+    html.window.console.log('setAttributionButtonMargins not available in web');
   }
 
   @override
@@ -648,12 +648,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setCompassViewMargins(int x, int y) {
-    print('setCompassViewMargins not available in web');
+    html.window.console.log('setCompassViewMargins not available in web');
   }
 
   @override
   void setLogoViewMargins(int x, int y) {
-    print('setLogoViewMargins not available in web');
+    html.window.console.log('setLogoViewMargins not available in web');
   }
 
   @override
@@ -674,7 +674,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setMyLocationRenderMode(int myLocationRenderMode) {
-    print('myLocationRenderMode not available in web');
+    html.window.console.log('myLocationRenderMode not available in web');
   }
 
   @override
@@ -686,7 +686,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (myLocationTrackingMode == 0) {
       _addGeolocateControl();
     } else {
-      print('Only one tracking mode available in web');
+      html.window.console.log('Only one tracking mode available in web');
       _addGeolocateControl(trackUserLocation: true);
     }
   }
@@ -886,13 +886,15 @@ class MapLibreMapController extends MapLibrePlatform
       // or paint property, we try to set it as both.
       try {
         _map.setLayoutProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+      } on Exception catch (e) {
+        html.window.console
+            .log('Caught exception (usually safe to ignore): $e');
       }
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+      } on Exception catch (e) {
+        html.window.console
+            .log('Caught exception (usually safe to ignore): $e');
       }
     }
   }
