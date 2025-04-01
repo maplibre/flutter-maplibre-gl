@@ -48,6 +48,7 @@ class LocalStyleState extends State<LocalStyle> {
     });
   }
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }

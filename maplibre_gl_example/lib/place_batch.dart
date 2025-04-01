@@ -75,6 +75,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
 
   late MapLibreMapController controller;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
   }

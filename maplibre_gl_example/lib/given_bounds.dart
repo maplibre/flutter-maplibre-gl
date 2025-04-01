@@ -26,6 +26,7 @@ class GivenBounds extends StatefulWidget {
 class GivenBoundsState extends State<GivenBounds> {
   late MapLibreMapController mapController;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }

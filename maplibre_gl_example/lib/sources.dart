@@ -37,6 +37,7 @@ class FullMapState extends State<FullMap> {
   final watercolorRasterId = 'watercolorRaster';
   int selectedStyleId = 0;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
   }

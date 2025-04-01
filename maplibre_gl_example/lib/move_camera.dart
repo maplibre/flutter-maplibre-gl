@@ -26,6 +26,7 @@ class MoveCamera extends StatefulWidget {
 class MoveCameraState extends State<MoveCamera> {
   late MapLibreMapController mapController;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }

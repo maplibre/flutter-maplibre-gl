@@ -96,10 +96,12 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     );
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedOne(MapLibreMapController controller) {
     controllerOne = controller;
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedTwo(MapLibreMapController controller) {
     controllerTwo = controller;
   }
