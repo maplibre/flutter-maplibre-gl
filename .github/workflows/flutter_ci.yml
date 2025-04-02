@@ -54,6 +54,20 @@ jobs:
       - uses: bluefireteam/melos-action@v3
       - run: melos test:web
 
+  code-gen:
+    name: "Generate code from templates"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos generate
+      - run: melos format
+      - name: Check Git changes
+        uses: multani/git-changes-action@v1
+
   build-android:
     name: "Build Android apk"
     runs-on: ubuntu-latest
