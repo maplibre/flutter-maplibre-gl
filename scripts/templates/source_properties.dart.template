@@ -3,6 +3,7 @@
 
 part of '../maplibre_gl_platform_interface.dart';
 
+// ignore: one_member_abstracts
 abstract class SourceProperties {
   Map<String, dynamic> toJson();
 }
@@ -48,7 +49,7 @@ class {{typePascal}}SourceProperties implements SourceProperties {
         json[fieldName] = value;
       }
     }
-    json["type"] = "{{type}}";
+    json['type'] = '{{type}}';
     {{#properties}}
     addIfPresent('{{value}}', {{valueAsCamelCase}});
     {{/properties}}

@@ -17,9 +17,9 @@ class Circle implements Annotation {
   @override
   String get id => _id;
 
-  final Map? _data;
+  final Map<String, dynamic>? _data;
 
-  Map? get data => _data;
+  Map<String, dynamic>? get data => _data;
 
   /// The circle configuration options most recently applied programmatically
   /// via the map controller.
@@ -31,8 +31,8 @@ class Circle implements Annotation {
   @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    geojson['id'] = id;
+    geojson['properties']['id'] = id;
 
     return geojson;
   }
@@ -116,12 +116,12 @@ class CircleOptions {
 
   Map<String, dynamic> toGeoJson() {
     return {
-      "type": "Feature",
-      "properties": toJson(false),
-      "geometry": {
-        "type": "Point",
-        "coordinates": geometry!.toGeoJsonCoordinates()
-      }
+      'type': 'Feature',
+      'properties': toJson(false),
+      'geometry': {
+        'type': 'Point',
+        'coordinates': geometry!.toGeoJsonCoordinates(),
+      },
     };
   }
 }

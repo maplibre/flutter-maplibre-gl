@@ -8,10 +8,12 @@ class AttributionControlOptions
     bool? compact,
     List<String>? customAttribution,
   }) =>
-      AttributionControlOptions.fromJsObject(AttributionControlOptionsJsImpl(
-        compact: compact,
-        customAttribution: customAttribution,
-      ));
+      AttributionControlOptions.fromJsObject(
+        AttributionControlOptionsJsImpl(
+          compact: compact,
+          customAttribution: customAttribution,
+        ),
+      );
 
   /// Creates a new AttributionControlOptions from a [jsObject].
   AttributionControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -28,17 +30,17 @@ class AttributionControlOptions
 /// map.addControl(attribution, 'top-left');
 /// @see [Display map attribution controls](https://maplibre.org/maplibre-gl-js/docs/examples/attribution-position/)
 class AttributionControl extends JsObjectWrapper<AttributionControlJsImpl> {
-  AttributionControlOptions get options =>
-      AttributionControlOptions.fromJsObject(jsObject.options);
-
   factory AttributionControl(AttributionControlOptions options) =>
       AttributionControl.fromJsObject(
-          AttributionControlJsImpl(options.jsObject));
-
-  onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
-
-  onRemove() => jsObject.onRemove();
+        AttributionControlJsImpl(options.jsObject),
+      );
 
   /// Creates a new MapOptions from a [jsObject].
   AttributionControl.fromJsObject(super.jsObject) : super.fromJsObject();
+  AttributionControlOptions get options =>
+      AttributionControlOptions.fromJsObject(jsObject.options);
+
+  dynamic onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
+
+  dynamic onRemove() => jsObject.onRemove();
 }

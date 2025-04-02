@@ -12,9 +12,9 @@ import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 class LogoControlJsImpl {
   external factory LogoControlJsImpl();
 
-  external onAdd(MapLibreMapJsImpl map);
+  external dynamic onAdd(MapLibreMapJsImpl map);
 
-  external onRemove();
+  external dynamic onRemove();
 
-  external getDefaultPosition();
+  external dynamic getDefaultPosition();
 }

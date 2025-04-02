@@ -1,14 +1,19 @@
 part of '../maplibre_gl.dart';
 
 Map<String, dynamic> buildFeatureCollection(
-    List<Map<String, dynamic>> features) {
-  return {"type": "FeatureCollection", "features": features};
+  List<Map<String, dynamic>> features,
+) {
+  return {'type': 'FeatureCollection', 'features': features};
 }
 
 final _random = Random();
 String getRandomString([int length = 10]) {
   const charSet =
       'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-  return String.fromCharCodes(Iterable.generate(
-      length, (_) => charSet.codeUnitAt(_random.nextInt(charSet.length))));
+  return String.fromCharCodes(
+    Iterable.generate(
+      length,
+      (_) => charSet.codeUnitAt(_random.nextInt(charSet.length)),
+    ),
+  );
 }

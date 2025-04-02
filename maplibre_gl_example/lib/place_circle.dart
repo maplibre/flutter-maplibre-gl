@@ -7,8 +7,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class PlaceCirclePage extends ExamplePage {
   const PlaceCirclePage({super.key})
@@ -70,11 +69,12 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
   void _add() {
     controller!.addCircle(
       CircleOptions(
-          geometry: LatLng(
-            center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
-            center.longitude + cos(_circleCount * pi / 6.0) / 20.0,
-          ),
-          circleColor: "#FF0000"),
+        geometry: LatLng(
+          center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
+          center.longitude + cos(_circleCount * pi / 6.0) / 20.0,
+        ),
+        circleColor: '#FF0000',
+      ),
     );
     setState(() {
       _circleCount += 1;
@@ -139,16 +139,18 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     var current = _selectedCircle!.options.circleStrokeWidth;
     current ??= 0;
     _updateSelectedCircle(
-        CircleOptions(circleStrokeWidth: current == 0 ? 5.0 : 0));
+      CircleOptions(circleStrokeWidth: current == 0 ? 5.0 : 0),
+    );
   }
 
   Future<void> _changeCircleStrokeColor() async {
     var current = _selectedCircle!.options.circleStrokeColor;
-    current ??= "#FFFFFF";
+    current ??= '#FFFFFF';
 
     _updateSelectedCircle(
       CircleOptions(
-          circleStrokeColor: current == "#FFFFFF" ? "#FF0000" : "#FFFFFF"),
+        circleStrokeColor: current == '#FFFFFF' ? '#FF0000' : '#FFFFFF',
+      ),
     );
   }
 
@@ -171,10 +173,10 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
   Future<void> _changeCircleColor() async {
     var current = _selectedCircle!.options.circleColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedCircle(
-      const CircleOptions(circleColor: "#FFFF00"),
+      const CircleOptions(circleColor: '#FFFF00'),
     );
   }
 
@@ -288,7 +290,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

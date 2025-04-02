@@ -1,9 +1,10 @@
 import 'dart:html';
+
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
+import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/ui/popup.dart';
-import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 
 /// Creates a marker component
@@ -24,11 +25,13 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 /// @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
 /// @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
 class Marker extends Evented {
-  @override
-  final MarkerJsImpl jsObject;
-
   factory Marker([MarkerOptions? options]) =>
       Marker.fromJsObject(MarkerJsImpl(options?.jsObject));
+
+  /// Creates a new Marker from a [jsObject].
+  Marker.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+  @override
+  final MarkerJsImpl jsObject;
 
   ///  Attaches the marker to a map
   ///  @param {MapLibreMap} map
@@ -125,9 +128,6 @@ class Marker extends Evented {
   ///  Returns the current `pitchAlignment` property of the marker.
   ///  @returns {string}
   String getPitchAlignment() => jsObject.getPitchAlignment();
-
-  /// Creates a new Marker from a [jsObject].
-  Marker.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
@@ -141,16 +141,18 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
     String? rotationAlignment,
     String? pitchAlignment,
   }) =>
-      MarkerOptions.fromJsObject(MarkerOptionsJsImpl(
-        element: element,
-        offset: offset?.jsObject,
-        anchor: anchor,
-        color: color,
-        draggable: draggable,
-        rotation: rotation,
-        rotationAlignment: rotationAlignment,
-        pitchAlignment: pitchAlignment,
-      ));
+      MarkerOptions.fromJsObject(
+        MarkerOptionsJsImpl(
+          element: element,
+          offset: offset?.jsObject,
+          anchor: anchor,
+          color: color,
+          draggable: draggable,
+          rotation: rotation,
+          rotationAlignment: rotationAlignment,
+          pitchAlignment: pitchAlignment,
+        ),
+      );
 
   /// Creates a new MarkerOptions from a [jsObject].
   MarkerOptions.fromJsObject(super.jsObject) : super.fromJsObject();

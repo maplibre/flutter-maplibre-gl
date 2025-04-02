@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/page.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'page.dart';
 
 class LocalStylePage extends ExamplePage {
   const LocalStylePage({super.key})
@@ -28,7 +27,7 @@ class LocalStyleState extends State<LocalStyle> {
   String? styleAbsoluteFilePath;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
 
     getApplicationDocumentsDirectory().then((dir) async {
@@ -49,6 +48,7 @@ class LocalStyleState extends State<LocalStyle> {
     });
   }
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
@@ -64,12 +64,13 @@ class LocalStyleState extends State<LocalStyle> {
     }
 
     return Scaffold(
-        body: MapLibreMap(
-      styleString: styleAbsoluteFilePath,
-      onMapCreated: _onMapCreated,
-      initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
-      onStyleLoadedCallback: onStyleLoadedCallback,
-    ));
+      body: MapLibreMap(
+        styleString: styleAbsoluteFilePath,
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: const CameraPosition(target: LatLng(0.0, 0.0)),
+        onStyleLoadedCallback: onStyleLoadedCallback,
+      ),
+    );
   }
 
   void onStyleLoadedCallback() {}

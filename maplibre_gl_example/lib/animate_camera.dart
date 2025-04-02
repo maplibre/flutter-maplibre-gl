@@ -4,8 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class AnimateCameraPage extends ExamplePage {
   const AnimateCameraPage({super.key})
@@ -27,6 +26,7 @@ class AnimateCamera extends StatefulWidget {
 class AnimateCameraState extends State<AnimateCamera> {
   late MapLibreMapController mapController;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
@@ -68,7 +68,8 @@ class AnimateCameraState extends State<AnimateCamera> {
                         )
                         .then(
                           (result) => debugPrint(
-                              "mapController.animateCamera() returned $result"),
+                            'mapController.animateCamera() returned $result',
+                          ),
                         );
                   },
                   child: const Text('newCameraPosition'),
@@ -82,8 +83,11 @@ class AnimateCameraState extends State<AnimateCamera> {
                           ),
                           duration: const Duration(seconds: 5),
                         )
-                        .then((result) => debugPrint(
-                            "mapController.animateCamera() returned $result"));
+                        .then(
+                          (result) => debugPrint(
+                            'mapController.animateCamera() returned $result',
+                          ),
+                        );
                   },
                   child: const Text('newLatLng'),
                 ),
@@ -197,7 +201,7 @@ class AnimateCameraState extends State<AnimateCamera> {
               ],
             ),
           ],
-        )
+        ),
       ],
     );
   }

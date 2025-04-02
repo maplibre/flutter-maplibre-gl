@@ -31,7 +31,7 @@ abstract class StyleImageInterfaceJsImpl {
 
   external Function get render;
 
-  external Function(MapLibreMapJsImpl map, String id) get onAdd;
+  external void Function(MapLibreMapJsImpl map, String id) get onAdd;
 
   external Function get onRemove;
 }

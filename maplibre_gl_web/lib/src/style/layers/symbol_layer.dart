@@ -2,6 +2,17 @@ import 'package:maplibre_gl_web/src/interop/style/layers/symbol_layer_interop.da
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 
 class SymbolLayer extends Layer {
+  SymbolLayer({
+    required this.id,
+    this.metadata,
+    this.source,
+    this.sourceLayer,
+    this.minZoom,
+    this.maxZoom,
+    this.filter,
+    this.layout,
+    this.paint,
+  });
   String id;
   String? metadata;
 
@@ -14,41 +25,14 @@ class SymbolLayer extends Layer {
   SymbolLayout? layout;
   SymbolPaint? paint;
 
-  SymbolLayer({
-    required this.id,
-    this.metadata,
-    this.source,
-    this.sourceLayer,
-    this.minZoom,
-    this.maxZoom,
-    this.filter,
-    this.layout,
-    this.paint,
-  });
+  @override
+  dynamic get jsObject => SymbolLayerJsImpl.toJs(this);
 
   @override
-  get jsObject => SymbolLayerJsImpl.toJs(this);
-
-  @override
-  get dict => SymbolLayerJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolLayerJsImpl.toDict(this);
 }
 
 class SymbolPaint {
-  num? iconOpacity;
-  String? iconColor;
-  String? iconHaloColor;
-  num? iconHaloWidth;
-  num? iconHaloBlur;
-  List<num>? iconTranslate;
-  String? iconTranslateAnchor;
-  num? textOpacity;
-  String? textColor;
-  String? textHaloColor;
-  num? textHaloWidth;
-  num? textHaloBlur;
-  List<num>? textTranslate;
-  String? textTranslateAnchor;
-
   SymbolPaint({
     this.iconOpacity,
     this.iconColor,
@@ -65,54 +49,27 @@ class SymbolPaint {
     this.textTranslate,
     this.textTranslateAnchor,
   });
+  num? iconOpacity;
+  String? iconColor;
+  String? iconHaloColor;
+  num? iconHaloWidth;
+  num? iconHaloBlur;
+  List<num>? iconTranslate;
+  String? iconTranslateAnchor;
+  num? textOpacity;
+  String? textColor;
+  String? textHaloColor;
+  num? textHaloWidth;
+  num? textHaloBlur;
+  List<num>? textTranslate;
+  String? textTranslateAnchor;
 
-  get jsObject => SymbolPaintJsImpl.toJs(this);
+  dynamic get jsObject => SymbolPaintJsImpl.toJs(this);
 
-  get dict => SymbolPaintJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolPaintJsImpl.toDict(this);
 }
 
 class SymbolLayout {
-  bool? symbolAvoidEdges;
-  num? symbolSortKey;
-  String? symbolZOrder;
-  bool? iconAllowOverlap;
-  bool? iconIgnorePlacement;
-  bool? iconOptional;
-  String? iconRotationAlignment;
-  num? iconSize;
-  String? iconTextFit;
-  List<num>? iconFitPadding;
-  dynamic iconImage;
-  num? iconRotate;
-  num? iconPadding;
-  bool? iconKeepUpright;
-  List<num>? iconOffset;
-  String? iconAnchor;
-  String? iconPitchAlignment;
-  String? textPitchAlignment;
-  String? textRotationAlignment;
-  String? textField;
-  List<String>? textFont;
-  num? textSize;
-  num? textMaxWidth;
-  num? textLineHeight;
-  num? textLetterSpacing;
-  String? textJustify;
-  num? textRadialOffset;
-  List<String>? textVariableAnchor;
-  String? textAnchor;
-  num? textMaxAngle;
-  List<String>? textWritingMode;
-  num? textRotate;
-  num? textPadding;
-  bool? textKeepUpright;
-  String? textTransform;
-  List<num>? textOffset;
-  bool? textAllowOverlap;
-  bool? textIgnorePlacement;
-  bool? textOptional;
-  String? visibility;
-
   SymbolLayout({
     this.symbolAvoidEdges,
     this.symbolSortKey,
@@ -155,8 +112,48 @@ class SymbolLayout {
     this.textOptional,
     this.visibility,
   });
+  bool? symbolAvoidEdges;
+  num? symbolSortKey;
+  String? symbolZOrder;
+  bool? iconAllowOverlap;
+  bool? iconIgnorePlacement;
+  bool? iconOptional;
+  String? iconRotationAlignment;
+  num? iconSize;
+  String? iconTextFit;
+  List<num>? iconFitPadding;
+  dynamic iconImage;
+  num? iconRotate;
+  num? iconPadding;
+  bool? iconKeepUpright;
+  List<num>? iconOffset;
+  String? iconAnchor;
+  String? iconPitchAlignment;
+  String? textPitchAlignment;
+  String? textRotationAlignment;
+  String? textField;
+  List<String>? textFont;
+  num? textSize;
+  num? textMaxWidth;
+  num? textLineHeight;
+  num? textLetterSpacing;
+  String? textJustify;
+  num? textRadialOffset;
+  List<String>? textVariableAnchor;
+  String? textAnchor;
+  num? textMaxAngle;
+  List<String>? textWritingMode;
+  num? textRotate;
+  num? textPadding;
+  bool? textKeepUpright;
+  String? textTransform;
+  List<num>? textOffset;
+  bool? textAllowOverlap;
+  bool? textIgnorePlacement;
+  bool? textOptional;
+  String? visibility;
 
-  get jsObject => SymbolLayoutJsImpl.toJs(this);
+  dynamic get jsObject => SymbolLayoutJsImpl.toJs(this);
 
-  get dict => SymbolLayoutJsImpl.toDict(this);
+  Map<String, dynamic> get dict => SymbolLayoutJsImpl.toDict(this);
 }

@@ -31,8 +31,8 @@ class Fill implements Annotation {
   @override
   String get id => _id;
 
-  final Map? _data;
-  Map? get data => _data;
+  final Map<String, dynamic>? _data;
+  Map<String, dynamic>? get data => _data;
 
   /// The fill configuration options most recently applied programmatically
   /// via the map controller.
@@ -44,8 +44,8 @@ class Fill implements Annotation {
   @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    geojson['id'] = id;
+    geojson['properties']['id'] = id;
 
     return geojson;
   }
@@ -65,13 +65,14 @@ class FillOptions {
   ///
   /// By default, every non-specified field is null, meaning no desire to change
   /// fill defaults or current configuration.
-  const FillOptions(
-      {this.fillOpacity,
-      this.fillColor,
-      this.fillOutlineColor,
-      this.fillPattern,
-      this.geometry,
-      this.draggable});
+  const FillOptions({
+    this.fillOpacity,
+    this.fillColor,
+    this.fillOutlineColor,
+    this.fillPattern,
+    this.geometry,
+    this.draggable,
+  });
 
   final double? fillOpacity;
   final String? fillColor;
@@ -108,11 +109,14 @@ class FillOptions {
     addIfPresent('fillPattern', fillPattern);
     if (addGeometry) {
       addIfPresent(
-          'geometry',
-          geometry
-              ?.map((List<LatLng> latLngList) =>
-                  latLngList.map((LatLng latLng) => latLng.toJson()).toList())
-              .toList());
+        'geometry',
+        geometry
+            ?.map(
+              (List<LatLng> latLngList) =>
+                  latLngList.map((LatLng latLng) => latLng.toJson()).toList(),
+            )
+            .toList(),
+      );
     }
     addIfPresent('draggable', draggable);
     return json;
@@ -120,16 +124,18 @@ class FillOptions {
 
   Map<String, dynamic> toGeoJson() {
     return {
-      "type": "Feature",
-      "properties": toJson(false),
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": geometry!
-            .map((List<LatLng> latLngList) => latLngList
-                .map((LatLng latLng) => latLng.toGeoJsonCoordinates())
-                .toList())
-            .toList()
-      }
+      'type': 'Feature',
+      'properties': toJson(false),
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': geometry!
+            .map(
+              (List<LatLng> latLngList) => latLngList
+                  .map((LatLng latLng) => latLng.toGeoJsonCoordinates())
+                  .toList(),
+            )
+            .toList(),
+      },
     };
   }
 }

@@ -26,13 +26,15 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Widget buildView(
-      Map<String, dynamic> creationParams,
-      OnPlatformViewCreatedCallback onPlatformViewCreated,
-      Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
+    Map<String, dynamic> creationParams,
+    OnPlatformViewCreatedCallback onPlatformViewCreated,
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+  ) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, hashCode);
     return HtmlElementView(
-        viewType: 'plugins.flutter.io/maplibre_gl_$hashCode');
+      viewType: 'plugins.flutter.io/maplibre_gl_$hashCode',
+    );
   }
 
   @override
@@ -41,7 +43,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.remove();
   }
 
-  void _registerViewFactory(Function(int) callback, int identifier) {
+  void _registerViewFactory(void Function(int) callback, int identifier) {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
@@ -111,7 +113,7 @@ class MapLibreMapController extends MapLibrePlatform
     await addImage(imagePath, bytes.buffer.asUint8List());
   }
 
-  _onMouseDown(Event e) {
+  void _onMouseDown(Event e) {
     final isDraggable = e.features[0].properties['draggable'];
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
@@ -130,14 +132,14 @@ class MapLibreMapController extends MapLibrePlatform
           'origin': _dragOrigin,
           'current': current,
           'delta': const LatLng(0, 0),
-          'eventType': 'start'
+          'eventType': 'start',
         };
         onFeatureDraggedPlatform(payload);
       }
     }
   }
 
-  _onMouseUp(Event e) {
+  void _onMouseUp(Event e) {
     if (_draggedFeatureId != null) {
       final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
       final payload = {
@@ -146,7 +148,7 @@ class MapLibreMapController extends MapLibrePlatform
         'origin': _dragOrigin,
         'current': current,
         'delta': current - (_dragPrevious ?? _dragOrigin!),
-        'eventType': 'end'
+        'eventType': 'end',
       };
       onFeatureDraggedPlatform(payload);
     }
@@ -156,7 +158,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.getCanvas().style.cursor = '';
   }
 
-  _onMouseMove(Event e) {
+  void _onMouseMove(Event e) {
     if (_draggedFeatureId != null) {
       final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
       final payload = {
@@ -165,7 +167,7 @@ class MapLibreMapController extends MapLibrePlatform
         'origin': _dragOrigin,
         'current': current,
         'delta': current - (_dragPrevious ?? _dragOrigin!),
-        'eventType': 'drag'
+        'eventType': 'drag',
       };
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
@@ -174,22 +176,25 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<CameraPosition?> updateMapOptions(
-      Map<String, dynamic> optionsUpdate) async {
+    Map<String, dynamic> optionsUpdate,
+  ) async {
     // FIX: why is called indefinitely? (map_ui page)
     Convert.interpretMapLibreMapOptions(optionsUpdate, this);
     return _getCameraPosition();
   }
 
   @override
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
+  Future<bool?> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
 
-    final around = getProperty(cameraOptions, 'around');
-    final bearing = getProperty(cameraOptions, 'bearing');
-    final center = getProperty(cameraOptions, 'center');
-    final pitch = getProperty(cameraOptions, 'pitch');
-    final zoom = getProperty(cameraOptions, 'zoom');
+    final around = getProperty<dynamic>(cameraOptions, 'around');
+    final bearing = getProperty<dynamic>(cameraOptions, 'bearing');
+    final center = getProperty<dynamic>(cameraOptions, 'center');
+    final pitch = getProperty<dynamic>(cameraOptions, 'pitch');
+    final zoom = getProperty<dynamic>(cameraOptions, 'zoom');
 
     _map.flyTo({
       if (around != null) 'around': around,
@@ -212,7 +217,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> updateMyLocationTrackingMode(
-      MyLocationTrackingMode myLocationTrackingMode) async {
+    MyLocationTrackingMode myLocationTrackingMode,
+  ) async {
     setMyLocationTrackingMode(myLocationTrackingMode.index);
   }
 
@@ -220,16 +226,16 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> matchMapLanguageWithDeviceDefault() async {
     // Fix in https://github.com/maplibre/flutter-maplibre-gl/issues/263
     // ignore: deprecated_member_use
-    setMapLanguage(ui.window.locale.languageCode);
+    await setMapLanguage(ui.window.locale.languageCode);
   }
 
   @override
   Future<void> setMapLanguage(String language) async {
     final layers = _map.getLayers();
 
-    final languageRegex = RegExp("(name:[a-z]+)");
+    final languageRegex = RegExp('(name:[a-z]+)');
 
-    final symbolLayers = layers.where((layer) => layer.type == "symbol");
+    final symbolLayers = layers.where((layer) => layer.type == 'symbol');
 
     for (final layer in symbolLayers) {
       final dynamic properties = _map.getLayoutProperty(layer.id, 'text-field');
@@ -244,10 +250,10 @@ class MapLibreMapController extends MapLibrePlatform
       }
 
       final newProperties = [
-        "coalesce",
-        ["get", "name:$language"],
-        ["get", "name:latin"],
-        ["get", "name"],
+        'coalesce',
+        ['get', 'name:$language'],
+        ['get', 'name:latin'],
+        ['get', 'name'],
       ];
 
       _map.setLayoutProperty(layer.id, 'text-field', newProperties);
@@ -256,19 +262,22 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
+    html.window.console.log('Telemetry not available in web');
     return;
   }
 
   @override
   Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
+    html.window.console.log('Telemetry not available in web');
     return false;
   }
 
   @override
-  Future<List> queryRenderedFeatures(
-      Point<double> point, List<String> layerIds, List<Object>? filter) async {
+  Future<List<dynamic>> queryRenderedFeatures(
+    Point<double> point,
+    List<String> layerIds,
+    List<Object>? filter,
+  ) async {
     final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
@@ -281,22 +290,27 @@ class MapLibreMapController extends MapLibrePlatform
     final pointAsList = [point.x, point.y];
     return _map
         .queryRenderedFeatures([pointAsList, pointAsList], options)
-        .map((feature) => {
-              'type': 'Feature',
-              'id': feature.id,
-              'geometry': {
-                'type': feature.geometry.type,
-                'coordinates': feature.geometry.coordinates,
-              },
-              'properties': feature.properties,
-              'source': feature.source,
-            })
+        .map(
+          (feature) => {
+            'type': 'Feature',
+            'id': feature.id,
+            'geometry': {
+              'type': feature.geometry.type,
+              'coordinates': feature.geometry.coordinates,
+            },
+            'properties': feature.properties,
+            'source': feature.source,
+          },
+        )
         .toList();
   }
 
   @override
-  Future<List> queryRenderedFeaturesInRect(
-      Rect rect, List<String> layerIds, String? filter) async {
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
+    Rect rect,
+    List<String> layerIds,
+    String? filter,
+  ) async {
     final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
@@ -305,26 +319,34 @@ class MapLibreMapController extends MapLibrePlatform
       options['filter'] = filter;
     }
     return _map
-        .queryRenderedFeatures([
-          [rect.left, rect.bottom],
-          [rect.right, rect.top],
-        ], options)
-        .map((feature) => {
-              'type': 'Feature',
-              'id': feature.id as int?,
-              'geometry': {
-                'type': feature.geometry.type,
-                'coordinates': feature.geometry.coordinates,
-              },
-              'properties': feature.properties,
-              'source': feature.source,
-            })
+        .queryRenderedFeatures(
+          [
+            [rect.left, rect.bottom],
+            [rect.right, rect.top],
+          ],
+          options,
+        )
+        .map(
+          (feature) => {
+            'type': 'Feature',
+            'id': feature.id as int?,
+            'geometry': {
+              'type': feature.geometry.type,
+              'coordinates': feature.geometry.coordinates,
+            },
+            'properties': feature.properties,
+            'source': feature.source,
+          },
+        )
         .toList();
   }
 
   @override
-  Future<List> querySourceFeatures(
-      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+  Future<List<dynamic>> querySourceFeatures(
+    String sourceId,
+    String? sourceLayerId,
+    List<Object>? filter,
+  ) async {
     final parameters = <String, dynamic>{};
 
     if (sourceLayerId != null) {
@@ -334,31 +356,33 @@ class MapLibreMapController extends MapLibrePlatform
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    print(parameters);
+    html.window.console.log(parameters);
 
     return _map
         .querySourceFeatures(sourceId, parameters)
-        .map((feature) => {
-              'type': 'Feature',
-              'id': feature.id,
-              'geometry': {
-                'type': feature.geometry.type,
-                'coordinates': feature.geometry.coordinates,
-              },
-              'properties': feature.properties,
-              'source': feature.source,
-            })
+        .map(
+          (feature) => {
+            'type': 'Feature',
+            'id': feature.id,
+            'geometry': {
+              'type': feature.geometry.type,
+              'coordinates': feature.geometry.coordinates,
+            },
+            'properties': feature.properties,
+            'source': feature.source,
+          },
+        )
         .toList();
   }
 
   @override
-  Future invalidateAmbientCache() async {
-    print('Offline storage not available in web');
+  Future<dynamic> invalidateAmbientCache() async {
+    html.window.console.log('Offline storage not available in web');
   }
 
   @override
-  Future clearAmbientCache() async {
-    print('Offline storage not available in web');
+  Future<dynamic> clearAmbientCache() async {
+    html.window.console.log('Offline storage not available in web');
   }
 
   @override
@@ -382,8 +406,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> addImage(String name, Uint8List bytes,
-      [bool sdf = false]) async {
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+  ]) async {
     final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
       _map.addImage(
@@ -435,12 +462,14 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onMapClick(Event e) {
-    final features = _map.queryRenderedFeatures([e.point.x, e.point.y],
-        {"layers": _interactiveFeatureLayerIds.toList()});
+    final features = _map.queryRenderedFeatures(
+      [e.point.x, e.point.y],
+      {'layers': _interactiveFeatureLayerIds.toList()},
+    );
     final payload = {
       'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
-      if (features.isNotEmpty) "id": features.first.id,
+      if (features.isNotEmpty) 'id': features.first.id,
     };
     if (features.isNotEmpty) {
       onFeatureTappedPlatform(payload);
@@ -449,10 +478,10 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  void _onMapLongClick(e) {
+  void _onMapLongClick(Event e) {
     onMapLongClickPlatform({
-      'point': Point<double>(e.point.x, e.point.y),
-      'latLng': LatLng(e.lngLat.lat, e.lngLat.lng),
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
     });
   }
 
@@ -504,9 +533,10 @@ class MapLibreMapController extends MapLibrePlatform
         showUserLocation: true,
       ),
     );
-    _geolocateControl!.on('geolocate', (e) {
+    _geolocateControl!.on('geolocate', (dynamic e) {
       _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
-      onUserLocationUpdatedPlatform(UserLocation(
+      onUserLocationUpdatedPlatform(
+        UserLocation(
           position: LatLng(e.coords.latitude, e.coords.longitude),
           altitude: e.coords.altitude,
           bearing: e.coords.heading,
@@ -514,7 +544,9 @@ class MapLibreMapController extends MapLibrePlatform
           horizontalAccuracy: e.coords.accuracy,
           verticalAccuracy: e.coords.altitudeAccuracy,
           heading: null,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
+          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp),
+        ),
+      );
     });
     _geolocateControl!.on('trackuserlocationstart', (_) {
       _onCameraTrackingChanged(true);
@@ -555,11 +587,13 @@ class MapLibreMapController extends MapLibrePlatform
     final newPosition = positionString ?? prevPosition;
 
     _removeNavigationControl();
-    _navigationControl = NavigationControl(NavigationControlOptions(
-      showCompass: newShowCompass,
-      showZoom: false,
-      visualizePitch: false,
-    ));
+    _navigationControl = NavigationControl(
+      NavigationControlOptions(
+        showCompass: newShowCompass,
+        showZoom: false,
+        visualizePitch: false,
+      ),
+    );
 
     if (newPosition == null) {
       _map.addControl(_navigationControl);
@@ -608,7 +642,7 @@ class MapLibreMapController extends MapLibrePlatform
    */
   @override
   void setAttributionButtonMargins(int x, int y) {
-    print('setAttributionButtonMargins not available in web');
+    html.window.console.log('setAttributionButtonMargins not available in web');
   }
 
   @override
@@ -648,12 +682,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setCompassViewMargins(int x, int y) {
-    print('setCompassViewMargins not available in web');
+    html.window.console.log('setCompassViewMargins not available in web');
   }
 
   @override
   void setLogoViewMargins(int x, int y) {
-    print('setLogoViewMargins not available in web');
+    html.window.console.log('setLogoViewMargins not available in web');
   }
 
   @override
@@ -674,7 +708,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setMyLocationRenderMode(int myLocationRenderMode) {
-    print('myLocationRenderMode not available in web');
+    html.window.console.log('myLocationRenderMode not available in web');
   }
 
   @override
@@ -686,7 +720,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (myLocationTrackingMode == 0) {
       _addGeolocateControl();
     } else {
-      print('Only one tracking mode available in web');
+      html.window.console.log('Only one tracking mode available in web');
       _addGeolocateControl(trackUserLocation: true);
     }
   }
@@ -705,7 +739,7 @@ class MapLibreMapController extends MapLibrePlatform
     _map.setStyle(styleString);
     // catch style loaded for later style changes
     if (_mapReady) {
-      _map.once("styledata", _onStyleLoaded);
+      _map.once('styledata', _onStyleLoaded);
     }
   }
 
@@ -732,7 +766,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List<Point<num>>> toScreenLocationBatch(
-      Iterable<LatLng> latLngs) async {
+    Iterable<LatLng> latLngs,
+  ) async {
     return latLngs.map((latLng) {
       final screenPosition =
           _map.project(LngLat(latLng.longitude, latLng.latitude));
@@ -760,34 +795,42 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
-      {String? promoteId}) async {
+  Future<void> addGeoJsonSource(
+    String sourceId,
+    Map<String, dynamic> geojson, {
+    String? promoteId,
+  }) async {
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     _map.addSource(sourceId, {
-      "type": 'geojson',
-      "data": geojson, // pass the raw string here to avoid errors
-      if (promoteId != null) "promoteId": promoteId
+      'type': 'geojson',
+      'data': geojson, // pass the raw string here to avoid errors
+      if (promoteId != null) 'promoteId': promoteId,
     });
   }
 
   Feature _makeFeature(Map<String, dynamic> geojsonFeature) {
     return Feature(
-        geometry: Geometry(
-            type: geojsonFeature["geometry"]["type"],
-            coordinates: geojsonFeature["geometry"]["coordinates"]),
-        properties: geojsonFeature["properties"],
-        id: geojsonFeature["properties"]?["id"] ?? geojsonFeature["id"]);
+      geometry: Geometry(
+        type: geojsonFeature['geometry']['type'],
+        coordinates: geojsonFeature['geometry']['coordinates'],
+      ),
+      properties: geojsonFeature['properties'],
+      id: geojsonFeature['properties']?['id'] ?? geojsonFeature['id'],
+    );
   }
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
     return FeatureCollection(
-        features: [for (final f in geojson["features"] ?? []) _makeFeature(f)]);
+      features: [for (final f in geojson['features'] ?? []) _makeFeature(f)],
+    );
   }
 
   @override
   Future<void> setGeoJsonSource(
-      String sourceId, Map<String, dynamic> geojson) async {
+    String sourceId,
+    Map<String, dynamic> geojson,
+  ) async {
     final source = _map.getSource(sourceId) as GeoJsonSource;
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
@@ -795,199 +838,278 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future setCameraBounds({
+  Future<dynamic> setCameraBounds({
     required double west,
     required double north,
     required double south,
     required double east,
     required int padding,
   }) async {
-    _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)),
-        {'padding': padding});
+    _map.fitBounds(
+      LngLatBounds(LngLat(west, south), LngLat(east, north)),
+      {'padding': padding},
+    );
   }
 
   @override
   Future<void> addFillExtrusionLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "fill-extrusion",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        filter: filter,
-        enableInteraction: enableInteraction);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'fill-extrusion',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+      enableInteraction: enableInteraction,
+    );
   }
 
   @override
   Future<void> addCircleLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "circle",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        filter: filter,
-        enableInteraction: enableInteraction);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'circle',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+      enableInteraction: enableInteraction,
+    );
   }
 
   @override
   Future<void> addFillLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "fill",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        filter: filter,
-        enableInteraction: enableInteraction);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'fill',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+      enableInteraction: enableInteraction,
+    );
   }
 
   @override
   Future<void> addLineLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "line",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        filter: filter,
-        enableInteraction: enableInteraction);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'line',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+      enableInteraction: enableInteraction,
+    );
   }
 
   @override
   Future<void> setLayerProperties(
-      String layerId, Map<String, dynamic> properties) async {
+    String layerId,
+    Map<String, dynamic> properties,
+  ) async {
     for (final entry in properties.entries) {
       // Very hacky: because we don't know if the property is a layout
       // or paint property, we try to set it as both.
       try {
         _map.setLayoutProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+      } on Exception catch (e) {
+        html.window.console
+            .log('Caught exception (usually safe to ignore): $e');
       }
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+      } on Exception catch (e) {
+        html.window.console
+            .log('Caught exception (usually safe to ignore): $e');
       }
     }
   }
 
   @override
   Future<void> addSymbolLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
-    return _addLayer(sourceId, layerId, properties, "symbol",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        filter: filter,
-        enableInteraction: enableInteraction);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'symbol',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+      enableInteraction: enableInteraction,
+    );
   }
 
   @override
   Future<void> addHillshadeLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
-    return _addLayer(sourceId, layerId, properties, "hillshade",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        enableInteraction: false);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'hillshade',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
   }
 
   @override
   Future<void> addHeatmapLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
-    return _addLayer(sourceId, layerId, properties, "heatmap",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        enableInteraction: false);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'heatmap',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
   }
 
   @override
   Future<void> addRasterLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
-    await _addLayer(sourceId, layerId, properties, "raster",
-        belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
-        minzoom: minzoom,
-        maxzoom: maxzoom,
-        enableInteraction: false);
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      'raster',
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
   }
 
-  Future<void> _addLayer(String sourceId, String layerId,
-      Map<String, dynamic> properties, String layerType,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction}) async {
+  Future<void> _addLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties,
+    String layerType, {
+    required bool enableInteraction,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
     final layout = Map.fromEntries(
-        properties.entries.where((entry) => isLayoutProperty(entry.key)));
+      properties.entries.where((entry) => isLayoutProperty(entry.key)),
+    );
     final paint = Map.fromEntries(
-        properties.entries.where((entry) => !isLayoutProperty(entry.key)));
+      properties.entries.where((entry) => !isLayoutProperty(entry.key)),
+    );
 
-    _map.addLayer({
-      'id': layerId,
-      'type': layerType,
-      'source': sourceId,
-      'layout': layout,
-      'paint': paint,
-      if (sourceLayer != null) 'source-layer': sourceLayer,
-      if (minzoom != null) 'minzoom': minzoom,
-      if (maxzoom != null) 'maxzoom': maxzoom,
-      if (filter != null) 'filter': filter,
-    }, belowLayerId);
+    _map.addLayer(
+      {
+        'id': layerId,
+        'type': layerType,
+        'source': sourceId,
+        'layout': layout,
+        'paint': paint,
+        if (sourceLayer != null) 'source-layer': sourceLayer,
+        if (minzoom != null) 'minzoom': minzoom,
+        if (maxzoom != null) 'maxzoom': maxzoom,
+        if (filter != null) 'filter': filter,
+      },
+      belowLayerId,
+    );
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
-      if (layerType == "fill") {
+      if (layerType == 'fill') {
         _map.on('mousemove', layerId, _onMouseEnterFeature);
       } else {
         _map.on('mouseenter', layerId, _onMouseEnterFeature);
@@ -1008,12 +1130,13 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  void setGestures(
-      {required bool rotateGesturesEnabled,
-      required bool scrollGesturesEnabled,
-      required bool tiltGesturesEnabled,
-      required bool zoomGesturesEnabled,
-      required bool doubleClickZoomEnabled}) {
+  void setGestures({
+    required bool rotateGesturesEnabled,
+    required bool scrollGesturesEnabled,
+    required bool tiltGesturesEnabled,
+    required bool zoomGesturesEnabled,
+    required bool doubleClickZoomEnabled,
+  }) {
     if (rotateGesturesEnabled &&
         scrollGesturesEnabled &&
         tiltGesturesEnabled &&
@@ -1068,28 +1191,43 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addImageSource(
-      String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
+    String imageSourceId,
+    Uint8List bytes,
+    LatLngQuad coordinates,
+  ) {
     // TODO: implement addImageSource
     throw UnimplementedError();
   }
 
   @override
   Future<void> updateImageSource(
-      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
+    String imageSourceId,
+    Uint8List? bytes,
+    LatLngQuad? coordinates,
+  ) {
     // TODO: implement updateImageSource
     throw UnimplementedError();
   }
 
   @override
-  Future<void> addLayer(String imageLayerId, String imageSourceId,
-      double? minzoom, double? maxzoom) {
+  Future<void> addLayer(
+    String imageLayerId,
+    String imageSourceId,
+    double? minzoom,
+    double? maxzoom,
+  ) {
     // TODO: implement addLayer
     throw UnimplementedError();
   }
 
   @override
-  Future<void> addLayerBelow(String imageLayerId, String imageSourceId,
-      String belowLayerId, double? minzoom, double? maxzoom) {
+  Future<void> addLayerBelow(
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  ) {
     // TODO: implement addLayerBelow
     throw UnimplementedError();
   }
@@ -1102,7 +1240,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFeatureForGeoJsonSource(
-      String sourceId, Map<String, dynamic> geojsonFeature) async {
+    String sourceId,
+    Map<String, dynamic> geojsonFeature,
+  ) async {
     final source = _map.getSource(sourceId) as GeoJsonSource?;
     final data = _addedFeaturesByLayer[sourceId];
 
@@ -1136,17 +1276,17 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future getFilter(String layerId) async {
+  Future<dynamic> getFilter(String layerId) async {
     return _map.getFilter(layerId);
   }
 
   @override
-  Future<List> getLayerIds() async {
+  Future<List<dynamic>> getLayerIds() async {
     return _map.getLayers().map((e) => e.id).toList();
   }
 
   @override
-  Future<List> getSourceIds() async {
+  Future<List<dynamic>> getSourceIds() async {
     throw UnimplementedError();
   }
 }

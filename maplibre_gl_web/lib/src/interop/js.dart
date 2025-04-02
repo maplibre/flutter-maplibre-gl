@@ -6,11 +6,12 @@ import 'package:js/js.dart';
 /// This class is a wrapper for the jsObject. All the specific JsObject
 /// wrappers extend from it.
 abstract class JsObjectWrapper<T> {
-  /// JS object.
-  final T jsObject;
-
   /// Creates a new JsObjectWrapper type from a [jsObject].
-  JsObjectWrapper.fromJsObject(this.jsObject);
+  JsObjectWrapper.fromJsObject(this._jsObject);
+
+  /// JS object.
+  final T _jsObject;
+  T get jsObject => _jsObject;
 }
 
 @JS('Object.keys')

@@ -7,8 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class LinePage extends ExamplePage {
   const LinePage({super.key}) : super(const Icon(Icons.share), 'Line');
@@ -34,7 +33,7 @@ class LineBodyState extends State<LineBody> {
   MapLibreMapController? controller;
   int _lineCount = 0;
   Line? _selectedLine;
-  final String _linePatternImage = "assets/fill/cat_silhouette_pattern.png";
+  final String _linePatternImage = 'assets/fill/cat_silhouette_pattern.png';
 
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
@@ -54,42 +53,45 @@ class LineBodyState extends State<LineBody> {
     return controller!.addImage(name, list);
   }
 
-  _onLineTapped(Line line) async {
+  Future<void> _onLineTapped(Line line) async {
     await _updateSelectedLine(
-      const LineOptions(lineColor: "#ff0000"),
+      const LineOptions(lineColor: '#ff0000'),
     );
     setState(() {
       _selectedLine = line;
     });
     await _updateSelectedLine(
-      const LineOptions(lineColor: "#ffe100"),
+      const LineOptions(lineColor: '#ffe100'),
     );
   }
 
-  _updateSelectedLine(LineOptions changes) async {
-    if (_selectedLine != null) controller!.updateLine(_selectedLine!, changes);
+  Future<void> _updateSelectedLine(LineOptions changes) async {
+    if (_selectedLine != null) {
+      await controller!.updateLine(_selectedLine!, changes);
+    }
   }
 
   void _add() {
     controller!.addLine(
       const LineOptions(
-          geometry: [
-            LatLng(-33.86711, 151.1947171),
-            LatLng(-33.86711, 151.1947171),
-            LatLng(-32.86711, 151.1947171),
-            LatLng(-33.86711, 152.1947171),
-          ],
-          lineColor: "#ff0000",
-          lineWidth: 14.0,
-          lineOpacity: 0.5,
-          draggable: true),
+        geometry: [
+          LatLng(-33.86711, 151.1947171),
+          LatLng(-33.86711, 151.1947171),
+          LatLng(-32.86711, 151.1947171),
+          LatLng(-33.86711, 152.1947171),
+        ],
+        lineColor: '#ff0000',
+        lineWidth: 14.0,
+        lineOpacity: 0.5,
+        draggable: true,
+      ),
     );
     setState(() {
       _lineCount += 1;
     });
   }
 
-  _move() async {
+  Future<void> _move() async {
     final currentStart = _selectedLine!.options.geometry![0];
     final currentEnd = _selectedLine!.options.geometry![1];
     final end =
@@ -110,7 +112,7 @@ class LineBodyState extends State<LineBody> {
 
   Future<void> _changeLinePattern() async {
     final current =
-        _selectedLine!.options.linePattern == null ? "assetImage" : null;
+        _selectedLine!.options.linePattern == null ? 'assetImage' : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
     );
@@ -133,12 +135,12 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _onStyleLoadedCallback() async {
-    addImageFromAsset("assetImage", _linePatternImage);
+  Future<void> _onStyleLoadedCallback() async {
+    await addImageFromAsset('assetImage', _linePatternImage);
     await controller!.addLine(
       const LineOptions(
         geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],
-        lineColor: "#ff0000",
+        lineColor: '#ff0000',
         lineWidth: 14.0,
         lineOpacity: 0.5,
       ),

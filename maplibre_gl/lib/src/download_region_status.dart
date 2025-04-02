@@ -5,9 +5,8 @@ abstract class DownloadRegionStatus {}
 class Success extends DownloadRegionStatus {}
 
 class InProgress extends DownloadRegionStatus {
-  final double progress;
-
   InProgress(this.progress);
+  final double progress;
 
   @override
   String toString() =>
@@ -15,9 +14,8 @@ class InProgress extends DownloadRegionStatus {
 }
 
 class Error extends DownloadRegionStatus {
-  final PlatformException cause;
-
   Error(this.cause);
+  final PlatformException cause;
 
   @override
   String toString() =>

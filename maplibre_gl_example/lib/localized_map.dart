@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class LocalizedMapPage extends ExamplePage {
   const LocalizedMapPage({super.key})
@@ -25,7 +24,7 @@ class LocalizedMap extends StatefulWidget {
 class LocalizedMapState extends State<LocalizedMap> {
   final _mapReadyCompleter = Completer<MapLibreMapController>();
 
-  var _mapLanguage = "en";
+  var _mapLanguage = 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +41,7 @@ class LocalizedMapState extends State<LocalizedMap> {
               setState(() => _mapLanguage = value);
               _setMapLanguage();
             },
-            items: ["en", "de", "es", "pl"]
+            items: ['en', 'de', 'es', 'pl']
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -73,6 +72,6 @@ class LocalizedMapState extends State<LocalizedMap> {
 
   Future<void> _setMapLanguage() async {
     final controller = await _mapReadyCompleter.future;
-    controller.setMapLanguage(_mapLanguage);
+    await controller.setMapLanguage(_mapLanguage);
   }
 }

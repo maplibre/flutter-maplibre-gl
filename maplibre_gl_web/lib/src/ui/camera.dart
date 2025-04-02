@@ -19,6 +19,25 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 ///  @property {LngLatLike} around If `zoom` is specified, `around` determines the point around which the zoom is centered.
 
 class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
+  factory CameraOptions({
+    LngLat? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLat? around,
+  }) =>
+      CameraOptions.fromJsObject(
+        CameraOptionsJsImpl(
+          center: center?.jsObject,
+          zoom: zoom,
+          bearing: bearing,
+          pitch: pitch,
+          around: around?.jsObject,
+        ),
+      );
+
+  /// Creates a new CameraOptions from a [jsObject].
+  CameraOptions.fromJsObject(super.jsObject) : super.fromJsObject();
   LngLat get center => LngLat.fromJsObject(jsObject.center);
 
   num get zoom => jsObject.zoom;
@@ -28,24 +47,6 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
   num get pitch => jsObject.pitch;
 
   LngLat get around => LngLat.fromJsObject(jsObject.around);
-
-  factory CameraOptions({
-    LngLat? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLat? around,
-  }) =>
-      CameraOptions.fromJsObject(CameraOptionsJsImpl(
-        center: center?.jsObject,
-        zoom: zoom,
-        bearing: bearing,
-        pitch: pitch,
-        around: around?.jsObject,
-      ));
-
-  /// Creates a new CameraOptions from a [jsObject].
-  CameraOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Options common to map movement methods that involve animation, such as {@link MapLibreMap#panBy} and
@@ -61,6 +62,25 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 ///  @property {boolean} essential If `true`, then the animation is considered essential and will not be affected by
 ///    [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
+  factory AnimationOptions({
+    required Point offset,
+    num? duration,
+    num Function(num time)? easing,
+    bool? animate,
+    bool? essential,
+  }) =>
+      AnimationOptions.fromJsObject(
+        AnimationOptionsJsImpl(
+          duration: duration,
+          easing: easing,
+          offset: offset.jsObject,
+          animate: animate,
+          essential: essential,
+        ),
+      );
+
+  /// Creates a new AnimationOptions from a [jsObject].
+  AnimationOptions.fromJsObject(super.jsObject) : super.fromJsObject();
   num get duration => jsObject.duration;
 
   num Function(num time) get easing => jsObject.easing;
@@ -70,24 +90,6 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
   bool get animate => jsObject.animate;
 
   bool get essential => jsObject.essential;
-
-  factory AnimationOptions({
-    num? duration,
-    num Function(num time)? easing,
-    required Point offset,
-    bool? animate,
-    bool? essential,
-  }) =>
-      AnimationOptions.fromJsObject(AnimationOptionsJsImpl(
-        duration: duration,
-        easing: easing,
-        offset: offset.jsObject,
-        animate: animate,
-        essential: essential,
-      ));
-
-  /// Creates a new AnimationOptions from a [jsObject].
-  AnimationOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Options for setting padding on a call to {@link MapLibreMap#fitBounds}. All properties of this object must be
@@ -99,6 +101,23 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
 ///  @property {number} left Padding in pixels from the left of the map canvas.
 ///  @property {number} right Padding in pixels from the right of the map canvas.
 class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
+  factory PaddingOptions({
+    num? top,
+    num? bottom,
+    num? left,
+    num? right,
+  }) =>
+      PaddingOptions.fromJsObject(
+        PaddingOptionsJsImpl(
+          top: top,
+          bottom: bottom,
+          left: left,
+          right: right,
+        ),
+      );
+
+  /// Creates a new PaddingOptions from a [jsObject].
+  PaddingOptions.fromJsObject(super.jsObject) : super.fromJsObject();
   num get top => jsObject.top;
 
   num get bottom => jsObject.bottom;
@@ -106,27 +125,13 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
   num get left => jsObject.left;
 
   num get right => jsObject.right;
-
-  factory PaddingOptions({
-    num? top,
-    num? bottom,
-    num? left,
-    num? right,
-  }) =>
-      PaddingOptions.fromJsObject(PaddingOptionsJsImpl(
-        top: top,
-        bottom: bottom,
-        left: left,
-        right: right,
-      ));
-
-  /// Creates a new PaddingOptions from a [jsObject].
-  PaddingOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class Camera extends Evented {
+  /// Creates a new Camera from a [jsObject].
+  Camera.fromJsObject(CameraJsImpl super.jsObject) : super.fromJsObject();
   @override
-  final CameraJsImpl jsObject;
+  CameraJsImpl get jsObject => super.jsObject as CameraJsImpl;
 
   ///  Returns the map's geographical centerpoint.
   ///
@@ -157,8 +162,11 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
-  MapLibreMap panBy(Point offset,
-          [AnimationOptions? options, dynamic eventData]) =>
+  MapLibreMap panBy(
+    Point offset, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
 
   ///  Pans the map to the specified location, with an animated transition.
@@ -170,8 +178,11 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap panTo(LngLat lnglat,
-          [AnimationOptions? options, dynamic eventData]) =>
+  MapLibreMap panTo(
+    LngLat lnglat, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
 
   ///  Returns the map's current zoom level.
@@ -211,8 +222,11 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap zoomTo(num zoom,
-          [AnimationOptions? options, dynamic eventData]) =>
+  MapLibreMap zoomTo(
+    num zoom, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
 
   ///  Increases the map's zoom level by 1.
@@ -280,8 +294,11 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap rotateTo(num bearing,
-          [AnimationOptions? options, dynamic eventData]) =>
+  MapLibreMap rotateTo(
+    num bearing, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
 
   ///  Rotates the map so that north is up (0° bearing), with an animated transition.
@@ -354,10 +371,15 @@ class Camera extends Evented {
   CameraOptions cameraForBounds(LngLatBounds bounds, [dynamic options]) {
     if (options == null) {
       return CameraOptions.fromJsObject(
-          jsObject.cameraForBounds(bounds.jsObject));
+        jsObject.cameraForBounds(bounds.jsObject),
+      );
     }
-    return CameraOptions.fromJsObject(jsObject.cameraForBounds(bounds.jsObject,
-        options is CameraOptions ? options.jsObject : jsify(options)));
+    return CameraOptions.fromJsObject(
+      jsObject.cameraForBounds(
+        bounds.jsObject,
+        options is CameraOptions ? options.jsObject : jsify(options),
+      ),
+    );
   }
 
   ///  Pans and zooms the map to contain its visible area within the specified geographical bounds.
@@ -384,10 +406,14 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
-  MapLibreMap fitBounds(LngLatBounds bounds,
-          [Map<String, dynamic>? options, dynamic eventData]) =>
+  MapLibreMap fitBounds(
+    LngLatBounds bounds, [
+    Map<String, dynamic>? options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(
-          jsObject.fitBounds(bounds.jsObject, jsify(options ?? {}), eventData));
+        jsObject.fitBounds(bounds.jsObject, jsify(options ?? {}), eventData),
+      );
 
   ///  Pans, rotates and zooms the map to to fit the box made by points p0 and p1
   ///  once the map is rotated to the specified bearing. To zoom without rotating,
@@ -416,10 +442,16 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Used by BoxZoomHandler](https://maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.BoxZoomHandler/)
-  MapLibreMap fitScreenCoordinates(Point p0, Point p1, num bearing,
-          [dynamic options, dynamic eventData]) =>
+  MapLibreMap fitScreenCoordinates(
+    Point p0,
+    Point p1,
+    num bearing, [
+    dynamic options,
+    dynamic eventData,
+  ]) =>
       MapLibreMap.fromJsObject(
-          jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing));
+        jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing),
+      );
 
   ///  Changes any combination of center, zoom, bearing, and pitch, without
   ///  an animated transition. The map will retain its current values for any
@@ -525,8 +557,11 @@ class Camera extends Evented {
   ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
   ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
   MapLibreMap flyTo(dynamic options, [String? eventData]) =>
-      MapLibreMap.fromJsObject(jsObject
-          .flyTo(options is CameraOptions ? options.jsObject : jsify(options)));
+      MapLibreMap.fromJsObject(
+        jsObject.flyTo(
+          options is CameraOptions ? options.jsObject : jsify(options),
+        ),
+      );
 
   bool isEasing() => jsObject.isEasing();
 
@@ -535,7 +570,4 @@ class Camera extends Evented {
   ///  @memberof MapLibreMap#
   ///  @returns {MapLibreMap} `this`
   MapLibreMap stop() => MapLibreMap.fromJsObject(jsObject.stop());
-
-  /// Creates a new Camera from a [jsObject].
-  Camera.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }

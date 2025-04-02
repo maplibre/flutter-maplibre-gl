@@ -3,6 +3,9 @@ import 'dart:html';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
+  /// Creates a new DragPanHandler from a [jsObject].
+  DragPanHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Returns a Boolean indicating whether the "drag to pan" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "drag to pan" interaction is enabled.
@@ -17,18 +20,15 @@ class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
   ///
   ///  @example
   ///  map.dragPan.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "drag to pan" interaction.
   ///
   ///  @example
   ///  map.dragPan.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
+  dynamic onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 
-  onTouchStart(TouchEvent e) => jsObject.onTouchStart(e);
-
-  /// Creates a new DragPanHandler from a [jsObject].
-  DragPanHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+  dynamic onTouchStart(TouchEvent e) => jsObject.onTouchStart(e);
 }

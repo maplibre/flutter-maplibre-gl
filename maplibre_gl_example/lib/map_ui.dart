@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
@@ -48,10 +47,10 @@ class MapUiBodyState extends State<MapUiBody> {
 
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  final List<String> _styleStrings = [MapLibreStyles.demo, "assets/style.json"];
+  final List<String> _styleStrings = [MapLibreStyles.demo, 'assets/style.json'];
   final List<String> _styleStringLabels = [
-    "MapLibre demo style",
-    "Local style file"
+    'MapLibre demo style',
+    'Local style file',
   ];
   bool _rotateGesturesEnabled = true;
   bool _scrollGesturesEnabled = true;
@@ -117,14 +116,15 @@ class MapUiBodyState extends State<MapUiBody> {
   Widget _queryFilterToggler() {
     return TextButton(
       child: Text(
-          'filter zoo on click ${_featureQueryFilter == null ? 'disabled' : 'enabled'}'),
+        'filter zoo on click ${_featureQueryFilter == null ? 'disabled' : 'enabled'}',
+      ),
       onPressed: () {
         setState(() {
           if (_featureQueryFilter == null) {
             _featureQueryFilter = [
-              "==",
-              ["get", "type"],
-              "zoo"
+              '==',
+              ['get', 'type'],
+              'zoo',
             ];
           } else {
             _featureQueryFilter = null;
@@ -175,9 +175,9 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _zoomBoundsToggler() {
     return TextButton(
-      child: Text(_minMaxZoomPreference.minZoom == null
-          ? 'bound zoom'
-          : 'release zoom'),
+      child: Text(
+        _minMaxZoomPreference.minZoom == null ? 'bound zoom' : 'release zoom',
+      ),
       onPressed: () {
         setState(() {
           _minMaxZoomPreference = _minMaxZoomPreference.minZoom == null
@@ -191,7 +191,8 @@ class MapUiBodyState extends State<MapUiBody> {
   Widget _setStyleToSatellite() {
     return TextButton(
       child: Text(
-          'change map style to ${_styleStringLabels[(_styleStringIndex + 1) % _styleStringLabels.length]}'),
+        'change map style to ${_styleStringLabels[(_styleStringIndex + 1) % _styleStringLabels.length]}',
+      ),
       onPressed: () {
         setState(() {
           _styleStringIndex = (_styleStringIndex + 1) % _styleStrings.length;
@@ -224,7 +225,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _doubleClickToZoomToggler() {
     final stateInfo = _doubleClickToZoomEnabled == null
-        ? "disable"
+        ? 'disable'
         : _doubleClickToZoomEnabled!
             ? 'unset'
             : 'enable';
@@ -298,9 +299,11 @@ class MapUiBodyState extends State<MapUiBody> {
         final result = await mapController!.getVisibleRegion();
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("SW: ${result.southwest} NE: ${result.northeast}"),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('SW: ${result.southwest} NE: ${result.northeast}'),
+          ),
+        );
       },
     );
   }
@@ -310,7 +313,7 @@ class MapUiBodyState extends State<MapUiBody> {
       child: const Text('get source features (maplibre)'),
       onPressed: () async {
         final result = await mapController!
-            .querySourceFeatures("maplibre", "centroids", null);
+            .querySourceFeatures('maplibre', 'centroids', null);
         debugPrint(result.toString());
       },
     );
@@ -321,12 +324,15 @@ class MapUiBodyState extends State<MapUiBody> {
       child: const Text('toggle layer visibility'),
       onPressed: () async {
         _countriesVisible = !_countriesVisible;
-        mapController?.setLayerVisibility('countries-fill', _countriesVisible);
+        await mapController?.setLayerVisibility(
+          'countries-fill',
+          _countriesVisible,
+        );
       },
     );
   }
 
-  _clearFill() {
+  void _clearFill() {
     if (_selectedFill != null) {
       mapController!.removeFill(_selectedFill!);
       setState(() {
@@ -335,22 +341,28 @@ class MapUiBodyState extends State<MapUiBody> {
     }
   }
 
-  _drawFill(List<dynamic> features) async {
+  Future<void> _drawFill(List<dynamic> features) async {
     final Map<String, dynamic>? feature =
         features.firstWhereOrNull((f) => f['geometry']['type'] == 'Polygon');
 
     if (feature != null) {
       final List<List<LatLng>> geometry = feature['geometry']['coordinates']
           .map(
-              (ll) => ll.map((l) => LatLng(l[1], l[0])).toList().cast<LatLng>())
+            (dynamic ll) => ll
+                .map((dynamic l) => LatLng(l[1], l[0]))
+                .toList()
+                .cast<LatLng>(),
+          )
           .toList()
           .cast<List<LatLng>>();
-      final fill = await mapController!.addFill(FillOptions(
-        geometry: geometry,
-        fillColor: "#FF0000",
-        fillOutlineColor: "#FF0000",
-        fillOpacity: 0.6,
-      ));
+      final fill = await mapController!.addFill(
+        FillOptions(
+          geometry: geometry,
+          fillColor: '#FF0000',
+          fillOutlineColor: '#FF0000',
+          fillOpacity: 0.6,
+        ),
+      );
       setState(() {
         _selectedFill = fill;
       });
@@ -377,8 +389,9 @@ class MapUiBodyState extends State<MapUiBody> {
       myLocationRenderMode: _myLocationRenderMode,
       onMapClick: (point, latLng) async {
         debugPrint(
-            "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        debugPrint("Filter $_featureQueryFilter");
+          'Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}',
+        );
+        debugPrint('Filter $_featureQueryFilter');
         final features = await mapController!
             .queryRenderedFeatures(point, [], _featureQueryFilter);
         if (!mounted) return;
@@ -387,25 +400,31 @@ class MapUiBodyState extends State<MapUiBody> {
         _clearFill();
         if (features.isEmpty && _featureQueryFilter != null) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('QueryRenderedFeatures: No features found!')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('QueryRenderedFeatures: No features found!'),
+              ),
+            );
           }
         } else if (features.isNotEmpty) {
-          _drawFill(features);
+          await _drawFill(features);
         }
       },
       onMapLongClick: (point, latLng) async {
         debugPrint(
-            "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+          'Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}',
+        );
         final convertedPoint = await mapController!.toScreenLocation(latLng);
         final convertedLatLng = await mapController!.toLatLng(point);
         debugPrint(
-            "Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}");
+          'Map long press converted: ${convertedPoint.x},${convertedPoint.y}   ${convertedLatLng.latitude}/${convertedLatLng.longitude}',
+        );
         final metersPerPixel =
             await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
 
         debugPrint(
-            "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
+          'Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m',
+        );
 
         final features =
             await mapController!.queryRenderedFeatures(point, [], null);
@@ -420,7 +439,8 @@ class MapUiBodyState extends State<MapUiBody> {
       },
       onUserLocationUpdated: (location) {
         debugPrint(
-            "new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}");
+          'new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}',
+        );
       },
     );
 
@@ -470,7 +490,7 @@ class MapUiBodyState extends State<MapUiBody> {
           child: ListView(
             children: listViewChildren,
           ),
-        )
+        ),
       ],
     );
   }
@@ -480,8 +500,10 @@ class MapUiBodyState extends State<MapUiBody> {
     mapController!.addListener(_onMapChanged);
     _extractMapInfo();
 
-    mapController!.getTelemetryEnabled().then((isEnabled) => setState(() {
-          _telemetryEnabled = isEnabled;
-        }));
+    mapController!.getTelemetryEnabled().then(
+          (isEnabled) => setState(() {
+            _telemetryEnabled = isEnabled;
+          }),
+        );
   }
 }

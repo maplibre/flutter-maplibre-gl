@@ -5,11 +5,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/page.dart';
 import 'package:maplibre_gl_example/util.dart';
-
-import 'page.dart';
 
 class ScrollingMapPage extends ExamplePage {
   const ScrollingMapPage({super.key})
@@ -110,24 +108,32 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
     );
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedOne(MapLibreMapController controller) {
     controllerOne = controller;
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedTwo(MapLibreMapController controller) {
     controllerTwo = controller;
   }
 
   Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
-        controller, "custom-marker", "assets/symbols/custom-marker.png");
-    controller.addSymbol(SymbolOptions(
+      controller,
+      'custom-marker',
+      'assets/symbols/custom-marker.png',
+    );
+    await controller.addSymbol(
+      SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "custom-marker"));
-    controller.addLine(
+        iconImage: 'custom-marker',
+      ),
+    );
+    await controller.addLine(
       const LineOptions(
         geometry: [
           LatLng(-33.86711, 151.1947171),
@@ -135,7 +141,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
           LatLng(-32.86711, 151.1947171),
           LatLng(-33.86711, 152.1947171),
         ],
-        lineColor: "#ff0000",
+        lineColor: '#ff0000',
         lineWidth: 7.0,
         lineOpacity: 0.5,
       ),

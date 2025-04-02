@@ -42,7 +42,7 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
       'path': path,
     },
   );
-  final Iterable regions = json.decode(regionsJson);
+  final Iterable<Map<String, dynamic>> regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
@@ -51,12 +51,14 @@ Future<List<OfflineRegion>> getListOfRegions() async {
     'getListOfRegions',
     <String, dynamic>{},
   );
-  final Iterable regions = json.decode(regionsJson);
+  final Iterable<Map<String, dynamic>> regions = json.decode(regionsJson);
   return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(
-    int id, Map<String, dynamic> metadata) async {
+  int id,
+  Map<String, dynamic> metadata,
+) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{
@@ -86,7 +88,7 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
-  Function(DownloadRegionStatus event)? onEvent,
+  void Function(DownloadRegionStatus event)? onEvent,
 }) async {
   final channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
@@ -97,14 +99,16 @@ Future<OfflineRegion> downloadOfflineRegion(
   });
 
   if (onEvent != null) {
-    EventChannel(channelName).receiveBroadcastStream().handleError((error) {
+    EventChannel(channelName)
+        .receiveBroadcastStream()
+        .handleError((Object error) {
       if (error is PlatformException) {
         onEvent(Error(error));
         return Error(error);
       }
       final unknownError = Error(
         PlatformException(
-          code: 'UnknowException',
+          code: 'UnknownException',
           message:
               'This error is unhandled by plugin. Please contact us if needed.',
           details: error,
@@ -115,7 +119,7 @@ Future<OfflineRegion> downloadOfflineRegion(
     }).listen((data) {
       final Map<String, Object?> jsonData = json.decode(data);
       final status = switch (jsonData['status']) {
-        'start' => InProgress(0.0),
+        'start' => InProgress(0),
         'progress' => InProgress((jsonData['progress']! as num).toDouble()),
         'success' => Success(),
         _ => throw Exception('Invalid event status ${jsonData['status']}'),
