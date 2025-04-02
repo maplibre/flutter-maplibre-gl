@@ -10,6 +10,7 @@ linter:
     # temporary rules
     flutter_style_todos: false
     lines_longer_than_80_chars: false
+    unnecessary_lambdas: false
     public_member_api_docs: false
     avoid_dynamic_calls: false
     avoid_positional_boolean_parameters: false

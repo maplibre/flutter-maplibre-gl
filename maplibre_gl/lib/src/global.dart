@@ -43,7 +43,7 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
     },
   );
   final Iterable<Map<String, dynamic>> regions = json.decode(regionsJson);
-  return regions.map<OfflineRegion>(OfflineRegion.fromMap).toList();
+  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
@@ -52,7 +52,7 @@ Future<List<OfflineRegion>> getListOfRegions() async {
     <String, dynamic>{},
   );
   final Iterable<Map<String, dynamic>> regions = json.decode(regionsJson);
-  return regions.map<OfflineRegion>(OfflineRegion.fromMap).toList();
+  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(

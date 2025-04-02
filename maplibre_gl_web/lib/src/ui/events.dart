@@ -60,12 +60,13 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
 
   ///  The array of pixel coordinates corresponding to a
   ///  [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
-  List<Point> get points => jsObject.points.map(Point.fromJsObject).toList();
+  List<Point> get points =>
+      jsObject.points.map((f) => Point.fromJsObject(f)).toList();
 
   ///  The geographical locations on the map corresponding to a
   ///  [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
   List<LngLat> get lngLats =>
-      jsObject.lngLats.map(LngLat.fromJsObject).toList();
+      jsObject.lngLats.map((dynamic f) => LngLat.fromJsObject(f)).toList();
 
   ///  Prevents subsequent default processing of the event by the map.
   ///

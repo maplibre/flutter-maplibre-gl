@@ -100,8 +100,9 @@ class MapLibreMapController extends MapLibrePlatform
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
       lastResizeObserverTimer?.cancel();
-      lastResizeObserverTimer =
-          Timer(const Duration(milliseconds: 50), _onMapResize);
+      lastResizeObserverTimer = Timer(const Duration(milliseconds: 50), () {
+        _onMapResize();
+      });
     });
     resizeObserver.observe(html.document.body!);
   }

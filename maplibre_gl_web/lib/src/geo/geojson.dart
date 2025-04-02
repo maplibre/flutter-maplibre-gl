@@ -19,7 +19,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   String get type => jsObject.type;
 
   List<Feature> get features =>
-      jsObject.features.map(Feature.fromJsObject).toList();
+      jsObject.features.map((f) => Feature.fromJsObject(f)).toList();
 }
 
 class Feature extends JsObjectWrapper<FeatureJsImpl> {
