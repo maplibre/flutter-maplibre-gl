@@ -3,10 +3,10 @@
 
 const _layoutProperties = {
 {{#all_layout_properties}}
-    "{{{property}}}",
+  "{{{property}}}",
 {{/all_layout_properties}}
 };
 
-bool isLayoutProperty(String property){
-    return _layoutProperties.contains(property);
+bool isLayoutProperty(String property) {
+  return _layoutProperties.contains(property);
 }

@@ -7,8 +7,9 @@ import 'package:recase/recase.dart';
 import 'conversions.dart';
 
 main() async {
-  final styleJson =
-      jsonDecode(await File('scripts/input/style.json').readAsString());
+  final currentPath = Directory.current.path;
+  final styleFilePath = '$currentPath/input/style.json';
+  final styleJson = jsonDecode(await File(styleFilePath).readAsString());
 
   final layerTypes = [
     "symbol",
@@ -20,6 +21,7 @@ main() async {
     "hillshade",
     "heatmap",
   ];
+
   final sourceTypes = [
     "vector",
     "raster",
@@ -58,8 +60,8 @@ main() async {
   }.map((p) => {"property": p}).toList();
 
   const templates = [
-    "maplibre_gl/android/src/main/java/com/mapbox/mapboxgl/LayerPropertyConverter.java",
-    "maplibre_gl/ios/Classes/LayerPropertyConverter.swift",
+    "maplibre_gl/android/src/main/java/org/maplibre/maplibregl/LayerPropertyConverter.java",
+    "maplibre_gl/ios/maplibre_gl/Sources/maplibre_gl/LayerPropertyConverter.swift",
     "maplibre_gl/lib/src/layer_expressions.dart",
     "maplibre_gl/lib/src/layer_properties.dart",
     "maplibre_gl_web/lib/src/layer_tools.dart",
@@ -75,13 +77,16 @@ Future<void> render(
   Map<String, List> renderContext,
   String path,
 ) async {
+  final currentParentPath = Directory.current.parent.path;
+
   final pathItems = path.split("/");
   final filename = pathItems.removeLast();
-  final outputPath = pathItems.join("/");
+  final outputPath = '$currentParentPath/${pathItems.join("/")}';
 
   print("Rendering $filename");
   final templateFile =
-      await File('./scripts/templates/$filename.template').readAsString();
+      await File('$currentParentPath/scripts/templates/$filename.template')
+          .readAsString();
 
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
@@ -98,9 +103,14 @@ List<Map<String, dynamic>> buildStyleProperties(
 
 Map<String, dynamic> buildStyleProperty(
     String key, Map<String, dynamic> value) {
+  final typeDart = dartTypeMappingTable[value["type"]];
+  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+      dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
+
   return <String, dynamic>{
     'value': key,
+    'isFloatArrayProperty': typeDart == "List" && nestedTypeDart == "double",
     'isVisibilityProperty': key == "visibility",
     'requiresLiteral': key == "icon-image",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),
