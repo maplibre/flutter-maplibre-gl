@@ -32,6 +32,28 @@ jobs:
       - name: Lint analysis
         run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
 
+  test:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:io
+
+  test-web:
+    name: "Run web tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:web
+
   build-android:
     name: "Build Android apk"
     runs-on: ubuntu-latest
