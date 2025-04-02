@@ -92,7 +92,8 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
                   }
                 ]
               }
-              ''',
+              '''
+                  .trim(),
             ),
           ),
         ),
