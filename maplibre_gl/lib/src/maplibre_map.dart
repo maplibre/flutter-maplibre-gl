@@ -24,7 +24,7 @@ class MapLibreMap extends StatefulWidget {
     this.gestureRecognizers,
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
-    this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
+    this.minMaxZoomPreference = const MinMaxZoomPreference(0, 24),
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
     this.zoomGesturesEnabled = true,

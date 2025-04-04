@@ -70,6 +70,8 @@ class MapLibreMapController extends MapLibrePlatform
           bearing: camera['bearing'],
           pitch: camera['tilt'],
           attributionControl: false, //avoid duplicate control
+          minZoom: _creationParams["options"]["minMaxZoomPreference"][0],
+          maxZoom: _creationParams["options"]["minMaxZoomPreference"][1],
         ),
       );
       _map.on('load', _onStyleLoaded);
