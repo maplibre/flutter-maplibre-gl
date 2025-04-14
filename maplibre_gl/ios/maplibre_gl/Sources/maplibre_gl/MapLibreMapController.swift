@@ -537,7 +537,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
-            addHillshadeLayer(
+
+            let addResult = addHillshadeLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
@@ -545,7 +546,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 maximumZoomLevel: maxzoom,
                 properties: properties
             )
-            result(nil)
+          
+            switch addResult {
+            case .success: result(nil)
+            case let .failure(error): result(error.flutterError)
+            }
 
         case "heatmapLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -555,7 +560,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
-            addHeatmapLayer(
+            let addResult = addHeatmapLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
@@ -563,7 +568,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 maximumZoomLevel: maxzoom,
                 properties: properties
             )
-            result(nil)
+            switch addResult {
+            case .success: result(nil)
+            case let .failure(error): result(error.flutterError)
+            }
 
         case "rasterLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -573,7 +581,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
-            addRasterLayer(
+            let addResult = addRasterLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
@@ -581,7 +589,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 maximumZoomLevel: maxzoom,
                 properties: properties
             )
-            result(nil)
+            switch addResult {
+            case .success: result(nil)
+            case let .failure(error): result(error.flutterError)
+            }
 
         case "style#addImage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -1504,26 +1515,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
         properties: [String: String]
-    ) {
-        if let style = mapView.style {
-            if let source = style.source(withIdentifier: sourceId) {
-                let layer = MLNHillshadeStyleLayer(identifier: layerId, source: source)
-                LayerPropertyConverter.addHillshadeProperties(
-                    hillshadeLayer: layer,
-                    properties: properties
-                )
-                if let minimumZoomLevel = minimumZoomLevel {
-                    layer.minimumZoomLevel = Float(minimumZoomLevel)
-                }
-                if let maximumZoomLevel = maximumZoomLevel {
-                    layer.maximumZoomLevel = Float(maximumZoomLevel)
-                }
-                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
-                    style.insertLayer(layer, below: belowLayer)
-                } else {
-                    style.addLayer(layer)
-                }
+    ) -> Result<Void, MethodCallError> {
+        switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let (style, source)):
+            let layer = MLNHillshadeStyleLayer(identifier: layerId, source: source)
+            LayerPropertyConverter.addHillshadeProperties(
+                hillshadeLayer: layer,
+                properties: properties
+            )
+            if let minimumZoomLevel = minimumZoomLevel {
+                layer.minimumZoomLevel = Float(minimumZoomLevel)
             }
+            if let maximumZoomLevel = maximumZoomLevel {
+                layer.maximumZoomLevel = Float(maximumZoomLevel)
+            }
+            if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            return .success(())
         }
     }
 
@@ -1534,26 +1547,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
         properties: [String: String]
-    ) {
-        if let style = mapView.style {
-            if let source = style.source(withIdentifier: sourceId) {
-                let layer = MLNHeatmapStyleLayer(identifier: layerId, source: source)
-                LayerPropertyConverter.addHeatmapProperties(
-                    heatmapLayer: layer,
-                    properties: properties
-                )
-                if let minimumZoomLevel = minimumZoomLevel {
-                    layer.minimumZoomLevel = Float(minimumZoomLevel)
-                }
-                if let maximumZoomLevel = maximumZoomLevel {
-                    layer.maximumZoomLevel = Float(maximumZoomLevel)
-                }
-                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
-                    style.insertLayer(layer, below: belowLayer)
-                } else {
-                    style.addLayer(layer)
-                }
+    ) -> Result<Void, MethodCallError> {
+        switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let (style, source)):
+            let layer = MLNHeatmapStyleLayer(identifier: layerId, source: source)
+            LayerPropertyConverter.addHeatmapProperties(
+                heatmapLayer: layer,
+                properties: properties
+            )
+            if let minimumZoomLevel = minimumZoomLevel {
+                layer.minimumZoomLevel = Float(minimumZoomLevel)
             }
+            if let maximumZoomLevel = maximumZoomLevel {
+                layer.maximumZoomLevel = Float(maximumZoomLevel)
+            }
+            if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            return .success(())
         }
     }
 
@@ -1564,26 +1579,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
         properties: [String: String]
-    ) {
-        if let style = mapView.style {
-            if let source = style.source(withIdentifier: sourceId) {
-                let layer = MLNRasterStyleLayer(identifier: layerId, source: source)
-                LayerPropertyConverter.addRasterProperties(
-                    rasterLayer: layer,
-                    properties: properties
-                )
-                if let minimumZoomLevel = minimumZoomLevel {
-                    layer.minimumZoomLevel = Float(minimumZoomLevel)
-                }
-                if let maximumZoomLevel = maximumZoomLevel {
-                    layer.maximumZoomLevel = Float(maximumZoomLevel)
-                }
-                if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
-                    style.insertLayer(layer, below: belowLayer)
-                } else {
-                    style.addLayer(layer)
-                }
+    )  -> Result<Void, MethodCallError>  {
+        switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let (style, source)):
+            let layer = MLNRasterStyleLayer(identifier: layerId, source: source)
+            LayerPropertyConverter.addRasterProperties(
+                rasterLayer: layer,
+                properties: properties
+            )
+            if let minimumZoomLevel = minimumZoomLevel {
+                layer.minimumZoomLevel = Float(minimumZoomLevel)
             }
+            if let maximumZoomLevel = maximumZoomLevel {
+                layer.maximumZoomLevel = Float(maximumZoomLevel)
+            }
+            if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            return .success(())
         }
     }
 
