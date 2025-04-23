@@ -64,11 +64,12 @@ class MapLibreMapController extends MapLibrePlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          style: _creationParams["styleString"],
+          style: _creationParams['styleString'],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
           pitch: camera['tilt'],
+          preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
           attributionControl: false, //avoid duplicate control
           minZoom: _creationParams["options"]["minMaxZoomPreference"][0],
           maxZoom: _creationParams["options"]["minMaxZoomPreference"][1],
