@@ -211,10 +211,6 @@ abstract class MapLibrePlatform {
 
   Future<String> takeWebSnapshot();
 
-  Future<Size> setWebMapToCustomSize(Size size);
-
-  Future<void> waitUntilMapIsIdleAfterMovement();
-
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
