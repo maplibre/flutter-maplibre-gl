@@ -6,7 +6,6 @@ class MapLibreMapController extends MapLibrePlatform
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
-  bool _mapReady = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
@@ -424,7 +423,6 @@ class MapLibreMapController extends MapLibrePlatform
       });
       return;
     }
-    _mapReady = true;
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
