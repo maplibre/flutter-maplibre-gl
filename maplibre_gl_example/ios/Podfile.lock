@@ -4,10 +4,10 @@ PODS:
   - Flutter (1.0.0)
   - location (0.0.1):
     - Flutter
-  - MapLibre (6.12.1)
+  - MapLibre (6.12.3)
   - maplibre_gl (0.0.1):
     - Flutter
-    - MapLibre (= 6.12.1)
+    - MapLibre (= 6.12.3)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -39,8 +39,8 @@ SPEC CHECKSUMS:
   device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
-  MapLibre: 32f6873a5346bf31c82faaf4b3066d254e45a22b
-  maplibre_gl: 8608b0445746c25494da88a7a99e8d1b25753df7
+  MapLibre: 7f9542ca26ebc5ada250b30e4d72394737073379
+  maplibre_gl: 23ec0496ad301901dd165b4d0dfcd46035aa0d93
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
 
 PODFILE CHECKSUM: 7be2f5f74864d463a8ad433546ed1de7e0f29aef
