@@ -10,19 +10,28 @@ environment:
   flutter: '>=3.22.0'
 
 dependencies:
-  collection: ^1.17.1
-  device_info_plus: ^11.3.0
   flutter:
     sdk: flutter
+  collection: ^1.17.1
+  device_info_plus: ^11.3.0
+  flutter_hooks: ^0.21.2
   http: ^1.1.0
   location: ^5.0.3
-  maplibre_gl: ^0.22.0
+  maplibre_gl: ^0.21.0
   path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: ^5.0.0
+
+dependency_overrides:
+    maplibre_gl:
+      path: ../maplibre_gl
+    maplibre_gl_web:
+      path: ../maplibre_gl_web
+    maplibre_gl_platform_interface:
+      path: ../maplibre_gl_platform_interface
 
 flutter:
   uses-material-design: true
