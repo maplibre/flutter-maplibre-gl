@@ -29,6 +29,7 @@ class GpsLocationMap extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final mapController = useState<MapLibreMapController?>(null);
+    final useDefaultLocationSettings = useState(true);
     return Scaffold(
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterFloat,
@@ -42,12 +43,16 @@ class GpsLocationMap extends HookWidget {
             compassEnabled: true,
             myLocationEnabled: true,
             trackCameraPosition: true,
-            locationEnginePlatforms: const LocationEnginePlatforms(
-                androidPlatform: LocationEngineAndroidProperties(
-              interval: 1000,
-              displacement: 0,
-              priority: LocationPriority.highAccuracy,
-            )),
+            locationEnginePlatforms: switch (useDefaultLocationSettings.value) {
+              false => const LocationEnginePlatforms(
+                  androidPlatform: LocationEngineAndroidProperties(
+                    interval: 1000,
+                    displacement: 100,
+                    priority: LocationPriority.highAccuracy,
+                  ),
+                ),
+              true => LocationEnginePlatforms.defaultPlatform,
+            },
             initialCameraPosition: initialLocation,
           ),
           Column(
@@ -57,11 +62,23 @@ class GpsLocationMap extends HookWidget {
                 print(currentLocation);
                 mapController.value?.animateCamera(
                   CameraUpdate.newLatLngZoom(
-                      LatLng(currentLocation.latitude!,
-                          currentLocation.longitude!),
+                      LatLng(
+                        currentLocation.latitude!,
+                        currentLocation.longitude!,
+                      ),
                       9),
                 );
               }),
+              FloatingActionButton(
+                onPressed: () {
+                  useDefaultLocationSettings.value =
+                      !useDefaultLocationSettings.value;
+                },
+                child: Text(switch (useDefaultLocationSettings.value) {
+                  true => "Default",
+                  false => "high",
+                }),
+              ),
             ],
           )
         ],
