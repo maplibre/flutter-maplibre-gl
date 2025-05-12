@@ -47,7 +47,7 @@ class GpsLocationMap extends HookWidget {
               false => const LocationEnginePlatforms(
                   androidPlatform: LocationEngineAndroidProperties(
                     interval: 1000,
-                    displacement: 100,
+                    displacement: 1,
                     priority: LocationPriority.highAccuracy,
                   ),
                 ),
