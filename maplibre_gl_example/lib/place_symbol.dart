@@ -48,8 +48,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void _onStyleLoaded() {
     addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
     addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
-    addImageFromUrl(
-        "networkImage", Uri.parse("https://via.placeholder.com/50"));
+    addImageFromUrl("networkImage", Uri.parse("https://dummyimage.com/50x50"));
   }
 
   @override
