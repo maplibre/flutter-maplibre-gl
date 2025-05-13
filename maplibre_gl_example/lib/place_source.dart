@@ -7,8 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class PlaceSourcePage extends ExamplePage {
   const PlaceSourcePage({super.key})
@@ -38,6 +37,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   bool imageFlag = false;
   late MapLibreMapController controller;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
   }
@@ -49,7 +49,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds an asset image as a source to the currently displayed style
   Future<void> addImageSourceFromAsset(
-      String imageSourceId, String assetName) async {
+    String imageSourceId,
+    String assetName,
+  ) async {
     final bytes = await rootBundle.load(assetName);
     final list = bytes.buffer.asUint8List();
     return controller.addImageSource(
@@ -77,13 +79,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> addLayerBelow(
-      String imageLayerId, String imageSourceId, String belowLayerId) {
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+  ) {
     if (layerAdded) {
       removeLayer(imageLayerId);
     }
     setState(() => layerAdded = true);
     return controller.addImageLayerBelow(
-        imageLayerId, imageSourceId, belowLayerId);
+      imageLayerId,
+      imageSourceId,
+      belowLayerId,
+    );
   }
 
   Future<void> removeLayer(String imageLayerId) {
@@ -92,7 +100,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   Future<void> updateImageSourceFromAsset(
-      String imageSourceId, String assetName) async {
+    String imageSourceId,
+    String assetName,
+  ) async {
     final bytes = await rootBundle.load(assetName);
     final list = bytes.buffer.asUint8List();
     return controller.updateImageSource(imageSourceId, list, null);
@@ -143,7 +153,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               await removeLayer(layerId);
-                              removeImageSource(sourceId).then((value) {
+                              await removeImageSource(sourceId).then((value) {
                                 setState(() => sourceAdded = false);
                               });
                             }
@@ -171,7 +181,10 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               setState(() => imageFlag = !imageFlag);
-                              updateImageSourceFromAsset(sourceId, pickImage());
+                              await updateImageSourceFromAsset(
+                                sourceId,
+                                pickImage(),
+                              );
                             }
                           : null,
                       child: const Text('Change image'),

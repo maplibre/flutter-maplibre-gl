@@ -21,13 +21,12 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 ///  var llb = new maplibregl.LngLatBounds(sw, ne);
 @JS('LngLatBounds')
 class LngLatBoundsJsImpl {
-  external LngLatJsImpl get sw;
-  external LngLatJsImpl get ne;
-
   external factory LngLatBoundsJsImpl(
     LngLatJsImpl sw,
     LngLatJsImpl ne,
   );
+  external LngLatJsImpl get sw;
+  external LngLatJsImpl get ne;
 
   ///  Set the northeast corner of the bounding box
   ///

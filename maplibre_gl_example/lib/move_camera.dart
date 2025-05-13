@@ -4,8 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class MoveCameraPage extends ExamplePage {
   const MoveCameraPage({super.key})
@@ -27,6 +26,7 @@ class MoveCamera extends StatefulWidget {
 class MoveCameraState extends State<MoveCamera> {
   late MapLibreMapController mapController;
 
+  // ignore: use_setters_to_change_properties
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
@@ -43,7 +43,7 @@ class MoveCameraState extends State<MoveCamera> {
             height: 200.0,
             child: MapLibreMap(
               onMapCreated: _onMapCreated,
-              onCameraIdle: () => debugPrint("onCameraIdle"),
+              onCameraIdle: () => debugPrint('onCameraIdle'),
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
             ),
@@ -180,7 +180,7 @@ class MoveCameraState extends State<MoveCamera> {
               ],
             ),
           ],
-        )
+        ),
       ],
     );
   }

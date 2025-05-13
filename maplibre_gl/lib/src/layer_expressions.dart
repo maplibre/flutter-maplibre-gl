@@ -9,19 +9,19 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const let = "let";
+  static const let = 'let';
 
   /// References variable bound using "let".
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const varExpression = "var";
+  static const varExpression = 'var';
 
   /// Provides a literal array or object value.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const literal = "literal";
+  static const literal = 'literal';
 
   /// Asserts that the input is an array (optionally with a specific item
   /// type and length).  If, when the input expression is evaluated, it is
@@ -30,27 +30,27 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const array = "array";
+  static const array = 'array';
 
   /// Retrieves an item from an array.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const at = "at";
+  static const at = 'at';
 
   /// Determines whether an item exists in an array or a substring exists in
   /// a string.
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const inExpression = "in";
+  static const inExpression = 'in';
 
   /// Selects the first output whose corresponding test condition evaluates
   /// to true, or the fallback value otherwise.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const caseExpression = "case";
+  static const caseExpression = 'case';
 
   /// Selects the output whose label value matches the input value, or the
   /// fallback value if no match is found. The input can be any expression
@@ -64,14 +64,14 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const match = "match";
+  static const match = 'match';
 
   /// Evaluates each expression in turn until the first non-null value is
   /// obtained, and returns that value.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const coalesce = "coalesce";
+  static const coalesce = 'coalesce';
 
   /// Produces discrete, stepped results by evaluating a piecewise-constant
   /// function defined by pairs of input and output values ("stops"). The
@@ -82,7 +82,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const step = "step";
+  static const step = 'step';
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). The `input` may be any numeric
@@ -100,7 +100,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const interpolate = "interpolate";
+  static const interpolate = 'interpolate';
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). Works like `interpolate`, but the
@@ -109,7 +109,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const interpolateHcl = "interpolate-hcl";
+  static const interpolateHcl = 'interpolate-hcl';
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). Works like `interpolate`, but the
@@ -118,31 +118,31 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const interpolateLab = "interpolate-lab";
+  static const interpolateLab = 'interpolate-lab';
 
   /// Returns mathematical constant ln(2).
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const ln2 = "ln2";
+  static const ln2 = 'ln2';
 
   /// Returns the mathematical constant pi.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const pi = "pi";
+  static const pi = 'pi';
 
   /// Returns the mathematical constant e.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const e = "e";
+  static const e = 'e';
 
   /// Returns a string describing the type of the given value.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const typeof = "typeof";
+  static const typeof = 'typeof';
 
   /// Asserts that the input value is a string. If multiple values are
   /// provided, each one is evaluated in order until a string is obtained.
@@ -150,7 +150,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const string = "string";
+  static const string = 'string';
 
   /// Asserts that the input value is a number. If multiple values are
   /// provided, each one is evaluated in order until a number is obtained.
@@ -158,7 +158,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const number = "number";
+  static const number = 'number';
 
   /// Asserts that the input value is a boolean. If multiple values are
   /// provided, each one is evaluated in order until a boolean is obtained.
@@ -166,7 +166,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const boolean = "boolean";
+  static const boolean = 'boolean';
 
   /// Asserts that the input value is an object. If multiple values are
   /// provided, each one is evaluated in order until an object is obtained.
@@ -174,7 +174,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const object = "object";
+  static const object = 'object';
 
   /// Returns a `collator` for use in locale-dependent comparison
   /// operations. The `case-sensitive` and `diacritic-sensitive` options
@@ -186,7 +186,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const collator = "collator";
+  static const collator = 'collator';
 
   /// Returns `formatted` text containing annotations for use in
   /// mixed-format `text-field` entries. For a `text-field` entries of a
@@ -199,7 +199,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const format = "format";
+  static const format = 'format';
 
   /// Returns an `image` type for use in `icon-image`, `*-pattern` entries
   /// and as a section in the `format` expression. If set, the `image`
@@ -211,7 +211,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  static const image = "image";
+  static const image = 'image';
 
   /// Converts the input number into a string representation using the
   /// providing formatting rules. If set, the `locale` argument specifies
@@ -223,7 +223,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const numberFormat = "number-format";
+  static const numberFormat = 'number-format';
 
   /// Converts the input value to a string. If the input is `null`, the
   /// result is `""`. If the input is a boolean, the result is `"true"` or
@@ -240,7 +240,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const toStringExpression = "to-string";
+  static const toStringExpression = 'to-string';
 
   /// Converts the input value to a number, if possible. If the input is
   /// `null` or `false`, the result is 0. If the input is `true`, the result
@@ -254,7 +254,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const toNumber = "to-number";
+  static const toNumber = 'to-number';
 
   /// Converts the input value to a boolean. The result is `false` when then
   /// input is an empty string, 0, `false`, `null`, or `NaN`; otherwise it
@@ -262,14 +262,14 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const toBoolean = "to-boolean";
+  static const toBoolean = 'to-boolean';
 
   /// Returns a four-element array containing the input color's red, green,
   /// blue, and alpha components, in that order.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const toRgba = "to-rgba";
+  static const toRgba = 'to-rgba';
 
   /// Converts the input value to a color. If multiple values are provided,
   /// each one is evaluated in order until the first successful conversion
@@ -278,7 +278,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const toColor = "to-color";
+  static const toColor = 'to-color';
 
   /// Creates a color value from red, green, and blue components, which must
   /// range between 0 and 255, and an alpha component of 1. If any component
@@ -286,7 +286,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const rgb = "rgb";
+  static const rgb = 'rgb';
 
   /// Creates a color value from red, green, blue components, which must
   /// range between 0 and 255, and an alpha component which must range
@@ -295,7 +295,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const rgba = "rgba";
+  static const rgba = 'rgba';
 
   /// Retrieves a property value from the current feature's properties, or
   /// from another object if a second argument is provided. Returns null if
@@ -303,27 +303,27 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const get = "get";
+  static const get = 'get';
 
   /// Tests for the presence of an property value in the current feature's
   /// properties, or from another object if a second argument is provided.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const has = "has";
+  static const has = 'has';
 
   /// Gets the length of an array or string.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const length = "length";
+  static const length = 'length';
 
   /// Gets the feature properties object.  Note that in some cases, it may
   /// be more efficient to use ["get", "property_name"] directly.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const properties = "properties";
+  static const properties = 'properties';
 
   /// Retrieves a property value from the current feature's state. Returns
   /// null if the requested property is not present on the feature's state.
@@ -335,20 +335,20 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const featureState = "feature-state";
+  static const featureState = 'feature-state';
 
   /// Gets the feature's geometry type: Point, MultiPoint, LineString,
   /// MultiLineString, Polygon, MultiPolygon.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const geometryType = "geometry-type";
+  static const geometryType = 'geometry-type';
 
   /// Gets the feature's id, if it has one.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const id = "id";
+  static const id = 'id';
 
   /// Gets the current zoom level.  Note that in style layout and paint
   /// properties, ["zoom"] may only appear as the input to a top-level
@@ -356,7 +356,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const zoom = "zoom";
+  static const zoom = 'zoom';
 
   /// Gets the kernel density estimation of a pixel in a heatmap layer,
   /// which is a relative measure of how many data points are crowded around
@@ -364,33 +364,33 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const heatmapDensity = "heatmap-density";
+  static const heatmapDensity = 'heatmap-density';
 
   /// Gets the progress along a gradient line. Can only be used in the
   /// `line-gradient` property.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const lineProgress = "line-progress";
+  static const lineProgress = 'line-progress';
 
   /// Gets the value of a cluster property accumulated so far. Can only be
   /// used in the `clusterProperties` option of a clustered GeoJSON source.
   ///
   /// Sdk Support:
   ///   basic functionality with js
-  static const accumulated = "accumulated";
+  static const accumulated = 'accumulated';
 
   /// Returns the sum of the inputs.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const plus = "+";
+  static const plus = '+';
 
   /// Returns the product of the inputs.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const multiply = "*";
+  static const multiply = '*';
 
   /// For two inputs, returns the result of subtracting the second input
   /// from the first. For a single input, returns the result of subtracting
@@ -398,126 +398,126 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const minus = "-";
+  static const minus = '-';
 
   /// Returns the result of floating point division of the first input by
   /// the second.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const divide = "/";
+  static const divide = '/';
 
   /// Returns the remainder after integer division of the first input by the
   /// second.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const precent = "%";
+  static const precent = '%';
 
   /// Returns the result of raising the first input to the power specified
   /// by the second.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const xor = "^";
+  static const xor = '^';
 
   /// Returns the square root of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const sqrt = "sqrt";
+  static const sqrt = 'sqrt';
 
   /// Returns the base-ten logarithm of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const log10 = "log10";
+  static const log10 = 'log10';
 
   /// Returns the natural logarithm of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const ln = "ln";
+  static const ln = 'ln';
 
   /// Returns the base-two logarithm of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const log2 = "log2";
+  static const log2 = 'log2';
 
   /// Returns the sine of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const sin = "sin";
+  static const sin = 'sin';
 
   /// Returns the cosine of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const cos = "cos";
+  static const cos = 'cos';
 
   /// Returns the tangent of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const tan = "tan";
+  static const tan = 'tan';
 
   /// Returns the arcsine of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const asin = "asin";
+  static const asin = 'asin';
 
   /// Returns the arccosine of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const acos = "acos";
+  static const acos = 'acos';
 
   /// Returns the arctangent of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const atan = "atan";
+  static const atan = 'atan';
 
   /// Returns the minimum value of the inputs.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const min = "min";
+  static const min = 'min';
 
   /// Returns the maximum value of the inputs.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const max = "max";
+  static const max = 'max';
 
   /// Rounds the input to the nearest integer. Halfway values are rounded
   /// away from zero. For example, `["round", -1.5]` evaluates to -2.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const round = "round";
+  static const round = 'round';
 
   /// Returns the absolute value of the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const abs = "abs";
+  static const abs = 'abs';
 
   /// Returns the smallest integer that is greater than or equal to the
   /// input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const ceil = "ceil";
+  static const ceil = 'ceil';
 
   /// Returns the largest integer that is less than or equal to the input.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const floor = "floor";
+  static const floor = 'floor';
 
   /// Returns `true` if the input values are equal, `false` otherwise. The
   /// comparison is strictly typed: values of different runtime types are
@@ -528,7 +528,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const equal = "==";
+  static const equal = '==';
 
   /// Returns `true` if the input values are not equal, `false` otherwise.
   /// The comparison is strictly typed: values of different runtime types
@@ -539,7 +539,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const notEqual = "!=";
+  static const notEqual = '!=';
 
   /// Returns `true` if the first input is strictly greater than the second,
   /// `false` otherwise. The arguments are required to be either both
@@ -551,7 +551,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const larger = ">";
+  static const larger = '>';
 
   /// Returns `true` if the first input is strictly less than the second,
   /// `false` otherwise. The arguments are required to be either both
@@ -563,7 +563,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const smaller = "<";
+  static const smaller = '<';
 
   /// Returns `true` if the first input is greater than or equal to the
   /// second, `false` otherwise. The arguments are required to be either
@@ -575,7 +575,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const largerOrEqual = ">=";
+  static const largerOrEqual = '>=';
 
   /// Returns `true` if the first input is less than or equal to the second,
   /// `false` otherwise. The arguments are required to be either both
@@ -587,7 +587,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const smallerOrEqual = "<=";
+  static const smallerOrEqual = '<=';
 
   /// Returns `true` if all the inputs are `true`, `false` otherwise. The
   /// inputs are evaluated in order, and evaluation is short-circuiting:
@@ -596,7 +596,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const all = "all";
+  static const all = 'all';
 
   /// Returns `true` if any of the inputs are `true`, `false` otherwise. The
   /// inputs are evaluated in order, and evaluation is short-circuiting:
@@ -605,14 +605,14 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const any = "any";
+  static const any = 'any';
 
   /// Logical negation. Returns `true` if the input is `false`, and `false`
   /// if the input is `true`.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const not = "!";
+  static const not = '!';
 
   /// Returns `true` if the input string is expected to render legibly.
   /// Returns `false` if the input string contains sections that cannot be
@@ -622,7 +622,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android
-  static const isSupportedScript = "is-supported-script";
+  static const isSupportedScript = 'is-supported-script';
 
   /// Returns the input string converted to uppercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
@@ -630,7 +630,7 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const upcase = "upcase";
+  static const upcase = 'upcase';
 
   /// Returns the input string converted to lowercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
@@ -638,14 +638,14 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const downcase = "downcase";
+  static const downcase = 'downcase';
 
   /// Returns a `string` consisting of the concatenation of the inputs. Each
   /// input is converted to a string as if by `to-string`.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const concat = "concat";
+  static const concat = 'concat';
 
   /// Returns the IETF language tag of the locale being used by the provided
   /// `collator`. This can be used to determine the default system locale,
@@ -653,5 +653,5 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios, macos
-  static const resolvedLocale = "resolved-locale";
+  static const resolvedLocale = 'resolved-locale';
 }

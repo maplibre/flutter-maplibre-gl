@@ -3,10 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 const randomMarkerNum = 100;
 
@@ -89,23 +87,26 @@ class CustomMarkerState extends State<CustomMarker> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: [
-        MapLibreMap(
-          trackCameraPosition: true,
-          onMapCreated: _onMapCreated,
-          onMapLongClick: _onMapLongClickCallback,
-          onCameraIdle: _onCameraIdleCallback,
-          onStyleLoadedCallback: _onStyleLoadedCallback,
-          initialCameraPosition:
-              const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
-          iosLongClickDuration: const Duration(milliseconds: 200),
-        ),
-        IgnorePointer(
+      body: Stack(
+        children: [
+          MapLibreMap(
+            trackCameraPosition: true,
+            onMapCreated: _onMapCreated,
+            onMapLongClick: _onMapLongClickCallback,
+            onCameraIdle: _onCameraIdleCallback,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            initialCameraPosition:
+                const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
+            iosLongClickDuration: const Duration(milliseconds: 200),
+          ),
+          IgnorePointer(
             ignoring: true,
             child: Stack(
               children: _markers,
-            ))
-      ]),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           //_measurePerformance();
@@ -184,16 +185,15 @@ class CustomMarkerState extends State<CustomMarker> {
 }
 
 class Marker extends StatefulWidget {
-  final Point initialPosition;
-  final LatLng _coordinate;
-  final void Function(MarkerState) addMarkerState;
-
   Marker(
     String key,
     this._coordinate,
     this.initialPosition,
     this.addMarkerState,
   ) : super(key: Key(key));
+  final Point initialPosition;
+  final LatLng _coordinate;
+  final void Function(MarkerState) addMarkerState;
 
   @override
   State<StatefulWidget> createState() {
@@ -202,14 +202,13 @@ class Marker extends StatefulWidget {
 }
 
 class MarkerState extends State<Marker> with TickerProviderStateMixin {
+  MarkerState();
   final _iconSize = 20.0;
 
   late Point _position;
 
   late AnimationController _controller;
   late Animation<double> _animation;
-
-  MarkerState();
 
   @override
   void initState() {
@@ -244,12 +243,16 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
     }
 
     return Positioned(
-        left: _position.x / ratio - _iconSize / 2,
-        top: _position.y / ratio - _iconSize / 2,
-        child: RotationTransition(
-            turns: _animation,
-            child: Image.asset('assets/symbols/2.0x/custom-icon.png',
-                height: _iconSize)));
+      left: _position.x / ratio - _iconSize / 2,
+      top: _position.y / ratio - _iconSize / 2,
+      child: RotationTransition(
+        turns: _animation,
+        child: Image.asset(
+          'assets/symbols/2.0x/custom-icon.png',
+          height: _iconSize,
+        ),
+      ),
+    );
   }
 
   void updatePosition(Point<num> point) {

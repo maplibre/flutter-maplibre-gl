@@ -22,13 +22,13 @@ abstract class DragRotateHandlerJsImpl {
   ///
   ///  @example
   ///  map.dragRotate.enable();
-  external enable();
+  external dynamic enable();
 
   ///  Disables the "drag to rotate" interaction.
   ///
   ///  @example
   ///  map.dragRotate.disable();
-  external disable();
+  external dynamic disable();
 
-  external onMouseDown(MouseEvent e);
+  external dynamic onMouseDown(MouseEvent e);
 }

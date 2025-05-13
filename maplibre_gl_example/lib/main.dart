@@ -9,32 +9,31 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/animate_camera.dart';
+import 'package:maplibre_gl_example/annotation_order_maps.dart';
 import 'package:maplibre_gl_example/attribution.dart';
+import 'package:maplibre_gl_example/click_annotations.dart';
+import 'package:maplibre_gl_example/custom_marker.dart';
+import 'package:maplibre_gl_example/full_map.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
+import 'package:maplibre_gl_example/layer.dart';
+import 'package:maplibre_gl_example/line.dart';
+import 'package:maplibre_gl_example/local_style.dart';
 import 'package:maplibre_gl_example/localized_map.dart';
+import 'package:maplibre_gl_example/map_ui.dart';
+import 'package:maplibre_gl_example/move_camera.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
+import 'package:maplibre_gl_example/offline_regions.dart';
+import 'package:maplibre_gl_example/page.dart';
+import 'package:maplibre_gl_example/place_batch.dart';
+import 'package:maplibre_gl_example/place_circle.dart';
+import 'package:maplibre_gl_example/place_fill.dart';
+import 'package:maplibre_gl_example/place_source.dart';
+import 'package:maplibre_gl_example/place_symbol.dart';
 import 'package:maplibre_gl_example/pmtiles.dart';
-
-import 'animate_camera.dart';
-import 'annotation_order_maps.dart';
-import 'click_annotations.dart';
-import 'custom_marker.dart';
-import 'full_map.dart';
-import 'layer.dart';
-import 'line.dart';
-import 'local_style.dart';
-import 'map_ui.dart';
-import 'move_camera.dart';
-import 'offline_regions.dart';
-import 'page.dart';
-import 'place_batch.dart';
-import 'place_circle.dart';
-import 'place_fill.dart';
-import 'place_source.dart';
-import 'place_symbol.dart';
-import 'scrolling_map.dart';
-import 'sources.dart';
+import 'package:maplibre_gl_example/scrolling_map.dart';
+import 'package:maplibre_gl_example/sources.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),
@@ -96,12 +95,14 @@ class _MapsDemoState extends State<MapsDemo> {
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: Text(page.title)),
-          body: page,
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text(page.title)),
+            body: page,
+          ),
         ),
-      ));
+      );
     }
   }
 
@@ -113,7 +114,7 @@ class _MapsDemoState extends State<MapsDemo> {
         itemCount: _allPages.length + 1,
         itemBuilder: (_, int index) => index == _allPages.length
             ? const AboutListTile(
-                applicationName: "flutter-maplibre-gl example",
+                applicationName: 'flutter-maplibre-gl example',
               )
             : ListTile(
                 leading: _allPages[index].leading,

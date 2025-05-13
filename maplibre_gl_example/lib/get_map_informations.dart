@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class GetMapInfoPage extends ExamplePage {
   const GetMapInfoPage({super.key})
@@ -69,7 +68,8 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
               compassEnabled: false,
               annotationOrder: const [],
               myLocationEnabled: false,
-              styleString: '''{
+              styleString: '''
+              {
                 "version": 8,
                 "sources": {
                   "OSM": {
@@ -91,29 +91,32 @@ class _GetMapInfoBodyState extends State<GetMapInfoBody> {
                     "type": "raster"
                   }
                 ]
-              }''',
+              }
+              '''
+                  .trim(),
             ),
           ),
         ),
         const Center(child: Text('© OpenStreetMap contributors')),
         Expanded(
-            child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 30),
-              Center(child: Text(data)),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: controller == null ? null : displayLayers,
-                child: const Text('Get map layers'),
-              ),
-              ElevatedButton(
-                onPressed: controller == null ? null : displaySources,
-                child: const Text('Get map sources'),
-              )
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
+                Center(child: Text(data)),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: controller == null ? null : displayLayers,
+                  child: const Text('Get map layers'),
+                ),
+                ElevatedButton(
+                  onPressed: controller == null ? null : displaySources,
+                  child: const Text('Get map sources'),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }

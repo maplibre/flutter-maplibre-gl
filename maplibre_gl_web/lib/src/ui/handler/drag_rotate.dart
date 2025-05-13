@@ -3,6 +3,9 @@ import 'dart:html';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class DragRotateHandler extends JsObjectWrapper<DragRotateHandlerJsImpl> {
+  /// Creates a new DragPanHandler from a [jsObject].
+  DragRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Returns a Boolean indicating whether the "drag to rotate" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "drag to rotate" interaction is enabled.
@@ -17,16 +20,13 @@ class DragRotateHandler extends JsObjectWrapper<DragRotateHandlerJsImpl> {
   ///
   ///  @example
   ///  map.dragRotate.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "drag to rotate" interaction.
   ///
   ///  @example
   ///  map.dragRotate.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
-
-  /// Creates a new DragPanHandler from a [jsObject].
-  DragRotateHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+  dynamic onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 }

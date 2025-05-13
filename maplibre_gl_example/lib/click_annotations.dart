@@ -4,9 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
-import 'util.dart';
+import 'package:maplibre_gl_example/page.dart';
+import 'package:maplibre_gl_example/util.dart';
 
 class ClickAnnotationPage extends ExamplePage {
   const ClickAnnotationPage({super.key})
@@ -49,16 +48,17 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     super.dispose();
   }
 
-  _showSnackBar(String type, String id) {
+  void _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
-        content: Text(
-          'Tapped $type $id',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+      content: Text(
+        'Tapped $type $id',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
-        backgroundColor: Theme.of(context).primaryColor);
+      ),
+      backgroundColor: Theme.of(context).primaryColor,
+    );
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -81,30 +81,34 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   Future<void> _onStyleLoaded() async {
     await addImageFromAsset(
-        controller!, "custom-marker", "assets/symbols/custom-marker.png");
-    controller!.addCircle(
+      controller!,
+      'custom-marker',
+      'assets/symbols/custom-marker.png',
+    );
+    await controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
-        circleStrokeColor: "#00FF00",
+        circleStrokeColor: '#00FF00',
         circleStrokeWidth: 2,
         circleRadius: 16,
       ),
     );
-    controller!.addCircle(
+    await controller!.addCircle(
       const CircleOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
-        circleStrokeColor: "#00FF00",
+        circleStrokeColor: '#00FF00',
         circleStrokeWidth: 2,
         circleRadius: 30,
       ),
     );
-    controller!.addSymbol(
+    await controller!.addSymbol(
       const SymbolOptions(
-          geometry: LatLng(-33.894372606072309, 151.17576679759523),
-          iconImage: "custom-marker", //"fast-food-15",
-          iconSize: 2),
+        geometry: LatLng(-33.894372606072309, 151.17576679759523),
+        iconImage: 'custom-marker', //"fast-food-15",
+        iconSize: 2,
+      ),
     );
-    controller!.addLine(
+    await controller!.addLine(
       const LineOptions(
         geometry: [
           LatLng(-33.874867744475786, 151.170627211986584),
@@ -113,12 +117,12 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
           LatLng(-33.894372606072309, 151.17576679759523),
           LatLng(-33.900060683994681, 151.15765587687909),
         ],
-        lineColor: "#0000FF",
+        lineColor: '#0000FF',
         lineWidth: 20,
       ),
     );
 
-    controller!.addFill(
+    await controller!.addFill(
       const FillOptions(
         geometry: [
           [
@@ -131,8 +135,8 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
             LatLng(-33.901517742631846, 151.178099204457737),
           ],
         ],
-        fillColor: "#FF0000",
-        fillOutlineColor: "#000000",
+        fillColor: '#FF0000',
+        fillOutlineColor: '#000000',
       ),
     );
   }

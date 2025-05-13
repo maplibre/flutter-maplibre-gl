@@ -7,8 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class PlaceFillPage extends ExamplePage {
   const PlaceFillPage({super.key})
@@ -31,7 +30,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   PlaceFillBodyState();
 
   static const LatLng center = LatLng(-33.86711, 151.1947171);
-  final String _fillPatternImage = "assets/fill/cat_silhouette_pattern.png";
+  final String _fillPatternImage = 'assets/fill/cat_silhouette_pattern.png';
 
   final List<List<LatLng>> _defaultGeometry = [
     [
@@ -59,14 +58,15 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     this.controller!.onFeatureDrag.add(_onFeatureDrag);
   }
 
-  void _onFeatureDrag(id,
-      {required current,
-      required delta,
-      required origin,
-      required point,
-      required eventType}) {
-    final DragEventType type = eventType;
-    switch (type) {
+  void _onFeatureDrag(
+    id, {
+    required current,
+    required delta,
+    required origin,
+    required point,
+    required DragEventType eventType,
+  }) {
+    switch (eventType) {
       case DragEventType.start:
         // TODO: Handle this case.
         break;
@@ -80,7 +80,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   }
 
   void _onStyleLoaded() {
-    addImageFromAsset("assetImage", _fillPatternImage);
+    addImageFromAsset('assetImage', _fillPatternImage);
   }
 
   /// Adds an asset image to the currently displayed style
@@ -109,9 +109,10 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   void _add() {
     controller!.addFill(
       FillOptions(
-          geometry: _defaultGeometry,
-          fillColor: "#FF0000",
-          fillOutlineColor: "#FF0000"),
+        geometry: _defaultGeometry,
+        fillColor: '#FF0000',
+        fillOutlineColor: '#FF0000',
+      ),
     );
     setState(() {
       _fillCount += 1;
@@ -131,14 +132,20 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
 
     geometry ??= _defaultGeometry;
 
-    _updateSelectedFill(FillOptions(
+    _updateSelectedFill(
+      FillOptions(
         geometry: geometry
-            .map((list) => list
-                .map(
+            .map(
+              (list) => list
+                  .map(
                     // Move to right with 0.1 degree on longitude
-                    (latLng) => LatLng(latLng.latitude, latLng.longitude + 0.1))
-                .toList())
-            .toList()));
+                    (latLng) => LatLng(latLng.latitude, latLng.longitude + 0.1),
+                  )
+                  .toList(),
+            )
+            .toList(),
+      ),
+    );
   }
 
   void _changeDraggable() {
@@ -160,25 +167,25 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
 
   Future<void> _changeFillColor() async {
     var current = _selectedFill!.options.fillColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedFill(
-      const FillOptions(fillColor: "#FFFF00"),
+      const FillOptions(fillColor: '#FFFF00'),
     );
   }
 
   Future<void> _changeFillOutlineColor() async {
     var current = _selectedFill!.options.fillOutlineColor;
-    current ??= "#FF0000";
+    current ??= '#FF0000';
 
     _updateSelectedFill(
-      const FillOptions(fillOutlineColor: "#FFFF00"),
+      const FillOptions(fillOutlineColor: '#FFFF00'),
     );
   }
 
   Future<void> _changeFillPattern() async {
     final current =
-        _selectedFill!.options.fillPattern == null ? "assetImage" : null;
+        _selectedFill!.options.fillPattern == null ? 'assetImage' : null;
     _updateSelectedFill(
       FillOptions(fillPattern: current),
     );
@@ -261,7 +268,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

@@ -4,36 +4,15 @@ analyzer:
   language:
     # temporary rules
     strict-casts: false
-    strict-raw-types: false
-    strict-inference: false
 
 linter:
   rules:
     # temporary rules
     flutter_style_todos: false
-    one_member_abstracts: false
     lines_longer_than_80_chars: false
-    prefer_int_literals: false
     unnecessary_lambdas: false
-    avoid_print: false
-    avoid_unused_constructor_parameters: false
-    unawaited_futures: false
-    overridden_fields: false
-    always_put_required_named_parameters_first: false
-    leading_newlines_in_multiline_strings: false
-    directives_ordering: false
-    parameter_assignments: false
-    use_setters_to_change_properties: false
-    type_annotate_public_apis: false
-    prefer_asserts_with_message: false
     public_member_api_docs: false
-    require_trailing_commas: false
     avoid_dynamic_calls: false
-    always_use_package_imports: false
-    prefer_single_quotes: false
-    always_declare_return_types: false
-    sort_constructors_first: false
-    avoid_relative_lib_imports: false
     avoid_positional_boolean_parameters: false
     comment_references: false
     cascade_invocations: false

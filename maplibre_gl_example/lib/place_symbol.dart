@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async'; // ignore: unnecessary_import
 import 'dart:core';
 import 'dart:math';
 
@@ -10,8 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class PlaceSymbolPage extends ExamplePage {
   const PlaceSymbolPage({super.key})
@@ -46,9 +44,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _onStyleLoaded() {
-    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-    addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
-    addImageFromUrl("networkImage", Uri.parse("https://dummyimage.com/50x50"));
+    addImageFromAsset('custom-marker', 'assets/symbols/custom-marker.png');
+    addImageFromAsset('assetImage', 'assets/symbols/custom-icon.png');
+    addImageFromUrl('networkImage', Uri.parse('https://dummyimage.com/50x50'));
   }
 
   @override
@@ -95,8 +93,9 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     }
     if (availableNumbers.isNotEmpty) {
       controller!.addSymbol(
-          _getSymbolOptions(iconImage, availableNumbers.first),
-          {'count': availableNumbers.first});
+        _getSymbolOptions(iconImage, availableNumbers.first),
+        {'count': availableNumbers.first},
+      );
       setState(() {
         _symbolCount += 1;
       });
@@ -141,8 +140,10 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
       final symbolOptionsList = symbolsToAddNumbers
           .map((i) => _getSymbolOptions(iconImage, i))
           .toList();
-      controller!.addSymbols(symbolOptionsList,
-          symbolsToAddNumbers.map((i) => {'count': i}).toList());
+      await controller!.addSymbols(
+        symbolOptionsList,
+        symbolsToAddNumbers.map((i) => {'count': i}).toList(),
+      );
 
       setState(() {
         _symbolCount += symbolOptionsList.length;
@@ -196,7 +197,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     } else {
       current = 'center';
     }
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconAnchor: current),
     );
   }
@@ -205,7 +206,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var draggable = _selectedSymbol!.options.draggable;
     draggable ??= false;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(draggable: !draggable),
     );
   }
@@ -214,7 +215,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
@@ -222,7 +223,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeRotation() async {
     var current = _selectedSymbol!.options.iconRotate;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconRotate: current == 330.0 ? 0.0 : current + 30.0),
     );
   }
@@ -231,7 +232,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current == 0.0 ? 1.0 : 0.0),
     );
   }
@@ -239,7 +240,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeZIndex() async {
     var current = _selectedSymbol!.options.zIndex;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(zIndex: current == 12 ? 0 : current + 1),
     );
   }
@@ -296,19 +297,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _add("custom-marker"),
+                              : _add('custom-marker'),
                         ),
                         TextButton(
                           child: const Text('add all'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _addAll("custom-marker"),
+                              : _addAll('custom-marker'),
                         ),
                         TextButton(
                           child: const Text('add (custom icon)'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
-                              : _add("assets/symbols/custom-icon.png"),
+                              : _add('assets/symbols/custom-icon.png'),
                         ),
                         TextButton(
                           onPressed: (_selectedSymbol == null) ? null : _remove,
@@ -317,7 +318,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                         TextButton(
                           onPressed: _changeIconOverlap,
                           child: Text(
-                              '${_iconAllowOverlap ? 'disable' : 'enable'} icon overlap'),
+                            '${_iconAllowOverlap ? 'disable' : 'enable'} icon overlap',
+                          ),
                         ),
                         TextButton(
                           onPressed: (_symbolCount == 0) ? null : _removeAll,
@@ -328,20 +330,22 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  "assetImage"), //assetImage added to the style in _onStyleLoaded
+                                  'assetImage',
+                                ), //assetImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (network image)'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add(
-                                  "networkImage"), //networkImage added to the style in _onStyleLoaded
+                                  'networkImage',
+                                ), //networkImage added to the style in _onStyleLoaded
                         ),
                         TextButton(
                           child: const Text('add (custom font)'),
                           onPressed: () =>
-                              (_symbolCount == 12) ? null : _add("customFont"),
-                        )
+                              (_symbolCount == 12) ? null : _add('customFont'),
+                        ),
                       ],
                     ),
                     Column(
@@ -399,7 +403,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

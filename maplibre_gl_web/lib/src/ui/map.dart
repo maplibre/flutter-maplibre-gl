@@ -1,10 +1,11 @@
 import 'dart:html';
+
 import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
-import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/geo/point.dart';
+import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
@@ -50,11 +51,14 @@ import 'package:maplibre_gl_web/src/ui/handler/touch_zoom_rotate.dart';
 ///  ```
 ///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 class MapLibreMap extends Camera {
-  @override
-  final MapLibreMapJsImpl jsObject;
-
   factory MapLibreMap(MapOptions options) =>
       MapLibreMap.fromJsObject(MapLibreMapJsImpl(options.jsObject));
+
+  /// Creates a new MapLibreMap from a [jsObject].
+  MapLibreMap.fromJsObject(MapLibreMapJsImpl super.jsObject)
+      : super.fromJsObject();
+  @override
+  MapLibreMapJsImpl get jsObject => super.jsObject as MapLibreMapJsImpl;
 
   Style get style => Style.fromJsObject(jsObject.style);
 
@@ -107,7 +111,8 @@ class MapLibreMap extends Camera {
   MapLibreMap addControl(dynamic control, [String? position]) {
     if (position != null) {
       return MapLibreMap.fromJsObject(
-          jsObject.addControl(control.jsObject, position));
+        jsObject.addControl(control.jsObject, position),
+      );
     }
     return MapLibreMap.fromJsObject(jsObject.addControl(control.jsObject));
   }
@@ -278,7 +283,8 @@ class MapLibreMap extends Camera {
   ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
       MapLibreMap.fromJsObject(
-          jsObject.setRenderWorldCopies(renderWorldCopies));
+        jsObject.setRenderWorldCopies(renderWorldCopies),
+      );
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -421,8 +427,10 @@ class MapLibreMap extends Camera {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  List<Feature> queryRenderedFeatures(dynamic geometry,
-      [Map<String, dynamic>? options]) {
+  List<Feature> queryRenderedFeatures(
+    dynamic geometry, [
+    Map<String, dynamic>? options,
+  ]) {
     if (options == null) {
       return jsObject
           .queryRenderedFeatures(geometry)
@@ -557,7 +565,7 @@ class MapLibreMap extends Camera {
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
-  addSourceType(String name, dynamic sourceType, Function callback) =>
+  dynamic addSourceType(String name, dynamic sourceType, Function callback) =>
       jsObject.addSourceType(name, sourceType, callback);
 
   ///  Removes a source from the map's style.
@@ -566,7 +574,7 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
-  removeSource(String id) => jsObject.removeSource(id);
+  dynamic removeSource(String id) => jsObject.removeSource(id);
 
   ///  Returns the source with the specified ID in the map's style.
   ///
@@ -632,13 +640,14 @@ class MapLibreMap extends Camera {
   ///
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
-  addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
+  dynamic addImage(String id, dynamic image, [Map<String, dynamic>? options]) {
+    dynamic jsImage = image;
     if (image is Map) {
-      image = jsify(image);
+      jsImage = jsify(image);
     }
     return options == null
-        ? jsObject.addImage(id, image)
-        : jsObject.addImage(id, image, jsify(options));
+        ? jsObject.addImage(id, jsImage)
+        : jsObject.addImage(id, jsImage, jsify(options));
   }
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
@@ -656,7 +665,8 @@ class MapLibreMap extends Camera {
   ///  // If an image with the ID 'cat' already exists in the style's sprite,
   ///  // replace that image with a new image, 'other-cat-icon.png'.
   ///  if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
-  updateImage(String id, dynamic image) => jsObject.updateImage(id, image);
+  dynamic updateImage(String id, dynamic image) =>
+      jsObject.updateImage(id, image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
   ///  in the style's original [sprite]  and any images
@@ -681,7 +691,7 @@ class MapLibreMap extends Camera {
   ///  // If an image with the ID 'cat' exists in
   ///  // the style's sprite, remove it.
   ///  if (map.hasImage('cat')) map.removeImage('cat');
-  removeImage(String id) => jsObject.removeImage(id);
+  dynamic removeImage(String id) => jsObject.removeImage(id);
 
   ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
@@ -698,7 +708,7 @@ class MapLibreMap extends Camera {
   ///  });
   ///
   ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-  loadImage(String url, Function callback) =>
+  dynamic loadImage(String url, Function callback) =>
       jsObject.loadImage(url, allowInterop(callback));
 
   //////
@@ -732,7 +742,8 @@ class MapLibreMap extends Camera {
   MapLibreMap addLayer(dynamic layer, [String? beforeId]) {
     if (layer is Layer) {
       return MapLibreMap.fromJsObject(
-          jsObject.addLayer(layer.jsObject, beforeId));
+        jsObject.addLayer(layer.jsObject, beforeId),
+      );
     }
     return MapLibreMap.fromJsObject(jsObject.addLayer(jsify(layer), beforeId));
   }
@@ -762,7 +773,7 @@ class MapLibreMap extends Camera {
   ///  @example
   ///  // If a layer with ID 'state-data' exists, remove it.
   ///  if (map.getLayer('state-data')) map.removeLayer('state-data');
-  removeLayer(String id) => jsObject.removeLayer(id);
+  dynamic removeLayer(String id) => jsObject.removeLayer(id);
 
   ///  Returns the layer with the specified ID in the map's style.
   ///
@@ -796,7 +807,8 @@ class MapLibreMap extends Camera {
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   MapLibreMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
       MapLibreMap.fromJsObject(
-          jsObject.setLayerZoomRange(layerId, minzoom, maxzoom));
+        jsObject.setLayerZoomRange(layerId, minzoom, maxzoom),
+      );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -813,8 +825,11 @@ class MapLibreMap extends Camera {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  MapLibreMap setFilter(String layerId, dynamic filter,
-          [StyleSetterOptions? options]) =>
+  MapLibreMap setFilter(
+    String layerId,
+    dynamic filter, [
+    StyleSetterOptions? options,
+  ]) =>
       MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
 
   ///  Returns the filter applied to the specified style layer.
@@ -837,8 +852,12 @@ class MapLibreMap extends Camera {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  setPaintProperty(String layerId, String name, dynamic value,
-          [StyleSetterOptions? options]) =>
+  dynamic setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptions? options,
+  ]) =>
       jsObject.setPaintProperty(layerId, name, jsify(value));
 
   ///  Returns the value of a paint property in the specified style layer.
@@ -859,10 +878,15 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
-  MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
-          [StyleSetterOptions? options]) =>
+  MapLibreMap setLayoutProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptions? options,
+  ]) =>
       MapLibreMap.fromJsObject(
-          jsObject.setLayoutProperty(layerId, name, value));
+        jsObject.setLayoutProperty(layerId, name, value),
+      );
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -902,7 +926,7 @@ class MapLibreMap extends Camera {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  setFeatureState(dynamic feature, dynamic state) =>
+  dynamic setFeatureState(dynamic feature, dynamic state) =>
       jsObject.setFeatureState(feature, state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
@@ -918,7 +942,7 @@ class MapLibreMap extends Camera {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  removeFeatureState(dynamic target, [String? key]) =>
+  dynamic removeFeatureState(dynamic target, [String? key]) =>
       jsObject.removeFeatureState(target);
 
   ///  Gets the state of a feature.
@@ -977,12 +1001,12 @@ class MapLibreMap extends Camera {
   ///  Use this method when you are done using the map and wish to ensure that it no
   ///  longer consumes browser resources. Afterwards, you must not call any other
   ///  methods on the map.
-  remove() => jsObject.remove();
+  dynamic remove() => jsObject.remove();
 
   ///  Trigger the rendering of a single frame. Use this method with custom layers to
   ///  repaint the map when the layer changes. Calling this multiple times before the
   ///  next frame is rendered will still result in only a single frame being rendered.
-  triggerRepaint() => jsObject.triggerRepaint();
+  dynamic triggerRepaint() => jsObject.triggerRepaint();
 
   ///  Gets and sets a Boolean indicating whether the map will render an outline
   ///  around each tile and the tile ID. These tile boundaries are useful for
@@ -1049,12 +1073,103 @@ class MapLibreMap extends Camera {
   ///  @memberof MapLibreMap
   ///  @var {string} version
   String get version => jsObject.version;
-
-  /// Creates a new MapLibreMap from a [jsObject].
-  MapLibreMap.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
 }
 
 class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
+  factory MapOptions({
+    dynamic hash,
+    bool? interactive,
+    dynamic container,
+    num? bearingSnap,
+    bool? pitchWithRotate,
+    bool? clickTolerance,
+    bool? attributionControl,
+    dynamic customAttribution,
+    String? logoPosition,
+    bool? failIfMajorPerformanceCaveat,
+    bool? preserveDrawingBuffer,
+    bool? antialias,
+    bool? refreshExpiredTiles,
+    LngLatBounds? maxBounds,
+    bool? scrollZoom,
+    num? minZoom,
+    num? maxZoom,
+    num? minPitch,
+    num? maxPitch,
+    dynamic style,
+    bool? boxZoom,
+    bool? dragRotate,
+    dynamic dragPan,
+    bool? keyboard,
+    bool? doubleClickZoom,
+    bool? touchZoomRotate,
+    bool? trackResize,
+    LngLat? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLatBounds? bounds,
+    dynamic fitBoundsOptions,
+    bool? renderWorldCopies,
+    num? maxTileCacheSize,
+    String? localIdeographFontFamily,
+    RequestTransformFunctionJsImpl? transformRequest, //TODO: Remove JsImpl
+    bool? collectResourceTiming,
+    num? fadeDuration,
+    bool? crossSourceCollisions,
+    String? accessToken,
+    dynamic locale,
+  }) =>
+      MapOptions.fromJsObject(
+        MapOptionsJsImpl(
+          hash: hash,
+          interactive: interactive ?? true,
+          container: container,
+          bearingSnap: bearingSnap,
+          pitchWithRotate: pitchWithRotate ?? true,
+          clickTolerance: clickTolerance ?? true,
+          attributionControl: attributionControl ?? true,
+          customAttribution: customAttribution,
+          logoPosition: logoPosition ?? 'bottom-left',
+          failIfMajorPerformanceCaveat: failIfMajorPerformanceCaveat,
+          preserveDrawingBuffer: preserveDrawingBuffer,
+          antialias: antialias,
+          refreshExpiredTiles: refreshExpiredTiles,
+          maxBounds: maxBounds?.jsObject,
+          scrollZoom: scrollZoom ?? true,
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+          minPitch: minPitch,
+          maxPitch: maxPitch,
+          style: style,
+          boxZoom: boxZoom,
+          dragRotate: dragRotate,
+          dragPan: dragPan ?? true,
+          keyboard: keyboard ?? true,
+          doubleClickZoom: doubleClickZoom ?? true,
+          touchZoomRotate: touchZoomRotate ?? true,
+          trackResize: trackResize ?? true,
+          center: center?.jsObject,
+          zoom: zoom,
+          bearing: bearing,
+          pitch: pitch,
+          bounds: bounds?.jsObject,
+          fitBoundsOptions: fitBoundsOptions,
+          renderWorldCopies: renderWorldCopies,
+          maxTileCacheSize: maxTileCacheSize,
+          localIdeographFontFamily: localIdeographFontFamily,
+          transformRequest: transformRequest,
+          collectResourceTiming: collectResourceTiming,
+          fadeDuration: fadeDuration,
+          crossSourceCollisions: crossSourceCollisions,
+          accessToken: accessToken,
+          locale: locale,
+        ),
+      );
+
+  /// Creates a new MapOptions from a [jsObject].
+  MapOptions.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
   /// For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
   /// An additional string may optionally be provided to indicate a parameter-styled hash,
@@ -1203,101 +1318,28 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
 
   /// A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
   dynamic get locale => jsObject.locale;
-
-  factory MapOptions({
-    dynamic hash,
-    bool? interactive,
-    dynamic container,
-    num? bearingSnap,
-    bool? pitchWithRotate,
-    bool? clickTolerance,
-    bool? attributionControl,
-    dynamic customAttribution,
-    String? logoPosition,
-    bool? failIfMajorPerformanceCaveat,
-    bool? preserveDrawingBuffer,
-    bool? antialias,
-    bool? refreshExpiredTiles,
-    LngLatBounds? maxBounds,
-    bool? scrollZoom,
-    num? minZoom,
-    num? maxZoom,
-    num? minPitch,
-    num? maxPitch,
-    dynamic style,
-    bool? boxZoom,
-    bool? dragRotate,
-    dynamic dragPan,
-    bool? keyboard,
-    bool? doubleClickZoom,
-    bool? touchZoomRotate,
-    bool? trackResize,
-    LngLat? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatBounds? bounds,
-    dynamic fitBoundsOptions,
-    bool? renderWorldCopies,
-    num? maxTileCacheSize,
-    String? localIdeographFontFamily,
-    RequestTransformFunctionJsImpl? transformRequest, //TODO: Remove JsImpl
-    bool? collectResourceTiming,
-    num? fadeDuration,
-    bool? crossSourceCollisions,
-    String? accessToken,
-    dynamic locale,
-  }) =>
-      MapOptions.fromJsObject(MapOptionsJsImpl(
-        //hash: hash,
-        interactive: interactive ?? true,
-        container: container,
-        bearingSnap: bearingSnap,
-        pitchWithRotate: pitchWithRotate ?? true,
-        clickTolerance: clickTolerance ?? true,
-        attributionControl: attributionControl ?? true,
-        customAttribution: customAttribution,
-        logoPosition: logoPosition ?? 'bottom-left',
-        failIfMajorPerformanceCaveat: failIfMajorPerformanceCaveat,
-        preserveDrawingBuffer: preserveDrawingBuffer,
-        antialias: antialias,
-        refreshExpiredTiles: refreshExpiredTiles,
-        maxBounds: maxBounds?.jsObject,
-        scrollZoom: scrollZoom ?? true,
-        minZoom: minZoom,
-        maxZoom: maxZoom,
-        minPitch: minPitch,
-        maxPitch: maxPitch,
-        style: style,
-        boxZoom: boxZoom,
-        dragRotate: dragRotate,
-        dragPan: dragPan ?? true,
-        keyboard: keyboard ?? true,
-        doubleClickZoom: doubleClickZoom ?? true,
-        touchZoomRotate: touchZoomRotate ?? true,
-        trackResize: trackResize ?? true,
-        center: center?.jsObject,
-        zoom: zoom,
-        bearing: bearing,
-        pitch: pitch,
-        bounds: bounds?.jsObject,
-        fitBoundsOptions: fitBoundsOptions,
-        renderWorldCopies: renderWorldCopies,
-        maxTileCacheSize: maxTileCacheSize,
-        localIdeographFontFamily: localIdeographFontFamily,
-        transformRequest: transformRequest,
-        collectResourceTiming: collectResourceTiming,
-        fadeDuration: fadeDuration,
-        crossSourceCollisions: crossSourceCollisions,
-        accessToken: accessToken,
-        locale: locale,
-      ));
-
-  /// Creates a new MapOptions from a [jsObject].
-  MapOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
+  factory RequestParameters({
+    String? url,
+    String? credentials,
+    dynamic headers,
+    String? method,
+    bool? collectResourceTiming,
+  }) =>
+      RequestParameters.fromJsObject(
+        RequestParametersJsImpl(
+          url: url,
+          credentials: credentials,
+          headers: headers,
+          method: method,
+          collectResourceTiming: collectResourceTiming,
+        ),
+      );
+
+  /// Creates a new RequestParameters from a [jsObject].
+  RequestParameters.fromJsObject(super.jsObject) : super.fromJsObject();
   String? get url => jsObject.url;
 
   String? get credentials => jsObject.credentials;
@@ -1307,24 +1349,6 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
   String? get method => jsObject.method;
 
   bool? get collectResourceTiming => jsObject.collectResourceTiming;
-
-  factory RequestParameters({
-    String? url,
-    String? credentials,
-    dynamic headers,
-    String? method,
-    bool? collectResourceTiming,
-  }) =>
-      RequestParameters.fromJsObject(RequestParametersJsImpl(
-        url: url,
-        credentials: credentials,
-        headers: headers,
-        method: method,
-        collectResourceTiming: collectResourceTiming,
-      ));
-
-  /// Creates a new RequestParameters from a [jsObject].
-  RequestParameters.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 ///  Interface for interactive controls added to the map. This is a
@@ -1358,6 +1382,9 @@ class RequestParameters extends JsObjectWrapper<RequestParametersJsImpl> {
 /// }
 /// ```
 class IControl extends JsObjectWrapper<IControlJsImpl> {
+  /// Creates a new IControl from a [jsObject].
+  IControl.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Register a control on the map and give it a chance to register event listeners
   ///  and resources. This method is called by {@link MapLibreMap#addControl}
   ///  internally.
@@ -1366,14 +1393,11 @@ class IControl extends JsObjectWrapper<IControlJsImpl> {
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
-  onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
+  dynamic onRemove(MapLibreMap map) => jsObject.onRemove(map.jsObject);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`
   ///  parameter, the value returned by getDefaultPosition will be used as the
   ///  control's position.
   String getDefaultPosition() => jsObject.getDefaultPosition();
-
-  /// Creates a new IControl from a [jsObject].
-  IControl.fromJsObject(super.jsObject) : super.fromJsObject();
 }

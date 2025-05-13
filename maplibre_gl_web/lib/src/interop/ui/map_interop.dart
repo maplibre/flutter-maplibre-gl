@@ -91,8 +91,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  external MapLibreMapJsImpl addControl(IControlJsImpl? control,
-      [String? position]);
+  external MapLibreMapJsImpl addControl(
+    IControlJsImpl? control, [
+    String? position,
+  ]);
 
   ///  Removes the control from the map.
   ///
@@ -391,8 +393,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  external List<FeatureJsImpl> queryRenderedFeatures(dynamic geometry,
-      [dynamic options]);
+  external List<FeatureJsImpl> queryRenderedFeatures(
+    dynamic geometry, [
+    dynamic options,
+  ]);
 
   ///  Returns an array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -430,7 +434,9 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   external List<dynamic> querySourceFeatures(
-      String sourceId, dynamic parameters);
+    String sourceId,
+    dynamic parameters,
+  );
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
@@ -507,7 +513,11 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
-  external addSourceType(String name, dynamic sourceType, Function callback);
+  external dynamic addSourceType(
+    String name,
+    dynamic sourceType,
+    Function callback,
+  );
 
   ///  Removes a source from the map's style.
   ///
@@ -515,7 +525,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
-  external removeSource(String id);
+  external dynamic removeSource(String id);
 
   ///  Returns the source with the specified ID in the map's style.
   ///
@@ -572,7 +582,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
-  external addImage(String id, dynamic image, [dynamic options]);
+  external dynamic addImage(String id, dynamic image, [dynamic options]);
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
@@ -589,7 +599,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // If an image with the ID 'cat' already exists in the style's sprite,
   ///  // replace that image with a new image, 'other-cat-icon.png'.
   ///  if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
-  external updateImage(String id, dynamic image);
+  external dynamic updateImage(String id, dynamic image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
   ///  in the style's original [sprite]  and any images
@@ -614,7 +624,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // If an image with the ID 'cat' exists in
   ///  // the style's sprite, remove it.
   ///  if (map.hasImage('cat')) map.removeImage('cat');
-  external removeImage(String id);
+  external dynamic removeImage(String id);
 
   ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
@@ -631,7 +641,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  });
   ///
   ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-  external loadImage(String url, dynamic callback);
+  external dynamic loadImage(String url, dynamic callback);
 
   //////
   ///  Returns an Array of strings containing the IDs of all images currently available in the map.
@@ -685,7 +695,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  // If a layer with ID 'state-data' exists, remove it.
   ///  if (map.getLayer('state-data')) map.removeLayer('state-data');
-  external removeLayer(String id);
+  external dynamic removeLayer(String id);
 
   ///  Returns the layer with the specified ID in the map's style.
   ///
@@ -718,7 +728,10 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   external MapLibreMapJsImpl setLayerZoomRange(
-      String layerId, num minzoom, num maxzoom);
+    String layerId,
+    num minzoom,
+    num maxzoom,
+  );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -735,8 +748,11 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapLibreMapJsImpl setFilter(String layerId, dynamic filter,
-      [StyleSetterOptionsJsImpl? options]);
+  external MapLibreMapJsImpl setFilter(
+    String layerId,
+    dynamic filter, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -758,8 +774,12 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external setPaintProperty(String layerId, String name, dynamic value,
-      [StyleSetterOptionsJsImpl? options]);
+  external dynamic setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -779,8 +799,11 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, dynamic value,
-      [StyleSetterOptionsJsImpl? options]);
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -796,7 +819,9 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-      dynamic light, StyleSetterOptionsJsImpl options);
+    dynamic light,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Returns the value of the light object.
   ///
@@ -819,7 +844,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  external setFeatureState(dynamic feature, dynamic state);
+  external dynamic setFeatureState(dynamic feature, dynamic state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
   ///  source is specified, removes all states of that source. If
@@ -834,7 +859,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  external removeFeatureState(dynamic target, [String? key]);
+  external dynamic removeFeatureState(dynamic target, [String? key]);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
@@ -892,12 +917,12 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Use this method when you are done using the map and wish to ensure that it no
   ///  longer consumes browser resources. Afterwards, you must not call any other
   ///  methods on the map.
-  external remove();
+  external dynamic remove();
 
   ///  Trigger the rendering of a single frame. Use this method with custom layers to
   ///  repaint the map when the layer changes. Calling this multiple times before the
   ///  next frame is rendered will still result in only a single frame being rendered.
-  external triggerRepaint();
+  external dynamic triggerRepaint();
 
   ///  Gets and sets a Boolean indicating whether the map will render an outline
   ///  around each tile and the tile ID. These tile boundaries are useful for
@@ -964,6 +989,51 @@ class MapLibreMapJsImpl extends CameraJsImpl {
 @JS()
 @anonymous
 class MapOptionsJsImpl {
+  external factory MapOptionsJsImpl({
+    dynamic hash,
+    bool? interactive,
+    dynamic container,
+    num? bearingSnap,
+    bool? pitchWithRotate,
+    bool? clickTolerance,
+    bool? attributionControl,
+    dynamic customAttribution,
+    String? logoPosition,
+    bool? failIfMajorPerformanceCaveat,
+    bool? preserveDrawingBuffer,
+    bool? antialias,
+    bool? refreshExpiredTiles,
+    LngLatBoundsJsImpl? maxBounds,
+    bool? scrollZoom,
+    num? minZoom,
+    num? maxZoom,
+    num? minPitch,
+    num? maxPitch,
+    dynamic style,
+    bool? boxZoom,
+    bool? dragRotate,
+    dynamic dragPan,
+    bool? keyboard,
+    bool? doubleClickZoom,
+    bool? touchZoomRotate,
+    bool? trackResize,
+    LngLatJsImpl? center,
+    num? zoom,
+    num? bearing,
+    num? pitch,
+    LngLatBoundsJsImpl? bounds,
+    dynamic fitBoundsOptions,
+    bool? renderWorldCopies,
+    num? maxTileCacheSize,
+    String? localIdeographFontFamily,
+    RequestTransformFunctionJsImpl? transformRequest,
+    bool? collectResourceTiming,
+    num? fadeDuration,
+    bool? crossSourceCollisions,
+    String? accessToken,
+    dynamic locale,
+  });
+
   /// If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
   /// For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
   /// An additional string may optionally be provided to indicate a parameter-styled hash,
@@ -1111,65 +1181,16 @@ class MapOptionsJsImpl {
 
   /// A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
   external dynamic get locale;
-
-  external factory MapOptionsJsImpl({
-    dynamic hash,
-    bool? interactive,
-    dynamic container,
-    num? bearingSnap,
-    bool? pitchWithRotate,
-    bool? clickTolerance,
-    bool? attributionControl,
-    dynamic customAttribution,
-    String? logoPosition,
-    bool? failIfMajorPerformanceCaveat,
-    bool? preserveDrawingBuffer,
-    bool? antialias,
-    bool? refreshExpiredTiles,
-    LngLatBoundsJsImpl? maxBounds,
-    bool? scrollZoom,
-    num? minZoom,
-    num? maxZoom,
-    num? minPitch,
-    num? maxPitch,
-    dynamic style,
-    bool? boxZoom,
-    bool? dragRotate,
-    dynamic dragPan,
-    bool? keyboard,
-    bool? doubleClickZoom,
-    bool? touchZoomRotate,
-    bool? trackResize,
-    LngLatJsImpl? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatBoundsJsImpl? bounds,
-    dynamic fitBoundsOptions,
-    bool? renderWorldCopies,
-    num? maxTileCacheSize,
-    String? localIdeographFontFamily,
-    RequestTransformFunctionJsImpl? transformRequest,
-    bool? collectResourceTiming,
-    num? fadeDuration,
-    bool? crossSourceCollisions,
-    String? accessToken,
-    dynamic locale,
-  });
 }
 
 typedef RequestTransformFunctionJsImpl = RequestParametersJsImpl Function(
-    String url, String resourceType);
+  String url,
+  String resourceType,
+);
 
 @JS()
 @anonymous
 class RequestParametersJsImpl {
-  String? url;
-  String? credentials;
-  dynamic headers;
-  String? method;
-  bool? collectResourceTiming;
-
   external factory RequestParametersJsImpl({
     String? url,
     String? credentials,
@@ -1177,6 +1198,11 @@ class RequestParametersJsImpl {
     String? method,
     bool? collectResourceTiming,
   });
+  String? url;
+  String? credentials;
+  dynamic headers;
+  String? method;
+  bool? collectResourceTiming;
 }
 
 ///  Interface for interactive controls added to the map. This is a
@@ -1220,7 +1246,7 @@ abstract class IControlJsImpl {
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
-  external onRemove(MapLibreMapJsImpl map);
+  external dynamic onRemove(MapLibreMapJsImpl map);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`

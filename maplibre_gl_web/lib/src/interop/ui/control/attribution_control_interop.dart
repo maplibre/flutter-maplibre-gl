@@ -7,12 +7,13 @@ import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 @JS()
 @anonymous
 class AttributionControlOptionsJsImpl {
+  external factory AttributionControlOptionsJsImpl({
+    bool? compact,
+    List<String>? customAttribution,
+  });
   external bool get compact;
 
   external List<String>? get customAttribution;
-
-  external factory AttributionControlOptionsJsImpl(
-      {bool? compact, List<String>? customAttribution});
 }
 
 /// A `AttributionControl` control contains attributions.
@@ -27,12 +28,12 @@ class AttributionControlOptionsJsImpl {
 /// @see [Display map attribution controls](https://maplibre.org/maplibre-gl-js/docs/examples/attribution-position/)
 @JS('AttributionControl')
 class AttributionControlJsImpl {
+  external factory AttributionControlJsImpl(
+    AttributionControlOptionsJsImpl options,
+  );
   external AttributionControlOptionsJsImpl get options;
 
-  external factory AttributionControlJsImpl(
-      AttributionControlOptionsJsImpl options);
+  external dynamic onAdd(MapLibreMapJsImpl map);
 
-  external onAdd(MapLibreMapJsImpl map);
-
-  external onRemove();
+  external dynamic onRemove();
 }

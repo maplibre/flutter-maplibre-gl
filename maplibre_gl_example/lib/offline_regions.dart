@@ -1,9 +1,8 @@
-import 'package:collection/collection.dart' show IterableExtension;
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'offline_region_map.dart';
-import 'page.dart';
+import 'package:maplibre_gl_example/offline_region_map.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 final LatLngBounds hawaiiBounds = LatLngBounds(
   southwest: const LatLng(17.26672, -161.14746),
@@ -186,7 +185,8 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     final regionItems = <OfflineRegionListItem>[];
     for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
-          (offlineRegion) => offlineRegion.metadata['name'] == item.name);
+        (offlineRegion) => offlineRegion.metadata['name'] == item.name,
+      );
       if (offlineRegion != null) {
         regionItems.add(item.copyWith(downloadedId: offlineRegion.id));
       } else {
@@ -215,21 +215,23 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
       setState(() {
         _items.removeAt(index);
         _items.insert(
-            index,
-            item.copyWith(
-              isDownloading: false,
-              downloadedId: downloadingRegion.id,
-            ));
+          index,
+          item.copyWith(
+            isDownloading: false,
+            downloadedId: downloadingRegion.id,
+          ),
+        );
       });
     } on Exception catch (_) {
       setState(() {
         _items.removeAt(index);
         _items.insert(
-            index,
-            item.copyWith(
-              isDownloading: false,
-              downloadedId: null,
-            ));
+          index,
+          item.copyWith(
+            isDownloading: false,
+            downloadedId: null,
+          ),
+        );
       });
       return;
     }
@@ -248,15 +250,16 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     setState(() {
       _items.removeAt(index);
       _items.insert(
-          index,
-          item.copyWith(
-            isDownloading: false,
-            downloadedId: null,
-          ));
+        index,
+        item.copyWith(
+          isDownloading: false,
+          downloadedId: null,
+        ),
+      );
     });
   }
 
-  _goToMap(OfflineRegionListItem item) {
+  void _goToMap(OfflineRegionListItem item) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => OfflineRegionMap(item),

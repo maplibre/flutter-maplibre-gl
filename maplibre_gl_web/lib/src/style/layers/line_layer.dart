@@ -2,6 +2,14 @@ import 'package:maplibre_gl_web/src/interop/style/layers/line_layer_interop.dart
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 
 class LineLayer extends Layer {
+  LineLayer({
+    required this.id,
+    this.source,
+    this.sourceLayer,
+    this.paint,
+    this.layout,
+    this.filter,
+  });
   String id;
 
   /// Source or String
@@ -11,35 +19,14 @@ class LineLayer extends Layer {
   LineLayout? layout;
   dynamic filter;
 
-  LineLayer({
-    required this.id,
-    this.source,
-    this.sourceLayer,
-    this.paint,
-    this.layout,
-    this.filter,
-  });
+  @override
+  dynamic get jsObject => LineLayerJsImpl.toJs(this);
 
   @override
-  get jsObject => LineLayerJsImpl.toJs(this);
-
-  @override
-  get dict => LineLayerJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LineLayerJsImpl.toDict(this);
 }
 
 class LinePaint {
-  num? lineOpacity;
-  dynamic lineColor;
-  List<num>? lineTranslate;
-  String? lineTranslateAnchor;
-  dynamic lineWidth;
-  num? lineGapWidth;
-  num? lineOffset;
-  num? lineBlur;
-  List<num>? lineDasharray;
-  String? linePattern;
-  String? lineGradient;
-
   LinePaint({
     this.lineOpacity,
     this.lineColor,
@@ -53,20 +40,24 @@ class LinePaint {
     this.linePattern,
     this.lineGradient,
   });
+  num? lineOpacity;
+  dynamic lineColor;
+  List<num>? lineTranslate;
+  String? lineTranslateAnchor;
+  dynamic lineWidth;
+  num? lineGapWidth;
+  num? lineOffset;
+  num? lineBlur;
+  List<num>? lineDasharray;
+  String? linePattern;
+  String? lineGradient;
 
-  get jsObject => LinePaintJsImpl.toJs(this);
+  dynamic get jsObject => LinePaintJsImpl.toJs(this);
 
-  get dict => LinePaintJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LinePaintJsImpl.toDict(this);
 }
 
 class LineLayout {
-  String? lineCap;
-  String? lineJoin;
-  num? lineMiterLimit;
-  num? lineRoundLimit;
-  num? lineSortKey;
-  String? visibility;
-
   LineLayout({
     this.lineCap,
     this.lineJoin,
@@ -75,8 +66,14 @@ class LineLayout {
     this.lineSortKey,
     this.visibility,
   });
+  String? lineCap;
+  String? lineJoin;
+  num? lineMiterLimit;
+  num? lineRoundLimit;
+  num? lineSortKey;
+  String? visibility;
 
-  get jsObject => LineLayoutJsImpl.toJs(this);
+  dynamic get jsObject => LineLayoutJsImpl.toJs(this);
 
-  get dict => LineLayoutJsImpl.toDict(this);
+  Map<String, dynamic> get dict => LineLayoutJsImpl.toDict(this);
 }

@@ -1,11 +1,14 @@
 import 'dart:html';
 
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
+import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
-import 'package:maplibre_gl_web/src/geo/point.dart';
 
 class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
+  /// Creates a new MapMouseEvent from a [jsObject].
+  MapMouseEvent.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// The event type.
   String get type => jsObject.type;
 
@@ -29,16 +32,16 @@ class MapMouseEvent extends JsObjectWrapper<MapMouseEventJsImpl> {
   ///  *  On `mousedown` events, the behavior of {@link DragRotateHandler}
   ///  *  On `mousedown` events, the behavior of {@link BoxZoomHandler}
   ///  *  On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-  preventDefault() => jsObject.preventDefault();
+  dynamic preventDefault() => jsObject.preventDefault();
 
   /// `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;
-
-  /// Creates a new MapMouseEvent from a [jsObject].
-  MapMouseEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
+  /// Creates a new MapTouchEvent from a [jsObject].
+  MapTouchEvent.fromJsObject(super.jsObject) : super.fromJsObject();
+
   /// The event type.
   String get type => jsObject.type;
 
@@ -71,11 +74,8 @@ class MapTouchEvent extends JsObjectWrapper<MapTouchEventJsImpl> {
   ///
   ///  *  On `touchstart` events, the behavior of {@link DragPanHandler}
   ///  *  On `touchstart` events, the behavior of {@link TouchZoomRotateHandler}
-  preventDefault() => jsObject.preventDefault();
+  dynamic preventDefault() => jsObject.preventDefault();
 
   ///  `true` if `preventDefault` has been called.
   bool get defaultPrevented => jsObject.defaultPrevented;
-
-  /// Creates a new MapTouchEvent from a [jsObject].
-  MapTouchEvent.fromJsObject(super.jsObject) : super.fromJsObject();
 }

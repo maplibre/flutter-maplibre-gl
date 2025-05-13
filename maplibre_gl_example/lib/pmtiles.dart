@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 const _nullIsland = CameraPosition(target: LatLng(0, 0), zoom: 4.0);
 
@@ -44,11 +43,12 @@ class PMTilesMapState extends State<PMTilesMap> {
         onMapCreated: (controller) => mapController.complete(controller),
         initialCameraPosition: _nullIsland,
         onStyleLoadedCallback: () => setState(() => canInteractWithMap = true),
-        styleString: "assets/pmtiles_style.json",
+        styleString: 'assets/pmtiles_style.json',
       ),
     );
   }
 
   void _moveCameraToNullIsland() => mapController.future.then(
-      (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)));
+        (c) => c.animateCamera(CameraUpdate.newCameraPosition(_nullIsland)),
+      );
 }

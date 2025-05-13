@@ -3,7 +3,7 @@
 
 const _layoutProperties = {
 {{#all_layout_properties}}
-  "{{{property}}}",
+    '{{{property}}}',
 {{/all_layout_properties}}
 };
 

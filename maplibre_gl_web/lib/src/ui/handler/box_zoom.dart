@@ -3,6 +3,9 @@ import 'dart:html';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
 class BoxZoomHandler extends JsObjectWrapper<BoxZoomHandlerJsImpl> {
+  /// Creates a new BoxZoomHandler from a [jsObject].
+  BoxZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+
   ///  Returns a Boolean indicating whether the "box zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "box zoom" interaction is enabled.
@@ -17,16 +20,13 @@ class BoxZoomHandler extends JsObjectWrapper<BoxZoomHandlerJsImpl> {
   ///
   ///  @example
   ///    map.boxZoom.enable();
-  enable() => jsObject.enable();
+  dynamic enable() => jsObject.enable();
 
   ///  Disables the "box zoom" interaction.
   ///
   ///  @example
   ///    map.boxZoom.disable();
-  disable() => jsObject.disable();
+  dynamic disable() => jsObject.disable();
 
-  onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
-
-  /// Creates a new BoxZoomHandler from a [jsObject].
-  BoxZoomHandler.fromJsObject(super.jsObject) : super.fromJsObject();
+  dynamic onMouseDown(MouseEvent e) => jsObject.onMouseDown(e);
 }

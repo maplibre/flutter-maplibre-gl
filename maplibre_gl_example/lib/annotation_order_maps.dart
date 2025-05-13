@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
-import 'util.dart';
+import 'package:maplibre_gl_example/page.dart';
+import 'package:maplibre_gl_example/util.dart';
 
 class AnnotationOrderPage extends ExamplePage {
   const AnnotationOrderPage({super.key})
@@ -36,7 +34,8 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0),
                 child: Text(
-                    'This map has polygones (fill) above all other anotations (default behavior)'),
+                  'This map has polygones (fill) above all other anotations (default behavior)',
+                ),
               ),
               Center(
                 child: SizedBox(
@@ -67,7 +66,8 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
                 child: Text(
-                    'This map has polygones (fill) under all other anotations'),
+                  'This map has polygones (fill) under all other anotations',
+                ),
               ),
               Center(
                 child: SizedBox(
@@ -96,30 +96,35 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
     );
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedOne(MapLibreMapController controller) {
     controllerOne = controller;
   }
 
+  // ignore: use_setters_to_change_properties
   void onMapCreatedTwo(MapLibreMapController controller) {
     controllerTwo = controller;
   }
 
   Future<void> onStyleLoaded(MapLibreMapController controller) async {
     await addImageFromAsset(
-        controller, "custom-marker", "assets/symbols/custom-marker.png");
-    controller.addSymbol(
+      controller,
+      'custom-marker',
+      'assets/symbols/custom-marker.png',
+    );
+    await controller.addSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude,
           center.longitude,
         ),
-        iconImage: "custom-marker", // "airport-15",
+        iconImage: 'custom-marker', // "airport-15",
       ),
     );
-    controller.addLine(
+    await controller.addLine(
       const LineOptions(
         draggable: false,
-        lineColor: "#ff0000",
+        lineColor: '#ff0000',
         lineWidth: 7.0,
         lineOpacity: 1,
         geometry: [
@@ -132,10 +137,10 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
         ],
       ),
     );
-    controller.addFill(
+    await controller.addFill(
       const FillOptions(
         draggable: false,
-        fillColor: "#008888",
+        fillColor: '#008888',
         fillOpacity: 0.3,
         geometry: [
           [

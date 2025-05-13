@@ -11,26 +11,6 @@ class OfflineRegionDefinition {
     this.includeIdeographs = false,
   });
 
-  final LatLngBounds bounds;
-  final String mapStyleUrl;
-  final double minZoom;
-  final double maxZoom;
-  final bool includeIdeographs;
-
-  @override
-  String toString() =>
-      "OfflineRegionDefinition, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom";
-
-  Map<String, dynamic> toMap() {
-    final data = <String, dynamic>{};
-    data['bounds'] = bounds.toList();
-    data['mapStyleUrl'] = mapStyleUrl;
-    data['minZoom'] = minZoom;
-    data['maxZoom'] = maxZoom;
-    data['includeIdeographs'] = includeIdeographs;
-    return data;
-  }
-
   factory OfflineRegionDefinition.fromMap(Map<String, dynamic> map) {
     return OfflineRegionDefinition(
       bounds: _latLngBoundsFromList(map['bounds']),
@@ -40,6 +20,26 @@ class OfflineRegionDefinition {
       maxZoom: map['maxZoom'].toDouble(),
       includeIdeographs: map['includeIdeographs'] ?? false,
     );
+  }
+
+  final LatLngBounds bounds;
+  final String mapStyleUrl;
+  final double minZoom;
+  final double maxZoom;
+  final bool includeIdeographs;
+
+  @override
+  String toString() =>
+      'OfflineRegionDefinition, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom';
+
+  Map<String, dynamic> toMap() {
+    final data = <String, dynamic>{};
+    data['bounds'] = bounds.toList();
+    data['mapStyleUrl'] = mapStyleUrl;
+    data['minZoom'] = minZoom;
+    data['maxZoom'] = maxZoom;
+    data['includeIdeographs'] = includeIdeographs;
+    return data;
   }
 
   static LatLngBounds _latLngBoundsFromList(List<dynamic> json) {
@@ -58,10 +58,6 @@ class OfflineRegion {
     required this.metadata,
   });
 
-  final int id;
-  final OfflineRegionDefinition definition;
-  final Map<String, dynamic> metadata;
-
   factory OfflineRegion.fromMap(Map<String, dynamic> json) {
     return OfflineRegion(
       id: json['id'],
@@ -70,7 +66,11 @@ class OfflineRegion {
     );
   }
 
+  final int id;
+  final OfflineRegionDefinition definition;
+  final Map<String, dynamic> metadata;
+
   @override
   String toString() =>
-      "OfflineRegion, id = $id, definition = $definition, metadata = $metadata";
+      'OfflineRegion, id = $id, definition = $definition, metadata = $metadata';
 }

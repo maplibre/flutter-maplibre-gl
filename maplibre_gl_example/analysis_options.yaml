@@ -2,5 +2,6 @@ include: ../analysis_options.yaml
 
 linter:
   rules:
+    prefer_int_literals: false
     public_member_api_docs: false
     avoid_redundant_argument_values: false

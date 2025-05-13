@@ -54,9 +54,8 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 /// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 @JS('Popup')
 class PopupJsImpl extends EventedJsImpl {
-  external dynamic get options;
-
   external factory PopupJsImpl([PopupOptionsJsImpl? options]);
+  external dynamic get options;
 
   /// Adds the popup to a map.
   ///
@@ -159,7 +158,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
-  external addClassName(String className);
+  external dynamic addClassName(String className);
 
   /// Removes a CSS class from the popup container element.
   ///
@@ -168,7 +167,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
-  external removeClassName(String className);
+  external dynamic removeClassName(String className);
 
   /// Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
   ///

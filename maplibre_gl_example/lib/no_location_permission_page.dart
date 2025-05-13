@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'page.dart';
+import 'package:maplibre_gl_example/page.dart';
 
 class NoLocationPermissionPage extends ExamplePage {
   const NoLocationPermissionPage({super.key})
@@ -33,7 +32,7 @@ class _NoLocationPermissionBodyState extends State<NoLocationPermissionBody> {
         target: LatLng(-33.852, 151.211),
         zoom: 11.0,
       ),
-      styleString: "assets/osm_style.json",
+      styleString: 'assets/osm_style.json',
     );
   }
 }
