@@ -17,21 +17,13 @@ dependencies:
   flutter_hooks: ^0.20.5
   http: ^1.1.0
   location: ^5.0.3
-  maplibre_gl: ^0.21.0
+  maplibre_gl: ^0.22.0
   path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: ^5.0.0
-
-dependency_overrides:
-  maplibre_gl:
-    path: ../maplibre_gl
-  maplibre_gl_platform_interface:
-    path: ../maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ../maplibre_gl_web
 
 flutter:
   uses-material-design: true
