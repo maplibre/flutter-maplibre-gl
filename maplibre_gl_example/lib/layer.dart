@@ -146,7 +146,7 @@ class LayerState extends State {
   }
 
   void onFeatureTap(
-      dynamic featureId, Point<double> point, LatLng latLng, String layerId) {
+      dynamic featureId, Point<double> point, LatLng latLng, String? layerId) {
     final snackBar = SnackBar(
       content: Text(
         'Tapped feature with id $featureId on layer $layerId',
