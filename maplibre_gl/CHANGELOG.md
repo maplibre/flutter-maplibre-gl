@@ -2,7 +2,7 @@
 
 ### Breaking changes
 
-* Updated maplibre-native for iOS to v6.13.0. This mainly introduces PMTiles support. See the
+* Updated maplibre-native for iOS to v6.14.0. This mainly introduces PMTiles support. See the
   [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#6121)
   for more information.
 * Updated maplibre-native for Android to v11.9.0. This mainly introduces PMTiles support.
