@@ -6,11 +6,14 @@ package org.maplibre.maplibregl;
 
 import android.content.Context;
 import android.view.Gravity;
+
 import androidx.annotation.NonNull;
+
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.android.maps.MapLibreMapOptions;
+
 import io.flutter.plugin.common.BinaryMessenger;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
@@ -45,7 +48,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
       controller.setCameraTargetBounds(bounds);
     }
 
-    if(null != locationEngineRequest ){
+    if(null != locationEngineRequest){
       controller.setLocationEngineProperties(locationEngineRequest);
     }
 
