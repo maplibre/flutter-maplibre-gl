@@ -80,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ${{ [ env.flutterVersion ] }}
+        sdk: [ '${{ env.flutterVersion }}' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ${{ [ env.flutterVersion ] }}
+        sdk: [ '${{ env.flutterVersion }}' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -140,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ${{ [ env.flutterVersion ] }}
+        sdk: [ '${{ env.flutterVersion }}' ]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
