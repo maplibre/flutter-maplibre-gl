@@ -77,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.22.0', '' ]
+        sdk: ['3.29.3']
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -108,7 +108,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.22.0', '' ]
+        sdk: ['3.29.3']
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -137,7 +137,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: [ '3.22.0', '' ]
+        sdk: ['3.29.3']
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
