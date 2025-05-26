@@ -2,6 +2,9 @@ name: Flutter CI
 
 on: [push, pull_request, workflow_dispatch]
 
+env:
+  flutterVersion: '3.29.3'
+
 # Ensure that new pushes/updates cancel running jobs
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -77,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ['3.29.3']
+        sdk: [${{ flutterVersion }}]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -94,7 +97,7 @@ jobs:
         run: flutter build apk
       - name: Upload apk as artifact
         uses: actions/upload-artifact@v4
-        if: ${{ matrix.sdk == '' }}
+        if: ${{ matrix.sdk == ${{ flutterVersion }} }}
         with:
           name: maplibre-flutter-demo.apk
           path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
@@ -108,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ['3.29.3']
+        sdk: [${{ flutterVersion }}]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -122,7 +125,7 @@ jobs:
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
-        if: ${{ matrix.sdk == '' }}
+        if: ${{ matrix.sdk == ${{ flutterVersion }} }}
         uses: actions/upload-artifact@v4
         with:
           name: maplibre-flutter-demo.app
@@ -137,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ['3.29.3']
+        sdk: [${{ flutterVersion }}]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
