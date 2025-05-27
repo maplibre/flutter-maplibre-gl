@@ -9,6 +9,7 @@
   Flutter version packed with OpenGL ES 3.0 build for now, later we could probably switch to Vulkan.
   See the [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1181)
   for more information.
+* queryRenderedFeaturesInRect support string feature ids on web (#576).
 
 ### Changed
 
