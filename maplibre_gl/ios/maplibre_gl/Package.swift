@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         // When updating the dependency version,
         // make sure to also update the version in maplibre_gl.podspec.
-        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.12.3"),
+        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.14.0"),
     ],
     targets: [
         .target(
