@@ -495,7 +495,7 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) =>
-      MapLibreMap.fromJsObject(jsObject.setStyle(style));
+      MapLibreMap.fromJsObject(jsObject.setStyle(style, jsify(options)));
 
   ///  Returns the map's MapLibre style object, which can be used to recreate the map's style.
   ///
