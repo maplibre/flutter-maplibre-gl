@@ -41,8 +41,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _registerViewFactory(Function(int) callback, int identifier) {
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
+    ui_web.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
       _mapElement = html.DivElement()
         ..style.position = 'absolute'
@@ -310,7 +309,7 @@ class MapLibreMapController extends MapLibrePlatform
         ], options)
         .map((feature) => {
               'type': 'Feature',
-              'id': feature.id as int?,
+              'id': feature.id,
               'geometry': {
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
