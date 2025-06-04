@@ -6,7 +6,6 @@ class MapLibreMapController extends MapLibrePlatform
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
-  bool _mapReady = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
@@ -42,8 +41,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _registerViewFactory(Function(int) callback, int identifier) {
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
+    ui_web.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
       _mapElement = html.DivElement()
         ..style.position = 'absolute'
@@ -73,7 +71,7 @@ class MapLibreMapController extends MapLibrePlatform
           attributionControl: false, //avoid duplicate control
         ),
       );
-      _map.on('load', _onStyleLoaded);
+      _map.on('style.load', _onStyleLoaded);
       _map.on('click', _onMapClick);
       // long click not available in web, so it is mapped to double click
       _map.on('dblclick', _onMapLongClick);
@@ -311,7 +309,7 @@ class MapLibreMapController extends MapLibrePlatform
         ], options)
         .map((feature) => {
               'type': 'Feature',
-              'id': feature.id as int?,
+              'id': feature.id,
               'geometry': {
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
@@ -417,7 +415,13 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onStyleLoaded(_) {
-    _mapReady = true;
+    final loaded = _map.isStyleLoaded();
+    if (!loaded) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _onStyleLoaded(_);
+      });
+      return;
+    }
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
@@ -702,11 +706,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     _interactiveFeatureLayerIds.clear();
 
-    _map.setStyle(styleString);
-    // catch style loaded for later style changes
-    if (_mapReady) {
-      _map.once("styledata", _onStyleLoaded);
-    }
+    _map.setStyle(styleString, {'diff': false});
   }
 
   @override
