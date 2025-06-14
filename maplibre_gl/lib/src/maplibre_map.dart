@@ -20,6 +20,7 @@ class MapLibreMap extends StatefulWidget {
     this.styleString = MapLibreStyles.demo,
     this.onMapCreated,
     this.onStyleLoadedCallback,
+    this.locationEnginePlatforms = LocationEnginePlatforms.defaultPlatform,
     this.gestureRecognizers,
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
@@ -40,6 +41,7 @@ class MapLibreMap extends StatefulWidget {
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
     this.iosLongClickDuration,
+    this.webPreserveDrawingBuffer = false,
     this.onMapClick,
     this.onUserLocationUpdated,
     this.onMapLongClick,
@@ -66,6 +68,10 @@ class MapLibreMap extends StatefulWidget {
         ),
         assert(annotationOrder.length <= 4),
         assert(annotationConsumeTapEvents.length > 0);
+
+  /// The properties for the platform-specific location engine.
+  /// Only has an impact if [myLocationEnabled] is set to true.
+  final LocationEnginePlatforms locationEnginePlatforms;
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -94,6 +100,11 @@ class MapLibreMap extends StatefulWidget {
   /// Has no effect on web or Android. Can not be changed at runtime, only the initial value is used.
   /// If null, the default value of the native MapLibre library / of the OS is used.
   final Duration? iosLongClickDuration;
+
+  /// If true, the map's canvas can be exported to a PNG using map.getCanvas().toDataURL().
+  /// This is false by default as a performance optimization.
+  /// **Web only** - has no effect on other platforms.
+  final bool? webPreserveDrawingBuffer;
 
   /// True if the map should show a compass when rotated.
   final bool compassEnabled;
@@ -269,6 +280,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
             widget.iosLongClickDuration!.inMilliseconds,
+      if (widget.webPreserveDrawingBuffer != null)
+        'webPreserveDrawingBuffer': widget.webPreserveDrawingBuffer,
     };
     return _maplibrePlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
@@ -338,29 +351,30 @@ class _MapLibreMapState extends State<MapLibreMap> {
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
 class _MapLibreMapOptions {
-  _MapLibreMapOptions({
-    this.compassEnabled,
-    this.cameraTargetBounds,
-    this.styleString,
-    this.minMaxZoomPreference,
-    required this.rotateGesturesEnabled,
-    required this.scrollGesturesEnabled,
-    required this.tiltGesturesEnabled,
-    required this.zoomGesturesEnabled,
-    required this.doubleClickZoomEnabled,
-    this.trackCameraPosition,
-    this.myLocationEnabled,
-    this.myLocationTrackingMode,
-    this.myLocationRenderMode,
-    this.logoViewMargins,
-    this.compassViewPosition,
-    this.compassViewMargins,
-    this.attributionButtonPosition,
-    this.attributionButtonMargins,
-  });
+  _MapLibreMapOptions(
+      {this.compassEnabled,
+      this.cameraTargetBounds,
+      this.styleString,
+      this.minMaxZoomPreference,
+      required this.rotateGesturesEnabled,
+      required this.scrollGesturesEnabled,
+      required this.tiltGesturesEnabled,
+      required this.zoomGesturesEnabled,
+      required this.doubleClickZoomEnabled,
+      this.trackCameraPosition,
+      this.myLocationEnabled,
+      this.myLocationTrackingMode,
+      this.myLocationRenderMode,
+      this.logoViewMargins,
+      this.compassViewPosition,
+      this.compassViewMargins,
+      this.attributionButtonPosition,
+      this.attributionButtonMargins,
+      this.locationEnginePlatforms});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
+          locationEnginePlatforms: map.locationEnginePlatforms,
           compassEnabled: map.compassEnabled,
           cameraTargetBounds: map.cameraTargetBounds,
           styleString: map.styleString,
@@ -418,6 +432,8 @@ class _MapLibreMapOptions {
 
   final Point? attributionButtonMargins;
 
+  final LocationEnginePlatforms? locationEnginePlatforms;
+
   final _gestureGroup = {
     'rotateGesturesEnabled',
     'scrollGesturesEnabled',
@@ -464,6 +480,7 @@ class _MapLibreMapOptions {
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
         'attributionButtonMargins', pointToArray(attributionButtonMargins));
+    addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
     return optionsMap;
   }
 

@@ -1339,7 +1339,7 @@ class MapLibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter}) async {
     if (properties is FillLayerProperties) {
-      addFillLayer(sourceId, layerId, properties,
+      await addFillLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1347,13 +1347,13 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is FillExtrusionLayerProperties) {
-      addFillExtrusionLayer(sourceId, layerId, properties,
+      await addFillExtrusionLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else if (properties is LineLayerProperties) {
-      addLineLayer(sourceId, layerId, properties,
+      await addLineLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1361,7 +1361,7 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is SymbolLayerProperties) {
-      addSymbolLayer(sourceId, layerId, properties,
+      await addSymbolLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1369,7 +1369,7 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is CircleLayerProperties) {
-      addCircleLayer(sourceId, layerId, properties,
+      await addCircleLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1380,7 +1380,7 @@ class MapLibreMapController extends ChangeNotifier {
       if (filter != null) {
         throw UnimplementedError("RasterLayer does not support filter");
       }
-      addRasterLayer(sourceId, layerId, properties,
+      await addRasterLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
@@ -1389,13 +1389,13 @@ class MapLibreMapController extends ChangeNotifier {
       if (filter != null) {
         throw UnimplementedError("HillShadeLayer does not support filter");
       }
-      addHillshadeLayer(sourceId, layerId, properties,
+      await addHillshadeLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else if (properties is HeatmapLayerProperties) {
-      addHeatmapLayer(sourceId, layerId, properties,
+      await addHeatmapLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,

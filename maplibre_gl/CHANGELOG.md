@@ -1,7 +1,47 @@
-## UNRELEASED
+## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
+### Breaking changes
+
+* Updated maplibre-native for iOS to v6.14.0. This mainly introduces PMTiles support. See the
+  [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/ios/CHANGELOG.md#6121)
+  for more information.
+* Updated maplibre-native for Android to v11.9.0. This mainly introduces PMTiles support.
+  Flutter version packed with OpenGL ES 3.0 build for now, later we could probably switch to Vulkan.
+  See the [maplibre-native changelog](https://github.com/maplibre/maplibre-native/blob/main/platform/android/CHANGELOG.md#1181)
+  for more information.
+* queryRenderedFeaturesInRect support string feature ids on web (#576).
+
+### Changed
+
+* Added `await` to all `addLayer` calls (#558).
+
+### Fixed
+
+* Fixed `Unsupported operation` error on web (#551).
+
+## [0.21.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.20.0...v0.21.0)
+
+### Added
+
+* added the `clearAmbientCache` functionality (#502).
+* added the `contains` functionality to `LatLngBounds` (#498).
+* added the possibility to set `LocationEnginePlatforms` properties for better device tracking on Android (#510).
+
+### Changed
+
+* BREAKING: `onFeatureTap` returns the `layerId` (#475).
+* Changed iOS package name to support Swift Package Manager (#467).
 * Move the `maplibre_gl` package to a subdirectory of the repository and add 
-  melos to orchestrate all packages.
+  melos to orchestrate all packages (#453).
+
+### Removed
+
+* Removed support for Dart SDKs older than `3.4.0` (`Flutter SDK 3.22.0`) (#542)
+
+### Fixed
+
+* Fixed exception when destroying mapView on Android by reordering cleanup (#459).
+
 
 ## 0.20.0
 
@@ -33,6 +73,7 @@ If you notice any build errors, please make sure to run `flutter clean`.
 * Added support for Swift Package Manager usage on iOS.
 * Migrated main iOS plugin class from Objective-C to Swift.
 * Renamed iOS plugin classes from `Mapbox` to `MapLibre`.
+* Removed support for Kotlin versions older than `1.9.0` (#460).
 
 **Full Changelog**:
 [v0.19.0+2...v0.20.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.19.0+2...v0.20.0)

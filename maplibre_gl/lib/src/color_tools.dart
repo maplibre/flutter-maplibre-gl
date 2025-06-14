@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 part of '../maplibre_gl.dart';
 
 extension MapLibreColorConversion on Color {
