@@ -54,7 +54,8 @@ abstract class MapLibrePlatform {
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode);
-
+  Future<void> setUserLocationAnchor(Point<double> anchor);
+  
   Future<void> matchMapLanguageWithDeviceDefault();
 
   void resizeWebMap();
