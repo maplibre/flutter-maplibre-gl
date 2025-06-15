@@ -210,20 +210,20 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<void> setUserLocationAnchor(Point anchor) async {
-    await _channel
-        .invokeMethod('map#setUserLocationAnchor', <String, dynamic>{
-      'x': anchor.x,
-      'y': anchor.y,
-    });
-  }
-
-  @override
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode) async {
     await _channel
         .invokeMethod('map#updateMyLocationTrackingMode', <String, dynamic>{
       'mode': myLocationTrackingMode.index,
+    });
+  }
+
+  @override
+  Future<void> setUserLocationAnchor(Point<double> anchor) async {
+    await _channel
+        .invokeMethod('map#setUserLocationAnchor', <String, dynamic>{
+      'x': anchor.x,
+      'y': anchor.y,
     });
   }
 
