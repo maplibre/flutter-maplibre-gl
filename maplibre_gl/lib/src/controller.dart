@@ -267,7 +267,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
-  Future<void> setUserLocationAnchor(Point anchor) async {
+  Future<void> setUserLocationAnchor(Point<double> anchor) async {
     await _maplibrePlatform.setUserLocationAnchor(anchor);
   }
 
