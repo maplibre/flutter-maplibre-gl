@@ -35,6 +35,20 @@ Future<void> setHttpHeaders(Map<String, String> headers) {
   );
 }
 
+/// Enable or disable SSL certificate validation
+///
+/// When enabled (true), the app will bypass SSL certificate validation,
+/// which is useful for handling self-signed certificates or certificate issues.
+/// This should only be used in development or with trusted sources.
+Future<void> setSslCertificateBypass(bool enabled) {
+  return _globalChannel.invokeMethod(
+    'setSslCertificateBypass',
+    <String, dynamic>{
+      'enabled': enabled,
+    },
+  );
+}
+
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',

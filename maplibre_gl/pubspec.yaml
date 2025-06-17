@@ -11,8 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.22.0
-  maplibre_gl_web: ^0.22.0
+  maplibre_gl_platform_interface: ^0.21.0
+  maplibre_gl_web: ^0.21.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0

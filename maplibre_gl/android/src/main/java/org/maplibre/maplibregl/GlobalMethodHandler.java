@@ -88,6 +88,10 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         Map<String, String> headers = (Map<String, String>) methodCall.argument("headers");
         MapLibreHttpRequestUtil.setHttpHeaders(headers, result);
         break;
+      case "setSslCertificateBypass":
+        boolean enabled = methodCall.argument("enabled");
+        MapLibreHttpRequestUtil.setSslCertificateBypass(enabled, result);
+        break;
       case "downloadOfflineRegion#setup":
         String channelName = methodCall.argument("channelName");
         // Prepare args
