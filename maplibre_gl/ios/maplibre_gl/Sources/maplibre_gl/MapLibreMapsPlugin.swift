@@ -29,9 +29,20 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     result(nil)
                     return
                 }
-                let sessionConfig = URLSessionConfiguration.default
-                sessionConfig.httpAdditionalHeaders = headers // your headers here
-                MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
+                NetworkConfiguration.shared.configureHeaders(headers)
+                result(nil)
+            case "setSslCertificateBypass":
+                guard let arguments = methodCall.arguments as? [String: Any],
+                      let enabled = arguments["enabled"] as? Bool
+                else {
+                    result(FlutterError(
+                        code: "setSslCertificateBypassError",
+                        message: "could not decode arguments",
+                        details: nil
+                    ))
+                    return
+                }
+                NetworkConfiguration.shared.configureSSLValidation(enabled: enabled)
                 result(nil)
             case "installOfflineMapTiles":
                 guard let arguments = methodCall.arguments as? [String: String] else { return }
