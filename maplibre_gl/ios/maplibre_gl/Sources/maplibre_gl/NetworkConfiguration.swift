@@ -36,7 +36,7 @@ class NetworkConfiguration {
     /// - Parameter headers: Dictionary of HTTP headers to be added to all requests
     func configureHeaders(_ headers: [String: String]) {
         print("🌐 NetworkConfiguration: configureHeaders called with headers=\(headers)")
-        currentHeaders = headers
+        currentHeaders.merge(headers, uniquingKeysWith: { $1 })
         updateNetworkConfiguration()
         print("🌐 NetworkConfiguration: Headers configuration completed")
     }
