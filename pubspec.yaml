@@ -1,11 +1,35 @@
-name: maplibre_gl_workspace
-publish_to: 'none'
-repository: https://github.com/maplibre/flutter-maplibre-gl
-issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+name: maplibre_gl
+dependencies:
+  flutter:
+    sdk: flutter
+  maplibre_gl_platform_interface:
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      path: maplibre_gl_platform_interface
+      ref: main
+  maplibre_gl_web:
+    git:
+      url: https://github.com/maplibre/flutter-maplibre-gl.git
+      path: maplibre_gl_web
+      ref: main
+
+dependency_overrides:
+  maplibre_gl_platform_interface:
+    path: ./maplibre_gl_platform_interface
+  maplibre_gl_web:
+    path: ./maplibre_gl_web
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.mapbox.mapboxgl
+        pluginClass: MapboxMapsPlugin
+      ios:
+        pluginClass: MapboxMapsPlugin
+      web:
+        default_package: maplibre_gl_web
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  
-dev_dependencies:
-  melos: ^6.0.0
-  very_good_analysis: ">=5.0.0 <7.0.0"
+  sdk: '>=2.15.0 <3.0.0'
+  flutter: ">=2.8.1"
