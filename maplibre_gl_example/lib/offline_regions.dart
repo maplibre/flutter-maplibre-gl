@@ -12,7 +12,7 @@ final LatLngBounds hawaiiBounds = LatLngBounds(
 
 final LatLngBounds santiagoBounds = LatLngBounds(
   southwest: const LatLng(-33.5597, -70.49102),
-  northeast: const LatLng(-33.33282, -153.74267),
+  northeast: const LatLng(-33.33282, -70.40102),
 );
 
 final LatLngBounds aucklandBounds = LatLngBounds(
@@ -25,19 +25,19 @@ final List<OfflineRegionDefinition> regionDefinitions = [
     bounds: hawaiiBounds,
     minZoom: 3.0,
     maxZoom: 8.0,
-    mapStyleUrl: MapLibreStyles.demo,
+    mapStyleUrl: MapLibreStyles.openfreemapLiberty,
   ),
   OfflineRegionDefinition(
     bounds: santiagoBounds,
     minZoom: 10.0,
     maxZoom: 16.0,
-    mapStyleUrl: MapLibreStyles.demo,
+    mapStyleUrl: MapLibreStyles.openfreemapLiberty,
   ),
   OfflineRegionDefinition(
     bounds: aucklandBounds,
     minZoom: 13.0,
     maxZoom: 16.0,
-    mapStyleUrl: MapLibreStyles.demo,
+    mapStyleUrl: MapLibreStyles.openfreemapLiberty,
   ),
 ];
 
