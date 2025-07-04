@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
@@ -27,86 +28,112 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Lint analysis
         run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
+
+  test:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:io
+
+  test-web:
+    name: "Run web tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos test:web
+
+  code-gen:
+    name: "Generate code from templates"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+      - run: melos generate
+      - run: melos format
+      - name: Check Git changes
+        uses: multani/git-changes-action@v1
 
   build-android:
     name: "Build Android apk"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: example
-    strategy:
-      fail-fast: false
-      matrix:
-        sdk: [ '3.10.5', '' ]
+        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ matrix.sdk }}
+          channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'gradle'
       - name: Build example APK
         run: flutter build apk
       - name: Upload apk as artifact
         uses: actions/upload-artifact@v4
-        if: ${{ matrix.sdk == '' }}
         with:
           name: maplibre-flutter-demo.apk
-          path: example/build/app/outputs/flutter-apk/app-release.apk
+          path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
 
   build-iOS:
     name: Build iOS package
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: example
-    strategy:
-      fail-fast: false
-      matrix:
-        sdk: [ '3.10.5', '' ]
+        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ matrix.sdk }}
+          channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
-          podfile-path: example/ios/Podfile.lock
+          podfile-path: maplibre_gl_example/ios/Podfile.lock
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
-        if: ${{ matrix.sdk == '' }}
         uses: actions/upload-artifact@v4
         with:
           name: maplibre-flutter-demo.app
-          path: example/build/ios/iphonesimulator
+          path: maplibre_gl_example/build/ios/iphonesimulator
 
   build-web:
     name: "Build web"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: example
-    strategy:
-      fail-fast: false
-      matrix:
-        sdk: [ '3.10.5', '' ]
+        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ matrix.sdk }}
+          channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
       - name: Build web

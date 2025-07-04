@@ -6,6 +6,7 @@
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="example">
@@ -15,8 +16,9 @@
   <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
 
   <!-- MapLibre -->
-  <script src='https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.js'></script>
-  <link href='https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.css' rel='stylesheet' />
+  <script src='https://unpkg.com/maplibre-gl@^5.3.0/dist/maplibre-gl.js'></script>
+  <link href='https://unpkg.com/maplibre-gl@^5.3.0/dist/maplibre-gl.css' rel='stylesheet'/>
+  <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
 
   <title>example</title>
   <link rel="manifest" href="/manifest.json">
@@ -31,6 +33,15 @@
         navigator.serviceWorker.register('/flutter_service_worker.js');
       });
     }
+
+    // This is just a rough sketch of how to set up a maplibre-gl JS map with pmtiles.
+    // The URL used is the same as in assets/pmtiles_style.json.
+    // In development this only works when passing `--web-browser-flag "--disable-web-security"` to flutter run.
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+    const PMTILES_URL = "https://demo-bucket.protomaps.com/v4.pmtiles";
+    const source = new pmtiles.FetchSource(PMTILES_URL);
+    protocol.add(new pmtiles.PMTiles(source));
   </script>
   <script src="main.dart.js" type="application/javascript"></script>
 </body>

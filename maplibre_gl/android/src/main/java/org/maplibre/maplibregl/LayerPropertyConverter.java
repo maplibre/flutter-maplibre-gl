@@ -11,10 +11,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-
 
 import static org.maplibre.maplibregl.Convert.toMap;
 
@@ -44,7 +44,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconHaloBlur(expression));
           break;
         case "icon-translate":
-          properties.add(PropertyFactory.iconTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.iconTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.iconTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.iconTranslate(expression));
+          }
           break;
         case "icon-translate-anchor":
           properties.add(PropertyFactory.iconTranslateAnchor(expression));
@@ -65,7 +74,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textHaloBlur(expression));
           break;
         case "text-translate":
-          properties.add(PropertyFactory.textTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.textTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.textTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.textTranslate(expression));
+          }
           break;
         case "text-translate-anchor":
           properties.add(PropertyFactory.textTranslateAnchor(expression));
@@ -104,12 +122,21 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconTextFit(expression));
           break;
         case "icon-text-fit-padding":
-          properties.add(PropertyFactory.iconTextFitPadding(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.iconTextFitPadding(floatArray));
+            } else {
+              properties.add(PropertyFactory.iconTextFitPadding(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.iconTextFitPadding(expression));
+          }
           break;
         case "icon-image":
-          if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()){
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
-          }else{
+          } else {
             properties.add(PropertyFactory.iconImage(expression));
           }
           break;
@@ -123,7 +150,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconKeepUpright(expression));
           break;
         case "icon-offset":
-          properties.add(PropertyFactory.iconOffset(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.iconOffset(floatArray));
+            } else {
+              properties.add(PropertyFactory.iconOffset(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.iconOffset(expression));
+          }
           break;
         case "icon-anchor":
           properties.add(PropertyFactory.iconAnchor(expression));
@@ -186,7 +222,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textTransform(expression));
           break;
         case "text-offset":
-          properties.add(PropertyFactory.textOffset(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.textOffset(floatArray));
+            } else {
+              properties.add(PropertyFactory.textOffset(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.textOffset(expression));
+          }
           break;
         case "text-allow-overlap":
           properties.add(PropertyFactory.textAllowOverlap(expression));
@@ -230,7 +275,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleOpacity(expression));
           break;
         case "circle-translate":
-          properties.add(PropertyFactory.circleTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.circleTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.circleTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.circleTranslate(expression));
+          }
           break;
         case "circle-translate-anchor":
           properties.add(PropertyFactory.circleTranslateAnchor(expression));
@@ -280,7 +334,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineColor(expression));
           break;
         case "line-translate":
-          properties.add(PropertyFactory.lineTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.lineTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.lineTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.lineTranslate(expression));
+          }
           break;
         case "line-translate-anchor":
           properties.add(PropertyFactory.lineTranslateAnchor(expression));
@@ -298,7 +361,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineBlur(expression));
           break;
         case "line-dasharray":
-          properties.add(PropertyFactory.lineDasharray(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.lineDasharray(floatArray));
+            } else {
+              properties.add(PropertyFactory.lineDasharray(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.lineDasharray(expression));
+          }
           break;
         case "line-pattern":
           properties.add(PropertyFactory.linePattern(expression));
@@ -354,7 +426,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillOutlineColor(expression));
           break;
         case "fill-translate":
-          properties.add(PropertyFactory.fillTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.fillTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.fillTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.fillTranslate(expression));
+          }
           break;
         case "fill-translate-anchor":
           properties.add(PropertyFactory.fillTranslateAnchor(expression));
@@ -392,7 +473,16 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionColor(expression));
           break;
         case "fill-extrusion-translate":
-          properties.add(PropertyFactory.fillExtrusionTranslate(expression));
+          if (jsonElement.isJsonArray()) {
+            final Float[] floatArray = convertJsonToFloatArray(jsonElement);
+            if (floatArray != null) {
+              properties.add(PropertyFactory.fillExtrusionTranslate(floatArray));
+            } else {
+              properties.add(PropertyFactory.fillExtrusionTranslate(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.fillExtrusionTranslate(expression));
+          }
           break;
         case "fill-extrusion-translate-anchor":
           properties.add(PropertyFactory.fillExtrusionTranslateAnchor(expression));
@@ -537,4 +627,21 @@ class LayerPropertyConverter {
     return properties.toArray(new PropertyValue[properties.size()]);
   }
 
+  private static boolean isNumber(JsonElement element) {
+    return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+  }
+
+  private static Float[] convertJsonToFloatArray(JsonElement jsonElement) {
+    final JsonArray jsonArray = jsonElement.getAsJsonArray();
+    Float[] floatArray = new Float[jsonArray.size()];
+
+    for (int i = 0; i < jsonArray.size(); i++) {
+      if (jsonArray.get(i).isJsonPrimitive() && jsonArray.get(i).getAsJsonPrimitive().isNumber()) {
+        floatArray[i] = jsonArray.get(i).getAsFloat();
+      } else {
+        return null;
+      }
+    }
+    return floatArray;
+  }
 }

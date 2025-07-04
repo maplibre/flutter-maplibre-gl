@@ -17,6 +17,7 @@ import android.location.Location;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -27,14 +28,13 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.mapbox.android.gestures.AndroidGesturesManager;
-import com.mapbox.android.gestures.MoveGestureDetector;
-import org.maplibre.geojson.Feature;
-import org.maplibre.geojson.FeatureCollection;
+
+import org.jetbrains.annotations.NotNull;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -43,17 +43,20 @@ import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.geometry.LatLngQuad;
 import org.maplibre.android.geometry.VisibleRegion;
+import org.maplibre.android.gestures.AndroidGesturesManager;
+import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.android.location.LocationComponent;
 import org.maplibre.android.location.LocationComponentActivationOptions;
 import org.maplibre.android.location.LocationComponentOptions;
 import org.maplibre.android.location.OnCameraTrackingChangedListener;
 import org.maplibre.android.location.engine.LocationEngineCallback;
+import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.android.location.engine.LocationEngineResult;
 import org.maplibre.android.location.modes.CameraMode;
 import org.maplibre.android.location.modes.RenderMode;
-import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.MapLibreMap;
 import org.maplibre.android.maps.MapLibreMapOptions;
+import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.OnMapReadyCallback;
 import org.maplibre.android.maps.Style;
 import org.maplibre.android.offline.OfflineManager;
@@ -66,20 +69,18 @@ import org.maplibre.android.style.layers.HillshadeLayer;
 import org.maplibre.android.style.layers.Layer;
 import org.maplibre.android.style.layers.LineLayer;
 import org.maplibre.android.style.layers.Property;
+import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
-import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.sources.CustomGeometrySource;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
+import org.maplibre.geojson.Feature;
+import org.maplibre.geojson.FeatureCollection;
 
-import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.platform.PlatformView;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -91,6 +92,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformView;
 
 
 /** Controller of a single MapLibreMaps MapView instance. */
@@ -126,6 +132,7 @@ final class MapLibreMapController
   private boolean myLocationEnabled = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
+  private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private MethodChannel.Result mapReadyResult;
@@ -293,6 +300,7 @@ final class MapLibreMapController
               LocationComponentActivationOptions
                       .builder(context, style)
                       .locationComponentOptions(buildLocationComponentOptions(style))
+                      .locationEngine(myLocationEngineFactory.getLocationEngine(context))
                       .build();
 
       locationComponent.activateLocationComponent(options);
@@ -652,7 +660,7 @@ final class MapLibreMapController
     }
   }
 
-  private Feature firstFeatureOnLayers(RectF in) {
+  private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
     if (style != null) {
       final List<Layer> layers = style.getLayers();
       final List<String> layersInOrder = new ArrayList<String>();
@@ -665,7 +673,7 @@ final class MapLibreMapController
       for (String id : layersInOrder) {
         List<Feature> features = mapLibreMap.queryRenderedFeatures(in, id);
         if (!features.isEmpty()) {
-          return features.get(0);
+          return new Pair<Feature, String>(features.get(0), id);
         }
       }
     }
@@ -674,7 +682,6 @@ final class MapLibreMapController
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
-
     switch (call.method) {
       case "map#waitForMap":
         if (mapLibreMap != null) {
@@ -934,6 +941,24 @@ final class MapLibreMapController
               });
           break;
         }
+      case "map#clearAmbientCache":
+      {
+        OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
+
+        fileSource.clearAmbientCache(
+                new OfflineManager.FileSourceCallback() {
+                  @Override
+                  public void onSuccess() {
+                    result.success(null);
+                  }
+
+                  @Override
+                  public void onError(@NonNull String message) {
+                    result.error("MAPBOX CACHE ERROR", message, null);
+                  }
+                });
+        break;
+      }
       case "source#addGeoJson":
         {
           final String sourceId = call.argument("sourceId");
@@ -1223,7 +1248,10 @@ final class MapLibreMapController
       case "locationComponent#getLastLocation":
         {
           Log.e(TAG, "location component: getLastLocation");
-          if (this.myLocationEnabled && locationComponent != null) {
+          if (this.myLocationEnabled
+              && locationComponent != null
+              && locationComponent.isLocationComponentActivated()
+              && locationComponent.getLocationEngine() != null) {
             Map<String, Object> reply = new HashMap<>();
 
             mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
@@ -1246,6 +1274,11 @@ final class MapLibreMapController
                     result.error("", "", null); // ???
                   }
                 });
+          } else {
+            result.error(
+                "LOCATION DISABLED",
+                "Location is disabled or location component is unavailable",
+                null);
           }
           break;
         }
@@ -1680,14 +1713,15 @@ final class MapLibreMapController
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
     RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-    Feature feature = firstFeatureOnLayers(rectF);
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
     final Map<String, Object> arguments = new HashMap<>();
     arguments.put("x", pointf.x);
     arguments.put("y", pointf.y);
     arguments.put("lng", point.getLongitude());
     arguments.put("lat", point.getLatitude());
-    if (feature != null) {
-      arguments.put("id", feature.id());
+    if (featureLayerPair != null && featureLayerPair.first != null) {
+      arguments.put("layerId", featureLayerPair.second);
+      arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
     } else {
       methodChannel.invokeMethod("map#onMapClick", arguments);
@@ -1865,6 +1899,11 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setLocationEngineProperties(@NotNull LocationEngineRequest locationEngineRequest) {
+    myLocationEngineFactory.initLocationComponent(context, locationComponent, locationEngineRequest);
+  }
+
+  @Override
   public void setCompassEnabled(boolean compassEnabled) {
     mapLibreMap.getUiSettings().setCompassEnabled(compassEnabled);
   }
@@ -2018,7 +2057,7 @@ final class MapLibreMapController
   }
 
   private void updateMyLocationEnabled() {
-    if (this.locationComponent == null && myLocationEnabled) {
+    if (this.locationComponent == null && mapLibreMap.getStyle() != null && myLocationEnabled) {
       enableLocationComponent(mapLibreMap.getStyle());
     }
 
@@ -2036,6 +2075,7 @@ final class MapLibreMapController
   private void startListeningForLocationUpdates() {
     if (locationEngineCallback == null
         && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
         && locationComponent.getLocationEngine() != null) {
       locationEngineCallback =
           new LocationEngineCallback<LocationEngineResult>() {
@@ -2057,6 +2097,7 @@ final class MapLibreMapController
   private void stopListeningForLocationUpdates() {
     if (locationEngineCallback != null
         && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
         && locationComponent.getLocationEngine() != null) {
       locationComponent.getLocationEngine().removeLocationUpdates(locationEngineCallback);
       locationEngineCallback = null;
@@ -2158,8 +2199,8 @@ final class MapLibreMapController
       PointF pointf = detector.getFocalPoint();
       LatLng origin = mapLibreMap.getProjection().fromScreenLocation(pointf);
       RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-      Feature feature = firstFeatureOnLayers(rectF);
-      if (feature != null && startDragging(feature, origin)) {
+      Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
+      if (featureLayerPair != null && featureLayerPair.first != null && startDragging(featureLayerPair.first, origin)) {
         invokeFeatureDrag(pointf, "start");
         return true;
       }

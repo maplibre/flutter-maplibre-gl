@@ -45,35 +45,26 @@ abstract class MapLibrePlatform {
   final onUserLocationUpdatedPlatform = ArgumentCallbacks<UserLocation>();
 
   Future<void> initPlatform(int id);
-
   Widget buildView(
       Map<String, dynamic> creationParams,
       OnPlatformViewCreatedCallback onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers);
-
   Future<CameraPosition?> updateMapOptions(Map<String, dynamic> optionsUpdate);
-
   Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration});
-
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
-
   Future<void> updateMyLocationTrackingMode(
       MyLocationTrackingMode myLocationTrackingMode);
 
   Future<void> matchMapLanguageWithDeviceDefault();
 
   void resizeWebMap();
-
   void forceResizeWebMap();
 
   Future<void> updateContentInsets(EdgeInsets insets, bool animated);
-
   Future<void> setMapLanguage(String language);
-
   Future<void> setTelemetryEnabled(bool enabled);
 
   Future<bool> getTelemetryEnabled();
-
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter);
 
@@ -82,9 +73,8 @@ abstract class MapLibrePlatform {
 
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter);
-
   Future invalidateAmbientCache();
-
+  Future clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 
   Future<LatLngBounds> getVisibleRegion();
@@ -211,18 +201,6 @@ abstract class MapLibrePlatform {
   Future<void> addSource(String sourceId, SourceProperties properties);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
-
-  /// Method to set style string
-  /// A MapLibre GL style document defining the map's appearance.
-  /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
-  /// A short introduction can be found in the documentation of the [maplibre_gl] library.
-  /// The [styleString] supports following formats:
-  ///
-  /// 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
-  /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
-  /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
-  /// 4. Passing the raw JSON of the map style. This is only supported on Android.
-  Future<void> setStyle(String styleString);
 
   @mustCallSuper
   void dispose() {
