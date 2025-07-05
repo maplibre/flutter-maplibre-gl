@@ -219,6 +219,15 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setUserLocationAnchor(Point<double> anchor) async {
+    await _channel
+        .invokeMethod('map#setUserLocationAnchor', <String, dynamic>{
+      'x': anchor.x,
+      'y': anchor.y,
+    });
+  }
+
+  @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
     await _channel.invokeMethod('map#matchMapLanguageWithDeviceDefault');
   }
