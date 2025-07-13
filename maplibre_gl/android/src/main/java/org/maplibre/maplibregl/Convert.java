@@ -305,5 +305,13 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
       final Point point = toPoint(attributionButtonMarginsData, metrics.density);
       sink.setAttributionButtonMargins(point.x, point.y);
     }
+    final Object foregroundLoadColor = data.get("foregroundLoadColor");
+    if (foregroundLoadColor != null) {
+      sink.setForegroundLoadColor(toInt(foregroundLoadColor));
+    }
+    final Object translucentTextureSurface = data.get("translucentTextureSurface");
+    if (translucentTextureSurface != null) {
+      sink.setTranslucentTextureSurface(toBoolean(translucentTextureSurface));
+    }
   }
 }
