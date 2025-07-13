@@ -55,10 +55,12 @@ class TranslucentFullMapState extends State<TranslucentFullMap> {
             styleString: _styleString,
             onMapCreated: (controller) => mapController.complete(controller),
             initialCameraPosition: _nullIsland,
-            onStyleLoadedCallback: () =>
-                setState(() => canInteractWithMap = true),
-            // This is default value, but I set it here for example purposes.
+            onStyleLoadedCallback: () => setState(
+              () => canInteractWithMap = true,
+            ),
+            // This is a random color, for example purposes.
             foregroundLoadColor: Colors.purple,
+            // This sets the map to be translucent.
             translucentTextureSurface: true,
           ),
         ],
