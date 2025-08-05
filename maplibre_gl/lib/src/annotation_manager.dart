@@ -8,6 +8,9 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Called if a annotation is tapped
   final void Function(T)? onTap;
 
+  /// Called if a annotation is dragged
+  final void Function(T)? onDrag;
+
   /// base id of the manager. User [layerdIds] to get the actual ids.
   final String id;
 
@@ -29,9 +32,13 @@ abstract class AnnotationManager<T extends Annotation> {
 
   Set<T> get annotations => _idToAnnotation.values.toSet();
 
-  AnnotationManager(this.controller,
-      {this.onTap, this.selectLayer, required this.enableInteraction})
-      : id = getRandomString() {
+  AnnotationManager(
+    this.controller, {
+    this.onTap,
+    this.onDrag,
+    this.selectLayer,
+    required this.enableInteraction,
+  }) : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
@@ -144,6 +151,7 @@ abstract class AnnotationManager<T extends Annotation> {
       required DragEventType eventType}) {
     final annotation = byId(id);
     if (annotation != null) {
+      onDrag?.call(annotation);
       annotation.translate(delta);
       set(annotation);
     }
@@ -169,8 +177,12 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
-      : super(
+  LineManager(
+    super.controller, {
+    super.onTap,
+    super.onDrag,
+    super.enableInteraction = true,
+  }) : super(
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
 
@@ -196,6 +208,7 @@ class FillManager extends AnnotationManager<Fill> {
   FillManager(
     super.controller, {
     super.onTap,
+    super.onDrag,
     super.enableInteraction = true,
   }) : super(
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
@@ -221,6 +234,7 @@ class CircleManager extends AnnotationManager<Circle> {
   CircleManager(
     super.controller, {
     super.onTap,
+    super.onDrag,
     super.enableInteraction = true,
   });
 
@@ -242,6 +256,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
     super.controller, {
     super.onTap,
+    super.onDrag,
     bool iconAllowOverlap = false,
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,
