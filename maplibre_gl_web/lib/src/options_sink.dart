@@ -7,7 +7,7 @@ abstract class MapLibreMapOptionsSink {
   void setCompassEnabled(bool compassEnabled);
 
   // TODO: styleString is not actually a part of options. consider moving
-  void setStyleString(String? styleString);
+  void setStyle(dynamic styleObject);
 
   void setMinMaxZoomPreference(num? min, num? max);
 
