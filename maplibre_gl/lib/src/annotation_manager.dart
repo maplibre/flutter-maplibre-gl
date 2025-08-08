@@ -56,7 +56,7 @@ abstract class AnnotationManager<T extends Annotation> {
   }
 
   _onFeatureTapped(
-      dynamic id, Point<double> point, LatLng coordinates, String layerId) {
+      dynamic id, Point<double> point, LatLng coordinates, String? layerId) {
     final annotation = _idToAnnotation[id];
     if (annotation != null) {
       onTap!(annotation);
