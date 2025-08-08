@@ -66,11 +66,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             target: self,
             action: #selector(handleMapLongPress(sender:))
         )
-        for recognizer in mapView.gestureRecognizers!
-            where recognizer is UILongPressGestureRecognizer
-        {
-            longPress.require(toFail: recognizer)
-        }
         var longPressRecognizerAdded = false
 
         if let args = args as? [String: Any] {
