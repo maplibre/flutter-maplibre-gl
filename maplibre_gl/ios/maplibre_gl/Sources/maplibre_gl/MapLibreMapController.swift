@@ -36,7 +36,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         arguments args: Any?,
         registrar: FlutterPluginRegistrar
     ) {
-        mapView = MLNMapView(frame: frame)
+        if let args = args as? [String: Any], 
+        let styleString = args["styleString"] as? String, 
+        styleString.hasPrefix("{") || styleString.hasPrefix("[") {
+            // https://github.com/maplibre/maplibre-native/issues/3708
+            mapView = MLNMapView(frame: frame, styleJSON: styleString)
+        } else {
+            mapView = MLNMapView(frame: frame)
+        }
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         mapView.logoView.isHidden = true
         self.registrar = registrar
@@ -1787,8 +1794,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if styleString.isEmpty {
             NSLog("setStyleString - string empty")
         } else if styleString.hasPrefix("{") || styleString.hasPrefix("[") {
-            // Currently the iOS MapLibre SDK does not have a builder for json.
-            NSLog("setStyleString - JSON style currently not supported")
+            // Style JSON
+            mapView.styleJSON = styleString;
         } else if styleString.hasPrefix("/") {
             // Absolute path
             mapView.styleURL = URL(fileURLWithPath: styleString, isDirectory: false)
