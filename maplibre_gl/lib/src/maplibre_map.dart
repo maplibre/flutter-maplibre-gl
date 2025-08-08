@@ -61,6 +61,8 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.line,
       AnnotationType.circle,
     ],
+    this.foregroundLoadColor = Colors.transparent,
+    this.translucentTextureSurface = false,
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
@@ -72,6 +74,18 @@ class MapLibreMap extends StatefulWidget {
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
   final LocationEnginePlatforms locationEnginePlatforms;
+
+  /// The color used for the map loading foreground.
+  /// Pass a [Color] and it will be converted to ARGB int for the platform.
+  ///
+  /// **Available only on Android. Has no effect on iOS or Web.**
+  final Color? foregroundLoadColor;
+
+  /// Enable translucent texture surface for the map.
+  /// This allows the map to have a transparent background, useful for overlay scenarios.
+  ///
+  /// **Available only on Android. Has no effect on iOS or Web.**
+  final bool translucentTextureSurface;
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -370,7 +384,9 @@ class _MapLibreMapOptions {
       this.compassViewMargins,
       this.attributionButtonPosition,
       this.attributionButtonMargins,
-      this.locationEnginePlatforms});
+      this.locationEnginePlatforms,
+      this.foregroundLoadColor,
+      this.translucentTextureSurface});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -394,6 +410,8 @@ class _MapLibreMapOptions {
           compassViewMargins: map.compassViewMargins,
           attributionButtonPosition: map.attributionButtonPosition,
           attributionButtonMargins: map.attributionButtonMargins,
+          foregroundLoadColor: map.foregroundLoadColor,
+          translucentTextureSurface: map.translucentTextureSurface,
         );
 
   final bool? compassEnabled;
@@ -433,6 +451,10 @@ class _MapLibreMapOptions {
   final Point? attributionButtonMargins;
 
   final LocationEnginePlatforms? locationEnginePlatforms;
+
+  final Color? foregroundLoadColor;
+
+  final bool? translucentTextureSurface;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -481,6 +503,8 @@ class _MapLibreMapOptions {
     addIfNonNull(
         'attributionButtonMargins', pointToArray(attributionButtonMargins));
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
+    addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
+    addIfNonNull('translucentTextureSurface', translucentTextureSurface);
     return optionsMap;
   }
 
