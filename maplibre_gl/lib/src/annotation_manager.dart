@@ -148,12 +148,12 @@ abstract class AnnotationManager<T extends Annotation> {
       required LatLng origin,
       required LatLng current,
       required LatLng delta,
-      required DragEventType eventType}) {
+      required DragEventType eventType}) async {
     final annotation = byId(id);
     if (annotation != null) {
-      onDrag?.call(annotation, eventType);
       annotation.translate(delta);
-      set(annotation);
+      await set(annotation);
+      onDrag?.call(annotation, eventType);
     }
   }
 
