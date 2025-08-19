@@ -83,6 +83,74 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
       },
     );
 
+/// Creates a snapshot of a map with the specified parameters.
+/// 
+/// [width] and [height] define the dimensions of the snapshot in pixels.
+/// [styleUrl] is the URL of the map style to use.
+/// [cameraPosition] defines the camera position (center and zoom level) for the snapshot.
+/// [markers] is an optional list of markers to add to the snapshot.
+/// 
+/// Returns a [Uint8List] containing the PNG image data of the snapshot.
+Future<Uint8List> startMapSnapshot({
+  required int width,
+  required int height,
+  required String styleUrl,
+  required CameraPosition cameraPosition,
+  List<MapMarker>? markers,
+}) async {
+  final result = await _globalChannel.invokeMethod<Uint8List>(
+    'startMapSnapshot',
+    <String, dynamic>{
+      'width': width,
+      'height': height,
+      'styleUrl': styleUrl,
+      'cameraPosition': {
+        'target': {
+          'latitude': cameraPosition.target.latitude,
+          'longitude': cameraPosition.target.longitude,
+        },
+        'zoom': cameraPosition.zoom,
+        'bearing': cameraPosition.bearing,
+        'tilt': cameraPosition.tilt,
+      },
+      'markers': markers?.map((m) => m.toMap()).toList(),
+    },
+  );
+  
+  if (result == null) {
+    throw Exception('Failed to create map snapshot');
+  }
+  
+  return result;
+}
+
+/// Represents a marker to be added to the map snapshot.
+class MapMarker {
+  final LatLng position;
+  final Uint8List iconData;
+  final double iconSize;
+  final String? label;
+  
+  const MapMarker({
+    required this.position,
+    required this.iconData,
+    this.iconSize = 32.0,
+    this.label,
+  });
+  
+  Map<String, dynamic> toMap() {
+    return {
+      'position': {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      },
+      'iconData': iconData,
+      'iconSize': iconSize,
+      'label': label,
+    };
+  }
+}
+
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},

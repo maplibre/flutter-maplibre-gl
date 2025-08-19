@@ -28,6 +28,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   @NonNull private final BinaryMessenger messenger;
   @Nullable private FlutterPlugin.FlutterAssets flutterAssets;
   @Nullable private OfflineChannelHandlerImpl downloadOfflineRegionChannelHandler;
+  @Nullable private MapSnapshotWrapper mapSnapshotter;
 
 
   GlobalMethodHandler(@NonNull FlutterPlugin.FlutterPluginBinding binding) {
@@ -124,6 +125,13 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
       case "deleteOfflineRegion":
         OfflineManagerUtils.deleteRegion(
             result, context, methodCall.<Number>argument("id").longValue());
+        break;
+      case "startMapSnapshot":
+        Map<String, Object> snapshotArgs = (Map<String, Object>) methodCall.arguments;
+        if (mapSnapshotter == null) {
+          mapSnapshotter = new MapSnapshotWrapper(new MethodChannel(messenger, "plugins.flutter.io/maplibre_gl"), context);
+        }
+        mapSnapshotter.startSnapshot(snapshotArgs, result);
         break;
       default:
         result.notImplemented();
