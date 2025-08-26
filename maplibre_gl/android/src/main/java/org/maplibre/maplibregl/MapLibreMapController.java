@@ -452,6 +452,10 @@ final class MapLibreMapController
   private void addGeoJsonSource(String sourceName, String source) {
     FeatureCollection featureCollection = FeatureCollection.fromJson(source);
     GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection);
+    // Prevent unbounded growth - remove old entry if exists
+    if (addedFeaturesByLayer.containsKey(sourceName)) {
+      addedFeaturesByLayer.remove(sourceName);
+    }
     addedFeaturesByLayer.put(sourceName, featureCollection);
 
     style.addSource(geoJsonSource);
@@ -1422,7 +1426,10 @@ final class MapLibreMapController
                 "The style is null. Has onStyleLoaded() already been invoked?",
                 null);
           }
-          style.removeSource((String) call.argument("sourceId"));
+          String sourceId = (String) call.argument("sourceId");
+          style.removeSource(sourceId);
+          // Clean up the cached features to prevent memory leak
+          addedFeaturesByLayer.remove(sourceId);
           result.success(null);
           break;
         }
@@ -1868,8 +1875,25 @@ final class MapLibreMapController
 
     if (locationComponent != null) {
       locationComponent.setLocationComponentEnabled(false);
+      locationComponent = null;
     }
     stopListeningForLocationUpdates();
+    
+    // Clean up collections to prevent memory leaks
+    if (interactiveFeatureLayerIds != null) {
+      interactiveFeatureLayerIds.clear();
+    }
+    if (addedFeaturesByLayer != null) {
+      addedFeaturesByLayer.clear();
+    }
+    
+    // Clear references to avoid memory leaks
+    mapLibreMap = null;
+    style = null;
+    draggedFeature = null;
+    dragOrigin = null;
+    dragPrevious = null;
+    androidGesturesManager = null;
 
     mapViewContainer.removeView(mapView);
 
@@ -2187,8 +2211,6 @@ final class MapLibreMapController
    * @return
    */
   private Bitmap getScaledImage(String imageId, float density) {
-    AssetFileDescriptor assetFileDescriptor;
-
     // Split image path into parts.
     List<String> imagePathList = Arrays.asList(imageId.split("/"));
     List<String> assetPathList = new ArrayList<>();
@@ -2222,15 +2244,32 @@ final class MapLibreMapController
     // Iterate over asset paths and get the highest scaled asset (as a bitmap).
     Bitmap bitmap = null;
     for (String assetPath : assetPathList) {
+      AssetFileDescriptor afd = null;
+      InputStream assetStream = null;
       try {
         // Read path (throws exception if doesn't exist).
-        assetFileDescriptor = mapView.getContext().getAssets().openFd(assetPath);
-        InputStream assetStream = assetFileDescriptor.createInputStream();
+        afd = mapView.getContext().getAssets().openFd(assetPath);
+        assetStream = afd.createInputStream();
         bitmap = BitmapFactory.decodeStream(assetStream);
-        assetFileDescriptor.close(); // Close for memory
         break; // If exists, break
       } catch (IOException e) {
-        // Skip
+        // Skip - try next resolution
+      } finally {
+        // CRITICAL: Always close both the stream AND the descriptor to prevent leaks
+        if (assetStream != null) {
+          try {
+            assetStream.close();
+          } catch (IOException e) {
+            Log.e(TAG, "Failed to close asset stream", e);
+          }
+        }
+        if (afd != null) {
+          try {
+            afd.close();
+          } catch (IOException e) {
+            Log.e(TAG, "Failed to close asset file descriptor", e);
+          }
+        }
       }
     }
     return bitmap;
