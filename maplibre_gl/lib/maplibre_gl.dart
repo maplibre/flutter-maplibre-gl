@@ -49,7 +49,10 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show
         Annotation,
+        ArgumentCallback,
+        ArgumentCallback2,
         ArgumentCallbacks,
+        ArgumentCallbacks2,
         AttributionButtonPosition,
         CameraPosition,
         CameraTargetBounds,
