@@ -231,20 +231,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for symbols placed on this map.
   final ArgumentCallbacks<Symbol> onSymbolTapped = ArgumentCallbacks<Symbol>();
 
-  // /// Callbacks to receive hover events for symbols placed on this map.
-  // final onSymbolHover = ArgumentCallbacks2<Symbol, HoverEventType>();
-
   /// Callbacks to receive tap events for circles placed on this map.
   final ArgumentCallbacks<Circle> onCircleTapped = ArgumentCallbacks<Circle>();
 
-  // /// Callbacks to receive hover events for circle placed on this map.
-  // final onCircleHover = ArgumentCallbacks2<Circle, HoverEventType>();
-
   /// Callbacks to receive tap events for fills placed on this map.
   final ArgumentCallbacks<Fill> onFillTapped = ArgumentCallbacks<Fill>();
-
-  // /// Callbacks to receive hover events for fill placed on this map.
-  // final onFillHover = ArgumentCallbacks2<Fill, HoverEventType>();
 
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
