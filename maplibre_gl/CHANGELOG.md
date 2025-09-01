@@ -1,3 +1,11 @@
+## UNRELEASED
+
+### Breaking changes
+* `annotation` argument is now passed to onFeatureDrag callbacks. Existing implementations must be updated to include the new parameter.
+
+### Changed
+* Added `onFeatureHover` to the controller for listening to hover interactions.
+
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
 ### Breaking changes

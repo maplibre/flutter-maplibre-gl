@@ -245,8 +245,9 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Callbacks to receive tap events for features (geojson layer) placed on this map.
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
-
+  /// Callbacks to receive drag events for features (geojson layer) placed on this map.
   final onFeatureDrag = <OnFeatureDragCallback>[];
+  /// Callbacks to receive mouse events(enter,move,leave) for features (geojson layer) placed on this map.
   final onFeatureHover = <OnFeatureHoverCallback>[];
 
   /// Callbacks to receive tap events for info windows on symbols
