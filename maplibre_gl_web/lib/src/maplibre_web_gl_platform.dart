@@ -7,6 +7,7 @@ class MapLibreMapController extends MapLibrePlatform
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
   dynamic _draggedFeatureId;
+  dynamic _hoveredFeatureId;
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
   bool _dragEnabled = true;
@@ -701,7 +702,7 @@ class MapLibreMapController extends MapLibrePlatform
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _onMouseEnterFeature);
-      _map.off('mousemouve', layerId, _onMouseEnterFeature);
+      _map.off('mousemove', layerId, _onMouseMoveInFeature);
       _map.off('mouseleave', layerId, _onMouseLeaveFeature);
       if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
     }
@@ -988,24 +989,47 @@ class MapLibreMapController extends MapLibrePlatform
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
-      if (layerType == "fill") {
-        _map.on('mousemove', layerId, _onMouseEnterFeature);
-      } else {
-        _map.on('mouseenter', layerId, _onMouseEnterFeature);
-      }
+      _map.on('mouseenter', layerId, _onMouseEnterFeature);
+      _map.on('mousemove', layerId, _onMouseMoveInFeature);
       _map.on('mouseleave', layerId, _onMouseLeaveFeature);
       if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
     }
   }
 
-  void _onMouseEnterFeature(_) {
+  void _onMouseEnterFeature(Event e) {
     if (_draggedFeatureId == null) {
       _map.getCanvas().style.cursor = 'pointer';
     }
+    final featureId = e.features.first.id;
+
+    onFeatureHoverPlatform({
+      'id': featureId,
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+      'eventType': 'enter'
+    });
+    _hoveredFeatureId = featureId;
   }
 
-  void _onMouseLeaveFeature(_) {
+  void _onMouseMoveInFeature(Event e) {
+    final featureId = e.features.first.id;
+    onFeatureHoverPlatform({
+      'id': featureId,
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+      'eventType': 'move'
+    });
+  }
+
+  void _onMouseLeaveFeature(Event e) {
     _map.getCanvas().style.cursor = '';
+    onFeatureHoverPlatform({
+      'id': _hoveredFeatureId,
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+      'eventType': 'leave'
+    });
+    _hoveredFeatureId = null;
   }
 
   @override

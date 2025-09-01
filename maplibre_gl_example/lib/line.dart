@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,11 +40,13 @@ class LineBodyState extends State<LineBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onLineTapped.add(_onLineTapped);
+    controller.onFeatureHover.add(_onFeatureHover);
   }
 
   @override
   void dispose() {
     controller?.onLineTapped.remove(_onLineTapped);
+    controller?.onFeatureHover.remove(_onFeatureHover);
     super.dispose();
   }
 
@@ -64,6 +67,16 @@ class LineBodyState extends State<LineBody> {
     await _updateSelectedLine(
       const LineOptions(lineColor: "#ffe100"),
     );
+  }
+
+  _onFeatureHover(Annotation annotation, Point<double> point, LatLng latLng,
+      HoverEventType eventType) async {
+    if (annotation is! Line) return;
+    if (eventType == HoverEventType.enter) {
+      controller!.updateLine(annotation, const LineOptions(lineWidth: 16));
+    } else if (eventType == HoverEventType.leave) {
+      controller!.updateLine(annotation, const LineOptions(lineWidth: 14));
+    }
   }
 
   _updateSelectedLine(LineOptions changes) async {

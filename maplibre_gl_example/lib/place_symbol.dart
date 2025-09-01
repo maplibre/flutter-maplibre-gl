@@ -43,7 +43,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onSymbolTapped.add(_onSymbolTapped);
-    controller.onSymbolDrag.add(_onSymbolDrag);
+    controller.onFeatureDrag.add(_onFeatureDrag);
   }
 
   void _onStyleLoaded() {
@@ -55,7 +55,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   @override
   void dispose() {
     controller?.onSymbolTapped.remove(_onSymbolTapped);
-    controller?.onSymbolDrag.remove(_onSymbolDrag);
+    controller?.onFeatureDrag.remove(_onFeatureDrag);
     super.dispose();
   }
 
@@ -86,12 +86,18 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _onSymbolDrag(Symbol symbol, DragEventType eventType) {
+  void _onFeatureDrag(Annotation annotation,
+      {required Point<double> point,
+      required LatLng origin,
+      required LatLng current,
+      required LatLng delta,
+      required DragEventType eventType}) {
+    if (annotation is! Symbol) return;
     if (eventType == DragEventType.end) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Symbol #${symbol.data?['count'] ?? ''} was dragged to ${symbol.options.geometry}'),
+              'Symbol #${annotation.data?['count'] ?? ''} was dragged to ${annotation.options.geometry}'),
         ),
       );
     }
