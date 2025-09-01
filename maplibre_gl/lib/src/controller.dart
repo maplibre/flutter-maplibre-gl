@@ -10,8 +10,9 @@ typedef OnMapClickCallback = void Function(
 typedef OnFeatureInteractionCallback = void Function(
     dynamic id, Point<double> point, LatLng coordinates, String layerId);
 
-typedef OnFeatureDragCallback = void Function(Annotation annotation,
-    {required Point<double> point,
+typedef OnFeatureDragCallback = void Function(dynamic id,
+    {required Annotation annotation,
+    required Point<double> point,
     required LatLng origin,
     required LatLng current,
     required LatLng delta,
@@ -105,9 +106,11 @@ class MapLibreMapController extends ChangeNotifier {
       for (final fun in List<OnFeatureDragCallback>.from(onFeatureDrag)) {
         final enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
-        final annotation = getAnnotationById(payload["id"]);
+        final id = payload["id"];
+        final annotation = getAnnotationById(id);
         if (annotation == null) return;
-        fun(annotation,
+        fun(id,
+            annotation: annotation,
             point: payload["point"],
             origin: payload["origin"],
             current: payload["current"],
