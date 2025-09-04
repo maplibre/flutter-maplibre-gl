@@ -6,7 +6,6 @@ class MapLibreMapController extends MapLibrePlatform
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
-  bool _mapReady = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
@@ -42,8 +41,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _registerViewFactory(Function(int) callback, int identifier) {
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
+    ui_web.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
       _mapElement = html.DivElement()
         ..style.position = 'absolute'
@@ -434,7 +432,6 @@ class MapLibreMapController extends MapLibrePlatform
       });
       return;
     }
-    _mapReady = true;
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
