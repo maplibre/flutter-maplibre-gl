@@ -54,7 +54,8 @@ GeneratedPluginRegistrant.swift
 pubspec_overrides.yaml
 melos_overrides.yaml
 
-.fvm
-.fvmrc
 .ruby-version
 Gemfile*
+
+# FVM Version Cache
+.fvm/
