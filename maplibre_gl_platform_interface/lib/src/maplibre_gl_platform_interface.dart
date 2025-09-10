@@ -65,6 +65,38 @@ abstract class MapLibrePlatform {
   Future<void> setTelemetryEnabled(bool enabled);
 
   Future<bool> getTelemetryEnabled();
+
+  /// Performance Controls
+  /// Sets the maximum frames per second for the map rendering.
+  Future<void> setMaximumFps(int fps);
+
+  /// Forces the map to use online mode (disables offline mode).
+  Future<void> forceOnlineMode();
+
+  /// Animates the camera to a new position with a specified duration.
+  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration);
+
+  /// Queries the current camera position.
+  Future<CameraPosition?> queryCameraPosition();
+
+  /// Edits a GeoJSON source with new data.
+  Future<bool> editGeoJsonSource(String id, String data);
+
+  /// Edits a GeoJSON source with a new URL.
+  Future<bool> editGeoJsonUrl(String id, String url);
+
+  /// Sets a filter for a layer.
+  Future<bool> setLayerFilter(String layerId, String filter);
+
+  /// Gets the current map style as JSON string.
+  Future<String?> getStyle();
+
+  /// Sets custom HTTP headers for map requests.
+  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter);
+
+  /// Gets the current custom HTTP headers.
+  Future<Map<String, String>> getCustomHeaders();
+
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter);
 

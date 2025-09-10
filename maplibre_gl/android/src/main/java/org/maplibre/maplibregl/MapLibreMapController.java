@@ -80,6 +80,7 @@ import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
+import org.maplibre.android.net.ConnectivityReceiver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -921,6 +922,154 @@ final class MapLibreMapController
       case "map#getTelemetryEnabled":
         {
           result.success(false);
+          break;
+        }
+      case "map#setMaximumFps":
+        {
+          final int fps = call.argument("fps");
+          if (mapView != null) {
+            mapView.setMaximumFps(fps);
+          }
+          result.success(null);
+          break;
+        }
+      case "map#forceOnlineMode":
+        {
+          // Force online mode by setting connectivity to true
+          if (mapView != null) {
+            ConnectivityReceiver.instance(mapView.getContext()).setConnected(true);
+          }
+          result.success(null);
+          break;
+        }
+      case "camera#animateWithDuration":
+        {
+          final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final int duration = (int)call.argument("duration");
+          if (cameraUpdate != null && duration > 0) {
+            // camera transformation not handled yet
+            mapLibreMap.easeCamera(cameraUpdate, duration, false);
+          }
+          result.success(null);
+          break;
+        }
+      case "map#queryCameraPosition":
+        {
+          result.success(Convert.toJson(getCameraPosition()));
+          break;
+        }
+      case "map#editGeoJsonSource":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                GeoJsonSource source = style.getSourceAs(call.argument("id"));
+                if (source != null) {
+                  source.setGeoJson((String)call.argument("data"));
+                  ret = true;
+                }
+              } catch (Exception e) {}
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#editGeoJsonUrl":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                GeoJsonSource source = style.getSourceAs(call.argument("id"));
+                if (source != null) {
+                  source.setUrl((String)call.argument("url"));
+                  ret = true;
+                }
+              } catch (Exception e) {}
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#setLayerFilter":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+                try {
+                    Layer layer = style.getLayer(call.argument("id"));
+                    if (layer != null) {
+                        String filter = call.argument("filter");
+                        if (filter != null) {
+                            Expression expression = Expression.raw(filter);
+                            if (expression != null) {
+                              if (layer instanceof LineLayer) {
+                                ((LineLayer)layer).setFilter(expression);
+                                ret = true;
+                              } else if (layer instanceof FillLayer) {
+                                ((FillLayer)layer).setFilter(expression);
+                                ret = true;
+                              } else if (layer instanceof SymbolLayer) {
+                                ((SymbolLayer)layer).setFilter(expression);
+                                ret = true;
+                              }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#getStyle":
+        {
+          Map<String, Object> reply = new HashMap<>();
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                String json = style.getJson();
+                reply.put("json", json);
+                ret = true;
+              } catch (Exception e) {}
+            }
+          }
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#setCustomHeaders":
+        {
+          if (mapLibreMap != null) {
+            HashMap<String, String> headers = (HashMap<String, String>)call.argument("headers");
+            List<String> filter = (List<String>)call.argument("filter");
+            MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
+          } else {
+            result.success(null);
+          }
+          break;
+        }
+      case "map#getCustomHeaders":
+        {
+          if (mapLibreMap != null) {
+            result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
+          } else {
+            result.success(null);
+          }
           break;
         }
       case "map#invalidateAmbientCache":

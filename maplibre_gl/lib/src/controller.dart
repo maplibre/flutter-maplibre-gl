@@ -747,6 +747,107 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getTelemetryEnabled();
   }
 
+  /// Sets the maximum frames per second for the map rendering.
+  ///
+  /// This can help optimize performance on lower-end devices by limiting
+  /// the rendering frequency.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setMaximumFps(int fps) async {
+    return _maplibrePlatform.setMaximumFps(fps);
+  }
+
+  /// Forces the map to use online mode, disabling any offline functionality.
+  ///
+  /// This is useful for testing or when you want to ensure the map always
+  /// uses the latest data from the network.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> forceOnlineMode() async {
+    return _maplibrePlatform.forceOnlineMode();
+  }
+
+  /// Animates the camera to a new position with a specified duration.
+  ///
+  /// The [cameraUpdate] specifies the target camera position, and [duration]
+  /// specifies the animation duration in milliseconds.
+  ///
+  /// The returned [Future] completes after the animation has been started on the
+  /// platform side.
+  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration) async {
+    return _maplibrePlatform.animateCameraWithDuration(cameraUpdate, duration);
+  }
+
+  /// Queries the current camera position.
+  ///
+  /// Returns the current camera position including center, zoom, bearing, and tilt.
+  /// Returns null if the camera position cannot be determined.
+  ///
+  /// The returned [Future] completes with the current camera position.
+  Future<CameraPosition?> queryCameraPosition() async {
+    return _maplibrePlatform.queryCameraPosition();
+  }
+
+  /// Edits a GeoJSON source with new data.
+  ///
+  /// The [id] specifies the source identifier, and [data] contains the new
+  /// GeoJSON data as a string.
+  ///
+  /// The returned [Future] completes with true if the source was successfully
+  /// updated, false otherwise.
+  Future<bool> editGeoJsonSource(String id, String data) async {
+    return _maplibrePlatform.editGeoJsonSource(id, data);
+  }
+
+  /// Edits a GeoJSON source with a new URL.
+  ///
+  /// The [id] specifies the source identifier, and [url] contains the new
+  /// URL for the GeoJSON data.
+  ///
+  /// The returned [Future] completes with true if the source was successfully
+  /// updated, false otherwise.
+  Future<bool> editGeoJsonUrl(String id, String url) async {
+    return _maplibrePlatform.editGeoJsonUrl(id, url);
+  }
+
+  /// Sets a filter for a layer.
+  ///
+  /// The [layerId] specifies the layer identifier, and [filter] contains the
+  /// filter expression as a JSON string.
+  ///
+  /// The returned [Future] completes with true if the filter was successfully
+  /// applied, false otherwise.
+  Future<bool> setLayerFilter(String layerId, String filter) async {
+    return _maplibrePlatform.setLayerFilter(layerId, filter);
+  }
+
+  /// Gets the current map style as JSON string.
+  ///
+  /// The returned [Future] completes with the style JSON string if successful,
+  /// null otherwise.
+  Future<String?> getStyle() async {
+    return _maplibrePlatform.getStyle();
+  }
+
+  /// Sets custom HTTP headers for map requests.
+  ///
+  /// The [headers] map contains the header key-value pairs to set, and [filter]
+  /// contains URL patterns to determine which requests should include these headers.
+  ///
+  /// The returned [Future] completes when the headers are successfully set.
+  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter) async {
+    return _maplibrePlatform.setCustomHeaders(headers, filter);
+  }
+
+  /// Gets the current custom HTTP headers.
+  ///
+  /// The returned [Future] completes with a map of the current custom headers.
+  Future<Map<String, String>> getCustomHeaders() async {
+    return _maplibrePlatform.getCustomHeaders();
+  }
+
   /// Adds a symbol to the map, configured using the specified custom [options].
   ///
   /// Change listeners are notified once the symbol has been added on the

@@ -256,6 +256,95 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setMaximumFps(int fps) async {
+    await _channel.invokeMethod('map#setMaximumFps', <String, dynamic>{
+      'fps': fps,
+    });
+  }
+
+  @override
+  Future<void> forceOnlineMode() async {
+    await _channel.invokeMethod('map#forceOnlineMode');
+  }
+
+  @override
+  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration) async {
+    await _channel.invokeMethod('camera#animateWithDuration', <String, dynamic>{
+      'cameraUpdate': cameraUpdate.toJson(),
+      'duration': duration,
+    });
+  }
+
+  @override
+  Future<CameraPosition?> queryCameraPosition() async {
+    final dynamic json = await _channel.invokeMethod('map#queryCameraPosition');
+    return CameraPosition.fromMap(json);
+  }
+
+  @override
+  Future<bool> editGeoJsonSource(String id, String data) async {
+    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#editGeoJsonSource', <String, dynamic>{
+      'id': id,
+      'data': data,
+    });
+    final result = reply['result'];
+    return result == true;
+  }
+
+  @override
+  Future<bool> editGeoJsonUrl(String id, String url) async {
+    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#editGeoJsonUrl', <String, String>{
+      'id': id,
+      'url': url,
+    });
+    final result = reply['result'];
+    return result == true;
+  }
+
+  @override
+  Future<bool> setLayerFilter(String layerId, String filter) async {
+    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#setLayerFilter', <String, dynamic>{
+      'id': layerId,
+      'filter': filter,
+    });
+    final result = reply['result'];
+    return result == true;
+  }
+
+  @override
+  Future<String?> getStyle() async {
+    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#getStyle');
+    final result = reply['result'] as bool?;
+    if (result == true) {
+      final json = reply['json'] as String?;
+      return json;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter) async {
+    try {
+      await _channel.invokeMethod('map#setCustomHeaders', <String, dynamic>{
+        'headers': headers,
+        'filter': filter,
+      });
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
+  Future<Map<String, String>> getCustomHeaders() async {
+    try {
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('map#getCustomHeaders', <String, dynamic>{});
+      return result?.map((key, value) => MapEntry<String, String>(key.toString(), value.toString())) ?? <String, String>{};
+    } on PlatformException catch (e) {
+      return new Future.error(e);
+    }
+  }
+
+  @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     try {
