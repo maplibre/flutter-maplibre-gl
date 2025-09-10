@@ -45,4 +45,8 @@ internal interface MapLibreMapOptionsSink {
     fun setAttributionButtonMargins(x: Int, y: Int)
 
     fun setLocationEngineProperties(locationEngineRequest: LocationEngineRequest)
+
+    fun setForegroundLoadColor(loadColor: Int)
+
+    fun setTranslucentTextureSurface(translucentTextureSurface: Boolean)
 }
