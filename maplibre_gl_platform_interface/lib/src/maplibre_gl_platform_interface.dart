@@ -92,7 +92,8 @@ abstract class MapLibrePlatform {
   Future<String?> getStyle();
 
   /// Sets custom HTTP headers for map requests.
-  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter);
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter);
 
   /// Gets the current custom HTTP headers.
   Future<Map<String, String>> getCustomHeaders();

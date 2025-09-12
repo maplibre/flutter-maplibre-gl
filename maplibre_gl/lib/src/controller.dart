@@ -837,7 +837,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// contains URL patterns to determine which requests should include these headers.
   ///
   /// The returned [Future] completes when the headers are successfully set.
-  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter) async {
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
     return _maplibrePlatform.setCustomHeaders(headers, filter);
   }
 

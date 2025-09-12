@@ -330,7 +330,8 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter) async {
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
     // Web implementation: MapLibre GL JS doesn't have direct custom headers setting
     print('setCustomHeaders called in web, headers: $headers, filter: $filter');
     // For future implementation, we could use MapLibre GL JS HTTP configuration

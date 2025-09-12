@@ -284,7 +284,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#editGeoJsonSource', <String, dynamic>{
+    final Map<Object?, Object?> reply =
+        await _channel.invokeMethod('map#editGeoJsonSource', <String, dynamic>{
       'id': id,
       'data': data,
     });
@@ -294,7 +295,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<bool> editGeoJsonUrl(String id, String url) async {
-    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#editGeoJsonUrl', <String, String>{
+    final Map<Object?, Object?> reply =
+        await _channel.invokeMethod('map#editGeoJsonUrl', <String, String>{
       'id': id,
       'url': url,
     });
@@ -304,7 +306,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#setLayerFilter', <String, dynamic>{
+    final Map<Object?, Object?> reply =
+        await _channel.invokeMethod('map#setLayerFilter', <String, dynamic>{
       'id': layerId,
       'filter': filter,
     });
@@ -314,9 +317,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<String?> getStyle() async {
-    final Map<Object?, Object?> reply = await _channel.invokeMethod('map#getStyle');
+    final Map<Object?, Object?> reply =
+        await _channel.invokeMethod('map#getStyle');
     final result = reply['result'] as bool?;
-    if (result == true) {
+    if (result ?? false) {
       final json = reply['json'] as String?;
       return json;
     }
@@ -324,24 +328,28 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<void> setCustomHeaders(Map<String, String> headers, List<String> filter) async {
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
     try {
       await _channel.invokeMethod('map#setCustomHeaders', <String, dynamic>{
         'headers': headers,
         'filter': filter,
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
   Future<Map<String, String>> getCustomHeaders() async {
     try {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('map#getCustomHeaders', <String, dynamic>{});
-      return result?.map((key, value) => MapEntry<String, String>(key.toString(), value.toString())) ?? <String, String>{};
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+          'map#getCustomHeaders', <String, dynamic>{});
+      return result?.map((key, value) =>
+              MapEntry<String, String>(key.toString(), value.toString())) ??
+          <String, String>{};
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
