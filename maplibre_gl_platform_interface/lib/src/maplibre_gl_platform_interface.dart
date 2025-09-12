@@ -74,7 +74,7 @@ abstract class MapLibrePlatform {
   Future<void> forceOnlineMode();
 
   /// Animates the camera to a new position with a specified duration.
-  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration);
+  Future<bool> easeCamera(CameraUpdate cameraUpdate, int? duration);
 
   /// Queries the current camera position.
   Future<CameraPosition?> queryCameraPosition();

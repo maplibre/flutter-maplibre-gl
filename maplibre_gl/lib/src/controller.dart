@@ -769,15 +769,15 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.forceOnlineMode();
   }
 
-  /// Animates the camera to a new position with a specified duration.
+  /// Eases the camera to a new position with an optional duration.
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]
-  /// specifies the animation duration in milliseconds.
+  /// specifies the animation duration in milliseconds (optional).
   ///
-  /// The returned [Future] completes after the animation has been started on the
-  /// platform side.
-  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration) async {
-    return _maplibrePlatform.animateCameraWithDuration(cameraUpdate, duration);
+  /// The returned [Future] completes with true if the animation finished successfully,
+  /// or false if it was cancelled.
+  Future<bool> easeCamera(CameraUpdate cameraUpdate, int? duration) async {
+    return _maplibrePlatform.easeCamera(cameraUpdate, duration);
   }
 
   /// Queries the current camera position.

@@ -942,15 +942,35 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-      case "camera#animateWithDuration":
+      case "camera#ease":
         {
           final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
-          final int duration = (int)call.argument("duration");
-          if (cameraUpdate != null && duration > 0) {
+          final Integer duration = call.argument("duration");
+
+          final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+              new OnCameraMoveFinishedListener() {
+                @Override
+                public void onFinish() {
+                  super.onFinish();
+                  result.success(true);
+                }
+
+                @Override
+                public void onCancel() {
+                  super.onCancel();
+                  result.success(false);
+                }
+              };
+
+          if (cameraUpdate != null && duration != null && duration > 0) {
             // camera transformation not handled yet
-            mapLibreMap.easeCamera(cameraUpdate, duration, false);
+            mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
+          } else if (cameraUpdate != null) {
+            // camera transformation not handled yet
+            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
+          } else {
+            result.success(false);
           }
-          result.success(null);
           break;
         }
       case "map#queryCameraPosition":

@@ -267,15 +267,31 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources
             result(nil)
-        case "camera#animateWithDuration":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-            guard let duration = arguments["duration"] as? Double else { return }
-            let interval: TimeInterval = duration / 1000.0;
-            if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear))
+        case "camera#ease":
+            guard let arguments = methodCall.arguments as? [String: Any] else { 
+                result(false)
+                return 
             }
-            result(nil)
+            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { 
+                result(false)
+                return 
+            }
+            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { 
+                result(false)
+                return 
+            }
+
+            let completion = {
+                result(true)
+            }
+
+            if let duration = arguments["duration"] as? Double, duration > 0 {
+                let interval: TimeInterval = duration / 1000.0
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear), completionHandler: completion)
+            } else {
+                mapView.setCamera(camera, animated: true)
+                completion()
+            }
         case "map#queryCameraPosition":
             if let camera = getCamera() {
                 result(camera.toDict(mapView: mapView))

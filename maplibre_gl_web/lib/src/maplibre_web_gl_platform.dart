@@ -281,10 +281,10 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> animateCameraWithDuration(CameraUpdate cameraUpdate, int duration) async {
+  Future<bool> easeCamera(CameraUpdate cameraUpdate, int? duration) async {
     // Web implementation: MapLibre GL JS doesn't have direct duration control
     // We can implement this by using the animate method with duration
-    print('animateCameraWithDuration called in web, duration: $duration');
+    print('easeCamera called in web, duration: $duration');
     // For future implementation, we could use MapLibre GL JS animate method
     throw UnimplementedError();
   }
