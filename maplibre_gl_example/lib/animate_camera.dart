@@ -26,6 +26,7 @@ class AnimateCamera extends StatefulWidget {
 
 class AnimateCameraState extends State<AnimateCamera> {
   late MapLibreMapController mapController;
+  var _fps = 30;
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
@@ -76,6 +77,27 @@ class AnimateCameraState extends State<AnimateCamera> {
                 TextButton(
                   onPressed: () {
                     mapController
+                        .easeCamera(
+                          CameraUpdate.newCameraPosition(
+                            const CameraPosition(
+                              bearing: 270.0,
+                              target: LatLng(46.233487, 14.363610),
+                              tilt: 30.0,
+                              zoom: 17.0,
+                            ),
+                          ),
+                          500,
+                        )
+                        .then(
+                          (result) => debugPrint(
+                              "mapController.easeCamera() returned $result"),
+                        );
+                  },
+                  child: const Text('easeCamera'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    mapController
                         .animateCamera(
                           CameraUpdate.newLatLng(
                             const LatLng(56.1725505, 10.1850512),
@@ -121,6 +143,22 @@ class AnimateCameraState extends State<AnimateCamera> {
                     );
                   },
                   child: const Text('scrollBy'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    mapController.queryCameraPosition().then(
+                          (result) => debugPrint(
+                              "queryCameraPosition() returned $result"),
+                        );
+                  },
+                  child: const Text('queryCameraPosition'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _fps = _fps == 30 ? 3 : 30;
+                    mapController.setMaximumFps(_fps);
+                  },
+                  child: const Text('setMaximumFps'),
                 ),
               ],
             ),
