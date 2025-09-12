@@ -287,7 +287,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear), completionHandler: completion)
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut), completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()

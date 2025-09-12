@@ -268,10 +268,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<bool> easeCamera(CameraUpdate cameraUpdate, int? duration) async {
+  Future<bool> easeCamera(CameraUpdate cameraUpdate, {Duration? duration}) async {
     final result = await _channel.invokeMethod('camera#ease', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
-      'duration': duration,
+      'duration': duration?.inMilliseconds,
     });
     return result as bool;
   }
