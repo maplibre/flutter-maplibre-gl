@@ -73,9 +73,19 @@ class LineBodyState extends State<LineBody> {
       HoverEventType eventType) async {
     if (annotation is! Line) return;
     if (eventType == HoverEventType.enter) {
-      controller!.updateLine(annotation, const LineOptions(lineWidth: 16));
+      controller!.updateLine(
+          annotation,
+          const LineOptions(
+            lineWidth: 16,
+            lineColor: "#8B0000",
+          ));
     } else if (eventType == HoverEventType.leave) {
-      controller!.updateLine(annotation, const LineOptions(lineWidth: 14));
+      controller!.updateLine(
+          annotation,
+          const LineOptions(
+            lineWidth: 14,
+            lineColor: "#ff0000",
+          ));
     }
   }
 
