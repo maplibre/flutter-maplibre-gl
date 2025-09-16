@@ -139,7 +139,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(
+  _onDrag(dynamic id,
       {required Annotation annotation,
       required Point<double> point,
       required LatLng origin,
