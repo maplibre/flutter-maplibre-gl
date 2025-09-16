@@ -69,8 +69,12 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _onFeatureHover(Annotation annotation, Point<double> point, LatLng latLng,
-      HoverEventType eventType) async {
+  _onFeatureHover(
+    Point<double> point,
+    LatLng latLng,
+    Annotation annotation,
+    HoverEventType eventType,
+  ) async {
     if (annotation is! Line) return;
     if (eventType == HoverEventType.enter) {
       controller!.updateLine(

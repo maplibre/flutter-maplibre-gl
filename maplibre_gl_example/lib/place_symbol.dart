@@ -86,13 +86,14 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _onFeatureDrag(dynamic id,
-      {required Annotation annotation,
-      required Point<double> point,
-      required LatLng origin,
-      required LatLng current,
-      required LatLng delta,
-      required DragEventType eventType}) {
+  void _onFeatureDrag(
+    Point<double> point,
+    LatLng origin,
+    LatLng current,
+    LatLng delta,
+    Annotation annotation,
+    DragEventType eventType,
+  ) {
     if (annotation is! Symbol) return;
     if (eventType == DragEventType.end) {
       ScaffoldMessenger.of(context).showSnackBar(

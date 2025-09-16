@@ -146,10 +146,14 @@ class LayerState extends State {
   }
 
   void onFeatureTap(
-      dynamic featureId, Point<double> point, LatLng latLng, String layerId) {
+    Point<double> point,
+    LatLng latLng,
+    Annotation annotation,
+    String layerId,
+  ) {
     final snackBar = SnackBar(
       content: Text(
-        'Tapped feature with id $featureId on layer $layerId',
+        'Tapped feature with id ${annotation.id} on layer $layerId',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Theme.of(context).primaryColor,
