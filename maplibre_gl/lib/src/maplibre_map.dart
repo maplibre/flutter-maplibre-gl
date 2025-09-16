@@ -55,6 +55,12 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.circle,
       AnnotationType.fill,
     ],
+    this.annotationConsumeTapEvents = const [
+      AnnotationType.symbol,
+      AnnotationType.fill,
+      AnnotationType.line,
+      AnnotationType.circle,
+    ],
     this.foregroundLoadColor = Colors.transparent,
     this.translucentTextureSurface = false,
   })  : assert(
@@ -62,7 +68,8 @@ class MapLibreMap extends StatefulWidget {
               myLocationEnabled,
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
-        assert(annotationOrder.length <= 4);
+        assert(annotationOrder.length <= 4),
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
@@ -87,6 +94,11 @@ class MapLibreMap extends StatefulWidget {
   /// Note that setting this to be empty gives a big perfomance boost for
   /// android. However if you do so annotations will not work.
   final List<AnnotationType> annotationOrder;
+
+  /// Defines the layer order of click annotations
+  ///
+  /// (must contain at least 1 annotation type, 4 items max)
+  final List<AnnotationType> annotationConsumeTapEvents;
 
   /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
   final MapCreatedCallback? onMapCreated;
@@ -340,6 +352,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       onCameraIdle: widget.onCameraIdle,
       onMapIdle: widget.onMapIdle,
       annotationOrder: widget.annotationOrder,
+      annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
     await _maplibrePlatform.initPlatform(id);
     _controller.complete(controller);

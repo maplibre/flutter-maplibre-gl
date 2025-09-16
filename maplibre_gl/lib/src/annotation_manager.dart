@@ -11,6 +11,9 @@ abstract class AnnotationManager<T extends Annotation> {
   List<String> get layerIds =>
       [for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i)];
 
+  /// If disabled the manager offers no interaction for the created symbols
+  final bool enableInteraction;
+
   /// implemented to define the layer properties
   List<LayerProperties> get allLayerProperties;
 
@@ -26,12 +29,18 @@ abstract class AnnotationManager<T extends Annotation> {
   AnnotationManager(
     this.controller, {
     this.selectLayer,
+    required this.enableInteraction,
   }) : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
           promoteId: "id");
-      controller.addLayer(layerId, layerId, allLayerProperties[i]);
+      controller.addLayer(
+        layerId,
+        layerId,
+        allLayerProperties[i],
+        enableInteraction: enableInteraction,
+      );
     }
 
     controller.onFeatureDrag.add(_onDrag);
@@ -154,8 +163,10 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(super.controller)
-      : super(
+  LineManager(
+    super.controller, {
+    super.enableInteraction = true,
+  }) : super(
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
 
@@ -178,8 +189,10 @@ class LineManager extends AnnotationManager<Line> {
 }
 
 class FillManager extends AnnotationManager<Fill> {
-  FillManager(super.controller)
-      : super(
+  FillManager(
+    super.controller, {
+    super.enableInteraction = true,
+  }) : super(
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
 
@@ -200,7 +213,10 @@ class FillManager extends AnnotationManager<Fill> {
 }
 
 class CircleManager extends AnnotationManager<Circle> {
-  CircleManager(super.controller);
+  CircleManager(
+    super.controller, {
+    super.enableInteraction = true,
+  });
 
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -223,6 +239,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
+    super.enableInteraction = true,
   })  : _iconAllowOverlap = iconAllowOverlap,
         _textAllowOverlap = textAllowOverlap,
         _iconIgnorePlacement = iconIgnorePlacement,

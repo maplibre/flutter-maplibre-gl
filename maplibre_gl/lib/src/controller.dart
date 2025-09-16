@@ -82,6 +82,7 @@ class MapLibreMapController extends ChangeNotifier {
     required MapLibrePlatform maplibrePlatform,
     required CameraPosition initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
+    required Iterable<AnnotationType> annotationConsumeTapEvents,
     this.onStyleLoadedCallback,
     this.onMapClick,
     this.onMapLongClick,
@@ -168,16 +169,30 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) {
+      final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (final type in annotationOrder.toSet()) {
+        final enableInteraction = interactionEnabled.contains(type);
         switch (type) {
           case AnnotationType.fill:
-            fillManager = FillManager(this);
+            fillManager = FillManager(
+              this,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.line:
-            lineManager = LineManager(this);
+            lineManager = LineManager(
+              this,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.circle:
-            circleManager = CircleManager(this);
+            circleManager = CircleManager(
+              this,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.symbol:
-            symbolManager = SymbolManager(this);
+            symbolManager = SymbolManager(
+              this,
+              enableInteraction: enableInteraction,
+            );
         }
       }
       onStyleLoadedCallback?.call();
