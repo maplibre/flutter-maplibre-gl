@@ -86,7 +86,7 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
