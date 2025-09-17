@@ -1,7 +1,7 @@
 ## UNRELEASED
 
 ### Breaking changes
-* `annotation` argument is now passed to onFeatureDrag callbacks. Existing implementations must be updated to include the new parameter.
+* `annotation` argument now replaces the previous `id` argument in the onFeatureDrag and onFeatureTapped callbacks. Existing implementations must be updated to use the new annotation parameter.
 
 ### Changed
 * Added `onFeatureHover` to the controller for listening to hover interactions.
