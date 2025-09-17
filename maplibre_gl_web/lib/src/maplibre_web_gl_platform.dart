@@ -62,6 +62,7 @@ class MapLibreMapController extends MapLibrePlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
+          style: _creationParams['styleString'],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
@@ -696,7 +697,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  void setStyle(dynamic styleObject) {
+  void setStyleString(String? styleString) {
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _onMouseEnterFeature);
@@ -706,7 +707,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     _interactiveFeatureLayerIds.clear();
 
-    _map.setStyle(styleObject, {'diff': false});
+    _map.setStyle(styleString, {'diff': false});
   }
 
   @override

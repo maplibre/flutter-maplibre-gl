@@ -196,7 +196,7 @@ constructor. The following formats are supported:
 3. Passing the style as a local file. create an JSON file in app directory (e.g.
    ApplicationDocumentsDirectory). Set the style string to the absolute path of
    this JSON file.
-4. Passing the raw JSON of the map style.
+4. Passing the raw JSON of the map style. This is only supported on Android.
 
 ### Tile sources requiring an API key
 
