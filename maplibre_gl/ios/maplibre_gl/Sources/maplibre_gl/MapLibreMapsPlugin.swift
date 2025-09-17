@@ -5,6 +5,7 @@ import UIKit
 
 public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
     static var downloadOfflineRegionChannelHandler: OfflineChannelHandler? = nil
+    static var mapSnapshotter: MapSnapshotter? = nil
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = MapLibreMapFactory(withRegistrar: registrar)
@@ -109,6 +110,20 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     return
                 }
                 OfflineManagerUtils.deleteRegion(result: result, id: id)
+            case "startMapSnapshot":
+                guard let args = methodCall.arguments as? [String: Any] else {
+                    result(FlutterError(
+                        code: "INVALID_ARGUMENTS",
+                        message: "Invalid arguments for startMapSnapshot",
+                        details: nil
+                    ))
+                    return
+                }
+                
+                if mapSnapshotter == nil {
+                    mapSnapshotter = MapSnapshotter(channel: channel)
+                }
+                mapSnapshotter?.startSnapshot(arguments: args, result: result)
             default:
                 result(FlutterMethodNotImplemented)
             }

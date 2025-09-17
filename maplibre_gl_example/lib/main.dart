@@ -13,6 +13,7 @@ import 'package:maplibre_gl_example/attribution.dart';
 import 'package:maplibre_gl_example/get_map_informations.dart';
 import 'package:maplibre_gl_example/given_bounds.dart';
 import 'package:maplibre_gl_example/localized_map.dart';
+import 'package:maplibre_gl_example/map_snapshot.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
 import 'package:maplibre_gl_example/pmtiles.dart';
 import 'package:maplibre_gl_example/presentation/gps_location/gps_location_page.dart';
@@ -65,6 +66,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const NoLocationPermissionPage(),
   const AttributionPage(),
   const GpsLocationPage(),
+  const MapSnapshotPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
