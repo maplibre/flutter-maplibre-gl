@@ -52,7 +52,8 @@ abstract class AnnotationManager<T extends Annotation> {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       await controller.removeLayer(layerId);
-      await controller.addLayer(layerId, layerId, allLayerProperties[i]);
+      await controller.addLayer(layerId, layerId, allLayerProperties[i],
+          enableInteraction: enableInteraction);
     }
   }
 
