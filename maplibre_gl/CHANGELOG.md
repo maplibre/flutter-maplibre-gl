@@ -5,6 +5,7 @@
 
 ### Changed
 * Added `onFeatureHover` to the controller for listening to hover interactions.
+* Fixed: annotationConsumeTapEvents previously had no effect. This has been fixed, and it now properly controls whether tap events on annotations are consumed.
 
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
