@@ -5,6 +5,12 @@ packages:
   - maplibre_gl*
 
 scripts:
+  generate:
+    description: Generate layer & source properties
+    exec: dart run lib/generate.dart
+    packageFilters:
+      scope: maplibre_code_gen
+
   test:
     description: Run all tests
     run: |

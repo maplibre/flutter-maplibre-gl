@@ -14,9 +14,11 @@ dependencies:
   device_info_plus: ^11.3.0
   flutter:
     sdk: flutter
+  flutter_hooks: ^0.20.5
   http: ^1.1.0
   location: ^5.0.3
-  maplibre_gl: ^0.22.0
+  maplibre_gl:
+    path: ../maplibre_gl
   path_provider: ^2.1.5
 
 dev_dependencies:
@@ -33,6 +35,7 @@ flutter:
     - assets/symbols/3.0x/custom-icon.png
     - assets/symbols/custom-marker.png
     - assets/style.json
+    - assets/translucent_style.json
     - assets/osm_style.json
     - assets/pmtiles_style.json
     - assets/sydney0.png

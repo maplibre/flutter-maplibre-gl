@@ -15,6 +15,8 @@ import 'package:maplibre_gl_example/given_bounds.dart';
 import 'package:maplibre_gl_example/localized_map.dart';
 import 'package:maplibre_gl_example/no_location_permission_page.dart';
 import 'package:maplibre_gl_example/pmtiles.dart';
+import 'package:maplibre_gl_example/presentation/gps_location/gps_location_page.dart';
+import 'package:maplibre_gl_example/translucent_full_map.dart';
 
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
@@ -39,6 +41,7 @@ import 'sources.dart';
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),
   const FullMapPage(),
+  const TranslucentFullMapPage(),
   const PMTilesPage(),
   const LocalizedMapPage(),
   const AnimateCameraPage(),
@@ -61,6 +64,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const GetMapInfoPage(),
   const NoLocationPermissionPage(),
   const AttributionPage(),
+  const GpsLocationPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
