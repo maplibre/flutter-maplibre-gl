@@ -30,49 +30,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return mapView
     }
 
-    private static func createMapView(
-        args: Any?,
-        frame: CGRect,
-        registrar: FlutterPluginRegistrar
-    ) -> MLNMapView {
-        if let args = args as? [String: Any],
-            let styleString = args["styleString"] as? String
-        {
-            if Self.styleStringIsJSON(styleString) {
-                return MLNMapView(frame: frame, styleJSON: styleString)
-            }
-
-            if let url = Self.styleStringAsURL(
-                styleString,
-                registrar: registrar
-            ) {
-                return MLNMapView(frame: frame, styleURL: url)
-            }
-        }
-
-        // Fallback to default if neither JSON nor valid URL
-        NSLog(
-            """
-            Warning: MapLibreMapController - Initializing map view with \
-            default style. This capability will be removed in a future release.
-            """
-        )
-        // https://github.com/maplibre/maplibre-native/issues/709
-        return MLNMapView(frame: frame)
-    }
-
     init(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?,
         registrar: FlutterPluginRegistrar
     ) {
-        mapView = Self.createMapView(
-            args: args,
-            frame: frame,
-            registrar: registrar
-        )
-
+        mapView = MLNMapView(frame: frame)
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         mapView.logoView.isHidden = true
         self.registrar = registrar
@@ -1814,54 +1778,34 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.maximumZoomLevel = max
     }
 
-    private static func styleStringIsJSON(_ styleString: String) -> Bool {
-        return styleString.hasPrefix("{") || styleString.hasPrefix("[")
-    }
-
-    private static func styleStringAsURL(
-        _ styleString: String,
-        registrar: FlutterPluginRegistrar
-    ) -> URL? {
+    func setStyleString(styleString: String) {
+        // Check if json, url, absolute path or asset path:
         if styleString.isEmpty {
-            NSLog("styleStringAsURL - style string is empty, ignoring")
-            return nil
-        } else if styleStringIsJSON(styleString) {
-            return nil
+            NSLog("setStyleString - string empty")
+        } else if styleString.hasPrefix("{") || styleString.hasPrefix("[") {
+            // Currently the iOS MapLibre SDK does not have a builder for json.
+            NSLog("setStyleString - JSON style currently not supported")
         } else if styleString.hasPrefix("/") {
             // Absolute path
-            return URL(fileURLWithPath: styleString, isDirectory: false)
-        } else if !styleString.hasPrefix("http://"),
+            mapView.styleURL = URL(fileURLWithPath: styleString, isDirectory: false)
+        } else if
+            !styleString.hasPrefix("http://"),
             !styleString.hasPrefix("https://"),
             !styleString.hasPrefix("mapbox://")
         {
             // We are assuming that the style will be loaded from an asset here.
             let assetPath = registrar.lookupKey(forAsset: styleString)
-            return URL(string: assetPath, relativeTo: Bundle.main.resourceURL)
+            mapView.styleURL = URL(string: assetPath, relativeTo: Bundle.main.resourceURL)
+
         } else if (styleString.hasPrefix("file://")) {
-            if let path = Bundle.main.path(
-                forResource: styleString.deletingPrefix("file://"),
-                ofType: "json"
-            ) {
-                return URL(fileURLWithPath: path)
+            if let path = Bundle.main.path(forResource: styleString.deletingPrefix("file://"), ofType: "json") {
+                let url = URL(fileURLWithPath: path)
+                mapView.styleURL = url
             } else {
-                NSLog(
-                    "styleStringAsURL - path not found: \(styleString), ignoring"
-                )
-                return nil
+                NSLog("setStyleString - Path not found")
             }
         } else {
-            return URL(string: styleString)
-        }
-    }
-
-    func setStyleString(styleString: String) {
-        if Self.styleStringIsJSON(styleString) {
-            mapView.styleJSON = styleString;
-        } else if let url = Self.styleStringAsURL(
-            styleString,
-            registrar: registrar
-        ) {
-            mapView.styleURL = url;
+            mapView.styleURL = URL(string: styleString)
         }
     }
 
