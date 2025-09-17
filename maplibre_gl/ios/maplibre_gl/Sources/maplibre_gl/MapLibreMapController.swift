@@ -56,7 +56,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             target: self,
             action: #selector(handleMapTap(sender:))
         )
-        for recognizer in mapView.gestureRecognizers! where recognizer is UITapGestureRecognizer {
+        for recognizer in mapView.gestureRecognizers!
+        where (recognizer as? UITapGestureRecognizer)?.numberOfTapsRequired == 2 {
             singleTap.require(toFail: recognizer)
         }
         mapView.addGestureRecognizer(singleTap)
@@ -65,11 +66,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             target: self,
             action: #selector(handleMapLongPress(sender:))
         )
-        for recognizer in mapView.gestureRecognizers!
-            where recognizer is UILongPressGestureRecognizer
-        {
-            longPress.require(toFail: recognizer)
-        }
         var longPressRecognizerAdded = false
 
         if let args = args as? [String: Any] {
