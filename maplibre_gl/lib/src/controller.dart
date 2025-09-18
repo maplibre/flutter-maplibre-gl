@@ -8,7 +8,7 @@ typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
 typedef OnFeatureInteractionCallback = void Function(Point<double> point,
-    LatLng coordinates, Annotation annotation, String layerId);
+    LatLng coordinates, Annotation annotation, String? layerId);
 
 typedef OnFeatureDragCallback = void Function(
   Point<double> point,

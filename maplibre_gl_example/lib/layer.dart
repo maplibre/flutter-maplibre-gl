@@ -149,7 +149,7 @@ class LayerState extends State {
     Point<double> point,
     LatLng latLng,
     Annotation annotation,
-    String layerId,
+    String? layerId,
   ) {
     final snackBar = SnackBar(
       content: Text(
