@@ -21,6 +21,7 @@ abstract class MapLibrePlatform {
 
   final onFeatureTappedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
+  final onFeatureHoverPlatform = ArgumentCallbacks<Map<String, dynamic>>();
   final onFeatureDraggedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
   final onCameraMoveStartedPlatform = ArgumentCallbacks<void>();
@@ -207,6 +208,7 @@ abstract class MapLibrePlatform {
     // clear all callbacks to avoid cyclic refs
     onInfoWindowTappedPlatform.clear();
     onFeatureTappedPlatform.clear();
+    onFeatureHoverPlatform.clear();
     onFeatureDraggedPlatform.clear();
     onCameraMoveStartedPlatform.clear();
     onCameraMovePlatform.clear();

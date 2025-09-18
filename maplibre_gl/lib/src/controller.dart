@@ -7,15 +7,20 @@ part of '../maplibre_gl.dart';
 typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
-typedef OnFeatureInteractionCallback = void Function(
-    dynamic id, Point<double> point, LatLng coordinates, String layerId);
+typedef OnFeatureInteractionCallback = void Function(Point<double> point,
+    LatLng coordinates, Annotation annotation, String? layerId);
 
-typedef OnFeatureDragnCallback = void Function(dynamic id,
-    {required Point<double> point,
-    required LatLng origin,
-    required LatLng current,
-    required LatLng delta,
-    required DragEventType eventType});
+typedef OnFeatureDragCallback = void Function(
+  Point<double> point,
+  LatLng origin,
+  LatLng current,
+  LatLng delta,
+  Annotation annotation,
+  DragEventType eventType,
+);
+
+typedef OnFeatureHoverCallback = void Function(Point<double> point,
+    LatLng latLng, Annotation annotation, HoverEventType eventType);
 
 typedef OnMapLongClickCallback = void Function(
     Point<double> point, LatLng coordinates);
@@ -81,7 +86,6 @@ class MapLibreMapController extends ChangeNotifier {
     this.onStyleLoadedCallback,
     this.onMapClick,
     this.onMapLongClick,
-    //this.onAttributionClick,
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
     this.onMapIdle,
@@ -91,23 +95,57 @@ class MapLibreMapController extends ChangeNotifier {
     _cameraPosition = initialCameraPosition;
 
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {
-      for (final fun
-          in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
-        fun(payload["id"], payload["point"], payload["latLng"],
-            payload["layerId"]);
+      final id = payload["id"];
+      final annotation = getAnnotationById(id);
+      if (annotation == null) return;
+      // Call onFeatureTapped callbacks
+      for (final fun in List.of(onFeatureTapped)) {
+        fun(
+          payload["point"],
+          payload["latLng"],
+          annotation,
+          payload["layerId"],
+        );
       }
+      // Call specific annotation callbacks (onSymbolTapped, onLineTapped...)
+      ArgumentCallbacks? annotationTappedCallbacks;
+      if (annotation is Line) {
+        annotationTappedCallbacks = onLineTapped;
+      } else if (annotation is Symbol) {
+        annotationTappedCallbacks = onSymbolTapped;
+      } else if (annotation is Fill) {
+        annotationTappedCallbacks = onFillTapped;
+      } else if (annotation is Circle) {
+        annotationTappedCallbacks = onCircleTapped;
+      }
+      annotationTappedCallbacks?.call(annotation);
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
-      for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
+      for (final fun in List.of(onFeatureDrag)) {
         final enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
-        fun(payload["id"],
-            point: payload["point"],
-            origin: payload["origin"],
-            current: payload["current"],
-            delta: payload["delta"],
-            eventType: enmDragEventType);
+        final id = payload["id"];
+        final annotation = getAnnotationById(id);
+        if (annotation == null) return;
+        fun(
+          payload["point"],
+          payload["origin"],
+          payload["current"],
+          payload["delta"],
+          annotation,
+          enmDragEventType,
+        );
+      }
+    });
+
+    _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
+      final annotation = getAnnotationById(payload["id"]);
+      if (annotation == null) return;
+      final hoverEventType = HoverEventType.values
+          .firstWhere((e) => e.name == payload["eventType"]);
+      for (final fun in List.of(onFeatureHover)) {
+        fun(payload["point"], payload["latLng"], annotation, hoverEventType);
       }
     });
 
@@ -138,29 +176,21 @@ class MapLibreMapController extends ChangeNotifier {
           case AnnotationType.fill:
             fillManager = FillManager(
               this,
-              onTap: onFillTapped.call,
-              onDrag: onFillDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.line:
             lineManager = LineManager(
               this,
-              onTap: onLineTapped.call,
-              onDrag: onLineDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.circle:
             circleManager = CircleManager(
               this,
-              onTap: onCircleTapped.call,
-              onDrag: onCircleDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.symbol:
             symbolManager = SymbolManager(
               this,
-              onTap: onSymbolTapped.call,
-              onDrag: onSymbolDrag.call,
               enableInteraction: enableInteraction,
             );
         }
@@ -192,6 +222,13 @@ class MapLibreMapController extends ChangeNotifier {
     });
   }
 
+  Annotation? getAnnotationById(dynamic id) => id == null
+      ? null
+      : fillManager?.byId(id) ??
+          lineManager?.byId(id) ??
+          symbolManager?.byId(id) ??
+          circleManager?.byId(id);
+
   FillManager? fillManager;
   LineManager? lineManager;
   CircleManager? circleManager;
@@ -213,31 +250,23 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for symbols placed on this map.
   final ArgumentCallbacks<Symbol> onSymbolTapped = ArgumentCallbacks<Symbol>();
 
-  /// Callbacks to receive drag events for symbols placed on this map.
-  final onSymbolDrag = ArgumentCallbacks2<Symbol, DragEventType>();
-
   /// Callbacks to receive tap events for circles placed on this map.
   final ArgumentCallbacks<Circle> onCircleTapped = ArgumentCallbacks<Circle>();
-
-  /// Callbacks to receive drag events for circles placed on this map.
-  final onCircleDrag = ArgumentCallbacks2<Circle, DragEventType>();
 
   /// Callbacks to receive tap events for fills placed on this map.
   final ArgumentCallbacks<Fill> onFillTapped = ArgumentCallbacks<Fill>();
 
-  /// Callbacks to receive drag events for fills placed on this map.
-  final onFillDrag = ArgumentCallbacks2<Fill, DragEventType>();
-
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
-
-  /// Callbacks to receive drag events for lines placed on this map.
-  final onLineDrag = ArgumentCallbacks2<Line, DragEventType>();
 
   /// Callbacks to receive tap events for features (geojson layer) placed on this map.
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
 
-  final onFeatureDrag = <OnFeatureDragnCallback>[];
+  /// Callbacks to receive drag events for features (geojson layer) placed on this map.
+  final onFeatureDrag = <OnFeatureDragCallback>[];
+
+  /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
+  final onFeatureHover = <OnFeatureHoverCallback>[];
 
   /// Callbacks to receive tap events for info windows on symbols
   @Deprecated("InfoWindow tapped is no longer supported")
