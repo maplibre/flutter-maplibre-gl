@@ -74,27 +74,28 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('newCameraPosition'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    mapController
-                        .easeCamera(
-                          CameraUpdate.newCameraPosition(
-                            const CameraPosition(
-                              bearing: 270.0,
-                              target: LatLng(46.233487, 14.363610),
-                              tilt: 30.0,
-                              zoom: 17.0,
+                if(!kIsWeb)
+                  TextButton(
+                    onPressed: () {
+                      mapController
+                          .easeCamera(
+                            CameraUpdate.newCameraPosition(
+                              const CameraPosition(
+                                bearing: 270.0,
+                                target: LatLng(46.233487, 14.363610),
+                                tilt: 30.0,
+                                zoom: 17.0,
+                              ),
                             ),
-                          ),
-                          duration: const Duration(milliseconds: 2000),
-                        )
-                        .then(
-                          (result) => debugPrint(
-                              "mapController.easeCamera() returned $result"),
-                        );
-                  },
-                  child: const Text('easeCamera'),
-                ),
+                            const Duration(milliseconds: 500),
+                          )
+                          .then(
+                            (result) => debugPrint(
+                                "mapController.easeCamera() returned $result"),
+                          );
+                    },
+                    child: const Text('easeCamera'),
+                  ),
                 TextButton(
                   onPressed: () {
                     mapController
