@@ -74,7 +74,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('newCameraPosition'),
                 ),
-                if(!kIsWeb)
+                if (!kIsWeb)
                   TextButton(
                     onPressed: () {
                       mapController
@@ -145,16 +145,16 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('scrollBy'),
                 ),
-                if(!kIsWeb)
-                    TextButton(
+                if (!kIsWeb)
+                  TextButton(
                     onPressed: () {
-                        mapController.queryCameraPosition().then(
+                      mapController.queryCameraPosition().then(
                             (result) => debugPrint(
                                 "queryCameraPosition() returned $result"),
-                            );
+                          );
                     },
                     child: const Text('queryCameraPosition'),
-                    ),
+                  ),
                 TextButton(
                   onPressed: () {
                     _fps = _fps == 30 ? 3 : 30;

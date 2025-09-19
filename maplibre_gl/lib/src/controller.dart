@@ -776,7 +776,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with true if the animation finished successfully,
   /// or false if it was cancelled.
-  Future<bool> easeCamera(CameraUpdate cameraUpdate, {Duration? duration}) async {
+  Future<bool> easeCamera(CameraUpdate cameraUpdate,
+      {Duration? duration}) async {
     return _maplibrePlatform.easeCamera(cameraUpdate, duration: duration);
   }
 
