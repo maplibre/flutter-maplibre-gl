@@ -86,7 +86,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                               zoom: 17.0,
                             ),
                           ),
-                          const Duration(milliseconds: 500),
+                          duration: const Duration(milliseconds: 2000),
                         )
                         .then(
                           (result) => debugPrint(
