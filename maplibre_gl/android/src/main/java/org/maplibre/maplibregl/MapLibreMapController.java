@@ -975,7 +975,7 @@ final class MapLibreMapController
         }
       case "map#queryCameraPosition":
         {
-          result.success(Convert.toJson(getCameraPosition()));
+          result.success(Convert.toJson(mapLibreMap.getCameraPosition()));
           break;
         }
       case "map#editGeoJsonSource":
