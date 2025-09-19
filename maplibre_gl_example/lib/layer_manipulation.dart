@@ -252,18 +252,20 @@ class _LayerManipulationState extends State<LayerManipulation> {
                             ? 'Stop Animation'
                             : 'Start Animation'),
                       ),
-                      ElevatedButton(
-                        onPressed: _editGeoJsonUrl,
-                        child: const Text('Show Earthquakes'),
-                      ),
-                      ElevatedButton(
-                        onPressed: _setLayerFilter,
-                        child: const Text('Toggle Country Fill'),
-                      ),
-                      ElevatedButton(
-                        onPressed: _getCurrentStyle,
-                        child: const Text('Get Style'),
-                      ),
+                    if(!kIsWeb) ...[
+                        ElevatedButton(
+                            onPressed: _editGeoJsonUrl,
+                            child: const Text('Show Earthquakes'),
+                        ),
+                        ElevatedButton(
+                            onPressed: _setLayerFilter,
+                            child: const Text('Toggle Country Fill'),
+                        ),
+                        ElevatedButton(
+                            onPressed: _getCurrentStyle,
+                            child: const Text('Get Style'),
+                        ),
+                    ],
                     ],
                   ),
 
