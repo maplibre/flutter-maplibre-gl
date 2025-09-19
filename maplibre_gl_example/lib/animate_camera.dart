@@ -145,15 +145,16 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('scrollBy'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    mapController.queryCameraPosition().then(
-                          (result) => debugPrint(
-                              "queryCameraPosition() returned $result"),
-                        );
-                  },
-                  child: const Text('queryCameraPosition'),
-                ),
+                if(!kIsWeb)
+                    TextButton(
+                    onPressed: () {
+                        mapController.queryCameraPosition().then(
+                            (result) => debugPrint(
+                                "queryCameraPosition() returned $result"),
+                            );
+                    },
+                    child: const Text('queryCameraPosition'),
+                    ),
                 TextButton(
                   onPressed: () {
                     _fps = _fps == 30 ? 3 : 30;
