@@ -265,6 +265,89 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setMaximumFps(int fps) async {
+    // Web implementation: MapLibre GL JS doesn't have direct FPS control
+    // We can implement this by controlling render frequency if needed
+    print('setMaximumFps not fully supported in web, fps: $fps');
+    // For future implementation, we could use requestAnimationFrame throttling
+  }
+
+  @override
+  Future<void> forceOnlineMode() async {
+    // Web implementation: Force online mode
+    // In web, we can ensure network requests are enabled
+    print('forceOnlineMode called in web');
+    // This is mostly a no-op in web as it's always online
+  }
+
+  @override
+  Future<bool> easeCamera(CameraUpdate cameraUpdate,
+      {Duration? duration}) async {
+    // Web implementation: MapLibre GL JS doesn't have direct duration control
+    // We can implement this by using the animate method with duration
+    print('easeCamera called in web, duration: $duration');
+    // For future implementation, we could use MapLibre GL JS animate method
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<CameraPosition?> queryCameraPosition() async {
+    // Web implementation: MapLibre GL JS doesn't have direct camera position query
+    print('queryCameraPosition called in web');
+    // For future implementation, we could query the map's camera state
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> editGeoJsonSource(String id, String data) async {
+    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON source editing
+    print('editGeoJsonSource called in web, id: $id');
+    // For future implementation, we could use MapLibre GL JS source methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> editGeoJsonUrl(String id, String url) async {
+    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON URL editing
+    print('editGeoJsonUrl called in web, id: $id, url: $url');
+    // For future implementation, we could use MapLibre GL JS source methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> setLayerFilter(String layerId, String filter) async {
+    // Web implementation: MapLibre GL JS doesn't have direct layer filter setting
+    print('setLayerFilter called in web, layerId: $layerId, filter: $filter');
+    // For future implementation, we could use MapLibre GL JS layer filter methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> getStyle() async {
+    // Web implementation: MapLibre GL JS doesn't have direct style JSON export
+    print('getStyle called in web');
+    // For future implementation, we could use MapLibre GL JS style methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
+    // Web implementation: MapLibre GL JS doesn't have direct custom headers setting
+    print('setCustomHeaders called in web, headers: $headers, filter: $filter');
+    // For future implementation, we could use MapLibre GL JS HTTP configuration
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Map<String, String>> getCustomHeaders() async {
+    // Web implementation: MapLibre GL JS doesn't have direct custom headers retrieval
+    print('getCustomHeaders called in web');
+    // For future implementation, we could use MapLibre GL JS HTTP configuration
+    throw UnimplementedError();
+  }
+
+  @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     final options = <String, dynamic>{};

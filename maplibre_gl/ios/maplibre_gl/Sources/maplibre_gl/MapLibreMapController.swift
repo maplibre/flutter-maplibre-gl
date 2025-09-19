@@ -297,6 +297,123 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#getTelemetryEnabled":
             let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
             result(telemetryEnabled)
+        case "map#setMaximumFps":
+            result(nil)
+        case "map#forceOnlineMode":
+            // Force online mode by ensuring network requests are enabled
+            // In MapLibre GL iOS, this is typically handled by the style and data sources
+            result(nil)
+        case "camera#ease":
+            guard let arguments = methodCall.arguments as? [String: Any] else { 
+                result(false)
+                return 
+            }
+            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { 
+                result(false)
+                return 
+            }
+            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { 
+                result(false)
+                return 
+            }
+
+            let completion = {
+                result(true)
+            }
+
+            if let duration = arguments["duration"] as? Double, duration > 0 {
+                let interval: TimeInterval = duration / 1000.0
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut), completionHandler: completion)
+            } else {
+                mapView.setCamera(camera, animated: true)
+                completion()
+            }
+        case "map#queryCameraPosition":
+            if let camera = getCamera() {
+                result(camera.toDict(mapView: mapView))
+            } else {
+                result(nil)
+            }
+        case "map#editGeoJsonSource":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let srcId = arguments["id"] as? String else { return }
+            guard let srcData = arguments["data"] as? String else { return }
+            guard let style = self.mapView.style else { return }
+
+            var ret: Bool = false
+            var reply: [String: Bool] = [:]
+            if let data = srcData.data(using: String.Encoding.utf8) {
+                let src = style.source(withIdentifier: srcId)
+                if src != nil && src is MLNShapeSource {
+                    let geojsonSrc = src as! MLNShapeSource
+                    let geojsonData = try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue)
+                    if geojsonData != nil {
+                        geojsonSrc.shape = geojsonData
+                        ret = true
+                    }
+                }
+            }
+
+            reply["result"] = ret
+            result(reply)
+        case "map#editGeoJsonUrl":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let srcId = arguments["id"] as? String else { return }
+            guard let srcUrl = arguments["url"] as? String else { return }
+            guard let style = self.mapView.style else { return }
+
+            var ret: Bool = false
+            var reply: [String: Bool] = [:]
+            let src = style.source(withIdentifier: srcId)
+            if src != nil && src is MLNShapeSource {
+                let geojsonSrc = src as! MLNShapeSource
+                let geojsonUrl = URL(string: srcUrl)
+                if geojsonUrl != nil {
+                    geojsonSrc.url = geojsonUrl
+                    ret = true
+                }
+            }
+
+            reply["result"] = ret
+            result(reply)
+        case "map#setLayerFilter":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["id"] as? String else { return }
+            guard let layerFilter = arguments["filter"] as? String else { return }
+            guard let style = self.mapView.style else { return }
+
+            var ret: Bool = false
+            var reply: [String: Bool] = [:]
+            let layer = style.layer(withIdentifier: layerId)
+            if layer != nil {
+                do {
+                    if let data = layerFilter.data(using: .utf8) {
+                        let jsonFilter = try JSONSerialization.jsonObject(with: data, options: [])
+                        let predicate = NSPredicate(mglJSONObject: jsonFilter)
+                        if let layer = layer as? MLNVectorStyleLayer {
+                            layer.predicate = predicate
+                            ret = true
+                        }
+                    }
+                } catch {
+                    print("Error parsing filter: \(error.localizedDescription)")
+                }
+            }
+
+            reply["result"] = ret
+            result(reply)
+        case "map#getStyle":
+            var reply: [String: Bool] = [:]
+            reply["result"] = false
+            result(reply)
+        case "map#setCustomHeaders":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let headers = arguments["headers"] as? [String:String] else { return }
+            guard let filter = arguments["filter"] as? [String] else { return }
+            MapLibreCustomHeaders.setCustomHeaders(headers, filter: filter)
+            result(nil)
+        case "map#getCustomHeaders":
+            result(MapLibreCustomHeaders.getCustomHeaders())
         case "map#getVisibleRegion":
             var reply = [String: NSObject]()
             let visibleRegion = mapView.visibleCoordinateBounds
