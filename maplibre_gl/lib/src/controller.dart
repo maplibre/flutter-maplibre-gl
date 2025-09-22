@@ -304,9 +304,10 @@ class MapLibreMapController extends ChangeNotifier {
 
   final MapLibrePlatform _maplibrePlatform; //ignore: unused_field
 
-  // Tracks whether the controller has already been disposed
+  /// Tracks whether the controller has already been disposed
   bool _isDisposed = false;
 
+  /// Return whether the controller has already been disposed.
   bool get isDisposed => _isDisposed;
 
   /// Updates configuration options of the map user interface.
