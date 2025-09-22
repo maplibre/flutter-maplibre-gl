@@ -305,7 +305,9 @@ class MapLibreMapController extends ChangeNotifier {
   final MapLibrePlatform _maplibrePlatform; //ignore: unused_field
 
   // Tracks whether the controller has already been disposed
-  bool isDisposed = false;
+  bool _isDisposed = false;
+
+  bool get isDisposed => _isDisposed;
 
   /// Updates configuration options of the map user interface.
   ///
@@ -1564,7 +1566,7 @@ class MapLibreMapController extends ChangeNotifier {
 
   @override
   void dispose() {
-    isDisposed = true;
+    _isDisposed = true;
     super.dispose();
     _maplibrePlatform.dispose();
   }
