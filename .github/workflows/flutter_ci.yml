@@ -21,7 +21,7 @@ jobs:
         with:
           run-bootstrap: true
       - name: Lint analysis
-        run: melos format --set-exit-if-changed .
+        run: melos run format-all
 
   lint:
     name: "Static code analysis"
@@ -36,7 +36,7 @@ jobs:
         with:
           run-bootstrap: true
       - name: Lint analysis
-        run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
+        run: melos run analyze-all
 
   test:
     name: "Run tests"
@@ -50,7 +50,7 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - run: melos test:io
+      - run: melos run test:io
 
   test-web:
     name: "Run web tests"
@@ -64,7 +64,7 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - run: melos test:web
+      - run: melos run test:web
 
   code-gen:
     name: "Generate code from templates"
@@ -78,8 +78,8 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - run: melos generate
-      - run: melos format
+      - run: melos run generate
+      - run: melos run format-all
       - name: Check Git changes
         uses: multani/git-changes-action@v1
 
