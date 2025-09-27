@@ -10,36 +10,37 @@ dev_dependencies:
   melos: ^7.1.1
   very_good_analysis: ^8.0.0
 
-scripts:
-  generate:
-    description: Generate layer & source properties
-    run: dart run lib/generate.dart
-    packageFilters:
-      scope: maplibre_code_gen
+melos:
+  scripts:
+    generate:
+      description: Generate layer & source properties
+      exec: dart run lib/generate.dart
+      packageFilters:
+        scope: maplibre_code_gen
 
-  test:
-    description: Run all tests
-    run: |
-      set -e
-      melos run test:io
-      melos run test:web
+    test:
+      description: Run all tests
+      run: |
+        set -e
+        melos run test:io
+        melos run test:web
 
-  test:io:
-    description: Run IO tests
-    run: flutter test
-    packageFilters:
-      scope: maplibre_gl_platform_interface
+    test:io:
+      description: Run IO tests
+      exec: flutter test
+      packageFilters:
+        scope: maplibre_gl_platform_interface
 
-  test:web:
-    description: Run Web tests
-    run: flutter test --platform chrome
-    packageFilters:
-      scope: maplibre_gl_platform_interface
+    test:web:
+      description: Run Web tests
+      exec: flutter test --platform chrome
+      packageFilters:
+        scope: maplibre_gl_platform_interface
 
-  analyze-all:
-    description: Run static analysis on all packages
-    exec: dart analyze --fatal-warnings --fatal-infos --concurrency 10
+    analyze-all:
+      description: Run static analysis on all packages
+      exec: dart analyze --fatal-warnings --fatal-infos --concurrency 10
 
-  format-all:
-    description: Format all packages
-    exec: dart format --set-exit-if-changed .
+    format-all:
+      description: Format all packages
+      exec: dart format --set-exit-if-changed .
