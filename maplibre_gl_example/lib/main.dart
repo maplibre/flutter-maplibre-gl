@@ -24,6 +24,7 @@ import 'click_annotations.dart';
 import 'custom_marker.dart';
 import 'full_map.dart';
 import 'layer.dart';
+import 'layer_manipulation.dart';
 import 'line.dart';
 import 'local_style.dart';
 import 'map_ui.dart';
@@ -51,6 +52,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const LinePage(),
   const LocalStylePage(),
   const LayerPage(),
+  const LayerManipulationPage(),
   const PlaceCirclePage(),
   const PlaceFillPage(),
   const ScrollingMapPage(),

@@ -19,6 +19,8 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
 
 enum DragEventType { start, drag, end }
 
+enum HoverEventType { enter, move, leave }
+
 Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{

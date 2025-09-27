@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -26,6 +27,7 @@ class AnimateCamera extends StatefulWidget {
 
 class AnimateCameraState extends State<AnimateCamera> {
   late MapLibreMapController mapController;
+  var _fps = 30;
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
@@ -73,6 +75,28 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('newCameraPosition'),
                 ),
+                if (!kIsWeb)
+                  TextButton(
+                    onPressed: () {
+                      mapController
+                          .easeCamera(
+                            CameraUpdate.newCameraPosition(
+                              const CameraPosition(
+                                bearing: 270.0,
+                                target: LatLng(46.233487, 14.363610),
+                                tilt: 30.0,
+                                zoom: 17.0,
+                              ),
+                            ),
+                            duration: const Duration(seconds: 2),
+                          )
+                          .then(
+                            (result) => debugPrint(
+                                "mapController.easeCamera() returned $result"),
+                          );
+                    },
+                    child: const Text('easeCamera'),
+                  ),
                 TextButton(
                   onPressed: () {
                     mapController
@@ -121,6 +145,23 @@ class AnimateCameraState extends State<AnimateCamera> {
                     );
                   },
                   child: const Text('scrollBy'),
+                ),
+                if (!kIsWeb)
+                  TextButton(
+                    onPressed: () {
+                      mapController.queryCameraPosition().then(
+                            (result) => debugPrint(
+                                "queryCameraPosition() returned $result"),
+                          );
+                    },
+                    child: const Text('queryCameraPosition'),
+                  ),
+                TextButton(
+                  onPressed: () {
+                    _fps = _fps == 30 ? 3 : 30;
+                    mapController.setMaximumFps(_fps);
+                  },
+                  child: const Text('setMaximumFps'),
                 ),
               ],
             ),
