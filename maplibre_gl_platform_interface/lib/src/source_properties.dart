@@ -63,8 +63,8 @@ class VectorSourceProperties implements SourceProperties {
   final String? attribution;
 
   /// A property to use as a feature id (for feature state). Either a
-  /// property name, or an object of the form `{<sourceLayer>:
-  /// <propertyName>}`. If specified as a string for a vector tile source,
+  /// property name, or an object of the form `{<sourceLayer>: <propertyName>}`.
+  /// If specified as a string for a vector tile source,
   /// the same property is used across all its source layers.
   ///
   /// Type: promoteId
@@ -501,8 +501,7 @@ class GeojsonSourceProperties implements SourceProperties {
   final bool? generateId;
 
   /// A property to use as a feature id (for feature state). Either a
-  /// property name, or an object of the form `{<sourceLayer>:
-  /// <propertyName>}`.
+  /// property name, or an object of the form `{<sourceLayer>: <propertyName>}`.
   ///
   /// Type: promoteId
   final String? promoteId;

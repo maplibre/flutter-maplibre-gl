@@ -6,7 +6,7 @@ import 'package:recase/recase.dart';
 
 import 'conversions.dart';
 
-main() async {
+Future<void> main() async {
   final currentPath = Directory.current.path;
   final styleFilePath = '$currentPath/input/style.json';
   final styleJson = jsonDecode(await File(styleFilePath).readAsString());

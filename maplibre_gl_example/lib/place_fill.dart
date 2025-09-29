@@ -58,8 +58,8 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     controller.onFillTapped.add(_onFillTapped);
   }
 
-  void _onStyleLoaded() {
-    addImageFromAsset("assetImage", _fillPatternImage);
+  Future<void> _onStyleLoaded() async {
+    await addImageFromAsset("assetImage", _fillPatternImage);
   }
 
   /// Adds an asset image to the currently displayed style
@@ -81,12 +81,12 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     });
   }
 
-  void _updateSelectedFill(FillOptions changes) {
-    controller!.updateFill(_selectedFill!, changes);
+  Future<void> _updateSelectedFill(FillOptions changes) async {
+    await controller!.updateFill(_selectedFill!, changes);
   }
 
-  void _add() {
-    controller!.addFill(
+  Future<void> _add() async {
+    await controller!.addFill(
       FillOptions(
           geometry: _defaultGeometry,
           fillColor: "#FF0000",
@@ -97,20 +97,20 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     });
   }
 
-  void _remove() {
-    controller!.removeFill(_selectedFill!);
+  Future<void> _remove() async {
+    await controller!.removeFill(_selectedFill!);
     setState(() {
       _selectedFill = null;
       _fillCount -= 1;
     });
   }
 
-  void _changePosition() {
+  Future<void> _changePosition() async {
     var geometry = _selectedFill!.options.geometry;
 
     geometry ??= _defaultGeometry;
 
-    _updateSelectedFill(FillOptions(
+    await _updateSelectedFill(FillOptions(
         geometry: geometry
             .map((list) => list
                 .map(
@@ -120,10 +120,10 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
             .toList()));
   }
 
-  void _changeDraggable() {
+  Future<void> _changeDraggable() async {
     var draggable = _selectedFill!.options.draggable;
     draggable ??= false;
-    _updateSelectedFill(
+    await _updateSelectedFill(
       FillOptions(draggable: !draggable),
     );
   }
@@ -132,7 +132,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     var current = _selectedFill!.options.fillOpacity;
     current ??= 1.0;
 
-    _updateSelectedFill(
+    await _updateSelectedFill(
       FillOptions(fillOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
@@ -141,7 +141,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     var current = _selectedFill!.options.fillColor;
     current ??= "#FF0000";
 
-    _updateSelectedFill(
+    await _updateSelectedFill(
       const FillOptions(fillColor: "#FFFF00"),
     );
   }
@@ -150,7 +150,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     var current = _selectedFill!.options.fillOutlineColor;
     current ??= "#FF0000";
 
-    _updateSelectedFill(
+    await _updateSelectedFill(
       const FillOptions(fillOutlineColor: "#FFFF00"),
     );
   }
@@ -158,7 +158,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   Future<void> _changeFillPattern() async {
     final current =
         _selectedFill!.options.fillPattern == null ? "assetImage" : null;
-    _updateSelectedFill(
+    await _updateSelectedFill(
       FillOptions(fillPattern: current),
     );
   }
@@ -168,7 +168,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -187,11 +187,11 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Row(
-                  children: <Widget>[
+                  children: [
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed: (_fillCount == 12) ? null : _add,
                           child: const Text('add'),
@@ -203,7 +203,7 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
                       ],
                     ),
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed: (_selectedFill == null)
                               ? null

@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use --- IGNORE ---
 
 part of '../maplibre_gl.dart';
 

@@ -302,7 +302,7 @@ class MapLibreMapController extends ChangeNotifier {
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
-  final MapLibrePlatform _maplibrePlatform; //ignore: unused_field
+  final MapLibrePlatform _maplibrePlatform;
 
   /// Tracks whether the controller has already been disposed
   bool _isDisposed = false;

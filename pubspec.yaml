@@ -52,3 +52,8 @@ melos:
     format-all:
       description: Format all packages
       exec: dart format --set-exit-if-changed .
+
+    fix-all:
+      run: |
+        melos exec --concurrency 10 -- "dart fix --apply"
+        melos exec --concurrency 10 -- "dart format -o write ."

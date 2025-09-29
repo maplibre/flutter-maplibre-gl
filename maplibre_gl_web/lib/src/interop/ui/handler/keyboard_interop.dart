@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.ui.handler.keyboard;
+library;
 
 import 'package:js/js.dart';
 

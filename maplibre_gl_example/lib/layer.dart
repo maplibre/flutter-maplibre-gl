@@ -39,7 +39,7 @@ class LayerState extends State {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(children: <Widget>[
+    return ListView(children: [
       Center(
         child: SizedBox(
             height: 400.0,
@@ -58,8 +58,8 @@ class LayerState extends State {
             )),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "lines",
                   LineLayerProperties.fromJson(
@@ -69,8 +69,8 @@ class LayerState extends State {
         child: const Text('toggle line visibility'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "lines",
                   LineLayerProperties.fromJson(
@@ -80,8 +80,8 @@ class LayerState extends State {
         child: const Text('toggle line color'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "fills",
                   FillLayerProperties.fromJson(
@@ -91,8 +91,8 @@ class LayerState extends State {
         child: const Text('toggle fill visibility'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "fills",
                   FillLayerProperties.fromJson(
@@ -102,8 +102,8 @@ class LayerState extends State {
         child: const Text('toggle fill color'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "circles",
                   CircleLayerProperties.fromJson(
@@ -114,8 +114,8 @@ class LayerState extends State {
         child: const Text('toggle circle visibility'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "circles",
                   CircleLayerProperties.fromJson(
@@ -125,8 +125,8 @@ class LayerState extends State {
         child: const Text('toggle circle color'),
       ),
       TextButton(
-        onPressed: () {
-          controller
+        onPressed: () async {
+          await controller
               .setLayerProperties(
                   "symbols",
                   SymbolLayerProperties.fromJson(
@@ -261,13 +261,14 @@ class LayerState extends State {
       minzoom: 11,
     );
 
-    bikeTimer = Timer.periodic(const Duration(milliseconds: 10), (t) {
-      controller.setGeoJsonSource("moving", _movingFeature(t.tick / 2000));
+    bikeTimer = Timer.periodic(const Duration(milliseconds: 10), (t) async {
+      await controller.setGeoJsonSource(
+          "moving", _movingFeature(t.tick / 2000));
     });
 
-    filterTimer = Timer.periodic(const Duration(seconds: 3), (t) {
+    filterTimer = Timer.periodic(const Duration(seconds: 3), (t) async {
       filteredId = filteredId == 0 ? 1 : 0;
-      controller.setFilter('fills', ['==', 'id', filteredId]);
+      await controller.setFilter('fills', ['==', 'id', filteredId]);
     });
   }
 
@@ -310,7 +311,7 @@ Map<String, dynamic> _movingFeature(double t) {
   };
 }
 
-final _fills = {
+final Map<String, Object> _fills = {
   "type": "FeatureCollection",
   "features": [
     {
@@ -375,7 +376,7 @@ final _fills = {
   ]
 };
 
-const _points = {
+const Map<String, Object> _points = {
   "type": "FeatureCollection",
   "features": [
     {

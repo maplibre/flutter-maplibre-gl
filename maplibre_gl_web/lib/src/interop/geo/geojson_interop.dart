@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.geo.geojson;
+library;
 
 import 'package:js/js.dart';
 
