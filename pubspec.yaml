@@ -46,7 +46,8 @@ melos:
 
     analyze-all:
       description: Run static analysis on all packages
-      exec: dart analyze --fatal-warnings --fatal-infos --concurrency 10
+      run: |
+        melos exec --concurrency 10 -- "dart analyze --fatal-warnings --fatal-infos"
 
     format-all:
       description: Format all packages
