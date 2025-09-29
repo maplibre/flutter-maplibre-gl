@@ -341,7 +341,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
         if (_controller.isCompleted) {
           widget.onStyleLoadedCallback?.call();
         } else {
-          await _controller.future.then((_) => widget.onStyleLoadedCallback?.call());
+          await _controller.future
+              .then((_) => widget.onStyleLoadedCallback?.call());
         }
       },
       onMapClick: widget.onMapClick,
