@@ -1913,16 +1913,12 @@ class FillExtrusionLayerProperties implements LayerProperties {
     addIfPresent('fill-extrusion-color', fillExtrusionColor);
     addIfPresent('fill-extrusion-translate', fillExtrusionTranslate);
     addIfPresent(
-      'fill-extrusion-translate-anchor',
-      fillExtrusionTranslateAnchor,
-    );
+        'fill-extrusion-translate-anchor', fillExtrusionTranslateAnchor);
     addIfPresent('fill-extrusion-pattern', fillExtrusionPattern);
     addIfPresent('fill-extrusion-height', fillExtrusionHeight);
     addIfPresent('fill-extrusion-base', fillExtrusionBase);
     addIfPresent(
-      'fill-extrusion-vertical-gradient',
-      fillExtrusionVerticalGradient,
-    );
+        'fill-extrusion-vertical-gradient', fillExtrusionVerticalGradient);
     addIfPresent('visibility', visibility);
     return json;
   }
@@ -2241,9 +2237,7 @@ class HillshadeLayerProperties implements LayerProperties {
     }
 
     addIfPresent(
-      'hillshade-illumination-direction',
-      hillshadeIlluminationDirection,
-    );
+        'hillshade-illumination-direction', hillshadeIlluminationDirection);
     addIfPresent('hillshade-illumination-anchor', hillshadeIlluminationAnchor);
     addIfPresent('hillshade-exaggeration', hillshadeExaggeration);
     addIfPresent('hillshade-shadow-color', hillshadeShadowColor);
