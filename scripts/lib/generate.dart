@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:mustache_template/mustache_template.dart';
 import 'package:recase/recase.dart';
+import 'package:dart_style/dart_style.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 import 'conversions.dart';
 
@@ -91,7 +93,33 @@ Future<void> render(
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
 
-  outputFile.writeAsString(template.renderString(renderContext));
+  var rendered = template.renderString(renderContext);
+
+  // Format Dart files so that subsequent `dart format --set-exit-if-changed` doesn't fail (in CI).
+  if (filename.endsWith('.dart')) {
+    try {
+      // Determine language version from current Dart SDK (major.minor)
+      final sdkVersion = Platform.version.split(' ').first; // e.g. 3.5.2
+      final versionParts = sdkVersion.split('.');
+      final languageVersion =
+          '${versionParts.elementAt(0)}.${versionParts.elementAt(1)}';
+
+      // Prepend language version pragma if not already present
+      if (!rendered.startsWith('// @dart=')) {
+        rendered = '// @dart=$languageVersion\n\n$rendered';
+      }
+
+      // Pass the version to the formatter so it can format accordingly
+      final versionObj = Version.parse('$languageVersion.0');
+      final formatter = DartFormatter(languageVersion: versionObj);
+      rendered = formatter.format(rendered);
+    } catch (e) {
+      // If formatting fails, keep the unformatted content but log a warning.
+      stderr.writeln('Warning: dart_style failed for $filename: $e');
+    }
+  }
+
+  await outputFile.writeAsString(rendered);
 }
 
 List<Map<String, dynamic>> buildStyleProperties(
