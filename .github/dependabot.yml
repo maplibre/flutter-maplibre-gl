@@ -1,11 +1,128 @@
 version: 2
 enable-beta-ecosystems: true
+
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "daily"
-  - package-ecosystem: "pub"
-    directory: "/"
+      interval: daily
+
+  # Workspace root
+  - package-ecosystem: pub
+    directory: /
     schedule:
-      interval: "daily"
+      interval: daily
+    open-pull-requests-limit: 10
+    groups:
+      root-runtime-deps:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Code generation scripts
+  - package-ecosystem: pub
+    directory: /scripts
+    schedule:
+      interval: daily
+    groups:
+      codegen-tools:
+        applies-to: version-updates
+        patterns:
+          - dart_style
+          - mustache_template
+          - recase
+          - "*"
+
+  # Core plugin
+  - package-ecosystem: pub
+    directory: /maplibre_gl
+    schedule:
+      interval: daily
+    groups:
+      maplibre-gl-core:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Web implementation
+  - package-ecosystem: pub
+    directory: /maplibre_gl_web
+    schedule:
+      interval: daily
+    groups:
+      maplibre-gl-web:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Platform interface
+  - package-ecosystem: pub
+    directory: /maplibre_gl_platform_interface
+    schedule:
+      interval: daily
+    groups:
+      platform-interface:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Example app dependencies
+  - package-ecosystem: pub
+    directory: /maplibre_gl_example
+    schedule:
+      interval: daily
+    groups:
+      example-deps:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Android Gradle (core plugin module)
+  - package-ecosystem: gradle
+    directory: /maplibre_gl/android
+    schedule:
+      interval: weekly
+    groups:
+      gradle-plugin:
+        applies-to: version-updates
+        patterns:
+          - gradle
+          - com.android.tools.build:gradle
+      kotlin:
+        applies-to: version-updates
+        patterns:
+          - org.jetbrains.kotlin:kotlin-*
+      androidx-core:
+        applies-to: version-updates
+        patterns:
+          - androidx.core:*
+          - androidx.annotation:*
+      google-maps-play-services:
+        applies-to: version-updates
+        patterns:
+          - com.google.android.gms:play-services-*
+
+  # Android Gradle (example app)
+  - package-ecosystem: gradle
+    directory: /maplibre_gl_example/android
+    schedule:
+      interval: weekly
+    groups:
+      gradle-plugin:
+        applies-to: version-updates
+        patterns:
+          - gradle
+          - com.android.tools.build:gradle
+      kotlin:
+        applies-to: version-updates
+        patterns:
+          - org.jetbrains.kotlin:kotlin-*
+      androidx:
+        applies-to: version-updates
+        patterns:
+          - androidx.*:*
+      google-play-services:
+        applies-to: version-updates
+        patterns:
+          - com.google.android.gms:play-services-*
