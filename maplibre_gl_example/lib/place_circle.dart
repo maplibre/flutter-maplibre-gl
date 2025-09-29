@@ -47,28 +47,28 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     super.dispose();
   }
 
-  void _onCircleTapped(Circle circle) {
+  Future<void> _onCircleTapped(Circle circle) async {
     if (_selectedCircle != null) {
-      _updateSelectedCircle(
+      await _updateSelectedCircle(
         const CircleOptions(circleRadius: 60),
       );
     }
     setState(() {
       _selectedCircle = circle;
     });
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       const CircleOptions(
         circleRadius: 30,
       ),
     );
   }
 
-  void _updateSelectedCircle(CircleOptions changes) {
-    controller!.updateCircle(_selectedCircle!, changes);
+  Future<void> _updateSelectedCircle(CircleOptions changes) async {
+    await controller!.updateCircle(_selectedCircle!, changes);
   }
 
-  void _add() {
-    controller!.addCircle(
+  Future<void> _add() async {
+    await controller!.addCircle(
       CircleOptions(
           geometry: LatLng(
             center.latitude + sin(_circleCount * pi / 6.0) / 20.0,
@@ -81,21 +81,21 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     });
   }
 
-  void _remove() {
-    controller!.removeCircle(_selectedCircle!);
+  Future<void> _remove() async {
+    await controller!.removeCircle(_selectedCircle!);
     setState(() {
       _selectedCircle = null;
       _circleCount -= 1;
     });
   }
 
-  void _changePosition() {
+  Future<void> _changePosition() async {
     final current = _selectedCircle!.options.geometry!;
     final offset = Offset(
       center.latitude - current.latitude,
       center.longitude - current.longitude,
     );
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(
         geometry: LatLng(
           center.latitude + offset.dy,
@@ -105,10 +105,10 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     );
   }
 
-  void _changeDraggable() {
+  Future<void> _changeDraggable() async {
     var draggable = _selectedCircle!.options.draggable;
     draggable ??= false;
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(
         draggable: !draggable,
       ),
@@ -126,19 +126,19 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     );
   }
 
-  void _changeCircleStrokeOpacity() {
+  Future<void> _changeCircleStrokeOpacity() async {
     var current = _selectedCircle!.options.circleStrokeOpacity;
     current ??= 1.0;
 
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(circleStrokeOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
 
-  void _changeCircleStrokeWidth() {
+  Future<void> _changeCircleStrokeWidth() async {
     var current = _selectedCircle!.options.circleStrokeWidth;
     current ??= 0;
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
         CircleOptions(circleStrokeWidth: current == 0 ? 5.0 : 0));
   }
 
@@ -146,7 +146,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     var current = _selectedCircle!.options.circleStrokeColor;
     current ??= "#FFFFFF";
 
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(
           circleStrokeColor: current == "#FFFFFF" ? "#FF0000" : "#FFFFFF"),
     );
@@ -156,7 +156,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     var current = _selectedCircle!.options.circleOpacity;
     current ??= 1.0;
 
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(circleOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
@@ -164,7 +164,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
   Future<void> _changeCircleRadius() async {
     var current = _selectedCircle!.options.circleRadius;
     current ??= 0;
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(circleRadius: current == 120.0 ? 30.0 : current + 30.0),
     );
   }
@@ -173,7 +173,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     var current = _selectedCircle!.options.circleColor;
     current ??= "#FF0000";
 
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       const CircleOptions(circleColor: "#FFFF00"),
     );
   }
@@ -181,7 +181,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
   Future<void> _changeCircleBlur() async {
     var current = _selectedCircle!.options.circleBlur;
     current ??= 0;
-    _updateSelectedCircle(
+    await _updateSelectedCircle(
       CircleOptions(circleBlur: current == 0.75 ? 0 : 0.75),
     );
   }
@@ -191,7 +191,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -209,11 +209,11 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Row(
-                  children: <Widget>[
+                  children: [
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed: (_circleCount == 12) ? null : _add,
                           child: const Text('add'),
@@ -225,7 +225,7 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
                       ],
                     ),
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed: (_selectedCircle == null)
                               ? null

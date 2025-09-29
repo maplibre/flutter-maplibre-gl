@@ -33,14 +33,14 @@ abstract class AnnotationManager<T extends Annotation> {
   }) : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
-      controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
-          promoteId: "id");
-      controller.addLayer(
+      unawaited(controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
+          promoteId: "id"));
+      unawaited(controller.addLayer(
         layerId,
         layerId,
         allLayerProperties[i],
         enableInteraction: enableInteraction,
-      );
+      ));
     }
 
     controller.onFeatureDrag.add(_onDrag);
@@ -130,7 +130,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(
+  Future<void> _onDrag(
     Point<double> point,
     LatLng origin,
     LatLng current,

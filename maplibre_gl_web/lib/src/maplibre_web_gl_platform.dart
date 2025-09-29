@@ -497,11 +497,11 @@ class MapLibreMapController extends MapLibrePlatform
     return null;
   }
 
-  void _onStyleLoaded(_) {
+  void _onStyleLoaded(data) {
     final loaded = _map.isStyleLoaded();
     if (!loaded) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        _onStyleLoaded(_);
+        _onStyleLoaded(data);
       });
       return;
     }

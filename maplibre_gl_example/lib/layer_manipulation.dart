@@ -143,10 +143,10 @@ class _LayerManipulationState extends State<LayerManipulation> {
     });
 
     _animationTimer =
-        Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        Timer.periodic(const Duration(milliseconds: 100), (timer) async {
       if (mapController != null) {
         final newData = _getAnimatedGeoJsonData(animationStep);
-        mapController!.setGeoJsonSource("sample-data", newData);
+        await mapController!.setGeoJsonSource("sample-data", newData);
 
         setState(() {
           animationStep++;

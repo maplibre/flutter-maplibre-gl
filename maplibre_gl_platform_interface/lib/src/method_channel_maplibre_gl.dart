@@ -156,7 +156,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
               onPlatformViewCreated,
             );
 
-            controller.create();
+            unawaited(controller.create());
             return controller;
           },
         );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class LocalStyleState extends State<LocalStyle> {
   initState() {
     super.initState();
 
-    getApplicationDocumentsDirectory().then((dir) async {
+    unawaited(getApplicationDocumentsDirectory().then((dir) async {
       final documentDir = dir.path;
       final stylesDir = '$documentDir/styles';
       const styleJSON =
@@ -46,7 +47,7 @@ class LocalStyleState extends State<LocalStyle> {
       setState(() {
         styleAbsoluteFilePath = styleFile.path;
       });
-    });
+    }));
   }
 
   void _onMapCreated(MapLibreMapController controller) {

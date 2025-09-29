@@ -348,13 +348,13 @@ class MapLibreMap extends Camera {
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
   ///  representing visible features that satisfy the query parameters.
   ///
-  ///  @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
+  ///  @param `{PointLike|Array<PointLike>}` [geometry] - The geometry of the query region:
   ///  either a single point or southwest and northeast points describing a bounding box.
   ///  Omitting this parameter (i.e. calling [MapLibreMap.queryRenderedFeatures] with zero arguments,
   ///  or with only a [options] argument) is equivalent to passing a bounding box encompassing the entire
   ///  map viewport.
   ///  @param {Object} [options]
-  ///  @param {Array<string>} `options.layers` An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
+  ///  @param `{Array<string>}` `options.layers` An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
   ///    Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
   ///  @param {Array} `options.filter` A [filter](https://maplibre.org/maplibre-style-spec/#other-filter)
   ///    to limit query results.
@@ -706,7 +706,7 @@ class MapLibreMap extends Camera {
   ///  This includes both images from the style's original [sprite]
   ///  and any images that have been added at runtime using {@link addImage}.
   ///
-  ///  @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
+  ///  @returns `{Array<string>}` An Array of strings containing the names of all sprites/images currently available in the map.
   ///
   ///  @example
   ///  var allImages = map.listImages();

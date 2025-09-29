@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.style.interop.sources.vector_source;
+library;
 
 import 'package:js/js.dart';
 

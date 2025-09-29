@@ -33,7 +33,7 @@
 /// Vector and GeoJson sources are displayed by adding a "line", "fill", "symbol" or "circle" layer to the MapLibre GL style and specifying
 /// which source to use (by setting the "source" property of the layer to the id of the source) as well as how to style the data by setting other properties of the layer such as "line-color" or "fill-outline-color".
 /// For example, a vector source layer (or a GeoJson source layer) with the outlines of countries could be displayed both by a fill layer to fill the countries with a color and by a line layer to draw the outlines of the countries.
-library maplibre_gl;
+library;
 
 import 'dart:async';
 import 'dart:convert';

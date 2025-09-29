@@ -317,11 +317,11 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   @override
-  void didUpdateWidget(MapLibreMap oldWidget) {
+  Future<void> didUpdateWidget(MapLibreMap oldWidget) async {
     super.didUpdateWidget(oldWidget);
     final newOptions = _MapLibreMapOptions.fromWidget(widget);
     final updates = _maplibreMapOptions.updatesMap(newOptions);
-    _updateOptions(updates);
+    await _updateOptions(updates);
     _maplibreMapOptions = newOptions;
   }
 
@@ -330,18 +330,19 @@ class _MapLibreMapState extends State<MapLibreMap> {
       return;
     }
     final controller = await _controller.future;
-    controller._updateMapOptions(updates);
+    await controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
-      onStyleLoadedCallback: () {
+      onStyleLoadedCallback: () async {
         if (_controller.isCompleted) {
           widget.onStyleLoadedCallback?.call();
         } else {
-          _controller.future.then((_) => widget.onStyleLoadedCallback?.call());
+          await _controller.future
+              .then((_) => widget.onStyleLoadedCallback?.call());
         }
       },
       onMapClick: widget.onMapClick,

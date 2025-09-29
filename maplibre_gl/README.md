@@ -319,14 +319,8 @@ but it seems like the expression still works well.
 ## Contributing
 
 Setup [melos](https://melos.invertase.dev/~melos-latest/getting-started) and run
-the
-
-```bash
-melos bootstrap
-```
-
-command in the plugin root directory. Run the example app and familiarize
-yourself with the plugin directory structure.
+the `melos bootstrap` command in the plugin root directory.\
+Run the example app and familiarize yourself with the plugin directory structure.
 
 [Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues), contributing
 pull requests
@@ -334,3 +328,5 @@ and [bug reports](https://github.com/maplibre/flutter-maplibre-gl/issues) are
 very welcome - check
 the [CONTRIBUTING.md](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CONTRIBUTING.md)
 guidelines.
+
+**Generated code**: Some API surface (layer/source property helpers, expression utilities) is produced via a generator under `scripts/`. Do not modify generated files directly—see the Code Generation & Formatting section in `CONTRIBUTING.md` for the workflow (`melos run generate` then `melos format-all`).

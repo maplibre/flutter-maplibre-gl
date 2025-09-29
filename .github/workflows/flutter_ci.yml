@@ -18,8 +18,10 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
       - name: Lint analysis
-        run: melos format --set-exit-if-changed .
+        run: melos run format-all
 
   lint:
     name: "Static code analysis"
@@ -31,8 +33,10 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
       - name: Lint analysis
-        run: melos analyze --fatal-warnings --fatal-infos --concurrency 10
+        run: melos run analyze-all
 
   test:
     name: "Run tests"
@@ -44,7 +48,9 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
-      - run: melos test:io
+        with:
+          run-bootstrap: true
+      - run: melos run test:io
 
   test-web:
     name: "Run web tests"
@@ -56,7 +62,9 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
-      - run: melos test:web
+        with:
+          run-bootstrap: true
+      - run: melos run test:web
 
   code-gen:
     name: "Generate code from templates"
@@ -68,8 +76,10 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
-      - run: melos generate
-      - run: melos format
+        with:
+          run-bootstrap: true
+      - run: melos run generate
+      - run: melos run format-all
       - name: Check Git changes
         uses: multani/git-changes-action@v1
 
@@ -86,6 +96,8 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
       - uses: actions/setup-java@v5
         with:
           java-version: '21'
@@ -112,6 +124,8 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
       - uses: maxim-lobanov/setup-cocoapods@v1
         with:
           podfile-path: maplibre_gl_example/ios/Podfile.lock
@@ -136,5 +150,7 @@ jobs:
           channel: stable
           cache: true
       - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
       - name: Build web
         run: flutter build web

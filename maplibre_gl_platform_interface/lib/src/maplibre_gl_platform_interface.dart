@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_getters_setters
-
 part of '../maplibre_gl_platform_interface.dart';
 
 /// The default instance of [MapLibrePlatform] to use.

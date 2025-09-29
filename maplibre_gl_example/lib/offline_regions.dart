@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -120,19 +122,19 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
   @override
   void initState() {
     super.initState();
-    _updateListOfRegions();
+    unawaited(_updateListOfRegions());
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: <Widget>[
+      children: [
         ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
           itemCount: _items.length,
           itemBuilder: (context, index) => Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
+            children: [
               IconButton(
                 icon: const Icon(Icons.map),
                 onPressed: () => _goToMap(_items[index]),
@@ -140,7 +142,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
+                children: [
                   Text(
                     _items[index].name,
                     style: const TextStyle(
@@ -256,8 +258,8 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     });
   }
 
-  _goToMap(OfflineRegionListItem item) {
-    Navigator.of(context).push(
+  Future<void> _goToMap(OfflineRegionListItem item) async {
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => OfflineRegionMap(item),
       ),

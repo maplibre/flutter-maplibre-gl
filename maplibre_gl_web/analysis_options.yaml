@@ -4,3 +4,4 @@ analyzer:
   errors:
     deprecated_member_use: ignore
     deprecated_member_use_from_same_package: ignore
+    strict_top_level_inference: ignore
