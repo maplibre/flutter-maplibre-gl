@@ -1,5 +1,0 @@
-name: maplibre_gl_workspace
-
-packages:
-  - scripts
-  - maplibre_gl*

@@ -4,11 +4,18 @@ repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  
+  sdk: '>=3.5.0 <4.0.0'
+
 dev_dependencies:
   melos: ^7.1.1
   very_good_analysis: ^10.0.0
+
+workspace:
+  - scripts
+  - maplibre_gl
+  - maplibre_gl_web
+  - maplibre_gl_example
+  - maplibre_gl_platform_interface
 
 melos:
   scripts:
