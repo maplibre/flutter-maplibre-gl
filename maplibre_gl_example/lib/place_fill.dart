@@ -56,27 +56,6 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onFillTapped.add(_onFillTapped);
-    this.controller!.onFeatureDrag.add(_onFeatureDrag);
-  }
-
-  void _onFeatureDrag(id,
-      {required current,
-      required delta,
-      required origin,
-      required point,
-      required eventType}) {
-    final DragEventType type = eventType;
-    switch (type) {
-      case DragEventType.start:
-        // TODO: Handle this case.
-        break;
-      case DragEventType.drag:
-        // TODO: Handle this case.
-        break;
-      case DragEventType.end:
-        // TODO: Handle this case.
-        break;
-    }
   }
 
   void _onStyleLoaded() {

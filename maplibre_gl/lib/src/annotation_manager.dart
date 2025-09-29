@@ -5,12 +5,6 @@ abstract class AnnotationManager<T extends Annotation> {
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 
-  /// Called if a annotation is tapped
-  final ArgumentCallback<T>? onTap;
-
-  /// Called if a annotation is dragged
-  final ArgumentCallback2<T, DragEventType>? onDrag;
-
   /// base id of the manager. User [layerdIds] to get the actual ids.
   final String id;
 
@@ -34,8 +28,6 @@ abstract class AnnotationManager<T extends Annotation> {
 
   AnnotationManager(
     this.controller, {
-    this.onTap,
-    this.onDrag,
     this.selectLayer,
     required this.enableInteraction,
   }) : id = getRandomString() {
@@ -43,12 +35,14 @@ abstract class AnnotationManager<T extends Annotation> {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
           promoteId: "id");
-      controller.addLayer(layerId, layerId, allLayerProperties[i]);
+      controller.addLayer(
+        layerId,
+        layerId,
+        allLayerProperties[i],
+        enableInteraction: enableInteraction,
+      );
     }
 
-    if (onTap != null) {
-      controller.onFeatureTapped.add(_onFeatureTapped);
-    }
     controller.onFeatureDrag.add(_onDrag);
   }
 
@@ -58,15 +52,8 @@ abstract class AnnotationManager<T extends Annotation> {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       await controller.removeLayer(layerId);
-      await controller.addLayer(layerId, layerId, allLayerProperties[i]);
-    }
-  }
-
-  _onFeatureTapped(
-      dynamic id, Point<double> point, LatLng coordinates, String layerId) {
-    final annotation = _idToAnnotation[id];
-    if (annotation != null) {
-      onTap!(annotation);
+      await controller.addLayer(layerId, layerId, allLayerProperties[i],
+          enableInteraction: enableInteraction);
     }
   }
 
@@ -143,17 +130,17 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(dynamic id,
-      {required Point<double> point,
-      required LatLng origin,
-      required LatLng current,
-      required LatLng delta,
-      required DragEventType eventType}) async {
-    final annotation = byId(id);
-    if (annotation != null) {
+  _onDrag(
+    Point<double> point,
+    LatLng origin,
+    LatLng current,
+    LatLng delta,
+    Annotation annotation,
+    DragEventType eventType,
+  ) async {
+    if (annotation is T) {
       annotation.translate(delta);
       await set(annotation);
-      onDrag?.call(annotation, eventType);
     }
   }
 
@@ -179,8 +166,6 @@ abstract class AnnotationManager<T extends Annotation> {
 class LineManager extends AnnotationManager<Line> {
   LineManager(
     super.controller, {
-    super.onTap,
-    super.onDrag,
     super.enableInteraction = true,
   }) : super(
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
@@ -207,8 +192,6 @@ class LineManager extends AnnotationManager<Line> {
 class FillManager extends AnnotationManager<Fill> {
   FillManager(
     super.controller, {
-    super.onTap,
-    super.onDrag,
     super.enableInteraction = true,
   }) : super(
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
@@ -233,8 +216,6 @@ class FillManager extends AnnotationManager<Fill> {
 class CircleManager extends AnnotationManager<Circle> {
   CircleManager(
     super.controller, {
-    super.onTap,
-    super.onDrag,
     super.enableInteraction = true,
   });
 
@@ -255,8 +236,6 @@ class CircleManager extends AnnotationManager<Circle> {
 class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
     super.controller, {
-    super.onTap,
-    super.onDrag,
     bool iconAllowOverlap = false,
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,

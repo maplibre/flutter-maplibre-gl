@@ -1,3 +1,14 @@
+## UNRELEASED
+
+### Breaking changes
+* `annotation` argument now replaces the previous `id` argument in the onFeatureDrag and onFeatureTapped callbacks. Existing implementations must be updated to use the new annotation parameter.
+
+### Changed
+* Added `onFeatureHover` to the controller for listening to hover interactions.
+* Fixed: annotationConsumeTapEvents previously had no effect. This has been fixed, and it now properly controls whether tap events on annotations are consumed.
+* Fixed: Avoided calling notifyListeners() on a disposed controller.
+* Fixed: Internal event listeners wasn't properly removed/off in web.
+
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
 ### Breaking changes
