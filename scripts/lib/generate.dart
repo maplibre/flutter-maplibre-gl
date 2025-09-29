@@ -7,7 +7,8 @@
 // Key goals:
 //  - Keep hand‑written logic small; most surface area is generated.
 //  - Ensure deterministic output (stable ordering helps minimal diffs).
-//  - Apply formatting immediately so CI "format-all" never fails after generation.
+//  - Generated Dart files are batch‑formatted at the end using `dart format`
+//    so that a subsequent CI `melos format-all` step produces no diffs.
 //
 // Notes:
 //  - Do NOT edit the generated files manually; instead adjust templates or
@@ -101,15 +102,33 @@ Future<void> main() async {
     "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
+  final generatedDartFiles = <String>[];
   for (final template in templates) {
-    await render(renderContext, template);
+    final path = await render(renderContext, template);
+    if (path.endsWith('.dart')) {
+      generatedDartFiles.add(path);
+    }
+  }
+
+  // Auto-format only the Dart files we just generated so that a subsequent
+  // CI `melos format-all` step does not introduce extra diffs.
+  if (generatedDartFiles.isNotEmpty) {
+    final result = await Process.run(
+      'dart',
+      ['format', ...generatedDartFiles],
+      runInShell: true,
+    );
+    if (result.exitCode != 0) {
+      stderr.writeln('Warning: dart format failed: ${result.stderr}');
+    }
   }
 }
 
 /// Render a single template file.
 /// [path] is the relative workspace path to the output (and indirectly the
 /// template at scripts/templates/$filename.template).
-Future<void> render(
+/// Returns the absolute path of the written file.
+Future<String> render(
   Map<String, List> renderContext,
   String path,
 ) async {
@@ -128,28 +147,8 @@ Future<void> render(
   final outputFile = File('$outputPath/$filename');
 
   final rendered = template.renderString(renderContext);
-
   await outputFile.writeAsString(rendered);
-
-  // For Dart targets, run the official formatter to ensure perfect parity
-  // with `dart format` (used by melos format-all in CI). Doing this instead
-  // of using the dart_style API avoids subtle version / option drift.
-  if (filename.endsWith('.dart')) {
-    try {
-      final result = await Process.run(
-        'dart',
-        ['format', outputFile.path],
-        runInShell: true,
-      );
-      if (result.exitCode != 0) {
-        stderr.writeln(
-          'Warning: dart format failed for ${outputFile.path}: ${result.stderr}',
-        );
-      }
-    } catch (e) {
-      stderr.writeln('Warning: spawning dart format failed for $filename: $e');
-    }
-  }
+  return outputFile.path;
 }
 
 /// Build the (paint/layout) style properties list for a given style.json key.
