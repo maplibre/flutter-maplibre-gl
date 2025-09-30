@@ -217,4 +217,14 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public void setLocationEngineProperties(@NonNull LocationEngineRequest locationEngineRequest) {
     this.locationEngineRequest = locationEngineRequest;
   }
+
+  @Override
+  public void setForegroundLoadColor(int loadColor) {
+    options.foregroundLoadColor(loadColor);
+  }
+
+  @Override
+  public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
+    options.translucentTextureSurface(translucentTextureSurface);
+  }
 }

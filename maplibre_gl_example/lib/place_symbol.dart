@@ -43,18 +43,19 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onSymbolTapped.add(_onSymbolTapped);
+    controller.onSymbolDrag.add(_onSymbolDrag);
   }
 
   void _onStyleLoaded() {
     addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
     addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
-    addImageFromUrl(
-        "networkImage", Uri.parse("https://via.placeholder.com/50"));
+    addImageFromUrl("networkImage", Uri.parse("https://dummyimage.com/50x50"));
   }
 
   @override
   void dispose() {
     controller?.onSymbolTapped.remove(_onSymbolTapped);
+    controller?.onSymbolDrag.remove(_onSymbolDrag);
     super.dispose();
   }
 
@@ -83,6 +84,17 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     _updateSelectedSymbol(
       const SymbolOptions(iconSize: 1.4),
     );
+  }
+
+  void _onSymbolDrag(Symbol symbol, DragEventType eventType) {
+    if (eventType == DragEventType.end) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Symbol #${symbol.data?['count'] ?? ''} was dragged to ${symbol.options.geometry}'),
+        ),
+      );
+    }
   }
 
   Future<void> _updateSelectedSymbol(SymbolOptions changes) async {

@@ -41,6 +41,7 @@ class MapLibreMap extends StatefulWidget {
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
     this.iosLongClickDuration,
+    this.webPreserveDrawingBuffer = false,
     this.onMapClick,
     this.onUserLocationUpdated,
     this.onMapLongClick,
@@ -60,6 +61,8 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.line,
       AnnotationType.circle,
     ],
+    this.foregroundLoadColor = Colors.transparent,
+    this.translucentTextureSurface = false,
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
@@ -71,6 +74,18 @@ class MapLibreMap extends StatefulWidget {
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
   final LocationEnginePlatforms locationEnginePlatforms;
+
+  /// The color used for the map loading foreground.
+  /// Pass a [Color] and it will be converted to ARGB int for the platform.
+  ///
+  /// **Available only on Android. Has no effect on iOS or Web.**
+  final Color? foregroundLoadColor;
+
+  /// Enable translucent texture surface for the map.
+  /// This allows the map to have a transparent background, useful for overlay scenarios.
+  ///
+  /// **Available only on Android. Has no effect on iOS or Web.**
+  final bool translucentTextureSurface;
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -99,6 +114,11 @@ class MapLibreMap extends StatefulWidget {
   /// Has no effect on web or Android. Can not be changed at runtime, only the initial value is used.
   /// If null, the default value of the native MapLibre library / of the OS is used.
   final Duration? iosLongClickDuration;
+
+  /// If true, the map's canvas can be exported to a PNG using map.getCanvas().toDataURL().
+  /// This is false by default as a performance optimization.
+  /// **Web only** - has no effect on other platforms.
+  final bool? webPreserveDrawingBuffer;
 
   /// True if the map should show a compass when rotated.
   final bool compassEnabled;
@@ -274,6 +294,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
             widget.iosLongClickDuration!.inMilliseconds,
+      if (widget.webPreserveDrawingBuffer != null)
+        'webPreserveDrawingBuffer': widget.webPreserveDrawingBuffer,
     };
     return _maplibrePlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
@@ -362,7 +384,9 @@ class _MapLibreMapOptions {
       this.compassViewMargins,
       this.attributionButtonPosition,
       this.attributionButtonMargins,
-      this.locationEnginePlatforms});
+      this.locationEnginePlatforms,
+      this.foregroundLoadColor,
+      this.translucentTextureSurface});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -386,6 +410,8 @@ class _MapLibreMapOptions {
           compassViewMargins: map.compassViewMargins,
           attributionButtonPosition: map.attributionButtonPosition,
           attributionButtonMargins: map.attributionButtonMargins,
+          foregroundLoadColor: map.foregroundLoadColor,
+          translucentTextureSurface: map.translucentTextureSurface,
         );
 
   final bool? compassEnabled;
@@ -425,6 +451,10 @@ class _MapLibreMapOptions {
   final Point? attributionButtonMargins;
 
   final LocationEnginePlatforms? locationEnginePlatforms;
+
+  final Color? foregroundLoadColor;
+
+  final bool? translucentTextureSurface;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -473,6 +503,8 @@ class _MapLibreMapOptions {
     addIfNonNull(
         'attributionButtonMargins', pointToArray(attributionButtonMargins));
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
+    addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
+    addIfNonNull('translucentTextureSurface', translucentTextureSurface);
     return optionsMap;
   }
 

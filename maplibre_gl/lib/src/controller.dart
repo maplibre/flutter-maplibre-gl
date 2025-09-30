@@ -136,19 +136,33 @@ class MapLibreMapController extends ChangeNotifier {
         final enableInteraction = interactionEnabled.contains(type);
         switch (type) {
           case AnnotationType.fill:
-            fillManager = FillManager(this,
-                onTap: onFillTapped.call, enableInteraction: enableInteraction);
+            fillManager = FillManager(
+              this,
+              onTap: onFillTapped.call,
+              onDrag: onFillDrag.call,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.line:
-            lineManager = LineManager(this,
-                onTap: onLineTapped.call, enableInteraction: enableInteraction);
+            lineManager = LineManager(
+              this,
+              onTap: onLineTapped.call,
+              onDrag: onLineDrag.call,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.circle:
-            circleManager = CircleManager(this,
-                onTap: onCircleTapped.call,
-                enableInteraction: enableInteraction);
+            circleManager = CircleManager(
+              this,
+              onTap: onCircleTapped.call,
+              onDrag: onCircleDrag.call,
+              enableInteraction: enableInteraction,
+            );
           case AnnotationType.symbol:
-            symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped.call,
-                enableInteraction: enableInteraction);
+            symbolManager = SymbolManager(
+              this,
+              onTap: onSymbolTapped.call,
+              onDrag: onSymbolDrag.call,
+              enableInteraction: enableInteraction,
+            );
         }
       }
       onStyleLoadedCallback?.call();
@@ -199,11 +213,26 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for symbols placed on this map.
   final ArgumentCallbacks<Symbol> onSymbolTapped = ArgumentCallbacks<Symbol>();
 
-  /// Callbacks to receive tap events for symbols placed on this map.
+  /// Callbacks to receive drag events for symbols placed on this map.
+  final onSymbolDrag = ArgumentCallbacks2<Symbol, DragEventType>();
+
+  /// Callbacks to receive tap events for circles placed on this map.
   final ArgumentCallbacks<Circle> onCircleTapped = ArgumentCallbacks<Circle>();
+
+  /// Callbacks to receive drag events for circles placed on this map.
+  final onCircleDrag = ArgumentCallbacks2<Circle, DragEventType>();
 
   /// Callbacks to receive tap events for fills placed on this map.
   final ArgumentCallbacks<Fill> onFillTapped = ArgumentCallbacks<Fill>();
+
+  /// Callbacks to receive drag events for fills placed on this map.
+  final onFillDrag = ArgumentCallbacks2<Fill, DragEventType>();
+
+  /// Callbacks to receive tap events for lines placed on this map.
+  final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
+
+  /// Callbacks to receive drag events for lines placed on this map.
+  final onLineDrag = ArgumentCallbacks2<Line, DragEventType>();
 
   /// Callbacks to receive tap events for features (geojson layer) placed on this map.
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
@@ -219,9 +248,6 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned set will be a detached snapshot of the symbols collection.
   Set<Symbol> get symbols => symbolManager!.annotations;
-
-  /// Callbacks to receive tap events for lines placed on this map.
-  final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
 
   /// The current set of lines on this map added with the [addLine] or [addLines] methods.
   ///
@@ -1328,7 +1354,7 @@ class MapLibreMapController extends ChangeNotifier {
       double? maxzoom,
       dynamic filter}) async {
     if (properties is FillLayerProperties) {
-      addFillLayer(sourceId, layerId, properties,
+      await addFillLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1336,13 +1362,13 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is FillExtrusionLayerProperties) {
-      addFillExtrusionLayer(sourceId, layerId, properties,
+      await addFillExtrusionLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else if (properties is LineLayerProperties) {
-      addLineLayer(sourceId, layerId, properties,
+      await addLineLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1350,7 +1376,7 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is SymbolLayerProperties) {
-      addSymbolLayer(sourceId, layerId, properties,
+      await addSymbolLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1358,7 +1384,7 @@ class MapLibreMapController extends ChangeNotifier {
           maxzoom: maxzoom,
           filter: filter);
     } else if (properties is CircleLayerProperties) {
-      addCircleLayer(sourceId, layerId, properties,
+      await addCircleLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           enableInteraction: enableInteraction,
           sourceLayer: sourceLayer,
@@ -1369,7 +1395,7 @@ class MapLibreMapController extends ChangeNotifier {
       if (filter != null) {
         throw UnimplementedError("RasterLayer does not support filter");
       }
-      addRasterLayer(sourceId, layerId, properties,
+      await addRasterLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
@@ -1378,13 +1404,13 @@ class MapLibreMapController extends ChangeNotifier {
       if (filter != null) {
         throw UnimplementedError("HillShadeLayer does not support filter");
       }
-      addHillshadeLayer(sourceId, layerId, properties,
+      await addHillshadeLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
           maxzoom: maxzoom);
     } else if (properties is HeatmapLayerProperties) {
-      addHeatmapLayer(sourceId, layerId, properties,
+      await addHeatmapLayer(sourceId, layerId, properties,
           belowLayerId: belowLayerId,
           sourceLayer: sourceLayer,
           minzoom: minzoom,
