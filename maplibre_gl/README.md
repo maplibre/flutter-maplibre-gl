@@ -344,7 +344,8 @@ Error: `Invalid filter value: filter property must be a string`. Replace `["!has
 
 ## Documentation & Examples
 
-* Example app: [`maplibre_gl_example`](./maplibre_gl_example)
+* Minimal example (for pub.dev & quick start): see [`example/lib/main.dart`](./example/lib/main.dart)
+* Full featured example app: [`maplibre_gl_example`](./maplibre_gl_example)
 * API docs: https://pub.dev/documentation/maplibre_gl/latest/
 * MapLibre upstream projects: [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js), [maplibre-native](https://github.com/maplibre/maplibre-native)
 
