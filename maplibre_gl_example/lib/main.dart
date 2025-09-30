@@ -26,7 +26,6 @@ import 'full_map.dart';
 import 'layer.dart';
 import 'layer_manipulation.dart';
 import 'line.dart';
-import 'local_style.dart';
 import 'map_ui.dart';
 import 'move_camera.dart';
 import 'offline_regions.dart';
@@ -38,19 +37,20 @@ import 'place_source.dart';
 import 'place_symbol.dart';
 import 'scrolling_map.dart';
 import 'sources.dart';
+import 'multi_style_switch.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   const MapUiPage(),
   const FullMapPage(),
   const TranslucentFullMapPage(),
   const PMTilesPage(),
+  const MultiStyleSwitchPage(),
   const LocalizedMapPage(),
   const AnimateCameraPage(),
   const MoveCameraPage(),
   const PlaceSymbolPage(),
   const PlaceSourcePage(),
   const LinePage(),
-  const LocalStylePage(),
   const LayerPage(),
   const LayerManipulationPage(),
   const PlaceCirclePage(),
