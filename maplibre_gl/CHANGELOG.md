@@ -1,6 +1,9 @@
-## 0.23.0
+## [0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
+> **Note**: This release has breaking changes.
 
 This release aligns the plugin with the latest MapLibre Native (Android 11.9.0 / iOS 6.14.0), introduces runtime style switching APIs, hover interaction callbacks, and several annotation interaction improvements. It also contains a small breaking change for feature interaction callbacks.
+
+A big thank you to everyone who contributed to this update!
 
 ### Breaking Changes
 * `onFeatureDrag` / `onFeatureTapped` callback signatures now provide an `Annotation annotation` object instead of an `id` parameter. Update your handlers to remove the `id` argument and use `annotation.id` (or other annotation fields) as needed.
@@ -29,6 +32,8 @@ This release aligns the plugin with the latest MapLibre Native (Android 11.9.0 /
 
 ### Refactor / Quality
 * Enable and fix additional lint rules to enforce consistency (#452).
+
+**Full Changelog**: [v0.22.0...v0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
 
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 

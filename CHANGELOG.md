@@ -3,14 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## 2025-09-30
-
-### 0.23.0
+## [0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
+> **Note**: This release has breaking changes.
 
 This consolidated release delivers runtime style switching, hover interactions, heatmap & visibility features, native SDK updates (Android 11.9.0 / iOS 6.14.0 with PMTiles), and broad naming / enum casing harmonization. It also fixes several interaction and stability issues across web and mobile. If you are upgrading from <= 0.22.x:
 * Review the breaking rename (`Maplibre` -> `MapLibre`) and enum / const lowerCamelCase migration.
 * Adapt feature interaction callbacks: `onFeatureTapped` / `onFeatureDrag` now receive an `Annotation` instead of an `id` argument.
 * Ensure any style access happens after `onStyleLoaded` due to stricter style readiness checks.
+
+A big thank you to everyone who contributed to this update!
 
 ### Breaking changes
 * Rename `Maplibre` to `MapLibre` across APIs (#441).
@@ -44,17 +45,8 @@ This consolidated release delivers runtime style switching, hover interactions, 
 ### Refactor / Quality
 * Enable and fix additional lint rules (#452).
 
+**Full Changelog**: [v0.22.0...v0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
 
-## 0.22.1
-
- - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
- - **FIX**: Update of generate.dart and its template files. Fixed Offset, Translate and expressions arrays on iOS. ([#481](https://github.com/maplibre/flutter-maplibre-gl/issues/481)).
- - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
- - **FEAT**: update android to 11.9.0 and ios to 6.14.0 ([#582](https://github.com/maplibre/flutter-maplibre-gl/issues/582)).
- - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
- - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
-
-No unreleased changes yet.
 
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
