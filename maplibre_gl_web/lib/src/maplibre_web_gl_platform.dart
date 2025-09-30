@@ -350,6 +350,14 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
+    if (!_map.isStyleLoaded()) {
+      // Style is not loaded yet, return empty list
+      dev.log(
+          'queryRenderedFeatures: Style not loaded yet, returning empty list',
+          name: 'MapLibreMapController');
+      return [];
+    }
+
     final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
@@ -378,6 +386,14 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
+    if (!_map.isStyleLoaded()) {
+      // Style is not loaded yet, return empty list
+      dev.log(
+          'queryRenderedFeaturesInRect: Style not loaded yet, returning empty list',
+          name: 'MapLibreMapController');
+      return [];
+    }
+
     final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
@@ -406,6 +422,13 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> querySourceFeatures(
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    if (!_map.isStyleLoaded()) {
+      // Style is not loaded yet, return empty list
+      dev.log('querySourceFeatures: Style not loaded yet, returning empty list',
+          name: 'MapLibreMapController');
+      return [];
+    }
+
     final parameters = <String, dynamic>{};
 
     if (sourceLayerId != null) {

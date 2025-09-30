@@ -335,13 +335,17 @@ final class MapLibreMapController
   }
 
   String getLastLayerOnStyle(Style style) {
-    if (style != null) {
-      final List<Layer> layers = style.getLayers();
-
-      if (layers.size() > 0) {
-        return layers.get(layers.size() - 1).getId();
-      }
+    if (style == null) return null;
+    if (!style.isFullyLoaded()) {
+        Log.d(TAG, "getLastLayerOnStyle: style not fully loaded yet");
+        return null;
     }
+    
+    final List<Layer> layers = style.getLayers();
+    if (layers.size() > 0) {
+      return layers.get(layers.size() - 1).getId();
+    }
+
     return null;
   }
 
@@ -669,29 +673,33 @@ final class MapLibreMapController
   }
 
   private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
-    if (style != null) {
-      final List<Layer> layers;
-      try {
-        layers = style.getLayers();
-      } catch (IllegalStateException ex) {
-        // Style object is stale (a new style is loading/has loaded). Skip querying.
-        Log.w(TAG, "Style.getLayers() failed: " + ex.getMessage());
+    if (style == null) return null;
+    if (!style.isFullyLoaded()) {
+        Log.d(TAG, "firstFeatureOnLayers: style not fully loaded yet");
         return null;
-      }
-      final List<String> layersInOrder = new ArrayList<String>();
-      for (Layer layer : layers) {
-        String id = layer.getId();
-        if (interactiveFeatureLayerIds.contains(id)) layersInOrder.add(id);
-      }
-      Collections.reverse(layersInOrder);
-
-      for (String id : layersInOrder) {
-        List<Feature> features = mapLibreMap.queryRenderedFeatures(in, id);
-        if (!features.isEmpty()) {
-          return new Pair<Feature, String>(features.get(0), id);
-        }
+    }
+    
+    final List<Layer> layers;
+    try {
+      layers = style.getLayers();
+    } catch (IllegalStateException ex) {
+      // Style object is stale (a new style is loading/has loaded). Skip querying.
+      Log.w(TAG, "firstFeatureOnLayers: Style.getLayers() failed: " + ex.getMessage());
+      return null;
+    }
+    final List<String> layersInOrder = new ArrayList<String>();
+    for (Layer layer : layers) {
+      String id = layer.getId();
+      if (interactiveFeatureLayerIds.contains(id)) layersInOrder.add(id);
+    }
+    Collections.reverse(layersInOrder);
+    for (String id : layersInOrder) {
+      List<Feature> features = mapLibreMap.queryRenderedFeatures(in, id);
+      if (!features.isEmpty()) {
+        return new Pair<Feature, String>(features.get(0), id);
       }
     }
+    
     return null;
   }
 
