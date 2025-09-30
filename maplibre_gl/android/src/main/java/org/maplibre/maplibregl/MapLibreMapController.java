@@ -345,7 +345,7 @@ final class MapLibreMapController
     if (layers.size() > 0) {
       return layers.get(layers.size() - 1).getId();
     }
-    
+
     return null;
   }
 
@@ -684,7 +684,7 @@ final class MapLibreMapController
       layers = style.getLayers();
     } catch (IllegalStateException ex) {
       // Style object is stale (a new style is loading/has loaded). Skip querying.
-      Log.w(TAG, "firstFeatureOnLayers:  Style.getLayers() failed: " + ex.getMessage());
+      Log.w(TAG, "firstFeatureOnLayers: Style.getLayers() failed: " + ex.getMessage());
       return null;
     }
     final List<String> layersInOrder = new ArrayList<String>();

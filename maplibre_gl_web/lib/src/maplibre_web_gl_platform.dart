@@ -386,7 +386,6 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
-    final options = <String, dynamic>{};
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
       dev.log(
@@ -395,6 +394,7 @@ class MapLibreMapController extends MapLibrePlatform
       return [];
     }
 
+    final options = <String, dynamic>{};
     if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
