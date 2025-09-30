@@ -317,11 +317,15 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   @override
-  Future<void> didUpdateWidget(MapLibreMap oldWidget) async {
+  void didUpdateWidget(MapLibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     final newOptions = _MapLibreMapOptions.fromWidget(widget);
     final updates = _maplibreMapOptions.updatesMap(newOptions);
-    await _updateOptions(updates);
+
+    if (updates.isNotEmpty) {
+      // Intentionally not awaited: updating map options asynchronously to avoid blocking widget update.
+      unawaited(_updateOptions(updates));
+    }
     _maplibreMapOptions = newOptions;
   }
 
