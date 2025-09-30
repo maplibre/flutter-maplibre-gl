@@ -1,29 +1,44 @@
 part of '../maplibre_gl.dart';
 
+/// Manages a homogeneous set of [Annotation]s (e.g. symbols, lines, fills) by
+/// owning their backing style source(s)/layer(s) and performing efficient
+/// batched updates.
+///
+/// An [AnnotationManager] keeps an internal mapping from annotation id to its
+/// model object and mirrors the collection into one or more GeoJSON sources;
+/// each source is bound to a style layer whose visual properties come from
+/// [allLayerProperties].
+///
+/// When [enableInteraction] is true, drag events are listened to and the
+/// underlying annotation is translated & re-set.
 abstract class AnnotationManager<T extends Annotation> {
   final MapLibreMapController controller;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 
-  /// base id of the manager. User [layerdIds] to get the actual ids.
+  /// Base identifier of the manager. Use [layerIds] for concrete layer ids.
   final String id;
 
   List<String> get layerIds =>
       [for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i)];
 
-  /// If disabled the manager offers no interaction for the created symbols
+  /// If false, the manager disables user interaction (e.g. dragging) for
+  /// its annotations.
   final bool enableInteraction;
 
-  /// implemented to define the layer properties
+  /// Layer property definitions (one per backing style layer). Override in
+  /// subclasses to specify visual styling for data-driven attributes.
   List<LayerProperties> get allLayerProperties;
 
-  /// used to spedicy the layer and annotation will life on
-  /// This can be replaced by layer filters a soon as they are implemented
+  /// Optional function used to select which layer/source a given annotation
+  /// should live in (e.g. pattern vs non-pattern lines). If null, a single
+  /// layer/source is used.
   final int Function(T)? selectLayer;
 
-  /// get the an annotation by its id
+  /// Returns the annotation with the given [id], or null if not found.
   T? byId(String id) => _idToAnnotation[id];
 
+  /// Current set of managed annotations.
   Set<T> get annotations => _idToAnnotation.values.toSet();
 
   AnnotationManager(
@@ -46,8 +61,7 @@ abstract class AnnotationManager<T extends Annotation> {
     controller.onFeatureDrag.add(_onDrag);
   }
 
-  /// This function can be used to rebuild all layers after their properties
-  /// changed
+  /// Rebuilds all backing style layers (e.g. after overlap settings changed).
   Future<void> _rebuildLayers() async {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
@@ -83,8 +97,7 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  /// Adds a multiple annotations to the map. This much faster than calling add
-  /// multiple times
+  /// Adds multiple annotations (faster than adding one-by-one).
   Future<void> addAll(Iterable<T> annotations) async {
     for (final a in annotations) {
       _idToAnnotation[a.id] = a;
@@ -92,13 +105,13 @@ abstract class AnnotationManager<T extends Annotation> {
     await _setAll();
   }
 
-  /// add a single annotation to the map
+  /// Adds a single annotation.
   Future<void> add(T annotation) async {
     _idToAnnotation[annotation.id] = annotation;
     await _setAll();
   }
 
-  /// Removes multiple annotations from the map
+  /// Removes multiple annotations.
   Future<void> removeAll(Iterable<T> annotations) async {
     for (final a in annotations) {
       _idToAnnotation.remove(a.id);
@@ -106,21 +119,19 @@ abstract class AnnotationManager<T extends Annotation> {
     await _setAll();
   }
 
-  /// Remove a single annotation form the map
+  /// Removes a single annotation.
   Future<void> remove(T annotation) async {
     _idToAnnotation.remove(annotation.id);
     await _setAll();
   }
 
-  /// Removes all annotations from the map
+  /// Removes all annotations.
   Future<void> clear() async {
     _idToAnnotation.clear();
-
     await _setAll();
   }
 
-  /// Fully dipose of all the the resouces managed by the annotation manager.
-  /// The manager cannot be used after this has been called
+  /// Fully dispose resources (layers & sources). Manager is unusable after.
   Future<void> dispose() async {
     _idToAnnotation.clear();
     await _setAll();
@@ -144,8 +155,8 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  /// Set an existing anntotation to the map. Use this to do a fast update for a
-  /// single annotation
+  /// Updates (re-sets) an existing annotation quickly by only replacing its
+  /// underlying GeoJSON feature if it remains on the same logical layer.
   Future<void> set(T anntotation) async {
     assert(_idToAnnotation.containsKey(anntotation.id),
         "you can only set existing annotations");
@@ -153,8 +164,7 @@ abstract class AnnotationManager<T extends Annotation> {
     final oldLayerIndex = _idToLayerIndex[anntotation.id];
     final layerIndex = selectLayer != null ? selectLayer!(anntotation) : 0;
     if (oldLayerIndex != layerIndex) {
-      // if the annotation has to be moved to another layer/source we have to
-      // set all
+      // Layer changed; must rewrite all sources.
       await _setAll();
     } else {
       await controller.setGeoJsonFeature(
