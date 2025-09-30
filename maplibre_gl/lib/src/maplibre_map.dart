@@ -323,6 +323,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
     final updates = _maplibreMapOptions.updatesMap(newOptions);
 
     if (updates.isNotEmpty) {
+      // Intentionally not awaited: updating map options asynchronously to avoid blocking widget update.
       unawaited(_updateOptions(updates));
     }
     _maplibreMapOptions = newOptions;
