@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
@@ -29,10 +28,10 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: <Widget>[
+      children: [
         Card(
           child: Column(
-            children: <Widget>[
+            children: [
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0),
                 child: Text(
@@ -63,7 +62,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
         ),
         Card(
           child: Column(
-            children: <Widget>[
+            children: [
               const Padding(
                 padding: EdgeInsets.only(bottom: 5.0, top: 5.0),
                 child: Text(

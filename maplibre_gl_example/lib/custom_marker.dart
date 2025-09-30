@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
@@ -40,9 +39,9 @@ class CustomMarkerState extends State<CustomMarker> {
 
   void _onMapCreated(MapLibreMapController controller) {
     _mapController = controller;
-    controller.addListener(() {
+    controller.addListener(() async {
       if (controller.isCameraMoving) {
-        _updateMarkerPosition();
+        await _updateMarkerPosition();
       }
     });
   }
@@ -55,18 +54,18 @@ class CustomMarkerState extends State<CustomMarker> {
     _addMarker(point, coordinates);
   }
 
-  void _onCameraIdleCallback() {
-    _updateMarkerPosition();
+  Future<void> _onCameraIdleCallback() async {
+    await _updateMarkerPosition();
   }
 
-  void _updateMarkerPosition() {
+  Future<void> _updateMarkerPosition() async {
     final coordinates = <LatLng>[];
 
     for (final markerState in _markerStates) {
       coordinates.add(markerState.getCoordinate());
     }
 
-    _mapController.toScreenLocationBatch(coordinates).then((points) {
+    await _mapController.toScreenLocationBatch(coordinates).then((points) {
       _markerStates.asMap().forEach((i, value) {
         _markerStates[i].updatePosition(points[i]);
       });
@@ -107,7 +106,7 @@ class CustomMarkerState extends State<CustomMarker> {
             ))
       ]),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           //_measurePerformance();
 
           // Generate random markers
@@ -118,7 +117,7 @@ class CustomMarkerState extends State<CustomMarker> {
             param.add(LatLng(lat, lng));
           }
 
-          _mapController.toScreenLocationBatch(param).then((value) {
+          await _mapController.toScreenLocationBatch(param).then((value) {
             for (var i = 0; i < randomMarkerNum; i++) {
               final point =
                   Point<double>(value[i].x as double, value[i].y as double);
@@ -131,8 +130,8 @@ class CustomMarkerState extends State<CustomMarker> {
     );
   }
 
-  // ignore: unused_element
-  void _measurePerformance() {
+  // ignore: unused_element --- IGNORE ---
+  Future<void> _measurePerformance() async {
     const trial = 10;
     final batches = [500, 1000, 1500, 2000, 2500, 3000];
     final results = <int, List<double>>{};
@@ -140,7 +139,7 @@ class CustomMarkerState extends State<CustomMarker> {
       results[batch] = [0.0, 0.0];
     }
 
-    _mapController.toScreenLocation(const LatLng(0, 0));
+    await _mapController.toScreenLocation(const LatLng(0, 0));
     final sw = Stopwatch();
 
     for (final batch in batches) {
@@ -220,6 +219,7 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
+      // ignore: discarded_futures --- IGNORE ---
     )..repeat(reverse: true);
     _animation = CurvedAnimation(
       parent: _controller,

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -26,6 +27,7 @@ class AnimateCamera extends StatefulWidget {
 
 class AnimateCameraState extends State<AnimateCamera> {
   late MapLibreMapController mapController;
+  var _fps = 30;
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
@@ -36,7 +38,7 @@ class AnimateCameraState extends State<AnimateCamera> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -50,12 +52,12 @@ class AnimateCameraState extends State<AnimateCamera> {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
+          children: [
             Column(
-              children: <Widget>[
+              children: [
                 TextButton(
-                  onPressed: () {
-                    mapController
+                  onPressed: () async {
+                    await mapController
                         .animateCamera(
                           CameraUpdate.newCameraPosition(
                             const CameraPosition(
@@ -73,9 +75,31 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('newCameraPosition'),
                 ),
+                if (!kIsWeb)
+                  TextButton(
+                    onPressed: () async {
+                      await mapController
+                          .easeCamera(
+                            CameraUpdate.newCameraPosition(
+                              const CameraPosition(
+                                bearing: 270.0,
+                                target: LatLng(46.233487, 14.363610),
+                                tilt: 30.0,
+                                zoom: 17.0,
+                              ),
+                            ),
+                            duration: const Duration(seconds: 2),
+                          )
+                          .then(
+                            (result) => debugPrint(
+                                "mapController.easeCamera() returned $result"),
+                          );
+                    },
+                    child: const Text('easeCamera'),
+                  ),
                 TextButton(
-                  onPressed: () {
-                    mapController
+                  onPressed: () async {
+                    await mapController
                         .animateCamera(
                           CameraUpdate.newLatLng(
                             const LatLng(56.1725505, 10.1850512),
@@ -88,8 +112,8 @@ class AnimateCameraState extends State<AnimateCamera> {
                   child: const Text('newLatLng'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.newLatLngBounds(
                         LatLngBounds(
                           southwest: const LatLng(-38.483935, 113.248673),
@@ -104,8 +128,8 @@ class AnimateCameraState extends State<AnimateCamera> {
                   child: const Text('newLatLngBounds'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.newLatLngZoom(
                         const LatLng(37.4231613, -122.087159),
                         11.0,
@@ -115,20 +139,37 @@ class AnimateCameraState extends State<AnimateCamera> {
                   child: const Text('newLatLngZoom'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.scrollBy(150.0, -225.0),
                     );
                   },
                   child: const Text('scrollBy'),
                 ),
+                if (!kIsWeb)
+                  TextButton(
+                    onPressed: () async {
+                      await mapController.queryCameraPosition().then(
+                            (result) => debugPrint(
+                                "queryCameraPosition() returned $result"),
+                          );
+                    },
+                    child: const Text('queryCameraPosition'),
+                  ),
+                TextButton(
+                  onPressed: () async {
+                    _fps = _fps == 30 ? 3 : 30;
+                    await mapController.setMaximumFps(_fps);
+                  },
+                  child: const Text('setMaximumFps'),
+                ),
               ],
             ),
             Column(
-              children: <Widget>[
+              children: [
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.zoomBy(
                         -0.5,
                         const Offset(30.0, 20.0),
@@ -138,8 +179,8 @@ class AnimateCameraState extends State<AnimateCamera> {
                   child: const Text('zoomBy with focus'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.newLatLngZoom(const LatLng(48, 11), 5),
                       duration: const Duration(milliseconds: 300),
                     );
@@ -147,48 +188,48 @@ class AnimateCameraState extends State<AnimateCamera> {
                   child: const Text('latlngZoom'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.zoomBy(-0.5),
                     );
                   },
                   child: const Text('zoomBy'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.zoomIn(),
                     );
                   },
                   child: const Text('zoomIn'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.zoomOut(),
                     );
                   },
                   child: const Text('zoomOut'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.zoomTo(16.0),
                     );
                   },
                   child: const Text('zoomTo'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.bearingTo(45.0),
                     );
                   },
                   child: const Text('bearingTo'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.animateCamera(
+                  onPressed: () async {
+                    await mapController.animateCamera(
                       CameraUpdate.tiltTo(30.0),
                     );
                   },

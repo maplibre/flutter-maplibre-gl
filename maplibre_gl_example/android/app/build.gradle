@@ -24,16 +24,18 @@ if (flutterVersionName == null) {
 
 android {
     namespace "org.maplibre.example"
-    compileSdkVersion 35
+    compileSdkVersion 36
+    buildToolsVersion "36.0.0"
+
     ndkVersion "28.1.13356709"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
+        jvmTarget = JavaVersion.VERSION_21.toString()
     }
 
     sourceSets {

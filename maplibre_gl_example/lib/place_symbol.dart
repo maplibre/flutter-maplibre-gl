@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async'; // ignore: unnecessary_import
 import 'dart:core';
 import 'dart:math';
 
@@ -43,19 +42,21 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onSymbolTapped.add(_onSymbolTapped);
-    controller.onSymbolDrag.add(_onSymbolDrag);
+    controller.onFeatureDrag.add(_onFeatureDrag);
   }
 
-  void _onStyleLoaded() {
-    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-    addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
-    addImageFromUrl("networkImage", Uri.parse("https://dummyimage.com/50x50"));
+  Future<void> _onStyleLoaded() async {
+    await addImageFromAsset(
+        "custom-marker", "assets/symbols/custom-marker.png");
+    await addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
+    await addImageFromUrl(
+        "networkImage", Uri.parse("https://dummyimage.com/50x50"));
   }
 
   @override
   void dispose() {
     controller?.onSymbolTapped.remove(_onSymbolTapped);
-    controller?.onSymbolDrag.remove(_onSymbolDrag);
+    controller?.onFeatureDrag.remove(_onFeatureDrag);
     super.dispose();
   }
 
@@ -72,26 +73,34 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return controller!.addImage(name, response.bodyBytes);
   }
 
-  void _onSymbolTapped(Symbol symbol) {
+  Future<void> _onSymbolTapped(Symbol symbol) async {
     if (_selectedSymbol != null) {
-      _updateSelectedSymbol(
+      await _updateSelectedSymbol(
         const SymbolOptions(iconSize: 1.0),
       );
     }
     setState(() {
       _selectedSymbol = symbol;
     });
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       const SymbolOptions(iconSize: 1.4),
     );
   }
 
-  void _onSymbolDrag(Symbol symbol, DragEventType eventType) {
+  void _onFeatureDrag(
+    Point<double> point,
+    LatLng origin,
+    LatLng current,
+    LatLng delta,
+    Annotation annotation,
+    DragEventType eventType,
+  ) {
+    if (annotation is! Symbol) return;
     if (eventType == DragEventType.end) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Symbol #${symbol.data?['count'] ?? ''} was dragged to ${symbol.options.geometry}'),
+              'Symbol #${annotation.data?['count'] ?? ''} was dragged to ${annotation.options.geometry}'),
         ),
       );
     }
@@ -101,13 +110,13 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
-  void _add(String iconImage) {
+  Future<void> _add(String iconImage) async {
     final availableNumbers = Iterable<int>.generate(12).toList();
     for (final s in controller!.symbols) {
       availableNumbers.removeWhere((i) => i == s.data!['count']);
     }
     if (availableNumbers.isNotEmpty) {
-      controller!.addSymbol(
+      await controller!.addSymbol(
           _getSymbolOptions(iconImage, availableNumbers.first),
           {'count': availableNumbers.first});
       setState(() {
@@ -163,29 +172,29 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     }
   }
 
-  void _remove() {
-    controller!.removeSymbol(_selectedSymbol!);
+  Future<void> _remove() async {
+    await controller!.removeSymbol(_selectedSymbol!);
     setState(() {
       _selectedSymbol = null;
       _symbolCount -= 1;
     });
   }
 
-  void _removeAll() {
-    controller!.removeSymbols(controller!.symbols);
+  Future<void> _removeAll() async {
+    await controller!.removeSymbols(controller!.symbols);
     setState(() {
       _selectedSymbol = null;
       _symbolCount = 0;
     });
   }
 
-  void _changePosition() {
+  Future<void> _changePosition() async {
     final current = _selectedSymbol!.options.geometry!;
     final offset = Offset(
       center.latitude - current.latitude,
       center.longitude - current.longitude,
     );
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(
         geometry: LatLng(
           center.latitude + offset.dy,
@@ -195,11 +204,11 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  void _changeIconOffset() {
+  Future<void> _changeIconOffset() async {
     var currentAnchor = _selectedSymbol!.options.iconOffset;
     currentAnchor ??= Offset.zero;
     final newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
-    _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
+    await _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
   }
 
   Future<void> _changeIconAnchor() async {
@@ -209,7 +218,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     } else {
       current = 'center';
     }
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconAnchor: current),
     );
   }
@@ -218,7 +227,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var draggable = _selectedSymbol!.options.draggable;
     draggable ??= false;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(draggable: !draggable),
     );
   }
@@ -227,7 +236,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current < 0.1 ? 1.0 : current * 0.75),
     );
   }
@@ -235,7 +244,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeRotation() async {
     var current = _selectedSymbol!.options.iconRotate;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconRotate: current == 330.0 ? 0.0 : current + 30.0),
     );
   }
@@ -244,7 +253,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     var current = _selectedSymbol!.options.iconOpacity;
     current ??= 1.0;
 
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current == 0.0 ? 1.0 : 0.0),
     );
   }
@@ -252,7 +261,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   Future<void> _changeZIndex() async {
     var current = _selectedSymbol!.options.zIndex;
     current ??= 0;
-    _updateSelectedSymbol(
+    await _updateSelectedSymbol(
       SymbolOptions(zIndex: current == 12 ? 0 : current + 1),
     );
   }
@@ -281,7 +290,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -300,11 +309,11 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Row(
-                  children: <Widget>[
+                  children: [
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)
@@ -358,7 +367,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       ],
                     ),
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed:
                               (_selectedSymbol == null) ? null : _changeAlpha,

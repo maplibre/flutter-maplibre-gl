@@ -36,11 +36,14 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
 
   String get source => jsObject.source;
 
+  String get layerId => jsObject.layer.id;
+
   factory Feature({
     dynamic id,
     required Geometry geometry,
     Map<String, dynamic>? properties,
     String? source,
+    String? layerId,
   }) =>
       Feature.fromJsObject(FeatureJsImpl(
         type: 'Feature',
@@ -48,6 +51,7 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
         geometry: geometry.jsObject,
         properties: properties == null ? jsify({}) : jsify(properties),
         source: source,
+        layer: layerId != null ? FeatureLayerJsImpl(id: layerId) : null,
       ));
 
   Feature copyWith({
