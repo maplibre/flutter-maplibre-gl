@@ -11,6 +11,27 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 Packages with breaking changes:
 
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`maplibre_gl` - `v0.23.0`](#maplibre_gl---v0230)
+
+---
+
+#### `maplibre_gl` - `v0.23.0`
+
+ - Bump "maplibre_gl" to `0.23.0`.
+
+
+## 2025-09-30
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
  - [`maplibre_gl_platform_interface` - `v0.23.0`](#maplibre_gl_platform_interface---v0230)
  - [`maplibre_gl_web` - `v0.23.0`](#maplibre_gl_web---v0230)
 

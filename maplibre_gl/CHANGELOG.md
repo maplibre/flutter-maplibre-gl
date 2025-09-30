@@ -1,3 +1,7 @@
+## 0.23.0
+
+ - Bump "maplibre_gl" to `0.23.0`.
+
 ## 0.22.1
 
  - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
