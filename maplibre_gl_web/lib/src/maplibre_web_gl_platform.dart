@@ -1098,10 +1098,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _handleLayerMouseMove(Event e, String layerId) {
     // Normalize feature ids to String to avoid type mismatch (ids can be int, String, etc.)
-    final currentHoveredFeatures = e.features
-        .map((f) => f.id?.toString())
-        .whereType<String>()
-        .toList();
+    final currentHoveredFeatures =
+        e.features.map((f) => f.id?.toString()).whereType<String>().toList();
     final lastHoveredFeatures = _hoveredFeatureIdsByLayer[layerId] ?? [];
     final features = <String>{
       ...currentHoveredFeatures,
