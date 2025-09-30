@@ -49,7 +49,7 @@ class Event extends JsObjectWrapper<EventJsImpl> {
 class Evented extends JsObjectWrapper<EventedJsImpl> {
   /// Store listener references so `off` can use the same one.
   /// Key is a composite of (eventType, layerIdOrListener.hashCode?, listener.hashCode)
-  final _listeners = <String, dynamic>{};
+  final _listeners = <String, ListenerJsImpl>{};
 
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
