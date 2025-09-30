@@ -30,6 +30,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return mapView
     }
 
+    private var styleIsReady: Bool {
+        return onStyleLoadedCalled && mapView.style != nil
+    }
+
     private static func createMapView(
         args: Any?,
         frame: CGRect,
@@ -1191,7 +1195,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      *  Scan layers from top to bottom and return the first matching feature
      */
     private func firstFeatureOnLayers(at: CGPoint) -> (feature: MLNFeature?, layerId: String?) {
-        guard let style = mapView.style else { return (nil, nil) }
+        guard let style = mapView.style else { 
+            NSLog("MapLibreMapController - Map style is nil")
+            return (nil, nil) 
+        }
+        
+        guard styleIsReady else { 
+            NSLog("MapLibreMapController - Map style is not ready yet")
+            return (nil, nil) 
+        }
 
         // get layers in order (interactiveFeatureLayerIds is unordered)
         let clickableLayers = style.layers.filter { layer in
