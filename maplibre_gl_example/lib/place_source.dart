@@ -68,18 +68,18 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return controller.removeSource(imageSourceId);
   }
 
-  Future<void> addLayer(String imageLayerId, String imageSourceId) {
+  Future<void> addLayer(String imageLayerId, String imageSourceId) async {
     if (layerAdded) {
-      removeLayer(imageLayerId);
+      await removeLayer(imageLayerId);
     }
     setState(() => layerAdded = true);
     return controller.addImageLayer(imageLayerId, imageSourceId);
   }
 
   Future<void> addLayerBelow(
-      String imageLayerId, String imageSourceId, String belowLayerId) {
+      String imageLayerId, String imageSourceId, String belowLayerId) async {
     if (layerAdded) {
-      removeLayer(imageLayerId);
+      await removeLayer(imageLayerId);
     }
     setState(() => layerAdded = true);
     return controller.addImageLayerBelow(
@@ -107,7 +107,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -125,14 +125,15 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Column(
-                  children: <Widget>[
+                  children: [
                     TextButton(
                       onPressed: sourceAdded
                           ? null
-                          : () {
-                              addImageSourceFromAsset(sourceId, pickImage())
+                          : () async {
+                              await addImageSourceFromAsset(
+                                      sourceId, pickImage())
                                   .then((value) {
                                 setState(() => sourceAdded = true);
                               });
@@ -143,7 +144,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               await removeLayer(layerId);
-                              removeImageSource(sourceId).then((value) {
+                              await removeImageSource(sourceId).then((value) {
                                 setState(() => sourceAdded = false);
                               });
                             }
@@ -171,7 +172,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                       onPressed: sourceAdded
                           ? () async {
                               setState(() => imageFlag = !imageFlag);
-                              updateImageSourceFromAsset(sourceId, pickImage());
+                              await updateImageSourceFromAsset(
+                                  sourceId, pickImage());
                             }
                           : null,
                       child: const Text('Change image'),

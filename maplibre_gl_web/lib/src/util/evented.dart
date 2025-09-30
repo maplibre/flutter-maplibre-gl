@@ -2,13 +2,14 @@ import 'dart:js';
 
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
+import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
-import 'package:maplibre_gl_web/src/geo/point.dart';
 
 typedef Listener = dynamic Function(Event object);
 typedef GeoListener = dynamic Function(dynamic object);
+typedef LayerEventListener = dynamic Function(Event object, String layerId);
 
 class Event extends JsObjectWrapper<EventJsImpl> {
   String get id => jsObject.id;
@@ -18,7 +19,8 @@ class Event extends JsObjectWrapper<EventJsImpl> {
   LngLat get lngLat => LngLat.fromJsObject(jsObject.lngLat);
 
   List<Feature> get features =>
-      jsObject.features.map((dynamic f) => Feature.fromJsObject(f)).toList();
+      jsObject.features?.map((dynamic f) => Feature.fromJsObject(f)).toList() ??
+      [];
 
   Point get point => Point.fromJsObject(jsObject.point);
 
@@ -45,6 +47,16 @@ class Event extends JsObjectWrapper<EventJsImpl> {
 }
 
 class Evented extends JsObjectWrapper<EventedJsImpl> {
+  /// Store listener references so `off` can use the same one.
+  /// Key is a composite of (eventType, layerIdOrListener.hashCode?, listener.hashCode)
+  final _listeners = <String, dynamic>{};
+
+  /// Build a composite key (eventType::layerId::listenerHashCode).
+  String _listenerKey(
+      String type, dynamic layerIdOrListener, LayerEventListener? listener) {
+    return '$type::${layerIdOrListener?.hashCode}::${listener?.hashCode}';
+  }
+
   ///  Adds a listener to a specified event type.
   ///
   ///  @param {string} type The event type to add a listen for.
@@ -52,31 +64,34 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
-  MapLibreMap on(String type, [dynamic layerIdOrListener, Listener? listener]) {
+  MapLibreMap on(String type,
+      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+    final ListenerJsImpl jsFn;
+    final MapLibreMapJsImpl mapJsImpl;
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      return MapLibreMap.fromJsObject(
-        jsObject.on(type, allowInterop(
-          (dynamic position) {
-            layerIdOrListener(position);
-          },
-        )),
+      jsFn = allowInterop(
+        (dynamic position) {
+          layerIdOrListener(position);
+        },
       );
-    }
-    if (layerIdOrListener is Listener) {
-      return MapLibreMap.fromJsObject(
-        jsObject.on(type, allowInterop(
-          (EventJsImpl object) {
-            layerIdOrListener(Event.fromJsObject(object));
-          },
-        )),
+      mapJsImpl = jsObject.on(type, jsFn);
+    } else if (layerIdOrListener is Listener) {
+      jsFn = allowInterop(
+        (EventJsImpl object) {
+          layerIdOrListener(Event.fromJsObject(object));
+        },
       );
+      mapJsImpl = jsObject.on(type, jsFn);
+    } else {
+      jsFn = allowInterop((EventJsImpl object) {
+        listener!(Event.fromJsObject(object), layerIdOrListener);
+      });
+      mapJsImpl = jsObject.on(type, layerIdOrListener, jsFn);
     }
-    return MapLibreMap.fromJsObject(
-        jsObject.on(type, layerIdOrListener, allowInterop(
-      (EventJsImpl object) {
-        listener!(Event.fromJsObject(object));
-      },
-    )));
+
+    _listeners[_listenerKey(type, layerIdOrListener, listener)] = jsFn;
+
+    return MapLibreMap.fromJsObject(mapJsImpl);
   }
 
   ///  Removes a previously registered event listener.
@@ -85,22 +100,17 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
   MapLibreMap off(String type,
-      [dynamic layerIdOrListener, Listener? listener]) {
-    if (layerIdOrListener is Listener) {
-      return MapLibreMap.fromJsObject(
-        jsObject.off(type, allowInterop(
-          (EventJsImpl object) {
-            layerIdOrListener(Event.fromJsObject(object));
-          },
-        )),
-      );
+      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+    final key = _listenerKey(type, layerIdOrListener, listener);
+    final jsFn = _listeners.remove(key);
+    final MapLibreMapJsImpl mapJsImpl;
+
+    if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
+      mapJsImpl = jsObject.off(type, jsFn);
+    } else {
+      mapJsImpl = jsObject.off(type, layerIdOrListener, jsFn);
     }
-    return MapLibreMap.fromJsObject(
-        jsObject.off(type, layerIdOrListener, allowInterop(
-      (EventJsImpl object) {
-        listener!(Event.fromJsObject(object));
-      },
-    )));
+    return MapLibreMap.fromJsObject(mapJsImpl);
   }
 
   ///  Adds a listener that will be called only once to a specified event type.

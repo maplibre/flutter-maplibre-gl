@@ -36,7 +36,7 @@ class MoveCameraState extends State<MoveCamera> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,
@@ -51,12 +51,12 @@ class MoveCameraState extends State<MoveCamera> {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
+          children: [
             Column(
-              children: <Widget>[
+              children: [
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.newCameraPosition(
                         const CameraPosition(
                           bearing: 270.0,
@@ -70,8 +70,8 @@ class MoveCameraState extends State<MoveCamera> {
                   child: const Text('newCameraPosition'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.newLatLng(
                         const LatLng(56.1725505, 10.1850512),
                       ),
@@ -80,8 +80,8 @@ class MoveCameraState extends State<MoveCamera> {
                   child: const Text('newLatLng'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.newLatLngBounds(
                         LatLngBounds(
                           southwest: const LatLng(-38.483935, 113.248673),
@@ -96,8 +96,8 @@ class MoveCameraState extends State<MoveCamera> {
                   child: const Text('newLatLngBounds'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.newLatLngZoom(
                         const LatLng(37.4231613, -122.087159),
                         11.0,
@@ -107,8 +107,8 @@ class MoveCameraState extends State<MoveCamera> {
                   child: const Text('newLatLngZoom'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.scrollBy(150.0, -225.0),
                     );
                   },
@@ -117,10 +117,10 @@ class MoveCameraState extends State<MoveCamera> {
               ],
             ),
             Column(
-              children: <Widget>[
+              children: [
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.zoomBy(
                         -0.5,
                         const Offset(30.0, 20.0),
@@ -130,48 +130,48 @@ class MoveCameraState extends State<MoveCamera> {
                   child: const Text('zoomBy with focus'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.zoomBy(-0.5),
                     );
                   },
                   child: const Text('zoomBy'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.zoomIn(),
                     );
                   },
                   child: const Text('zoomIn'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.zoomOut(),
                     );
                   },
                   child: const Text('zoomOut'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.zoomTo(16.0),
                     );
                   },
                   child: const Text('zoomTo'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.bearingTo(45.0),
                     );
                   },
                   child: const Text('bearingTo'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    mapController.moveCamera(
+                  onPressed: () async {
+                    await mapController.moveCamera(
                       CameraUpdate.tiltTo(30.0),
                     );
                   },

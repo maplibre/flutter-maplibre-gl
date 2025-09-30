@@ -97,7 +97,7 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
 
   ///  Returns the bounding box represented as an array.
   ///
-  ///  @returns {Array<Array<number>>} The bounding box represented as an array, consisting of the
+  ///  @returns `{Array<Array<number>>}` The bounding box represented as an array, consisting of the
   ///    southwest and northeast coordinates of the bounding represented as arrays of numbers.
   ///  @example
   ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);

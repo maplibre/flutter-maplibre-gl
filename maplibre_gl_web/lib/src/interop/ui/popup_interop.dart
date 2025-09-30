@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.ui.popup;
+library;
 
 import 'dart:html';
 import 'package:js/js.dart';

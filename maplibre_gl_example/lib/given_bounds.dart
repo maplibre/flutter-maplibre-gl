@@ -36,7 +36,7 @@ class GivenBoundsState extends State<GivenBounds> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             width: 300.0,

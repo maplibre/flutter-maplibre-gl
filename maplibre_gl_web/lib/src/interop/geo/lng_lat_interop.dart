@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.geo.lng_lat;
+library;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
@@ -42,7 +42,7 @@ class LngLatJsImpl {
 
   ///  Returns the coordinates represented as an array of two numbers.
   ///
-  ///  @returns {Array<number>} The coordinates represeted as an array of longitude and latitude.
+  ///  @returns `{Array<number>}` The coordinates represeted as an array of longitude and latitude.
   ///  @example
   ///  var ll = new maplibregl.LngLat(-73.9749, 40.7736);
   ///  ll.toArray(); // = [-73.9749, 40.7736]

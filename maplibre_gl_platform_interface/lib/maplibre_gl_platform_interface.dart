@@ -1,4 +1,4 @@
-library maplibre_gl_platform_interface;
+library;
 
 import 'dart:async';
 import 'dart:convert';

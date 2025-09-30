@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,11 +40,13 @@ class LineBodyState extends State<LineBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onLineTapped.add(_onLineTapped);
+    controller.onFeatureHover.add(_onFeatureHover);
   }
 
   @override
   void dispose() {
     controller?.onLineTapped.remove(_onLineTapped);
+    controller?.onFeatureHover.remove(_onFeatureHover);
     super.dispose();
   }
 
@@ -54,7 +57,7 @@ class LineBodyState extends State<LineBody> {
     return controller!.addImage(name, list);
   }
 
-  _onLineTapped(Line line) async {
+  Future<void> _onLineTapped(Line line) async {
     await _updateSelectedLine(
       const LineOptions(lineColor: "#ff0000"),
     );
@@ -66,12 +69,36 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _updateSelectedLine(LineOptions changes) async {
+  Future<void> _onFeatureHover(
+    Point<double> point,
+    LatLng latLng,
+    Annotation annotation,
+    HoverEventType eventType,
+  ) async {
+    if (annotation is! Line) return;
+    if (eventType == HoverEventType.enter) {
+      controller!.updateLine(
+          annotation,
+          const LineOptions(
+            lineWidth: 16,
+            lineColor: "#8B0000",
+          ));
+    } else if (eventType == HoverEventType.leave) {
+      controller!.updateLine(
+          annotation,
+          const LineOptions(
+            lineWidth: 14,
+            lineColor: "#ff0000",
+          ));
+    }
+  }
+
+  Future<void> _updateSelectedLine(LineOptions changes) async {
     if (_selectedLine != null) controller!.updateLine(_selectedLine!, changes);
   }
 
-  void _add() {
-    controller!.addLine(
+  Future<void> _add() async {
+    await controller!.addLine(
       const LineOptions(
           geometry: [
             LatLng(-33.86711, 151.1947171),
@@ -89,7 +116,7 @@ class LineBodyState extends State<LineBody> {
     });
   }
 
-  _move() async {
+  Future<void> _move() async {
     final currentStart = _selectedLine!.options.geometry![0];
     final currentEnd = _selectedLine!.options.geometry![1];
     final end =
@@ -100,8 +127,8 @@ class LineBodyState extends State<LineBody> {
         .updateLine(_selectedLine!, LineOptions(geometry: [start, end]));
   }
 
-  void _remove() {
-    controller!.removeLine(_selectedLine!);
+  Future<void> _remove() async {
+    await controller!.removeLine(_selectedLine!);
     setState(() {
       _selectedLine = null;
       _lineCount -= 1;
@@ -133,7 +160,7 @@ class LineBodyState extends State<LineBody> {
     );
   }
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     addImageFromAsset("assetImage", _linePatternImage);
     await controller!.addLine(
       const LineOptions(
@@ -150,7 +177,7 @@ class LineBodyState extends State<LineBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             height: 400.0,
@@ -168,11 +195,11 @@ class LineBodyState extends State<LineBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Column(
-                  children: <Widget>[
+                  children: [
                     Row(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed: (_lineCount == 12) ? null : _add,
                           child: const Text('add'),
@@ -198,7 +225,7 @@ class LineBodyState extends State<LineBody> {
                       ],
                     ),
                     Row(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                           onPressed:
                               (_selectedLine == null) ? null : _changeAlpha,

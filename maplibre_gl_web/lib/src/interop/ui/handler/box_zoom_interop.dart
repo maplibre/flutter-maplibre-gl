@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.ui.handler.box_zoom;
+library;
 
 import 'dart:html';
 

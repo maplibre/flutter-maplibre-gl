@@ -102,14 +102,13 @@ class MapUiBodyState extends State<MapUiBody> {
     final nextType = MyLocationRenderMode.values[
         (_myLocationRenderMode.index + 1) % MyLocationRenderMode.values.length];
     return TextButton(
-      onPressed:
-          _myLocationEnabled == true || nextType == MyLocationRenderMode.normal
-              ? () {
-                  setState(() {
-                    _myLocationRenderMode = nextType;
-                  });
-                }
-              : null,
+      onPressed: _myLocationEnabled || nextType == MyLocationRenderMode.normal
+          ? () {
+              setState(() {
+                _myLocationRenderMode = nextType;
+              });
+            }
+          : null,
       child: Text('change to $nextType'),
     );
   }
@@ -282,11 +281,11 @@ class MapUiBodyState extends State<MapUiBody> {
   Widget _telemetryToggler() {
     return TextButton(
       child: Text('${_telemetryEnabled ? 'disable' : 'enable'} telemetry'),
-      onPressed: () {
+      onPressed: () async {
         setState(() {
           _telemetryEnabled = !_telemetryEnabled;
         });
-        mapController?.setTelemetryEnabled(_telemetryEnabled);
+        await mapController?.setTelemetryEnabled(_telemetryEnabled);
       },
     );
   }
@@ -326,16 +325,16 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  _clearFill() {
+  Future<void> _clearFill() async {
     if (_selectedFill != null) {
-      mapController!.removeFill(_selectedFill!);
+      await mapController!.removeFill(_selectedFill!);
       setState(() {
         _selectedFill = null;
       });
     }
   }
 
-  _drawFill(List<dynamic> features) async {
+  Future<void> _drawFill(List<dynamic> features) async {
     final Map<String, dynamic>? feature =
         features.firstWhereOrNull((f) => f['geometry']['type'] == 'Polygon');
 
@@ -428,7 +427,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
     if (mapController != null) {
       listViewChildren.addAll(
-        <Widget>[
+        [
           Text('camera bearing: ${_position.bearing}'),
           Text('camera target: ${_position.target.latitude.toStringAsFixed(4)},'
               '${_position.target.longitude.toStringAsFixed(4)}'),
@@ -475,12 +474,12 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  void onMapCreated(MapLibreMapController controller) {
+  Future<void> onMapCreated(MapLibreMapController controller) async {
     mapController = controller;
     mapController!.addListener(_onMapChanged);
     _extractMapInfo();
 
-    mapController!.getTelemetryEnabled().then((isEnabled) => setState(() {
+    await mapController!.getTelemetryEnabled().then((isEnabled) => setState(() {
           _telemetryEnabled = isEnabled;
         }));
   }
