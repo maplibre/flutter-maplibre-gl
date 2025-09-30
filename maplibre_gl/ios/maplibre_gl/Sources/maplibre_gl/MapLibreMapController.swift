@@ -1372,9 +1372,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if !isFirstStyleLoad || mapReadyResult != nil {
             isFirstStyleLoad = false
 
-
-
             if let channel = channel {
+                onStyleLoadedCalled = true
                 channel.invokeMethod("map#onStyleLoaded", arguments: nil)
             }
         }
@@ -1997,6 +1996,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func setStyleString(styleString: String) {
+        interactiveFeatureLayerIds.removeAll()
+        addedShapesByLayer.removeAll()
+        
         if Self.styleStringIsJSON(styleString) {
             mapView.styleJSON = styleString;
         } else if let url = Self.styleStringAsURL(

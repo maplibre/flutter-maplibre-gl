@@ -269,6 +269,13 @@ final class MapLibreMapController
     clearLocationComponentLayer();
     styleString = styleString.trim();
 
+    // Prevent race conditions: invalidate current style reference & interactive layers
+    // Old Style instances become invalid immediately after setStyle is called.
+    this.style = null;
+    if (interactiveFeatureLayerIds != null) {
+      interactiveFeatureLayerIds.clear();
+    }
+
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
       Log.e(TAG, "setStyleString - string empty or null");
@@ -663,7 +670,14 @@ final class MapLibreMapController
 
   private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
     if (style != null) {
-      final List<Layer> layers = style.getLayers();
+      final List<Layer> layers;
+      try {
+        layers = style.getLayers();
+      } catch (IllegalStateException ex) {
+        // Style object is stale (a new style is loading/has loaded). Skip querying.
+        Log.w(TAG, "Style.getLayers() failed: " + ex.getMessage());
+        return null;
+      }
       final List<String> layersInOrder = new ArrayList<String>();
       for (Layer layer : layers) {
         String id = layer.getId();

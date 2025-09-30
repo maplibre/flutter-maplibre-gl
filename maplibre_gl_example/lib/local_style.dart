@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb; // added
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -27,48 +29,67 @@ class LocalStyle extends StatefulWidget {
 class LocalStyleState extends State<LocalStyle> {
   MapLibreMapController? mapController;
   String? styleAbsoluteFilePath;
+  String? _inMemoryStyle; // web fallback
+
+  static const String _styleJSON = MapLibreStyles.demo;
 
   @override
   initState() {
     super.initState();
 
-    unawaited(getApplicationDocumentsDirectory().then((dir) async {
-      final documentDir = dir.path;
-      final stylesDir = '$documentDir/styles';
-      const styleJSON =
-          '{"version":8,"name":"Demo style","center":[50,10],"zoom":4,"sources":{"demotiles":{"type":"vector","url":"https://demotiles.maplibre.org/tiles/tiles.json"}},"sprite":"","glyphs":"https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255, 255, 255, 1)"}},{"id":"countries","type":"line","source":"demotiles","source-layer":"countries","paint":{"line-color":"rgba(0, 0, 0, 1)","line-width":1,"line-opacity":1}}]}';
+    if (kIsWeb) {
+      // On web we can't use path_provider, just keep the JSON in memory
+      _inMemoryStyle = _styleJSON;
+      // Trigger rebuild so map loads immediately
+      scheduleMicrotask(() => setState(() {}));
+    } else {
+      unawaited(_prepareLocalStyleFile());
+    }
+  }
 
-      await Directory(stylesDir).create(recursive: true);
+  Future<void> _prepareLocalStyleFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final documentDir = dir.path;
+    final stylesDir = '$documentDir/styles';
 
-      final styleFile = File('$stylesDir/style.json');
+    await Directory(stylesDir).create(recursive: true);
 
-      await styleFile.writeAsString(styleJSON);
+    final styleFile = File('$stylesDir/style.json');
+    await styleFile.writeAsString(_styleJSON);
 
+    if (mounted) {
       setState(() {
         styleAbsoluteFilePath = styleFile.path;
       });
-    }));
+    }
   }
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
 
-    // Adding style to the map with some delay
-    Future.delayed(
-      const Duration(milliseconds: 250),
-      () async {
+    // Adding style to the map with some delay to watch the setStyle method working
+    Future.delayed(const Duration(milliseconds: 250), () async {
+      if (kIsWeb) {
+        if (_inMemoryStyle != null) {
+          await mapController?.setStyle(_inMemoryStyle!);
+        }
+      } else {
         if (styleAbsoluteFilePath != null) {
           await mapController?.setStyle(styleAbsoluteFilePath!);
         }
-      },
-    );
+      }
+
+      log('Style loaded from local file ${await mapController?.getStyle()}');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (styleAbsoluteFilePath == null) {
+    final ready =
+        kIsWeb ? _inMemoryStyle != null : styleAbsoluteFilePath != null;
+    if (!ready) {
       return const Scaffold(
-        body: Center(child: Text('Creating local style file...')),
+        body: Center(child: Text('Preparing local style...')),
       );
     }
 
@@ -81,5 +102,7 @@ class LocalStyleState extends State<LocalStyle> {
     );
   }
 
-  void onStyleLoadedCallback() {}
+  Future<void> onStyleLoadedCallback() async {
+    log('Style loaded from local file ${await mapController?.getStyle()}');
+  }
 }
