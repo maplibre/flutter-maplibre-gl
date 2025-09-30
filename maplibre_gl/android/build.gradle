@@ -2,14 +2,14 @@ group 'org.maplibre.maplibregl'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '2.1.0'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.8.2'
+        classpath 'com.android.tools.build:gradle:8.12.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -28,12 +28,14 @@ android {
     if (project.android.hasProperty("namespace")) {
         namespace 'org.maplibre.maplibregl'
     }
+    compileSdkVersion 36
+    buildToolsVersion "36.0.0"
 
     ndkVersion "28.1.13356709"
 
     defaultConfig {
         minSdkVersion 21
-        compileSdk 35
+        compileSdk 36
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -41,11 +43,11 @@ android {
         disable 'InvalidPackage'
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_21.toString()
     }
     dependencies {
         implementation 'org.maplibre.gl:android-sdk:11.9.0'
