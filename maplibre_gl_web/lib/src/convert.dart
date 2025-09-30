@@ -20,7 +20,13 @@ class Convert {
       sink.setCompassEnabled(options['compassEnabled']);
     }
     if (options.containsKey('styleString')) {
-      sink.setStyleString(options['styleString']);
+      final styleString = options['styleString'];
+      if (styleString is String &&
+          (styleString.startsWith('{') || styleString.startsWith('['))) {
+        sink.setStyle(jsonDecode(styleString));
+      } else {
+        sink.setStyle(styleString);
+      }
     }
     if (options.containsKey('minMaxZoomPreference')) {
       sink.setMinMaxZoomPreference(options['minMaxZoomPreference'][0],
@@ -82,7 +88,7 @@ class Convert {
   static CameraOptions toCameraOptions(
       CameraUpdate cameraUpdate, MapLibreMap mapLibreMap) {
     final List<dynamic> json = cameraUpdate.toJson();
-    final type = json[0];
+    final type = json[0] as String;
     switch (type) {
       case 'newCameraPosition':
         final camera = json[1];

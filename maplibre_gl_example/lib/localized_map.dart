@@ -36,11 +36,11 @@ class LocalizedMapState extends State<LocalizedMap> {
             value: _mapLanguage,
             icon: const Icon(Icons.arrow_drop_down),
             elevation: 16,
-            onChanged: (value) {
+            onChanged: (value) async {
               if (value == null) return;
 
               setState(() => _mapLanguage = value);
-              _setMapLanguage();
+              await _setMapLanguage();
             },
             items: ["en", "de", "es", "pl"]
                 .map<DropdownMenuItem<String>>((String value) {
@@ -67,8 +67,8 @@ class LocalizedMapState extends State<LocalizedMap> {
     _mapReadyCompleter.complete(controller);
   }
 
-  void _onStyleLoadedCallback() {
-    _setMapLanguage();
+  Future<void> _onStyleLoadedCallback() async {
+    await _setMapLanguage();
   }
 
   Future<void> _setMapLanguage() async {

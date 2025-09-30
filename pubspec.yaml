@@ -4,8 +4,56 @@ repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  
+  sdk: '>=3.5.0 <4.0.0'
+
 dev_dependencies:
-  melos: ^6.0.0
-  very_good_analysis: ">=5.0.0 <7.0.0"
+  melos: ^7.1.1
+  very_good_analysis: ^10.0.0
+
+workspace:
+  - scripts
+  - maplibre_gl
+  - maplibre_gl_web
+  - maplibre_gl_example
+  - maplibre_gl_platform_interface
+
+melos:
+  scripts:
+    generate:
+      description: Generate layer & source properties
+      exec: dart run lib/generate.dart
+      packageFilters:
+        scope: maplibre_code_gen
+
+    test:
+      description: Run all tests
+      run: |
+        set -e
+        melos run test:io
+        melos run test:web
+
+    test:io:
+      description: Run IO tests
+      exec: flutter test
+      packageFilters:
+        scope: maplibre_gl_platform_interface
+
+    test:web:
+      description: Run Web tests
+      exec: flutter test --platform chrome
+      packageFilters:
+        scope: maplibre_gl_platform_interface
+
+    analyze-all:
+      description: Run static analysis on all packages
+      run: |
+        melos exec --concurrency 10 -- "dart analyze --fatal-warnings --fatal-infos"
+
+    format-all:
+      description: Format all packages
+      exec: dart format --set-exit-if-changed .
+
+    fix-all:
+      run: |
+        melos exec --concurrency 10 -- "dart fix --apply"
+        melos exec --concurrency 10 -- "dart format -o write ."

@@ -3,9 +3,10 @@ description: A common platform interface for the maplibre_gl plugin. This packag
 version: 0.22.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+resolution: workspace
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: ">=3.5.0 <4.0.0"
   flutter: '>=3.22.0'
 
 dependencies:
@@ -16,4 +17,4 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^5.0.0
+  very_good_analysis: ^10.0.0

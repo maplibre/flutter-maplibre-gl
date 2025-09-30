@@ -140,7 +140,7 @@ class MapLibreMap extends StatefulWidget {
   /// 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
   /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
   /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
-  /// 4. Passing the raw JSON of the map style. This is only supported on Android.
+  /// 4. Passing the raw JSON of the map style.
   final String styleString;
 
   /// Preferred bounds for the camera zoom level.
@@ -321,7 +321,11 @@ class _MapLibreMapState extends State<MapLibreMap> {
     super.didUpdateWidget(oldWidget);
     final newOptions = _MapLibreMapOptions.fromWidget(widget);
     final updates = _maplibreMapOptions.updatesMap(newOptions);
-    _updateOptions(updates);
+
+    if (updates.isNotEmpty) {
+      // Intentionally not awaited: updating map options asynchronously to avoid blocking widget update.
+      unawaited(_updateOptions(updates));
+    }
     _maplibreMapOptions = newOptions;
   }
 
@@ -330,18 +334,19 @@ class _MapLibreMapState extends State<MapLibreMap> {
       return;
     }
     final controller = await _controller.future;
-    controller._updateMapOptions(updates);
+    await controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
-      onStyleLoadedCallback: () {
+      onStyleLoadedCallback: () async {
         if (_controller.isCompleted) {
           widget.onStyleLoadedCallback?.call();
         } else {
-          _controller.future.then((_) => widget.onStyleLoadedCallback?.call());
+          await _controller.future
+              .then((_) => widget.onStyleLoadedCallback?.call());
         }
       },
       onMapClick: widget.onMapClick,

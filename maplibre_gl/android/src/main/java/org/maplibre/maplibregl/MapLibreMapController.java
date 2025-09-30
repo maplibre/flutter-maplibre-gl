@@ -80,6 +80,7 @@ import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
+import org.maplibre.android.net.ConnectivityReceiver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -267,6 +268,13 @@ final class MapLibreMapController
     // clear old layer id from the location Component
     clearLocationComponentLayer();
     styleString = styleString.trim();
+
+    // Prevent race conditions: invalidate current style reference & interactive layers
+    // Old Style instances become invalid immediately after setStyle is called.
+    this.style = null;
+    if (interactiveFeatureLayerIds != null) {
+      interactiveFeatureLayerIds.clear();
+    }
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -662,7 +670,14 @@ final class MapLibreMapController
 
   private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
     if (style != null && style.isFullyLoaded()) {
-      final List<Layer> layers = style.getLayers();
+      final List<Layer> layers;
+      try {
+        layers = style.getLayers();
+      } catch (IllegalStateException ex) {
+        // Style object is stale (a new style is loading/has loaded). Skip querying.
+        Log.w(TAG, "Style.getLayers() failed: " + ex.getMessage());
+        return null;
+      }
       final List<String> layersInOrder = new ArrayList<String>();
       for (Layer layer : layers) {
         String id = layer.getId();
@@ -921,6 +936,174 @@ final class MapLibreMapController
       case "map#getTelemetryEnabled":
         {
           result.success(false);
+          break;
+        }
+      case "map#setMaximumFps":
+        {
+          final int fps = call.argument("fps");
+          if (mapView != null) {
+            mapView.setMaximumFps(fps);
+          }
+          result.success(null);
+          break;
+        }
+      case "map#forceOnlineMode":
+        {
+          // Force online mode by setting connectivity to true
+          if (mapView != null) {
+            ConnectivityReceiver.instance(mapView.getContext()).setConnected(true);
+          }
+          result.success(null);
+          break;
+        }
+      case "camera#ease":
+        {
+          final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final Integer duration = call.argument("duration");
+
+          final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+              new OnCameraMoveFinishedListener() {
+                @Override
+                public void onFinish() {
+                  super.onFinish();
+                  result.success(true);
+                }
+
+                @Override
+                public void onCancel() {
+                  super.onCancel();
+                  result.success(false);
+                }
+              };
+
+          if (cameraUpdate != null && duration != null && duration > 0) {
+            // camera transformation not handled yet
+            mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
+          } else if (cameraUpdate != null) {
+            // camera transformation not handled yet
+            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
+          } else {
+            result.success(false);
+          }
+          break;
+        }
+      case "map#queryCameraPosition":
+        {
+          result.success(Convert.toJson(mapLibreMap.getCameraPosition()));
+          break;
+        }
+      case "map#editGeoJsonSource":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                GeoJsonSource source = style.getSourceAs(call.argument("id"));
+                if (source != null) {
+                  source.setGeoJson((String)call.argument("data"));
+                  ret = true;
+                }
+              } catch (Exception e) {}
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#editGeoJsonUrl":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                GeoJsonSource source = style.getSourceAs(call.argument("id"));
+                if (source != null) {
+                  source.setUrl((String)call.argument("url"));
+                  ret = true;
+                }
+              } catch (Exception e) {}
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#setLayerFilter":
+        {
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+                try {
+                    Layer layer = style.getLayer(call.argument("id"));
+                    if (layer != null) {
+                        String filter = call.argument("filter");
+                        if (filter != null) {
+                            Expression expression = Expression.raw(filter);
+                            if (expression != null) {
+                              if (layer instanceof LineLayer) {
+                                ((LineLayer)layer).setFilter(expression);
+                                ret = true;
+                              } else if (layer instanceof FillLayer) {
+                                ((FillLayer)layer).setFilter(expression);
+                                ret = true;
+                              } else if (layer instanceof SymbolLayer) {
+                                ((SymbolLayer)layer).setFilter(expression);
+                                ret = true;
+                              }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+          }
+          Map<String, Boolean> reply = new HashMap<>();
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#getStyle":
+        {
+          Map<String, Object> reply = new HashMap<>();
+          boolean ret = false;
+          if (mapLibreMap != null) {
+            Style style = mapLibreMap.getStyle();
+            if (style != null) {
+              try {
+                String json = style.getJson();
+                reply.put("json", json);
+                ret = true;
+              } catch (Exception e) {}
+            }
+          }
+          reply.put("result", ret);
+          result.success(reply);
+          break;
+        }
+      case "map#setCustomHeaders":
+        {
+          if (mapLibreMap != null) {
+            HashMap<String, String> headers = (HashMap<String, String>)call.argument("headers");
+            List<String> filter = (List<String>)call.argument("filter");
+            MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
+          } else {
+            result.success(null);
+          }
+          break;
+        }
+      case "map#getCustomHeaders":
+        {
+          if (mapLibreMap != null) {
+            result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
+          } else {
+            result.success(null);
+          }
           break;
         }
       case "map#invalidateAmbientCache":
@@ -1619,6 +1802,27 @@ final class MapLibreMapController
 
         reply.put("sources", sourceIds);
         result.success(reply);
+        break;
+      }
+      case "style#setStyle":
+      {
+        // Getting style json, url, path etc. from the flutter side
+        String styleString = call.argument("style");
+
+        // Checking if style is null or not
+        if (styleString != null) {
+          // If style is not null setting style
+          setStyleString(styleString);
+          result.success(null);
+        } else {
+
+          // else throwing error
+          result.error(
+                  "STYLE STRING IS NULL",
+                  "The style string is null.",
+                  null
+          );
+        }
         break;
       }
       default:

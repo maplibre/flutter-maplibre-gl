@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.geo.geojson;
+library;
 
 import 'package:js/js.dart';
 
@@ -23,12 +23,14 @@ class FeatureJsImpl {
   external GeometryJsImpl get geometry;
   external dynamic get properties;
   external String get source;
+  external FeatureLayerJsImpl get layer;
   external factory FeatureJsImpl({
     dynamic id,
     String? type,
     GeometryJsImpl geometry,
     dynamic properties,
     String? source,
+    FeatureLayerJsImpl? layer,
   });
 }
 
@@ -40,5 +42,14 @@ class GeometryJsImpl {
   external factory GeometryJsImpl({
     String? type,
     dynamic coordinates,
+  });
+}
+
+@JS()
+@anonymous
+class FeatureLayerJsImpl {
+  external String get id;
+  external factory FeatureLayerJsImpl({
+    String id,
   });
 }

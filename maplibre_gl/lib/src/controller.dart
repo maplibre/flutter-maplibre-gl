@@ -7,15 +7,20 @@ part of '../maplibre_gl.dart';
 typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
-typedef OnFeatureInteractionCallback = void Function(
-    dynamic id, Point<double> point, LatLng coordinates, String layerId);
+typedef OnFeatureInteractionCallback = void Function(Point<double> point,
+    LatLng coordinates, Annotation annotation, String layerId);
 
-typedef OnFeatureDragnCallback = void Function(dynamic id,
-    {required Point<double> point,
-    required LatLng origin,
-    required LatLng current,
-    required LatLng delta,
-    required DragEventType eventType});
+typedef OnFeatureDragCallback = void Function(
+  Point<double> point,
+  LatLng origin,
+  LatLng current,
+  LatLng delta,
+  Annotation annotation,
+  DragEventType eventType,
+);
+
+typedef OnFeatureHoverCallback = void Function(Point<double> point,
+    LatLng latLng, Annotation annotation, HoverEventType eventType);
 
 typedef OnMapLongClickCallback = void Function(
     Point<double> point, LatLng coordinates);
@@ -81,7 +86,6 @@ class MapLibreMapController extends ChangeNotifier {
     this.onStyleLoadedCallback,
     this.onMapClick,
     this.onMapLongClick,
-    //this.onAttributionClick,
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
     this.onMapIdle,
@@ -91,23 +95,57 @@ class MapLibreMapController extends ChangeNotifier {
     _cameraPosition = initialCameraPosition;
 
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {
-      for (final fun
-          in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
-        fun(payload["id"], payload["point"], payload["latLng"],
-            payload["layerId"]);
+      final id = payload["id"];
+      final annotation = getAnnotationById(id);
+      if (annotation == null) return;
+      // Call onFeatureTapped callbacks
+      for (final fun in List.of(onFeatureTapped)) {
+        fun(
+          payload["point"],
+          payload["latLng"],
+          annotation,
+          payload["layerId"],
+        );
       }
+      // Call specific annotation callbacks (onSymbolTapped, onLineTapped...)
+      ArgumentCallbacks? annotationTappedCallbacks;
+      if (annotation is Line) {
+        annotationTappedCallbacks = onLineTapped;
+      } else if (annotation is Symbol) {
+        annotationTappedCallbacks = onSymbolTapped;
+      } else if (annotation is Fill) {
+        annotationTappedCallbacks = onFillTapped;
+      } else if (annotation is Circle) {
+        annotationTappedCallbacks = onCircleTapped;
+      }
+      annotationTappedCallbacks?.call(annotation);
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
-      for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
+      for (final fun in List.of(onFeatureDrag)) {
         final enmDragEventType = DragEventType.values
             .firstWhere((element) => element.name == payload["eventType"]);
-        fun(payload["id"],
-            point: payload["point"],
-            origin: payload["origin"],
-            current: payload["current"],
-            delta: payload["delta"],
-            eventType: enmDragEventType);
+        final id = payload["id"];
+        final annotation = getAnnotationById(id);
+        if (annotation == null) return;
+        fun(
+          payload["point"],
+          payload["origin"],
+          payload["current"],
+          payload["delta"],
+          annotation,
+          enmDragEventType,
+        );
+      }
+    });
+
+    _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
+      final annotation = getAnnotationById(payload["id"]);
+      if (annotation == null) return;
+      final hoverEventType = HoverEventType.values
+          .firstWhere((e) => e.name == payload["eventType"]);
+      for (final fun in List.of(onFeatureHover)) {
+        fun(payload["point"], payload["latLng"], annotation, hoverEventType);
       }
     });
 
@@ -138,29 +176,21 @@ class MapLibreMapController extends ChangeNotifier {
           case AnnotationType.fill:
             fillManager = FillManager(
               this,
-              onTap: onFillTapped.call,
-              onDrag: onFillDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.line:
             lineManager = LineManager(
               this,
-              onTap: onLineTapped.call,
-              onDrag: onLineDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.circle:
             circleManager = CircleManager(
               this,
-              onTap: onCircleTapped.call,
-              onDrag: onCircleDrag.call,
               enableInteraction: enableInteraction,
             );
           case AnnotationType.symbol:
             symbolManager = SymbolManager(
               this,
-              onTap: onSymbolTapped.call,
-              onDrag: onSymbolDrag.call,
               enableInteraction: enableInteraction,
             );
         }
@@ -192,6 +222,13 @@ class MapLibreMapController extends ChangeNotifier {
     });
   }
 
+  Annotation? getAnnotationById(dynamic id) => id == null
+      ? null
+      : fillManager?.byId(id) ??
+          lineManager?.byId(id) ??
+          symbolManager?.byId(id) ??
+          circleManager?.byId(id);
+
   FillManager? fillManager;
   LineManager? lineManager;
   CircleManager? circleManager;
@@ -213,31 +250,23 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for symbols placed on this map.
   final ArgumentCallbacks<Symbol> onSymbolTapped = ArgumentCallbacks<Symbol>();
 
-  /// Callbacks to receive drag events for symbols placed on this map.
-  final onSymbolDrag = ArgumentCallbacks2<Symbol, DragEventType>();
-
   /// Callbacks to receive tap events for circles placed on this map.
   final ArgumentCallbacks<Circle> onCircleTapped = ArgumentCallbacks<Circle>();
-
-  /// Callbacks to receive drag events for circles placed on this map.
-  final onCircleDrag = ArgumentCallbacks2<Circle, DragEventType>();
 
   /// Callbacks to receive tap events for fills placed on this map.
   final ArgumentCallbacks<Fill> onFillTapped = ArgumentCallbacks<Fill>();
 
-  /// Callbacks to receive drag events for fills placed on this map.
-  final onFillDrag = ArgumentCallbacks2<Fill, DragEventType>();
-
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
-
-  /// Callbacks to receive drag events for lines placed on this map.
-  final onLineDrag = ArgumentCallbacks2<Line, DragEventType>();
 
   /// Callbacks to receive tap events for features (geojson layer) placed on this map.
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
 
-  final onFeatureDrag = <OnFeatureDragnCallback>[];
+  /// Callbacks to receive drag events for features (geojson layer) placed on this map.
+  final onFeatureDrag = <OnFeatureDragCallback>[];
+
+  /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
+  final onFeatureHover = <OnFeatureHoverCallback>[];
 
   /// Callbacks to receive tap events for info windows on symbols
   @Deprecated("InfoWindow tapped is no longer supported")
@@ -273,7 +302,13 @@ class MapLibreMapController extends ChangeNotifier {
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
-  final MapLibrePlatform _maplibrePlatform; //ignore: unused_field
+  final MapLibrePlatform _maplibrePlatform;
+
+  /// Tracks whether the controller has already been disposed
+  bool _isDisposed = false;
+
+  /// Return whether the controller has already been disposed.
+  bool get isDisposed => _isDisposed;
 
   /// Updates configuration options of the map user interface.
   ///
@@ -283,7 +318,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
     _cameraPosition = await _maplibrePlatform.updateMapOptions(optionsUpdate);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Triggers a resize event for the map on web (ignored on Android or iOS).
@@ -747,6 +782,109 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getTelemetryEnabled();
   }
 
+  /// Sets the maximum frames per second for the map rendering.
+  ///
+  /// This can help optimize performance on lower-end devices by limiting
+  /// the rendering frequency.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setMaximumFps(int fps) async {
+    return _maplibrePlatform.setMaximumFps(fps);
+  }
+
+  /// Forces the map to use online mode, disabling any offline functionality.
+  ///
+  /// This is useful for testing or when you want to ensure the map always
+  /// uses the latest data from the network.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> forceOnlineMode() async {
+    return _maplibrePlatform.forceOnlineMode();
+  }
+
+  /// Eases the camera to a new position with an optional duration.
+  ///
+  /// The [cameraUpdate] specifies the target camera position, and [duration]
+  /// specifies the animation duration in milliseconds (optional).
+  ///
+  /// The returned [Future] completes with true if the animation finished successfully,
+  /// or false if it was cancelled.
+  Future<bool> easeCamera(CameraUpdate cameraUpdate,
+      {Duration? duration}) async {
+    return _maplibrePlatform.easeCamera(cameraUpdate, duration: duration);
+  }
+
+  /// Queries the current camera position.
+  ///
+  /// Returns the current camera position including center, zoom, bearing, and tilt.
+  /// Returns null if the camera position cannot be determined.
+  ///
+  /// The returned [Future] completes with the current camera position.
+  Future<CameraPosition?> queryCameraPosition() async {
+    return _maplibrePlatform.queryCameraPosition();
+  }
+
+  /// Edits a GeoJSON source with new data.
+  ///
+  /// The [id] specifies the source identifier, and [data] contains the new
+  /// GeoJSON data as a string.
+  ///
+  /// The returned [Future] completes with true if the source was successfully
+  /// updated, false otherwise.
+  Future<bool> editGeoJsonSource(String id, String data) async {
+    return _maplibrePlatform.editGeoJsonSource(id, data);
+  }
+
+  /// Edits a GeoJSON source with a new URL.
+  ///
+  /// The [id] specifies the source identifier, and [url] contains the new
+  /// URL for the GeoJSON data.
+  ///
+  /// The returned [Future] completes with true if the source was successfully
+  /// updated, false otherwise.
+  Future<bool> editGeoJsonUrl(String id, String url) async {
+    return _maplibrePlatform.editGeoJsonUrl(id, url);
+  }
+
+  /// Sets a filter for a layer.
+  ///
+  /// The [layerId] specifies the layer identifier, and [filter] contains the
+  /// filter expression as a JSON string.
+  ///
+  /// The returned [Future] completes with true if the filter was successfully
+  /// applied, false otherwise.
+  Future<bool> setLayerFilter(String layerId, String filter) async {
+    return _maplibrePlatform.setLayerFilter(layerId, filter);
+  }
+
+  /// Gets the current map style as JSON string.
+  ///
+  /// The returned [Future] completes with the style JSON string if successful,
+  /// null otherwise.
+  Future<String?> getStyle() async {
+    return _maplibrePlatform.getStyle();
+  }
+
+  /// Sets custom HTTP headers for map requests.
+  ///
+  /// The [headers] map contains the header key-value pairs to set, and [filter]
+  /// contains URL patterns to determine which requests should include these headers.
+  ///
+  /// The returned [Future] completes when the headers are successfully set.
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
+    return _maplibrePlatform.setCustomHeaders(headers, filter);
+  }
+
+  /// Gets the current custom HTTP headers.
+  ///
+  /// The returned [Future] completes with a map of the current custom headers.
+  Future<Map<String, String>> getCustomHeaders() async {
+    return _maplibrePlatform.getCustomHeaders();
+  }
+
   /// Adds a symbol to the map, configured using the specified custom [options].
   ///
   /// Change listeners are notified once the symbol has been added on the
@@ -758,7 +896,7 @@ class MapLibreMapController extends ChangeNotifier {
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
     await symbolManager!.add(symbol);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return symbol;
   }
 
@@ -778,8 +916,7 @@ class MapLibreMapController extends ChangeNotifier {
             SymbolOptions.defaultOptions.copyWith(options[i]), data?[i])
     ];
     await symbolManager!.addAll(symbols);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return symbols;
   }
 
@@ -793,8 +930,7 @@ class MapLibreMapController extends ChangeNotifier {
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
     await symbolManager!
         .set(symbol..options = symbol.options.copyWith(changes));
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the symbol.
@@ -813,7 +949,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbol(Symbol symbol) async {
     await symbolManager!.remove(symbol);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes the specified [symbols] from the map. The symbols must be current
@@ -825,7 +961,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbols(Iterable<Symbol> symbols) async {
     await symbolManager!.removeAll(symbols);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes all [symbols] from the map added with the [addSymbol] or [addSymbols] methods.
@@ -835,8 +971,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearSymbols() async {
-    symbolManager!.clear();
-    notifyListeners();
+    await symbolManager!.clear();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Adds a line to the map, configured using the specified custom [options].
@@ -850,7 +986,7 @@ class MapLibreMapController extends ChangeNotifier {
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
     await lineManager!.add(line);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return line;
   }
 
@@ -869,8 +1005,7 @@ class MapLibreMapController extends ChangeNotifier {
             data?[i])
     ];
     await lineManager!.addAll(lines);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return lines;
   }
 
@@ -884,7 +1019,7 @@ class MapLibreMapController extends ChangeNotifier {
   Future<void> updateLine(Line line, LineOptions changes) async {
     line.options = line.options.copyWith(changes);
     await lineManager!.set(line);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the line.
@@ -903,7 +1038,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLine(Line line) async {
     await lineManager!.remove(line);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes the specified [lines] from the map. The lines must be current
@@ -915,7 +1050,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLines(Iterable<Line> lines) async {
     await lineManager!.removeAll(lines);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes all [lines] from the map added with the [addLine] or [addLines] methods.
@@ -926,7 +1061,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearLines() async {
     await lineManager!.clear();
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Adds a circle to the map, configured using the specified custom [options].
@@ -940,7 +1075,7 @@ class MapLibreMapController extends ChangeNotifier {
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
     await circleManager!.add(circle);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return circle;
   }
 
@@ -960,8 +1095,7 @@ class MapLibreMapController extends ChangeNotifier {
             CircleOptions.defaultOptions.copyWith(options[i]), data?[i])
     ];
     await circleManager!.addAll(cricles);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return cricles;
   }
 
@@ -975,8 +1109,7 @@ class MapLibreMapController extends ChangeNotifier {
   Future<void> updateCircle(Circle circle, CircleOptions changes) async {
     circle.options = circle.options.copyWith(changes);
     await circleManager!.set(circle);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the circle.
@@ -994,9 +1127,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircle(Circle circle) async {
-    circleManager!.remove(circle);
-
-    notifyListeners();
+    await circleManager!.remove(circle);
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes the specified [circles] from the map. The circles must be current
@@ -1008,7 +1140,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircles(Iterable<Circle> circles) async {
     await circleManager!.removeAll(circles);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes all [circles] from the map added with the [addCircle] or [addCircles] methods.
@@ -1018,9 +1150,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearCircles() async {
-    circleManager!.clear();
-
-    notifyListeners();
+    await circleManager!.clear();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Adds a fill to the map, configured using the specified custom [options].
@@ -1034,7 +1165,7 @@ class MapLibreMapController extends ChangeNotifier {
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
     await fillManager!.add(fill);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return fill;
   }
 
@@ -1054,8 +1185,7 @@ class MapLibreMapController extends ChangeNotifier {
             data?[i])
     ];
     await fillManager!.addAll(fills);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
     return fills;
   }
 
@@ -1069,8 +1199,7 @@ class MapLibreMapController extends ChangeNotifier {
   Future<void> updateFill(Fill fill, FillOptions changes) async {
     fill.options = fill.options.copyWith(changes);
     await fillManager!.set(fill);
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes all [fills] from the map added with the [addFill] or [addFills] methods.
@@ -1081,8 +1210,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearFills() async {
     await fillManager!.clear();
-
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes the specified [fill] from the map. The fill must be a current
@@ -1094,7 +1222,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFill(Fill fill) async {
     await fillManager!.remove(fill);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Removes the specified [fills] from the map. The fills must be current
@@ -1106,7 +1234,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFills(Iterable<Fill> fills) async {
     await fillManager!.removeAll(fills);
-    notifyListeners();
+    if (!isDisposed) notifyListeners();
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
@@ -1437,8 +1565,23 @@ class MapLibreMapController extends ChangeNotifier {
         .toList();
   }
 
+  /// Method to set style string
+  /// A MapLibre GL style document defining the map's appearance.
+  /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
+  /// A short introduction can be found in the documentation of the [maplibre_gl] library.
+  /// The [styleString] supports following formats:
+  ///
+  /// 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
+  /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
+  /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
+  /// 4. Passing the raw JSON of the map style. This is only supported on Android.
+  Future<void> setStyle(String styleString) async {
+    return _maplibrePlatform.setStyle(styleString);
+  }
+
   @override
   void dispose() {
+    _isDisposed = true;
     super.dispose();
     _maplibrePlatform.dispose();
   }

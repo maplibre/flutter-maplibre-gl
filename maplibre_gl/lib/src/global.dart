@@ -19,6 +19,8 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
 
 enum DragEventType { start, drag, end }
 
+enum HoverEventType { enter, move, leave }
+
 Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
       'setOffline',
       <String, dynamic>{
@@ -42,8 +44,8 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
       'path': path,
     },
   );
-  final Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
+  final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
+  return regions.map(OfflineRegion.fromMap).toList();
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
@@ -51,8 +53,8 @@ Future<List<OfflineRegion>> getListOfRegions() async {
     'getListOfRegions',
     <String, dynamic>{},
   );
-  final Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
+  final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
+  return regions.map(OfflineRegion.fromMap).toList();
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(

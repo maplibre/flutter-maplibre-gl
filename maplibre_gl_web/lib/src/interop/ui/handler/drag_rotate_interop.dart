@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.ui.handler.drag_rotate;
+library;
 
 import 'dart:html';
 

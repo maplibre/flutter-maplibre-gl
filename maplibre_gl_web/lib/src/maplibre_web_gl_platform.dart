@@ -11,6 +11,7 @@ class MapLibreMapController extends MapLibrePlatform
   LatLng? _dragPrevious;
   bool _dragEnabled = true;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
+  final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
 
   final _interactiveFeatureLayerIds = <String>{};
 
@@ -62,7 +63,6 @@ class MapLibreMapController extends MapLibrePlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          style: _creationParams['styleString'],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
@@ -109,7 +109,7 @@ class MapLibreMapController extends MapLibrePlatform
     await addImage(imagePath, bytes.buffer.asUint8List());
   }
 
-  _onMouseDown(Event e) {
+  void _onMouseDown(Event e, String? layerId) {
     final isDraggable = e.features[0].properties['draggable'];
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
@@ -265,6 +265,89 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setMaximumFps(int fps) async {
+    // Web implementation: MapLibre GL JS doesn't have direct FPS control
+    // We can implement this by controlling render frequency if needed
+    print('setMaximumFps not fully supported in web, fps: $fps');
+    // For future implementation, we could use requestAnimationFrame throttling
+  }
+
+  @override
+  Future<void> forceOnlineMode() async {
+    // Web implementation: Force online mode
+    // In web, we can ensure network requests are enabled
+    print('forceOnlineMode called in web');
+    // This is mostly a no-op in web as it's always online
+  }
+
+  @override
+  Future<bool> easeCamera(CameraUpdate cameraUpdate,
+      {Duration? duration}) async {
+    // Web implementation: MapLibre GL JS doesn't have direct duration control
+    // We can implement this by using the animate method with duration
+    print('easeCamera called in web, duration: $duration');
+    // For future implementation, we could use MapLibre GL JS animate method
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<CameraPosition?> queryCameraPosition() async {
+    // Web implementation: MapLibre GL JS doesn't have direct camera position query
+    print('queryCameraPosition called in web');
+    // For future implementation, we could query the map's camera state
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> editGeoJsonSource(String id, String data) async {
+    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON source editing
+    print('editGeoJsonSource called in web, id: $id');
+    // For future implementation, we could use MapLibre GL JS source methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> editGeoJsonUrl(String id, String url) async {
+    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON URL editing
+    print('editGeoJsonUrl called in web, id: $id, url: $url');
+    // For future implementation, we could use MapLibre GL JS source methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> setLayerFilter(String layerId, String filter) async {
+    // Web implementation: MapLibre GL JS doesn't have direct layer filter setting
+    print('setLayerFilter called in web, layerId: $layerId, filter: $filter');
+    // For future implementation, we could use MapLibre GL JS layer filter methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> getStyle() async {
+    // Web implementation: MapLibre GL JS doesn't have direct style JSON export
+    print('getStyle called in web');
+    // For future implementation, we could use MapLibre GL JS style methods
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter) async {
+    // Web implementation: MapLibre GL JS doesn't have direct custom headers setting
+    print('setCustomHeaders called in web, headers: $headers, filter: $filter');
+    // For future implementation, we could use MapLibre GL JS HTTP configuration
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Map<String, String>> getCustomHeaders() async {
+    // Web implementation: MapLibre GL JS doesn't have direct custom headers retrieval
+    print('getCustomHeaders called in web');
+    // For future implementation, we could use MapLibre GL JS HTTP configuration
+    throw UnimplementedError();
+  }
+
+  @override
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     final options = <String, dynamic>{};
@@ -414,11 +497,11 @@ class MapLibreMapController extends MapLibrePlatform
     return null;
   }
 
-  void _onStyleLoaded(_) {
+  void _onStyleLoaded(data) {
     final loaded = _map.isStyleLoaded();
     if (!loaded) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        _onStyleLoaded(_);
+        _onStyleLoaded(data);
       });
       return;
     }
@@ -445,7 +528,7 @@ class MapLibreMapController extends MapLibrePlatform
       'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
       if (features.isNotEmpty) "id": features.first.id,
-      if (features.isNotEmpty) "layerId": features.first.source,
+      if (features.isNotEmpty) "layerId": features.first.layerId,
     };
     if (features.isNotEmpty) {
       onFeatureTappedPlatform(payload);
@@ -696,18 +779,36 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  /// Sets the map style.
+  ///
+  /// The [styleString] parameter can be one of the following:
+  /// - A JSON string representing a MapLibre style object.
+  /// - A URL (http/https) pointing to a MapLibre style JSON document.
+  /// - An absolute file path to a MapLibre style JSON file.
+  /// - An asset path (prefixed with 'assets/') to a style JSON included in the app bundle.
+  ///
+  /// The style must conform to the MapLibre Style Specification:
+  /// https://maplibre.org/projects/maplibre-gl-js/style-spec/
+  ///
+  /// Example usage:
+  /// ```dart
+  /// await controller.setStyle('https://demotiles.maplibre.org/style.json');
+  /// await controller.setStyle('{"version":8,"sources":{...},"layers":[...]}');
+  /// await controller.setStyle('/absolute/path/to/style.json');
+  /// await controller.setStyle('assets/styles/my_style.json');
+  /// ```
   @override
-  void setStyleString(String? styleString) {
+  Future<void> setStyle(dynamic styleObject) async {
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
-      _map.off('mouseenter', layerId, _onMouseEnterFeature);
-      _map.off('mousemouve', layerId, _onMouseEnterFeature);
-      _map.off('mouseleave', layerId, _onMouseLeaveFeature);
+      _map.off('mouseenter', layerId, _handleLayerMouseMove);
+      _map.off('mousemove', layerId, _handleLayerMouseMove);
+      _map.off('mouseleave', layerId, _handleLayerMouseMove);
       if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
     }
     _interactiveFeatureLayerIds.clear();
 
-    _map.setStyle(styleString, {'diff': false});
+    _map.setStyle(styleObject, {'diff': false});
   }
 
   @override
@@ -988,24 +1089,55 @@ class MapLibreMapController extends MapLibrePlatform
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
-      if (layerType == "fill") {
-        _map.on('mousemove', layerId, _onMouseEnterFeature);
-      } else {
-        _map.on('mouseenter', layerId, _onMouseEnterFeature);
-      }
-      _map.on('mouseleave', layerId, _onMouseLeaveFeature);
+      _map.on('mouseenter', layerId, _handleLayerMouseMove);
+      _map.on('mousemove', layerId, _handleLayerMouseMove);
+      _map.on('mouseleave', layerId, _handleLayerMouseMove);
       if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
     }
   }
 
-  void _onMouseEnterFeature(_) {
-    if (_draggedFeatureId == null) {
+  void _handleLayerMouseMove(Event e, String layerId) {
+    // Normalize feature ids to String to avoid type mismatch (ids can be int, String, etc.)
+    final currentHoveredFeatures =
+        e.features.map((f) => f.id?.toString()).whereType<String>().toList();
+    final lastHoveredFeatures = _hoveredFeatureIdsByLayer[layerId] ?? [];
+    final features = <String>{
+      ...currentHoveredFeatures,
+      ...lastHoveredFeatures,
+    };
+    _hoveredFeatureIdsByLayer[layerId] = currentHoveredFeatures;
+
+    for (final feature in features) {
+      final isCurrentlyHovered = currentHoveredFeatures.contains(feature);
+      final isPreviouslyHovered = lastHoveredFeatures.contains(feature);
+      late final String eventType;
+      if (isCurrentlyHovered && isPreviouslyHovered) {
+        eventType = 'move';
+      } else if (isCurrentlyHovered && !isPreviouslyHovered) {
+        eventType = 'enter';
+        if (_draggedFeatureId == null) {
+          _map.getCanvas().style.cursor = 'pointer';
+        }
+      } else if (!isCurrentlyHovered && isPreviouslyHovered) {
+        eventType = 'leave';
+      }
+
+      onFeatureHoverPlatform({
+        'id': feature,
+        'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+        'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+        'eventType': eventType
+      });
+    }
+
+    final isAnyFeatureHovered = _hoveredFeatureIdsByLayer.values
+        .any((hoveredFeatures) => hoveredFeatures.isNotEmpty);
+    if (isAnyFeatureHovered && _draggedFeatureId == null) {
       _map.getCanvas().style.cursor = 'pointer';
     }
-  }
-
-  void _onMouseLeaveFeature(_) {
-    _map.getCanvas().style.cursor = '';
+    if (!isAnyFeatureHovered) {
+      _map.getCanvas().style.cursor = '';
+    }
   }
 
   @override

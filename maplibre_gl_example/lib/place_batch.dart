@@ -128,11 +128,11 @@ class BatchAddBodyState extends State<BatchAddBody> {
     }
   }
 
-  void _remove() {
-    controller.removeFills(_fills);
-    controller.removeLines(_lines);
-    controller.removeCircles(_circles);
-    controller.removeSymbols(_symbols);
+  Future<void> _remove() async {
+    await controller.removeFills(_fills);
+    await controller.removeLines(_lines);
+    await controller.removeCircles(_circles);
+    await controller.removeSymbols(_symbols);
     _fills.clear();
     _lines.clear();
     _circles.clear();
@@ -144,7 +144,7 @@ class BatchAddBodyState extends State<BatchAddBody> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
+      children: [
         Center(
           child: SizedBox(
             height: 200.0,
@@ -169,11 +169,11 @@ class BatchAddBodyState extends State<BatchAddBody> {
           child: SingleChildScrollView(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
+              children: [
                 Row(
-                  children: <Widget>[
+                  children: [
                     Column(
-                      children: <Widget>[
+                      children: [
                         TextButton(
                             onPressed: _add, child: const Text('batch add')),
                         TextButton(
