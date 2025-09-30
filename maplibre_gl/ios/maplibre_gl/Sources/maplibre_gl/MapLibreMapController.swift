@@ -2012,7 +2012,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         addedShapesByLayer.removeAll()
         
         if Self.styleStringIsJSON(styleString) {
-            mapView.styleJSON = styleString;
+            mapView.styleJSON = styleString
         } else if let url = Self.styleStringAsURL(
             styleString,
             registrar: registrar
