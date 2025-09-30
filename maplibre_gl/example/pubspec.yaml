@@ -1,0 +1,26 @@
+name: maplibre_gl_example
+publish_to: none
+description: Minimal example app for the maplibre_gl package published on pub.dev.
+version: 0.0.1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  maplibre_gl:
+    path: ..
+
+dev_dependencies:
+  very_good_analysis: ^10.0.0
+
+dependency_overrides:
+  maplibre_gl_platform_interface:
+    path: ../../maplibre_gl_platform_interface
+  maplibre_gl_web:
+    path: ../../maplibre_gl_web
+
+flutter:
+  uses-material-design: true

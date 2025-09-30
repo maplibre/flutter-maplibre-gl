@@ -1,3 +1,24 @@
+// Code generation entry point for the MapLibre Flutter workspace.
+//
+// This script reads the canonical style definition (style.json) and produces
+// strongly-typed Dart (and some platform specific Java/Swift) sources that
+// expose layer & source properties plus expression helpers.
+//
+// Key goals:
+//  - Keep hand‑written logic small; most surface area is generated.
+//  - Ensure deterministic output (stable ordering helps minimal diffs).
+//  - Generated Dart files are batch‑formatted at the end using `dart format`
+//    so that a subsequent CI `melos format-all` step produces no diffs.
+//
+// Notes:
+//  - Do NOT edit the generated files manually; instead adjust templates or
+//    this generator.
+//  - The generator intentionally avoids adding a per‑file language version
+//    pragma to prevent part <-> library mismatches (see earlier CI issue).
+//  - If the style specification evolves, update templates & mapping tables
+//    inside conversions.dart.
+//  - Run via:  melos run generate
+//
 import 'dart:io';
 import 'dart:convert';
 
@@ -6,11 +27,15 @@ import 'package:recase/recase.dart';
 
 import 'conversions.dart';
 
-main() async {
+Future<void> main() async {
+  /// We assume the current working directory for this script is the scripts/
+  /// package root (melos exec enforces that). style.json lives under input/.
   final currentPath = Directory.current.path;
   final styleFilePath = '$currentPath/input/style.json';
   final styleJson = jsonDecode(await File(styleFilePath).readAsString());
 
+  /// Layer types in the order we want to render them. Order matters for
+  /// deterministic output & smaller diffs.
   final layerTypes = [
     "symbol",
     "circle",
@@ -22,6 +47,8 @@ main() async {
     "heatmap",
   ];
 
+  /// Source types. The template will convert snake_case to
+  /// the appropriate casing for class names and enum-like strings.
   final sourceTypes = [
     "vector",
     "raster",
@@ -31,6 +58,9 @@ main() async {
     "image"
   ];
 
+  /// Build the mustache rendering context consumed by each template.
+  /// Most heavy lifting (doc splitting, type inference) happens in helper
+  /// functions below for clarity & reuse.
   final renderContext = {
     "layerTypes": [
       for (final type in layerTypes)
@@ -54,11 +84,15 @@ main() async {
   };
 
   // required for deduplication
+  // Collect a set of all layout property names across layer types to enable
+  // template logic for shared helpers / deduplication.
   renderContext["all_layout_properties"] = <dynamic>{
     for (final type in renderContext["layerTypes"]!)
       ...type["layout_properties"].map((p) => p["value"])
   }.map((p) => {"property": p}).toList();
 
+  // Ordered list of templates we render. If you add a new feature, append
+  // here to keep existing diff noise minimal.
   const templates = [
     "maplibre_gl/android/src/main/java/org/maplibre/maplibregl/LayerPropertyConverter.java",
     "maplibre_gl/ios/maplibre_gl/Sources/maplibre_gl/LayerPropertyConverter.swift",
@@ -68,12 +102,33 @@ main() async {
     "maplibre_gl_platform_interface/lib/src/source_properties.dart",
   ];
 
+  final generatedDartFiles = <String>[];
   for (final template in templates) {
-    await render(renderContext, template);
+    final path = await render(renderContext, template);
+    if (path.endsWith('.dart')) {
+      generatedDartFiles.add(path);
+    }
+  }
+
+  // Auto-format only the Dart files we just generated so that a subsequent
+  // CI `melos format-all` step does not introduce extra diffs.
+  if (generatedDartFiles.isNotEmpty) {
+    final result = await Process.run(
+      'dart',
+      ['format', ...generatedDartFiles],
+      runInShell: true,
+    );
+    if (result.exitCode != 0) {
+      stderr.writeln('Warning: dart format failed: ${result.stderr}');
+    }
   }
 }
 
-Future<void> render(
+/// Render a single template file.
+/// [path] is the relative workspace path to the output (and indirectly the
+/// template at scripts/templates/$filename.template).
+/// Returns the absolute path of the written file.
+Future<String> render(
   Map<String, List> renderContext,
   String path,
 ) async {
@@ -91,9 +146,12 @@ Future<void> render(
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
 
-  outputFile.writeAsString(template.renderString(renderContext));
+  final rendered = template.renderString(renderContext);
+  await outputFile.writeAsString(rendered);
+  return outputFile.path;
 }
 
+/// Build the (paint/layout) style properties list for a given style.json key.
 List<Map<String, dynamic>> buildStyleProperties(
     Map<String, dynamic> styleJson, String key) {
   final Map<String, dynamic> items = styleJson[key];
@@ -101,6 +159,7 @@ List<Map<String, dynamic>> buildStyleProperties(
   return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
 }
 
+/// Translate a single raw style property spec into a template-ready map.
 Map<String, dynamic> buildStyleProperty(
     String key, Map<String, dynamic> value) {
   final typeDart = dartTypeMappingTable[value["type"]];
@@ -121,6 +180,7 @@ Map<String, dynamic> buildStyleProperty(
   };
 }
 
+/// Build the list of source properties (excluding generic wildcard entries).
 List<Map<String, dynamic>> buildSourceProperties(
     Map<String, dynamic> styleJson, String key) {
   final Map<String, dynamic> items = styleJson[key];
@@ -131,6 +191,8 @@ List<Map<String, dynamic>> buildSourceProperties(
       .toList();
 }
 
+/// Translate one source property spec to a template map, including default
+/// value normalization (prefixing const for literal lists, quoting strings).
 Map<String, dynamic> buildSourceProperty(
     String key, Map<String, dynamic> value) {
   final camelCase = ReCase(key).camelCase;
@@ -161,6 +223,8 @@ Map<String, dynamic> buildSourceProperty(
   };
 }
 
+/// Produce a wrapped documentation block (array of lines) including
+/// type/default/constraints plus enumerated option docs.
 List<String> buildDocSplit(Map<String, dynamic> item) {
   final defaultValue = item["default"];
   final maxValue = item["maximum"];
@@ -202,6 +266,7 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
   return result;
 }
 
+/// Simple greedy word-wrapping utility used for docs.
 List<String> splitIntoChunks(String input, int lineLength,
     {String prefix = ""}) {
   final words = input.split(" ");
@@ -222,6 +287,8 @@ List<String> splitIntoChunks(String input, int lineLength,
   return chunks;
 }
 
+/// Build expression metadata (renaming reserved or symbolic operators to
+/// valid method-like identifiers for Dart code generation).
 List<Map<String, dynamic>> buildExpressionProperties(
     Map<String, dynamic> styleJson) {
   final Map<String, dynamic> items = styleJson["expression_name"]["values"];

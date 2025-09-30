@@ -1,5 +1,5 @@
 @JS('maplibregl')
-library maplibre.interop.util.evented;
+library;
 
 import 'package:js/js.dart';
 import 'package:maplibre_gl_web/src/interop/geo/geojson_interop.dart';
@@ -15,7 +15,7 @@ abstract class EventJsImpl {
   external String get id;
   external String get type;
   external LngLatJsImpl get lngLat;
-  external List<FeatureJsImpl> get features;
+  external List<FeatureJsImpl>? get features;
   external PointJsImpl get point;
 
   external factory EventJsImpl({

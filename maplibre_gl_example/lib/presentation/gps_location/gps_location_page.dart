@@ -70,6 +70,7 @@ class GpsLocationMap extends HookWidget {
                 );
               }),
               FloatingActionButton(
+                heroTag: "accuracy",
                 onPressed: () {
                   useDefaultLocationSettings.value =
                       !useDefaultLocationSettings.value;
@@ -96,6 +97,7 @@ class GpsIcon extends HookWidget {
   Widget build(BuildContext context) {
     final locationLoading = useState(false);
     return FloatingActionButton.small(
+      heroTag: "gps",
       onPressed: () async {
         if (locationLoading.value) {
           return;

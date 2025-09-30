@@ -5,7 +5,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl_example/util.dart';
 
@@ -37,12 +36,12 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      children: <Widget>[
+      children: [
         Card(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 30.0),
             child: Column(
-              children: <Widget>[
+              children: [
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12.0),
                   child: Text('This map consumes all touch events.'),
@@ -75,7 +74,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 30.0),
             child: Column(
-              children: <Widget>[
+              children: [
                 const Text("This map doesn't consume the vertical drags."),
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12.0),

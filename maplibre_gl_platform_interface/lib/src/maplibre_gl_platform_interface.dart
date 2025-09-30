@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_getters_setters
-
 part of '../maplibre_gl_platform_interface.dart';
 
 /// The default instance of [MapLibrePlatform] to use.
@@ -21,6 +19,7 @@ abstract class MapLibrePlatform {
 
   final onFeatureTappedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
+  final onFeatureHoverPlatform = ArgumentCallbacks<Map<String, dynamic>>();
   final onFeatureDraggedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
   final onCameraMoveStartedPlatform = ArgumentCallbacks<void>();
@@ -65,6 +64,39 @@ abstract class MapLibrePlatform {
   Future<void> setTelemetryEnabled(bool enabled);
 
   Future<bool> getTelemetryEnabled();
+
+  /// Performance Controls
+  /// Sets the maximum frames per second for the map rendering.
+  Future<void> setMaximumFps(int fps);
+
+  /// Forces the map to use online mode (disables offline mode).
+  Future<void> forceOnlineMode();
+
+  /// Animates the camera to a new position with a specified duration.
+  Future<bool> easeCamera(CameraUpdate cameraUpdate, {Duration? duration});
+
+  /// Queries the current camera position.
+  Future<CameraPosition?> queryCameraPosition();
+
+  /// Edits a GeoJSON source with new data.
+  Future<bool> editGeoJsonSource(String id, String data);
+
+  /// Edits a GeoJSON source with a new URL.
+  Future<bool> editGeoJsonUrl(String id, String url);
+
+  /// Sets a filter for a layer.
+  Future<bool> setLayerFilter(String layerId, String filter);
+
+  /// Gets the current map style as JSON string.
+  Future<String?> getStyle();
+
+  /// Sets custom HTTP headers for map requests.
+  Future<void> setCustomHeaders(
+      Map<String, String> headers, List<String> filter);
+
+  /// Gets the current custom HTTP headers.
+  Future<Map<String, String>> getCustomHeaders();
+
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter);
 
@@ -202,11 +234,24 @@ abstract class MapLibrePlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
+  /// Method to set style string
+  /// A MapLibre GL style document defining the map's appearance.
+  /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
+  /// A short introduction can be found in the documentation of the [maplibre_gl] library.
+  /// The [styleString] supports following formats:
+  ///
+  /// 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
+  /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
+  /// 3. Passing the style as a local file. create a JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
+  /// 4. Passing the raw JSON of the map style. This is only supported on Android.
+  Future<void> setStyle(String styleString);
+
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
     onInfoWindowTappedPlatform.clear();
     onFeatureTappedPlatform.clear();
+    onFeatureHoverPlatform.clear();
     onFeatureDraggedPlatform.clear();
     onCameraMoveStartedPlatform.clear();
     onCameraMovePlatform.clear();

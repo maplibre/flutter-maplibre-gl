@@ -7,6 +7,9 @@ analyzer:
     strict-raw-types: false
     strict-inference: false
 
+  errors:
+    avoid_catches_without_on_clauses: ignore
+
 linter:
   rules:
     # temporary rules
