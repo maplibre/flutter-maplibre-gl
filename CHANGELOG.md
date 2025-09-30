@@ -11,33 +11,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 Packages with breaking changes:
 
- - There are no breaking changes in this release.
-
-Packages with other changes:
-
- - [`maplibre_gl` - `v0.23.0`](#maplibre_gl---v0230)
-
----
-
-#### `maplibre_gl` - `v0.23.0`
-
- - Bump "maplibre_gl" to `0.23.0`.
-
-
-## 2025-09-30
-
-### Changes
-
----
-
-Packages with breaking changes:
-
  - [`maplibre_gl_platform_interface` - `v0.23.0`](#maplibre_gl_platform_interface---v0230)
  - [`maplibre_gl_web` - `v0.23.0`](#maplibre_gl_web---v0230)
 
 Packages with other changes:
 
- - [`maplibre_gl` - `v0.22.1`](#maplibre_gl---v0221)
+ - [`maplibre_gl` - `v0.23.0`](#maplibre_gl---v0230)
 
 ---
 
@@ -78,7 +57,7 @@ Packages with other changes:
  - **BREAKING** **FEAT**: rename `Maplibre` to `MapLibre` ([#441](https://github.com/maplibre/flutter-maplibre-gl/issues/441)).
  - **BREAKING** **FEAT**: use lower camel case for enum fields and consts ([#415](https://github.com/maplibre/flutter-maplibre-gl/issues/415)).
 
-#### `maplibre_gl` - `v0.22.1`
+#### `maplibre_gl` - `v0.23.0`
 
  - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
  - **FIX**: Update of generate.dart and its template files. Fixed Offset, Translate and expressions arrays on iOS. ([#481](https://github.com/maplibre/flutter-maplibre-gl/issues/481)).

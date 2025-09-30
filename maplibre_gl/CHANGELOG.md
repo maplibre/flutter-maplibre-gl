@@ -1,9 +1,5 @@
 ## 0.23.0
 
- - Bump "maplibre_gl" to `0.23.0`.
-
-## 0.22.1
-
  - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
  - **FIX**: Update of generate.dart and its template files. Fixed Offset, Translate and expressions arrays on iOS. ([#481](https://github.com/maplibre/flutter-maplibre-gl/issues/481)).
  - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
