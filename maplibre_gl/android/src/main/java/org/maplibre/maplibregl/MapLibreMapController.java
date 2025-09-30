@@ -2056,6 +2056,18 @@ final class MapLibreMapController
     }
   }
 
+  @Override
+  public void setForegroundLoadColor(int color) {
+    // foregroundLoadColor is only useful during initial map creation
+    // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
+    // translucentTextureSurface is only useful during initial map creation
+    // not for runtime updates, so this is a no-op
+  }
+
   private void updateMyLocationEnabled() {
     if (this.locationComponent == null && mapLibreMap.getStyle() != null && myLocationEnabled) {
       enableLocationComponent(mapLibreMap.getStyle());
