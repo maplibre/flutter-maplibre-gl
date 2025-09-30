@@ -2,22 +2,7 @@
 
 > Note: This release has breaking changes.
 
- - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
- - **FIX**: Aligned example and maplibre_gl_web pubspec versions. ([#476](https://github.com/maplibre/flutter-maplibre-gl/issues/476)).
- - **FIX**(web): ensure the usage of `maplibre-gl-js` version 4.x.x, remove `_addStylesheetToShadowRoot` ([#409](https://github.com/maplibre/flutter-maplibre-gl/issues/409)).
- - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
- - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
- - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
- - **FEAT**: use lints from very_good_analysis ([#434](https://github.com/maplibre/flutter-maplibre-gl/issues/434)).
- - **FEAT**: allow latest `flutter_lints` version ([#419](https://github.com/maplibre/flutter-maplibre-gl/issues/419)).
- - **FEAT**: add `flutter_lints`, fix or ignore lints ([#414](https://github.com/maplibre/flutter-maplibre-gl/issues/414)).
- - **FEAT**: update package links in pubspec.yaml files ([#413](https://github.com/maplibre/flutter-maplibre-gl/issues/413)).
- - **FEAT**(web): allow package:js version 0.6.x and 0.7.x ([#410](https://github.com/maplibre/flutter-maplibre-gl/issues/410)).
- - **FEAT**: heatmap layer ([#365](https://github.com/maplibre/flutter-maplibre-gl/issues/365)).
- - **FEAT**: add support for changing the receiver’s viewport to fit given bounds ([#133](https://github.com/maplibre/flutter-maplibre-gl/issues/133)).
- - **FEAT**: Set layer visibility ([#138](https://github.com/maplibre/flutter-maplibre-gl/issues/138)).
- - **BREAKING** **FEAT**: rename `Maplibre` to `MapLibre` ([#441](https://github.com/maplibre/flutter-maplibre-gl/issues/441)).
- - **BREAKING** **FEAT**: use lower camel case for enum fields and consts ([#415](https://github.com/maplibre/flutter-maplibre-gl/issues/415)).
+see top-level CHANGELOG.md
 
 ## newer releases
 

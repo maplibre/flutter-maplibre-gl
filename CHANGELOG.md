@@ -5,66 +5,45 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 2025-09-30
 
-### Changes
+### 0.23.0
 
----
+This consolidated release delivers runtime style switching, hover interactions, heatmap & visibility features, native SDK updates (Android 11.9.0 / iOS 6.14.0 with PMTiles), and broad naming / enum casing harmonization. It also fixes several interaction and stability issues across web and mobile. If you are upgrading from <= 0.22.x:
+* Review the breaking rename (`Maplibre` -> `MapLibre`) and enum / const lowerCamelCase migration.
+* Adapt feature interaction callbacks: `onFeatureTapped` / `onFeatureDrag` now receive an `Annotation` instead of an `id` argument.
+* Ensure any style access happens after `onStyleLoaded` due to stricter style readiness checks.
 
-Packages with breaking changes:
+### Breaking changes
+* Rename `Maplibre` to `MapLibre` across APIs (#441).
+* Enum fields & const identifiers migrated to lower camel case (#415).
+* `onFeatureTapped` / `onFeatureDrag` replaced the raw `id` parameter with an `Annotation annotation` instance (update handler signatures).
 
- - [`maplibre_gl_platform_interface` - `v0.23.0`](#maplibre_gl_platform_interface---v0230)
- - [`maplibre_gl_web` - `v0.23.0`](#maplibre_gl_web---v0230)
+### Added / Features
+* Runtime style switching APIs on controller (#444) and raw style JSON setting on iOS / Web (#603).
+* Hover interaction events (`onFeatureHover`) (#614).
+* Heatmap layer support (#365).
+* Bounds fitting API to change viewport to given bounds (#133).
+* Layer visibility control (#138).
+* `LatLngBounds.contains` convenience (#498).
 
-Packages with other changes:
+### Changed / Updates
+* MapLibre Native: Android 11.9.0 & iOS 6.14.0 (PMTiles support, performance) (#552, #582).
+* Flutter / Gradle plugin & tooling compatibility update (#542).
+* Lint and analysis alignment via very_good_analysis and flutter_lints (#452, #434, #414, #419).
+* Package link updates & style resource relocation (`MaplibreStyles` moved to main package) (#435, #413).
 
- - [`maplibre_gl` - `v0.23.0`](#maplibre_gl---v0230)
+### Fixed
+* iOS code generation (Offset / Translate / expression arrays) (#481).
+* Annotation tap consumption now properly respected (`annotationConsumeTapEvents`).
+* Prevent calling `notifyListeners()` after controller disposal (#621).
+* Web: event listener cancellation & hover handling robustness (#623).
+* Offline region download crash in example (#569).
+* Added style loaded safety checks (#563).
+* Aligned example and web pubspec versions (#476).
+* Web: enforce maplibre-gl-js 4.x & remove shadow root stylesheet workaround (#409).
 
----
+### Refactor / Quality
+* Enable and fix additional lint rules (#452).
 
-#### `maplibre_gl_platform_interface` - `v0.23.0`
-
- - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
- - **REFACTOR**: move `MaplibreStyles` to `maplibre_gl` ([#435](https://github.com/maplibre/flutter-maplibre-gl/issues/435)).
- - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
- - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
- - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
- - **FEAT**: contains method for `LatLngBounds` ([#498](https://github.com/maplibre/flutter-maplibre-gl/issues/498)).
- - **FEAT**: use lints from very_good_analysis ([#434](https://github.com/maplibre/flutter-maplibre-gl/issues/434)).
- - **FEAT**: allow latest `flutter_lints` version ([#419](https://github.com/maplibre/flutter-maplibre-gl/issues/419)).
- - **FEAT**: add `flutter_lints`, fix or ignore lints ([#414](https://github.com/maplibre/flutter-maplibre-gl/issues/414)).
- - **FEAT**: update package links in pubspec.yaml files ([#413](https://github.com/maplibre/flutter-maplibre-gl/issues/413)).
- - **FEAT**: heatmap layer ([#365](https://github.com/maplibre/flutter-maplibre-gl/issues/365)).
- - **FEAT**: add support for changing the receiver’s viewport to fit given bounds ([#133](https://github.com/maplibre/flutter-maplibre-gl/issues/133)).
- - **FEAT**: Set layer visibility ([#138](https://github.com/maplibre/flutter-maplibre-gl/issues/138)).
- - **BREAKING** **FEAT**: rename `Maplibre` to `MapLibre` ([#441](https://github.com/maplibre/flutter-maplibre-gl/issues/441)).
- - **BREAKING** **FEAT**: use lower camel case for enum fields and consts ([#415](https://github.com/maplibre/flutter-maplibre-gl/issues/415)).
-
-#### `maplibre_gl_web` - `v0.23.0`
-
- - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
- - **FIX**: Aligned example and maplibre_gl_web pubspec versions. ([#476](https://github.com/maplibre/flutter-maplibre-gl/issues/476)).
- - **FIX**(web): ensure the usage of `maplibre-gl-js` version 4.x.x, remove `_addStylesheetToShadowRoot` ([#409](https://github.com/maplibre/flutter-maplibre-gl/issues/409)).
- - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
- - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
- - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
- - **FEAT**: use lints from very_good_analysis ([#434](https://github.com/maplibre/flutter-maplibre-gl/issues/434)).
- - **FEAT**: allow latest `flutter_lints` version ([#419](https://github.com/maplibre/flutter-maplibre-gl/issues/419)).
- - **FEAT**: add `flutter_lints`, fix or ignore lints ([#414](https://github.com/maplibre/flutter-maplibre-gl/issues/414)).
- - **FEAT**: update package links in pubspec.yaml files ([#413](https://github.com/maplibre/flutter-maplibre-gl/issues/413)).
- - **FEAT**(web): allow package:js version 0.6.x and 0.7.x ([#410](https://github.com/maplibre/flutter-maplibre-gl/issues/410)).
- - **FEAT**: heatmap layer ([#365](https://github.com/maplibre/flutter-maplibre-gl/issues/365)).
- - **FEAT**: add support for changing the receiver’s viewport to fit given bounds ([#133](https://github.com/maplibre/flutter-maplibre-gl/issues/133)).
- - **FEAT**: Set layer visibility ([#138](https://github.com/maplibre/flutter-maplibre-gl/issues/138)).
- - **BREAKING** **FEAT**: rename `Maplibre` to `MapLibre` ([#441](https://github.com/maplibre/flutter-maplibre-gl/issues/441)).
- - **BREAKING** **FEAT**: use lower camel case for enum fields and consts ([#415](https://github.com/maplibre/flutter-maplibre-gl/issues/415)).
-
-#### `maplibre_gl` - `v0.23.0`
-
- - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
- - **FIX**: Update of generate.dart and its template files. Fixed Offset, Translate and expressions arrays on iOS. ([#481](https://github.com/maplibre/flutter-maplibre-gl/issues/481)).
- - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
- - **FEAT**: update android to 11.9.0 and ios to 6.14.0 ([#582](https://github.com/maplibre/flutter-maplibre-gl/issues/582)).
- - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
- - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
 
 ## 0.22.1
 
@@ -75,16 +54,7 @@ Packages with other changes:
  - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
  - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
 
-## UNRELEASED
-
-### Breaking changes
-* `annotation` argument now replaces the previous `id` argument in the onFeatureDrag and onFeatureTapped callbacks. Existing implementations must be updated to use the new annotation parameter.
-
-### Changed
-* Added `onFeatureHover` to the controller for listening to hover interactions.
-* Fixed: annotationConsumeTapEvents previously had no effect. This has been fixed, and it now properly controls whether tap events on annotations are consumed.
-* Fixed: Avoided calling notifyListeners() on a disposed controller.
-* Fixed: Internal event listeners wasn't properly removed/off in web.
+No unreleased changes yet.
 
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 

@@ -4,10 +4,10 @@ PODS:
   - Flutter (1.0.0)
   - location (0.0.1):
     - Flutter
-  - MapLibre (6.14.0)
-  - maplibre_gl (0.0.1):
+  - MapLibre (6.19.1)
+  - maplibre_gl (0.23.0):
     - Flutter
-    - MapLibre (= 6.14.0)
+    - MapLibre (= 6.19.1)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -36,13 +36,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
-  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  location: 155caecf9da4f280ab5fe4a55f94ceccfab838f8
-  MapLibre: 69e572367f4ef6287e18246cfafc39c80cdcabcd
-  maplibre_gl: 3c924e44725147b03dda33430ad216005b40555f
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
+  MapLibre: 7f24faba45439f80ccb0f83393c29fa32cb81952
+  maplibre_gl: 797df2712114170d739e164142d8fa897b08ec4a
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
 
-PODFILE CHECKSUM: 7be2f5f74864d463a8ad433546ed1de7e0f29aef
+PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
 
 COCOAPODS: 1.16.2
