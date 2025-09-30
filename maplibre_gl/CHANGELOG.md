@@ -1,3 +1,12 @@
+## 0.22.1
+
+ - **REFACTOR**: enable and fix some lint rules ([#452](https://github.com/maplibre/flutter-maplibre-gl/issues/452)).
+ - **FIX**: Update of generate.dart and its template files. Fixed Offset, Translate and expressions arrays on iOS. ([#481](https://github.com/maplibre/flutter-maplibre-gl/issues/481)).
+ - **FEAT**: added set style method on controller ([#444](https://github.com/maplibre/flutter-maplibre-gl/issues/444)).
+ - **FEAT**: update android to 11.9.0 and ios to 6.14.0 ([#582](https://github.com/maplibre/flutter-maplibre-gl/issues/582)).
+ - **FEAT**: update maplibre-native to the latest versions ([#552](https://github.com/maplibre/flutter-maplibre-gl/issues/552)).
+ - **FEAT**: upgrade FGP & compatible with flutter 3.29.0 ([#542](https://github.com/maplibre/flutter-maplibre-gl/issues/542)).
+
 ## UNRELEASED
 
 ### Breaking changes
