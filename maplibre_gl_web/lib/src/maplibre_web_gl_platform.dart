@@ -1151,8 +1151,24 @@ class MapLibreMapController extends MapLibrePlatform
     throw UnimplementedError();
   }
 
-  /// Method to set style string
-  /// [styleString] -> It will take json, url, absolute path or asset path
+  /// Sets the map style.
+  ///
+  /// The [styleString] parameter can be one of the following:
+  /// - A JSON string representing a MapLibre style object.
+  /// - A URL (http/https) pointing to a MapLibre style JSON document.
+  /// - An absolute file path to a MapLibre style JSON file.
+  /// - An asset path (prefixed with 'asset://') to a style JSON included in the app bundle.
+  ///
+  /// The style must conform to the MapLibre Style Specification:
+  /// https://maplibre.org/projects/maplibre-gl-js/style-spec/
+  ///
+  /// Example usage:
+  /// ```dart
+  /// await controller.setStyle('https://demotiles.maplibre.org/style.json');
+  /// await controller.setStyle('{"version":8,"sources":{...},"layers":[...]}');
+  /// await controller.setStyle('/absolute/path/to/style.json');
+  /// await controller.setStyle('asset://styles/my_style.json');
+  /// ```
   @override
   Future<void> setStyle(String styleString) async {
     _map.setStyle(styleString);
