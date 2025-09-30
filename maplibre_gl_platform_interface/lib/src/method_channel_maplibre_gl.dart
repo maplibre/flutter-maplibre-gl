@@ -930,4 +930,22 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       return Future.error(e);
     }
   }
+
+  /// Method to set style string
+  ///
+  @override
+  Future<void> setStyle(String styleString) async {
+    try {
+      await _channel.invokeMethod(
+        'style#setStyle',
+        <String, dynamic>{
+          'style': styleString,
+        },
+      );
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    } catch (e) {
+      return Future.error(e);
+    }
+  }
 }

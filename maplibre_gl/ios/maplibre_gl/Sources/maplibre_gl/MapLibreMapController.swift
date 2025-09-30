@@ -695,7 +695,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 maximumZoomLevel: maxzoom,
                 properties: properties
             )
-          
+
             switch addResult {
             case .success: result(nil)
             case let .failure(error): result(error.flutterError)
@@ -1120,6 +1120,31 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["filter"] = currentLayerFilter as NSObject
             result(reply)
 
+        case "style#setStyle":
+            if let arguments = methodCall.arguments as? [String: Any] {
+              if let style = arguments["style"] as? String {
+                setStyleString(styleString: style)
+                result(nil)
+              } else {
+                // Error for missing style key in argument
+                result(
+                    FlutterError(
+                        code: "invalidStyleString",
+                        message: "Missing style key in arguments",
+                        details: nil
+                    )
+                )
+              }
+            } else {
+              // Error for invalid arguments type
+              result(
+                  FlutterError(
+                      code: "invalidArgumentsType",
+                      message: "Arguments not of type [String: Any]",
+                      details: nil
+                  )
+              )
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -1347,9 +1372,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if !isFirstStyleLoad || mapReadyResult != nil {
             isFirstStyleLoad = false
 
-
-
             if let channel = channel {
+                onStyleLoadedCalled = true
                 channel.invokeMethod("map#onStyleLoaded", arguments: nil)
             }
         }
@@ -1379,7 +1403,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
     }
-    
+
     private func validateBeforeLayerAdd(
         sourceId: String,
         layerId: String
@@ -1743,7 +1767,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func addSource(sourceId: String, properties: [String: Any]) -> Result<Void, MethodCallError> {
-        guard let style = mapView.style else { 
+        guard let style = mapView.style else {
             return .failure(.styleNotFound)
         }
         guard style.source(withIdentifier: sourceId) == nil else {
@@ -1793,7 +1817,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return .failure(.invalidSourceType(
             details: "Source '\(sourceId)' does not support type '\(type)'."
         ))
-       
+
     }
 
     func mapViewDidBecomeIdle(_: MLNMapView) {
@@ -1828,7 +1852,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func addSourceGeojson(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {
         do{
-            guard let style = mapView.style else { 
+            guard let style = mapView.style else {
                 return .failure(.styleNotFound)
             }
             guard style.source(withIdentifier: sourceId) == nil else {
@@ -1849,7 +1873,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func setSource(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {
-        guard let style = mapView.style else { 
+        guard let style = mapView.style else {
             return .failure(.styleNotFound)
         }
 
@@ -1869,10 +1893,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
 
     }
-    
+
 
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {
-        guard let style = mapView.style else { 
+        guard let style = mapView.style else {
             return .failure(.styleNotFound)
         }
         do {
@@ -1972,6 +1996,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func setStyleString(styleString: String) {
+        interactiveFeatureLayerIds.removeAll()
+        addedShapesByLayer.removeAll()
+        
         if Self.styleStringIsJSON(styleString) {
             mapView.styleJSON = styleString;
         } else if let url = Self.styleStringAsURL(
