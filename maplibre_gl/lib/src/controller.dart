@@ -7,20 +7,34 @@ part of '../maplibre_gl.dart';
 typedef OnMapClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
-typedef OnFeatureInteractionCallback = void Function(Point<double> point,
-    LatLng coordinates, Annotation annotation, String layerId);
+// New generalized feature interaction callback that always provides a raw feature id.
+// If the feature also corresponds to a managed annotation, the annotation parameter
+// is non-null; otherwise it is null (e.g. raw style layer feature not managed by an AnnotationManager).
+typedef OnFeatureInteractionCallback = void Function(
+  Point<double> point,
+  LatLng coordinates,
+  String id,
+  String layerId,
+  Annotation? annotation,
+);
 
 typedef OnFeatureDragCallback = void Function(
   Point<double> point,
   LatLng origin,
   LatLng current,
   LatLng delta,
-  Annotation annotation,
+  String id,
+  Annotation? annotation,
   DragEventType eventType,
 );
 
-typedef OnFeatureHoverCallback = void Function(Point<double> point,
-    LatLng latLng, Annotation annotation, HoverEventType eventType);
+typedef OnFeatureHoverCallback = void Function(
+  Point<double> point,
+  LatLng latLng,
+  String id,
+  Annotation? annotation,
+  HoverEventType eventType,
+);
 
 typedef OnMapLongClickCallback = void Function(
     Point<double> point, LatLng coordinates);
@@ -95,19 +109,19 @@ class MapLibreMapController extends ChangeNotifier {
     _cameraPosition = initialCameraPosition;
 
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {
-      final id = payload["id"];
+      final id = payload["id"].toString();
+      final layerId = payload["layerId"];
+      final point = payload["point"];
+      final latLng = payload["latLng"];
       final annotation = getAnnotationById(id);
-      if (annotation == null) return;
-      // Call onFeatureTapped callbacks
+
+      // Call all generic feature tapped callbacks
       for (final fun in List.of(onFeatureTapped)) {
-        fun(
-          payload["point"],
-          payload["latLng"],
-          annotation,
-          payload["layerId"],
-        );
+        // New signature supplies id and (possibly null) annotation
+        fun(point, latLng, id, layerId, annotation);
       }
-      // Call specific annotation callbacks (onSymbolTapped, onLineTapped...)
+
+      // If we have a managed annotation, call specific annotation callbacks (onSymbolTapped, onLineTapped...)
       ArgumentCallbacks? annotationTappedCallbacks;
       if (annotation is Line) {
         annotationTappedCallbacks = onLineTapped;
@@ -119,20 +133,34 @@ class MapLibreMapController extends ChangeNotifier {
         annotationTappedCallbacks = onCircleTapped;
       }
       annotationTappedCallbacks?.call(annotation);
+
+      if (annotation != null) {
+        ArgumentCallbacks? annotationTappedCallbacks;
+        if (annotation is Line) {
+          annotationTappedCallbacks = onLineTapped;
+        } else if (annotation is Symbol) {
+          annotationTappedCallbacks = onSymbolTapped;
+        } else if (annotation is Fill) {
+          annotationTappedCallbacks = onFillTapped;
+        } else if (annotation is Circle) {
+          annotationTappedCallbacks = onCircleTapped;
+        }
+        annotationTappedCallbacks?.call(annotation);
+      }
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
+      final id = payload["id"];
+      final annotation = getAnnotationById(id);
+      final enmDragEventType = DragEventType.values
+          .firstWhere((element) => element.name == payload["eventType"]);
       for (final fun in List.of(onFeatureDrag)) {
-        final enmDragEventType = DragEventType.values
-            .firstWhere((element) => element.name == payload["eventType"]);
-        final id = payload["id"];
-        final annotation = getAnnotationById(id);
-        if (annotation == null) return;
         fun(
           payload["point"],
           payload["origin"],
           payload["current"],
           payload["delta"],
+          id,
           annotation,
           enmDragEventType,
         );
@@ -140,12 +168,18 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
-      final annotation = getAnnotationById(payload["id"]);
-      if (annotation == null) return;
+      final id = payload["id"];
+      final annotation = getAnnotationById(id);
       final hoverEventType = HoverEventType.values
           .firstWhere((e) => e.name == payload["eventType"]);
       for (final fun in List.of(onFeatureHover)) {
-        fun(payload["point"], payload["latLng"], annotation, hoverEventType);
+        fun(
+          payload["point"],
+          payload["latLng"],
+          id,
+          annotation,
+          hoverEventType,
+        );
       }
     });
 
@@ -222,12 +256,15 @@ class MapLibreMapController extends ChangeNotifier {
     });
   }
 
-  Annotation? getAnnotationById(dynamic id) => id == null
-      ? null
-      : fillManager?.byId(id) ??
-          lineManager?.byId(id) ??
-          symbolManager?.byId(id) ??
-          circleManager?.byId(id);
+  Annotation? getAnnotationById(dynamic id) {
+    if (id == null) return null;
+
+    final formattedId = id.toString();
+    return fillManager?.byId(formattedId) ??
+        lineManager?.byId(formattedId) ??
+        symbolManager?.byId(formattedId) ??
+        circleManager?.byId(formattedId);
+  }
 
   FillManager? fillManager;
   LineManager? lineManager;

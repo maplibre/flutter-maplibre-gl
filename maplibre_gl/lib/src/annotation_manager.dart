@@ -146,7 +146,8 @@ abstract class AnnotationManager<T extends Annotation> {
     LatLng origin,
     LatLng current,
     LatLng delta,
-    Annotation annotation,
+    String id,
+    Annotation? annotation,
     DragEventType eventType,
   ) async {
     if (annotation is T) {
@@ -157,18 +158,18 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Updates (re-sets) an existing annotation quickly by only replacing its
   /// underlying GeoJSON feature if it remains on the same logical layer.
-  Future<void> set(T anntotation) async {
-    assert(_idToAnnotation.containsKey(anntotation.id),
+  Future<void> set(T annotation) async {
+    assert(_idToAnnotation.containsKey(annotation.id),
         "you can only set existing annotations");
-    _idToAnnotation[anntotation.id] = anntotation;
-    final oldLayerIndex = _idToLayerIndex[anntotation.id];
-    final layerIndex = selectLayer != null ? selectLayer!(anntotation) : 0;
+    _idToAnnotation[annotation.id] = annotation;
+    final oldLayerIndex = _idToLayerIndex[annotation.id];
+    final layerIndex = selectLayer != null ? selectLayer!(annotation) : 0;
     if (oldLayerIndex != layerIndex) {
       // Layer changed; must rewrite all sources.
       await _setAll();
     } else {
       await controller.setGeoJsonFeature(
-          _makeLayerId(layerIndex), anntotation.toGeoJson());
+          _makeLayerId(layerIndex), annotation.toGeoJson());
     }
   }
 }

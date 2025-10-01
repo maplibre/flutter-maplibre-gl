@@ -11,7 +11,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         if (symbolId != null) {
           onInfoWindowTappedPlatform(symbolId);
         }
-
       case 'feature#onTap':
         final id = call.arguments['id'];
         final double x = call.arguments['x'];
