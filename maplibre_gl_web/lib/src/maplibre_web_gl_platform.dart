@@ -48,6 +48,7 @@ class MapLibreMapController extends MapLibrePlatform
         ..style.position = 'absolute'
         ..style.top = '0'
         ..style.bottom = '0'
+        ..style.height = '100%'
         ..style.width = '100%';
       callback(viewId);
       return _mapElement;
