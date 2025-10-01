@@ -1,3 +1,40 @@
+## [0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
+> **Note**: This release has breaking changes.\
+> We apologize for the quick change in 0.23.0: this version definitively stabilizes the signatures of feature interaction callbacks.
+
+This release restores the  **feature id** and makes the `Annotation` parameter **nullable** for all feature interaction callbacks (`tap` / `drag` / `hover`).\
+This unblocks interaction with style-layer features not managed by annotation managers (i.e. added via `addLayer*` / style APIs).
+
+### Breaking Changes
+ * **Tap**: `OnFeatureInteractionCallback` → `(Point point, LatLng coordinates, String id, String layerId, Annotation? annotation)`.
+
+* **Drag**: `OnFeatureDragCallback` → `(Point point, LatLng origin, LatLng current, LatLng delta, String id, String layerId, Annotation? annotation, DragEventType eventType)`.
+
+* **Hover**: `OnFeatureHoverCallback` → `(Point point, LatLng coordinates, String id, String layerId, Annotation? annotation, HoverEventType eventType)`.
+
+* **Update existing listeners**: The short‑lived 0.23.0-only signatures (without `id`) are removed.
+  * For unmanaged style layer features `annotation` is `null` (`unmanaged` means sources/layers you add via style APIs like `addGeoJsonSource` + `addSymbolLayer`).
+  * For managed annotations it is the `Annotation` object.
+
+### Migration Example
+Before (0.23.0):
+```
+controller.onFeatureTapped.add((p, latLng, annotation, layerId) {
+  print(annotation.id);
+});
+```
+After (>=0.24.0):
+```
+controller.onFeatureTapped.add((p, latLng, id, layerId, annotation) {
+  print('feature id=$id managed=${annotation != null}');
+});
+```
+
+### Reasoning
+In 0.23.0 the move to annotation objects inadvertently dropped interaction for unmanaged style features. Reintroducing `id` (and making `annotation` nullable) normalizes all three interaction paths without creating phantom annotation wrappers.
+
+**Full Changelog**: [v0.23.0...v0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
+
 ## [0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
 > **Note**: This release has breaking changes.
 
