@@ -30,7 +30,7 @@ typedef OnFeatureDragCallback = void Function(
 
 typedef OnFeatureHoverCallback = void Function(
   Point<double> point,
-  LatLng latLng,
+  LatLng coordinates,
   String id,
   Annotation? annotation,
   HoverEventType eventType,
