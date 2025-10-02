@@ -34,7 +34,8 @@ controller.onFeatureTapped.add((p, latLng, id, layerId, annotation) {
 ```
 
 ### Refactor / Quality
-* (web) Refactored `onMapClick` (degenerate bbox + interactive layer filter) to surface features inserted via style APIs (unmanaged style-layer features) in `onFeatureTapped` (previously skipped; returned now with `id`, `layerId` and `annotation = null`).
+* (web) Refactored `onMapClick` (degenerate bbox + interactive layer filter) to surface features inserted via style APIs (unmanaged style-layer features) in `onFeatureTapped` (previously skipped; returned now with `id`, `layerId` and `annotation = null`) (##646).
+* (web) Ensure map container stretches vertically by adding `style.height = '100%'` to the registered div (prevents occasional zero-height layout issues in flexible parents) (#641)
 
 **Full Changelog**: [v0.23.0...v0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
 
