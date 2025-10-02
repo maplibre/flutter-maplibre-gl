@@ -251,10 +251,10 @@ class MapLibreMap extends StatefulWidget {
   /// Called when the location tracking mode changes
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
-  // Called when camera is moving.
+  /// Called when camera is moving.
   final OnCameraMoveCallback? onCameraMove;
 
-  // Called when camera movement has ended.
+  /// Called when camera movement has ended.
   final OnCameraIdleCallback? onCameraIdle;
 
   /// Called when map view is entering an idle state, and no more drawing will
