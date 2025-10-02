@@ -545,20 +545,43 @@ class MapLibreMapController extends MapLibrePlatform
     });
   }
 
+  /// Handle map click event
+  ///
+  /// If the click intersects with any features in interactive layers, trigger
+  /// `onFeatureTappedPlatform` with the first feature's info.
+  /// Otherwise, trigger `onMapClickPlatform`.
+  ///
+  /// Both events include the click point and latLng.
   void _onMapClick(Event e) {
-    final features = _map.queryRenderedFeatures([e.point.x, e.point.y],
-        {"layers": _interactiveFeatureLayerIds.toList()});
-    final payload = {
+    final pointBox = [
+      [e.point.x, e.point.y],
+      [e.point.x, e.point.y]
+    ];
+
+    // Query rendered features in the point box
+    final features = _map.queryRenderedFeatures(pointBox);
+
+    // Keep only interactive-layer features (preserve order)
+    final filtered = features
+        .where((f) => _interactiveFeatureLayerIds.contains(f.layerId))
+        .toList(growable: false);
+
+    // Prepare common payload for both events (mapClick or featureTapped)
+    final payload = <String, dynamic>{
       'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
-      if (features.isNotEmpty) "id": features.first.id,
-      if (features.isNotEmpty) "layerId": features.first.layerId,
     };
-    if (features.isNotEmpty) {
-      onFeatureTappedPlatform(payload);
-    } else {
+
+    if (filtered.isEmpty) {
       onMapClickPlatform(payload);
+      return;
     }
+
+    // Add 'first' feature info to payload
+    payload['layerId'] = filtered.first.layerId;
+    payload['id'] = filtered.first.id;
+
+    onFeatureTappedPlatform(payload);
   }
 
   void _onMapLongClick(e) {

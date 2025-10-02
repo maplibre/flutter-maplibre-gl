@@ -72,7 +72,8 @@ class LineBodyState extends State<LineBody> {
   Future<void> _onFeatureHover(
     Point<double> point,
     LatLng latLng,
-    Annotation annotation,
+    String id,
+    Annotation? annotation,
     HoverEventType eventType,
   ) async {
     if (annotation is! Line) return;
