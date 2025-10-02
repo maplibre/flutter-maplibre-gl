@@ -39,122 +39,158 @@ class LayerState extends State {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(children: [
-      Center(
-        child: SizedBox(
-            height: 400.0,
-            child: MapLibreMap(
-              dragEnabled: false,
-              myLocationEnabled: true,
-              onMapCreated: _onMapCreated,
-              onMapClick: (point, latLong) =>
-                  debugPrint(point.toString() + latLong.toString()),
-              onStyleLoadedCallback: _onStyleLoadedCallback,
-              initialCameraPosition: const CameraPosition(
-                target: center,
-                zoom: 11.0,
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SizedBox(
+                height: 400.0,
+                child: MapLibreMap(
+                  dragEnabled: false,
+                  myLocationEnabled: true,
+                  onMapCreated: _onMapCreated,
+                  onMapClick: (point, latLong) {
+                    debugPrint(point.toString() + latLong.toString());
+                  },
+                  onStyleLoadedCallback: _onStyleLoadedCallback,
+                  initialCameraPosition: const CameraPosition(
+                    target: center,
+                    zoom: 11.0,
+                  ),
+                )),
+          ),
+        ),
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "lines",
+                        LineLayerProperties.fromJson(
+                          {"visibility": linesVisible ? "none" : "visible"},
+                        ),
+                      )
+                      .then(
+                        (value) => setState(() => linesVisible = !linesVisible),
+                      );
+                },
+                child: const Text('toggle line visibility'),
               ),
-              annotationOrder: const [],
-            )),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "lines",
-                  LineLayerProperties.fromJson(
-                      {"visibility": linesVisible ? "none" : "visible"}))
-              .then((value) => setState(() => linesVisible = !linesVisible));
-        },
-        child: const Text('toggle line visibility'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "lines",
-                  LineLayerProperties.fromJson(
-                      {"line-color": linesRed ? "#0000ff" : "#ff0000"}))
-              .then((value) => setState(() => linesRed = !linesRed));
-        },
-        child: const Text('toggle line color'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "fills",
-                  FillLayerProperties.fromJson(
-                      {"visibility": fillsVisible ? "none" : "visible"}))
-              .then((value) => setState(() => fillsVisible = !fillsVisible));
-        },
-        child: const Text('toggle fill visibility'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "fills",
-                  FillLayerProperties.fromJson(
-                      {"fill-color": fillsRed ? "#0000ff" : "#ff0000"}))
-              .then((value) => setState(() => fillsRed = !fillsRed));
-        },
-        child: const Text('toggle fill color'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "circles",
-                  CircleLayerProperties.fromJson(
-                      {"visibility": circlesVisible ? "none" : "visible"}))
-              .then(
-                  (value) => setState(() => circlesVisible = !circlesVisible));
-        },
-        child: const Text('toggle circle visibility'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "circles",
-                  CircleLayerProperties.fromJson(
-                      {"circle-color": circlesRed ? "#0000ff" : "#ff0000"}))
-              .then((value) => setState(() => circlesRed = !circlesRed));
-        },
-        child: const Text('toggle circle color'),
-      ),
-      TextButton(
-        onPressed: () async {
-          await controller
-              .setLayerProperties(
-                  "symbols",
-                  SymbolLayerProperties.fromJson(
-                      {"visibility": symbolsVisible ? "none" : "visible"}))
-              .then(
-                  (value) => setState(() => symbolsVisible = !symbolsVisible));
-        },
-        child: const Text('toggle (non-moving) symbols visibility'),
-      ),
-    ]);
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "lines",
+                        LineLayerProperties.fromJson(
+                          {"line-color": linesRed ? "#0000ff" : "#ff0000"},
+                        ),
+                      )
+                      .then((value) => setState(() => linesRed = !linesRed));
+                },
+                child: const Text('toggle line color'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "fills",
+                        FillLayerProperties.fromJson(
+                          {"visibility": fillsVisible ? "none" : "visible"},
+                        ),
+                      )
+                      .then(
+                        (value) => setState(() => fillsVisible = !fillsVisible),
+                      );
+                },
+                child: const Text('toggle fill visibility'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "fills",
+                        FillLayerProperties.fromJson(
+                          {"fill-color": fillsRed ? "#0000ff" : "#ff0000"},
+                        ),
+                      )
+                      .then(
+                        (value) => setState(() => fillsRed = !fillsRed),
+                      );
+                },
+                child: const Text('toggle fill color'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "circles",
+                        CircleLayerProperties.fromJson(
+                          {"visibility": circlesVisible ? "none" : "visible"},
+                        ),
+                      )
+                      .then(
+                        (value) =>
+                            setState(() => circlesVisible = !circlesVisible),
+                      );
+                },
+                child: const Text('toggle circle visibility'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "circles",
+                        CircleLayerProperties.fromJson(
+                          {"circle-color": circlesRed ? "#0000ff" : "#ff0000"},
+                        ),
+                      )
+                      .then(
+                        (value) => setState(() => circlesRed = !circlesRed),
+                      );
+                },
+                child: const Text('toggle circle color'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await controller
+                      .setLayerProperties(
+                        "symbols",
+                        SymbolLayerProperties.fromJson(
+                          {"visibility": symbolsVisible ? "none" : "visible"},
+                        ),
+                      )
+                      .then(
+                        (value) =>
+                            setState(() => symbolsVisible = !symbolsVisible),
+                      );
+                },
+                child: const Text('toggle (non-moving) symbols visibility'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
-
     controller.onFeatureTapped.add(onFeatureTap);
   }
 
   void onFeatureTap(
     Point<double> point,
     LatLng latLng,
-    Annotation annotation,
-    String? layerId,
+    String id,
+    String layerId,
+    Annotation? annotation,
   ) {
     final snackBar = SnackBar(
       content: Text(
-        'Tapped feature with id ${annotation.id} on layer $layerId',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        'Tapped feature with id $id on layer $layerId at $latLng.\nAnnotation is ${annotation != null ? 'present' : 'null'}',
+        style: const TextStyle(fontSize: 14),
       ),
       backgroundColor: Theme.of(context).primaryColor,
     );

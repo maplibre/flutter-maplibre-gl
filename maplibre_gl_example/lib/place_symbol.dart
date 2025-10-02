@@ -92,7 +92,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     LatLng origin,
     LatLng current,
     LatLng delta,
-    Annotation annotation,
+    String id,
+    Annotation? annotation,
     DragEventType eventType,
   ) {
     if (annotation is! Symbol) return;
