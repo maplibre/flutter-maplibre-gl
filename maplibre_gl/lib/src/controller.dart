@@ -33,7 +33,7 @@ typedef OnCameraTrackingDismissedCallback = void Function();
 typedef OnCameraTrackingChangedCallback = void Function(
     MyLocationTrackingMode mode);
 
-typedef OnCameraMoveCallback = void Function();
+typedef OnCameraMoveCallback = void Function(CameraPosition cameraPosition);
 
 typedef OnCameraIdleCallback = void Function();
 
@@ -159,7 +159,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
-      onCameraMove?.call();
+      onCameraMove?.call(cameraPosition);
       notifyListeners();
     });
 
