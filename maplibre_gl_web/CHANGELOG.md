@@ -1,3 +1,11 @@
+## 0.24.0
+
+See top-level CHANGELOG.md for full details.
+
+### Refactor / Quality (web)
+* Refactored `onMapClick` (degenerate bbox + interactive layer filter) so unmanaged style-layer features now trigger `onFeatureTapped` (feature id + layer id, `annotation = null`).
+* Ensured map container stretches vertically by setting `style.height = '100%'` on the registered div to avoid zero-height issues in flexible layouts.
+
 ## 0.23.0
 
 > Note: This release has breaking changes.
