@@ -47,6 +47,7 @@ class MapLibreMap extends StatefulWidget {
     this.onMapLongClick,
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
+    this.onCameraMove,
     this.onCameraIdle,
     this.onMapIdle,
     this.annotationOrder = const [
@@ -250,7 +251,10 @@ class MapLibreMap extends StatefulWidget {
   /// Called when the location tracking mode changes
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
-  // Called when camera movement has ended.
+  /// Called when camera is moving.
+  final OnCameraMoveCallback? onCameraMove;
+
+  /// Called when camera movement has ended.
   final OnCameraIdleCallback? onCameraIdle;
 
   /// Called when map view is entering an idle state, and no more drawing will
@@ -354,6 +358,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       onMapLongClick: widget.onMapLongClick,
       onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
       onCameraTrackingChanged: widget.onCameraTrackingChanged,
+      onCameraMove: widget.onCameraMove,
       onCameraIdle: widget.onCameraIdle,
       onMapIdle: widget.onMapIdle,
       annotationOrder: widget.annotationOrder,
