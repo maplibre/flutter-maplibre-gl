@@ -122,18 +122,6 @@ class MapLibreMapController extends ChangeNotifier {
       }
 
       // If we have a managed annotation, call specific annotation callbacks (onSymbolTapped, onLineTapped...)
-      ArgumentCallbacks? annotationTappedCallbacks;
-      if (annotation is Line) {
-        annotationTappedCallbacks = onLineTapped;
-      } else if (annotation is Symbol) {
-        annotationTappedCallbacks = onSymbolTapped;
-      } else if (annotation is Fill) {
-        annotationTappedCallbacks = onFillTapped;
-      } else if (annotation is Circle) {
-        annotationTappedCallbacks = onCircleTapped;
-      }
-      annotationTappedCallbacks?.call(annotation);
-
       if (annotation != null) {
         ArgumentCallbacks? annotationTappedCallbacks;
         if (annotation is Line) {
