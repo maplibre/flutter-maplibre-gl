@@ -1,3 +1,8 @@
+## UNRELEASED
+
+### Fixed
+* Annotation tap call callbacks twice #652
+
 ## [0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
 > **Note**: This release has breaking changes.\
 > We apologize for the quick change in 0.24.0: this version definitively stabilizes the signatures of feature interaction callbacks.
