@@ -306,22 +306,22 @@ class MapLibreMapController extends ChangeNotifier {
   /// The current set of symbols on this map added with the [addSymbol] or [addSymbols] methods.
   ///
   /// The returned set will be a detached snapshot of the symbols collection.
-  Set<Symbol> get symbols => symbolManager!.annotations;
+  Set<Symbol> get symbols => symbolManager?.annotations ?? {};
 
   /// The current set of lines on this map added with the [addLine] or [addLines] methods.
   ///
   /// The returned set will be a detached snapshot of the lines collection.
-  Set<Line> get lines => lineManager!.annotations;
+  Set<Line> get lines => lineManager?.annotations ?? {};
 
   /// The current set of circles on this map added with the [addCircle] or [addCircles] methods.
   ///
   /// The returned set will be a detached snapshot of the circles collection.
-  Set<Circle> get circles => circleManager!.annotations;
+  Set<Circle> get circles => circleManager?.annotations ?? {};
 
   /// The current set of fills on this map added with the [addFill] or [addFills] methods.
   ///
   /// The returned set will be a detached snapshot of the fills collection.
-  Set<Fill> get fills => fillManager!.annotations;
+  Set<Fill> get fills => fillManager?.annotations ?? {};
 
   /// True if the map camera is currently moving.
   bool get isCameraMoving => _isCameraMoving;
@@ -921,11 +921,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added symbol once listeners have
-  /// been notified.
+  /// been notified.\
+  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
   Future<Symbol> addSymbol(SymbolOptions options, [Map? data]) async {
+    _ensureManagerInitialized(symbolManager);
+
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
-    await symbolManager!.add(symbol);
+    await symbolManager?.add(symbol);
     if (!isDisposed) notifyListeners();
     return symbol;
   }
@@ -937,15 +940,23 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added symbol once listeners have
-  /// been notified.
-  Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
-      [List<Map>? data]) async {
+  /// been notified.\
+  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
+  Future<List<Symbol>> addSymbols(
+    List<SymbolOptions> options, [
+    List<Map>? data,
+  ]) async {
+    _ensureManagerInitialized(symbolManager);
+
     final symbols = [
       for (var i = 0; i < options.length; i++)
-        Symbol(getRandomString(),
-            SymbolOptions.defaultOptions.copyWith(options[i]), data?[i])
+        Symbol(
+          getRandomString(),
+          SymbolOptions.defaultOptions.copyWith(options[i]),
+          data?[i],
+        )
     ];
-    await symbolManager!.addAll(symbols);
+    await symbolManager?.addAll(symbols);
     if (!isDisposed) notifyListeners();
     return symbols;
   }
@@ -956,17 +967,26 @@ class MapLibreMapController extends ChangeNotifier {
   /// Change listeners are notified once the symbol has been updated on the
   /// platform side.
   ///
-  /// The returned [Future] completes once listeners have been notified.
+  /// The returned [Future] completes once listeners have been notified.\
+  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
-    await symbolManager!
-        .set(symbol..options = symbol.options.copyWith(changes));
+    await symbolManager?.set(
+      symbol..options = symbol.options.copyWith(changes),
+    );
     if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the symbol.
   /// This may be different from the value of `symbol.options.geometry` if the symbol is draggable.
-  /// In that case this method provides the symbol's actual position, and `symbol.options.geometry` the last programmatically set position.
-  Future<LatLng> getSymbolLatLng(Symbol symbol) async {
+  /// In that case this method provides the symbol's actual position, and `symbol.options.geometry` the last programmatically set position.\
+  /// An [Exception] is thrown if the Symbol has no geometry set. 
+  LatLng getSymbolLatLng(Symbol symbol) {
+    if (symbol.options.geometry == null) {
+      throw ArgumentError(
+        "Symbol geometry is null. Cannot determine position.",
+      );
+    }
+
     return symbol.options.geometry!;
   }
 
@@ -978,7 +998,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbol(Symbol symbol) async {
-    await symbolManager!.remove(symbol);
+    await symbolManager?.remove(symbol);
     if (!isDisposed) notifyListeners();
   }
 
@@ -990,7 +1010,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbols(Iterable<Symbol> symbols) async {
-    await symbolManager!.removeAll(symbols);
+    await symbolManager?.removeAll(symbols);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1001,7 +1021,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearSymbols() async {
-    await symbolManager!.clear();
+    await symbolManager?.clear();
     if (!isDisposed) notifyListeners();
   }
 
@@ -1011,11 +1031,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added line once listeners have
-  /// been notified.
+  /// been notified.\
+  /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
   Future<Line> addLine(LineOptions options, [Map? data]) async {
+    _ensureManagerInitialized(lineManager);
+
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
-    await lineManager!.add(line);
+    await lineManager?.add(line);
     if (!isDisposed) notifyListeners();
     return line;
   }
@@ -1026,15 +1049,23 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added line once listeners have
-  /// been notified.
-  Future<List<Line>> addLines(List<LineOptions> options,
-      [List<Map>? data]) async {
+  /// been notified.\
+  /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
+  Future<List<Line>> addLines(
+    List<LineOptions> options, [
+    List<Map>? data,
+  ]) async {
+    _ensureManagerInitialized(lineManager);
+
     final lines = [
       for (var i = 0; i < options.length; i++)
-        Line(getRandomString(), LineOptions.defaultOptions.copyWith(options[i]),
-            data?[i])
+        Line(
+          getRandomString(),
+          LineOptions.defaultOptions.copyWith(options[i]),
+          data?[i],
+        )
     ];
-    await lineManager!.addAll(lines);
+    await lineManager?.addAll(lines);
     if (!isDisposed) notifyListeners();
     return lines;
   }
@@ -1048,14 +1079,21 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> updateLine(Line line, LineOptions changes) async {
     line.options = line.options.copyWith(changes);
-    await lineManager!.set(line);
+    await lineManager?.set(line);
     if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the line.
   /// This may be different from the value of `line.options.geometry` if the line is draggable.
   /// In that case this method provides the line's actual position, and `line.options.geometry` the last programmatically set position.
-  Future<List<LatLng>> getLineLatLngs(Line line) async {
+  /// An [Exception] is thrown if the Line has no geometry set.
+  List<LatLng> getLineLatLngs(Line line) {
+    if (line.options.geometry == null) {
+      throw ArgumentError(
+        "Line geometry is null. Cannot determine position.",
+      );
+    }
+
     return line.options.geometry!;
   }
 
@@ -1067,7 +1105,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLine(Line line) async {
-    await lineManager!.remove(line);
+    await lineManager?.remove(line);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1079,7 +1117,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeLines(Iterable<Line> lines) async {
-    await lineManager!.removeAll(lines);
+    await lineManager?.removeAll(lines);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1090,7 +1128,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearLines() async {
-    await lineManager!.clear();
+    await lineManager?.clear();
     if (!isDisposed) notifyListeners();
   }
 
@@ -1100,11 +1138,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added circle once listeners have
-  /// been notified.
+  /// been notified.\
+  /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
   Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
+    _ensureManagerInitialized(circleManager);
+
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
-    await circleManager!.add(circle);
+    await circleManager?.add(circle);
     if (!isDisposed) notifyListeners();
     return circle;
   }
@@ -1116,17 +1157,22 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added circle once listeners have
-  /// been notified.
-  Future<List<Circle>> addCircles(List<CircleOptions> options,
-      [List<Map>? data]) async {
-    final cricles = [
+  /// been notified.\
+  /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
+  Future<List<Circle>> addCircles(
+    List<CircleOptions> options, [
+    List<Map>? data,
+  ]) async {
+    _ensureManagerInitialized(circleManager);
+
+    final circles = [
       for (var i = 0; i < options.length; i++)
         Circle(getRandomString(),
             CircleOptions.defaultOptions.copyWith(options[i]), data?[i])
     ];
-    await circleManager!.addAll(cricles);
+    await circleManager?.addAll(circles);
     if (!isDisposed) notifyListeners();
-    return cricles;
+    return circles;
   }
 
   /// Updates the specified [circle] with the given [changes]. The circle must
@@ -1138,14 +1184,21 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> updateCircle(Circle circle, CircleOptions changes) async {
     circle.options = circle.options.copyWith(changes);
-    await circleManager!.set(circle);
+    await circleManager?.set(circle);
     if (!isDisposed) notifyListeners();
   }
 
   /// Retrieves the current position of the circle.
   /// This may be different from the value of `circle.options.geometry` if the circle is draggable.
-  /// In that case this method provides the circle's actual position, and `circle.options.geometry` the last programmatically set position.
-  Future<LatLng> getCircleLatLng(Circle circle) async {
+  /// In that case this method provides the circle's actual position, and `circle.options.geometry` the last programmatically set position.\
+  /// An [Exception] is thrown if the Circle has no geometry set.
+  LatLng getCircleLatLng(Circle circle) {
+    if (circle.options.geometry == null) {
+      throw ArgumentError(
+        "Circle geometry is null. Cannot determine position.",
+      );
+    }
+
     return circle.options.geometry!;
   }
 
@@ -1157,7 +1210,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircle(Circle circle) async {
-    await circleManager!.remove(circle);
+    await circleManager?.remove(circle);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1169,7 +1222,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeCircles(Iterable<Circle> circles) async {
-    await circleManager!.removeAll(circles);
+    await circleManager?.removeAll(circles);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1180,7 +1233,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearCircles() async {
-    await circleManager!.clear();
+    await circleManager?.clear();
     if (!isDisposed) notifyListeners();
   }
 
@@ -1190,11 +1243,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added fill once listeners have
-  /// been notified.
+  /// been notified.\
+  /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
   Future<Fill> addFill(FillOptions options, [Map? data]) async {
+    _ensureManagerInitialized(fillManager);
+
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
-    await fillManager!.add(fill);
+    await fillManager?.add(fill);
     if (!isDisposed) notifyListeners();
     return fill;
   }
@@ -1206,15 +1262,23 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes with the added fills once listeners have
-  /// been notified.
-  Future<List<Fill>> addFills(List<FillOptions> options,
-      [List<Map>? data]) async {
+  /// been notified.\
+  /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
+  Future<List<Fill>> addFills(
+    List<FillOptions> options, [
+    List<Map>? data,
+  ]) async {
+    _ensureManagerInitialized(fillManager);
+
     final fills = [
       for (var i = 0; i < options.length; i++)
-        Fill(getRandomString(), FillOptions.defaultOptions.copyWith(options[i]),
-            data?[i])
+        Fill(
+          getRandomString(),
+          FillOptions.defaultOptions.copyWith(options[i]),
+          data?[i],
+        )
     ];
-    await fillManager!.addAll(fills);
+    await fillManager?.addAll(fills);
     if (!isDisposed) notifyListeners();
     return fills;
   }
@@ -1228,7 +1292,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> updateFill(Fill fill, FillOptions changes) async {
     fill.options = fill.options.copyWith(changes);
-    await fillManager!.set(fill);
+    await fillManager?.set(fill);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1239,7 +1303,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearFills() async {
-    await fillManager!.clear();
+    await fillManager?.clear();
     if (!isDisposed) notifyListeners();
   }
 
@@ -1251,7 +1315,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFill(Fill fill) async {
-    await fillManager!.remove(fill);
+    await fillManager?.remove(fill);
     if (!isDisposed) notifyListeners();
   }
 
@@ -1263,8 +1327,23 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes once listeners have been notified.
   Future<void> removeFills(Iterable<Fill> fills) async {
-    await fillManager!.removeAll(fills);
+    await fillManager?.removeAll(fills);
     if (!isDisposed) notifyListeners();
+  }
+
+  /// Retrieves the current position of the fill.
+  /// This may be different from the value of `fill.options.geometry` if the fill is
+  /// draggable. In that case this method provides the fill's actual position,
+  /// and `fill.options.geometry` the last programmatically set position.\
+  /// An [Exception] is thrown if the Fill has no geometry set.
+  List<List<LatLng>> getFillLatLngs(Fill fill) {
+    if (fill.options.geometry == null) {
+      throw ArgumentError(
+        "Fill geometry is null. Cannot determine position.",
+      );
+    }
+
+    return fill.options.geometry!;
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
@@ -1614,5 +1693,15 @@ class MapLibreMapController extends ChangeNotifier {
     _isDisposed = true;
     super.dispose();
     _maplibrePlatform.dispose();
+  }
+
+  /// Ensures that the given manager is initialized.
+  /// If not, throws an [Exception].
+  void _ensureManagerInitialized(Object? manager) {
+    if (manager == null) {
+      throw Exception(
+        "${manager.runtimeType} has not been initialized. Make sure that the map style has been loaded.",
+      );
+    }
   }
 }
