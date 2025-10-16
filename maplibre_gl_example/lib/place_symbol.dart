@@ -267,8 +267,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-  Future<void> _getLatLng() async {
-    final latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
+  void _getLatLng() {
+    final latLng = controller!.getSymbolLatLng(_selectedSymbol!);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(

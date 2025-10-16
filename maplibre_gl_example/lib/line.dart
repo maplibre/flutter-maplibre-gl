@@ -240,8 +240,8 @@ class LineBodyState extends State<LineBody> {
                         TextButton(
                           onPressed: (_selectedLine == null)
                               ? null
-                              : () async {
-                                  final latLngs = await controller!
+                              : () {
+                                  final latLngs = controller!
                                       .getLineLatLngs(_selectedLine!);
                                   for (final latLng in latLngs) {
                                     debugPrint(latLng.toString());
