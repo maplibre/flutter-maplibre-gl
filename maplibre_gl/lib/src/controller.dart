@@ -1167,8 +1167,11 @@ class MapLibreMapController extends ChangeNotifier {
 
     final circles = [
       for (var i = 0; i < options.length; i++)
-        Circle(getRandomString(),
-            CircleOptions.defaultOptions.copyWith(options[i]), data?[i])
+        Circle(
+          getRandomString(),
+          CircleOptions.defaultOptions.copyWith(options[i]),
+          data?[i],
+        )
     ];
     await circleManager?.addAll(circles);
     if (!isDisposed) notifyListeners();
@@ -1700,7 +1703,7 @@ class MapLibreMapController extends ChangeNotifier {
   void _ensureManagerInitialized(Object? manager) {
     if (manager == null) {
       throw Exception(
-        "${manager.runtimeType} has not been initialized. Make sure that the map style has been loaded.",
+        "This Annotation Manager has not been initialized. Make sure that the map style has been loaded.",
       );
     }
   }
