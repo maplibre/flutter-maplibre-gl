@@ -47,6 +47,8 @@ typedef OnCameraTrackingDismissedCallback = void Function();
 typedef OnCameraTrackingChangedCallback = void Function(
     MyLocationTrackingMode mode);
 
+typedef OnCameraMoveCallback = void Function(CameraPosition cameraPosition);
+
 typedef OnCameraIdleCallback = void Function();
 
 typedef OnMapIdleCallback = void Function();
@@ -105,6 +107,7 @@ class MapLibreMapController extends ChangeNotifier {
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
+    this.onCameraMove,
   }) : _maplibrePlatform = maplibrePlatform {
     _cameraPosition = initialCameraPosition;
 
@@ -190,6 +193,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
+      onCameraMove?.call(cameraPosition);
       notifyListeners();
     });
 
@@ -280,6 +284,7 @@ class MapLibreMapController extends ChangeNotifier {
   final OnCameraTrackingDismissedCallback? onCameraTrackingDismissed;
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
+  final OnCameraMoveCallback? onCameraMove;
   final OnCameraIdleCallback? onCameraIdle;
 
   final OnMapIdleCallback? onMapIdle;
