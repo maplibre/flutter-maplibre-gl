@@ -2,6 +2,8 @@
 
 ### Fixed
 * Annotation tap call callbacks twice #652
+* Annotation APIs: use null-aware access for manager-backed collections (symbols, lines, circles, fills) to avoid null errors before style load. (#657)
+* Add methods enforce explicit manager initialization with clear exceptions when style is not loaded. (#657)
 
 ## [0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
 > **Note**: This release has breaking changes.\

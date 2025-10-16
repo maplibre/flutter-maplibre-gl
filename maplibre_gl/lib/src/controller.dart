@@ -979,7 +979,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Retrieves the current position of the symbol.
   /// This may be different from the value of `symbol.options.geometry` if the symbol is draggable.
   /// In that case this method provides the symbol's actual position, and `symbol.options.geometry` the last programmatically set position.\
-  /// An [Exception] is thrown if the Symbol has no geometry set. 
+  /// An [Exception] is thrown if the Symbol has no geometry set.
   LatLng getSymbolLatLng(Symbol symbol) {
     if (symbol.options.geometry == null) {
       throw ArgumentError(
