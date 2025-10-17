@@ -109,6 +109,8 @@ class MapLibreMap extends StatefulWidget {
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
+  /// 
+  /// ! **This camera position will override any camera setting in the style JSON.**
   final CameraPosition initialCameraPosition;
 
   /// How long a user has to click the map **on iOS** until a long click is registered.
@@ -378,7 +380,6 @@ class _MapLibreMapOptions {
   _MapLibreMapOptions(
       {this.compassEnabled,
       this.cameraTargetBounds,
-      this.styleString,
       this.minMaxZoomPreference,
       required this.rotateGesturesEnabled,
       required this.scrollGesturesEnabled,
@@ -403,7 +404,6 @@ class _MapLibreMapOptions {
           locationEnginePlatforms: map.locationEnginePlatforms,
           compassEnabled: map.compassEnabled,
           cameraTargetBounds: map.cameraTargetBounds,
-          styleString: map.styleString,
           minMaxZoomPreference: map.minMaxZoomPreference,
           rotateGesturesEnabled: map.rotateGesturesEnabled,
           scrollGesturesEnabled: map.scrollGesturesEnabled,
@@ -427,8 +427,6 @@ class _MapLibreMapOptions {
   final bool? compassEnabled;
 
   final CameraTargetBounds? cameraTargetBounds;
-
-  final String? styleString;
 
   final MinMaxZoomPreference? minMaxZoomPreference;
 
@@ -493,7 +491,6 @@ class _MapLibreMapOptions {
 
     addIfNonNull('compassEnabled', compassEnabled);
     addIfNonNull('cameraTargetBounds', cameraTargetBounds?.toJson());
-    addIfNonNull('styleString', styleString);
     addIfNonNull('minMaxZoomPreference', minMaxZoomPreference?.toJson());
 
     addIfNonNull('rotateGesturesEnabled', rotateGesturesEnabled);
