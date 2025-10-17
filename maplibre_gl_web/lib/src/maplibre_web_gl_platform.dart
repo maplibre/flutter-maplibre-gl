@@ -57,38 +57,55 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> initPlatform(int id) async {
-    if (_creationParams.containsKey('initialCameraPosition')) {
-      final camera = _creationParams['initialCameraPosition'];
-      _dragEnabled = _creationParams['dragEnabled'] ?? true;
+    final camera =
+        _creationParams['initialCameraPosition'] as Map<String, dynamic>?;
+    final styleString = _sanitizeStyleObject(_creationParams['styleString']);
+    _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-      _map = MapLibreMap(
-        MapOptions(
-          container: _mapElement,
+    _map = MapLibreMap(
+      MapOptions(
+        container: _mapElement,
+        center: (camera != null)
+            ? LngLat(camera['target'][1], camera['target'][0])
+            : null,
+        zoom: camera?['zoom'],
+        bearing: camera?['bearing'],
+        pitch: camera?['tilt'],
+        style: styleString,
+        preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
+        attributionControl: false, //avoid duplicate control
+      ),
+    );
+    _map.on('style.load', _onStyleLoaded);
+    _map.on('click', _onMapClick);
+    // long click not available in web, so it is mapped to double click
+    _map.on('dblclick', _onMapLongClick);
+    _map.on('movestart', _onCameraMoveStarted);
+    _map.on('move', _onCameraMove);
+    _map.on('moveend', _onCameraIdle);
+    _map.on('resize', (_) => _onMapResize());
+    _map.on('styleimagemissing', _loadFromAssets);
+    if (_dragEnabled) {
+      _map.on('mouseup', _onMouseUp);
+      _map.on('mousemove', _onMouseMove);
+    }
+
+    _initResizeObserver();
+
+    final options = _creationParams['options'] ?? {};
+    Convert.interpretMapLibreMapOptions(options, this);
+
+    // If initial camera position is provided, force it after style load to override any style settings.
+    if (camera != null) {
+      _map.jumpTo(
+        CameraOptions(
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
           pitch: camera['tilt'],
-          preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
-          attributionControl: false, //avoid duplicate control
         ),
       );
-      _map.on('style.load', _onStyleLoaded);
-      _map.on('click', _onMapClick);
-      // long click not available in web, so it is mapped to double click
-      _map.on('dblclick', _onMapLongClick);
-      _map.on('movestart', _onCameraMoveStarted);
-      _map.on('move', _onCameraMove);
-      _map.on('moveend', _onCameraIdle);
-      _map.on('resize', (_) => _onMapResize());
-      _map.on('styleimagemissing', _loadFromAssets);
-      if (_dragEnabled) {
-        _map.on('mouseup', _onMouseUp);
-        _map.on('mousemove', _onMouseMove);
-      }
-
-      _initResizeObserver();
     }
-    Convert.interpretMapLibreMapOptions(_creationParams['options'], this);
   }
 
   void _initResizeObserver() {
@@ -855,7 +872,20 @@ class MapLibreMapController extends MapLibrePlatform
     }
     _interactiveFeatureLayerIds.clear();
 
-    _map.setStyle(styleObject, {'diff': false});
+    final sanitizedStyle = _sanitizeStyleObject(styleObject);
+    _map.setStyle(sanitizedStyle, {'diff': false});
+  }
+
+  /// Sanitizes the style object to ensure it is in the correct format.
+  /// If the style object is a JSON string, it decodes it into a Map.
+  /// If it is already a Map or other type, it returns it as is.
+  dynamic _sanitizeStyleObject(dynamic styleObject) {
+    if (styleObject is String &&
+        (styleObject.startsWith('{') || styleObject.startsWith('['))) {
+      return jsonDecode(styleObject);
+    } else {
+      return styleObject;
+    }
   }
 
   @override

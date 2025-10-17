@@ -109,7 +109,7 @@ class MapLibreMap extends StatefulWidget {
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
-  /// 
+  ///
   /// ! **This camera position will override any camera setting in the style JSON.**
   final CameraPosition initialCameraPosition;
 
