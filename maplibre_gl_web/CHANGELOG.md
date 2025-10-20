@@ -3,7 +3,6 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 ## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
 
 * Rollback maplibre-gl to `4.7.1` version. (#660)
-* Removed `styleString` from internal MapLibreMapOptions class. (#660)
 
 ## 0.24.0
 

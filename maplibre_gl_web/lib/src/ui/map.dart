@@ -143,7 +143,7 @@ class MapLibreMap extends Camera {
   ///  var mapDiv = document.getElementById('map');
   ///  if (mapDiv.style.visibility === true) map.resize();
   MapLibreMap resize([dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.resize());
+      MapLibreMap.fromJsObject(jsObject.resize(eventData));
 
   ///  Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
   ///  an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
@@ -230,7 +230,7 @@ class MapLibreMap extends Camera {
   ///    If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
   ///  @returns {MapLibreMap} `this`
   MapLibreMap setMinPitch([num? minPitch]) =>
-      MapLibreMap.fromJsObject(jsObject.setMinPitch());
+      MapLibreMap.fromJsObject(jsObject.setMinPitch(minPitch));
 
   ///  Returns the map's minimum allowable pitch.
   ///
@@ -245,7 +245,7 @@ class MapLibreMap extends Camera {
   ///    If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
   ///  @returns {MapLibreMap} `this`
   MapLibreMap setMaxPitch([num? maxPitch]) =>
-      MapLibreMap.fromJsObject(jsObject.setMaxPitch());
+      MapLibreMap.fromJsObject(jsObject.setMaxPitch(maxPitch));
 
   ///  Returns the map's maximum allowable pitch.
   ///
@@ -1268,7 +1268,7 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
         maxZoom: maxZoom,
         minPitch: minPitch,
         maxPitch: maxPitch,
-        style: style,
+        style: jsify(style),
         boxZoom: boxZoom,
         dragRotate: dragRotate,
         dragPan: dragPan ?? true,

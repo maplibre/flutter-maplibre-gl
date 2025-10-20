@@ -378,6 +378,7 @@ class _MapLibreMapOptions {
   _MapLibreMapOptions(
       {this.compassEnabled,
       this.cameraTargetBounds,
+      this.styleString,
       this.minMaxZoomPreference,
       required this.rotateGesturesEnabled,
       required this.scrollGesturesEnabled,
@@ -402,6 +403,7 @@ class _MapLibreMapOptions {
           locationEnginePlatforms: map.locationEnginePlatforms,
           compassEnabled: map.compassEnabled,
           cameraTargetBounds: map.cameraTargetBounds,
+          styleString: map.styleString,
           minMaxZoomPreference: map.minMaxZoomPreference,
           rotateGesturesEnabled: map.rotateGesturesEnabled,
           scrollGesturesEnabled: map.scrollGesturesEnabled,
@@ -425,6 +427,8 @@ class _MapLibreMapOptions {
   final bool? compassEnabled;
 
   final CameraTargetBounds? cameraTargetBounds;
+
+  final String? styleString;
 
   final MinMaxZoomPreference? minMaxZoomPreference;
 
@@ -489,6 +493,7 @@ class _MapLibreMapOptions {
 
     addIfNonNull('compassEnabled', compassEnabled);
     addIfNonNull('cameraTargetBounds', cameraTargetBounds?.toJson());
+    addIfNonNull('styleString', styleString);
     addIfNonNull('minMaxZoomPreference', minMaxZoomPreference?.toJson());
 
     addIfNonNull('rotateGesturesEnabled', rotateGesturesEnabled);

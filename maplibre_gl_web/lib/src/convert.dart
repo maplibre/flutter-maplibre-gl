@@ -1,8 +1,15 @@
 part of '../maplibre_gl_web.dart';
 
 class Convert {
+  /// Interprets the map options and applies them to the sink.
+  /// 
+  /// [ignoreStyle] if true, will not apply styleString changes.
+  /// This is useful when the style is handled separately (like MapLibreMap initialization).
   static void interpretMapLibreMapOptions(
-      Map<String, dynamic> options, MapLibreMapOptionsSink sink) {
+    Map<String, dynamic> options,
+    MapLibreMapOptionsSink sink, {
+    bool ignoreStyle = false,
+  }) {
     if (options.containsKey('cameraTargetBounds')) {
       final bounds = options['cameraTargetBounds'][0];
       if (bounds == null) {
@@ -18,6 +25,12 @@ class Convert {
     }
     if (options.containsKey('compassEnabled')) {
       sink.setCompassEnabled(options['compassEnabled']);
+    }
+    if (options.containsKey('styleString') && !ignoreStyle) {
+      final styleString = options['styleString'];
+      if (styleString == null) return;
+
+      sink.setStyle(styleString);
     }
     if (options.containsKey('minMaxZoomPreference')) {
       sink.setMinMaxZoomPreference(options['minMaxZoomPreference'][0],

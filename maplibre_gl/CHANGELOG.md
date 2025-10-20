@@ -8,7 +8,6 @@
 
 ### Changed
 * Rollback maplibre-gl to `4.7.1` version. (#660)
-* Removed `styleString` from internal MapLibreMapOptions class. (#660)
 
 ### Added
 * Added `onCameraMove` callback in the controller and in MapLibreMap class. (#643)

@@ -93,7 +93,7 @@ class MapLibreMapController extends MapLibrePlatform
     _initResizeObserver();
 
     final options = _creationParams['options'] ?? {};
-    Convert.interpretMapLibreMapOptions(options, this);
+    Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
   }
 
   void _initResizeObserver() {
@@ -178,8 +178,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<CameraPosition?> updateMapOptions(
-      Map<String, dynamic> optionsUpdate) async {
-    // FIX: why is called indefinitely? (map_ui page)
+    Map<String, dynamic> optionsUpdate,
+  ) async {
     Convert.interpretMapLibreMapOptions(optionsUpdate, this);
     return _getCameraPosition();
   }
@@ -444,7 +444,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    print(parameters);
+    print('Query source features parameters: $parameters');
 
     return _map
         .querySourceFeatures(sourceId, parameters)
