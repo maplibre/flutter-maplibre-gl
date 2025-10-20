@@ -109,8 +109,6 @@ class MapLibreMap extends StatefulWidget {
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
-  ///
-  /// ! **This camera position will override any camera setting in the style JSON.**
   final CameraPosition initialCameraPosition;
 
   /// How long a user has to click the map **on iOS** until a long click is registered.
