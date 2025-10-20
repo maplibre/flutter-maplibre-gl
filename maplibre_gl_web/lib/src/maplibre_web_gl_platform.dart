@@ -94,7 +94,6 @@ class MapLibreMapController extends MapLibrePlatform
 
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this);
-
   }
 
   void _initResizeObserver() {
