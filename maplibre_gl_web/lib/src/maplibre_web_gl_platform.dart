@@ -95,17 +95,17 @@ class MapLibreMapController extends MapLibrePlatform
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this);
 
-    // If initial camera position is provided, force it after style load to override any style settings.
-    if (camera != null) {
-      _map.jumpTo(
-        CameraOptions(
-          center: LngLat(camera['target'][1], camera['target'][0]),
-          zoom: camera['zoom'],
-          bearing: camera['bearing'],
-          pitch: camera['tilt'],
-        ),
-      );
-    }
+    // // If initial camera position is provided, force it after style load to override any style settings.
+    // if (camera != null) {
+    //   _map.jumpTo(
+    //     CameraOptions(
+    //       center: LngLat(camera['target'][1], camera['target'][0]),
+    //       zoom: camera['zoom'],
+    //       bearing: camera['bearing'],
+    //       pitch: camera['tilt'],
+    //     ),
+    //   );
+    // }
   }
 
   void _initResizeObserver() {
