@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
+
+### Fixed
+* Annotation tap call callbacks twice. (#652)
+* Annotation APIs: use null-aware access for manager-backed collections (symbols, lines, circles, fills) to avoid null errors before style load. (#657)
+* Add methods enforce explicit manager initialization with clear exceptions when style is not loaded. (#657)
+* Calling add* before style load now fails fast with a clear Exception instead of risking null dereferences or silent failures. (#657)
+
+### Changed
+* Rollback maplibre-gl to `4.7.1` version. (#660)
+* Removed `styleString` from internal MapLibreMapOptions class. (#660)
+
+### Added
+* Added `onCameraMove` callback in the controller and in MapLibreMap class. (#643)
+
 ## [0.24.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.23.0...v0.24.0)
 > **Note**: This release has breaking changes.\
 > We apologize for the quick change in 0.24.0: this version definitively stabilizes the signatures of feature interaction callbacks.

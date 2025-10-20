@@ -19,15 +19,6 @@ class Convert {
     if (options.containsKey('compassEnabled')) {
       sink.setCompassEnabled(options['compassEnabled']);
     }
-    if (options.containsKey('styleString')) {
-      final styleString = options['styleString'];
-      if (styleString is String &&
-          (styleString.startsWith('{') || styleString.startsWith('['))) {
-        sink.setStyle(jsonDecode(styleString));
-      } else {
-        sink.setStyle(styleString);
-      }
-    }
     if (options.containsKey('minMaxZoomPreference')) {
       sink.setMinMaxZoomPreference(options['minMaxZoomPreference'][0],
           options['minMaxZoomPreference'][1]);
