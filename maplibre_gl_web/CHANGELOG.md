@@ -1,6 +1,10 @@
-## 0.24.0
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
-See top-level CHANGELOG.md for full details.
+## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
+
+* Rollback maplibre-gl to `4.7.1` version. (#660)
+
+## 0.24.0
 
 ### Refactor / Quality (web)
 * Refactored `onMapClick` (degenerate bbox + interactive layer filter) so unmanaged style-layer features now trigger `onFeatureTapped` (feature id + layer id, `annotation = null`).
