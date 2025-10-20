@@ -9,6 +9,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Annotation tap call callbacks twice. (#652)
 * Annotation APIs: use null-aware access for manager-backed collections (symbols, lines, circles, fills) to avoid null errors before style load. (#657)
 * Add methods enforce explicit manager initialization with clear exceptions when style is not loaded. (#657)
+* Calling add* before style load now fails fast with a clear Exception instead of risking null dereferences or silent failures. (#657)
 
 ### Changed
 * Rollback maplibre-gl to `4.7.1` version. (#660)
