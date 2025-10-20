@@ -2,7 +2,7 @@ part of '../maplibre_gl_web.dart';
 
 class Convert {
   /// Interprets the map options and applies them to the sink.
-  /// 
+  ///
   /// [ignoreStyle] if true, will not apply styleString changes.
   /// This is useful when the style is handled separately (like MapLibreMap initialization).
   static void interpretMapLibreMapOptions(
