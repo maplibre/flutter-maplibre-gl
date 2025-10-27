@@ -106,7 +106,7 @@ jobs:
       - name: Build example APK
         run: flutter build apk
       - name: Upload apk as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: maplibre-flutter-demo.apk
           path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
@@ -132,7 +132,7 @@ jobs:
       - name: Build iOS package
         run: flutter build ios --simulator
       - name: Upload Runner.app as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: maplibre-flutter-demo.app
           path: maplibre_gl_example/build/ios/iphonesimulator
