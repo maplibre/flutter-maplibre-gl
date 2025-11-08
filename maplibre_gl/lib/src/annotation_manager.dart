@@ -13,11 +13,17 @@ part of '../maplibre_gl.dart';
 /// underlying annotation is translated & re-set.
 abstract class AnnotationManager<T extends Annotation> {
   final MapLibreMapController controller;
+
+  bool _isInitializing = false;
+  bool _isInitialized = false;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 
   /// Base identifier of the manager. Use [layerIds] for concrete layer ids.
   final String id;
+
+  /// Tracks whether the manager and its layers were initialized.
+  bool get isInitialized => _isInitialized;
 
   List<String> get layerIds =>
       [for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i)];
@@ -45,20 +51,36 @@ abstract class AnnotationManager<T extends Annotation> {
     this.controller, {
     this.selectLayer,
     required this.enableInteraction,
-  }) : id = getRandomString() {
+  }) : id = getRandomString();
+
+  @mustCallSuper
+  Future<void> initialize() async {
+    if (_isInitializing || _isInitialized) {
+      return;
+    }
+
+    // Mark initialization process start, so that it cannot be entered again
+    _isInitializing = true;
+
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
-      unawaited(controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
-          promoteId: "id"));
-      unawaited(controller.addLayer(
+
+      await controller.addGeoJsonSource(
+        layerId,
+        buildFeatureCollection([]),
+        promoteId: "id",
+      );
+      await controller.addLayer(
         layerId,
         layerId,
         allLayerProperties[i],
         enableInteraction: enableInteraction,
-      ));
+      );
     }
 
     controller.onFeatureDrag.add(_onDrag);
+
+    _isInitialized = true;
   }
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
