@@ -4,6 +4,10 @@ part of '../maplibre_gl.dart';
 /// owning their backing style source(s)/layer(s) and performing efficient
 /// batched updates.
 ///
+/// The [initialize] method must be called before [AnnotationManager] instance
+/// can be used. Once [AnnotationManager is initialized], the [isInitialized]
+/// getter will return true.
+///
 /// An [AnnotationManager] keeps an internal mapping from annotation id to its
 /// model object and mirrors the collection into one or more GeoJSON sources;
 /// each source is bound to a style layer whose visual properties come from
