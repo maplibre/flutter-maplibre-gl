@@ -50,7 +50,7 @@ android {
         jvmTarget = JavaVersion.VERSION_21.toString()
     }
     dependencies {
-        implementation 'org.maplibre.gl:android-sdk:11.13.5'
+        implementation 'org.maplibre.gl:android-sdk:12.2.0'
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.2'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
         implementation 'com.squareup.okhttp3:okhttp:4.12.0'
