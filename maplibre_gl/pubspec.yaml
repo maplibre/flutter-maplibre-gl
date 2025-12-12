@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.24.1
+  maplibre_gl_platform_interface: ^0.24.2-dev
   maplibre_gl_web: ^0.24.1
 
 dev_dependencies:
