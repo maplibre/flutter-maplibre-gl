@@ -58,3 +58,4 @@ melos_overrides.yaml
 .fvmrc
 .ruby-version
 Gemfile*
+temp/

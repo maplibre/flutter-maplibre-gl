@@ -327,7 +327,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut), completionHandler: completion)
+                
+                // Create timing function based on interpolation parameter
+                var timingFunction: CAMediaTimingFunction?
+                if let interpolationStr = arguments["interpolation"] as? String {
+                    switch interpolationStr {
+                    case "linear":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                    case "easeInOut":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                    case "easeOut":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+                    case "fastOutLinearIn":
+                        // iOS doesn't have exact equivalent, use linear as fallback
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                    default:
+                        // Use default if interpolation string is unrecognized
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                    }
+                } else {
+                    // No interpolation specified, use default
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                }
+                
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()

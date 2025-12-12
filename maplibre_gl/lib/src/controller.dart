@@ -838,12 +838,23 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]
   /// specifies the animation duration in milliseconds (optional).
+  /// The [interpolation] parameter controls the easing curve (optional).
+  ///
+  /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking
+  /// without velocity discontinuities. This is ideal for following moving objects.
   ///
   /// The returned [Future] completes with true if the animation finished successfully,
   /// or false if it was cancelled.
-  Future<bool> easeCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
-    return _maplibrePlatform.easeCamera(cameraUpdate, duration: duration);
+  Future<bool> easeCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+    CameraAnimationInterpolation? interpolation,
+  }) async {
+    return _maplibrePlatform.easeCamera(
+      cameraUpdate,
+      duration: duration,
+      interpolation: interpolation,
+    );
   }
 
   /// Queries the current camera position.

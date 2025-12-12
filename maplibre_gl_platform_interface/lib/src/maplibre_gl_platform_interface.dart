@@ -1,5 +1,25 @@
 part of '../maplibre_gl_platform_interface.dart';
 
+/// Camera animation interpolation modes for easeCamera.
+/// Controls how the camera position changes over time during animation.
+enum CameraAnimationInterpolation {
+  /// Constant velocity throughout the animation (no easing).
+  /// Best for continuous tracking scenarios where smooth motion is critical.
+  linear,
+
+  /// Accelerate at the start and decelerate at the end.
+  /// Creates a smooth, natural feeling animation.
+  easeInOut,
+
+  /// Decelerate towards the end of the animation.
+  /// The default behavior on most platforms.
+  easeOut,
+
+  /// Fast start with linear end (Android-specific).
+  /// Available on Android only, falls back to easeOut on iOS.
+  fastOutLinearIn,
+}
+
 /// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
@@ -72,8 +92,19 @@ abstract class MapLibrePlatform {
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
 
-  /// Animates the camera to a new position with a specified duration.
-  Future<bool> easeCamera(CameraUpdate cameraUpdate, {Duration? duration});
+  /// Animates the camera to a new position with a specified duration and interpolation.
+  ///
+  /// The [cameraUpdate] specifies the target camera position.
+  /// The [duration] specifies how long the animation should take.
+  /// The [interpolation] controls the easing curve (defaults to platform default if not specified).
+  ///
+  /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking without
+  /// velocity discontinuities. Use other modes for discrete camera movements.
+  Future<bool> easeCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+    CameraAnimationInterpolation? interpolation,
+  });
 
   /// Queries the current camera position.
   Future<CameraPosition?> queryCameraPosition();
