@@ -2,7 +2,7 @@ part of '../maplibre_gl_web.dart';
 
 class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
-  late html.DivElement _mapElement;
+  late web.HTMLDivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
@@ -44,7 +44,7 @@ class MapLibreMapController extends MapLibrePlatform
   void _registerViewFactory(Function(int) callback, int identifier) {
     ui_web.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
-      _mapElement = html.DivElement()
+      _mapElement = (web.document.createElement('div') as web.HTMLDivElement)
         ..style.position = 'absolute'
         ..style.top = '0'
         ..style.bottom = '0'
@@ -97,7 +97,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _initResizeObserver() {
-    final resizeObserver = html.ResizeObserver((entries, observer) {
+    final resizeObserver = web.ResizeObserver(((JSAny entries, JSAny observer) {
       // The resize observer might be called a lot of times when the user resizes the browser window with the mouse for example.
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
@@ -105,8 +105,8 @@ class MapLibreMapController extends MapLibrePlatform
       lastResizeObserverTimer = Timer(const Duration(milliseconds: 50), () {
         _onMapResize();
       });
-    });
-    resizeObserver.observe(html.document.body!);
+    }).toJS);
+    resizeObserver.observe(_mapElement);
   }
 
   Future<void> _loadFromAssets(Event event) async {
@@ -1066,12 +1066,14 @@ class MapLibreMapController extends MapLibrePlatform
       try {
         _map.setLayoutProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        print(
+            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
       }
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        print(
+            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
       }
     }
   }

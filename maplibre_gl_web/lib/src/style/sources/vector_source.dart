@@ -1,10 +1,12 @@
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/style/sources/vector_source_interop.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
 
 class VectorSource extends Source<VectorSourceJsImpl> {
   String? get url => jsObject.url;
 
-  List<String>? get tiles => jsObject.tiles;
+  List<String>? get tiles =>
+      jsObject.tiles.toDart.map((s) => s.toDart).toList();
 
   factory VectorSource({
     String? url,
@@ -21,7 +23,7 @@ class VectorSource extends Source<VectorSourceJsImpl> {
     }
     return VectorSource.fromJsObject(VectorSourceJsImpl(
       type: 'vector',
-      tiles: tiles,
+      tiles: tiles?.map((s) => s.toJS).toList().toJS,
     ));
   }
 

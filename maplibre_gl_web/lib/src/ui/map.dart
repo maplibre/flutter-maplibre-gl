@@ -1,5 +1,5 @@
-import 'dart:html';
 import 'dart:js_interop';
+import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
@@ -8,7 +8,7 @@ import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
-import 'package:maplibre_gl_web/src/utils.dart';
+import 'package:maplibre_gl_web/src/utils.dart' as utils;
 import 'package:maplibre_gl_web/src/style/sources/vector_source.dart';
 import 'package:maplibre_gl_web/src/style/style.dart';
 import 'package:maplibre_gl_web/src/ui/camera.dart';
@@ -548,7 +548,8 @@ class MapLibreMap extends Camera {
       return MapLibreMap.fromJsObject(jsObject.addSource(id, source.jsObject));
     }
     // source is a Map<String, dynamic>
-    return MapLibreMap.fromJsObject(jsObject.addSource(id, jsify(source)!));
+    return MapLibreMap.fromJsObject(
+        jsObject.addSource(id, utils.jsify(source)!));
   }
 
   ///  Returns a Boolean indicating whether the source is loaded.
@@ -756,7 +757,8 @@ class MapLibreMap extends Camera {
           jsObject.addLayer(layer.jsObject, beforeId));
     }
     // layer is a Map<String, dynamic>
-    return MapLibreMap.fromJsObject(jsObject.addLayer(jsify(layer)!, beforeId));
+    return MapLibreMap.fromJsObject(
+        jsObject.addLayer(utils.jsify(layer)!, beforeId));
   }
 
   //jsObject.addLayer(layer.jsObject ?? jsify(layer));
@@ -864,7 +866,7 @@ class MapLibreMap extends Camera {
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
   setPaintProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
-      jsObject.setPaintProperty(layerId, name, value.jsify());
+      jsObject.setPaintProperty(layerId, name, utils.jsify(value)!);
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -887,7 +889,7 @@ class MapLibreMap extends Camera {
   MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
           [StyleSetterOptions? options]) =>
       MapLibreMap.fromJsObject(
-          jsObject.setLayoutProperty(layerId, name, value));
+          jsObject.setLayoutProperty(layerId, name, utils.jsify(value)!));
 
   ///  Returns the value of a layout property in the specified style layer.
   ///

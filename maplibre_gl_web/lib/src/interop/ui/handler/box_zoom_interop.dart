@@ -1,8 +1,8 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
 import 'dart:js_interop';
+import 'package:web/web.dart';
 
 @JS()
 @staticInterop

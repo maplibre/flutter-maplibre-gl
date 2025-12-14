@@ -1,8 +1,8 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
 import 'dart:js_interop';
+import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';

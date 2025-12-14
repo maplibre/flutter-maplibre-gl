@@ -1,3 +1,4 @@
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
 
@@ -5,14 +6,14 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   String get type => jsObject.type;
 
   List<Feature> get features =>
-      jsObject.features.map((f) => Feature.fromJsObject(f)).toList();
+      jsObject.features.toDart.map((f) => Feature.fromJsObject(f)).toList();
 
   factory FeatureCollection({
     required List<Feature> features,
   }) {
     return FeatureCollection.fromJsObject(FeatureCollectionJsImpl(
       type: 'FeatureCollection',
-      features: features.map((f) => f.jsObject).toList(),
+      features: features.map((f) => f.jsObject).toList().toJS,
     ));
   }
 

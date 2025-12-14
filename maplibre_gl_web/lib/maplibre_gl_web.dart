@@ -4,9 +4,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as dev;
 
-// FIXED HERE: https://github.com/dart-lang/linter/pull/1985
-import 'dart:html' as html hide Event;
-
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
@@ -15,8 +12,9 @@ import 'dart:ui' as ui;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/services.dart';
 
-import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Element;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
