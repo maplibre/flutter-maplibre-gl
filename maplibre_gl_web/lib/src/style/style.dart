@@ -171,8 +171,8 @@ class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
     dynamic stops,
   }) {
     final jsImpl = StyleFunctionJsImpl();
-    if (base != null) jsImpl.base = base?.toJS;
-    if (stops != null) jsImpl.stops = stops?.toJS;
+    if (base != null) jsImpl.base = base.toJS;
+    if (stops != null) jsImpl.stops = stops.toJS;
     return StyleFunction.fromJsObject(jsImpl);
   }
 

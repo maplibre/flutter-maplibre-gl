@@ -207,7 +207,7 @@ class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {
     if (closeButton != null) jsImpl.closeButton = closeButton;
     if (closeOnClick != null) jsImpl.closeOnClick = closeOnClick;
     if (anchor != null) jsImpl.anchor = anchor;
-    if (offset != null) jsImpl.offset = offset?.toJS;
+    if (offset != null) jsImpl.offset = offset.toJS;
     if (className != null) jsImpl.className = className;
     if (maxWidth != null) jsImpl.maxWidth = maxWidth;
     return PopupOptions.fromJsObject(jsImpl);

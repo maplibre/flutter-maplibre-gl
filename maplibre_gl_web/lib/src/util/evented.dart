@@ -89,7 +89,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
       jsFn = ((EventJsImpl object) {
         listener!(Event.fromJsObject(object), layerIdOrListener);
       }).toJS;
-      mapJsImpl = jsObject.on(type, layerIdOrListener.toString().toJS, jsFn);
+      final layerId = layerIdOrListener is String
+          ? layerIdOrListener.toJS
+          : layerIdOrListener.toString().toJS;
+      mapJsImpl = jsObject.on(type, layerId, jsFn);
     }
 
     _listeners[_listenerKey(type, layerIdOrListener, listener)] = jsFn;
