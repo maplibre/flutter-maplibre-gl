@@ -2,14 +2,16 @@
 library;
 
 import 'dart:html';
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 
 @JS()
-@anonymous
-abstract class MapMouseEventJsImpl {
+@staticInterop
+abstract class MapMouseEventJsImpl {}
+
+extension MapMouseEventJsImplExtension on MapMouseEventJsImpl {
   /// The event type.
   external String get type;
 
@@ -33,15 +35,17 @@ abstract class MapMouseEventJsImpl {
   ///  *  On `mousedown` events, the behavior of {@link DragRotateHandler}
   ///  *  On `mousedown` events, the behavior of {@link BoxZoomHandler}
   ///  *  On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-  external preventDefault();
+  external void preventDefault();
 
   /// `true` if `preventDefault` has been called.
   external bool get defaultPrevented;
 }
 
 @JS()
-@anonymous
-abstract class MapTouchEventJsImpl {
+@staticInterop
+abstract class MapTouchEventJsImpl {}
+
+extension MapTouchEventJsImplExtension on MapTouchEventJsImpl {
   /// The event type.
   external String get type;
 
@@ -60,11 +64,11 @@ abstract class MapTouchEventJsImpl {
 
   ///  The array of pixel coordinates corresponding to a
   ///  [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
-  external List<PointJsImpl> get points;
+  external JSArray get points;
 
   ///  The geographical locations on the map corresponding to a
   ///  [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
-  external List<LngLatJsImpl> get lngLats;
+  external JSArray get lngLats;
 
   ///  Prevents subsequent default processing of the event by the map.
   ///
@@ -72,7 +76,7 @@ abstract class MapTouchEventJsImpl {
   ///
   ///  *  On `touchstart` events, the behavior of {@link DragPanHandler}
   ///  *  On `touchstart` events, the behavior of {@link TouchZoomRotateHandler}
-  external preventDefault();
+  external void preventDefault();
 
   ///  `true` if `preventDefault` has been called.
   external bool get defaultPrevented;

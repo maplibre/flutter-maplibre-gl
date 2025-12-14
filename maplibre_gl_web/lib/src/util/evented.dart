@@ -1,4 +1,4 @@
-import 'dart:js';
+import 'dart:js_interop';
 
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -18,9 +18,15 @@ class Event extends JsObjectWrapper<EventJsImpl> {
 
   LngLat get lngLat => LngLat.fromJsObject(jsObject.lngLat);
 
-  List<Feature> get features =>
-      jsObject.features?.map((dynamic f) => Feature.fromJsObject(f)).toList() ??
-      [];
+  List<Feature> get features {
+    final jsFeatures = jsObject.features;
+    if (jsFeatures == null) return [];
+    // Convert JSAny to List using casting
+    final list = (jsFeatures as JSArray).toDart;
+    return list.nonNulls
+        .map((f) => Feature.fromJsObject(f as FeatureJsImpl))
+        .toList();
+  }
 
   Point get point => Point.fromJsObject(jsObject.point);
 
@@ -30,15 +36,16 @@ class Event extends JsObjectWrapper<EventJsImpl> {
     required LngLat lngLat,
     required List<Feature> features,
     required Point point,
-  }) =>
-      Event.fromJsObject(EventJsImpl(
-        id: id,
-        type: type,
-        lngLat: lngLat.jsObject,
-        features: features.map((dynamic f) => f.jsObject).toList()
-            as List<FeatureJsImpl?>?,
-        point: point.jsObject,
-      ));
+  }) {
+    final jsFeatures = features.map((f) => f.jsObject).toList().jsify();
+    return Event.fromJsObject(EventJsImpl(
+      id: id,
+      type: type,
+      lngLat: lngLat.jsObject,
+      features: jsFeatures,
+      point: point.jsObject,
+    ));
+  }
 
   preventDefault() => jsObject.preventDefault();
 
@@ -49,7 +56,7 @@ class Event extends JsObjectWrapper<EventJsImpl> {
 class Evented extends JsObjectWrapper<EventedJsImpl> {
   /// Store listener references so `off` can use the same one.
   /// Key is a composite of (eventType, layerIdOrListener.hashCode?, listener.hashCode)
-  final _listeners = <String, ListenerJsImpl>{};
+  final _listeners = <String, JSFunction>{};
 
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
@@ -66,27 +73,23 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @returns {Object} `this`
   MapLibreMap on(String type,
       [dynamic layerIdOrListener, LayerEventListener? listener]) {
-    final ListenerJsImpl jsFn;
+    final JSFunction jsFn;
     final MapLibreMapJsImpl mapJsImpl;
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      jsFn = allowInterop(
-        (dynamic position) {
-          layerIdOrListener(position);
-        },
-      );
+      jsFn = ((JSAny position) {
+        layerIdOrListener(position);
+      }).toJS;
       mapJsImpl = jsObject.on(type, jsFn);
     } else if (layerIdOrListener is Listener) {
-      jsFn = allowInterop(
-        (EventJsImpl object) {
-          layerIdOrListener(Event.fromJsObject(object));
-        },
-      );
+      jsFn = ((EventJsImpl object) {
+        layerIdOrListener(Event.fromJsObject(object));
+      }).toJS;
       mapJsImpl = jsObject.on(type, jsFn);
     } else {
-      jsFn = allowInterop((EventJsImpl object) {
+      jsFn = ((EventJsImpl object) {
         listener!(Event.fromJsObject(object), layerIdOrListener);
-      });
-      mapJsImpl = jsObject.on(type, layerIdOrListener, jsFn);
+      }).toJS;
+      mapJsImpl = jsObject.on(type, layerIdOrListener.toString().toJS, jsFn);
     }
 
     _listeners[_listenerKey(type, layerIdOrListener, listener)] = jsFn;
@@ -121,13 +124,13 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {Function} listener The function to be called when the event is fired the first time.
   ///  @returns {Object} `this`
   MapLibreMap once(String type, Listener listener) =>
-      MapLibreMap.fromJsObject(jsObject.once(type, allowInterop(
-        (EventJsImpl object) {
-          listener(Event.fromJsObject(object));
-        },
-      )));
+      MapLibreMap.fromJsObject(jsObject.once(
+          type,
+          ((EventJsImpl object) {
+            listener(Event.fromJsObject(object));
+          }).toJS));
 
-  fire(Event event, [dynamic properties]) =>
+  fire(Event event, [JSAny? properties]) =>
       jsObject.fire(event.jsObject, properties);
 
   ///  Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.

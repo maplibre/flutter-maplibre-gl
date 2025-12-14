@@ -111,8 +111,14 @@ class MapLibreMapController extends MapLibrePlatform
 
   Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
-    final bytes = await rootBundle.load(imagePath);
-    await addImage(imagePath, bytes.buffer.asUint8List());
+
+    try {
+      final bytes = await rootBundle.load(imagePath);
+      await addImage(imagePath, bytes.buffer.asUint8List());
+    } catch (e) {
+      dev.log('Could not load image from assets: $imagePath',
+          name: 'MapLibreMapController');
+    }
   }
 
   void _onMouseDown(Event e, String? layerId) {
@@ -188,12 +194,13 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
+    final jsObj = cameraOptions as JSObject;
 
-    final around = getProperty(cameraOptions, 'around');
-    final bearing = getProperty(cameraOptions, 'bearing');
-    final center = getProperty(cameraOptions, 'center');
-    final pitch = getProperty(cameraOptions, 'pitch');
-    final zoom = getProperty(cameraOptions, 'zoom');
+    final around = jsObj.getProperty('around'.toJS);
+    final bearing = jsObj.getProperty('bearing'.toJS);
+    final center = jsObj.getProperty('center'.toJS);
+    final pitch = jsObj.getProperty('pitch'.toJS);
+    final zoom = jsObj.getProperty('zoom'.toJS);
 
     _map.flyTo({
       if (around != null) 'around': around,
@@ -330,10 +337,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<String?> getStyle() async {
-    // Web implementation: MapLibre GL JS doesn't have direct style JSON export
-    print('getStyle called in web');
-    // For future implementation, we could use MapLibre GL JS style methods
-    throw UnimplementedError();
+    final styleJs = _map.getStyle();
+    if (styleJs == null) return null;
+
+    // Convert JS object to Dart map, then to JSON string
+    final styleMap = dartify(styleJs);
+    return jsonEncode(styleMap);
   }
 
   @override
@@ -496,7 +505,7 @@ class MapLibreMapController extends MapLibrePlatform
       [bool sdf = false]) async {
     final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
-      _map.addImage(
+      await _map.addImage(
         name,
         {
           'width': photo.width,
@@ -505,6 +514,9 @@ class MapLibreMapController extends MapLibrePlatform
         },
         {'sdf': sdf},
       );
+    } else {
+      dev.log('Image already exists on map: $name',
+          name: 'MapLibreMapController');
     }
   }
 
@@ -1345,6 +1357,16 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getSourceIds() async {
-    throw UnimplementedError();
+    final style = _map.getStyle();
+    if (style == null) return [];
+
+    // The style is a JavaScript object with a 'sources' property
+    final jsStyle = style as JSObject;
+    final jsSources = jsStyle.getProperty('sources'.toJS);
+
+    if (jsSources == null) return [];
+
+    // Get the keys (source IDs) from the sources object
+    return objectKeys(jsSources);
   }
 }

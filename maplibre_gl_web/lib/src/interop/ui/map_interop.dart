@@ -2,11 +2,11 @@
 library;
 
 import 'dart:html';
-import 'package:js/js.dart';
-import 'package:maplibre_gl_web/src/interop/geo/geojson_interop.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
+import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/style/style_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/camera_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/handler/box_zoom_interop.dart';
@@ -46,11 +46,14 @@ import 'package:maplibre_gl_web/src/interop/ui/handler/touch_zoom_rotate_interop
 ///  ```
 ///  @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
 @JS('Map')
+@staticInterop
 class MapLibreMapJsImpl extends CameraJsImpl {
   external factory MapLibreMapJsImpl(MapOptionsJsImpl options);
+}
 
+extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   external StyleJsImpl get style;
-  external dynamic get painter;
+  external JSAny? get painter;
 
   ///  The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
   ///  Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
@@ -123,7 +126,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // after being initially hidden with CSS.
   ///  var mapDiv = document.getElementById('map');
   ///  if (mapDiv.style.visibility === true) map.resize();
-  external MapLibreMapJsImpl resize([dynamic eventData]);
+  external MapLibreMapJsImpl resize([JSAny? eventData]);
 
   ///  Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
   ///  an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
@@ -391,8 +394,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  external List<FeatureJsImpl> queryRenderedFeatures(dynamic geometry,
-      [dynamic options]);
+  external JSArray queryRenderedFeatures(JSAny geometry, [JSAny? options]);
 
   ///  Returns an array of [GeoJSON](http://geojson.org/)
   ///  [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -429,8 +431,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  });
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
-  external List<dynamic> querySourceFeatures(
-      String sourceId, dynamic parameters);
+  external JSArray querySourceFeatures(String sourceId, JSAny? parameters);
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
@@ -454,7 +455,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @returns {MapLibreMap} `this`
   ///
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
-  external MapLibreMapJsImpl setStyle(dynamic style, [dynamic options]);
+  external MapLibreMapJsImpl setStyle(JSAny? style, [JSAny? options]);
 
   ///  Returns the map's MapLibre style object, which can be used to recreate the map's style.
   ///
@@ -462,7 +463,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @example
   ///  var styleJson = map.getStyle();
-  external dynamic getStyle();
+  external StyleJsImpl? getStyle();
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
   ///
@@ -470,7 +471,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @example
   ///  var styleLoadStatus = map.isStyleLoaded();
-  external bool isStyleLoaded();
+  external bool? isStyleLoaded();
 
   ///  Adds a source to the map's style.
   ///
@@ -483,7 +484,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js/docs/examples/toggle-layers/)
   ///  @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
   ///  @see Raster DEM source: [Add hillshading](https://maplibre.org/maplibre-gl-js/docs/examples/hillshade/)
-  external MapLibreMapJsImpl addSource(String id, dynamic source);
+  external MapLibreMapJsImpl addSource(String id, JSAny source);
 
   ///  Returns a Boolean indicating whether the source is loaded.
   ///
@@ -507,7 +508,8 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
-  external addSourceType(String name, dynamic sourceType, Function callback);
+  external void addSourceType(
+      String name, JSAny sourceType, JSFunction callback);
 
   ///  Removes a source from the map's style.
   ///
@@ -515,7 +517,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.removeSource('bathymetry-data');
-  external removeSource(String id);
+  external void removeSource(String id);
 
   ///  Returns the source with the specified ID in the map's style.
   ///
@@ -527,7 +529,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
   ///  @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
   ///  @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
-  external dynamic getSource(String id);
+  external JSAny? getSource(String id);
 
   ///  Add an image to the style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
@@ -572,7 +574,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
-  external addImage(String id, dynamic image, [dynamic options]);
+  external void addImage(String id, JSAny image, [JSAny? options]);
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
@@ -589,7 +591,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // If an image with the ID 'cat' already exists in the style's sprite,
   ///  // replace that image with a new image, 'other-cat-icon.png'.
   ///  if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
-  external updateImage(String id, dynamic image);
+  external void updateImage(String id, JSAny image);
 
   ///  Check whether or not an image with a specific ID exists in the style. This checks both images
   ///  in the style's original [sprite]  and any images
@@ -614,7 +616,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  // If an image with the ID 'cat' exists in
   ///  // the style's sprite, remove it.
   ///  if (map.hasImage('cat')) map.removeImage('cat');
-  external removeImage(String id);
+  external void removeImage(String id);
 
   ///  Load an image from an external URL to be used with `MapLibreMap#addImage`. External
   ///  domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
@@ -631,7 +633,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  });
   ///
   ///  @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-  external loadImage(String url, dynamic callback);
+  external void loadImage(String url, JSFunction callback);
 
   //////
   ///  Returns an Array of strings containing the IDs of all images currently available in the map.
@@ -643,7 +645,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  var allImages = map.listImages();
   ///
-  external List<String> listImages();
+  external JSArray listImages();
 
   ///  Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
   ///  to the map's style.
@@ -661,7 +663,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
   ///  @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
   ///  @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
-  external MapLibreMapJsImpl addLayer(dynamic layer, [String? beforeId]);
+  external MapLibreMapJsImpl addLayer(JSAny layer, [String? beforeId]);
 
   ///  Moves a layer to a different z-position.
   ///
@@ -685,7 +687,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  // If a layer with ID 'state-data' exists, remove it.
   ///  if (map.getLayer('state-data')) map.removeLayer('state-data');
-  external removeLayer(String id);
+  external void removeLayer(String id);
 
   ///  Returns the layer with the specified ID in the map's style.
   ///
@@ -698,7 +700,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///
   ///  @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
   ///  @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
-  external dynamic getLayer(String id);
+  external JSAny? getLayer(String id);
 
   ///  Sets the zoom extent for the specified style layer. The zoom extent includes the
   ///  [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
@@ -735,14 +737,14 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapLibreMapJsImpl setFilter(String layerId, dynamic filter,
+  external MapLibreMapJsImpl setFilter(String layerId, JSAny filter,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the filter applied to the specified style layer.
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  external List<dynamic> getFilter(String layerId);
+  external JSArray? getFilter(String layerId);
 
   ///  Sets the value of a paint property in the specified style layer.
   ///
@@ -758,7 +760,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external setPaintProperty(String layerId, String name, dynamic value,
+  external void setPaintProperty(String layerId, String name, JSAny value,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the value of a paint property in the specified style layer.
@@ -766,7 +768,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} layerId The ID of the layer to get the paint property from.
   ///  @param {string} name The name of a paint property to get.
   ///  @returns {*} The value of the specified paint property.
-  external dynamic getPaintProperty(String layerId, String name);
+  external JSAny? getPaintProperty(String layerId, String name);
 
   ///  Sets the value of a layout property in the specified style layer.
   ///
@@ -779,7 +781,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, dynamic value,
+      String layerId, String name, JSAny value,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the value of a layout property in the specified style layer.
@@ -787,7 +789,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} layerId The ID of the layer to get the layout property from.
   ///  @param {string} name The name of the layout property to get.
   ///  @returns {*} The value of the specified layout property.
-  external dynamic getLayoutProperty(String layerId, String name);
+  external JSAny? getLayoutProperty(String layerId, String name);
 
   ///  Sets the any combination of light values.
   ///
@@ -796,12 +798,12 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-      dynamic light, StyleSetterOptionsJsImpl options);
+      JSAny light, StyleSetterOptionsJsImpl options);
 
   ///  Returns the value of the light object.
   ///
   ///  @returns {Object} light Light properties of the style.
-  external dynamic getLight();
+  external JSAny getLight();
 
   ///  Sets the state of a feature. The `state` object is merged in with the existing state of the feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
@@ -819,7 +821,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  external setFeatureState(dynamic feature, dynamic state);
+  external void setFeatureState(JSAny feature, JSAny state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
   ///  source is specified, removes all states of that source. If
@@ -834,7 +836,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  external removeFeatureState(dynamic target, [String? key]);
+  external void removeFeatureState(JSAny target, [String? key]);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
@@ -848,7 +850,7 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///   required.*
   ///
   ///  @returns {Object} The state of the feature.
-  external dynamic getFeatureState(dynamic feature);
+  external JSAny getFeatureState(JSAny feature);
 
   ///  Returns the map's containing HTML element.
   ///
@@ -892,12 +894,12 @@ class MapLibreMapJsImpl extends CameraJsImpl {
   ///  Use this method when you are done using the map and wish to ensure that it no
   ///  longer consumes browser resources. Afterwards, you must not call any other
   ///  methods on the map.
-  external remove();
+  external void remove();
 
   ///  Trigger the rendering of a single frame. Use this method with custom layers to
   ///  repaint the map when the layer changes. Calling this multiple times before the
   ///  next frame is rendered will still result in only a single frame being rendered.
-  external triggerRepaint();
+  external void triggerRepaint();
 
   ///  Gets and sets a Boolean indicating whether the map will render an outline
   ///  around each tile and the tile ID. These tile boundaries are useful for
@@ -962,221 +964,224 @@ class MapLibreMapJsImpl extends CameraJsImpl {
 }
 
 @JS()
-@anonymous
+@staticInterop
 class MapOptionsJsImpl {
+  factory MapOptionsJsImpl() => createJsObject() as MapOptionsJsImpl;
+}
+
+extension MapOptionsJsImplExtension on MapOptionsJsImpl {
   /// If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
   /// For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
   /// An additional string may optionally be provided to indicate a parameter-styled hash,
   /// e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
   /// is a custom parameter and bar is an arbitrary hash distinct from the map hash.
   /// `bool` or `String`
-  external dynamic get hash;
+  external JSAny get hash;
+  external set hash(JSAny value);
 
   /// If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
-  external bool get interactive;
+  external JSBoolean get interactive;
+  external set interactive(JSBoolean value);
 
   /// The HTML element in which MapLibre JS JS will render the map, or the element's string `id`. The specified element must have no children.
   /// `HTMLElement` or `String`
-  external dynamic get container;
+  external JSAny get container;
+  external set container(JSAny value);
 
   /// The threshold, measured in degrees, that determines when the map's
   /// bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
   /// the map within 7 degrees of north, the map will automatically snap to exact north.
-  external num get bearingSnap;
+  external JSNumber get bearingSnap;
+  external set bearingSnap(JSNumber value);
 
   /// If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
-  external bool get pitchWithRotate;
+  external JSBoolean get pitchWithRotate;
+  external set pitchWithRotate(JSBoolean value);
 
   ///  The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
-  external num get clickTolerance;
+  external JSNumber get clickTolerance;
+  external set clickTolerance(JSNumber value);
 
   /// If `true`, an {@link AttributionControl} will be added to the map.
-  external bool get attributionControl;
+  external JSBoolean get attributionControl;
+  external set attributionControl(JSBoolean value);
 
   /// String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
   /// `String` or `List<String>`
-  external dynamic get customAttribution;
+  external JSAny get customAttribution;
+  external set customAttribution(JSAny value);
 
   /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
-  external String get logoPosition;
+  external JSString get logoPosition;
+  external set logoPosition(JSString value);
 
   /// If `true`, map creation will fail if the performance of MapLibre
   /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
-  external bool get failIfMajorPerformanceCaveat;
+  external JSBoolean get failIfMajorPerformanceCaveat;
+  external set failIfMajorPerformanceCaveat(JSBoolean value);
 
   /// If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
-  external bool get preserveDrawingBuffer;
+  external JSBoolean get preserveDrawingBuffer;
+  external set preserveDrawingBuffer(JSBoolean value);
 
   /// If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
-  external bool get antialias;
+  external JSBoolean get antialias;
+  external set antialias(JSBoolean value);
 
   /// If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
-  external bool get refreshExpiredTiles;
+  external JSBoolean get refreshExpiredTiles;
+  external set refreshExpiredTiles(JSBoolean? value);
 
   /// If set, the map will be constrained to the given bounds.
   external LngLatBoundsJsImpl get maxBounds;
+  external set maxBounds(LngLatBoundsJsImpl value);
 
   /// If `true`, the "scroll to zoom" interaction is enabled. An `Object` value is passed as options to {@link ScrollZoomHandler#enable}.
-  external bool get scrollZoom;
+  external JSBoolean get scrollZoom;
+  external set scrollZoom(JSBoolean value);
 
   /// The minimum zoom level of the map (0-24).
-  external num get minZoom;
+  external JSNumber get minZoom;
+  external set minZoom(JSNumber value);
 
   /// The maximum zoom level of the map (0-24).
-  external num get maxZoom;
+  external JSNumber get maxZoom;
+  external set maxZoom(JSNumber value);
 
   /// The minimum pitch of the map (0-60).
-  external num get minPitch;
+  external JSNumber get minPitch;
+  external set minPitch(JSNumber value);
 
   /// The maximum pitch of the map (0-60).
-  external num get maxPitch;
+  external JSNumber get maxPitch;
+  external set maxPitch(JSNumber value);
 
   ///  The map's MapLibre style. This must be an a JSON object conforming to
   ///  the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
   ///  such JSON.
-  external dynamic get style;
+  external JSAny? get style;
+  external set style(JSAny? value);
 
   /// If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
-  external bool get boxZoom;
+  external JSBoolean get boxZoom;
+  external set boxZoom(JSBoolean value);
 
   /// If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
-  external bool get dragRotate;
+  external JSBoolean get dragRotate;
+  external set dragRotate(JSBoolean value);
 
   /// If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
-  external dynamic get dragPan;
+  external JSAny get dragPan;
+  external set dragPan(JSAny value);
 
   /// If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
-  external bool get keyboard;
+  external JSBoolean get keyboard;
+  external set keyboard(JSBoolean value);
 
   /// If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
-  external bool get doubleClickZoom;
+  external JSBoolean get doubleClickZoom;
+  external set doubleClickZoom(JSBoolean value);
 
   /// If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
-  external bool get touchZoomRotate;
+  external JSBoolean get touchZoomRotate;
+  external set touchZoomRotate(JSBoolean value);
 
   /// If `true`, the map will automatically resize when the browser window resizes.
-  external bool get trackResize;
+  external JSBoolean get trackResize;
+  external set trackResize(JSBoolean value);
 
   /// The inital geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
   external LngLatJsImpl get center;
+  external set center(LngLatJsImpl value);
 
   /// The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
-  external num get zoom;
+  external JSNumber get zoom;
+  external set zoom(JSNumber value);
 
   /// The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
-  external num get bearing;
+  external JSNumber get bearing;
+  external set bearing(JSNumber value);
 
   /// The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-60). If `pitch` is not specified in the constructor options, MapLibre JS JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
-  external num get pitch;
+  external JSNumber get pitch;
+  external set pitch(JSNumber value);
 
   /// The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
   external LngLatBoundsJsImpl get bounds;
+  external set bounds(LngLatBoundsJsImpl value);
 
   /// A [`fitBounds`](#map#fitbounds) options object to use _only_ when fitting the initial `bounds` provided above.
-  external dynamic get fitBoundsOptions;
+  external JSAny get fitBoundsOptions;
+  external set fitBoundsOptions(JSAny value);
 
   /// If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
   /// - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
   /// container, there will be blank space beyond 180 and -180 degrees longitude.
   /// - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
   /// map and the other on the left edge of the map) at every zoom level.
-  external bool get renderWorldCopies;
+  external JSBoolean get renderWorldCopies;
+  external set renderWorldCopies(JSBoolean value);
 
   /// The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
-  external num get maxTileCacheSize;
+  external JSNumber get maxTileCacheSize;
+  external set maxTileCacheSize(JSNumber value);
 
   /// Defines a CSS
   /// font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
   /// In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
   /// Set to `false`, to enable font settings from the map's style for these glyph ranges.
   /// The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
-  external String get localIdeographFontFamily;
+  external JSString get localIdeographFontFamily;
+  external set localIdeographFontFamily(JSString value);
 
   /// A callback run before the MapLibreMap makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
   /// Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
-  external RequestTransformFunctionJsImpl
-      get transformRequest; //TODO: Remove JsImpl
+  external JSFunction get transformRequest;
+  external set transformRequest(JSFunction value);
 
   /// If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
-  external bool get collectResourceTiming;
+  external JSBoolean get collectResourceTiming;
+  external set collectResourceTiming(JSBoolean value);
 
   /// Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
-  external num get fadeDuration;
+  external JSNumber get fadeDuration;
+  external set fadeDuration(JSNumber value);
 
   /// If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
-  external bool get crossSourceCollisions;
+  external JSBoolean get crossSourceCollisions;
+  external set crossSourceCollisions(JSBoolean value);
 
   /// If specified, map will use this token instead of the one defined in accessToken.
-  external String get accessToken;
+  external JSString get accessToken;
+  external set accessToken(JSString value);
 
   /// A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
-  external dynamic get locale;
-
-  external factory MapOptionsJsImpl({
-    dynamic hash,
-    bool? interactive,
-    dynamic container,
-    num? bearingSnap,
-    bool? pitchWithRotate,
-    bool? clickTolerance,
-    bool? attributionControl,
-    dynamic customAttribution,
-    String? logoPosition,
-    bool? failIfMajorPerformanceCaveat,
-    bool? preserveDrawingBuffer,
-    bool? antialias,
-    bool? refreshExpiredTiles,
-    LngLatBoundsJsImpl? maxBounds,
-    bool? scrollZoom,
-    num? minZoom,
-    num? maxZoom,
-    num? minPitch,
-    num? maxPitch,
-    dynamic style,
-    bool? boxZoom,
-    bool? dragRotate,
-    dynamic dragPan,
-    bool? keyboard,
-    bool? doubleClickZoom,
-    bool? touchZoomRotate,
-    bool? trackResize,
-    LngLatJsImpl? center,
-    num? zoom,
-    num? bearing,
-    num? pitch,
-    LngLatBoundsJsImpl? bounds,
-    dynamic fitBoundsOptions,
-    bool? renderWorldCopies,
-    num? maxTileCacheSize,
-    String? localIdeographFontFamily,
-    RequestTransformFunctionJsImpl? transformRequest,
-    bool? collectResourceTiming,
-    num? fadeDuration,
-    bool? crossSourceCollisions,
-    String? accessToken,
-    dynamic locale,
-  });
+  external JSAny? get locale;
+  external set locale(JSAny? value);
 }
 
-typedef RequestTransformFunctionJsImpl = RequestParametersJsImpl Function(
-    String url, String resourceType);
-
 @JS()
-@anonymous
+@staticInterop
 class RequestParametersJsImpl {
-  String? url;
-  String? credentials;
-  dynamic headers;
-  String? method;
-  bool? collectResourceTiming;
+  factory RequestParametersJsImpl() =>
+      createJsObject() as RequestParametersJsImpl;
+}
 
-  external factory RequestParametersJsImpl({
-    String? url,
-    String? credentials,
-    dynamic headers,
-    String? method,
-    bool? collectResourceTiming,
-  });
+extension RequestParametersJsImplExtension on RequestParametersJsImpl {
+  external JSString? get url;
+  external set url(JSString? value);
+
+  external JSString? get credentials;
+  external set credentials(JSString? value);
+
+  external JSAny? get headers;
+  external set headers(JSAny? value);
+
+  external JSString? get method;
+  external set method(JSString? value);
+
+  external JSBoolean? get collectResourceTiming;
+  external set collectResourceTiming(JSBoolean? value);
 }
 
 ///  Interface for interactive controls added to the map. This is a
@@ -1210,8 +1215,12 @@ class RequestParametersJsImpl {
 /// }
 /// ```
 @JS()
-@anonymous
+@staticInterop
 abstract class IControlJsImpl {
+  external factory IControlJsImpl();
+}
+
+extension IControlJsImplExtension on IControlJsImpl {
   ///  Register a control on the map and give it a chance to register event listeners
   ///  and resources. This method is called by {@link MapLibreMap#addControl}
   ///  internally.
@@ -1220,7 +1229,7 @@ abstract class IControlJsImpl {
   ///  Unregister a control on the map and give it a chance to detach event listeners
   ///  and resources. This method is called by {@link MapLibreMap#removeControl}
   ///  internally.
-  external onRemove(MapLibreMapJsImpl map);
+  external JSAny? onRemove(MapLibreMapJsImpl map);
 
   ///  Optionally provide a default position for this control. If this method
   ///  is implemented and {@link MapLibreMap#addControl} is called without the `position`

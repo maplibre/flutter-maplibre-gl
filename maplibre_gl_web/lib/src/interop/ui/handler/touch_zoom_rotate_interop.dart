@@ -2,12 +2,16 @@
 library;
 
 import 'dart:html';
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class TouchZoomRotateHandlerJsImpl {
+  factory TouchZoomRotateHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension TouchZoomRotateHandlerJsImplExtension
+    on TouchZoomRotateHandlerJsImpl {
   ///  Returns a Boolean indicating whether the "pinch to rotate and zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "pinch to rotate and zoom" interaction is enabled.
@@ -22,27 +26,27 @@ abstract class TouchZoomRotateHandlerJsImpl {
   ///    map.touchZoomRotate.enable();
   ///  @example
   ///    map.touchZoomRotate.enable({ around: 'center' });
-  external enable(dynamic options);
+  external void enable(JSAny? options);
 
   ///  Disables the "pinch to rotate and zoom" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.disable();
-  external disable();
+  external void disable();
 
   ///  Disables the "pinch to rotate" interaction, leaving the "pinch to zoom"
   ///  interaction enabled.
   ///
   ///  @example
   ///    map.touchZoomRotate.disableRotation();
-  external disableRotation();
+  external void disableRotation();
 
   ///  Enables the "pinch to rotate" interaction.
   ///
   ///  @example
   ///    map.touchZoomRotate.enable();
   ///    map.touchZoomRotate.enableRotation();
-  external enableRotation();
+  external void enableRotation();
 
-  external onStart(TouchEvent e);
+  external void onStart(TouchEvent e);
 }

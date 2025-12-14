@@ -2,8 +2,9 @@
 library;
 
 import 'dart:html';
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
+import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 
@@ -53,10 +54,13 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 /// @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
 /// @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
 @JS('Popup')
+@staticInterop
 class PopupJsImpl extends EventedJsImpl {
-  external dynamic get options;
-
   external factory PopupJsImpl([PopupOptionsJsImpl? options]);
+}
+
+extension PopupJsImplExtension on PopupJsImpl {
+  external JSAny? get options;
 
   /// Adds the popup to a map.
   ///
@@ -159,7 +163,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.addClassName('some-class')
-  external addClassName(String className);
+  external void addClassName(String className);
 
   /// Removes a CSS class from the popup container element.
   ///
@@ -168,7 +172,7 @@ class PopupJsImpl extends EventedJsImpl {
   /// @example
   /// let popup = new maplibregl.Popup()
   /// popup.removeClassName('some-class')
-  external removeClassName(String className);
+  external void removeClassName(String className);
 
   /// Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
   ///
@@ -183,15 +187,30 @@ class PopupJsImpl extends EventedJsImpl {
 }
 
 @JS()
-@anonymous
+@staticInterop
 class PopupOptionsJsImpl {
-  external factory PopupOptionsJsImpl({
-    bool? loseButton,
-    bool? closeButton,
-    bool? closeOnClick,
-    String? anchor,
-    dynamic offset,
-    String? className,
-    String? maxWidth,
-  });
+  factory PopupOptionsJsImpl() => createJsObject() as PopupOptionsJsImpl;
+}
+
+extension PopupOptionsJsImplExtension on PopupOptionsJsImpl {
+  external bool? get loseButton;
+  external set loseButton(bool? value);
+
+  external bool? get closeButton;
+  external set closeButton(bool? value);
+
+  external bool? get closeOnClick;
+  external set closeOnClick(bool? value);
+
+  external String? get anchor;
+  external set anchor(String? value);
+
+  external JSAny? get offset;
+  external set offset(JSAny? value);
+
+  external String? get className;
+  external set className(String? value);
+
+  external String? get maxWidth;
+  external set maxWidth(String? value);
 }

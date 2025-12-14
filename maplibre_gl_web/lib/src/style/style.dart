@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/style/evaluation_parameters.dart';
 import 'package:maplibre_gl_web/src/style/style_image.dart';
@@ -137,8 +139,8 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   querySourceFeatures(String sourceID, dynamic params) =>
       jsObject.querySourceFeatures(sourceID, params);
 
-  addSourceType(String name, dynamic sourceType, Function callback) =>
-      jsObject.addSourceType(name, sourceType, callback);
+  addSourceType(String name, dynamic sourceType, void Function() callback) =>
+      jsObject.addSourceType(name, sourceType, callback.toJS as JSFunction);
 
   getLight() => jsObject.getLight();
 
@@ -147,27 +149,32 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
 
   // Callbacks from web workers
 
-  getImages(String mapId, dynamic params, Function callback) =>
-      jsObject.getImages(mapId, params, callback);
+  getImages(String mapId, dynamic params, void Function() callback) =>
+      jsObject.getImages(mapId, params, callback.toJS as JSFunction);
 
-  getGlyphs(String mapId, dynamic params, Function callback) =>
-      jsObject.getGlyphs(mapId, params, callback);
+  getGlyphs(String mapId, dynamic params, void Function() callback) =>
+      jsObject.getGlyphs(mapId, params, callback.toJS as JSFunction);
 
-  getResource(String mapId, RequestParameters params, Function callback) =>
-      jsObject.getResource(mapId, params.jsObject, callback);
+  getResource(
+          String mapId, RequestParameters params, void Function() callback) =>
+      jsObject.getResource(mapId, params.jsObject, callback.toJS as JSFunction);
 
   /// Creates a new Style from a [jsObject].
   Style.fromJsObject(super.jsObject) : super.fromJsObject();
 
-  List<dynamic> get layers => jsObject.layers;
+  List<dynamic> get layers => jsObject.layers.toDart;
 }
 
 class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
   factory StyleFunction({
     dynamic base,
     dynamic stops,
-  }) =>
-      StyleFunction.fromJsObject(StyleFunctionJsImpl(base: base, stops: stops));
+  }) {
+    final jsImpl = StyleFunctionJsImpl();
+    if (base != null) jsImpl.base = base?.toJS;
+    if (stops != null) jsImpl.stops = stops?.toJS;
+    return StyleFunction.fromJsObject(jsImpl);
+  }
 
   /// Creates a new StyleFunction from a [jsObject].
   StyleFunction.fromJsObject(super.jsObject) : super.fromJsObject();

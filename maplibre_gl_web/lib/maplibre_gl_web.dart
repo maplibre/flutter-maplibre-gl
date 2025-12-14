@@ -7,7 +7,9 @@ import 'dart:developer' as dev;
 // FIXED HERE: https://github.com/dart-lang/linter/pull/1985
 import 'dart:html' as html hide Event;
 
-import 'dart:js_util';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui_web' as ui_web;
@@ -32,6 +34,9 @@ import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/navigation_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
+import 'package:maplibre_gl_web/src/utils.dart';
+
+import 'src/interop/js.dart';
 
 part 'src/convert.dart';
 
