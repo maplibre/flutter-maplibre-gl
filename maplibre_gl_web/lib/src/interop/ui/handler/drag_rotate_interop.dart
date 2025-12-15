@@ -1,13 +1,16 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class DragRotateHandlerJsImpl {
+  factory DragRotateHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension DragRotateHandlerJsImplExtension on DragRotateHandlerJsImpl {
   ///  Returns a Boolean indicating whether the "drag to rotate" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "drag to rotate" interaction is enabled.
@@ -22,13 +25,13 @@ abstract class DragRotateHandlerJsImpl {
   ///
   ///  @example
   ///  map.dragRotate.enable();
-  external enable();
+  external void enable();
 
   ///  Disables the "drag to rotate" interaction.
   ///
   ///  @example
   ///  map.dragRotate.disable();
-  external disable();
+  external void disable();
 
-  external onMouseDown(MouseEvent e);
+  external void onMouseDown(MouseEvent e);
 }
