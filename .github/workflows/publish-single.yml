@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'maplibre'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dart-lang/setup-dart@v1
         # --force skips the y/N confirmation
         # --skip-validation because of "Because maplibre_gl requires the Flutter SDK, version solving failed. Flutter users should use `flutter pub` instead of `dart pub`."
