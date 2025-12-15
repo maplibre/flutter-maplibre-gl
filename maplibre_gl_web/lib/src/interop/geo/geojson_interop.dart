@@ -1,53 +1,45 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
-@JS()
-@anonymous
-class FeatureCollectionJsImpl {
+extension type FeatureCollectionJsImpl._(JSObject _) implements JSObject {
   external String get type;
-  external List<FeatureJsImpl> get features;
+  external JSArray<FeatureJsImpl> get features;
   external factory FeatureCollectionJsImpl({
     String type,
-    List<FeatureJsImpl> features,
+    JSArray<FeatureJsImpl> features,
   });
 }
 
-@JS()
-@anonymous
-class FeatureJsImpl {
-  external dynamic get id;
-  external set id(dynamic id);
+extension type FeatureJsImpl._(JSObject _) implements JSObject {
+  external JSAny? get id;
+  external set id(JSAny? id);
   external String get type;
   external GeometryJsImpl get geometry;
-  external dynamic get properties;
+  external JSAny? get properties;
   external String get source;
   external FeatureLayerJsImpl get layer;
   external factory FeatureJsImpl({
-    dynamic id,
+    JSAny? id,
     String? type,
     GeometryJsImpl geometry,
-    dynamic properties,
+    JSAny? properties,
     String? source,
     FeatureLayerJsImpl? layer,
   });
 }
 
-@JS()
-@anonymous
-class GeometryJsImpl {
+extension type GeometryJsImpl._(JSObject _) implements JSObject {
   external String get type;
-  external dynamic get coordinates;
+  external JSAny? get coordinates;
   external factory GeometryJsImpl({
     String? type,
-    dynamic coordinates,
+    JSAny? coordinates,
   });
 }
 
-@JS()
-@anonymous
-class FeatureLayerJsImpl {
+extension type FeatureLayerJsImpl._(JSObject _) implements JSObject {
   external String get id;
   external factory FeatureLayerJsImpl({
     String id,

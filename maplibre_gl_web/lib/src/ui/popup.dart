@@ -1,4 +1,4 @@
-import 'dart:html';
+import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
@@ -201,16 +201,17 @@ class PopupOptions extends JsObjectWrapper<PopupOptionsJsImpl> {
     dynamic offset,
     String? className,
     String? maxWidth,
-  }) =>
-      PopupOptions.fromJsObject(PopupOptionsJsImpl(
-        loseButton: loseButton,
-        closeButton: closeButton,
-        closeOnClick: closeOnClick,
-        anchor: anchor,
-        offset: offset,
-        className: className,
-        maxWidth: maxWidth,
-      ));
+  }) {
+    final jsImpl = PopupOptionsJsImpl();
+    if (loseButton != null) jsImpl.loseButton = loseButton;
+    if (closeButton != null) jsImpl.closeButton = closeButton;
+    if (closeOnClick != null) jsImpl.closeOnClick = closeOnClick;
+    if (anchor != null) jsImpl.anchor = anchor;
+    if (offset != null) jsImpl.offset = offset.toJS;
+    if (className != null) jsImpl.className = className;
+    if (maxWidth != null) jsImpl.maxWidth = maxWidth;
+    return PopupOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new PopupOptions from a [jsObject].
   PopupOptions.fromJsObject(super.jsObject) : super.fromJsObject();

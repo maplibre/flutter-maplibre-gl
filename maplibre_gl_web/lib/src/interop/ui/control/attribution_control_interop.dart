@@ -1,18 +1,17 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 
-@JS()
-@anonymous
-class AttributionControlOptionsJsImpl {
+extension type AttributionControlOptionsJsImpl._(JSObject _)
+    implements JSObject {
   external bool get compact;
 
-  external List<String>? get customAttribution;
+  external JSArray<JSString>? get customAttribution;
 
   external factory AttributionControlOptionsJsImpl(
-      {bool? compact, List<String>? customAttribution});
+      {bool? compact, JSArray<JSString>? customAttribution});
 }
 
 /// A `AttributionControl` control contains attributions.
@@ -26,13 +25,14 @@ class AttributionControlOptionsJsImpl {
 /// map.addControl(attribution, 'top-left');
 /// @see [Display map attribution controls](https://maplibre.org/maplibre-gl-js/docs/examples/attribution-position/)
 @JS('AttributionControl')
+@staticInterop
 class AttributionControlJsImpl {
-  external AttributionControlOptionsJsImpl get options;
-
   external factory AttributionControlJsImpl(
       AttributionControlOptionsJsImpl options);
+}
 
-  external onAdd(MapLibreMapJsImpl map);
-
-  external onRemove();
+extension AttributionControlJsImplExtension on AttributionControlJsImpl {
+  external AttributionControlOptionsJsImpl get options;
+  external JSAny? onAdd(MapLibreMapJsImpl map);
+  external void onRemove();
 }
