@@ -1,20 +1,23 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class ScrollZoomHandlerJsImpl {
+  factory ScrollZoomHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension ScrollZoomHandlerJsImplExtension on ScrollZoomHandlerJsImpl {
   ///  Set the zoom rate of a trackpad
   ///  @param {number} [zoomRate = 1/100]
-  external setZoomRate(num zoomRate);
+  external void setZoomRate(num zoomRate);
 
   ///  Set the zoom rate of a mouse wheel
   ///  @param {number} [wheelZoomRate = 1/450]
-  external setWheelZoomRate(num wheelZoomRate);
+  external void setWheelZoomRate(num wheelZoomRate);
 
   ///  Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.
   ///
@@ -37,13 +40,13 @@ abstract class ScrollZoomHandlerJsImpl {
   ///    map.scrollZoom.enable();
   ///  @example
   ///   map.scrollZoom.enable({ around: 'center' })
-  external enable(dynamic options);
+  external void enable(JSAny? options);
 
   ///  Disables the "scroll to zoom" interaction.
   ///
   ///  @example
   ///    map.scrollZoom.disable();
-  external disable();
+  external void disable();
 
-  external onWheel(WheelEvent e);
+  external void onWheel(WheelEvent e);
 }

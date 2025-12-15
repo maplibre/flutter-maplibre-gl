@@ -1,7 +1,7 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 
 ///  A `LngLatBounds` object represents a geographical bounding box,
@@ -20,14 +20,17 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 ///  var ne = new maplibregl.LngLat(-73.9397, 40.8002);
 ///  var llb = new maplibregl.LngLatBounds(sw, ne);
 @JS('LngLatBounds')
+@staticInterop
 class LngLatBoundsJsImpl {
-  external LngLatJsImpl get sw;
-  external LngLatJsImpl get ne;
-
   external factory LngLatBoundsJsImpl(
     LngLatJsImpl sw,
     LngLatJsImpl ne,
   );
+}
+
+extension LngLatBoundsJsImplExtension on LngLatBoundsJsImpl {
+  external LngLatJsImpl get sw;
+  external LngLatJsImpl get ne;
 
   ///  Set the northeast corner of the bounding box
   ///
@@ -45,7 +48,7 @@ class LngLatBoundsJsImpl {
   ///
   ///  @param {LngLat|LngLatBounds} obj object to extend to
   ///  @returns {LngLatBounds} `this`
-  external LngLatBoundsJsImpl extend(dynamic obj);
+  external LngLatBoundsJsImpl extend(JSAny obj);
 
   ///  Returns the geographical coordinate equidistant from the bounding box's corners.
   ///
@@ -102,17 +105,7 @@ class LngLatBoundsJsImpl {
   ///  @example
   ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
   ///  llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
-  external List<List<num>> toArray();
-
-  ///  Return the bounding box represented as a string.
-  ///
-  ///  @returns {string} The bounding box represents as a string of the format
-  ///    `'LngLatBounds(LngLat(lng, lat), LngLat(lng, lat))'`.
-  ///  @example
-  ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
-  ///  llb.toString(); // = "LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))"
-  @override
-  external String toString();
+  external JSArray<JSArray<JSNumber>> toArray();
 
   ///  Check if the bounding box is an empty/`null`-type box.
   ///
@@ -124,14 +117,15 @@ class LngLatBoundsJsImpl {
   ///  @param {LngLatLike} lnglat geographic point to check against.
   ///  @returns {boolean} True if the point is within the bounding box.
   external bool contains(LngLatJsImpl lnglat);
-
-  ///  Converts an array to a `LngLatBounds` object.
-  ///
-  ///  If a `LngLatBounds` object is passed in, the function returns it unchanged.
-  ///
-  ///  Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
-  ///
-  ///  @param {LngLatBoundsLike} input An array of two coordinates to convert, or a `LngLatBounds` object to return.
-  ///  @returns {LngLatBounds} A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.
-  external static LngLatBoundsJsImpl convert(dynamic input);
 }
+
+///  Converts an array to a `LngLatBounds` object.
+///
+///  If a `LngLatBounds` object is passed in, the function returns it unchanged.
+///
+///  Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
+///
+///  @param {LngLatBoundsLike} input An array of two coordinates to convert, or a `LngLatBounds` object to return.
+///  @returns {LngLatBounds} A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.
+@JS('LngLatBounds.convert')
+external LngLatBoundsJsImpl lngLatBoundsConvert(JSAny input);
