@@ -358,6 +358,10 @@ class MapUiBodyState extends State<MapUiBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height =
+        _mapExpanded ? MediaQuery.of(context).size.height / 2 : 200.0;
+
     final maplibreMap = MapLibreMap(
       onMapCreated: onMapCreated,
       initialCameraPosition: _kInitialPosition,
@@ -409,7 +413,7 @@ class MapUiBodyState extends State<MapUiBody> {
         final features =
             await mapController!.queryRenderedFeatures(point, [], null);
         if (features.isNotEmpty) {
-          debugPrint(features[0]);
+          debugPrint("Features in map: ${features[0]}");
         }
       },
       onCameraTrackingDismissed: () {
@@ -460,8 +464,8 @@ class MapUiBodyState extends State<MapUiBody> {
       children: [
         Center(
           child: SizedBox(
-            width: _mapExpanded ? null : 300.0,
-            height: 200.0,
+            width: width,
+            height: height,
             child: maplibreMap,
           ),
         ),

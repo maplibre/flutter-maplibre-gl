@@ -1,13 +1,16 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class DragPanHandlerJsImpl {
+  factory DragPanHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension DragPanHandlerJsImplExtension on DragPanHandlerJsImpl {
   ///  Returns a Boolean indicating whether the "drag to pan" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "drag to pan" interaction is enabled.
@@ -22,15 +25,15 @@ abstract class DragPanHandlerJsImpl {
   ///
   ///  @example
   ///  map.dragPan.enable();
-  external enable();
+  external void enable();
 
   ///  Disables the "drag to pan" interaction.
   ///
   ///  @example
   ///  map.dragPan.disable();
-  external disable();
+  external void disable();
 
-  external onMouseDown(MouseEvent e);
+  external void onMouseDown(MouseEvent e);
 
-  external onTouchStart(TouchEvent e);
+  external void onTouchStart(TouchEvent e);
 }

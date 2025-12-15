@@ -188,20 +188,19 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MapLibreMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
-              ),
+        SizedBox(
+          width: width,
+          height: height * 0.5,
+          child: MapLibreMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(-33.852, 151.211),
+              zoom: 11.0,
             ),
           ),
         ),

@@ -1,13 +1,16 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class BoxZoomHandlerJsImpl {
+  factory BoxZoomHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension BoxZoomHandlerJsImplExtension on BoxZoomHandlerJsImpl {
   ///  Returns a Boolean indicating whether the "box zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "box zoom" interaction is enabled.
@@ -22,13 +25,13 @@ abstract class BoxZoomHandlerJsImpl {
   ///
   ///  @example
   ///    map.boxZoom.enable();
-  external enable();
+  external void enable();
 
   ///  Disables the "box zoom" interaction.
   ///
   ///  @example
   ///    map.boxZoom.disable();
-  external disable();
+  external void disable();
 
-  external onMouseDown(MouseEvent e);
+  external void onMouseDown(MouseEvent e);
 }

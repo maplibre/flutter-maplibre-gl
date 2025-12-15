@@ -59,7 +59,7 @@ class GpsLocationMap extends HookWidget {
             children: [
               GpsIcon(onTapAndPermissionGranted: () async {
                 final currentLocation = await Location().getLocation();
-                print(currentLocation);
+                print("Current location: $currentLocation");
                 mapController.value?.animateCamera(
                   CameraUpdate.newLatLngZoom(
                       LatLng(

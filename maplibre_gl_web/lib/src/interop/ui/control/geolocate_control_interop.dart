@@ -1,58 +1,66 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 
 @JS()
-@anonymous
+@staticInterop
 class GeolocateControlOptionsJsImpl {
-  external PositionOptionsJsImpl get positionOptions;
+  factory GeolocateControlOptionsJsImpl() =>
+      createJsObject() as GeolocateControlOptionsJsImpl;
+}
 
-  external dynamic get fitBoundsOptions;
+extension GeolocateControlOptionsJsImplExtension
+    on GeolocateControlOptionsJsImpl {
+  external PositionOptionsJsImpl? get positionOptions;
+  external set positionOptions(PositionOptionsJsImpl? value);
 
-  external bool get trackUserLocation;
+  external JSAny? get fitBoundsOptions;
+  external set fitBoundsOptions(JSAny? value);
 
-  external bool get showAccuracyCircle;
+  external bool? get trackUserLocation;
+  external set trackUserLocation(bool? value);
 
-  external bool get showUserLocation;
+  external bool? get showAccuracyCircle;
+  external set showAccuracyCircle(bool? value);
 
-  external factory GeolocateControlOptionsJsImpl({
-    PositionOptionsJsImpl? positionOptions,
-    dynamic fitBoundsOptions,
-    bool? trackUserLocation,
-    bool? showAccuracyCircle,
-    bool? showUserLocation,
-  });
+  external bool? get showUserLocation;
+  external set showUserLocation(bool? value);
 }
 
 @JS()
-@anonymous
+@staticInterop
 class PositionOptionsJsImpl {
-  external bool get enableHighAccuracy;
+  factory PositionOptionsJsImpl() => createJsObject() as PositionOptionsJsImpl;
+}
 
-  external num get maximumAge;
+extension PositionOptionsJsImplExtension on PositionOptionsJsImpl {
+  external bool? get enableHighAccuracy;
+  external set enableHighAccuracy(bool? value);
 
-  external num get timeout;
+  external num? get maximumAge;
+  external set maximumAge(num? value);
 
-  external factory PositionOptionsJsImpl({
-    bool? enableHighAccuracy,
-    num? maximumAge,
-    num? timeout,
-  });
+  external num? get timeout;
+  external set timeout(num? value);
 }
 
 @JS('GeolocateControl')
+@staticInterop
 abstract class GeolocateControlJsImpl extends EventedJsImpl {
+  external factory GeolocateControlJsImpl(
+      [GeolocateControlOptionsJsImpl? options]);
+}
+
+extension GeolocateControlJsImplExtension on GeolocateControlJsImpl {
   external GeolocateControlOptionsJsImpl get options;
 
-  external factory GeolocateControlJsImpl(
-      GeolocateControlOptionsJsImpl options);
+  external void onAdd(MapLibreMapJsImpl map);
 
-  external onAdd(MapLibreMapJsImpl map);
+  external void onRemove(MapLibreMapJsImpl map);
 
-  external onRemove(MapLibreMapJsImpl map);
-
-  external trigger();
+  external void trigger();
 }

@@ -1,8 +1,7 @@
-import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/circle_layer.dart';
 
 class CircleLayerJsImpl {
-  static toJs(CircleLayer circleLayer) => jsify(toDict(circleLayer));
+  static toJs(CircleLayer circleLayer) => toDict(circleLayer).jsify();
 
   static toDict(CircleLayer circleLayer) {
     final dict = <String, dynamic>{
@@ -25,7 +24,7 @@ class CircleLayerJsImpl {
 }
 
 class CirclePaintJsImpl {
-  static toJs(CirclePaint circlePaint) => jsify(toDict(circlePaint));
+  static toJs(CirclePaint circlePaint) => toDict(circlePaint).jsify();
 
   static toDict(CirclePaint circlePaint) {
     final dict = <String, dynamic>{};

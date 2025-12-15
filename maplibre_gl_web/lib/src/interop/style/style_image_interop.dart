@@ -1,13 +1,14 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
-import 'package:maplibre_gl_web/src/interop/interop.dart';
+import 'dart:js_interop';
 
 @JS()
-@anonymous
-abstract class StyleImageJsImpl {
-  external dynamic get data;
+@staticInterop
+abstract class StyleImageJsImpl {}
+
+extension StyleImageJsImplExtension on StyleImageJsImpl {
+  external JSAny get data;
 
   external num get pixelRatio;
 
@@ -21,17 +22,19 @@ abstract class StyleImageJsImpl {
 }
 
 @JS()
-@anonymous
-abstract class StyleImageInterfaceJsImpl {
+@staticInterop
+abstract class StyleImageInterfaceJsImpl {}
+
+extension StyleImageInterfaceJsImplExtension on StyleImageInterfaceJsImpl {
   external num get width;
 
   external num get height;
 
-  external dynamic get data;
+  external JSAny get data;
 
-  external Function get render;
+  external JSFunction get render;
 
-  external Function(MapLibreMapJsImpl map, String id) get onAdd;
+  external JSFunction get onAdd;
 
-  external Function get onRemove;
+  external JSFunction get onRemove;
 }

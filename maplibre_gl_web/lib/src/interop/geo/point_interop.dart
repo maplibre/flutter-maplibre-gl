@@ -1,16 +1,19 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
+@staticInterop
 @anonymous
 class PointJsImpl {
-  external num get x;
-  external num get y;
-
   external factory PointJsImpl({
     num x,
     num y,
   });
+}
+
+extension PointJsImplExtension on PointJsImpl {
+  external num get x;
+  external num get y;
 }

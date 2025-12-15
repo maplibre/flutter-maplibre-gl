@@ -4,47 +4,56 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 
 class GeolocateControlOptions
     extends JsObjectWrapper<GeolocateControlOptionsJsImpl> {
-  PositionOptions get positionOptions =>
-      PositionOptions.fromJsObject(jsObject.positionOptions);
+  PositionOptions? get positionOptions => jsObject.positionOptions != null
+      ? PositionOptions.fromJsObject(jsObject.positionOptions!)
+      : null;
   dynamic get fitBoundsOptions => jsObject.fitBoundsOptions;
-  bool get trackUserLocation => jsObject.trackUserLocation;
-  bool get showAccuracyCircle => jsObject.showAccuracyCircle;
-  bool get showUserLocation => jsObject.showUserLocation;
+  bool? get trackUserLocation => jsObject.trackUserLocation;
+  bool? get showAccuracyCircle => jsObject.showAccuracyCircle;
+  bool? get showUserLocation => jsObject.showUserLocation;
 
   factory GeolocateControlOptions({
-    required PositionOptions positionOptions,
+    PositionOptions? positionOptions,
     dynamic fitBoundsOptions,
     bool? trackUserLocation,
     bool? showAccuracyCircle,
     bool? showUserLocation,
-  }) =>
-      GeolocateControlOptions.fromJsObject(GeolocateControlOptionsJsImpl(
-        positionOptions: positionOptions.jsObject,
-        fitBoundsOptions: fitBoundsOptions,
-        trackUserLocation: trackUserLocation,
-        showAccuracyCircle: showAccuracyCircle,
-        showUserLocation: showUserLocation,
-      ));
+  }) {
+    final jsImpl = GeolocateControlOptionsJsImpl();
+    if (positionOptions != null) {
+      jsImpl.positionOptions = positionOptions.jsObject;
+    }
+    if (fitBoundsOptions != null) jsImpl.fitBoundsOptions = fitBoundsOptions;
+    if (trackUserLocation != null) jsImpl.trackUserLocation = trackUserLocation;
+    if (showAccuracyCircle != null) {
+      jsImpl.showAccuracyCircle = showAccuracyCircle;
+    }
+    if (showUserLocation != null) jsImpl.showUserLocation = showUserLocation;
+    return GeolocateControlOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new MapOptions from a [jsObject].
   GeolocateControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
 }
 
 class PositionOptions extends JsObjectWrapper<PositionOptionsJsImpl> {
-  bool get enableHighAccuracy => jsObject.enableHighAccuracy;
-  num get maximumAge => jsObject.maximumAge;
-  num get timeout => jsObject.timeout;
+  bool? get enableHighAccuracy => jsObject.enableHighAccuracy;
+  num? get maximumAge => jsObject.maximumAge;
+  num? get timeout => jsObject.timeout;
 
   factory PositionOptions({
     bool? enableHighAccuracy,
     num? maximumAge,
     num? timeout,
-  }) =>
-      PositionOptions.fromJsObject(PositionOptionsJsImpl(
-        enableHighAccuracy: enableHighAccuracy,
-        maximumAge: maximumAge,
-        timeout: timeout,
-      ));
+  }) {
+    final jsImpl = PositionOptionsJsImpl();
+    if (enableHighAccuracy != null) {
+      jsImpl.enableHighAccuracy = enableHighAccuracy;
+    }
+    if (maximumAge != null) jsImpl.maximumAge = maximumAge;
+    if (timeout != null) jsImpl.timeout = timeout;
+    return PositionOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new MapOptions from a [jsObject].
   PositionOptions.fromJsObject(super.jsObject) : super.fromJsObject();

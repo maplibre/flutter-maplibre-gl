@@ -1,8 +1,7 @@
-import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/line_layer.dart';
 
 class LineLayerJsImpl {
-  static toJs(LineLayer lineLayer) => jsify(toDict(lineLayer));
+  static toJs(LineLayer lineLayer) => toDict(lineLayer).jsify();
 
   static toDict(LineLayer lineLayer) {
     final dict = <String, dynamic>{
@@ -30,7 +29,7 @@ class LineLayerJsImpl {
 }
 
 class LinePaintJsImpl {
-  static toJs(LinePaint linePaint) => jsify(toDict(linePaint));
+  static toJs(LinePaint linePaint) => toDict(linePaint).jsify();
 
   static toDict(LinePaint linePaint) {
     final dict = <String, dynamic>{};
@@ -72,7 +71,7 @@ class LinePaintJsImpl {
 }
 
 class LineLayoutJsImpl {
-  static toJs(LineLayout lineLayout) => jsify(toDict(lineLayout));
+  static toJs(LineLayout lineLayout) => toDict(lineLayout).jsify();
 
   static toDict(LineLayout lineLayout) {
     final dict = <String, dynamic>{};

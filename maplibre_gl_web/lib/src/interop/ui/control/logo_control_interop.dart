@@ -1,7 +1,7 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 
 /// A LogoControl is a control that adds the watermark.
@@ -9,12 +9,13 @@ import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 /// @implements {IControl}
 /// @private
 @JS('LogoControl')
+@staticInterop
 class LogoControlJsImpl {
   external factory LogoControlJsImpl();
+}
 
-  external onAdd(MapLibreMapJsImpl map);
-
-  external onRemove();
-
-  external getDefaultPosition();
+extension LogoControlJsImplExtension on LogoControlJsImpl {
+  external JSAny? onAdd(MapLibreMapJsImpl map);
+  external void onRemove();
+  external JSAny? getDefaultPosition();
 }

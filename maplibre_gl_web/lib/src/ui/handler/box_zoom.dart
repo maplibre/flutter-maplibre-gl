@@ -1,4 +1,4 @@
-import 'dart:html';
+import 'package:web/web.dart';
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 

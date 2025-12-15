@@ -2,7 +2,7 @@ part of '../maplibre_gl_web.dart';
 
 class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
-  late html.DivElement _mapElement;
+  late web.HTMLDivElement _mapElement;
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
@@ -44,7 +44,7 @@ class MapLibreMapController extends MapLibrePlatform
   void _registerViewFactory(Function(int) callback, int identifier) {
     ui_web.platformViewRegistry.registerViewFactory(
         'plugins.flutter.io/maplibre_gl_$identifier', (int viewId) {
-      _mapElement = html.DivElement()
+      _mapElement = (web.document.createElement('div') as web.HTMLDivElement)
         ..style.position = 'absolute'
         ..style.top = '0'
         ..style.bottom = '0'
@@ -97,7 +97,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _initResizeObserver() {
-    final resizeObserver = html.ResizeObserver((entries, observer) {
+    final resizeObserver = web.ResizeObserver(((JSAny entries, JSAny observer) {
       // The resize observer might be called a lot of times when the user resizes the browser window with the mouse for example.
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
@@ -105,14 +105,20 @@ class MapLibreMapController extends MapLibrePlatform
       lastResizeObserverTimer = Timer(const Duration(milliseconds: 50), () {
         _onMapResize();
       });
-    });
-    resizeObserver.observe(html.document.body!);
+    }).toJS);
+    resizeObserver.observe(_mapElement);
   }
 
   Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
-    final bytes = await rootBundle.load(imagePath);
-    await addImage(imagePath, bytes.buffer.asUint8List());
+
+    try {
+      final bytes = await rootBundle.load(imagePath);
+      await addImage(imagePath, bytes.buffer.asUint8List());
+    } catch (e) {
+      dev.log('Could not load image from assets: $imagePath',
+          name: 'MapLibreMapController');
+    }
   }
 
   void _onMouseDown(Event e, String? layerId) {
@@ -188,12 +194,13 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
+    final jsObj = cameraOptions as JSObject;
 
-    final around = getProperty(cameraOptions, 'around');
-    final bearing = getProperty(cameraOptions, 'bearing');
-    final center = getProperty(cameraOptions, 'center');
-    final pitch = getProperty(cameraOptions, 'pitch');
-    final zoom = getProperty(cameraOptions, 'zoom');
+    final around = jsObj.getProperty('around'.toJS);
+    final bearing = jsObj.getProperty('bearing'.toJS);
+    final center = jsObj.getProperty('center'.toJS);
+    final pitch = jsObj.getProperty('pitch'.toJS);
+    final zoom = jsObj.getProperty('zoom'.toJS);
 
     _map.flyTo({
       if (around != null) 'around': around,
@@ -330,10 +337,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<String?> getStyle() async {
-    // Web implementation: MapLibre GL JS doesn't have direct style JSON export
-    print('getStyle called in web');
-    // For future implementation, we could use MapLibre GL JS style methods
-    throw UnimplementedError();
+    final styleJs = _map.getStyle();
+    if (styleJs == null) return null;
+
+    // Convert JS object to Dart map, then to JSON string
+    final styleMap = dartify(styleJs);
+    return jsonEncode(styleMap);
   }
 
   @override
@@ -496,7 +505,7 @@ class MapLibreMapController extends MapLibrePlatform
       [bool sdf = false]) async {
     final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
-      _map.addImage(
+      await _map.addImage(
         name,
         {
           'width': photo.width,
@@ -505,6 +514,9 @@ class MapLibreMapController extends MapLibrePlatform
         },
         {'sdf': sdf},
       );
+    } else {
+      dev.log('Image already exists on map: $name',
+          name: 'MapLibreMapController');
     }
   }
 
@@ -1054,12 +1066,14 @@ class MapLibreMapController extends MapLibrePlatform
       try {
         _map.setLayoutProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        print(
+            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
       }
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print('Caught exception (usually safe to ignore): $e');
+        print(
+            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
       }
     }
   }
@@ -1345,6 +1359,16 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getSourceIds() async {
-    throw UnimplementedError();
+    final style = _map.getStyle();
+    if (style == null) return [];
+
+    // The style is a JavaScript object with a 'sources' property
+    final jsStyle = style as JSObject;
+    final jsSources = jsStyle.getProperty('sources'.toJS);
+
+    if (jsSources == null) return [];
+
+    // Get the keys (source IDs) from the sources object
+    return objectKeys(jsSources);
   }
 }

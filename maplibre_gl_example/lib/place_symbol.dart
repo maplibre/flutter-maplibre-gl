@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:core';
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -70,6 +71,8 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   /// Adds a network image to the currently displayed style
   Future<void> addImageFromUrl(String name, Uri uri) async {
     final response = await http.get(uri);
+    dev.log(
+        "response.statusCode: ${response.statusCode} for uri: $uri, bodyBytes length: ${response.bodyBytes.length}");
     return controller!.addImage(name, response.bodyBytes);
   }
 
@@ -288,21 +291,20 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 200.0,
-            child: MapLibreMap(
-              onMapCreated: _onMapCreated,
-              onStyleLoadedCallback: _onStyleLoaded,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
-              ),
+        SizedBox(
+          width: width,
+          height: height * 0.5,
+          child: MapLibreMap(
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoaded,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(-33.852, 151.211),
+              zoom: 11.0,
             ),
           ),
         ),

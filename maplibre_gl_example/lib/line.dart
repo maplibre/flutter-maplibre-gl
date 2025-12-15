@@ -175,20 +175,20 @@ class LineBodyState extends State<LineBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: SizedBox(
-            height: 400.0,
-            child: MapLibreMap(
-              onMapCreated: _onMapCreated,
-              onStyleLoadedCallback: _onStyleLoadedCallback,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
-              ),
+        SizedBox(
+          width: width,
+          height: height * 0.5,
+          child: MapLibreMap(
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(-33.852, 151.211),
+              zoom: 11.0,
             ),
           ),
         ),
@@ -243,9 +243,7 @@ class LineBodyState extends State<LineBody> {
                               : () {
                                   final latLngs = controller!
                                       .getLineLatLngs(_selectedLine!);
-                                  for (final latLng in latLngs) {
-                                    debugPrint(latLng.toString());
-                                  }
+                                  debugPrint('Current geometry: $latLngs');
                                 },
                           child: const Text('print current LatLng'),
                         ),

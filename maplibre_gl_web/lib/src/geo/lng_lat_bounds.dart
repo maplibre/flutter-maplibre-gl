@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 
@@ -102,7 +104,11 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  @example
   ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
   ///  llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
-  List<List<num>> toArray() => jsObject.toArray();
+  List<List<num>> toArray() => (jsObject.toArray() as JSArray)
+      .toDart
+      .nonNulls
+      .map((e) => (e as JSArray).toDart.cast<num>())
+      .toList();
 
   ///  Return the bounding box represented as a string.
   ///
@@ -138,7 +144,7 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  var llb = maplibregl.LngLatBounds.convert(arr);
   ///  llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
   LngLatBounds.convert(dynamic input)
-      : this.fromJsObject(LngLatBoundsJsImpl.convert(input));
+      : this.fromJsObject(lngLatBoundsConvert(input.jsify()));
 
   /// Creates a new LngLatBounds from a [jsObject].
   LngLatBounds.fromJsObject(super.jsObject) : super.fromJsObject();
