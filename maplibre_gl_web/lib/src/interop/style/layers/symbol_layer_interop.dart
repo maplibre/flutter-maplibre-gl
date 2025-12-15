@@ -1,8 +1,7 @@
-import 'package:js/js_util.dart';
 import 'package:maplibre_gl_web/src/style/layers/symbol_layer.dart';
 
 class SymbolLayerJsImpl {
-  static toJs(SymbolLayer symbolLayer) => jsify(toDict(symbolLayer));
+  static toJs(SymbolLayer symbolLayer) => toDict(symbolLayer).jsify();
 
   static toDict(SymbolLayer symbolLayer) {
     final dict = <String, dynamic>{
@@ -40,7 +39,7 @@ class SymbolLayerJsImpl {
 }
 
 class SymbolPaintJsImpl {
-  static toJs(SymbolPaint symbolPaint) => jsify(toDict(symbolPaint));
+  static toJs(SymbolPaint symbolPaint) => toDict(symbolPaint).jsify();
 
   static toDict(SymbolPaint symbolPaint) {
     final dict = <String, dynamic>{};
@@ -91,7 +90,7 @@ class SymbolPaintJsImpl {
 }
 
 class SymbolLayoutJsImpl {
-  static toJs(SymbolLayout symbolLayout) => jsify(toDict(symbolLayout));
+  static toJs(SymbolLayout symbolLayout) => toDict(symbolLayout).jsify();
 
   static toDict(SymbolLayout symbolLayout) {
     final dict = <String, dynamic>{};

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -239,8 +238,10 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
 
     //web does not support Platform._operatingSystem
     if (!kIsWeb) {
+      final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+
       // iOS returns logical pixel while Android returns screen pixel
-      ratio = Platform.isIOS ? 1.0 : MediaQuery.of(context).devicePixelRatio;
+      ratio = isIos ? 1.0 : MediaQuery.of(context).devicePixelRatio;
     }
 
     return Positioned(

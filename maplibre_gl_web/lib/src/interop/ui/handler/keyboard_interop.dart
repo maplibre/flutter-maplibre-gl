@@ -1,11 +1,15 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class KeyboardHandlerJsImpl {
+  factory KeyboardHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension KeyboardHandlerJsImplExtension on KeyboardHandlerJsImpl {
   ///  Returns a Boolean indicating whether keyboard interaction is enabled.
   ///
   ///  @returns {boolean} `true` if keyboard interaction is enabled.
@@ -15,11 +19,11 @@ abstract class KeyboardHandlerJsImpl {
   ///
   ///  @example
   ///  map.keyboard.enable();
-  external bool enable();
+  external bool? enable();
 
   ///  Disables keyboard interaction.
   ///
   ///  @example
   ///  map.keyboard.disable();
-  external bool disable();
+  external bool? disable();
 }
