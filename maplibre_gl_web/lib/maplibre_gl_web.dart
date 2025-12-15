@@ -4,17 +4,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as dev;
 
-// FIXED HERE: https://github.com/dart-lang/linter/pull/1985
-import 'dart:html' as html hide Event;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
-import 'dart:js_util';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/services.dart';
 
-import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Element;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
@@ -32,6 +32,9 @@ import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/navigation_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
+import 'package:maplibre_gl_web/src/utils.dart';
+
+import 'src/interop/js.dart';
 
 part 'src/convert.dart';
 
