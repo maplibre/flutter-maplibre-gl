@@ -18,7 +18,7 @@ class LocationEnginePlatforms {
     if (kIsWeb) {
       return [];
     }
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       return androidPlatform.toList();
     }
     return [];
