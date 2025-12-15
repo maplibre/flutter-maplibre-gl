@@ -1,30 +1,36 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/style/evaluation_parameters_interop.dart';
 import 'package:maplibre_gl_web/src/interop/style/style_image_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 
 @JS()
-@anonymous
-abstract class StyleSetterOptionsJsImpl {
+@staticInterop
+abstract class StyleSetterOptionsJsImpl {}
+
+extension StyleSetterOptionsJsImplExtension on StyleSetterOptionsJsImpl {
   external bool get validate;
 }
 
 @JS('Style')
-abstract class StyleJsImpl extends EventedJsImpl {
-  loadURL(String url, dynamic options);
+@staticInterop
+abstract class StyleJsImpl extends EventedJsImpl {}
 
-  loadJSON(dynamic json, StyleSetterOptionsJsImpl option);
+extension StyleJsImplExtension on StyleJsImpl {
+  external void loadURL(String url, JSAny options);
 
-  loaded();
+  external void loadJSON(JSAny json, StyleSetterOptionsJsImpl option);
 
-  hasTransitions();
+  external void loaded();
+
+  external void hasTransitions();
 
   ///  Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
-  update(EvaluationParametersJsImpl parameters);
+  external void update(EvaluationParametersJsImpl parameters);
 
   ///  Update this style's state to match the given style JSON, performing only
   ///  the necessary mutations.
@@ -34,46 +40,47 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///
   ///  @returns {boolean} true if any changes were made; false otherwise
   ///  @private
-  setState(dynamic nextState);
+  external void setState(JSAny nextState);
 
-  addImage(String id, StyleImageJsImpl image);
+  external void addImage(String id, StyleImageJsImpl image);
 
-  updateImage(String id, StyleImageJsImpl image);
+  external void updateImage(String id, StyleImageJsImpl image);
 
-  StyleImageJsImpl getImage(String id);
+  external StyleImageJsImpl getImage(String id);
 
-  removeImage(String id);
+  external void removeImage(String id);
 
-  listImages();
+  external void listImages();
 
-  addSource(String id, dynamic source, StyleSetterOptionsJsImpl options);
+  external void addSource(
+      String id, JSAny source, StyleSetterOptionsJsImpl options);
 
   ///  Remove a source from this stylesheet, given its id.
   ///  @param {string} id id of the source to remove
   ///  @throws {Error} if no source is found with the given ID
-  removeSource(String id);
+  external void removeSource(String id);
 
   ///  Set the data of a GeoJSON source, given its id.
   ///  @param {string} id id of the source
   ///  @param {GeoJSON|string} data GeoJSON source
-  setGeoJSONSourceData(String id, dynamic data);
+  external void setGeoJSONSourceData(String id, JSAny data);
 
   ///  Get a source by id.
   ///  @param {string} id id of the desired source
   ///  @returns {Object} source
-  dynamic getSource(String id);
+  external JSAny getSource(String id);
 
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  addLayer(dynamic layerObject,
+  external void addLayer(JSAny layerObject,
       [String? before, StyleSetterOptionsJsImpl? options]);
 
   ///  Moves a layer to a different z-position. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} id  ID of the layer to move
   ///  @param {string} [before] ID of an existing layer to insert before
-  moveLayer(String id, [String? before]);
+  external void moveLayer(String id, [String? before]);
 
   ///  Remove the layer with the given id from the style.
   ///
@@ -81,71 +88,79 @@ abstract class StyleJsImpl extends EventedJsImpl {
   ///
   ///  @param {string} id id of the layer to remove
   ///  @fires error
-  removeLayer(String id);
+  external void removeLayer(String id);
 
   ///  Return the style layer object with the given `id`.
   ///
   ///  @param {string} id - id of the desired layer
   ///  @returns {?Object} a layer, if one with the given `id` exists
-  dynamic getLayer(String id);
+  external JSAny getLayer(String id);
 
-  setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]);
+  external void setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]);
 
-  setFilter(String layerId, dynamic filter, StyleSetterOptionsJsImpl options);
+  external void setFilter(
+      String layerId, JSAny filter, StyleSetterOptionsJsImpl options);
 
   ///  Get a layer's filter object
   ///  @param {string} layer the layer to inspect
   ///  @returns {*} the layer's filter, if any
-  getFilter(String layer);
+  external JSAny getFilter(String layer);
 
-  setLayoutProperty(String layerId, String name, dynamic value,
+  external void setLayoutProperty(String layerId, String name, JSAny value,
       StyleSetterOptionsJsImpl options);
 
   ///  Get a layout property's value from a given layer
   ///  @param {string} layerId the layer to inspect
   ///  @param {string} name the name of the layout property
   ///  @returns {*} the property value
-  getLayoutProperty(String layerId, String name);
+  external JSAny getLayoutProperty(String layerId, String name);
 
-  setPaintProperty(String layerId, String name, dynamic value,
+  external void setPaintProperty(String layerId, String name, JSAny value,
       StyleSetterOptionsJsImpl options);
 
-  getPaintProperty(String layer, String name);
+  external JSAny getPaintProperty(String layer, String name);
 
-  setFeatureState(dynamic target, dynamic state);
+  external void setFeatureState(JSAny target, JSAny state);
 
-  removeFeatureState(dynamic target, [String? key]);
+  external void removeFeatureState(JSAny target, [String? key]);
 
-  getFeatureState(dynamic target);
+  external JSAny getFeatureState(JSAny target);
 
-  getTransition();
+  external JSAny getTransition();
 
-  serialize();
+  external JSAny serialize();
 
-  querySourceFeatures(String sourceID, dynamic params);
+  external JSAny querySourceFeatures(String sourceID, JSAny params);
 
-  addSourceType(String name, dynamic sourceType, Function callback);
+  external void addSourceType(
+      String name, JSAny sourceType, JSFunction callback);
 
-  getLight();
+  external JSAny getLight();
 
-  setLight(dynamic lightOptions, StyleSetterOptionsJsImpl options);
+  external void setLight(JSAny lightOptions, StyleSetterOptionsJsImpl options);
 
   // Callbacks from web workers
 
-  getImages(String mapId, dynamic params, Function callback);
+  external void getImages(String mapId, JSAny params, JSFunction callback);
 
-  getGlyphs(String mapId, dynamic params, Function callback);
+  external void getGlyphs(String mapId, JSAny params, JSFunction callback);
 
-  getResource(String mapId, RequestParametersJsImpl params, Function callback);
+  external void getResource(
+      String mapId, RequestParametersJsImpl params, JSFunction callback);
 
-  external List<dynamic> layers;
+  external JSArray layers;
 }
 
 @JS()
-@anonymous
+@staticInterop
 class StyleFunctionJsImpl {
-  external factory StyleFunctionJsImpl({
-    dynamic base,
-    dynamic stops,
-  });
+  factory StyleFunctionJsImpl() => createJsObject() as StyleFunctionJsImpl;
+}
+
+extension StyleFunctionJsImplExtension on StyleFunctionJsImpl {
+  external JSAny? get base;
+  external set base(JSAny? value);
+
+  external JSAny? get stops;
+  external set stops(JSAny? value);
 }

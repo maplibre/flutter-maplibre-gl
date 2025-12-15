@@ -1,12 +1,11 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 
-@JS()
-@anonymous
-class NavigationControlOptionsJsImpl {
+extension type NavigationControlOptionsJsImpl._(JSObject _)
+    implements JSObject {
   external bool get showCompass;
 
   external bool get showZoom;
@@ -33,13 +32,14 @@ class NavigationControlOptionsJsImpl {
 /// @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
 /// @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
 @JS('NavigationControl')
+@staticInterop
 class NavigationControlJsImpl {
-  external NavigationControlOptionsJsImpl get options;
-
   external factory NavigationControlJsImpl(
       NavigationControlOptionsJsImpl options);
+}
 
-  external onAdd(MapLibreMapJsImpl map);
-
-  external onRemove();
+extension NavigationControlJsImplExtension on NavigationControlJsImpl {
+  external NavigationControlOptionsJsImpl get options;
+  external JSAny? onAdd(MapLibreMapJsImpl map);
+  external void onRemove();
 }
