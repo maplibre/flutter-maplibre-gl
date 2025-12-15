@@ -22,6 +22,10 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -968,6 +972,32 @@ final class MapLibreMapController
         {
           final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
           final Integer duration = call.argument("duration");
+          final String interpolationStr = call.argument("interpolation");
+
+          // Create interpolator based on parameter
+          Interpolator interpolator = null;
+          if (interpolationStr != null) {
+            switch (interpolationStr) {
+              case "linear":
+                interpolator = new LinearInterpolator();
+                break;
+              case "easeInOut":
+                interpolator = new AccelerateDecelerateInterpolator();
+                break;
+              case "easeOut":
+                interpolator = new DecelerateInterpolator();
+                break;
+              case "fastOutLinearIn":
+                // Use LinearInterpolator as fallback for fastOutLinearIn
+                // (androidx FastOutLinearInInterpolator would require additional dependency)
+                interpolator = new LinearInterpolator();
+                break;
+              default:
+                // null = use MapLibre's default interpolation
+                interpolator = null;
+                break;
+            }
+          }
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
               new OnCameraMoveFinishedListener() {
@@ -985,10 +1015,15 @@ final class MapLibreMapController
               };
 
           if (cameraUpdate != null && duration != null && duration > 0) {
-            // camera transformation not handled yet
-            mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
+            // Use easeCamera with custom interpolator if provided
+            if (interpolator != null) {
+              mapLibreMap.easeCamera(cameraUpdate, duration, interpolator, onCameraMoveFinishedListener);
+            } else {
+              // Use default interpolation
+              mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
+            }
           } else if (cameraUpdate != null) {
-            // camera transformation not handled yet
+            // No duration specified, use default animation
             mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
             result.success(false);
