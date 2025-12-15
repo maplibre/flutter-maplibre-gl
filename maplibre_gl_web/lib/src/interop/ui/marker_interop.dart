@@ -1,10 +1,11 @@
 @JS('maplibregl')
 library;
 
-import 'dart:html';
-import 'package:js/js.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
+import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/popup_interop.dart';
 import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
@@ -27,9 +28,12 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 /// @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
 /// @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
 @JS('Marker')
+@staticInterop
 class MarkerJsImpl extends EventedJsImpl {
   external factory MarkerJsImpl([MarkerOptionsJsImpl? options]);
+}
 
+extension MarkerJsImplExtension on MarkerJsImpl {
   ///  Attaches the marker to a map
   ///  @param {MapLibreMap} map
   ///  @returns {Marker} `this`
@@ -120,16 +124,33 @@ class MarkerJsImpl extends EventedJsImpl {
 }
 
 @JS()
-@anonymous
+@staticInterop
 class MarkerOptionsJsImpl {
-  external factory MarkerOptionsJsImpl({
-    HtmlElement? element,
-    PointJsImpl? offset,
-    String? anchor,
-    String? color,
-    bool? draggable,
-    num? rotation,
-    String? rotationAlignment,
-    String? pitchAlignment,
-  });
+  factory MarkerOptionsJsImpl() => createJsObject() as MarkerOptionsJsImpl;
+}
+
+extension MarkerOptionsJsImplExtension on MarkerOptionsJsImpl {
+  external HtmlElement? get element;
+  external set element(HtmlElement? value);
+
+  external PointJsImpl? get offset;
+  external set offset(PointJsImpl? value);
+
+  external String? get anchor;
+  external set anchor(String? value);
+
+  external String? get color;
+  external set color(String? value);
+
+  external bool? get draggable;
+  external set draggable(bool? value);
+
+  external num? get rotation;
+  external set rotation(num? value);
+
+  external String? get rotationAlignment;
+  external set rotationAlignment(String? value);
+
+  external String? get pitchAlignment;
+  external set pitchAlignment(String? value);
 }

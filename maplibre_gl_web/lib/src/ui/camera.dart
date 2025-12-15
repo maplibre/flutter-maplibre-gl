@@ -1,10 +1,12 @@
-import 'package:js/js_util.dart';
+import 'dart:js_interop';
+
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
 import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/interop/interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
+import 'package:maplibre_gl_web/src/utils.dart' as utils;
 
 ///  Options common to {@link MapLibreMap#jumpTo}, [MapLibreMap.easeTo], and {@link MapLibreMap#flyTo}, controlling the desired location,
 ///  zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
@@ -19,15 +21,17 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 ///  @property {LngLatLike} around If `zoom` is specified, `around` determines the point around which the zoom is centered.
 
 class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
-  LngLat get center => LngLat.fromJsObject(jsObject.center);
+  LngLat? get center =>
+      jsObject.center != null ? LngLat.fromJsObject(jsObject.center!) : null;
 
-  num get zoom => jsObject.zoom;
+  num? get zoom => jsObject.zoom;
 
-  num get bearing => jsObject.bearing;
+  num? get bearing => jsObject.bearing;
 
-  num get pitch => jsObject.pitch;
+  num? get pitch => jsObject.pitch;
 
-  LngLat get around => LngLat.fromJsObject(jsObject.around);
+  LngLat? get around =>
+      jsObject.around != null ? LngLat.fromJsObject(jsObject.around!) : null;
 
   factory CameraOptions({
     LngLat? center,
@@ -35,14 +39,15 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
     num? bearing,
     num? pitch,
     LngLat? around,
-  }) =>
-      CameraOptions.fromJsObject(CameraOptionsJsImpl(
-        center: center?.jsObject,
-        zoom: zoom,
-        bearing: bearing,
-        pitch: pitch,
-        around: around?.jsObject,
-      ));
+  }) {
+    final jsImpl = CameraOptionsJsImpl();
+    if (center != null) jsImpl.center = center.jsObject;
+    if (zoom != null) jsImpl.zoom = zoom;
+    if (bearing != null) jsImpl.bearing = bearing;
+    if (pitch != null) jsImpl.pitch = pitch;
+    if (around != null) jsImpl.around = around.jsObject;
+    return CameraOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new CameraOptions from a [jsObject].
   CameraOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -61,30 +66,32 @@ class CameraOptions extends JsObjectWrapper<CameraOptionsJsImpl> {
 ///  @property {boolean} essential If `true`, then the animation is considered essential and will not be affected by
 ///    [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
-  num get duration => jsObject.duration;
+  num? get duration => jsObject.duration;
 
-  num Function(num time) get easing => jsObject.easing;
+  JSFunction? get easing => jsObject.easing;
 
-  Point get offset => Point.fromJsObject(jsObject.offset);
+  Point? get offset =>
+      jsObject.offset != null ? Point.fromJsObject(jsObject.offset!) : null;
 
-  bool get animate => jsObject.animate;
+  bool? get animate => jsObject.animate;
 
-  bool get essential => jsObject.essential;
+  bool? get essential => jsObject.essential;
 
   factory AnimationOptions({
     num? duration,
-    num Function(num time)? easing,
-    required Point offset,
+    JSFunction? easing,
+    Point? offset,
     bool? animate,
     bool? essential,
-  }) =>
-      AnimationOptions.fromJsObject(AnimationOptionsJsImpl(
-        duration: duration,
-        easing: easing,
-        offset: offset.jsObject,
-        animate: animate,
-        essential: essential,
-      ));
+  }) {
+    final jsImpl = AnimationOptionsJsImpl();
+    if (duration != null) jsImpl.duration = duration;
+    if (easing != null) jsImpl.easing = easing;
+    if (offset != null) jsImpl.offset = offset.jsObject;
+    if (animate != null) jsImpl.animate = animate;
+    if (essential != null) jsImpl.essential = essential;
+    return AnimationOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new AnimationOptions from a [jsObject].
   AnimationOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -99,26 +106,27 @@ class AnimationOptions extends JsObjectWrapper<AnimationOptionsJsImpl> {
 ///  @property {number} left Padding in pixels from the left of the map canvas.
 ///  @property {number} right Padding in pixels from the right of the map canvas.
 class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
-  num get top => jsObject.top;
+  num? get top => jsObject.top;
 
-  num get bottom => jsObject.bottom;
+  num? get bottom => jsObject.bottom;
 
-  num get left => jsObject.left;
+  num? get left => jsObject.left;
 
-  num get right => jsObject.right;
+  num? get right => jsObject.right;
 
   factory PaddingOptions({
     num? top,
     num? bottom,
     num? left,
     num? right,
-  }) =>
-      PaddingOptions.fromJsObject(PaddingOptionsJsImpl(
-        top: top,
-        bottom: bottom,
-        left: left,
-        right: right,
-      ));
+  }) {
+    final jsImpl = PaddingOptionsJsImpl();
+    if (top != null) jsImpl.top = top;
+    if (bottom != null) jsImpl.bottom = bottom;
+    if (left != null) jsImpl.left = left;
+    if (right != null) jsImpl.right = right;
+    return PaddingOptions.fromJsObject(jsImpl);
+  }
 
   /// Creates a new PaddingOptions from a [jsObject].
   PaddingOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -356,8 +364,12 @@ class Camera extends Evented {
       return CameraOptions.fromJsObject(
           jsObject.cameraForBounds(bounds.jsObject));
     }
-    return CameraOptions.fromJsObject(jsObject.cameraForBounds(bounds.jsObject,
-        options is CameraOptions ? options.jsObject : jsify(options)));
+    final optionsJs = options is CameraOptions
+        ? options.jsObject
+        : (options is Map ? utils.jsify(options) : options as JSAny);
+
+    return CameraOptions.fromJsObject(jsObject.cameraForBounds(
+        bounds.jsObject, optionsJs as CameraOptionsJsImpl?));
   }
 
   ///  Pans and zooms the map to contain its visible area within the specified geographical bounds.
@@ -386,8 +398,8 @@ class Camera extends Evented {
   ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
   MapLibreMap fitBounds(LngLatBounds bounds,
           [Map<String, dynamic>? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(
-          jsObject.fitBounds(bounds.jsObject, jsify(options ?? {}), eventData));
+      MapLibreMap.fromJsObject(jsObject.fitBounds(
+          bounds.jsObject, utils.jsify(options ?? {}), eventData));
 
   ///  Pans, rotates and zooms the map to to fit the box made by points p0 and p1
   ///  once the map is rotated to the specified bearing. To zoom without rotating,
@@ -524,9 +536,17 @@ class Camera extends Evented {
   ///  @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
   ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
   ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
-  MapLibreMap flyTo(dynamic options, [String? eventData]) =>
-      MapLibreMap.fromJsObject(jsObject
-          .flyTo(options is CameraOptions ? options.jsObject : jsify(options)));
+  MapLibreMap flyTo(dynamic options, [String? eventData]) {
+    JSAny optionsJs;
+    if (options is CameraOptions) {
+      optionsJs = options.jsObject as JSAny;
+    } else if (options is Map) {
+      optionsJs = utils.jsify(options)!;
+    } else {
+      optionsJs = options as JSAny;
+    }
+    return MapLibreMap.fromJsObject(jsObject.flyTo(optionsJs));
+  }
 
   bool isEasing() => jsObject.isEasing();
 
