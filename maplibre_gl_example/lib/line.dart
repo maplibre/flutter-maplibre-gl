@@ -194,64 +194,54 @@ class LineBodyState extends State<LineBody> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: (_lineCount == 12) ? null : _add,
-                          child: const Text('add'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null) ? null : _remove,
-                          child: const Text('remove'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () async {
-                                  await _move();
-                                },
-                          child: const Text('move'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : _changeLinePattern,
-                          child: const Text('change line-pattern'),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _changeAlpha,
-                          child: const Text('change alpha'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _toggleVisible,
-                          child: const Text('toggle visible'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () {
-                                  final latLngs = controller!
-                                      .getLineLatLngs(_selectedLine!);
-                                  debugPrint('Current geometry: $latLngs');
-                                },
-                          child: const Text('print current LatLng'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: (_lineCount == 12) ? null : _add,
+                    child: const Text('add'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _remove,
+                    child: const Text('remove'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null)
+                        ? null
+                        : () async {
+                            await _move();
+                          },
+                    child: const Text('move'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedLine == null) ? null : _changeLinePattern,
+                    child: const Text('change line-pattern'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _changeAlpha,
+                    child: const Text('change alpha'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _toggleVisible,
+                    child: const Text('toggle visible'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null)
+                        ? null
+                        : () {
+                            final latLngs =
+                                controller!.getLineLatLngs(_selectedLine!);
+                            debugPrint('Current geometry: $latLngs');
+                          },
+                    child: const Text('print current LatLng'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

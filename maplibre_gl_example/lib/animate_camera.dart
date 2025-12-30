@@ -49,10 +49,13 @@ class AnimateCameraState extends State<AnimateCamera> {
                 const CameraPosition(target: LatLng(0.0, 0.0)),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 4.0,
+              runSpacing: 4.0,
+              alignment: WrapAlignment.center,
               children: [
                 TextButton(
                   onPressed: () async {
@@ -162,10 +165,6 @@ class AnimateCameraState extends State<AnimateCamera> {
                   },
                   child: const Text('setMaximumFps'),
                 ),
-              ],
-            ),
-            Column(
-              children: [
                 TextButton(
                   onPressed: () async {
                     await mapController.animateCamera(
@@ -236,7 +235,7 @@ class AnimateCameraState extends State<AnimateCamera> {
                 ),
               ],
             ),
-          ],
+          ),
         )
       ],
     );
