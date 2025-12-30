@@ -175,85 +175,73 @@ class LineBodyState extends State<LineBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: SizedBox(
-            height: 400.0,
-            child: MapLibreMap(
-              onMapCreated: _onMapCreated,
-              onStyleLoadedCallback: _onStyleLoadedCallback,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
-              ),
+        SizedBox(
+          width: width,
+          height: height * 0.5,
+          child: MapLibreMap(
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(-33.852, 151.211),
+              zoom: 11.0,
             ),
           ),
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: (_lineCount == 12) ? null : _add,
-                          child: const Text('add'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null) ? null : _remove,
-                          child: const Text('remove'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () async {
-                                  await _move();
-                                },
-                          child: const Text('move'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : _changeLinePattern,
-                          child: const Text('change line-pattern'),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _changeAlpha,
-                          child: const Text('change alpha'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedLine == null) ? null : _toggleVisible,
-                          child: const Text('toggle visible'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedLine == null)
-                              ? null
-                              : () {
-                                  final latLngs = controller!
-                                      .getLineLatLngs(_selectedLine!);
-                                  for (final latLng in latLngs) {
-                                    debugPrint(latLng.toString());
-                                  }
-                                },
-                          child: const Text('print current LatLng'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: (_lineCount == 12) ? null : _add,
+                    child: const Text('add'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _remove,
+                    child: const Text('remove'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null)
+                        ? null
+                        : () async {
+                            await _move();
+                          },
+                    child: const Text('move'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedLine == null) ? null : _changeLinePattern,
+                    child: const Text('change line-pattern'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _changeAlpha,
+                    child: const Text('change alpha'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null) ? null : _toggleVisible,
+                    child: const Text('toggle visible'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedLine == null)
+                        ? null
+                        : () {
+                            final latLngs =
+                                controller!.getLineLatLngs(_selectedLine!);
+                            debugPrint('Current geometry: $latLngs');
+                          },
+                    child: const Text('print current LatLng'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

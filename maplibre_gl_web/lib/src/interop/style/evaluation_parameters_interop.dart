@@ -1,21 +1,24 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS('EvaluationParameters')
+@staticInterop
 class EvaluationParametersJsImpl {
+  external factory EvaluationParametersJsImpl(num zoom, [JSAny? options]);
+}
+
+extension EvaluationParametersJsImplExtension on EvaluationParametersJsImpl {
   external num get zoom;
   external num get now;
   external num get fadeDuration;
-  external dynamic get zoomHistory;
-  external dynamic get transition;
-
-  external factory EvaluationParametersJsImpl(num zoom, [dynamic options]);
+  external JSAny? get zoomHistory;
+  external JSAny? get transition;
 
   external bool isSupportedScript(String str);
 
-  external crossFadingFactor();
+  external JSAny? crossFadingFactor();
 
-  external dynamic getCrossfadeParameters();
+  external JSAny? getCrossfadeParameters();
 }

@@ -1,16 +1,14 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
-@JS()
-@anonymous
-class VectorSourceJsImpl {
+extension type VectorSourceJsImpl._(JSObject _) implements JSObject {
   external String get url;
-  external List<String> get tiles;
+  external JSArray<JSString> get tiles;
   external factory VectorSourceJsImpl({
     String? type,
     String? url,
-    List<String>? tiles,
+    JSArray<JSString>? tiles,
   });
 }

@@ -1,12 +1,18 @@
 @JS('maplibregl')
 library;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
+
 import 'package:maplibre_gl_web/src/interop/ui/events_interop.dart';
 
 @JS()
-@anonymous
+@staticInterop
 abstract class DoubleClickZoomHandlerJsImpl {
+  factory DoubleClickZoomHandlerJsImpl() => throw UnimplementedError();
+}
+
+extension DoubleClickZoomHandlerJsImplExtension
+    on DoubleClickZoomHandlerJsImpl {
   ///  Returns a Boolean indicating whether the "double click to zoom" interaction is enabled.
   ///
   ///  @returns {boolean} `true` if the "double click to zoom" interaction is enabled.
@@ -21,15 +27,15 @@ abstract class DoubleClickZoomHandlerJsImpl {
   ///
   ///  @example
   ///  map.doubleClickZoom.enable();
-  external enable();
+  external void enable();
 
   ///  Disables the "double click to zoom" interaction.
   ///
   ///  @example
   ///  map.doubleClickZoom.disable();
-  external disable();
+  external void disable();
 
-  external onTouchStart(MapTouchEventJsImpl e);
+  external void onTouchStart(MapTouchEventJsImpl e);
 
-  external onDblClick(MapMouseEventJsImpl e);
+  external void onDblClick(MapMouseEventJsImpl e);
 }
