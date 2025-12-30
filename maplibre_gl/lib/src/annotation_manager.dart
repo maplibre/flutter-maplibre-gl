@@ -66,25 +66,31 @@ abstract class AnnotationManager<T extends Annotation> {
     // Mark initialization process start, so that it cannot be entered again
     _isInitializing = true;
 
-    for (var i = 0; i < allLayerProperties.length; i++) {
-      final layerId = _makeLayerId(i);
+    try {
+      for (var i = 0; i < allLayerProperties.length; i++) {
+        final layerId = _makeLayerId(i);
 
-      await controller.addGeoJsonSource(
-        layerId,
-        buildFeatureCollection([]),
-        promoteId: "id",
-      );
-      await controller.addLayer(
-        layerId,
-        layerId,
-        allLayerProperties[i],
-        enableInteraction: enableInteraction,
-      );
+        await controller.addGeoJsonSource(
+          layerId,
+          buildFeatureCollection([]),
+          promoteId: "id",
+        );
+        await controller.addLayer(
+          layerId,
+          layerId,
+          allLayerProperties[i],
+          enableInteraction: enableInteraction,
+        );
+      }
+
+      controller.onFeatureDrag.add(_onDrag);
+
+      // Mark as initialized
+      _isInitialized = true;
+    } finally {
+      // Mark initialization process end
+      _isInitializing = false;
     }
-
-    controller.onFeatureDrag.add(_onDrag);
-
-    _isInitialized = true;
   }
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
