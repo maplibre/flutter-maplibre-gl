@@ -5,7 +5,7 @@ part of '../maplibre_gl.dart';
 /// batched updates.
 ///
 /// The [initialize] method must be called before [AnnotationManager] instance
-/// can be used. Once [AnnotationManager is initialized], the [isInitialized]
+/// can be used. Once [AnnotationManager] is initialized, the [isInitialized]
 /// getter will return true.
 ///
 /// An [AnnotationManager] keeps an internal mapping from annotation id to its
