@@ -206,89 +206,75 @@ class PlaceCircleBodyState extends State<PlaceCircleBody> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  children: [
-                    Column(
-                      children: [
-                        TextButton(
-                          onPressed: (_circleCount == 12) ? null : _add,
-                          child: const Text('add'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null) ? null : _remove,
-                          child: const Text('remove'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleOpacity,
-                          child: const Text('change circle-opacity'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleRadius,
-                          child: const Text('change circle-radius'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleColor,
-                          child: const Text('change circle-color'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleBlur,
-                          child: const Text('change circle-blur'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleStrokeWidth,
-                          child: const Text('change circle-stroke-width'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleStrokeColor,
-                          child: const Text('change circle-stroke-color'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeCircleStrokeOpacity,
-                          child: const Text('change circle-stroke-opacity'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changePosition,
-                          child: const Text('change position'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedCircle == null)
-                              ? null
-                              : _changeDraggable,
-                          child: const Text('toggle draggable'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedCircle == null) ? null : _getLatLng,
-                          child: const Text('get current LatLng'),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: (_circleCount == 12) ? null : _add,
+                    child: const Text('add'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedCircle == null) ? null : _remove,
+                    child: const Text('remove'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changeCircleOpacity,
+                    child: const Text('change circle-opacity'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changeCircleRadius,
+                    child: const Text('change circle-radius'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changeCircleColor,
+                    child: const Text('change circle-color'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changeCircleBlur,
+                    child: const Text('change circle-blur'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedCircle == null)
+                        ? null
+                        : _changeCircleStrokeWidth,
+                    child: const Text('change circle-stroke-width'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedCircle == null)
+                        ? null
+                        : _changeCircleStrokeColor,
+                    child: const Text('change circle-stroke-color'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedCircle == null)
+                        ? null
+                        : _changeCircleStrokeOpacity,
+                    child: const Text('change circle-stroke-opacity'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changePosition,
+                    child: const Text('change position'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedCircle == null) ? null : _changeDraggable,
+                    child: const Text('toggle draggable'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedCircle == null) ? null : _getLatLng,
+                    child: const Text('get current LatLng'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

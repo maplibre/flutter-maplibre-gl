@@ -104,14 +104,17 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
           child: SizedBox(
-            width: 300.0,
-            height: 200.0,
+            width: width,
+            height: height * 0.5,
             child: MapLibreMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition: const CameraPosition(
@@ -123,64 +126,62 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    TextButton(
-                      onPressed: sourceAdded
-                          ? null
-                          : () async {
-                              await addImageSourceFromAsset(
-                                      sourceId, pickImage())
-                                  .then((value) {
-                                setState(() => sourceAdded = true);
-                              });
-                            },
-                      child: const Text('Add source (asset image)'),
-                    ),
-                    TextButton(
-                      onPressed: sourceAdded
-                          ? () async {
-                              await removeLayer(layerId);
-                              await removeImageSource(sourceId).then((value) {
-                                setState(() => sourceAdded = false);
-                              });
-                            }
-                          : null,
-                      child: const Text('Remove source (asset image)'),
-                    ),
-                    TextButton(
-                      onPressed: sourceAdded
-                          ? () => addLayer(layerId, sourceId)
-                          : null,
-                      child: const Text('Show layer'),
-                    ),
-                    TextButton(
-                      onPressed: sourceAdded
-                          ? () => addLayerBelow(layerId, sourceId, 'water')
-                          : null,
-                      child: const Text('Show layer below water'),
-                    ),
-                    TextButton(
-                      onPressed:
-                          sourceAdded ? () => removeLayer(layerId) : null,
-                      child: const Text('Hide layer'),
-                    ),
-                    TextButton(
-                      onPressed: sourceAdded
-                          ? () async {
-                              setState(() => imageFlag = !imageFlag);
-                              await updateImageSourceFromAsset(
-                                  sourceId, pickImage());
-                            }
-                          : null,
-                      child: const Text('Change image'),
-                    ),
-                  ],
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: sourceAdded
+                        ? null
+                        : () async {
+                            await addImageSourceFromAsset(sourceId, pickImage())
+                                .then((value) {
+                              setState(() => sourceAdded = true);
+                            });
+                          },
+                    child: const Text('Add source (asset image)'),
+                  ),
+                  TextButton(
+                    onPressed: sourceAdded
+                        ? () async {
+                            await removeLayer(layerId);
+                            await removeImageSource(sourceId).then((value) {
+                              setState(() => sourceAdded = false);
+                            });
+                          }
+                        : null,
+                    child: const Text('Remove source (asset image)'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        sourceAdded ? () => addLayer(layerId, sourceId) : null,
+                    child: const Text('Show layer'),
+                  ),
+                  TextButton(
+                    onPressed: sourceAdded
+                        ? () => addLayerBelow(layerId, sourceId, 'water')
+                        : null,
+                    child: const Text('Show layer below water'),
+                  ),
+                  TextButton(
+                    onPressed: sourceAdded ? () => removeLayer(layerId) : null,
+                    child: const Text('Hide layer'),
+                  ),
+                  TextButton(
+                    onPressed: sourceAdded
+                        ? () async {
+                            setState(() => imageFlag = !imageFlag);
+                            await updateImageSourceFromAsset(
+                                sourceId, pickImage());
+                          }
+                        : null,
+                    child: const Text('Change image'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
