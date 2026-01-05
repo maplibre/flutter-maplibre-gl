@@ -10,10 +10,14 @@ class Convert {
         if let compassEnabled = options["compassEnabled"] as? Bool {
             delegate.setCompassEnabled(compassEnabled: compassEnabled)
         }
-        if let minMaxZoomPreference = options["minMaxZoomPreference"] as? [Double] {
+        if let minMaxZoomPreference = options["minMaxZoomPreference"] as? [Any] {
+            // Handle both [Double] and [NSNull] (for unbounded zoom)
+            let minZoom: Double? = (minMaxZoomPreference[0] is NSNull) ? nil : minMaxZoomPreference[0] as? Double
+            let maxZoom: Double? = (minMaxZoomPreference[1] is NSNull) ? nil : minMaxZoomPreference[1] as? Double
+
             delegate.setMinMaxZoomPreference(
-                min: minMaxZoomPreference[0],
-                max: minMaxZoomPreference[1]
+                min: minZoom,
+                max: maxZoom
             )
         }
         if let styleString = options["styleString"] as? String {

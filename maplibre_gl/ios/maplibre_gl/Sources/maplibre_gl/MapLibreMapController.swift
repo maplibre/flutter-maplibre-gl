@@ -1962,9 +1962,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.compassView.isHidden = !compassEnabled
     }
 
-    func setMinMaxZoomPreference(min: Double, max: Double) {
-        mapView.minimumZoomLevel = min
-        mapView.maximumZoomLevel = max
+    func setMinMaxZoomPreference(min: Double?, max: Double?) {
+        // Use MapLibre defaults (0 for min, 22 for max) when unbounded (nil)
+        let minZoom = min ?? 0.0
+        let maxZoom = max ?? 22.0
+        
+        mapView.minimumZoomLevel = minZoom
+        mapView.maximumZoomLevel = maxZoom
     }
 
     private static func styleStringIsJSON(_ styleString: String) -> Bool {
