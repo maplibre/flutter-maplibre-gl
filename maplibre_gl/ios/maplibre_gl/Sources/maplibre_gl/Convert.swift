@@ -3,9 +3,15 @@ import MapLibre
 class Convert {
     class func interpretMapLibreMapOptions(options: Any?, delegate: MapLibreMapOptionsSink) {
         guard let options = options as? [String: Any] else { return }
-        if let cameraTargetBounds = options["cameraTargetBounds"] as? [[[Double]]] {
-            delegate
-                .setCameraTargetBounds(bounds: MLNCoordinateBounds.fromArray(cameraTargetBounds[0]))
+        if let cameraTargetBounds = options["cameraTargetBounds"] as? [Any?] {
+            // Handle both [[[Double]]] and [nil] (for unbounded)
+            if let boundsArray = cameraTargetBounds[0] as? [[Double]] {
+                let bounds = MLNCoordinateBounds.fromArray(boundsArray)
+                delegate.setCameraTargetBounds(bounds: bounds)
+            } else {
+                // Unbounded - clear the bounds restriction
+                delegate.setCameraTargetBounds(bounds: nil)
+            }
         }
         if let compassEnabled = options["compassEnabled"] as? Bool {
             delegate.setCompassEnabled(compassEnabled: compassEnabled)

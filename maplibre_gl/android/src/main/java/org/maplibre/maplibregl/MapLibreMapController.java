@@ -165,7 +165,7 @@ final class MapLibreMapController
           updateMyLocationEnabled();
 
           if (null != bounds) {
-            mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+            setCameraTargetBounds(bounds);
           }
 
           mapLibreMap.addOnMapClickListener(MapLibreMapController.this);
@@ -235,6 +235,11 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveStartedListener(this);
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
+
+    // Apply camera target bounds if set during initialization
+    if (bounds != null) {
+      mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
 
     if (androidGesturesManager != null) {
       androidGesturesManager.setMoveGestureListener(new MoveGestureListener());
@@ -2087,6 +2092,9 @@ final class MapLibreMapController
   @Override
   public void setCameraTargetBounds(LatLngBounds bounds) {
     this.bounds = bounds;
+    if (mapLibreMap != null) {
+      mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
   }
 
   @Override
