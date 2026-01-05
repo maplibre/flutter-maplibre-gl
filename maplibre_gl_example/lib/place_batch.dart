@@ -167,23 +167,18 @@ class BatchAddBodyState extends State<BatchAddBody> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  children: [
-                    Column(
-                      children: [
-                        TextButton(
-                            onPressed: _add, child: const Text('batch add')),
-                        TextButton(
-                            onPressed: _remove,
-                            child: const Text('batch remove')),
-                      ],
-                    ),
-                  ],
-                )
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(onPressed: _add, child: const Text('batch add')),
+                  TextButton(
+                      onPressed: _remove, child: const Text('batch remove')),
+                ],
+              ),
             ),
           ),
         ),

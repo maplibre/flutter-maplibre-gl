@@ -427,17 +427,11 @@ class MapUiBodyState extends State<MapUiBody> {
       },
     );
 
-    final listViewChildren = <Widget>[];
+    final controlWidgets = <Widget>[];
 
     if (mapController != null) {
-      listViewChildren.addAll(
+      controlWidgets.addAll(
         [
-          Text('camera bearing: ${_position.bearing}'),
-          Text('camera target: ${_position.target.latitude.toStringAsFixed(4)},'
-              '${_position.target.longitude.toStringAsFixed(4)}'),
-          Text('camera zoom: ${_position.zoom}'),
-          Text('camera tilt: ${_position.tilt}'),
-          Text(_isMoving ? '(Camera moving)' : '(Camera idle)'),
           _mapSizeToggler(),
           _queryFilterToggler(),
           _compassToggler(),
@@ -462,16 +456,44 @@ class MapUiBodyState extends State<MapUiBody> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Center(
-          child: SizedBox(
-            width: width,
-            height: height,
-            child: maplibreMap,
-          ),
+        Stack(
+          children: [
+            Center(
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: maplibreMap,
+              ),
+            ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Lat: ${_position.target.latitude.toStringAsFixed(4)}, '
+                  'Lng: ${_position.target.longitude.toStringAsFixed(4)}, '
+                  'Zoom: ${_position.zoom.toStringAsFixed(2)}'
+                  '${_isMoving ? " (moving)" : ""}',
+                  style: const TextStyle(
+                    backgroundColor: Colors.white,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         Expanded(
-          child: ListView(
-            children: listViewChildren,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: controlWidgets,
+              ),
+            ),
           ),
         )
       ],

@@ -48,10 +48,13 @@ class MoveCameraState extends State<MoveCamera> {
                 const CameraPosition(target: LatLng(0.0, 0.0)),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 4.0,
+              runSpacing: 4.0,
+              alignment: WrapAlignment.center,
               children: [
                 TextButton(
                   onPressed: () async {
@@ -113,10 +116,6 @@ class MoveCameraState extends State<MoveCamera> {
                   },
                   child: const Text('scrollBy'),
                 ),
-              ],
-            ),
-            Column(
-              children: [
                 TextButton(
                   onPressed: () async {
                     await mapController.moveCamera(
@@ -178,7 +177,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
               ],
             ),
-          ],
+          ),
         )
       ],
     );

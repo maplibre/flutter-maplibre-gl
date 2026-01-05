@@ -184,63 +184,53 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  children: [
-                    Column(
-                      children: [
-                        TextButton(
-                          onPressed: (_fillCount == 12) ? null : _add,
-                          child: const Text('add'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedFill == null) ? null : _remove,
-                          child: const Text('remove'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        TextButton(
-                          onPressed: (_selectedFill == null)
-                              ? null
-                              : _changeFillOpacity,
-                          child: const Text('change fill-opacity'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedFill == null) ? null : _changeFillColor,
-                          child: const Text('change fill-color'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedFill == null)
-                              ? null
-                              : _changeFillOutlineColor,
-                          child: const Text('change fill-outline-color'),
-                        ),
-                        TextButton(
-                          onPressed: (_selectedFill == null)
-                              ? null
-                              : _changeFillPattern,
-                          child: const Text('change fill-pattern'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedFill == null) ? null : _changePosition,
-                          child: const Text('change position'),
-                        ),
-                        TextButton(
-                          onPressed:
-                              (_selectedFill == null) ? null : _changeDraggable,
-                          child: const Text('toggle draggable'),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: (_fillCount == 12) ? null : _add,
+                    child: const Text('add'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedFill == null) ? null : _remove,
+                    child: const Text('remove'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedFill == null) ? null : _changeFillOpacity,
+                    child: const Text('change fill-opacity'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedFill == null) ? null : _changeFillColor,
+                    child: const Text('change fill-color'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedFill == null)
+                        ? null
+                        : _changeFillOutlineColor,
+                    child: const Text('change fill-outline-color'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedFill == null) ? null : _changeFillPattern,
+                    child: const Text('change fill-pattern'),
+                  ),
+                  TextButton(
+                    onPressed: (_selectedFill == null) ? null : _changePosition,
+                    child: const Text('change position'),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_selectedFill == null) ? null : _changeDraggable,
+                    child: const Text('toggle draggable'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
