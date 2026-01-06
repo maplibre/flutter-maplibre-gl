@@ -291,6 +291,7 @@ class MapLibreMap extends StatefulWidget {
 class _MapLibreMapState extends State<MapLibreMap> {
   final Completer<MapLibreMapController> _controller =
       Completer<MapLibreMapController>();
+  MapLibreMapController? _mapController;
 
   late _MapLibreMapOptions _maplibreMapOptions;
   final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
@@ -322,12 +323,12 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
+  void dispose() {
     if (_controller.isCompleted) {
-      final controller = await _controller.future;
-      controller.dispose();
+      _mapController?.dispose();
     }
+
+    super.dispose();
   }
 
   @override
@@ -375,6 +376,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
     await _maplibrePlatform.initPlatform(id);
+    _mapController = controller;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);
   }

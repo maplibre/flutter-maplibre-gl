@@ -1549,8 +1549,8 @@ class LineLayerProperties implements LayerProperties {
     addIfPresent('line-gap-width', lineGapWidth);
     addIfPresent('line-offset', lineOffset);
     addIfPresent('line-blur', lineBlur);
-    addIfPresent('line-dasharray', lineDasharray);
-    addIfPresent('line-pattern', linePattern);
+    json['line-dasharray'] = lineDasharray;
+    json['line-pattern'] = linePattern;
     addIfPresent('line-gradient', lineGradient);
     addIfPresent('line-cap', lineCap);
     addIfPresent('line-join', lineJoin);
@@ -1734,7 +1734,7 @@ class FillLayerProperties implements LayerProperties {
     addIfPresent('fill-outline-color', fillOutlineColor);
     addIfPresent('fill-translate', fillTranslate);
     addIfPresent('fill-translate-anchor', fillTranslateAnchor);
-    addIfPresent('fill-pattern', fillPattern);
+    json['fill-pattern'] = fillPattern;
     addIfPresent('fill-sort-key', fillSortKey);
     addIfPresent('visibility', visibility);
     return json;
@@ -1914,7 +1914,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
     addIfPresent('fill-extrusion-translate', fillExtrusionTranslate);
     addIfPresent(
         'fill-extrusion-translate-anchor', fillExtrusionTranslateAnchor);
-    addIfPresent('fill-extrusion-pattern', fillExtrusionPattern);
+    json['fill-extrusion-pattern'] = fillExtrusionPattern;
     addIfPresent('fill-extrusion-height', fillExtrusionHeight);
     addIfPresent('fill-extrusion-base', fillExtrusionBase);
     addIfPresent(

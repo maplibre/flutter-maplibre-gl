@@ -119,7 +119,6 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
         initialCameraPosition: ExampleConstants.defaultCameraPosition,
         minMaxZoomPreference: MinMaxZoomPreference(_minZoom, _maxZoom),
       ),
-      
       controls: [
         InfoCard(
           title: 'Visible Bounds',
@@ -136,7 +135,6 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
           ),
         const SizedBox(height: 8),
         ControlGroup(
-          
           title: 'Move to Bounds',
           children: [
             ExampleButton(

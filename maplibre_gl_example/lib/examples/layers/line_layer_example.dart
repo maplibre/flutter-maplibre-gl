@@ -1,7 +1,9 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/util.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
 
@@ -44,6 +46,8 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
   String _lineJoin = 'round'; // bevel, round, miter
   double _lineMiterLimit = 2.0;
   double _lineRoundLimit = 1.05;
+  String? _linePattern;
+  _LineDashStyle _lineDasharray = _LineDashStyle.solid;
 
   @override
   void initState() {
@@ -55,22 +59,38 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
   }
 
   Future<void> _onStyleLoaded() async {
+    await _loadPatternImages();
+
+    // Add GeoJSON source with multiple lines
+    await _controller!.addGeoJsonSource(
+      _sourceId,
+      {
+        'type': 'FeatureCollection',
+        'features': _generateRandomLines(5),
+      },
+    );
     await _addLineLayer();
+  }
+
+  Future<void> _loadPatternImages() async {
+    if (_controller == null) return;
+
+    try {
+      // Load cat silhouette pattern from assets
+      await addImageFromAsset(
+        _controller!,
+        'pattern-cat',
+        'assets/fill/cat_silhouette_pattern.png',
+      );
+    } catch (e) {
+      dev.log('Error loading pattern images: $e');
+    }
   }
 
   Future<void> _addLineLayer() async {
     if (_controller == null) return;
 
     try {
-      // Add GeoJSON source with multiple lines
-      await _controller!.addGeoJsonSource(
-        _sourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': _generateRandomLines(5),
-        },
-      );
-
       // Add line layer
       await _controller!.addLineLayer(
         _sourceId,
@@ -87,11 +107,14 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
           lineJoin: _lineJoin,
           lineMiterLimit: _lineMiterLimit,
           lineRoundLimit: _lineRoundLimit,
+          linePattern: _linePattern,
+          lineDasharray: _lineDasharray.dashArray,
         ),
       );
 
       setState(() {});
     } catch (e) {
+      dev.log('Error adding line layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding line layer: $e')),
@@ -148,9 +171,12 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
           lineJoin: _lineJoin,
           lineMiterLimit: _lineMiterLimit,
           lineRoundLimit: _lineRoundLimit,
+          linePattern: _linePattern,
+          lineDasharray: _lineDasharray.dashArray,
         ),
       );
     } catch (e) {
+      dev.log('Error updating line layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating layer: $e')),
@@ -412,6 +438,33 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                 ],
               ),
               ControlGroup(
+                title: 'Pattern',
+                children: [
+                  SwitchListTile(
+                    value: _linePattern != null,
+                    title: const Text('Line Pattern'),
+                    subtitle: Text(_linePattern ?? 'None'),
+                    onChanged: (bool value) async {
+                      setState(() {
+                        _linePattern = value ? 'pattern-cat' : null;
+                      });
+                      await _updateLayer();
+                    },
+                  ),
+                ],
+              ),
+              ControlGroup(
+                title: 'Dash Array',
+                children: [
+                  ListTile(
+                    title: const Text('Dash Style'),
+                    subtitle: Text(_lineDasharray.label),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _selectDashArray(),
+                  ),
+                ],
+              ),
+              ControlGroup(
                 title: 'Actions',
                 children: [
                   ExampleButton(
@@ -430,6 +483,8 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                         _lineJoin = 'round';
                         _lineMiterLimit = 2.0;
                         _lineRoundLimit = 1.05;
+                        _linePattern = null;
+                        _lineDasharray = _LineDashStyle.solid;
                       });
                       await _updateLayer();
                     },
@@ -452,4 +507,93 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
       await _updateLayer();
     }
   }
+
+  Future<void> _selectDashArray() async {
+    final result = await showDialog<Object?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Dash Style'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(_LineDashStyle.solid.label),
+              subtitle: const Text('No dashes'),
+              leading: Icon(
+                _lineDasharray == _LineDashStyle.solid
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              onTap: () => Navigator.pop(context, _LineDashStyle.solid),
+            ),
+            ListTile(
+              title: Text(_LineDashStyle.dotted.label),
+              subtitle: Text(_LineDashStyle.dotted.dashArray.toString()),
+              leading: Icon(
+                _lineDasharray == _LineDashStyle.dotted
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              onTap: () => Navigator.pop(context, _LineDashStyle.dotted),
+            ),
+            ListTile(
+              title: Text(_LineDashStyle.dashed.label),
+              subtitle: Text(_LineDashStyle.dashed.dashArray.toString()),
+              leading: Icon(
+                _lineDasharray == _LineDashStyle.dashed
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              onTap: () => Navigator.pop(context, _LineDashStyle.dashed),
+            ),
+            ListTile(
+              title: Text(_LineDashStyle.dashDot.label),
+              subtitle: Text(_LineDashStyle.dashDot.dashArray.toString()),
+              leading: Icon(
+                _lineDasharray == _LineDashStyle.dashDot
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              onTap: () => Navigator.pop(context, _LineDashStyle.dashDot),
+            ),
+            ListTile(
+              title: Text(_LineDashStyle.custom.label),
+              subtitle: Text(_LineDashStyle.custom.dashArray.toString()),
+              leading: Icon(
+                _lineDasharray == _LineDashStyle.custom
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              ),
+              onTap: () => Navigator.pop(context, _LineDashStyle.custom),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    // Only update if a selection was made (not cancelled)
+    if (result != null && result is _LineDashStyle) {
+      dev.log('Selected dash style: ${result.label}');
+      setState(() => _lineDasharray = result);
+      await _updateLayer();
+    }
+  }
+}
+
+enum _LineDashStyle {
+  solid(label: 'Solid', dashArray: null),
+  dotted(label: 'Dotted', dashArray: [0.1, 2]),
+  dashed(label: 'Dashed', dashArray: [6, 3]),
+  dashDot(label: 'Dash Dot', dashArray: [6, 2, 0.1, 2]),
+  custom(label: 'Custom', dashArray: [10.0, 5.0, 2.0, 5.0]);
+
+  final String label;
+  final List<double>? dashArray;
+  const _LineDashStyle({required this.label, required this.dashArray});
 }

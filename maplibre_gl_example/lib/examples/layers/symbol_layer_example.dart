@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -128,6 +129,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
 
       setState(() {});
     } catch (e) {
+      dev.log('Error adding symbol layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding symbol layer: $e')),
@@ -206,9 +208,10 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
         ),
       );
     } catch (e) {
+      dev.log('Error updating symbol layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating layer: $e')),
+          SnackBar(content: Text('Error updating symbol layer: $e')),
         );
       }
     }

@@ -1,7 +1,9 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl_example/util.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
 
@@ -37,7 +39,9 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
   Color _fillOutlineColor = const Color(0xFF2C3E50);
   double _fillTranslateX = 0.0;
   double _fillTranslateY = 0.0;
+  String _fillTranslateAnchor = 'map';
   bool _fillAntialias = true;
+  String? _fillPattern;
 
   @override
   void initState() {
@@ -49,7 +53,23 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
   }
 
   Future<void> _onStyleLoaded() async {
+    await _loadPatternImages();
     await _addFillLayer();
+  }
+
+  Future<void> _loadPatternImages() async {
+    if (_controller == null) return;
+
+    try {
+      // Load cat silhouette pattern from assets
+      await addImageFromAsset(
+        _controller!,
+        'pattern-cat',
+        'assets/fill/cat_silhouette_pattern.png',
+      );
+    } catch (e) {
+      dev.log('Error loading pattern images: $e');
+    }
   }
 
   Future<void> _addFillLayer() async {
@@ -75,12 +95,15 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
           fillOutlineColor:
               '#${_fillOutlineColor.toARGB32().toRadixString(16).substring(2)}',
           fillTranslate: [_fillTranslateX, _fillTranslateY],
+          fillTranslateAnchor: _fillTranslateAnchor,
           fillAntialias: _fillAntialias,
+          fillPattern: _fillPattern,
         ),
       );
 
       setState(() {});
     } catch (e) {
+      dev.log('Error adding fill layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding fill layer: $e')),
@@ -131,13 +154,16 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
           fillOutlineColor:
               '#${_fillOutlineColor.toARGB32().toRadixString(16).substring(2)}',
           fillTranslate: [_fillTranslateX, _fillTranslateY],
+          fillTranslateAnchor: _fillTranslateAnchor,
           fillAntialias: _fillAntialias,
+          fillPattern: _fillPattern,
         ),
       );
     } catch (e) {
+      dev.log('Error updating fill layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating layer: $e')),
+          SnackBar(content: Text('Error updating fill layer: $e')),
         );
       }
     }
@@ -249,6 +275,38 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
                       },
                     ),
                   ),
+                  ListTile(
+                    title: const Text('Translate Anchor'),
+                    subtitle: const Text('Reference frame for translation'),
+                    trailing: SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'map', label: Text('Map')),
+                        ButtonSegment(
+                            value: 'viewport', label: Text('Viewport')),
+                      ],
+                      selected: {_fillTranslateAnchor},
+                      onSelectionChanged: (Set<String> selected) async {
+                        setState(() => _fillTranslateAnchor = selected.first);
+                        await _updateLayer();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              ControlGroup(
+                title: 'Pattern',
+                children: [
+                  SwitchListTile(
+                    value: _fillPattern != null,
+                    title: const Text('Fill Pattern'),
+                    subtitle: Text(_fillPattern ?? 'None'),
+                    onChanged: (bool value) async {
+                      setState(() {
+                        _fillPattern = value ? 'pattern-cat' : null;
+                      });
+                      await _updateLayer();
+                    },
+                  ),
                 ],
               ),
               ControlGroup(
@@ -263,7 +321,9 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
                         _fillOutlineColor = const Color(0xFF2C3E50);
                         _fillTranslateX = 0.0;
                         _fillTranslateY = 0.0;
+                        _fillTranslateAnchor = 'map';
                         _fillAntialias = true;
+                        _fillPattern = null;
                       });
                       await _updateLayer();
                     },

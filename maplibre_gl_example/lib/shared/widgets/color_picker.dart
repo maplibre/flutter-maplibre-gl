@@ -89,9 +89,8 @@ class ColorPickerModal {
     String title = 'Select Color',
     String? currentHexColor,
   }) async {
-    final currentColor = currentHexColor != null
-        ? _hexToColor(currentHexColor)
-        : null;
+    final currentColor =
+        currentHexColor != null ? _hexToColor(currentHexColor) : null;
 
     return await show(
       context: context,
@@ -132,7 +131,8 @@ class ColorPickerModal {
 
   /// Get contrasting color for text (white or black)
   static Color _getContrastColor(Color color) {
-    final luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
+    final luminance =
+        (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 }
@@ -141,7 +141,7 @@ class ColorPickerModal {
 enum ColorFormat {
   /// Returns a Color object
   color,
-  
+
   /// Returns a hex string (#RRGGBB)
   hex,
 }

@@ -4,8 +4,6 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
 
-const _nullIsland = CameraPosition(target: LatLng(0, 0), zoom: 4.0);
-
 /// Example demonstrating a translucent map with content underneath
 class TranslucentFullMapPage extends ExamplePage {
   const TranslucentFullMapPage({super.key})

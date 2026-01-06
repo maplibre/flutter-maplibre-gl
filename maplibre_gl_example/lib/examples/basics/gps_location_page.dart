@@ -31,7 +31,6 @@ class _GpsLocationBody extends StatefulWidget {
 class _GpsLocationBodyState extends State<_GpsLocationBody> {
   MapLibreMapController? _controller;
   LocationData? _currentLocation;
-  bool _isLoadingLocation = false;
   bool _useHighAccuracy = false;
   PermissionStatus? _permissionStatus;
   MyLocationTrackingMode _trackingMode = MyLocationTrackingMode.none;
