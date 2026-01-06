@@ -11,40 +11,42 @@ All packages share the same version number. A release = bump versions + update c
 
 ## Versioning Policy
 
-Format: `MAJOR.MINOR.PATCH` (currently MAJOR fixed at 0 until 1.0.0).
+Format: `MAJOR.MINOR.PATCH` following [Semantic Versioning 2.0.0](https://semver.org/).
+
+As of v1.0.0, this project follows **standard semantic versioning**:
 
 | Change Type | Bump | Effect | Example (old → new) | Notes |
 |-------------|------|--------|---------------------|-------|
-| Breaking / significant feature | MINOR (2nd) & reset PATCH | Public API or behavior change (may be breaking pre‑1.0) | 0.23.4 → 0.24.0 | Mark **BREAKING** in changelog if present |
-| Compatible feature / enhancement | MINOR (2nd) & reset PATCH | Adds capability, no removal | 0.24.1 → 0.25.0 | Combine small features where possible |
-| Bug fix / doc / internal only | PATCH (3rd) | No API change | 0.24.0 → 0.24.1 | Batch multiple fixes if close in time |
+| Breaking change | MAJOR (1st) | Incompatible API changes | 1.2.3 → 2.0.0 | Mark **BREAKING** in changelog with migration guide |
+| New feature / enhancement | MINOR (2nd) & reset PATCH | Adds functionality in a backward-compatible manner | 1.2.3 → 1.3.0 | Combine related features where possible |
+| Bug fix / doc / internal only | PATCH (3rd) | Backward-compatible bug fixes | 1.2.3 → 1.2.4 | Batch multiple fixes if close in time |
 
 Rules:
-1. Pre‑1.0 any incompatible change still uses a MINOR bump (second segment).
-2. Always reset PATCH to 0 when you bump MINOR.
-3. Avoid publishing multiple PATCH releases within minutes—group fixes.
-4. No build metadata (`+...`) for normal releases.
+1. **MAJOR version** (X.y.z) increments for incompatible API changes.
+2. **MINOR version** (x.Y.z) increments for new backward-compatible functionality (reset PATCH to 0).
+3. **PATCH version** (x.y.Z) increments for backward-compatible bug fixes.
+4. Avoid publishing multiple PATCH releases within minutes—group fixes.
+5. No build metadata (`+...`) for normal releases.
 
 Changelog tags:
-- Use headings: Added / Changed / Fixed / Removed / **BREAKING**.
-- Provide a one‑line migration hint for each breaking change.
+- Use headings: Added / Changed / Fixed / Removed / Deprecated / Security / **BREAKING**.
+- Provide migration hints for each breaking change.
 
-Tag format: `v0.X.Y` (e.g. `v0.24.0`).
+Tag format: `vX.Y.Z` (e.g. `v1.0.0`, `v1.2.3`).
 
-After 1.0.0 the table semantics align with standard SemVer (MINOR no longer contains breaking changes; those move to MAJOR).
-
-### Examples (Pre-1.0)
+### Examples (Post-1.0)
 | Scenario | Old | New | Notes |
 |----------|-----|-----|-------|
-| Add new public controller API | 0.23.1 | 0.24.0 | MINOR bump (document new API) |
-| Fix crash in symbol update logic | 0.24.0 | 0.24.1 | PATCH fix |
-| Introduce breaking rename of parameter | 0.24.1 | 0.25.0 | MINOR bump (flag **BREAKING**) |
-| Documentation typo only (optional) | 0.25.0 | 0.25.1 | Only if you want it on pub.dev |
+| Remove deprecated API or change signature | 1.2.3 | 2.0.0 | MAJOR bump (breaking change) |
+| Add new public controller method | 1.2.3 | 1.3.0 | MINOR bump (backward-compatible feature) |
+| Fix crash in symbol update logic | 1.2.3 | 1.2.4 | PATCH fix |
+| Documentation typo only | 1.2.3 | 1.2.4 | PATCH (or skip if trivial) |
 
 ### Deciding the bump
-1. Is the change user-visible (new feature or breaking)? -> bump MINOR, reset PATCH to 0.
-2. Pure bug fix with no API surface change? -> bump PATCH.
-3. Multiple fixes queued? Prefer batching into one PATCH rather than multiple rapid releases.
+1. Does it break existing code or change behavior? -> bump MAJOR.
+2. Does it add new functionality without breaking changes? -> bump MINOR, reset PATCH to 0.
+3. Is it a pure bug fix with no API surface change? -> bump PATCH.
+4. Multiple fixes queued? Prefer batching into one PATCH rather than multiple rapid releases.
 
 ---
 ## Pre‑Release Checklist
@@ -74,19 +76,22 @@ Edit `pubspec.yaml` in each package:
 Ensure internal dependencies point to the new version (same number across all three). Example snippet:
 ```yaml
 dependencies:
-  maplibre_gl_platform_interface: ^0.23.0
+  maplibre_gl_platform_interface: ^1.0.0
 ```
 
 ## Update the Changelog
 In root `CHANGELOG.md`:
-1. Move items from `Unreleased` (if present) under a new heading: `## 0.23.0 - YYYY-MM-DD`.
+1. Move items from `Unreleased` (if present) under a new heading: `## [X.Y.Z] - YYYY-MM-DD`.
 2. Group by sections (Suggested):
    - Added
    - Changed
    - Fixed
    - Removed / Deprecated
+   - Security
+   - **BREAKING** (for major versions)
    - Internal (optional)
-3. Ensure breaking changes are clearly marked with **BREAKING** and (if needed) short migration hints.
+3. For **MAJOR** version bumps, ensure breaking changes are clearly marked with **BREAKING** and include migration guides.
+4. Link to full changelog comparison: `[vX.Y.Z...vA.B.C]`
 
 Sub-package changelogs may link to root; keep duplication minimal.
 
@@ -116,8 +121,8 @@ After the release PR has been merged, create & push the version tag (format `vX.
 ```bash
 git checkout main
 git pull origin main
-git tag v0.23.0
-git push origin v0.23.0
+git tag v1.2.3
+git push origin v1.2.3
 ```
 No further manual publish commands are required unless the pipeline fails. In that case, resolve the issue and re-push (delete & recreate tag only if absolutely necessary and before broad adoption).
 
@@ -140,15 +145,39 @@ If a critical issue is discovered shortly after release:
 - If native SDK version bumps are included, link upstream release notes in the PR description.
 - Run `flutter clean` in example only if weird build artifacts appear (avoid unnecessary noise in instructions).
 
-## Example Flow (Patch Fix)
-```
+## Example Flows
+
+### Patch Fix (Bug Fix)
+```bash
 # After merging a simple fix
-# decide version 0.23.1
-edit pubspecs -> 0.23.1
+# decide version 1.2.4 (was 1.2.3)
+edit pubspecs -> 1.2.4
 update CHANGELOG
-commit & PR -> chore: release 0.23.1
+commit & PR -> chore: release 1.2.4
 merge
-git tag v0.23.1 && push tag
+git tag v1.2.4 && git push origin v1.2.4
+```
+
+### Minor Release (New Feature)
+```bash
+# After merging a new backward-compatible feature
+# decide version 1.3.0 (was 1.2.3)
+edit pubspecs -> 1.3.0
+update CHANGELOG
+commit & PR -> chore: release 1.3.0
+merge
+git tag v1.3.0 && git push origin v1.3.0
+```
+
+### Major Release (Breaking Change)
+```bash
+# After merging breaking API changes
+# decide version 2.0.0 (was 1.2.3)
+edit pubspecs -> 2.0.0
+update CHANGELOG with BREAKING section and migration guide
+commit & PR -> chore: release 2.0.0
+merge
+git tag v2.0.0 && git push origin v2.0.0
 ```
 
 ---

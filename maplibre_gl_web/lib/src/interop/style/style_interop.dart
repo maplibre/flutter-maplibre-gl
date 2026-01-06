@@ -149,6 +149,9 @@ extension StyleJsImplExtension on StyleJsImpl {
       String mapId, RequestParametersJsImpl params, JSFunction callback);
 
   external JSArray layers;
+
+  /// Map of source IDs to source objects
+  external JSAny? get sources;
 }
 
 @JS()

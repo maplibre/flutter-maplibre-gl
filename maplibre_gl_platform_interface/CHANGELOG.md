@@ -1,3 +1,17 @@
+## [1.0.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v1.0.0) - 2026-01-06
+
+🎉 **First stable release!** This package now follows standard semantic versioning.
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Changed
+* Updated to align with main package v1.0.0.
+* No breaking changes to the platform interface in this release.
+
+## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
+
+See top-level CHANGELOG.md
+
 ## 0.23.0
 
 > Note: This release has breaking changes.

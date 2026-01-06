@@ -193,19 +193,19 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
-    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
-    final jsObj = cameraOptions as JSObject;
+    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
 
-    final around = jsObj.getProperty('around'.toJS);
-    final bearing = jsObj.getProperty('bearing'.toJS);
-    final center = jsObj.getProperty('center'.toJS);
-    final pitch = jsObj.getProperty('pitch'.toJS);
-    final zoom = jsObj.getProperty('zoom'.toJS);
+    // Use the existing CameraOptions wrapper which has proper WASM-compatible accessors
+    final around = cameraOptions.around;
+    final bearing = cameraOptions.bearing;
+    final center = cameraOptions.center;
+    final pitch = cameraOptions.pitch;
+    final zoom = cameraOptions.zoom;
 
     _map.flyTo({
-      if (around != null) 'around': around,
+      if (around != null) 'around': around.jsObject,
       if (bearing != null) 'bearing': bearing,
-      if (center != null) 'center': center,
+      if (center != null) 'center': center.jsObject,
       if (pitch != null) 'pitch': pitch,
       if (zoom != null) 'zoom': zoom,
       if (duration != null) 'duration': duration.inMilliseconds,
@@ -1377,9 +1377,8 @@ class MapLibreMapController extends MapLibrePlatform
     final style = _map.getStyle();
     if (style == null) return [];
 
-    // The style is a JavaScript object with a 'sources' property
-    final jsStyle = style as JSObject;
-    final jsSources = jsStyle.getProperty('sources'.toJS);
+    // Get the sources from the style object
+    final jsSources = style.sources;
 
     if (jsSources == null) return [];
 
