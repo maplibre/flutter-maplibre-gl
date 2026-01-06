@@ -57,6 +57,14 @@ class Convert {
         {
             delegate.setMyLocationRenderMode(myLocationRenderMode: renderMode)
         }
+        if let logoEnabled = options["logoEnabled"] as? Bool {
+            delegate.setLogoEnabled(logoEnabled: logoEnabled)
+        }
+        if let logoViewPosition = options["logoViewPosition"] as? UInt,
+           let position = MLNOrnamentPosition(rawValue: logoViewPosition)
+        {
+            delegate.setLogoViewPosition(position: position)
+        }
         if let logoViewMargins = options["logoViewMargins"] as? [Double] {
             delegate.setLogoViewMargins(x: logoViewMargins[0], y: logoViewMargins[1])
         }

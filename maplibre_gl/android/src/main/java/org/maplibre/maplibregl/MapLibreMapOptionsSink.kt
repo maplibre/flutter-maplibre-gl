@@ -34,6 +34,10 @@ internal interface MapLibreMapOptionsSink {
 
     fun setMyLocationRenderMode(myLocationRenderMode: Int)
 
+    fun setLogoEnabled(logoEnabled: Boolean)
+
+    fun setLogoViewGravity(gravity: Int)
+
     fun setLogoViewMargins(x: Int, y: Int)
 
     fun setCompassGravity(gravity: Int)

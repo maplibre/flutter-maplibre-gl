@@ -2175,6 +2175,30 @@ final class MapLibreMapController
     }
   }
 
+  @Override
+  public void setLogoEnabled(boolean logoEnabled) {
+    mapLibreMap.getUiSettings().setLogoEnabled(logoEnabled);
+  }
+
+  @Override
+  public void setLogoViewGravity(int gravity) {
+    switch (gravity) {
+      case 0:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.TOP | Gravity.START);
+        break;
+      case 1:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.TOP | Gravity.END);
+        break;
+      default:
+      case 2:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.BOTTOM | Gravity.START);
+        break;
+      case 3:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.BOTTOM | Gravity.END);
+        break;
+    }
+  }
+
   public void setLogoViewMargins(int x, int y) {
     mapLibreMap.getUiSettings().setLogoMargins(x, 0, 0, y);
   }

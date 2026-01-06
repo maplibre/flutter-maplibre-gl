@@ -279,6 +279,14 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (myLocationRenderMode != null) {
       sink.setMyLocationRenderMode(toInt(myLocationRenderMode));
     }
+    final Object logoEnabled = data.get("logoEnabled");
+    if (logoEnabled != null) {
+      sink.setLogoEnabled(toBoolean(logoEnabled));
+    }
+    final Object logoViewGravity = data.get("logoViewPosition");
+    if (logoViewGravity != null) {
+      sink.setLogoViewGravity(toInt(logoViewGravity));
+    }
     final Object logoViewMargins = data.get("logoViewMargins");
     if (logoViewMargins != null) {
       final List logoViewMarginsData = toList(logoViewMargins);

@@ -79,7 +79,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        mapView.logoView.isHidden = true
         self.registrar = registrar
 
         super.init()
@@ -2113,6 +2112,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case .Gps:
             NSLog("RenderMode.GPS currently not supported")
         }
+    }
+
+    func setLogoEnabled(logoEnabled: Bool) {
+        mapView.logoView.isHidden = !logoEnabled
+    }
+
+    func setLogoViewPosition(position: MLNOrnamentPosition) {
+        mapView.logoViewPosition = position
     }
 
     func setLogoViewMargins(x: Double, y: Double) {
