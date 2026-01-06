@@ -505,14 +505,18 @@ class MapLibreMapController extends MapLibrePlatform
       [bool sdf = false]) async {
     final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
+      // Convert image to RGBA format with proper byte ordering
+      final rgbaBytes = photo.convert(numChannels: 4).getBytes();
+      final data = Uint8List.fromList(rgbaBytes);
+
       await _map.addImage(
         name,
         {
           'width': photo.width,
           'height': photo.height,
-          'data': photo.getBytes(),
+          'data': data,
         },
-        {'sdf': sdf},
+        {'sdf': sdf, 'pixelRatio': 1},
       );
     } else {
       dev.log('Image already exists on map: $name',

@@ -530,9 +530,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
+  ///
+  /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
   Future<void> setLayerProperties(
-      String layerId, LayerProperties properties) async {
-    await _maplibrePlatform.setLayerProperties(layerId, properties.toJson());
+    String layerId,
+    LayerProperties properties,
+  ) async {
+    await _maplibrePlatform.setLayerProperties(
+      layerId,
+      properties.toJson(skipNulls: false),
+    );
   }
 
   /// Add a fill layer to the map with the given properties

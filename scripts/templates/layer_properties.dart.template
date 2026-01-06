@@ -4,7 +4,7 @@
 part of '../maplibre_gl.dart';
 
 abstract class LayerProperties {
-  Map<String, dynamic> toJson();
+  Map<String, dynamic> toJson({bool skipNulls = true});
 }
 {{#layerTypes}}
 
@@ -46,13 +46,12 @@ class {{typePascal}}LayerProperties implements LayerProperties {
   }
 
   @override
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool skipNulls = true}) {
     final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
-      if (value != null) {
-        json[fieldName] = value;
-      }
+      if (value == null && skipNulls) return;
+      json[fieldName] = value;
     }
 
     {{#paint_properties}}

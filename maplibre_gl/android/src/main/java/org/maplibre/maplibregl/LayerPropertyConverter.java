@@ -373,7 +373,11 @@ class LayerPropertyConverter {
           }
           break;
         case "line-pattern":
-          properties.add(PropertyFactory.linePattern(expression));
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.linePattern(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.linePattern(expression));
+          }
           break;
         case "line-gradient":
           properties.add(PropertyFactory.lineGradient(expression));
@@ -441,7 +445,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillTranslateAnchor(expression));
           break;
         case "fill-pattern":
-          properties.add(PropertyFactory.fillPattern(expression));
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.fillPattern(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.fillPattern(expression));
+          }
           break;
         case "fill-sort-key":
           properties.add(PropertyFactory.fillSortKey(expression));
@@ -488,7 +496,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionTranslateAnchor(expression));
           break;
         case "fill-extrusion-pattern":
-          properties.add(PropertyFactory.fillExtrusionPattern(expression));
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.fillExtrusionPattern(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.fillExtrusionPattern(expression));
+          }
           break;
         case "fill-extrusion-height":
           properties.add(PropertyFactory.fillExtrusionHeight(expression));

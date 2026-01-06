@@ -1486,9 +1486,21 @@ final class MapLibreMapController
                 "The style is null. Has onStyleLoaded() already been invoked?",
                 null);
           }
+          // Configure bitmap options to prevent density-based scaling
+          BitmapFactory.Options options = new BitmapFactory.Options();
+          options.inScaled = false;       // Disable automatic scaling
+          options.inDensity = 0;          // No source density
+          options.inTargetDensity = 0;    // No target density
+          
+          Bitmap bitmap = BitmapFactory.decodeByteArray(
+              call.argument("bytes"), 
+              0, 
+              call.argument("length"),
+              options);
+          
           style.addImage(
               call.argument("name"),
-              BitmapFactory.decodeByteArray(call.argument("bytes"), 0, call.argument("length")),
+              bitmap,
               call.argument("sdf"));
           result.success(null);
           break;
