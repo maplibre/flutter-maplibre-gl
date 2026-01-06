@@ -296,24 +296,32 @@ class SymbolManager extends AnnotationManager<Symbol> {
 
   /// If true, the icon will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconAllowOverlap(bool value) async {
+    if (value == _iconAllowOverlap) return;
+
     _iconAllowOverlap = value;
     await _rebuildLayers();
   }
 
   /// If true, other symbols can be visible even if they collide with the icon.
   Future<void> setTextAllowOverlap(bool value) async {
+    if (value == _textAllowOverlap) return;
+
     _textAllowOverlap = value;
     await _rebuildLayers();
   }
 
   /// If true, the text will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconIgnorePlacement(bool value) async {
+    if (value == _iconIgnorePlacement) return;
+
     _iconIgnorePlacement = value;
     await _rebuildLayers();
   }
 
   /// If true, other symbols can be visible even if they collide with the text.
   Future<void> setTextIgnorePlacement(bool value) async {
+    if (value == _textIgnorePlacement) return;
+
     _textIgnorePlacement = value;
     await _rebuildLayers();
   }

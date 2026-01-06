@@ -4,13 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '../../page.dart';
 
 const randomMarkerNum = 100;
 
 class CustomMarkerPage extends ExamplePage {
   const CustomMarkerPage({super.key})
-      : super(const Icon(Icons.place), 'Custom marker');
+      : super(const Icon(Icons.place), 'Custom marker',
+            category: ExampleCategory.annotations);
 
   @override
   Widget build(BuildContext context) {

@@ -804,6 +804,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setLogoViewAlignment(LogoViewPosition position) {
+    print('setLogoViewAlignment not available in web');
+  }
+
+  @override
   void setLogoViewMargins(int x, int y) {
     print('setLogoViewMargins not available in web');
   }

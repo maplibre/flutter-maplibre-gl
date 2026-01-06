@@ -39,9 +39,9 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
     setState(() => _canInteractWithMap = true);
   }
 
-  Future<void> _moveCameraToNullIsland() async {
+  Future<void> _moveCameraToTokyo() async {
     await _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(_nullIsland),
+      CameraUpdate.newCameraPosition(ExampleConstants.tokyoCameraPosition),
     );
     setState(() => _canReset = true);
   }
@@ -87,12 +87,12 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
         ],
       ),
       floatingActionButton: ExampleButton(
-        label: _canReset ? 'Reset camera' : 'Go to Null Island',
-        icon: _canReset ? Icons.refresh : Icons.flight_takeoff,
+        label: _canReset ? 'Reset camera' : 'Go to Tokyo',
+        icon: _canReset ? Icons.refresh : Icons.location_searching,
         onPressed: _canInteractWithMap
             ? _canReset
                 ? _resetCamera
-                : _moveCameraToNullIsland
+                : _moveCameraToTokyo
             : null,
         style: ExampleButtonStyle.tonal,
       ),

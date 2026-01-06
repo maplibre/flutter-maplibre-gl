@@ -40,6 +40,14 @@ enum AttributionButtonPosition {
   bottomRight,
 }
 
+/// Logo View Position
+enum LogoViewPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
 /// Bounds for the map camera target.
 /// Used with [_MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)

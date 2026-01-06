@@ -69,6 +69,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         LocationEngineAndroidProperties,
         LocationEnginePlatforms,
         LocationPriority,
+        LogoViewPosition,
         MapLibreMethodChannel,
         MapLibrePlatform,
         MinMaxZoomPreference,

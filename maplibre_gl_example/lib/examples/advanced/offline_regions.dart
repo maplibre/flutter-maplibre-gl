@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'offline_region_map.dart';
-import 'page.dart';
+import '../../page.dart';
+import '../../shared/shared.dart';
 
 final LatLngBounds hawaiiBounds = LatLngBounds(
   southwest: const LatLng(17.26672, -161.14746),
@@ -101,22 +102,24 @@ final List<OfflineRegionListItem> allRegions = [
 
 class OfflineRegionsPage extends ExamplePage {
   const OfflineRegionsPage({super.key})
-      : super(const Icon(Icons.map), 'Offline Regions');
+      : super(
+          const Icon(Icons.cloud_off),
+          'Offline Regions',
+          category: ExampleCategory.advanced,
+        );
 
   @override
-  Widget build(BuildContext context) {
-    return const OfflineRegionBody();
-  }
+  Widget build(BuildContext context) => const _OfflineRegionBody();
 }
 
-class OfflineRegionBody extends StatefulWidget {
-  const OfflineRegionBody({super.key});
+class _OfflineRegionBody extends StatefulWidget {
+  const _OfflineRegionBody();
 
   @override
-  State<OfflineRegionBody> createState() => _OfflineRegionsBodyState();
+  State<_OfflineRegionBody> createState() => _OfflineRegionsBodyState();
 }
 
-class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
+class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
   final List<OfflineRegionListItem> _items = [];
 
   @override
@@ -127,60 +130,105 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-          itemCount: _items.length,
-          itemBuilder: (context, index) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.map),
-                onPressed: () => _goToMap(_items[index]),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _items[index].name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+    return _items.isEmpty
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _items.length,
+            itemBuilder: (context, index) {
+              final item = _items[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: item.isDownloaded
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          item.isDownloaded
+                              ? Icons.cloud_done
+                              : Icons.cloud_download,
+                          color: item.isDownloaded
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      title: Text(
+                        item.name,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      subtitle: Text(
+                        'Estimated tiles: ${item.estimatedTiles}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      trailing: item.isDownloading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : null,
                     ),
-                  ),
-                  Text(
-                    'Est. tiles: ${_items[index].estimatedTiles}',
-                    style: const TextStyle(
-                      fontSize: 16,
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ExampleButton(
+                              label: 'View Map',
+                              icon: Icons.map_outlined,
+                              onPressed: () => _goToMap(item),
+                              style: ExampleButtonStyle.outlined,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: item.isDownloaded
+                                ? ExampleButton(
+                                    label: 'Delete',
+                                    icon: Icons.delete_outline,
+                                    onPressed: item.isDownloading
+                                        ? null
+                                        : () => _deleteRegion(item, index),
+                                    style: ExampleButtonStyle.destructive,
+                                  )
+                                : ExampleButton(
+                                    label: 'Download',
+                                    icon: Icons.download,
+                                    onPressed: item.isDownloading
+                                        ? null
+                                        : () => _downloadRegion(item, index),
+                                    style: ExampleButtonStyle.filled,
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              if (_items[index].isDownloading)
-                const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(),
-                )
-              else
-                IconButton(
-                  icon: Icon(
-                    _items[index].isDownloaded
-                        ? Icons.delete
-                        : Icons.file_download,
-                  ),
-                  onPressed: _items[index].isDownloaded
-                      ? () => _deleteRegion(_items[index], index)
-                      : () => _downloadRegion(_items[index], index),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ],
-    );
+              );
+            },
+          );
   }
 
   Future<void> _updateListOfRegions() async {

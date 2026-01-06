@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '../../page.dart';
 
 class StyleInfo {
   final String name;
@@ -17,8 +17,10 @@ class StyleInfo {
       required this.position});
 }
 
-class Sources extends ExamplePage {
-  const Sources({super.key}) : super(const Icon(Icons.map), 'Various Sources');
+class VariousSources extends ExamplePage {
+  const VariousSources({super.key})
+      : super(const Icon(Icons.map), 'Various Sources',
+            category: ExampleCategory.layers);
 
   @override
   Widget build(BuildContext context) {

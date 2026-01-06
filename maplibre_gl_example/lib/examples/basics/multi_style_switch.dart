@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'page.dart';
+import '../../page.dart';
 
 /// A page that demonstrates switching between multiple map styles in MapLibre GL.
 ///
@@ -14,7 +14,8 @@ import 'page.dart';
 /// The styles include a remote style, an embedded minimal style, and styles loaded from assets.
 class MultiStyleSwitchPage extends ExamplePage {
   const MultiStyleSwitchPage({super.key})
-      : super(const Icon(Icons.style), 'Multi style switch');
+      : super(const Icon(Icons.style), 'Multi style switch',
+            category: ExampleCategory.basics);
 
   @override
   Widget build(BuildContext context) => const _MultiStyleSwitchBody();
@@ -111,9 +112,10 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
             onCameraIdle: _onCameraIdle,
+            attributionButtonPosition: AttributionButtonPosition.topRight,
           ),
           Positioned(
-            top: 0,
+            bottom: 0,
             left: 0,
             right: 0,
             child: SafeArea(

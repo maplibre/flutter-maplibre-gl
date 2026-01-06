@@ -63,6 +63,10 @@ class Convert {
     if (options.containsKey('myLocationRenderMode')) {
       sink.setMyLocationRenderMode(options['myLocationRenderMode']);
     }
+    if (options.containsKey('logoViewPosition')) {
+      final position = LogoViewPosition.values[options['logoViewPosition']];
+      sink.setLogoViewAlignment(position);
+    }
     if (options.containsKey('logoViewMargins')) {
       sink.setLogoViewMargins(
           options['logoViewMargins'][0], options['logoViewMargins'][1]);
