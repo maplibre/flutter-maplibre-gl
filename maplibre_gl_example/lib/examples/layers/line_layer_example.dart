@@ -76,11 +76,11 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
     if (_controller == null) return;
 
     try {
-      // Load cat silhouette pattern from assets
+      // Load marker pattern from assets
       await addImageFromAsset(
         _controller!,
-        'pattern-cat',
-        'assets/fill/cat_silhouette_pattern.png',
+        'marker-pattern',
+        ExampleConstants.markerPatternPath,
       );
     } catch (e) {
       dev.log('Error loading pattern images: $e');
@@ -446,7 +446,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                     subtitle: Text(_linePattern ?? 'None'),
                     onChanged: (bool value) async {
                       setState(() {
-                        _linePattern = value ? 'pattern-cat' : null;
+                        _linePattern = value ? 'marker-pattern' : null;
                       });
                       await _updateLayer();
                     },

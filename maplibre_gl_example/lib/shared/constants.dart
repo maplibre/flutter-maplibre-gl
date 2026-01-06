@@ -143,4 +143,15 @@ class ExampleConstants {
 
   /// Maximum zoom level
   static const double maxZoom = 22.0;
+
+  // ===========================================================================
+  // Pattern images paths
+  // ===========================================================================
+
+  /// Pattern image for fill layer example
+  static const String catPatternPath =
+      'assets/pattern/cat_silhouette_pattern.png';
+
+  /// Pattern image for line layer example
+  static const String markerPatternPath = 'assets/pattern/marker_pattern.png';
 }

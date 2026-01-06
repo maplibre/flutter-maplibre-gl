@@ -61,12 +61,13 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
     if (_controller == null) return;
 
     try {
-      // Load cat silhouette pattern from assets
+      // Load marker pattern from assets
       await addImageFromAsset(
         _controller!,
-        'pattern-cat',
-        'assets/fill/cat_silhouette_pattern.png',
+        'marker-pattern',
+        ExampleConstants.markerPatternPath,
       );
+      dev.log('Pattern images loaded successfully', name: 'FillLayerExample');
     } catch (e) {
       dev.log('Error loading pattern images: $e');
     }
@@ -302,7 +303,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
                     subtitle: Text(_fillPattern ?? 'None'),
                     onChanged: (bool value) async {
                       setState(() {
-                        _fillPattern = value ? 'pattern-cat' : null;
+                        _fillPattern = value ? 'marker-pattern' : null;
                       });
                       await _updateLayer();
                     },

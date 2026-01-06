@@ -30,7 +30,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/fill/cat_silhouette_pattern.png
+    - assets/pattern/cat_silhouette_pattern.png
+    - assets/pattern/marker_pattern.png
     - assets/symbols/custom-icon.png
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png
