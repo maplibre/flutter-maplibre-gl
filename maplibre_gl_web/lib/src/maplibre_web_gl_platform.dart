@@ -385,10 +385,10 @@ class MapLibreMapController extends MapLibrePlatform
     final pointAsList = [point.x, point.y];
     return _map
         .queryRenderedFeatures([pointAsList, pointAsList], options)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -421,10 +421,10 @@ class MapLibreMapController extends MapLibrePlatform
           [rect.left, rect.bottom],
           [rect.right, rect.top],
         ], options)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -457,10 +457,10 @@ class MapLibreMapController extends MapLibrePlatform
 
     return _map
         .querySourceFeatures(sourceId, parameters)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -948,7 +948,7 @@ class MapLibreMapController extends MapLibrePlatform
       {String? promoteId}) async {
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
-    _map.addSource(sourceId, {
+    _map.addSource(sourceId, <String, dynamic>{
       "type": 'geojson',
       "data": geojson, // pass the raw string here to avoid errors
       if (promoteId != null) "promoteId": promoteId
@@ -956,12 +956,19 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   Feature _makeFeature(Map<String, dynamic> geojsonFeature) {
+    final geometry =
+        Map<String, dynamic>.from(geojsonFeature["geometry"] as Map);
+    final propertiesRaw = geojsonFeature["properties"];
+    final properties = propertiesRaw != null
+        ? Map<String, dynamic>.from(propertiesRaw as Map)
+        : null;
+
     return Feature(
-        geometry: Geometry(
-            type: geojsonFeature["geometry"]["type"],
-            coordinates: geojsonFeature["geometry"]["coordinates"]),
-        properties: geojsonFeature["properties"],
-        id: geojsonFeature["properties"]?["id"] ?? geojsonFeature["id"]);
+      geometry: Geometry(
+          type: geometry["type"], coordinates: geometry["coordinates"]),
+      properties: properties,
+      id: properties?["id"] ?? geojsonFeature["id"],
+    );
   }
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
@@ -1066,19 +1073,18 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
-      // Very hacky: because we don't know if the property is a layout
-      // or paint property, we try to set it as both.
-      try {
-        _map.setLayoutProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print(
-            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
-      }
+      // Try paint property first (most common), then layout property
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print(
-            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
+        // If setPaintProperty fails, try setLayoutProperty
+        try {
+          _map.setLayoutProperty(layerId, entry.key, entry.value);
+        } catch (e) {
+          // If both fail, the property doesn't exist on this layer type
+          print(
+              'Warning: Could not set property "${entry.key}" on layer "$layerId" for value "${entry.value}": $e');
+        }
       }
     }
   }
@@ -1154,12 +1160,12 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    final layout = Map.fromEntries(
+    final layout = Map<String, dynamic>.fromEntries(
         properties.entries.where((entry) => isLayoutProperty(entry.key)));
-    final paint = Map.fromEntries(
+    final paint = Map<String, dynamic>.fromEntries(
         properties.entries.where((entry) => !isLayoutProperty(entry.key)));
 
-    _map.addLayer({
+    _map.addLayer(<String, dynamic>{
       'id': layerId,
       'type': layerType,
       'source': sourceId,

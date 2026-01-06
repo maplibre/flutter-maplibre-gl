@@ -760,7 +760,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external void setPaintProperty(String layerId, String name, JSAny value,
+  external void setPaintProperty(String layerId, String name, JSAny? value,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the value of a paint property in the specified style layer.
@@ -781,7 +781,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, JSAny value,
+      String layerId, String name, JSAny? value,
       [StyleSetterOptionsJsImpl? options]);
 
   ///  Returns the value of a layout property in the specified style layer.

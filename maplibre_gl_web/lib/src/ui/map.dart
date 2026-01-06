@@ -865,8 +865,10 @@ class MapLibreMap extends Camera {
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
   setPaintProperty(String layerId, String name, dynamic value,
-          [StyleSetterOptions? options]) =>
-      jsObject.setPaintProperty(layerId, name, utils.jsify(value)!);
+      [StyleSetterOptions? options]) {
+    final jsValue = utils.jsify(value);
+    jsObject.setPaintProperty(layerId, name, jsValue);
+  }
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -887,9 +889,12 @@ class MapLibreMap extends Camera {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
-          [StyleSetterOptions? options]) =>
-      MapLibreMap.fromJsObject(
-          jsObject.setLayoutProperty(layerId, name, utils.jsify(value)!));
+      [StyleSetterOptions? options]) {
+    final jsValue = utils.jsify(value);
+    return MapLibreMap.fromJsObject(
+      jsObject.setLayoutProperty(layerId, name, jsValue),
+    );
+  }
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
