@@ -163,11 +163,10 @@ Found a vulnerability or sensitive exposure vector?
 ## Release process (Maintainers)
 A high-level outline (subject to change):
 1. Ensure `main` (or release branch) is green (CI, tests, analyzer).
-2. Update package versions & root/individual `CHANGELOG.md` sections following [Semantic Versioning 2.0.0](https://semver.org/):
-   - **MAJOR** version for incompatible API changes
-   - **MINOR** version for new backward-compatible functionality
+2. Update package versions & root/individual `CHANGELOG.md` sections following the pre-1.0 versioning policy in [RELEASE.md](RELEASE.md):
+   - **MINOR** version for breaking changes, significant features, or new functionality
    - **PATCH** version for backward-compatible bug fixes
-3. Tag the release (`vX.Y.Z`) and publish packages to pub.dev in dependency order.
+3. Tag the release (`v0.X.Y`) and publish packages to pub.dev in dependency order.
 4. Merge back any release branch into `main`.
 5. Announce in discussions (optional).
 

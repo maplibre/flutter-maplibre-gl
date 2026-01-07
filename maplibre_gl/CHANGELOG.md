@@ -1,6 +1,4 @@
-## [1.0.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v1.0.0) - 2026-01-06
-
-🎉 **First stable release!** This major version marks the maturity and stability of the Flutter MapLibre GL package. We now follow standard semantic versioning.
+## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
 ### Added
 * Logo customization options including visibility and position settings (#b4fb174).
@@ -30,7 +28,7 @@
 * Complete refactor of example app with new UI and improved user experience (#ac877a4).
 * Refactored `cameraTargetBounds` implementation on Android and iOS for consistent behavior (#8bcd74a).
 
-**Full Changelog**: [v0.24.1...v1.0.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v1.0.0)
+**Full Changelog**: [v0.24.1...v0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0)
 
 ## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
 
