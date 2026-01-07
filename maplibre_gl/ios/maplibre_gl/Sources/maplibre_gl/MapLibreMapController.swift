@@ -18,7 +18,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var dragFeature: MLNFeature?
 
     private var initialTilt: CGFloat?
-    private var cameraTargetBounds: MLNCoordinateBounds?
     private var trackCameraPosition = false
     private var myLocationEnabled = false
     private var scrollingEnabled = true
@@ -1854,46 +1853,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
-        // Skip bounds enforcement if we're programmatically adjusting the camera to prevent recursion
-        if !isAdjustingCameraProgrammatically {
-            // Enforce camera target bounds if set
-            if let bounds = cameraTargetBounds {
-                let center = mapView.centerCoordinate
-                var needsAdjustment = false
-                var adjustedLat = center.latitude
-                var adjustedLng = center.longitude
-                
-                // Check if center is outside bounds and clamp to bounds
-                if center.latitude < bounds.sw.latitude {
-                    adjustedLat = bounds.sw.latitude
-                    needsAdjustment = true
-                } else if center.latitude > bounds.ne.latitude {
-                    adjustedLat = bounds.ne.latitude
-                    needsAdjustment = true
-                }
-                
-                if center.longitude < bounds.sw.longitude {
-                    adjustedLng = bounds.sw.longitude
-                    needsAdjustment = true
-                } else if center.longitude > bounds.ne.longitude {
-                    adjustedLng = bounds.ne.longitude
-                    needsAdjustment = true
-                }
-                
-                // If the center coordinate is outside bounds, constrain it
-                if needsAdjustment {
-                    let adjustedCenter = CLLocationCoordinate2D(latitude: adjustedLat, longitude: adjustedLng)
-                    // Set flag to prevent recursion
-                    isAdjustingCameraProgrammatically = true
-                    // Use setCenter without animation to snap back to valid bounds
-                    mapView.setCenter(adjustedCenter, animated: false)
-                    isAdjustingCameraProgrammatically = false
-                    // Early return to avoid invoking camera#onIdle during constraint adjustment
-                    return
-                }
-            }
-        }
-        
         let arguments = trackCameraPosition ? [
             "position": getCamera()?.toDict(mapView: mapView)
         ] : [:]
@@ -1994,12 +1953,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      *  MapLibreMapOptionsSink
      */
     func setCameraTargetBounds(bounds: MLNCoordinateBounds?) {
-        guard let bounds = bounds else {
-            cameraTargetBounds = nil
-            return
-        }
-        cameraTargetBounds = bounds
-        mapView.setVisibleCoordinateBounds(bounds, animated: false)
+        let bounds = bounds ?? MLNCoordinateBounds(
+            sw: CLLocationCoordinate2D(latitude: -90, longitude: -180),
+            ne: CLLocationCoordinate2D(latitude: 90, longitude: 180)
+        )
+        mapView.maximumScreenBounds = bounds;
     }
 
     func setCompassEnabled(compassEnabled: Bool) {

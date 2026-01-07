@@ -26,6 +26,7 @@ class _CameraBoundsBody extends StatefulWidget {
 class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
   MapLibreMapController? _controller;
   LatLngBounds? _currentBounds;
+  LatLngBounds? _constrainedBounds;
   double? _minZoom;
   double? _maxZoom;
 
@@ -60,25 +61,18 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
 
   Future<void> _setBounds(LatLngBounds bounds, String name) async {
     if (_controller == null) return;
+    var padding = 150.0;
+    if (bounds == _europeBounds) padding = 0.0;
 
     await _controller!.animateCamera(
       CameraUpdate.newLatLngBounds(
         bounds,
-        left: 50,
-        top: 50,
-        right: 50,
-        bottom: 50,
+        left: padding,
+        top: padding,
+        right: padding,
+        bottom: padding,
       ),
     );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Camera moved to $name bounds'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
 
     _updateInfo();
   }
@@ -102,6 +96,17 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
     });
   }
 
+  Future<void> _setCameraBounds(LatLngBounds bounds, String name) async {
+    if (_controller == null) return;
+
+    setState(() => _constrainedBounds = bounds);
+  }
+
+  Future<void> _clearCameraBounds() async {
+    if (_controller == null) return;
+    setState(() => _constrainedBounds = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
@@ -118,6 +123,9 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
         trackCameraPosition: true,
         initialCameraPosition: ExampleConstants.defaultCameraPosition,
         minMaxZoomPreference: MinMaxZoomPreference(_minZoom, _maxZoom),
+        cameraTargetBounds: _constrainedBounds != null
+            ? CameraTargetBounds(_constrainedBounds)
+            : CameraTargetBounds.unbounded,
       ),
       controls: [
         InfoCard(
@@ -132,6 +140,13 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
                 'Min: ${_minZoom?.toStringAsFixed(0) ?? "None"} | Max: ${_maxZoom?.toStringAsFixed(0) ?? "None"}',
             icon: Icons.lock,
             color: Colors.orange.shade100,
+          ),
+        if (_constrainedBounds != null)
+          InfoCard(
+            title: 'Camera Target Bounds',
+            subtitle: 'Panning restricted to defined region',
+            icon: Icons.lock_outline,
+            color: Colors.red.shade100,
           ),
         const SizedBox(height: 8),
         ControlGroup(
@@ -177,10 +192,47 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
               style: ExampleButtonStyle.tonal,
             ),
             ExampleButton(
-              label: 'Clear Limits',
-              icon: Icons.lock_open,
+              label: 'Clear',
+              icon: Icons.clear,
               onPressed: hasController && (_minZoom != null || _maxZoom != null)
                   ? _clearZoomConstraints
+                  : null,
+              style: ExampleButtonStyle.outlined,
+            ),
+          ],
+        ),
+        ControlGroup(
+          title: 'Camera Bounds Constraint',
+          children: [
+            ExampleButton(
+              label: 'Lock to Sydney',
+              icon: Icons.lock,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_sydneyBounds, 'Sydney')
+                  : null,
+              style: ExampleButtonStyle.tonal,
+            ),
+            ExampleButton(
+              label: 'Lock to SF',
+              icon: Icons.lock,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_sanFranciscoBounds, 'San Francisco')
+                  : null,
+              style: ExampleButtonStyle.tonal,
+            ),
+            ExampleButton(
+              label: 'Lock to Europe',
+              icon: Icons.lock,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_europeBounds, 'Europe')
+                  : null,
+              style: ExampleButtonStyle.tonal,
+            ),
+            ExampleButton(
+              label: 'Clear',
+              icon: Icons.clear,
+              onPressed: hasController && _constrainedBounds != null
+                  ? _clearCameraBounds
                   : null,
               style: ExampleButtonStyle.outlined,
             ),
