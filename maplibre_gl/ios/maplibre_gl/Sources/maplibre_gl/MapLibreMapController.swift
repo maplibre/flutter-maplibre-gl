@@ -18,10 +18,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var dragFeature: MLNFeature?
 
     private var initialTilt: CGFloat?
-    private var cameraTargetBounds: MLNCoordinateBounds?
     private var trackCameraPosition = false
     private var myLocationEnabled = false
     private var scrollingEnabled = true
+    private var isAdjustingCameraProgrammatically = false
 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
@@ -78,7 +78,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        mapView.logoView.isHidden = true
         self.registrar = registrar
 
         super.init()
@@ -254,7 +253,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#queryRenderedFeatures":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             var styleLayerIdentifiers: Set<String>?
-            if let layerIds = arguments["layerIds"] as? [String] {
+            if let layerIds = arguments["layerIds"] as? [String], !layerIds.isEmpty {
                 styleLayerIdentifiers = Set<String>(layerIds)
             }
             var filterExpression: NSPredicate?
@@ -1853,7 +1852,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated _: Bool) {
+    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
         let arguments = trackCameraPosition ? [
             "position": getCamera()?.toDict(mapView: mapView)
         ] : [:]
@@ -1954,7 +1953,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      *  MapLibreMapOptionsSink
      */
     func setCameraTargetBounds(bounds: MLNCoordinateBounds?) {
-        cameraTargetBounds = bounds
+        let bounds = bounds ?? MLNCoordinateBounds(
+            sw: CLLocationCoordinate2D(latitude: -90, longitude: -180),
+            ne: CLLocationCoordinate2D(latitude: 90, longitude: 180)
+        )
+        mapView.maximumScreenBounds = bounds;
     }
 
     func setCompassEnabled(compassEnabled: Bool) {
@@ -1962,9 +1965,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.compassView.isHidden = !compassEnabled
     }
 
-    func setMinMaxZoomPreference(min: Double, max: Double) {
-        mapView.minimumZoomLevel = min
-        mapView.maximumZoomLevel = max
+    func setMinMaxZoomPreference(min: Double?, max: Double?) {
+        // Use MapLibre defaults (0 for min, 22 for max) when unbounded (nil)
+        let minZoom = min ?? 0.0
+        let maxZoom = max ?? 22.0
+        
+        mapView.minimumZoomLevel = minZoom
+        mapView.maximumZoomLevel = maxZoom
     }
 
     private static func styleStringIsJSON(_ styleString: String) -> Bool {
@@ -2063,6 +2070,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case .Gps:
             NSLog("RenderMode.GPS currently not supported")
         }
+    }
+
+    func setLogoEnabled(logoEnabled: Bool) {
+        mapView.logoView.isHidden = !logoEnabled
+    }
+
+    func setLogoViewPosition(position: MLNOrnamentPosition) {
+        mapView.logoViewPosition = position
     }
 
     func setLogoViewMargins(x: Double, y: Double) {

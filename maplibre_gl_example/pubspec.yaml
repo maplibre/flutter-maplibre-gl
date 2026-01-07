@@ -1,7 +1,7 @@
 name: maplibre_gl_example
 description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
-version: 0.24.1
+version: 0.25.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 resolution: workspace
@@ -30,7 +30,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/fill/cat_silhouette_pattern.png
+    - assets/pattern/cat_silhouette_pattern.png
+    - assets/pattern/marker_pattern.png
     - assets/symbols/custom-icon.png
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png

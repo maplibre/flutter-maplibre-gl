@@ -1,5 +1,47 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
+
+### Major Changes
+
+#### **BREAKING**: Migration to Modern JS Interop (#687)
+* **WASM Compatible**: Migrated from deprecated `dart:js_util` to modern `dart:js_interop` API
+* Required for Flutter 3.38.4+ compatibility
+* Now fully compatible with Flutter's WASM compilation target
+* **No public API changes** - this is an internal implementation update
+
+#### Technical Details of JS Interop Migration:
+* Replaced `dart:js_util` with `dart:js_interop` and `dart:js_interop_unsafe`
+* Updated all JS interop classes to use `@staticInterop` + extension methods pattern
+* Migrated from `@JS()` factory constructors to new interop model
+* Converted `allowInterop()` callbacks to `.toJS`
+* Updated property access from `getProperty()`/`setProperty()` to native JS property access
+* Replaced `jsify()`/`dartify()` utilities to work with `JSAny`/`JSObject` types
+* Fixed primitive type conversions: `JSString.toDart`, `JSNumber.toDartDouble`, `JSArray.toDart`
+* Converted static methods to top-level functions (e.g., `LngLat.convert()` → `lngLatConvert()`)
+
+### Added
+* Implemented `getStyle()` - returns map style as JSON string (previously threw `UnimplementedError`)
+* Implemented `getSourceIds()` - returns list of source IDs from current style
+* Improved `getLayers()` - safely handles null styles and returns empty list instead of crashing
+
+### Fixed
+* Fixed `setPaintProperty` and `setLayoutProperty` to handle nullable `JSAny` values correctly (#12dfad2)
+* Improved `jsify` function to create JS arrays correctly
+* Enhanced error handling in `getLayer()`, `getFilter()`, and `isStyleLoaded()` with null-safety checks
+* Fixed pattern images loading - all images now correctly converted to RGBA format (#9ce52a6)
+  - Resolves mismatched image size errors when loading pattern images
+  - Ensures consistent image format across all image uploads
+
+### Refactor
+* Improved null safety across the web platform
+* Enhanced type safety for JS ↔ Dart conversions
+* More descriptive error messages in the web implementation
+* Example app improvements:
+  - Maps now use responsive sizing (50-60% of screen height)
+  - Removed fixed width constraints for full-screen responsiveness
+  - Better button and control layouts
+
 ## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
 
 * Rollback maplibre-gl to `4.7.1` version. (#660)

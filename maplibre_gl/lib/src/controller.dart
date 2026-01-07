@@ -176,13 +176,13 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onCameraMoveStartedPlatform.add((_) {
       _isCameraMoving = true;
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
       onCameraMove?.call(cameraPosition);
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraIdlePlatform.add((cameraPosition) {
@@ -191,10 +191,10 @@ class MapLibreMapController extends ChangeNotifier {
         _cameraPosition = cameraPosition;
       }
       onCameraIdle?.call();
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
-    _maplibrePlatform.onMapStyleLoadedPlatform.add((_) {
+    _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
@@ -204,21 +204,25 @@ class MapLibreMapController extends ChangeNotifier {
               this,
               enableInteraction: enableInteraction,
             );
+            await fillManager!.initialize();
           case AnnotationType.line:
             lineManager = LineManager(
               this,
               enableInteraction: enableInteraction,
             );
+            await lineManager!.initialize();
           case AnnotationType.circle:
             circleManager = CircleManager(
               this,
               enableInteraction: enableInteraction,
             );
+            await circleManager!.initialize();
           case AnnotationType.symbol:
             symbolManager = SymbolManager(
               this,
               enableInteraction: enableInteraction,
             );
+            await symbolManager!.initialize();
         }
       }
       onStyleLoadedCallback?.call();
@@ -526,9 +530,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
+  ///
+  /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
   Future<void> setLayerProperties(
-      String layerId, LayerProperties properties) async {
-    await _maplibrePlatform.setLayerProperties(layerId, properties.toJson());
+    String layerId,
+    LayerProperties properties,
+  ) async {
+    await _maplibrePlatform.setLayerProperties(
+      layerId,
+      properties.toJson(skipNulls: false),
+    );
   }
 
   /// Add a fill layer to the map with the given properties
@@ -1700,8 +1711,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Ensures that the given manager is initialized.
   /// If not, throws an [Exception].
-  void _ensureManagerInitialized(Object? manager) {
-    if (manager == null) {
+  void _ensureManagerInitialized(AnnotationManager? manager) {
+    if (manager == null || !manager.isInitialized) {
       throw Exception(
         "This Annotation Manager has not been initialized. Make sure that the map style has been loaded.",
       );

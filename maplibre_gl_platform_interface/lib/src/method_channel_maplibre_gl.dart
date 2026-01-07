@@ -819,8 +819,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   void dispose() {
-    super.dispose();
     _channel.setMethodCallHandler(null);
+    super.dispose();
   }
 
   @override

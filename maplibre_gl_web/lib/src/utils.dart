@@ -45,7 +45,8 @@ JSAny? jsify(Object? dartObject) {
   if (dartObject is num) return dartObject.toJS;
   if (dartObject is bool) return dartObject.toJS;
   if (dartObject is List) {
-    return dartObject.map((e) => jsify(e)).toList().toJS as JSAny;
+    final jsArray = dartObject.map((e) => jsify(e)).toList();
+    return jsArray.toJS;
   }
   if (dartObject is Map<String, dynamic>) {
     return jsifyMap(dartObject);

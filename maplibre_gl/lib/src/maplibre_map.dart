@@ -35,6 +35,8 @@ class MapLibreMap extends StatefulWidget {
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
     this.myLocationRenderMode = MyLocationRenderMode.normal,
+    this.logoEnabled = false,
+    this.logoViewPosition,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
@@ -88,9 +90,10 @@ class MapLibreMap extends StatefulWidget {
   /// **Available only on Android. Has no effect on iOS or Web.**
   final bool translucentTextureSurface;
 
-  /// Defines the layer order of annotations displayed on map
+  /// Defines the layer order of annotations displayed on map.
+  /// Order them from bottom to top. Bottom annotation will be rendered first.
   ///
-  /// Any annotation type can only be contained once, so 0 to 4 types
+  /// Any annotation type can only be contained once, so 0 to 4 types.
   ///
   /// Note that setting this to be empty gives a big perfomance boost for
   /// android. However if you do so annotations will not work.
@@ -207,6 +210,13 @@ class MapLibreMap extends StatefulWidget {
   /// If this is set to a value other than [MyLocationRenderMode.normal], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
+  /// True if the MapLibre logo should be shown on the map.
+  /// Defaults to false.
+  final bool logoEnabled;
+
+  /// Set the position for the Logo
+  final LogoViewPosition? logoViewPosition;
+
   /// Set the layout margins for the Logo
   final Point? logoViewMargins;
 
@@ -281,6 +291,7 @@ class MapLibreMap extends StatefulWidget {
 class _MapLibreMapState extends State<MapLibreMap> {
   final Completer<MapLibreMapController> _controller =
       Completer<MapLibreMapController>();
+  MapLibreMapController? _mapController;
 
   late _MapLibreMapOptions _maplibreMapOptions;
   final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
@@ -312,12 +323,12 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
+  void dispose() {
     if (_controller.isCompleted) {
-      final controller = await _controller.future;
-      controller.dispose();
+      _mapController?.dispose();
     }
+
+    super.dispose();
   }
 
   @override
@@ -365,6 +376,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
     await _maplibrePlatform.initPlatform(id);
+    _mapController = controller;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);
   }
@@ -389,6 +401,8 @@ class _MapLibreMapOptions {
       this.myLocationEnabled,
       this.myLocationTrackingMode,
       this.myLocationRenderMode,
+      this.logoEnabled,
+      this.logoViewPosition,
       this.logoViewMargins,
       this.compassViewPosition,
       this.compassViewMargins,
@@ -415,6 +429,8 @@ class _MapLibreMapOptions {
           myLocationEnabled: map.myLocationEnabled,
           myLocationTrackingMode: map.myLocationTrackingMode,
           myLocationRenderMode: map.myLocationRenderMode,
+          logoEnabled: map.logoEnabled,
+          logoViewPosition: map.logoViewPosition,
           logoViewMargins: map.logoViewMargins,
           compassViewPosition: map.compassViewPosition,
           compassViewMargins: map.compassViewMargins,
@@ -449,6 +465,10 @@ class _MapLibreMapOptions {
   final MyLocationTrackingMode? myLocationTrackingMode;
 
   final MyLocationRenderMode? myLocationRenderMode;
+
+  final bool? logoEnabled;
+
+  final LogoViewPosition? logoViewPosition;
 
   final Point? logoViewMargins;
 
@@ -506,6 +526,8 @@ class _MapLibreMapOptions {
     addIfNonNull('myLocationEnabled', myLocationEnabled);
     addIfNonNull('myLocationTrackingMode', myLocationTrackingMode?.index);
     addIfNonNull('myLocationRenderMode', myLocationRenderMode?.index);
+    addIfNonNull('logoEnabled', logoEnabled);
+    addIfNonNull('logoViewPosition', logoViewPosition?.index);
     addIfNonNull('logoViewMargins', pointToArray(logoViewMargins));
     addIfNonNull('compassViewPosition', compassViewPosition?.index);
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));

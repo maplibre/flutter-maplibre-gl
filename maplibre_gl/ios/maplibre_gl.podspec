@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'maplibre_gl'
-  s.version          = '0.24.1'
+  s.version          = '0.25.0'
   s.summary          = 'MapLibre GL Flutter plugin'
   s.description      = <<-DESC
 MapLibre GL Flutter plugin.

@@ -31,8 +31,18 @@ class LayerPropertyConverter {
       switch (entry.getKey()) {
         {{#paint_properties}}
         {{^isFloatArrayProperty}}
+        {{^isPatternProperty}}
         case "{{value}}":
           properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+        {{/isPatternProperty}}
+        {{#isPatternProperty}}
+        case "{{value}}":
+          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+          }
+        {{/isPatternProperty}}
         {{/isFloatArrayProperty}}
         {{#isFloatArrayProperty}}
         case "{{value}}":

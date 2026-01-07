@@ -37,8 +37,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
-    super.dispose();
     _map.remove();
+    super.dispose();
   }
 
   void _registerViewFactory(Function(int) callback, int identifier) {
@@ -193,19 +193,19 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<bool?> animateCamera(CameraUpdate cameraUpdate,
       {Duration? duration}) async {
-    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map).jsObject;
-    final jsObj = cameraOptions as JSObject;
+    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
 
-    final around = jsObj.getProperty('around'.toJS);
-    final bearing = jsObj.getProperty('bearing'.toJS);
-    final center = jsObj.getProperty('center'.toJS);
-    final pitch = jsObj.getProperty('pitch'.toJS);
-    final zoom = jsObj.getProperty('zoom'.toJS);
+    // Use the existing CameraOptions wrapper which has proper WASM-compatible accessors
+    final around = cameraOptions.around;
+    final bearing = cameraOptions.bearing;
+    final center = cameraOptions.center;
+    final pitch = cameraOptions.pitch;
+    final zoom = cameraOptions.zoom;
 
     _map.flyTo({
-      if (around != null) 'around': around,
+      if (around != null) 'around': around.jsObject,
       if (bearing != null) 'bearing': bearing,
-      if (center != null) 'center': center,
+      if (center != null) 'center': center.jsObject,
       if (pitch != null) 'pitch': pitch,
       if (zoom != null) 'zoom': zoom,
       if (duration != null) 'duration': duration.inMilliseconds,
@@ -385,10 +385,10 @@ class MapLibreMapController extends MapLibrePlatform
     final pointAsList = [point.x, point.y];
     return _map
         .queryRenderedFeatures([pointAsList, pointAsList], options)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -421,10 +421,10 @@ class MapLibreMapController extends MapLibrePlatform
           [rect.left, rect.bottom],
           [rect.right, rect.top],
         ], options)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -457,10 +457,10 @@ class MapLibreMapController extends MapLibrePlatform
 
     return _map
         .querySourceFeatures(sourceId, parameters)
-        .map((feature) => {
+        .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
-              'geometry': {
+              'geometry': <String, dynamic>{
                 'type': feature.geometry.type,
                 'coordinates': feature.geometry.coordinates,
               },
@@ -505,14 +505,18 @@ class MapLibreMapController extends MapLibrePlatform
       [bool sdf = false]) async {
     final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
+      // Convert image to RGBA format with proper byte ordering
+      final rgbaBytes = photo.convert(numChannels: 4).getBytes();
+      final data = Uint8List.fromList(rgbaBytes);
+
       await _map.addImage(
         name,
         {
           'width': photo.width,
           'height': photo.height,
-          'data': photo.getBytes(),
+          'data': data,
         },
-        {'sdf': sdf},
+        {'sdf': sdf, 'pixelRatio': 1},
       );
     } else {
       dev.log('Image already exists on map: $name',
@@ -804,6 +808,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setLogoViewAlignment(LogoViewPosition position) {
+    print('setLogoViewAlignment not available in web');
+  }
+
+  @override
   void setLogoViewMargins(int x, int y) {
     print('setLogoViewMargins not available in web');
   }
@@ -943,7 +952,7 @@ class MapLibreMapController extends MapLibrePlatform
       {String? promoteId}) async {
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
-    _map.addSource(sourceId, {
+    _map.addSource(sourceId, <String, dynamic>{
       "type": 'geojson',
       "data": geojson, // pass the raw string here to avoid errors
       if (promoteId != null) "promoteId": promoteId
@@ -951,12 +960,19 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   Feature _makeFeature(Map<String, dynamic> geojsonFeature) {
+    final geometry =
+        Map<String, dynamic>.from(geojsonFeature["geometry"] as Map);
+    final propertiesRaw = geojsonFeature["properties"];
+    final properties = propertiesRaw != null
+        ? Map<String, dynamic>.from(propertiesRaw as Map)
+        : null;
+
     return Feature(
-        geometry: Geometry(
-            type: geojsonFeature["geometry"]["type"],
-            coordinates: geojsonFeature["geometry"]["coordinates"]),
-        properties: geojsonFeature["properties"],
-        id: geojsonFeature["properties"]?["id"] ?? geojsonFeature["id"]);
+      geometry: Geometry(
+          type: geometry["type"], coordinates: geometry["coordinates"]),
+      properties: properties,
+      id: properties?["id"] ?? geojsonFeature["id"],
+    );
   }
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
@@ -1061,19 +1077,18 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
-      // Very hacky: because we don't know if the property is a layout
-      // or paint property, we try to set it as both.
-      try {
-        _map.setLayoutProperty(layerId, entry.key, entry.value);
-      } catch (e) {
-        print(
-            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
-      }
+      // Try paint property first (most common), then layout property
       try {
         _map.setPaintProperty(layerId, entry.key, entry.value);
       } catch (e) {
-        print(
-            'Caught exception (usually safe to ignore): $e.\nLayerId: $layerId, Property: ${entry.key}, Value: ${entry.value}');
+        // If setPaintProperty fails, try setLayoutProperty
+        try {
+          _map.setLayoutProperty(layerId, entry.key, entry.value);
+        } catch (e) {
+          // If both fail, the property doesn't exist on this layer type
+          print(
+              'Warning: Could not set property "${entry.key}" on layer "$layerId" for value "${entry.value}": $e');
+        }
       }
     }
   }
@@ -1149,12 +1164,12 @@ class MapLibreMapController extends MapLibrePlatform
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction}) async {
-    final layout = Map.fromEntries(
+    final layout = Map<String, dynamic>.fromEntries(
         properties.entries.where((entry) => isLayoutProperty(entry.key)));
-    final paint = Map.fromEntries(
+    final paint = Map<String, dynamic>.fromEntries(
         properties.entries.where((entry) => !isLayoutProperty(entry.key)));
 
-    _map.addLayer({
+    _map.addLayer(<String, dynamic>{
       'id': layerId,
       'type': layerType,
       'source': sourceId,
@@ -1362,9 +1377,8 @@ class MapLibreMapController extends MapLibrePlatform
     final style = _map.getStyle();
     if (style == null) return [];
 
-    // The style is a JavaScript object with a 'sources' property
-    final jsStyle = style as JSObject;
-    final jsSources = jsStyle.getProperty('sources'.toJS);
+    // Get the sources from the style object
+    final jsSources = style.sources;
 
     if (jsSources == null) return [];
 

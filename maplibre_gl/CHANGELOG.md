@@ -1,3 +1,40 @@
+## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
+
+### Added
+* Logo customization options including visibility and position settings (#b4fb174).
+* Explicit annotation manager initialization with clear error handling (#668).
+* iOS: Attribution support for tile and raster sources with HTML link parsing.
+
+### Changed
+* MapLibre Android SDK upgraded from `11.13.5` to `12.3.0` (#690).
+  - Includes synchronous GeoJSON source updates
+  - Support for MLT-format vector tile sources
+  - Better frustum offset support
+  - See [MapLibre Native Android 12.3.0 release notes](https://github.com/maplibre/maplibre-native/releases/tag/android-v12.3.0)
+* OkHttp updated from `4.12.0` to `5.3.2` for Node.js 24 compatibility (#676, #700).
+* Kotlin updated to `2.3.0` (#697, #698).
+* Android Gradle Plugin updated to `8.13.2` (#695, #674).
+* Android Application Plugin updated to `8.13.2` (#696, #689).
+* GitHub Actions: `actions/checkout` updated from v5 to v6 (#672, #693).
+* GitHub Actions: `actions/upload-artifact` updated from v4 to v6 (#688, #694).
+
+### Fixed
+* Min/max zoom preference on iOS (#5230fab).
+* `queryRenderedFeatures` now returns all targets when supplying empty layers list on iOS, aligning behavior with Android (#680).
+* iOS: Enhanced LayerPropertyConverter to handle null values and improve expression parsing (#98660dc).
+* Fixed `lineDasharray` and patterns reset to null in layer properties (#2b550ed).
+* Improved MapLibreMapController disposing to prevent memory leaks.
+* Removed unnecessary disposing of mapController in example app (#f989797).
+* Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
+  - Pattern images now correctly converted to RGBA format on web
+  - Fixed mismatched image size error when loading pattern images
+
+### Refactor
+* Complete refactor of example app with new UI and improved user experience (#ac877a4).
+* Refactored `cameraTargetBounds` implementation on Android and iOS for consistent behavior (#8bcd74a).
+
+**Full Changelog**: [v0.24.1...v0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0)
+
 ## [0.24.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.0...v0.24.1)
 
 ### Fixed

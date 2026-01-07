@@ -163,12 +163,14 @@ Found a vulnerability or sensitive exposure vector?
 ## Release process (Maintainers)
 A high-level outline (subject to change):
 1. Ensure `main` (or release branch) is green (CI, tests, analyzer).
-2. Update package versions & root/individual `CHANGELOG.md` sections.
-3. Tag the release (`vX.Y.Z`) and publish packages to pub.dev in dependency order.
+2. Update package versions & root/individual `CHANGELOG.md` sections following the pre-1.0 versioning policy in [RELEASE.md](RELEASE.md):
+   - **MINOR** version for breaking changes, significant features, or new functionality
+   - **PATCH** version for backward-compatible bug fixes
+3. Tag the release (`v0.X.Y`) and publish packages to pub.dev in dependency order.
 4. Merge back any release branch into `main`.
 5. Announce in discussions (optional).
 
-For more information, see [RELEASE](RELEASE.md) instructions.
+For more information, see [RELEASE.md](RELEASE.md) instructions.
 
 ## Community epectations
 Be respectful and constructive. We follow the project's `CODE_OF_CONDUCT.md`. Harassment, discrimination, or unprofessional behavior is not tolerated.

@@ -165,7 +165,7 @@ final class MapLibreMapController
           updateMyLocationEnabled();
 
           if (null != bounds) {
-            mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+            setCameraTargetBounds(bounds);
           }
 
           mapLibreMap.addOnMapClickListener(MapLibreMapController.this);
@@ -235,6 +235,11 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveStartedListener(this);
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
+
+    // Apply camera target bounds if set during initialization
+    if (bounds != null) {
+      mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
 
     if (androidGesturesManager != null) {
       androidGesturesManager.setMoveGestureListener(new MoveGestureListener());
@@ -1481,9 +1486,21 @@ final class MapLibreMapController
                 "The style is null. Has onStyleLoaded() already been invoked?",
                 null);
           }
+          // Configure bitmap options to prevent density-based scaling
+          BitmapFactory.Options options = new BitmapFactory.Options();
+          options.inScaled = false;       // Disable automatic scaling
+          options.inDensity = 0;          // No source density
+          options.inTargetDensity = 0;    // No target density
+          
+          Bitmap bitmap = BitmapFactory.decodeByteArray(
+              call.argument("bytes"), 
+              0, 
+              call.argument("length"),
+              options);
+          
           style.addImage(
               call.argument("name"),
-              BitmapFactory.decodeByteArray(call.argument("bytes"), 0, call.argument("length")),
+              bitmap,
               call.argument("sdf"));
           result.success(null);
           break;
@@ -2087,6 +2104,9 @@ final class MapLibreMapController
   @Override
   public void setCameraTargetBounds(LatLngBounds bounds) {
     this.bounds = bounds;
+    if (mapLibreMap != null) {
+      mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
   }
 
   @Override
@@ -2164,6 +2184,30 @@ final class MapLibreMapController
     this.myLocationRenderMode = myLocationRenderMode;
     if (mapLibreMap != null && locationComponent != null) {
       updateMyLocationRenderMode();
+    }
+  }
+
+  @Override
+  public void setLogoEnabled(boolean logoEnabled) {
+    mapLibreMap.getUiSettings().setLogoEnabled(logoEnabled);
+  }
+
+  @Override
+  public void setLogoViewGravity(int gravity) {
+    switch (gravity) {
+      case 0:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.TOP | Gravity.START);
+        break;
+      case 1:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.TOP | Gravity.END);
+        break;
+      default:
+      case 2:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.BOTTOM | Gravity.START);
+        break;
+      case 3:
+        mapLibreMap.getUiSettings().setLogoGravity(Gravity.BOTTOM | Gravity.END);
+        break;
     }
   }
 

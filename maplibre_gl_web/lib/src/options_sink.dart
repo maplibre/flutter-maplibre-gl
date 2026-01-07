@@ -27,6 +27,8 @@ abstract class MapLibreMapOptionsSink {
 
   void setMyLocationRenderMode(int myLocationRenderMode);
 
+  void setLogoViewAlignment(LogoViewPosition position);
+
   void setLogoViewMargins(int x, int y);
 
   void setCompassAlignment(CompassViewPosition position);

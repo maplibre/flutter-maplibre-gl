@@ -4,6 +4,10 @@ part of '../maplibre_gl.dart';
 /// owning their backing style source(s)/layer(s) and performing efficient
 /// batched updates.
 ///
+/// The [initialize] method must be called before [AnnotationManager] instance
+/// can be used. Once [AnnotationManager] is initialized, the [isInitialized]
+/// getter will return true.
+///
 /// An [AnnotationManager] keeps an internal mapping from annotation id to its
 /// model object and mirrors the collection into one or more GeoJSON sources;
 /// each source is bound to a style layer whose visual properties come from
@@ -13,11 +17,17 @@ part of '../maplibre_gl.dart';
 /// underlying annotation is translated & re-set.
 abstract class AnnotationManager<T extends Annotation> {
   final MapLibreMapController controller;
+
+  bool _isInitializing = false;
+  bool _isInitialized = false;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 
   /// Base identifier of the manager. Use [layerIds] for concrete layer ids.
   final String id;
+
+  /// Tracks whether the manager and its layers were initialized.
+  bool get isInitialized => _isInitialized;
 
   List<String> get layerIds =>
       [for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i)];
@@ -45,20 +55,42 @@ abstract class AnnotationManager<T extends Annotation> {
     this.controller, {
     this.selectLayer,
     required this.enableInteraction,
-  }) : id = getRandomString() {
-    for (var i = 0; i < allLayerProperties.length; i++) {
-      final layerId = _makeLayerId(i);
-      unawaited(controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
-          promoteId: "id"));
-      unawaited(controller.addLayer(
-        layerId,
-        layerId,
-        allLayerProperties[i],
-        enableInteraction: enableInteraction,
-      ));
+  }) : id = getRandomString();
+
+  @mustCallSuper
+  Future<void> initialize() async {
+    if (_isInitializing || _isInitialized) {
+      return;
     }
 
-    controller.onFeatureDrag.add(_onDrag);
+    // Mark initialization process start, so that it cannot be entered again
+    _isInitializing = true;
+
+    try {
+      for (var i = 0; i < allLayerProperties.length; i++) {
+        final layerId = _makeLayerId(i);
+
+        await controller.addGeoJsonSource(
+          layerId,
+          buildFeatureCollection([]),
+          promoteId: "id",
+        );
+        await controller.addLayer(
+          layerId,
+          layerId,
+          allLayerProperties[i],
+          enableInteraction: enableInteraction,
+        );
+      }
+
+      controller.onFeatureDrag.add(_onDrag);
+
+      // Mark as initialized
+      _isInitialized = true;
+    } finally {
+      // Mark initialization process end
+      _isInitializing = false;
+    }
   }
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
@@ -264,24 +296,32 @@ class SymbolManager extends AnnotationManager<Symbol> {
 
   /// If true, the icon will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconAllowOverlap(bool value) async {
+    if (value == _iconAllowOverlap) return;
+
     _iconAllowOverlap = value;
     await _rebuildLayers();
   }
 
   /// If true, other symbols can be visible even if they collide with the icon.
   Future<void> setTextAllowOverlap(bool value) async {
+    if (value == _textAllowOverlap) return;
+
     _textAllowOverlap = value;
     await _rebuildLayers();
   }
 
   /// If true, the text will be visible even if it collides with other previously drawn symbols.
   Future<void> setIconIgnorePlacement(bool value) async {
+    if (value == _iconIgnorePlacement) return;
+
     _iconIgnorePlacement = value;
     await _rebuildLayers();
   }
 
   /// If true, other symbols can be visible even if they collide with the text.
   Future<void> setTextIgnorePlacement(bool value) async {
+    if (value == _textIgnorePlacement) return;
+
     _textIgnorePlacement = value;
     await _rebuildLayers();
   }
