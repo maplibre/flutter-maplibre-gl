@@ -6,7 +6,20 @@ import MapLibre
 class LayerPropertyConverter {
     class func addSymbolProperties(symbolLayer: MLNSymbolStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "icon-opacity":
                     symbolLayer.iconOpacity = expression
@@ -119,8 +132,10 @@ class LayerPropertyConverter {
                 case "text-optional":
                     symbolLayer.textOptional = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    symbolLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        symbolLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -130,7 +145,20 @@ class LayerPropertyConverter {
 
     class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "circle-radius":
                     circleLayer.circleRadius = expression
@@ -157,8 +185,10 @@ class LayerPropertyConverter {
                 case "circle-sort-key":
                     circleLayer.circleSortKey = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    circleLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        circleLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -168,7 +198,20 @@ class LayerPropertyConverter {
 
     class func addLineProperties(lineLayer: MLNLineStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "line-opacity":
                     lineLayer.lineOpacity = expression
@@ -203,8 +246,10 @@ class LayerPropertyConverter {
                 case "line-sort-key":
                     lineLayer.lineSortKey = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    lineLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        lineLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -214,7 +259,20 @@ class LayerPropertyConverter {
 
     class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "fill-antialias":
                     fillLayer.fillAntialiased = expression
@@ -233,8 +291,10 @@ class LayerPropertyConverter {
                 case "fill-sort-key":
                     fillLayer.fillSortKey = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    fillLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        fillLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -244,7 +304,20 @@ class LayerPropertyConverter {
 
     class func addFillExtrusionProperties(fillExtrusionLayer: MLNFillExtrusionStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "fill-extrusion-opacity":
                     fillExtrusionLayer.fillExtrusionOpacity = expression
@@ -263,8 +336,10 @@ class LayerPropertyConverter {
                 case "fill-extrusion-vertical-gradient":
                     fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    fillExtrusionLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        fillExtrusionLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -274,7 +349,20 @@ class LayerPropertyConverter {
 
     class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "raster-opacity":
                     rasterLayer.rasterOpacity = expression
@@ -293,8 +381,10 @@ class LayerPropertyConverter {
                 case "raster-fade-duration":
                     rasterLayer.rasterFadeDuration = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    rasterLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        rasterLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -304,7 +394,20 @@ class LayerPropertyConverter {
 
     class func addHillshadeProperties(hillshadeLayer: MLNHillshadeStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "hillshade-illumination-direction":
                     hillshadeLayer.hillshadeIlluminationDirection = expression
@@ -319,8 +422,10 @@ class LayerPropertyConverter {
                 case "hillshade-accent-color":
                     hillshadeLayer.hillshadeAccentColor = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    hillshadeLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        hillshadeLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -330,7 +435,20 @@ class LayerPropertyConverter {
 
     class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 case "heatmap-radius":
                     heatmapLayer.heatmapRadius = expression
@@ -343,8 +461,10 @@ class LayerPropertyConverter {
                 case "heatmap-opacity":
                     heatmapLayer.heatmapOpacity = expression
                 case "visibility":
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    heatmapLayer.isVisible = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        heatmapLayer.isVisible = trimmedPropertyValue == "visible"
+                    }
              
                 default:
                     break
@@ -359,6 +479,12 @@ class LayerPropertyConverter {
 
         do {
             let json = try JSONSerialization.jsonObject(with: expression.data(using: .utf8)!, options: .fragmentsAllowed)
+            
+            // Check if JSON contains NSNull - this would create an invalid NSExpression
+            if json is NSNull {
+                return nil
+            }
+            
             // this is required because NSExpression.init(mglJSONObject: json) fails to create
             // a proper Expression if the data of is a hexString
             if isColor {
@@ -392,6 +518,13 @@ class LayerPropertyConverter {
                     // this is required because NSExpression.init(mglJSONObject: json) fails to create
                     // a proper Expression if the data is an array of double
                     return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
+                } else {
+                    // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
+                    // Convert to array of NSNumbers for proper expression creation
+                    let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
+                    if numbers.count == offset.count {
+                        return NSExpression(forConstantValue: numbers)
+                    }
                 }
             }
             

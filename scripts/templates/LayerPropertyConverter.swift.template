@@ -7,7 +7,20 @@ class LayerPropertyConverter {
 {{#layerTypes}}
     class func add{{typePascal}}Properties({{typeCamel}}Layer: MLN{{typePascal}}StyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            let expression = interpretExpression(propertyName: propertyName, expression: propertyValue)
+            // Check if the value is explicitly null to clear the property
+            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
+            
+            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
+            var expression: NSExpression?
+            if trimmedValue == "null" {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
             switch propertyName {
                 {{#paint_properties}}
                 case "{{{value}}}":
@@ -29,8 +42,10 @@ class LayerPropertyConverter {
                 {{/isIosAsCamelCase}}
                 {{/isVisibilityProperty}}
                 {{#isVisibilityProperty}}
-                    let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                    {{typeCamel}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
+                    if trimmedValue != "null" {
+                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
+                        {{typeCamel}}Layer.{{iosAsCamelCase}} = trimmedPropertyValue == "visible"
+                    }
                 {{/isVisibilityProperty}}
                 {{/layout_properties}}
              
@@ -48,6 +63,12 @@ class LayerPropertyConverter {
 
         do {
             let json = try JSONSerialization.jsonObject(with: expression.data(using: .utf8)!, options: .fragmentsAllowed)
+            
+            // Check if JSON contains NSNull - this would create an invalid NSExpression
+            if json is NSNull {
+                return nil
+            }
+            
             // this is required because NSExpression.init(mglJSONObject: json) fails to create
             // a proper Expression if the data of is a hexString
             if isColor {
@@ -81,6 +102,13 @@ class LayerPropertyConverter {
                     // this is required because NSExpression.init(mglJSONObject: json) fails to create
                     // a proper Expression if the data is an array of double
                     return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
+                } else {
+                    // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
+                    // Convert to array of NSNumbers for proper expression creation
+                    let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
+                    if numbers.count == offset.count {
+                        return NSExpression(forConstantValue: numbers)
+                    }
                 }
             }
             
