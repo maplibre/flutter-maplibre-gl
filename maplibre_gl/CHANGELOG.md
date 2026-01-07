@@ -3,6 +3,7 @@
 ### Added
 * Logo customization options including visibility and position settings (#b4fb174).
 * Explicit annotation manager initialization with clear error handling (#668).
+* iOS: Attribution support for tile and raster sources with HTML link parsing.
 
 ### Changed
 * MapLibre Android SDK upgraded from `11.13.5` to `12.3.0` (#690).
@@ -27,6 +28,7 @@
 * Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
   - Pattern images now correctly converted to RGBA format on web
   - Fixed mismatched image size error when loading pattern images
+
 ### Refactor
 * Complete refactor of example app with new UI and improved user experience (#ac877a4).
 * Refactored `cameraTargetBounds` implementation on Android and iOS for consistent behavior (#8bcd74a).
