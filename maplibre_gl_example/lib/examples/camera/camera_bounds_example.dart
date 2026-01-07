@@ -62,7 +62,7 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
   Future<void> _setBounds(LatLngBounds bounds, String name) async {
     if (_controller == null) return;
     var padding = 150.0;
-    if (bounds == _europeBounds) padding = 0.0;
+    if (bounds == _europeBounds) padding = 50.0;
 
     await _controller!.animateCamera(
       CameraUpdate.newLatLngBounds(
@@ -99,7 +99,18 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
   Future<void> _setCameraBounds(LatLngBounds bounds, String name) async {
     if (_controller == null) return;
 
-    setState(() => _constrainedBounds = bounds);
+    final adjustedBounds = LatLngBounds(
+      southwest: LatLng(
+        bounds.southwest.latitude - 0.2,
+        bounds.southwest.longitude - 0.2,
+      ),
+      northeast: LatLng(
+        bounds.northeast.latitude + 0.2,
+        bounds.northeast.longitude + 0.2,
+      ),
+    );
+
+    setState(() => _constrainedBounds = adjustedBounds);
   }
 
   Future<void> _clearCameraBounds() async {
@@ -202,7 +213,7 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
           ],
         ),
         ControlGroup(
-          title: 'Camera Bounds Constraint',
+          title: 'Camera Target Bounds',
           children: [
             ExampleButton(
               label: 'Lock to Sydney',
