@@ -41,36 +41,40 @@ class FullMapState extends State<FullMap> {
   int selectedStyleId = 0;
 
   void _onMapCreated(MapLibreMapController controller) {
-    this.controller = controller;
+    setState(() => this.controller = controller);
   }
 
   static Future<void> addRaster(MapLibreMapController controller) async {
     await controller.addSource(
-      "watercolor",
+      "osm-raster",
       const RasterSourceProperties(
           tiles: [
-            'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'
+            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
           ],
           tileSize: 256,
           attribution:
-              'Map tiles by <a target="_top" rel="noopener" href="http://stamen.com">Stamen Design</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_top" rel="noopener" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'),
+              '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'),
     );
     await controller.addLayer(
-        "watercolor", "watercolor", const RasterLayerProperties());
+        "osm-raster", "osm-raster", const RasterLayerProperties());
   }
 
   static Future<void> addGeojsonCluster(
       MapLibreMapController controller) async {
     await controller.addSource(
-        "earthquakes",
-        const GeojsonSourceProperties(
-            data:
-                'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
-            cluster: true,
-            clusterMaxZoom: 14, // Max zoom to cluster points on
-            clusterRadius:
-                50 // Radius of each cluster when clustering points (defaults to 50)
-            ));
+      "earthquakes",
+      const GeojsonSourceProperties(
+          data:
+              'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
+          cluster: true,
+          clusterMaxZoom: 14, // Max zoom to cluster points on
+          clusterRadius:
+              50, // Radius of each cluster when clustering points (defaults to 50)
+          attribution:
+              'Earthquake data © <a href="https://maplibre.org">MapLibre</a>'),
+    );
     await controller.addLayer(
         "earthquakes",
         "earthquakes-circles",
@@ -103,34 +107,50 @@ class FullMapState extends State<FullMap> {
 
   static Future<void> addVector(MapLibreMapController controller) async {
     await controller.addSource(
-        "terrain",
+        "openmaptiles",
         const VectorSourceProperties(
-          url: MapLibreStyles.demo,
+          tiles: [
+            'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf',
+          ],
+          maxzoom: 14,
+          attribution:
+              '© <a href="https://maplibre.org">MapLibre</a> contributors',
         ));
 
     await controller.addLayer(
-        "terrain",
-        "contour",
+        "openmaptiles",
+        "water-fill",
+        const FillLayerProperties(
+          fillColor: "#0080ff",
+          fillOpacity: 0.5,
+        ),
+        sourceLayer: "water");
+
+    await controller.addLayer(
+        "openmaptiles",
+        "roads",
         const LineLayerProperties(
           lineColor: "#ff69b4",
-          lineWidth: 1,
+          lineWidth: 2,
           lineCap: "round",
           lineJoin: "round",
         ),
-        sourceLayer: "countries");
+        sourceLayer: "transportation");
   }
 
   static Future<void> addImage(MapLibreMapController controller) async {
     await controller.addSource(
-        "radar",
-        const ImageSourceProperties(
-            url: "https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif",
-            coordinates: [
-              [-80.425, 46.437],
-              [-71.516, 46.437],
-              [-71.516, 37.936],
-              [-80.425, 37.936]
-            ]));
+      "radar",
+      const ImageSourceProperties(
+        url: "https://maplibre.org/maplibre-gl-js/docs/assets/radar.gif",
+        coordinates: [
+          [-80.425, 46.437],
+          [-71.516, 46.437],
+          [-71.516, 37.936],
+          [-80.425, 37.936]
+        ],
+      ),
+    );
 
     await controller.addRasterLayer(
       "radar",
@@ -141,16 +161,20 @@ class FullMapState extends State<FullMap> {
 
   static Future<void> addVideo(MapLibreMapController controller) async {
     await controller.addSource(
-        "video",
-        const VideoSourceProperties(urls: [
+      "video",
+      const VideoSourceProperties(
+        urls: [
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4',
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm'
-        ], coordinates: [
+        ],
+        coordinates: [
           [-122.51596391201019, 37.56238816766053],
           [-122.51467645168304, 37.56410183312965],
           [-122.51309394836426, 37.563391708549425],
           [-122.51423120498657, 37.56161849366671]
-        ]));
+        ],
+      ),
+    );
 
     await controller.addRasterLayer(
       "video",
@@ -161,10 +185,14 @@ class FullMapState extends State<FullMap> {
 
   static Future<void> addHeatMap(MapLibreMapController controller) async {
     await controller.addSource(
-        'earthquakes-heatmap-source',
-        const GeojsonSourceProperties(
-            data:
-                'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson'));
+      'earthquakes-heatmap-source',
+      const GeojsonSourceProperties(
+        data:
+            'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
+        attribution:
+            'Earthquake data © <a href="https://maplibre.org">MapLibre</a>',
+      ),
+    );
 
     await controller.addLayer(
       'earthquakes-heatmap-source',
@@ -236,20 +264,94 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  static Future<void> addDem(MapLibreMapController controller) async {
-    // TODO: adapt example?
-    // await controller.addSource(
-    //     "dem",
-    //     RasterDemSourceProperties(
-    //         url: "mapbox://mapbox.mapbox-terrain-dem-v1"));
+  static Future<void> addCountries(MapLibreMapController controller) async {
+    // Add a simple additional layer to demonstrate layering on the default style
+    // Remove existing layers/source if they exist (in case of re-loading)
+    try {
+      await controller.removeLayer("countries-fill");
+    } catch (e) {
+      // Layer doesn't exist, ignore
+    }
+    try {
+      await controller.removeLayer("countries-outline");
+    } catch (e) {
+      // Layer doesn't exist, ignore
+    }
+    try {
+      await controller.removeSource("countries-highlight");
+    } catch (e) {
+      // Source doesn't exist, ignore
+    }
 
-    // await controller.addLayer(
-    //   "dem",
-    //   "hillshade",
-    //   HillshadeLayerProperties(
-    //       hillshadeExaggeration: 1,
-    //       hillshadeShadowColor: Colors.blue.toHexStringRGB()),
-    // );
+    // Source: Natural Earth public domain data
+    // Free vector and raster map data @ naturalearthdata.com
+    await controller.addSource(
+      "countries-highlight",
+      const GeojsonSourceProperties(
+        data:
+            'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson',
+        attribution:
+            'GeoJSON data courtesy of <a href="https://www.naturalearthdata.com">Natural Earth</a>',
+      ),
+    );
+
+    await controller.addLayer(
+      "countries-highlight",
+      "countries-fill",
+      const FillLayerProperties(
+        fillColor: "#627BC1",
+        fillOpacity: 0.3,
+      ),
+    );
+
+    await controller.addLayer(
+      "countries-highlight",
+      "countries-outline",
+      const LineLayerProperties(
+        lineColor: "#627BC1",
+        lineWidth: 2,
+      ),
+    );
+  }
+
+  static Future<void> addDemHillshade(MapLibreMapController controller) async {
+    // Remove existing layers/source if they exist
+    try {
+      await controller.removeLayer("hillshade-layer");
+    } catch (e) {
+      // Layer doesn't exist, ignore
+    }
+    try {
+      await controller.removeSource("terrarium-dem");
+    } catch (e) {
+      // Source doesn't exist, ignore
+    }
+
+    // Source: Terrarium terrain tiles
+    await controller.addSource(
+      "terrarium-dem",
+      const RasterDemSourceProperties(
+        tiles: [
+          'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
+        ],
+        minzoom: 0,
+        maxzoom: 15,
+        tileSize: 256,
+        encoding: 'terrarium',
+        attribution:
+            'Elevation data © <a href="https://registry.opendata.aws/terrain-tiles/">AWS Terrain Tiles</a>',
+      ),
+    );
+
+    await controller.addLayer(
+      "terrarium-dem",
+      "hillshade-layer",
+      HillshadeLayerProperties(
+        hillshadeExaggeration: 0.8,
+        hillshadeShadowColor: Colors.blue.shade900.toHexStringRGB(),
+        hillshadeHighlightColor: Colors.white.toHexStringRGB(),
+      ),
+    );
   }
 
   final _stylesAndLoaders = [
@@ -260,14 +362,20 @@ class FullMapState extends State<FullMap> {
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
     ),
     const StyleInfo(
-      name: "Default style",
+      name: "Countries GeoJSON",
       // Using the raw github file version of MapLibreStyles.DEMO here, because we need to
       // specify a different baseStyle for consecutive elements in this list,
       // otherwise the map will not update
-      baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
-      addDetails: addDem,
-      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 8),
+      baseStyle: MapLibreStyles.demo,
+      addDetails: addCountries,
+      position: CameraPosition(target: LatLng(20, 0), zoom: 2),
+    ),
+    const StyleInfo(
+      name: "DEM Hillshade",
+      baseStyle: MapLibreStyles.demo,
+      addDetails: addDemHillshade,
+      position: CameraPosition(
+          target: LatLng(46.5, 8.0), zoom: 8, bearing: 80, tilt: 60),
     ),
     const StyleInfo(
       name: "Geojson cluster",
@@ -277,22 +385,19 @@ class FullMapState extends State<FullMap> {
     ),
     const StyleInfo(
       name: "Raster",
-      baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+      baseStyle: MapLibreStyles.demo,
       addDetails: addRaster,
       position: CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
     const StyleInfo(
       name: "Image",
-      baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json?",
+      baseStyle: MapLibreStyles.demo,
       addDetails: addImage,
       position: CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
     const StyleInfo(
       name: "Heatmap",
-      baseStyle:
-          "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+      baseStyle: MapLibreStyles.demo,
       addDetails: addHeatMap,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
     ),
@@ -300,18 +405,27 @@ class FullMapState extends State<FullMap> {
     if (kIsWeb)
       const StyleInfo(
         name: "Video",
-        baseStyle:
-            "https://raw.githubusercontent.com/maplibre/demotiles/gh-pages/style.json",
+        baseStyle: MapLibreStyles.demo,
         addDetails: addVideo,
         position: CameraPosition(
             target: LatLng(37.562984, -122.514426), zoom: 17, bearing: -96),
       ),
   ];
 
-  Future<void> _onStyleLoadedCallback() async {
+  Future<void> _loadCurrentSource() async {
+    if (controller == null) return;
     final styleInfo = _stylesAndLoaders[selectedStyleId];
-    styleInfo.addDetails(controller!);
-    controller!
+    // Reload the style to clear all previous layers/sources
+    await controller!.setStyle(styleInfo.baseStyle);
+    // Wait for style to load, then add the new source details
+    // The onStyleLoadedCallback will be triggered again, but we need to prevent recursion
+  }
+
+  Future<void> _onStyleLoadedCallback() async {
+    if (controller == null) return;
+    final styleInfo = _stylesAndLoaders[selectedStyleId];
+    await styleInfo.addDetails(controller!);
+    await controller!
         .animateCamera(CameraUpdate.newCameraPosition(styleInfo.position));
   }
 
@@ -328,10 +442,13 @@ class FullMapState extends State<FullMap> {
             icon: const Icon(Icons.swap_horiz),
             label: SizedBox(
                 width: 120, child: Center(child: Text("To $nextName"))),
-            onPressed: () => setState(
-              () => selectedStyleId =
-                  (selectedStyleId + 1) % _stylesAndLoaders.length,
-            ),
+            onPressed: () async {
+              setState(() {
+                selectedStyleId =
+                    (selectedStyleId + 1) % _stylesAndLoaders.length;
+              });
+              await _loadCurrentSource();
+            },
           ),
         ),
         body: Stack(

@@ -22,8 +22,72 @@ class SourcePropertyConverter {
             let system: MLNTileCoordinateSystem = (scheme == "tms" ? .TMS : .XYZ)
             options[.tileCoordinateSystem] = system.rawValue
         }
+        if let attribution = properties["attribution"] as? String {
+            options[.attributionInfos] = parseAttributionHTML(attribution)
+        }
         return options
-        // TODO: attribution not implemneted for IOS
+    }
+    
+    class func parseAttributionHTML(_ html: String) -> [MLNAttributionInfo] {
+        // Parse HTML attribution string and create a single attributed string with clickable links
+        let pattern = #"<a\s+href=[\"']([^\"']+)[\"'][^>]*>([^<]+)</a>"#
+        
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            // Regex failed, use plain text
+            let title = NSAttributedString(string: html)
+            return [MLNAttributionInfo(title: title, url: nil)]
+        }
+        
+        let nsString = html as NSString
+        let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: nsString.length))
+        
+        if matches.isEmpty {
+            // No links found, create simple attribution
+            let title = NSAttributedString(string: html)
+            return [MLNAttributionInfo(title: title, url: nil)]
+        }
+        
+        // Build a single attributed string with all text and apply link attributes
+        let attributedString = NSMutableAttributedString()
+        var lastLocation = 0
+        var primaryURL: URL?
+        
+        for match in matches {
+            // Add text before the link
+            if match.range.location > lastLocation {
+                let plainRange = NSRange(location: lastLocation, length: match.range.location - lastLocation)
+                let plainText = nsString.substring(with: plainRange)
+                attributedString.append(NSAttributedString(string: plainText))
+            }
+            
+            // Add the link text with link attribute
+            if match.numberOfRanges >= 3 {
+                let urlRange = match.range(at: 1)
+                let textRange = match.range(at: 2)
+                
+                let urlString = nsString.substring(with: urlRange)
+                let linkText = nsString.substring(with: textRange)
+                
+                if let url = URL(string: urlString) {
+                    if primaryURL == nil {
+                        primaryURL = url
+                    }
+                    let linkAttributedString = NSMutableAttributedString(string: linkText)
+                    linkAttributedString.addAttribute(.link, value: url, range: NSRange(location: 0, length: linkText.count))
+                    attributedString.append(linkAttributedString)
+                }
+            }
+            
+            lastLocation = match.range.location + match.range.length
+        }
+        
+        // Add any remaining text after the last link
+        if lastLocation < nsString.length {
+            let remainingText = nsString.substring(from: lastLocation)
+            attributedString.append(NSAttributedString(string: remainingText))
+        }
+        
+        return [MLNAttributionInfo(title: attributedString, url: primaryURL)]
     }
 
     class func buildRasterTileSource(identifier: String,
