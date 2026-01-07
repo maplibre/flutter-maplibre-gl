@@ -29,7 +29,7 @@ class CustomMarker extends StatefulWidget {
 class CustomMarkerState extends State<CustomMarker> {
   final _rnd = Random();
 
-  late MapLibreMapController _mapController;
+  MapLibreMapController? _mapController;
   final _markers = <Marker>[];
   final _markerStates = <MarkerState>[];
 
@@ -38,7 +38,8 @@ class CustomMarkerState extends State<CustomMarker> {
   }
 
   void _onMapCreated(MapLibreMapController controller) {
-    _mapController = controller;
+    setState(() => _mapController = controller);
+
     controller.addListener(() async {
       if (controller.isCameraMoving) {
         await _updateMarkerPosition();
@@ -65,7 +66,7 @@ class CustomMarkerState extends State<CustomMarker> {
       coordinates.add(markerState.getCoordinate());
     }
 
-    await _mapController.toScreenLocationBatch(coordinates).then((points) {
+    await _mapController?.toScreenLocationBatch(coordinates).then((points) {
       _markerStates.asMap().forEach((i, value) {
         _markerStates[i].updatePosition(points[i]);
       });
@@ -117,7 +118,7 @@ class CustomMarkerState extends State<CustomMarker> {
             param.add(LatLng(lat, lng));
           }
 
-          await _mapController.toScreenLocationBatch(param).then((value) {
+          await _mapController?.toScreenLocationBatch(param).then((value) {
             for (var i = 0; i < randomMarkerNum; i++) {
               final point =
                   Point<double>(value[i].x as double, value[i].y as double);
@@ -128,57 +129,6 @@ class CustomMarkerState extends State<CustomMarker> {
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  // ignore: unused_element --- IGNORE ---
-  Future<void> _measurePerformance() async {
-    const trial = 10;
-    final batches = [500, 1000, 1500, 2000, 2500, 3000];
-    final results = <int, List<double>>{};
-    for (final batch in batches) {
-      results[batch] = [0.0, 0.0];
-    }
-
-    await _mapController.toScreenLocation(const LatLng(0, 0));
-    final sw = Stopwatch();
-
-    for (final batch in batches) {
-      //
-      // primitive
-      //
-      for (var i = 0; i < trial; i++) {
-        sw.start();
-        final list = <Future<Point<num>>>[];
-        for (var j = 0; j < batch; j++) {
-          final p = _mapController
-              .toScreenLocation(LatLng(j.toDouble() % 80, j.toDouble() % 300));
-          list.add(p);
-        }
-        Future.wait(list);
-        sw.stop();
-        results[batch]![0] += sw.elapsedMilliseconds;
-        sw.reset();
-      }
-
-      //
-      // batch
-      //
-      for (var i = 0; i < trial; i++) {
-        sw.start();
-        final param = <LatLng>[];
-        for (var j = 0; j < batch; j++) {
-          param.add(LatLng(j.toDouble() % 80, j.toDouble() % 300));
-        }
-        Future.wait([_mapController.toScreenLocationBatch(param)]);
-        sw.stop();
-        results[batch]![1] += sw.elapsedMilliseconds;
-        sw.reset();
-      }
-
-      debugPrint(
-        'batch=$batch,primitive=${results[batch]![0] / trial}ms, batch=${results[batch]![1] / trial}ms',
-      );
-    }
   }
 }
 
@@ -226,13 +176,7 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
       curve: Curves.elasticOut,
     );
   }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     var ratio = 1.0;

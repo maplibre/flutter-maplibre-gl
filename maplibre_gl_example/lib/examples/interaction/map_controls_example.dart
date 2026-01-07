@@ -223,7 +223,6 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
   @override
   void dispose() {
     _controller?.removeListener(_onMapChanged);
-    _controller?.dispose();
     super.dispose();
   }
 }

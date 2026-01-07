@@ -176,13 +176,13 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onCameraMoveStartedPlatform.add((_) {
       _isCameraMoving = true;
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
       _cameraPosition = cameraPosition;
       onCameraMove?.call(cameraPosition);
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraIdlePlatform.add((cameraPosition) {
@@ -191,7 +191,7 @@ class MapLibreMapController extends ChangeNotifier {
         _cameraPosition = cameraPosition;
       }
       onCameraIdle?.call();
-      notifyListeners();
+      if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {

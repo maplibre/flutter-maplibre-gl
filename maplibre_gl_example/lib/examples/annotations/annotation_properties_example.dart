@@ -681,10 +681,4 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       }
     }
   }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
 }

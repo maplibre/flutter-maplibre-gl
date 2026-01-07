@@ -199,7 +199,6 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
   @override
   void dispose() {
     _controller?.removeListener(_onMapChanged);
-    _controller?.dispose();
     super.dispose();
   }
 }

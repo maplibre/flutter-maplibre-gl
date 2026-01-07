@@ -97,10 +97,4 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
 }

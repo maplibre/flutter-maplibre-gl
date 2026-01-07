@@ -245,10 +245,4 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
       contentPadding: EdgeInsets.zero,
     );
   }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
 }

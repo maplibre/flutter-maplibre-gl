@@ -37,8 +37,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
-    super.dispose();
     _map.remove();
+    super.dispose();
   }
 
   void _registerViewFactory(Function(int) callback, int identifier) {

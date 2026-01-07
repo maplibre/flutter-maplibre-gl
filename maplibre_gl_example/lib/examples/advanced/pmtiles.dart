@@ -78,10 +78,4 @@ class _PMTilesBodyState extends State<_PMTilesBody> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
 }

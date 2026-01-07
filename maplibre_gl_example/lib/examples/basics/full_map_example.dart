@@ -77,10 +77,4 @@ class _FullMapBodyState extends State<_FullMapBody> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
 }
