@@ -55,7 +55,7 @@ class FullMapState extends State<FullMap> {
           ],
           tileSize: 256,
           attribution:
-              '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'),
+              '<a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap contributors</a>'),
     );
     await controller.addLayer(
         "osm-raster", "osm-raster", const RasterLayerProperties());
@@ -73,7 +73,7 @@ class FullMapState extends State<FullMap> {
           clusterRadius:
               50, // Radius of each cluster when clustering points (defaults to 50)
           attribution:
-              'Earthquake data © <a href="https://maplibre.org">MapLibre</a>'),
+              '<a href="https://maplibre.org">Earthquake data &copy; MapLibre</a>'),
     );
     await controller.addLayer(
         "earthquakes",
@@ -114,7 +114,7 @@ class FullMapState extends State<FullMap> {
           ],
           maxzoom: 14,
           attribution:
-              '© <a href="https://maplibre.org">MapLibre</a> contributors',
+              '<a href="https://maplibre.org">&copy; MapLibre contributors</a',
         ));
 
     await controller.addLayer(
@@ -190,7 +190,7 @@ class FullMapState extends State<FullMap> {
         data:
             'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
         attribution:
-            'Earthquake data © <a href="https://maplibre.org">MapLibre</a>',
+            '<a href="https://maplibre.org">Earthquake data &copy; MapLibre</a>',
       ),
     );
 
@@ -291,7 +291,7 @@ class FullMapState extends State<FullMap> {
         data:
             'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson',
         attribution:
-            'GeoJSON data courtesy of <a href="https://www.naturalearthdata.com">Natural Earth</a>',
+            '<a href="https://www.naturalearthdata.com">GeoJSON data courtesy of Natural Earth</a>',
       ),
     );
 
@@ -339,7 +339,7 @@ class FullMapState extends State<FullMap> {
         tileSize: 256,
         encoding: 'terrarium',
         attribution:
-            'Elevation data © <a href="https://registry.opendata.aws/terrain-tiles/">AWS Terrain Tiles</a>',
+            '<a href="https://registry.opendata.aws/terrain-tiles/">Elevation data &copy; AWS Terrain Tiles</a>',
       ),
     );
 
@@ -436,20 +436,17 @@ class FullMapState extends State<FullMap> {
         _stylesAndLoaders[(selectedStyleId + 1) % _stylesAndLoaders.length]
             .name;
     return Scaffold(
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: FloatingActionButton.extended(
-            icon: const Icon(Icons.swap_horiz),
-            label: SizedBox(
-                width: 120, child: Center(child: Text("To $nextName"))),
-            onPressed: () async {
-              setState(() {
-                selectedStyleId =
-                    (selectedStyleId + 1) % _stylesAndLoaders.length;
-              });
-              await _loadCurrentSource();
-            },
-          ),
+        floatingActionButton: FloatingActionButton.extended(
+          icon: const Icon(Icons.swap_horiz),
+          label:
+              SizedBox(width: 120, child: Center(child: Text("To $nextName"))),
+          onPressed: () async {
+            setState(() {
+              selectedStyleId =
+                  (selectedStyleId + 1) % _stylesAndLoaders.length;
+            });
+            await _loadCurrentSource();
+          },
         ),
         body: Stack(
           children: [
@@ -458,6 +455,8 @@ class FullMapState extends State<FullMap> {
               onMapCreated: _onMapCreated,
               initialCameraPosition: styleInfo.position,
               onStyleLoadedCallback: _onStyleLoadedCallback,
+              logoEnabled: true,
+              attributionButtonPosition: AttributionButtonPosition.bottomLeft,
             ),
             Container(
               padding: const EdgeInsets.all(8),
