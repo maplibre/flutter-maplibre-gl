@@ -20,8 +20,11 @@
 ### Fixed
 * Min/max zoom preference on iOS (#5230fab).
 * `queryRenderedFeatures` now returns all targets when supplying empty layers list on iOS, aligning behavior with Android (#680).
+* iOS: Enhanced LayerPropertyConverter to handle null values and improve expression parsing (#98660dc).
 * Fixed `lineDasharray` and patterns reset to null in layer properties (#2b550ed).
-* Improved MapLibreMapController disposing to prevent memory leaks.* Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
+* Improved MapLibreMapController disposing to prevent memory leaks.
+* Removed unnecessary disposing of mapController in example app (#f989797).
+* Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
   - Pattern images now correctly converted to RGBA format on web
   - Fixed mismatched image size error when loading pattern images
 ### Refactor

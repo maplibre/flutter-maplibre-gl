@@ -34,10 +34,16 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Fixed
 * Min/max zoom preference on iOS (#5230fab).
 * `queryRenderedFeatures` now returns all targets when supplying empty layers list on iOS, aligning behavior with Android (#680).
+* iOS: Enhanced LayerPropertyConverter to handle null values and improve expression parsing (#98660dc).
+  - Better handling of null values in layer properties
+  - Improved expression parsing for complex layer configurations
 * Web: Fixed `setPaintProperty` and `setLayoutProperty` to handle nullable `JSAny` values correctly (#12dfad2).
 * Web: Improved `jsify` function to create JS arrays correctly (#2b550ed).
 * Fixed `lineDasharray` and patterns reset to null in layer properties (#2b550ed).
 * Improved MapLibreMapController disposing to prevent memory leaks (#2b550ed).
+* Removed unnecessary disposing of mapController in example app (#f989797).
+  - Cleaned up example code with minor fixes
+  - Improved example app stability
 * Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
   - Pattern images now correctly converted to RGBA format on web
   - Fixed mismatched image size error when loading pattern images

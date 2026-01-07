@@ -176,7 +176,7 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
       curve: Curves.elasticOut,
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     var ratio = 1.0;
