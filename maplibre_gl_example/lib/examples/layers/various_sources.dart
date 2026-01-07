@@ -55,7 +55,7 @@ class FullMapState extends State<FullMap> {
           ],
           tileSize: 256,
           attribution:
-              '<a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap contributors</a>'),
+              '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>'),
     );
     await controller.addLayer(
         "osm-raster", "osm-raster", const RasterLayerProperties());
@@ -73,7 +73,7 @@ class FullMapState extends State<FullMap> {
           clusterRadius:
               50, // Radius of each cluster when clustering points (defaults to 50)
           attribution:
-              '<a href="https://maplibre.org">Earthquake data &copy; MapLibre</a>'),
+              '<a href="https://maplibre.org">Earthquake data © MapLibre</a>'),
     );
     await controller.addLayer(
         "earthquakes",
@@ -114,7 +114,7 @@ class FullMapState extends State<FullMap> {
           ],
           maxzoom: 14,
           attribution:
-              '<a href="https://maplibre.org">&copy; MapLibre contributors</a',
+              '<a href="https://maplibre.org">© MapLibre contributors</a',
         ));
 
     await controller.addLayer(
@@ -190,7 +190,7 @@ class FullMapState extends State<FullMap> {
         data:
             'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
         attribution:
-            '<a href="https://maplibre.org">Earthquake data &copy; MapLibre</a>',
+            '<a href="https://maplibre.org">Earthquake data © MapLibre</a>',
       ),
     );
 
@@ -339,7 +339,7 @@ class FullMapState extends State<FullMap> {
         tileSize: 256,
         encoding: 'terrarium',
         attribution:
-            '<a href="https://registry.opendata.aws/terrain-tiles/">Elevation data &copy; AWS Terrain Tiles</a>',
+            '<a href="https://registry.opendata.aws/terrain-tiles/">Elevation data © AWS Terrain Tiles</a>',
       ),
     );
 
