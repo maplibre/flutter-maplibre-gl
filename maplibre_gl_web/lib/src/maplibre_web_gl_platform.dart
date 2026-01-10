@@ -122,11 +122,14 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onMouseDown(Event e, String? layerId) {
-    final isDraggable = e.features[0].properties['draggable'];
+    // Check if there are features under the mouse cursor
+    if (e.features.isEmpty) return;
+
+    final isDraggable = e.features.first.properties['draggable'];
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
       e.preventDefault();
-      _draggedFeatureId = e.features[0].id;
+      _draggedFeatureId = e.features.first.id;
       _map.getCanvas().style.cursor = 'grabbing';
       final coords = e.lngLat;
       _dragOrigin = LatLng(coords.lat as double, coords.lng as double);
@@ -1369,20 +1372,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
-    return _map.getLayers().map((e) => e.id).toList();
+    final layers = _map.getLayers();
+    return layers.map((layer) => layer.id).toList();
   }
 
   @override
   Future<List> getSourceIds() async {
-    final style = _map.getStyle();
-    if (style == null) return [];
-
-    // Get the sources from the style object
-    final jsSources = style.sources;
-
-    if (jsSources == null) return [];
-
-    // Get the keys (source IDs) from the sources object
-    return objectKeys(jsSources);
+    final sourceIds = _map.getSourceIds();
+    return sourceIds;
   }
 }

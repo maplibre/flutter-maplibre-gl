@@ -162,7 +162,11 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   /// Creates a new Style from a [jsObject].
   Style.fromJsObject(super.jsObject) : super.fromJsObject();
 
-  List<dynamic> get layers => jsObject.layers.toDart;
+  /// Returns the list of layers in the style
+  List<StyleLayerJsImpl> get layers => jsObject.layers.toDart;
+
+  /// Returns the sources object from the style
+  JSObject? get sources => jsObject.sources;
 }
 
 class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {

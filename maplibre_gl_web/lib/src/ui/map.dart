@@ -515,12 +515,25 @@ class MapLibreMap extends Camera {
   ///
   ///  @example
   ///  var styleJson = map.getStyle();
-  dynamic getStyle() => jsObject.getStyle();
+  StyleJsImpl? getStyle() => jsObject.getStyle();
 
   /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
-  List<dynamic> getLayers() {
+  List<StyleLayerJsImpl> getLayers() {
     final style = jsObject.getStyle();
     return style != null ? Style.fromJsObject(style).layers : [];
+  }
+
+  /// Returns the source IDs from the map style.
+  List<String> getSourceIds() {
+    final style = jsObject.getStyle();
+    if (style == null) return [];
+
+    final styleObj = Style.fromJsObject(style);
+    final sourcesObj = styleObj.sources;
+    if (sourcesObj == null) return [];
+
+    // The sources object is a dictionary where keys are the source IDs
+    return objectKeys(sourcesObj);
   }
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.

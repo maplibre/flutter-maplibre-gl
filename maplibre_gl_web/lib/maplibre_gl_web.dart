@@ -33,8 +33,6 @@ import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
 
-import 'src/interop/js.dart';
-
 part 'src/convert.dart';
 
 part 'src/maplibre_map_plugin.dart';
