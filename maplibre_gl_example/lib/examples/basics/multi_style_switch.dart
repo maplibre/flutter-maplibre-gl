@@ -38,7 +38,7 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   // Demo styles
   static const String _remoteStyle = MapLibreStyles.demo;
   static const String _embeddedMinimalStyle =
-      '{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
+      '{"version":8,"glyphs":"https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
   static const String _osmAssetStyle = 'assets/osm_style.json';
 
@@ -54,7 +54,6 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     setState(() => _isSwitching = true);
 
     final entry = _styles[index];
-    log('Switching to style: ${entry.label}');
 
     try {
       await _controller!.setStyle(entry.styleString);
@@ -77,13 +76,15 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     }
   }
 
-  void _onMapCreated(MapLibreMapController c) {
-    _controller = c;
+  Future<void> _onMapCreated(MapLibreMapController c) async {
+    setState(() => _controller = c);
     c.addListener(() {
       // Listen to camera changes to keep track of last position.
       if (!c.isCameraMoving) return;
       _lastCamera = c.cameraPosition;
     });
+    // Apply the initial style
+    await _applyStyle(_currentIndex);
   }
 
   void _onCameraIdle() {

@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -54,6 +55,9 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
       "custom-marker",
       "assets/symbols/custom-marker.png",
     );
+
+    await _controller?.setSymbolIconAllowOverlap(true);
+    await _controller?.setSymbolTextAllowOverlap(true);
   }
 
   void _onSymbolTapped(Symbol symbol) {
@@ -61,6 +65,7 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
         .firstWhere((entry) => entry.value == symbol,
             orElse: () => MapEntry('', symbol))
         .key;
+    dev.log('Symbol tapped: $symbolId, position ${symbol.options.geometry}');
     setState(() => _lastTappedAnnotation = 'Selected: $symbolId');
   }
 
@@ -69,6 +74,7 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
         .firstWhere((entry) => entry.value == circle,
             orElse: () => MapEntry('', circle))
         .key;
+    dev.log('Circle tapped: $circleId, position ${circle.options.geometry}');
     setState(() => _lastTappedAnnotation = 'Selected: $circleId');
   }
 
@@ -77,6 +83,7 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
         .firstWhere((entry) => entry.value == fill,
             orElse: () => MapEntry('', fill))
         .key;
+    dev.log('Fill tapped: $fillId');
     setState(() => _lastTappedAnnotation = 'Fill: $fillId');
   }
 
@@ -85,6 +92,7 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
         .firstWhere((entry) => entry.value == line,
             orElse: () => MapEntry('', line))
         .key;
+    dev.log('Line tapped: $lineId');
     setState(() => _lastTappedAnnotation = 'Line: $lineId');
   }
 
@@ -138,8 +146,6 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
           ),
         );
         setState(() => _symbols['symbol_$_counter'] = symbol);
-        await _controller?.setSymbolIconAllowOverlap(true);
-        await _controller?.setSymbolTextAllowOverlap(true);
 
       case AnnotationType.circle:
         final circle = await _controller!.addCircle(
@@ -285,11 +291,6 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
           );
           _lines['line_$_counter'] = line;
       }
-    }
-
-    if (_currentType == AnnotationType.symbol) {
-      await _controller?.setSymbolIconAllowOverlap(true);
-      await _controller?.setSymbolTextAllowOverlap(true);
     }
 
     setState(() {});

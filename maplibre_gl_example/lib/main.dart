@@ -28,6 +28,8 @@ import 'examples/annotations/annotations_example.dart';
 import 'examples/annotations/annotation_order_example.dart';
 import 'examples/annotations/annotation_properties_example.dart';
 import 'examples/annotations/custom_marker.dart';
+import 'examples/annotations/edit_annotation_animated.dart';
+import 'examples/annotations/edit_annotation_draggable.dart';
 
 // Layers examples
 import 'examples/layers/circle_layer_example.dart';
@@ -35,6 +37,8 @@ import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/various_sources.dart';
+import 'examples/layers/edit_style_layer_animated.dart';
+import 'examples/layers/edit_style_layer_draggable.dart';
 
 // Advanced examples
 import 'examples/advanced/offline_regions.dart';
@@ -42,6 +46,13 @@ import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
 
 void main() {
+  if (kIsWeb) {
+    const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
+    print(
+      'Running with WASM: $isRunningWithWasm, in ${kReleaseMode ? "release" : kProfileMode ? "profile" : "debug"} mode',
+    );
+  }
+
   runApp(const MapLibreExampleApp());
 }
 
@@ -93,6 +104,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const AnnotationPropertiesExample(),
   const AnnotationOrderExample(),
   const CustomMarkerPage(),
+  const EditAnnotationAnimatedExample(),
+  const EditAnnotationDraggableExample(),
 
   // Layers
   const SymbolLayerExample(),
@@ -100,6 +113,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const FillLayerExample(),
   const LineLayerExample(),
   const VariousSources(),
+  const EditStyleLayerAnimatedExample(),
+  const EditStyleLayerDraggableExample(),
 
   // Advanced
   const PMTilesPage(),

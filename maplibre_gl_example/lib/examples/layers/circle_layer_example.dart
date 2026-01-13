@@ -90,8 +90,8 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
       );
 
       setState(() {});
-    } catch (e) {
-      dev.log('Error adding circle layer: $e');
+    } catch (e, stackTrace) {
+      dev.log('Error adding circle layer: $e', stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding circle layer: $e')),
