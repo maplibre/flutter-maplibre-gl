@@ -422,15 +422,16 @@ class MapLibreMap extends Camera {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  List<Feature> queryRenderedFeatures(dynamic geometry,
+  List<Feature> queryRenderedFeatures(JSAny geometry,
       [Map<String, dynamic>? options]) {
+    final jsOptions = options != null ? utils.jsify(options) : null;
+
     if (options == null) {
       return (jsObject.queryRenderedFeatures(geometry).toDart as List)
           .map((dynamic f) => Feature.fromJsObject(f))
           .toList();
     }
-    return (jsObject.queryRenderedFeatures(geometry, options.jsify()).toDart
-            as List)
+    return (jsObject.queryRenderedFeatures(geometry, jsOptions).toDart as List)
         .map((dynamic f) => Feature.fromJsObject(f))
         .toList();
   }
@@ -495,17 +496,9 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) {
-    JSAny? styleJs;
-    if (style is String) {
-      styleJs = style.toJS;
-    } else if (style is Style) {
-      styleJs = style.jsObject as JSAny;
-    } else if (style is Map) {
-      styleJs = style.jsify();
-    } else {
-      styleJs = style as JSAny?;
-    }
-    final optionsJs = options is Map ? options.jsify() : options?.toJS;
+    final styleJs =
+        style is Style ? style.jsObject as JSAny : utils.jsify(style);
+    final optionsJs = utils.jsify(options);
     return MapLibreMap.fromJsObject(jsObject.setStyle(styleJs, optionsJs));
   }
 
