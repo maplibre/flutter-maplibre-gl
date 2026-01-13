@@ -39,6 +39,11 @@ typedef OnFeatureHoverCallback = void Function(
 typedef OnMapLongClickCallback = void Function(
     Point<double> point, LatLng coordinates);
 
+typedef OnMapMouseMoveCallback = void Function(
+  Point<double> point,
+  LatLng coordinates,
+);
+
 typedef OnStyleLoadedCallback = void Function();
 
 typedef OnUserLocationUpdated = void Function(UserLocation location);
@@ -236,6 +241,15 @@ class MapLibreMapController extends ChangeNotifier {
       onMapLongClick?.call(dict['point'], dict['latLng']);
     });
 
+    _maplibrePlatform.onMapMouseMovePlatform.add((payload) {
+      for (final fun in List.of(onMapMouseMove)) {
+        fun(
+          payload["point"],
+          payload["latLng"],
+        );
+      }
+    });
+
     _maplibrePlatform.onCameraTrackingChangedPlatform.add((mode) {
       onCameraTrackingChanged?.call(mode);
     });
@@ -301,6 +315,10 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
   final onFeatureHover = <OnFeatureHoverCallback>[];
+
+  /// Callbacks to receive mouse move events over the map.
+  /// Provides cursor position (screen point and geographic coordinates).
+  final onMapMouseMove = <OnMapMouseMoveCallback>[];
 
   /// Callbacks to receive tap events for info windows on symbols
   @Deprecated("InfoWindow tapped is no longer supported")
@@ -442,6 +460,101 @@ class MapLibreMapController extends ChangeNotifier {
       String sourceId, Map<String, dynamic> geojsonFeature) async {
     await _maplibrePlatform.setFeatureForGeoJsonSource(
         sourceId, geojsonFeature);
+  }
+
+  /// Sets the state of a feature.
+  ///
+  /// Features are identified by their `id` attribute, which can be set using
+  /// the `promoteId` option at the time of creation of the source.
+  ///
+  /// A feature's state is a set of user-defined key-value pairs that can be
+  /// dynamically updated and used for styling with data-driven properties.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] The unique ID of the feature. Must be an integer or a string
+  ///   that can be cast to an integer.
+  /// [state] A set of key-value pairs representing the state. Values should be
+  ///   valid JSON types.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// Note: This method requires features to have an ID. For GeoJSON sources,
+  /// use the `promoteId` option when adding the source to promote a property
+  /// to be the feature's ID.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, dynamic> state, {
+    String? sourceLayer,
+  }) async {
+    await _maplibrePlatform.setFeatureState(
+      sourceId,
+      featureId,
+      state,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  /// Removes the state of a feature, setting it back to the default behavior.
+  ///
+  /// If only [sourceId] is specified, removes all states for all features in
+  /// that source. If [featureId] is also specified, removes all state keys for
+  /// that feature. If [stateKey] is also specified, removes only that key from
+  /// the feature's state.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] (Optional) The unique ID of the feature.
+  /// [stateKey] (Optional) The key in the feature state to remove.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> removeFeatureState(
+    String sourceId, {
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  }) async {
+    await _maplibrePlatform.removeFeatureState(
+      sourceId,
+      featureId: featureId,
+      stateKey: stateKey,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  /// Gets the state of a feature.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] The unique ID of the feature.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// Returns a map containing the feature's state, or null if the feature
+  /// doesn't exist or has no state.
+  ///
+  /// The returned [Future] completes with the feature state.
+  Future<Map<String, dynamic>?> getFeatureState(
+    String sourceId,
+    String featureId, {
+    String? sourceLayer,
+  }) async {
+    final result = await _maplibrePlatform.getFeatureState(
+      sourceId,
+      featureId,
+      sourceLayer: sourceLayer,
+    );
+    return result;
   }
 
   /// Add a symbol layer to the map with the given properties
