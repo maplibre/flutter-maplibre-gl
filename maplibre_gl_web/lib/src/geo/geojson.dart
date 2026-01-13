@@ -25,7 +25,7 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
   dynamic get id => utils.dartify(jsObject.id);
 
   set id(dynamic id) {
-    jsObject.id = id;
+    jsObject.id = utils.jsify(id);
   }
 
   String get type => utils.dartify(jsObject.type) as String;
