@@ -170,7 +170,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     isFirstStyleLoad = false
                     if let channel = channel {
                         onStyleLoadedCalled = true
-                        channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        // Defer the callback to the next run loop iteration to avoid race conditions
+                        DispatchQueue.main.async {
+                            channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        }
                     }
                 }
             } else {
@@ -1385,7 +1388,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let channel = channel {
                 onStyleLoadedCalled = true
-                channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                // Defer the callback to the next run loop iteration to avoid race conditions
+                // where the map's internal state is not fully ready for operations like camera animations
+                DispatchQueue.main.async {
+                    channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                }
             }
         }
     }
