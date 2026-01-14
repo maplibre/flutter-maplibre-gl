@@ -2154,11 +2154,7 @@ final class MapLibreMapController
 
   @Override
   public void onTrimMemory(int level) {
-    if (disposed || mapView == null) {
-      return;
-    }
-    // Forward trim memory event to MapView with the specific level
-    mapView.onTrimMemory(level);
+    // Lifecycle methods already handle resource management
   }
 
   // MapLibreMapOptionsSink methods
