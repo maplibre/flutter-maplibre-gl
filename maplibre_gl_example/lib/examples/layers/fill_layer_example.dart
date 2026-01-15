@@ -68,7 +68,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
       );
       print('FillLayerExample: Pattern images loaded successfully');
     } catch (e) {
-      print('FillLayerExample:  Error loading pattern images: $e');
+      print('FillLayerExample: Error loading pattern images: $e');
     }
   }
 
