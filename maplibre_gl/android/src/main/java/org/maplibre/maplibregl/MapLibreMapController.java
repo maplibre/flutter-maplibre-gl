@@ -2088,11 +2088,6 @@ final class MapLibreMapController
     if (disposed) {
       return;
     }
-    // Start MapView only if it was stopped
-    if (!mapViewStarted) {
-      mapView.onStart();
-      mapViewStarted = true;
-    }
     mapView.onResume();
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
