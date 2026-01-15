@@ -22,6 +22,8 @@ class MapLibreMapController extends MapLibrePlatform
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
   AttributionControl? _attributionControl;
+  ScaleControl? _scaleControl;
+  String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
 
   @override
@@ -773,6 +775,69 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   void setAttributionButtonMargins(int x, int y) {
     print('setAttributionButtonMargins not available in web');
+  }
+
+  @override
+  void setScaleControlEnabled(bool enabled) {
+    if (enabled) {
+      _addScaleControl();
+    } else {
+      _removeScaleControl();
+    }
+  }
+
+  @override
+  void setScaleControlPosition(ScaleControlPosition position) {
+    final positionString = switch (position) {
+      ScaleControlPosition.topLeft => 'top-left',
+      ScaleControlPosition.topRight => 'top-right',
+      ScaleControlPosition.bottomLeft => 'bottom-left',
+      ScaleControlPosition.bottomRight => 'bottom-right',
+    };
+    // Only re-add if position changed
+    if (_scaleControl != null && _scaleControlPosition != positionString) {
+      _addScaleControl(position: position);
+    }
+  }
+
+  @override
+  void setScaleControlUnit(ScaleControlUnit unit) {
+    if (_scaleControl != null) {
+      final unitString = switch (unit) {
+        ScaleControlUnit.metric => 'metric',
+        ScaleControlUnit.imperial => 'imperial',
+        ScaleControlUnit.nautical => 'nautical',
+      };
+      _scaleControl!.setUnit(unitString);
+    }
+  }
+
+  void _addScaleControl({ScaleControlPosition? position}) {
+    _removeScaleControl();
+
+    final positionString =
+        switch (position ?? ScaleControlPosition.bottomLeft) {
+      ScaleControlPosition.topLeft => 'top-left',
+      ScaleControlPosition.topRight => 'top-right',
+      ScaleControlPosition.bottomLeft => 'bottom-left',
+      ScaleControlPosition.bottomRight => 'bottom-right',
+    };
+
+    _scaleControl = ScaleControl(
+      ScaleControlOptions(
+        maxWidth: 80,
+      ),
+    );
+    _scaleControlPosition = positionString;
+    _map.addControl(_scaleControl, positionString);
+  }
+
+  void _removeScaleControl() {
+    if (_scaleControl != null) {
+      _map.removeControl(_scaleControl);
+      _scaleControl = null;
+      _scaleControlPosition = null;
+    }
   }
 
   @override
