@@ -16,7 +16,7 @@ import io.flutter.plugin.common.BinaryMessenger;
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
   private final MapLibreMapOptions options =
-      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
+      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(false);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
@@ -249,5 +249,8 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     options.translucentTextureSurface(translucentTextureSurface);
+    // TextureMode is required for translucent surfaces, but causes frame sync issues
+    // Only enable it when transparency is actually needed
+    options.textureMode(translucentTextureSurface);
   }
 }

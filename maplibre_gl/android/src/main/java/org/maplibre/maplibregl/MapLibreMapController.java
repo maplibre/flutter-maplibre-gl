@@ -18,6 +18,8 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
+import android.content.ComponentCallbacks2;
+import android.content.res.Configuration;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -104,6 +106,7 @@ import io.flutter.plugin.platform.PlatformView;
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
     implements DefaultLifecycleObserver,
+        ComponentCallbacks2,
         MapLibreMap.OnCameraIdleListener,
         MapLibreMap.OnCameraMoveListener,
         MapLibreMap.OnCameraMoveStartedListener,
@@ -136,6 +139,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -210,6 +214,7 @@ final class MapLibreMapController
 
   void init() {
     lifecycleProvider.getLifecycle().addObserver(this);
+    context.registerComponentCallbacks(this);
     mapView.getMapAsync(this);
   }
 
@@ -1956,10 +1961,22 @@ final class MapLibreMapController
     }
     disposed = true;
     methodChannel.setMethodCallHandler(null);
+    // Properly cleanup MapView lifecycle before destroying
+    if (mapView != null && mapViewStarted) {
+      mapView.onPause();
+      mapView.onStop();
+      mapViewStarted = false;
+    }
     destroyMapViewIfNecessary();
     Lifecycle lifecycle = lifecycleProvider.getLifecycle();
     if (lifecycle != null) {
       lifecycle.removeObserver(this);
+    }
+
+    try {
+      context.unregisterComponentCallbacks(this);
+    } catch (Exception e) {
+      // Ignore if already unregistered
     }
   }
 
@@ -2060,7 +2077,10 @@ final class MapLibreMapController
     if (disposed) {
       return;
     }
-    mapView.onStart();
+    if (!mapViewStarted) {
+      mapView.onStart();
+      mapViewStarted = true;
+    }
   }
 
   @Override
@@ -2071,6 +2091,16 @@ final class MapLibreMapController
     mapView.onResume();
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
+    }
+    // Force a repaint to fix invisible map when returning from background
+    if (mapView != null) {
+      // Use standard Android view invalidation to trigger a repaint
+      mapView.post(new Runnable() {
+        @Override
+        public void run() {
+          mapView.invalidate();
+        }
+      });
     }
   }
 
@@ -2087,7 +2117,10 @@ final class MapLibreMapController
     if (disposed) {
       return;
     }
-    mapView.onStop();
+    if (mapViewStarted) {
+      mapView.onStop();
+      mapViewStarted = false;
+    }
   }
 
   @Override
@@ -2097,6 +2130,26 @@ final class MapLibreMapController
       return;
     }
     destroyMapViewIfNecessary();
+  }
+
+  @Override
+  public void onConfigurationChanged(@NonNull Configuration newConfig) {
+    // No-op: configuration changes are handled by the activity
+  }
+
+  @Override
+  public void onLowMemory() {
+    if (disposed || mapView == null) {
+      return;
+    }
+    Log.w(TAG, "onLowMemory has been called, telling MapView to reduce memory usage.");
+    // Forward low memory event to MapView
+    mapView.onLowMemory();
+  }
+
+  @Override
+  public void onTrimMemory(int level) {
+    // Lifecycle methods already handle resource management
   }
 
   // MapLibreMapOptionsSink methods
