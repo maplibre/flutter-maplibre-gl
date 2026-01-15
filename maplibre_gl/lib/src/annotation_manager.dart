@@ -59,7 +59,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   @mustCallSuper
   Future<void> initialize() async {
-    if (_isInitializing || _isInitialized) {
+    if (_isInitializing || _isInitialized || controller.isDisposed) {
       return;
     }
 
@@ -95,6 +95,8 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
   Future<void> _rebuildLayers() async {
+    if (controller.isDisposed) return;
+
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       await controller.removeLayer(layerId);
@@ -106,6 +108,8 @@ abstract class AnnotationManager<T extends Annotation> {
   String _makeLayerId(int layerIndex) => "${id}_$layerIndex";
 
   Future<void> _setAll() async {
+    if (controller.isDisposed) return;
+
     if (selectLayer != null) {
       final featureBuckets = [for (final _ in allLayerProperties) <T>[]];
 
@@ -165,7 +169,9 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Fully dispose resources (layers & sources). Manager is unusable after.
   Future<void> dispose() async {
+    if (controller.isDisposed) return;
     _idToAnnotation.clear();
+
     await _setAll();
     for (var i = 0; i < allLayerProperties.length; i++) {
       await controller.removeLayer(_makeLayerId(i));
