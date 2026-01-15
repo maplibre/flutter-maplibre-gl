@@ -1962,9 +1962,9 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
-    } else {
-      methodChannel.invokeMethod("map#onMapClick", arguments);
     }
+    // Always fire map#onMapClick for all map clicks
+    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
