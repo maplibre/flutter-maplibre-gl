@@ -48,6 +48,21 @@ enum LogoViewPosition {
   bottomRight,
 }
 
+/// Scale Control Position
+enum ScaleControlPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
+/// Scale Control Unit
+enum ScaleControlUnit {
+  metric,
+  imperial,
+  nautical,
+}
+
 /// Bounds for the map camera target.
 /// Used with [_MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
