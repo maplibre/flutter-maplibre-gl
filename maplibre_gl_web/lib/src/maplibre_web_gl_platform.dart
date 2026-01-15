@@ -603,16 +603,15 @@ class MapLibreMapController extends MapLibrePlatform
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
     };
 
-    if (filtered.isEmpty) {
-      onMapClickPlatform(payload);
-      return;
+    if (filtered.isNotEmpty) {
+      // Add 'first' feature info to payload
+      payload['layerId'] = filtered.first.layerId;
+      payload['id'] = filtered.first.id;
+      onFeatureTappedPlatform(payload);
     }
 
-    // Add 'first' feature info to payload
-    payload['layerId'] = filtered.first.layerId;
-    payload['id'] = filtered.first.id;
-
-    onFeatureTappedPlatform(payload);
+    // Always fire onMapClickPlatform for all map clicks
+    onMapClickPlatform(payload);
   }
 
   void _onMapLongClick(e) {
