@@ -76,6 +76,7 @@ import org.maplibre.android.style.layers.PropertyValue;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
 import org.maplibre.android.style.sources.CustomGeometrySource;
+import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
 import org.maplibre.android.style.sources.Source;
@@ -405,13 +406,21 @@ final class MapLibreMapController
 
   private void addGeoJsonSource(String sourceName, String source) {
     FeatureCollection featureCollection = FeatureCollection.fromJson(source);
-    GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection);
+
+    // Enable synchronous updates to reduce flicker during animations/dragging if dragEnabled option is true
+    GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+    GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
     addedFeaturesByLayer.put(sourceName, featureCollection);
 
     style.addSource(geoJsonSource);
   }
 
   private void setGeoJsonSource(String sourceName, String geojson) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "setGeoJsonSource: style not ready, skipping update");
+      return;
+    }
+    
     FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
     GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
     addedFeaturesByLayer.put(sourceName, featureCollection);
@@ -420,6 +429,11 @@ final class MapLibreMapController
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "setGeoJsonFeature: style not ready, skipping update");
+      return;
+    }
+    
     Feature feature = Feature.fromJson(geojsonFeature);
     FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
     GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
@@ -433,6 +447,7 @@ final class MapLibreMapController
         }
       }
 
+      // Synchronous updates are enabled via GeoJsonOptions at source creation when dragEnabled is true
       geoJsonSource.setGeoJson(featureCollection);
     }
   }
