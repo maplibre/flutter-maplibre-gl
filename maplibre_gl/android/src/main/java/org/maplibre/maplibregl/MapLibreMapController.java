@@ -442,7 +442,7 @@ final class MapLibreMapController
         }
       }
 
-      // Synchronous updates enabled via GeoJsonOptions at source creation
+      // Synchronous updates are enabled via GeoJsonOptions at source creation when dragEnabled is true
       geoJsonSource.setGeoJson(featureCollection);
     }
   }
