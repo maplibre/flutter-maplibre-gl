@@ -30,6 +30,7 @@ import 'package:maplibre_gl_web/src/ui/camera.dart';
 import 'package:maplibre_gl_web/src/ui/control/attribution_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/navigation_control.dart';
+import 'package:maplibre_gl_web/src/ui/control/scale_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
