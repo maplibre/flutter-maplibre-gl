@@ -169,8 +169,8 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Fully dispose resources (layers & sources). Manager is unusable after.
   Future<void> dispose() async {
-    _idToAnnotation.clear();
     if (controller.isDisposed) return;
+    _idToAnnotation.clear();
 
     await _setAll();
     for (var i = 0; i < allLayerProperties.length; i++) {
