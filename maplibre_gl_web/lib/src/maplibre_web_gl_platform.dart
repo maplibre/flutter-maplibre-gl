@@ -12,6 +12,7 @@ class MapLibreMapController extends MapLibrePlatform
   bool _dragEnabled = true;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
+  Set<String>? _assetManifest;
 
   final _interactiveFeatureLayerIds = <String>{};
 
@@ -111,15 +112,39 @@ class MapLibreMapController extends MapLibrePlatform
     resizeObserver.observe(_mapElement);
   }
 
+  Future<Set<String>> _loadAssetManifest() async {
+    if (_assetManifest != null) return _assetManifest!;
+
+    try {
+      final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = assetManifest.listAssets();
+      _assetManifest = assets.toSet();
+    } catch (_) {
+      // If the manifest can't be read, assume no declared assets
+      _assetManifest = <String>{};
+    }
+
+    return _assetManifest!;
+  }
+
   Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
+
+    // Check if the image is already added
+    if (_map.hasImage(imagePath)) return;
+
+    // Check if the image is declared in the assets loaded
+    final manifest = await _loadAssetManifest();
+    if (!manifest.contains(imagePath) &&
+        !manifest.contains('assets/$imagePath')) {
+      return;
+    }
 
     try {
       final bytes = await rootBundle.load(imagePath);
       await addImage(imagePath, bytes.buffer.asUint8List());
-    } catch (e) {
-      dev.log('Could not load image from assets: $imagePath',
-          name: 'MapLibreMapController');
+    } catch (_) {
+      // If it still fails, ignore so MapLibre can continue without the image.
     }
   }
 
@@ -372,9 +397,8 @@ class MapLibreMapController extends MapLibrePlatform
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log(
-          'queryRenderedFeatures: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: queryRenderedFeatures, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -410,9 +434,8 @@ class MapLibreMapController extends MapLibrePlatform
       Rect rect, List<String> layerIds, String? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log(
-          'queryRenderedFeaturesInRect: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: queryRenderedFeaturesInRect, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -449,8 +472,8 @@ class MapLibreMapController extends MapLibrePlatform
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log('querySourceFeatures: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: querySourceFeatures, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -529,8 +552,7 @@ class MapLibreMapController extends MapLibrePlatform
         {'sdf': sdf, 'pixelRatio': 1},
       );
     } else {
-      dev.log('Image already exists on map: $name',
-          name: 'MapLibreMapController');
+      print('MapLibreMapController: Image already exists on map: $name');
     }
   }
 
