@@ -1243,14 +1243,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         "lat": coordinate.latitude,
                         "layerId": result.layerId,
             ])
-        } else {
-            channel?.invokeMethod("map#onMapClick", arguments: [
-                "x": point.x,
-                "y": point.y,
-                "lng": coordinate.longitude,
-                "lat": coordinate.latitude,
-            ])
         }
+        // Always fire map#onMapClick for all map clicks
+        channel?.invokeMethod("map#onMapClick", arguments: [
+            "x": point.x,
+            "y": point.y,
+            "lng": coordinate.longitude,
+            "lat": coordinate.latitude,
+        ])
     }
 
     fileprivate func invokeFeatureDrag(
