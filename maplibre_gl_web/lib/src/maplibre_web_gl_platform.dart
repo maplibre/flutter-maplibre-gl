@@ -1473,4 +1473,71 @@ class MapLibreMapController extends MapLibrePlatform
     final sourceIds = _map.getSourceIds();
     return sourceIds;
   }
+
+  @override
+  Future<bool?> getLayerVisibility(String layerId) async {
+    final property = _map.getLayoutProperty(layerId, 'visibility');
+    if (property == null) return true;
+    if (property is String) return property != 'none';
+    return true;
+  }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() async {
+    final complete = Completer<void>();
+    _map.once('idle', (_) => complete.complete());
+    return complete.future;
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() async {
+    if (_map.areTilesLoaded()) {
+      return;
+    }
+
+    final tilesLoadedCompleter = Completer<void>();
+    late void Function(dynamic) listener;
+    listener = (_) {
+      if (_map.areTilesLoaded()) {
+        _map.off('sourcedata', listener);
+        if (!tilesLoadedCompleter.isCompleted) {
+          tilesLoadedCompleter.complete();
+        }
+      }
+    };
+    _map.on('sourcedata', listener);
+
+    await tilesLoadedCompleter.future;
+  }
+
+  @override
+  Future<ui.Size> setWebMapToCustomSize(ui.Size size) async {
+    final initialSize = ui.Size(
+      _map.getContainer().clientWidth.toDouble(),
+      _map.getContainer().clientHeight.toDouble(),
+    );
+
+    _map.getContainer().style.width = '${size.width}px';
+    _map.getContainer().style.height = '${size.height}px';
+    _map.resize();
+
+    await waitUntilMapIsIdleAfterMovement();
+    return initialSize;
+  }
+
+  @override
+  Future<String> takeWebSnapshot() async {
+    // "preserveDrawingBuffer" is set to false in the WebGL context to get the best possible performance,
+    // therefore we cannot directly use the canvas.toDataURL() method to get a snapshot of the map because it would be blank then.
+    // That's the reason why we trigger a repaint and then directly catch the image data from the canvas during the rendering.
+
+    final completer = Completer<String>();
+    _map.once('render', (_) {
+      final canvas = _map.getCanvas();
+      final dataUrl = canvas.toDataUrl('image/png');
+      completer.complete(dataUrl);
+    });
+    _map.triggerRepaint();
+    return completer.future;
+  }
 }

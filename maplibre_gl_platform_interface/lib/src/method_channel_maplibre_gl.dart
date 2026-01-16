@@ -903,6 +903,41 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<bool?> getLayerVisibility(String layerId) async {
+    try {
+      final result =
+          await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
+        'layerId': layerId,
+      });
+      return result as bool?;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
+  Future<Size> setWebMapToCustomSize(Size size) async {
+    // Not supported on native platforms, return the requested size
+    return size;
+  }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() async {
+    // On native platforms, this is a no-op as camera animations complete synchronously
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() async {
+    // On native platforms, this is a no-op
+  }
+
+  @override
+  Future<String> takeWebSnapshot() async {
+    // Not supported on native platforms
+    throw UnsupportedError('takeWebSnapshot is only supported on web platform');
+  }
+
+  @override
   void forceResizeWebMap() {}
 
   @override

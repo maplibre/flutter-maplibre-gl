@@ -234,6 +234,24 @@ abstract class MapLibrePlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
+  /// Returns the visibility of a layer.
+  /// Returns true if visible, false if hidden, null if layer not found.
+  Future<bool?> getLayerVisibility(String layerId);
+
+  /// Sets the web map to a custom size for rendering.
+  /// Returns the previous/initial size of the web map before this change.
+  Future<Size> setWebMapToCustomSize(Size size);
+
+  /// Waits until the map is idle after camera movement.
+  Future<void> waitUntilMapIsIdleAfterMovement();
+
+  /// Waits until all visible map tiles are loaded.
+  Future<void> waitUntilMapTilesAreLoaded();
+
+  /// Takes a screenshot of the web map.
+  /// Returns a base64-encoded PNG image string.
+  Future<String> takeWebSnapshot();
+
   /// Method to set style string
   /// A MapLibre GL style document defining the map's appearance.
   /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
