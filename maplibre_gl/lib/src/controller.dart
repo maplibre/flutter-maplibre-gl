@@ -1688,6 +1688,37 @@ class MapLibreMapController extends ChangeNotifier {
         .toList();
   }
 
+  /// Returns the visibility of a layer.
+  /// Returns true if visible, false if hidden, null if layer not found.
+  Future<bool?> getLayerVisibility(String layerId) {
+    return _maplibrePlatform.getLayerVisibility(layerId);
+  }
+
+  /// Sets the web map to a custom size for rendering.
+  /// Returns the previous size before this change was applied.
+  /// Useful for generating fixed-dimension map images.
+  Future<Size> setWebMapToCustomSize(Size size) {
+    return _maplibrePlatform.setWebMapToCustomSize(size);
+  }
+
+  /// Waits until the map is idle after camera movement.
+  Future<void> waitUntilMapIsIdleAfterMovement() {
+    return _maplibrePlatform.waitUntilMapIsIdleAfterMovement();
+  }
+
+  /// Waits until all visible map tiles are loaded.
+  /// Useful for ensuring the map is fully rendered before taking screenshots.
+  Future<void> waitUntilMapTilesAreLoaded() {
+    return _maplibrePlatform.waitUntilMapTilesAreLoaded();
+  }
+
+  /// Takes a screenshot of the web map.
+  /// Returns a base64-encoded PNG image string.
+  /// Only supported on web platform.
+  Future<String> takeWebSnapshot() {
+    return _maplibrePlatform.takeWebSnapshot();
+  }
+
   /// Method to set style string
   /// A MapLibre GL style document defining the map's appearance.
   /// The style document specification is at [https://maplibre.org/maplibre-style-spec].
