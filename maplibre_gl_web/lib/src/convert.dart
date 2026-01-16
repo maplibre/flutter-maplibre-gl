@@ -103,8 +103,9 @@ class Convert {
       final unit = ScaleControlUnit.values[options['scaleControlUnit']];
       sink.setScaleControlUnit(unit);
     }
-    if (options.containsKey('ignoreFeatureTapOnMapClick')) {
-      sink.setIgnoreFeatureTapOnMapClick(options['ignoreFeatureTapOnMapClick']);
+    if (options.containsKey('featureTapsTriggersMapClick')) {
+      sink.setFeatureTapsTriggersMapClick(
+          options['featureTapsTriggersMapClick']);
     }
   }
 

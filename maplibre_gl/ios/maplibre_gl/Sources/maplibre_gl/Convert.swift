@@ -87,8 +87,8 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
-        if let ignoreFeatureTapOnMapClick = options["ignoreFeatureTapOnMapClick"] as? Bool {
-            delegate.setIgnoreFeatureTapOnMapClick(ignore: ignoreFeatureTapOnMapClick)
+        if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
+            delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
     }
     

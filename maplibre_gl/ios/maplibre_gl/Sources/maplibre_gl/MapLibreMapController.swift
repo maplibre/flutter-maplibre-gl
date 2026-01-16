@@ -10,7 +10,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var mapView: MLNMapView
     private var isMapReady = false
     private var dragEnabled = true
-    private var ignoreFeatureTapOnMapClick = true
+    private var featureTapsTriggersMapClick = false
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
     private var mapReadyResult: FlutterResult?
@@ -1244,8 +1244,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         "lat": coordinate.latitude,
                         "layerId": result.layerId,
             ])
-            // Fire map#onMapClick only if ignoreFeatureTapOnMapClick is false
-            if !ignoreFeatureTapOnMapClick {
+            // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+            if featureTapsTriggersMapClick {
                 channel?.invokeMethod("map#onMapClick", arguments: [
                     "x": point.x,
                     "y": point.y,
@@ -2118,8 +2118,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.attributionButtonPosition = position
     }
 
-    func setIgnoreFeatureTapOnMapClick(ignore: Bool) {
-        ignoreFeatureTapOnMapClick = ignore
+    func setFeatureTapsTriggersMapClick(triggers: Bool) {
+        featureTapsTriggersMapClick = triggers
     }
 }
 

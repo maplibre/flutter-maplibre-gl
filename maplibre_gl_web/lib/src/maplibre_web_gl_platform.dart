@@ -10,7 +10,7 @@ class MapLibreMapController extends MapLibrePlatform
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
   bool _dragEnabled = true;
-  bool _ignoreFeatureTapOnMapClick = true;
+  bool _featureTapsTriggersMapClick = false;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
   Set<String>? _assetManifest;
@@ -631,8 +631,8 @@ class MapLibreMapController extends MapLibrePlatform
       payload['layerId'] = filtered.first.layerId;
       payload['id'] = filtered.first.id;
       onFeatureTappedPlatform(payload);
-      // Fire onMapClickPlatform only if ignoreFeatureTapOnMapClick is false
-      if (!_ignoreFeatureTapOnMapClick) {
+      // Fire onMapClickPlatform only if featureTapsTriggersMapClick is true
+      if (_featureTapsTriggersMapClick) {
         onMapClickPlatform(payload);
       }
     } else {
@@ -839,8 +839,8 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  void setIgnoreFeatureTapOnMapClick(bool ignore) {
-    _ignoreFeatureTapOnMapClick = ignore;
+  void setFeatureTapsTriggersMapClick(bool triggers) {
+    _featureTapsTriggersMapClick = triggers;
   }
 
   void _addScaleControl({ScaleControlPosition? position}) {

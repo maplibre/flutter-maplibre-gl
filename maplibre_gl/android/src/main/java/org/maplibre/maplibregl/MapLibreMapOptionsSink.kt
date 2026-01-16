@@ -54,5 +54,5 @@ internal interface MapLibreMapOptionsSink {
 
     fun setTranslucentTextureSurface(translucentTextureSurface: Boolean)
 
-    fun setIgnoreFeatureTapOnMapClick(ignore: Boolean)
+    fun setFeatureTapsTriggersMapClick(triggers: Boolean)
 }

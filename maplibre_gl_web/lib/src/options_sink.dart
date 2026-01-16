@@ -45,5 +45,5 @@ abstract class MapLibreMapOptionsSink {
 
   void setScaleControlUnit(ScaleControlUnit unit);
 
-  void setIgnoreFeatureTapOnMapClick(bool ignore);
+  void setFeatureTapsTriggersMapClick(bool triggers);
 }

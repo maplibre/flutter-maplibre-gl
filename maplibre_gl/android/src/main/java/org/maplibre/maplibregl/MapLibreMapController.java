@@ -140,7 +140,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
-  private boolean ignoreFeatureTapOnMapClick = true;
+  private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
@@ -1952,8 +1952,8 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
-      // Fire map#onMapClick only if ignoreFeatureTapOnMapClick is false
-      if (!ignoreFeatureTapOnMapClick) {
+      // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+      if (featureTapsTriggersMapClick) {
         methodChannel.invokeMethod("map#onMapClick", arguments);
       }
     } else {
@@ -2378,8 +2378,8 @@ final class MapLibreMapController
   }
 
   @Override
-  public void setIgnoreFeatureTapOnMapClick(boolean ignore) {
-    this.ignoreFeatureTapOnMapClick = ignore;
+  public void setFeatureTapsTriggersMapClick(boolean triggers) {
+    this.featureTapsTriggersMapClick = triggers;
   }
 
   private void updateMyLocationEnabled() {
