@@ -148,7 +148,6 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
       [_fillLayerId], // Only query our states layer
       null,
     );
-    print('Queried features: ${features?.length ?? 0}');
     if (features != null && features.isNotEmpty) {
       // Get the first state feature
       final feature = features.first;
