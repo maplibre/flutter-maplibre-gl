@@ -31,6 +31,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.ignoreFeatureTapOnMapClick = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
@@ -135,6 +136,13 @@ class MapLibreMap extends StatefulWidget {
   /// Disable to avoid performance issues that from the drag event listeners.
   /// Biggest impact in android
   final bool dragEnabled;
+
+  /// Whether to ignore feature tap events when the map is clicked.
+  /// Defaults to `true`.
+  ///
+  /// If `true`, `onMapClick` will not be called when the map is clicked
+  /// if there are features at the clicked location.
+  final bool ignoreFeatureTapOnMapClick;
 
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
@@ -431,7 +439,8 @@ class _MapLibreMapOptions {
       this.scaleControlUnit,
       this.locationEnginePlatforms,
       this.foregroundLoadColor,
-      this.translucentTextureSurface});
+      this.translucentTextureSurface,
+      this.ignoreFeatureTapOnMapClick});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -462,6 +471,7 @@ class _MapLibreMapOptions {
           scaleControlUnit: map.scaleControlUnit,
           foregroundLoadColor: map.foregroundLoadColor,
           translucentTextureSurface: map.translucentTextureSurface,
+          ignoreFeatureTapOnMapClick: map.ignoreFeatureTapOnMapClick,
         );
 
   final bool? compassEnabled;
@@ -515,6 +525,8 @@ class _MapLibreMapOptions {
   final Color? foregroundLoadColor;
 
   final bool? translucentTextureSurface;
+
+  final bool? ignoreFeatureTapOnMapClick;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -570,6 +582,7 @@ class _MapLibreMapOptions {
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
+    addIfNonNull('ignoreFeatureTapOnMapClick', ignoreFeatureTapOnMapClick);
     return optionsMap;
   }
 

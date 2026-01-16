@@ -10,6 +10,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var mapView: MLNMapView
     private var isMapReady = false
     private var dragEnabled = true
+    private var ignoreFeatureTapOnMapClick = true
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
     private var mapReadyResult: FlutterResult?
@@ -1243,14 +1244,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         "lat": coordinate.latitude,
                         "layerId": result.layerId,
             ])
+            // Fire map#onMapClick only if ignoreFeatureTapOnMapClick is false
+            if !ignoreFeatureTapOnMapClick {
+                channel?.invokeMethod("map#onMapClick", arguments: [
+                    "x": point.x,
+                    "y": point.y,
+                    "lng": coordinate.longitude,
+                    "lat": coordinate.latitude,
+                ])
+            }
+        } else {
+            // Always fire map#onMapClick when no feature is tapped
+            channel?.invokeMethod("map#onMapClick", arguments: [
+                "x": point.x,
+                "y": point.y,
+                "lng": coordinate.longitude,
+                "lat": coordinate.latitude,
+            ])
         }
-        // Always fire map#onMapClick for all map clicks
-        channel?.invokeMethod("map#onMapClick", arguments: [
-            "x": point.x,
-            "y": point.y,
-            "lng": coordinate.longitude,
-            "lat": coordinate.latitude,
-        ])
     }
 
     fileprivate func invokeFeatureDrag(
@@ -2105,6 +2116,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setIgnoreFeatureTapOnMapClick(ignore: Bool) {
+        ignoreFeatureTapOnMapClick = ignore
     }
 }
 

@@ -140,6 +140,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean ignoreFeatureTapOnMapClick = true;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
@@ -1951,9 +1952,14 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
+      // Fire map#onMapClick only if ignoreFeatureTapOnMapClick is false
+      if (!ignoreFeatureTapOnMapClick) {
+        methodChannel.invokeMethod("map#onMapClick", arguments);
+      }
+    } else {
+      // Always fire map#onMapClick when no feature is tapped
+      methodChannel.invokeMethod("map#onMapClick", arguments);
     }
-    // Always fire map#onMapClick for all map clicks
-    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
@@ -2369,6 +2375,11 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setIgnoreFeatureTapOnMapClick(boolean ignore) {
+    this.ignoreFeatureTapOnMapClick = ignore;
   }
 
   private void updateMyLocationEnabled() {

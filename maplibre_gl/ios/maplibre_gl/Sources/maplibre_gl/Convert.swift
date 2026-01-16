@@ -87,6 +87,9 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
+        if let ignoreFeatureTapOnMapClick = options["ignoreFeatureTapOnMapClick"] as? Bool {
+            delegate.setIgnoreFeatureTapOnMapClick(ignore: ignoreFeatureTapOnMapClick)
+        }
     }
     
     class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {
