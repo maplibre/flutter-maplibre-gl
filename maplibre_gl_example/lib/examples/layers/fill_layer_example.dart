@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -67,9 +66,9 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
         'marker-pattern',
         ExampleConstants.markerPatternPath,
       );
-      dev.log('Pattern images loaded successfully', name: 'FillLayerExample');
+      print('FillLayerExample: Pattern images loaded successfully');
     } catch (e) {
-      dev.log('Error loading pattern images: $e');
+      print('FillLayerExample: Error loading pattern images: $e');
     }
   }
 
@@ -104,7 +103,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
 
       setState(() {});
     } catch (e) {
-      dev.log('Error adding fill layer: $e');
+      print('FillLayerExample: Error adding fill layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding fill layer: $e')),
@@ -161,7 +160,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
         ),
       );
     } catch (e) {
-      dev.log('Error updating fill layer: $e');
+      print('FillLayerExample: Error updating fill layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating fill layer: $e')),

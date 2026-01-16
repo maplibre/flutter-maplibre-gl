@@ -114,7 +114,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
     if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
       mapJsImpl = jsObject.off(type, jsFn);
     } else {
-      mapJsImpl = jsObject.off(type, layerIdOrListener, jsFn);
+      final layerId = layerIdOrListener is String
+          ? layerIdOrListener.toJS
+          : layerIdOrListener.toString().toJS;
+      mapJsImpl = jsObject.off(type, layerId, jsFn);
     }
     return MapLibreMap.fromJsObject(mapJsImpl);
   }

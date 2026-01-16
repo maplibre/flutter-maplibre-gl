@@ -12,6 +12,7 @@ class MapLibreMapController extends MapLibrePlatform
   bool _dragEnabled = true;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
+  Set<String>? _assetManifest;
 
   final _interactiveFeatureLayerIds = <String>{};
 
@@ -22,6 +23,8 @@ class MapLibreMapController extends MapLibrePlatform
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
   AttributionControl? _attributionControl;
+  ScaleControl? _scaleControl;
+  String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
 
   @override
@@ -111,24 +114,51 @@ class MapLibreMapController extends MapLibrePlatform
     resizeObserver.observe(_mapElement);
   }
 
+  Future<Set<String>> _loadAssetManifest() async {
+    if (_assetManifest != null) return _assetManifest!;
+
+    try {
+      final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = assetManifest.listAssets();
+      _assetManifest = assets.toSet();
+    } catch (_) {
+      // If the manifest can't be read, assume no declared assets
+      _assetManifest = <String>{};
+    }
+
+    return _assetManifest!;
+  }
+
   Future<void> _loadFromAssets(Event event) async {
     final imagePath = event.id;
+
+    // Check if the image is already added
+    if (_map.hasImage(imagePath)) return;
+
+    // Check if the image is declared in the assets loaded
+    final manifest = await _loadAssetManifest();
+    if (!manifest.contains(imagePath) &&
+        !manifest.contains('assets/$imagePath')) {
+      return;
+    }
 
     try {
       final bytes = await rootBundle.load(imagePath);
       await addImage(imagePath, bytes.buffer.asUint8List());
-    } catch (e) {
-      dev.log('Could not load image from assets: $imagePath',
-          name: 'MapLibreMapController');
+    } catch (_) {
+      // If it still fails, ignore so MapLibre can continue without the image.
     }
   }
 
   void _onMouseDown(Event e, String? layerId) {
-    final isDraggable = e.features[0].properties['draggable'];
+    // Check if there are features under the mouse cursor
+    if (e.features.isEmpty) return;
+
+    final isDraggable = e.features.first.getProperty('draggable');
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
       e.preventDefault();
-      _draggedFeatureId = e.features[0].id;
+      _draggedFeatureId = e.features.first.id;
       _map.getCanvas().style.cursor = 'grabbing';
       final coords = e.lngLat;
       _dragOrigin = LatLng(coords.lat as double, coords.lng as double);
@@ -377,9 +407,8 @@ class MapLibreMapController extends MapLibrePlatform
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log(
-          'queryRenderedFeatures: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: queryRenderedFeatures, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -392,9 +421,11 @@ class MapLibreMapController extends MapLibrePlatform
     }
 
     // avoid issues with the js point type
-    final pointAsList = [point.x, point.y];
+    final geometry = jsify([point.x, point.y]);
+    if (geometry == null) return [];
+
     return _map
-        .queryRenderedFeatures([pointAsList, pointAsList], options)
+        .queryRenderedFeatures(geometry, options)
         .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
@@ -413,9 +444,8 @@ class MapLibreMapController extends MapLibrePlatform
       Rect rect, List<String> layerIds, String? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log(
-          'queryRenderedFeaturesInRect: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: queryRenderedFeaturesInRect, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -426,11 +456,14 @@ class MapLibreMapController extends MapLibrePlatform
     if (filter != null) {
       options['filter'] = filter;
     }
+
+    final geometry = jsify([
+      [rect.left, rect.bottom],
+      [rect.right, rect.top],
+    ]);
+    if (geometry == null) return [];
     return _map
-        .queryRenderedFeatures([
-          [rect.left, rect.bottom],
-          [rect.right, rect.top],
-        ], options)
+        .queryRenderedFeatures(geometry, options)
         .map((feature) => <String, dynamic>{
               'type': 'Feature',
               'id': feature.id,
@@ -449,8 +482,8 @@ class MapLibreMapController extends MapLibrePlatform
       String sourceId, String? sourceLayerId, List<Object>? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
-      dev.log('querySourceFeatures: Style not loaded yet, returning empty list',
-          name: 'MapLibreMapController');
+      print(
+          'MapLibreMapController: querySourceFeatures, Style not loaded yet, returning empty list');
       return [];
     }
 
@@ -529,8 +562,7 @@ class MapLibreMapController extends MapLibrePlatform
         {'sdf': sdf, 'pixelRatio': 1},
       );
     } else {
-      dev.log('Image already exists on map: $name',
-          name: 'MapLibreMapController');
+      print('MapLibreMapController: Image already exists on map: $name');
     }
   }
 
@@ -584,13 +616,13 @@ class MapLibreMapController extends MapLibrePlatform
   ///
   /// Both events include the click point and latLng.
   void _onMapClick(Event e) {
-    final pointBox = [
+    final geometry = jsify([
       [e.point.x, e.point.y],
       [e.point.x, e.point.y]
-    ];
-
+    ]);
+    if (geometry == null) return;
     // Query rendered features in the point box
-    final features = _map.queryRenderedFeatures(pointBox);
+    final features = _map.queryRenderedFeatures(geometry);
 
     // Keep only interactive-layer features (preserve order)
     final filtered = features
@@ -603,16 +635,15 @@ class MapLibreMapController extends MapLibrePlatform
       'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
     };
 
-    if (filtered.isEmpty) {
-      onMapClickPlatform(payload);
-      return;
+    if (filtered.isNotEmpty) {
+      // Add 'first' feature info to payload
+      payload['layerId'] = filtered.first.layerId;
+      payload['id'] = filtered.first.id;
+      onFeatureTappedPlatform(payload);
     }
 
-    // Add 'first' feature info to payload
-    payload['layerId'] = filtered.first.layerId;
-    payload['id'] = filtered.first.id;
-
-    onFeatureTappedPlatform(payload);
+    // Always fire onMapClickPlatform for all map clicks
+    onMapClickPlatform(payload);
   }
 
   void _onMapLongClick(e) {
@@ -778,6 +809,69 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setScaleControlEnabled(bool enabled) {
+    if (enabled) {
+      _addScaleControl();
+    } else {
+      _removeScaleControl();
+    }
+  }
+
+  @override
+  void setScaleControlPosition(ScaleControlPosition position) {
+    final positionString = switch (position) {
+      ScaleControlPosition.topLeft => 'top-left',
+      ScaleControlPosition.topRight => 'top-right',
+      ScaleControlPosition.bottomLeft => 'bottom-left',
+      ScaleControlPosition.bottomRight => 'bottom-right',
+    };
+    // Only re-add if position changed
+    if (_scaleControl != null && _scaleControlPosition != positionString) {
+      _addScaleControl(position: position);
+    }
+  }
+
+  @override
+  void setScaleControlUnit(ScaleControlUnit unit) {
+    if (_scaleControl != null) {
+      final unitString = switch (unit) {
+        ScaleControlUnit.metric => 'metric',
+        ScaleControlUnit.imperial => 'imperial',
+        ScaleControlUnit.nautical => 'nautical',
+      };
+      _scaleControl!.setUnit(unitString);
+    }
+  }
+
+  void _addScaleControl({ScaleControlPosition? position}) {
+    _removeScaleControl();
+
+    final positionString =
+        switch (position ?? ScaleControlPosition.bottomLeft) {
+      ScaleControlPosition.topLeft => 'top-left',
+      ScaleControlPosition.topRight => 'top-right',
+      ScaleControlPosition.bottomLeft => 'bottom-left',
+      ScaleControlPosition.bottomRight => 'bottom-right',
+    };
+
+    _scaleControl = ScaleControl(
+      ScaleControlOptions(
+        maxWidth: 80,
+      ),
+    );
+    _scaleControlPosition = positionString;
+    _map.addControl(_scaleControl, positionString);
+  }
+
+  void _removeScaleControl() {
+    if (_scaleControl != null) {
+      _map.removeControl(_scaleControl);
+      _scaleControl = null;
+      _scaleControlPosition = null;
+    }
+  }
+
+  @override
   void setCameraTargetBounds(LatLngBounds? bounds) {
     if (bounds == null) {
       _map.setMaxBounds(null);
@@ -896,12 +990,13 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   /// Sanitizes the style object to ensure it is in the correct format.
-  /// If the style object is a JSON string, it decodes it into a Map.
-  /// If it is already a Map or other type, it returns it as is.
+  /// If the style object is a JSON string, use JavaScript's native JSON.parse
+  /// to avoid Dart object metadata leaking into web workers.
   dynamic _sanitizeStyleObject(dynamic styleObject) {
     if (styleObject is String &&
         (styleObject.startsWith('{') || styleObject.startsWith('['))) {
-      return jsonDecode(styleObject);
+      // Use JavaScript's native JSON.parse to create pure JS objects
+      return jsonParse(styleObject);
     } else {
       return styleObject;
     }
@@ -1430,20 +1525,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
-    return _map.getLayers().map((e) => e.id).toList();
+    final layers = _map.getLayers();
+    return layers.map((layer) => layer.id).toList();
   }
 
   @override
   Future<List> getSourceIds() async {
-    final style = _map.getStyle();
-    if (style == null) return [];
-
-    // Get the sources from the style object
-    final jsSources = style.sources;
-
-    if (jsSources == null) return [];
-
-    // Get the keys (source IDs) from the sources object
-    return objectKeys(jsSources);
+    final sourceIds = _map.getSourceIds();
+    return sourceIds;
   }
 }
