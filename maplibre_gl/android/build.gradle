@@ -54,6 +54,8 @@ android {
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.2'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
         implementation 'com.squareup.okhttp3:okhttp:5.3.2'
+        implementation 'com.google.android.gms:play-services-base:18.5.0'
+        implementation 'com.google.android.gms:play-services-location:21.3.0'
     }
 }
 
