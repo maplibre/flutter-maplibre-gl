@@ -37,6 +37,7 @@ import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/various_sources.dart';
 
 // Advanced examples
+import 'examples/advanced/map_snapshot.dart';
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
@@ -102,6 +103,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const VariousSources(),
 
   // Advanced
+  const MapSnapshotPage(),
   const PMTilesPage(),
   const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
