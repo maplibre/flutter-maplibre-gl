@@ -31,6 +31,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.featureTapsTriggersMapClick = false,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
@@ -135,6 +136,13 @@ class MapLibreMap extends StatefulWidget {
   /// Disable to avoid performance issues that from the drag event listeners.
   /// Biggest impact in android
   final bool dragEnabled;
+
+  /// Whether tapping on a feature also triggers the map click event.
+  /// Defaults to `false`.
+  ///
+  /// If `true`, both the feature tap and `onMapClick` events will fire when tapping a feature.
+  /// If `false`, only the feature tap event fires, and `onMapClick` is not called.
+  final bool featureTapsTriggersMapClick;
 
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
@@ -431,7 +439,8 @@ class _MapLibreMapOptions {
       this.scaleControlUnit,
       this.locationEnginePlatforms,
       this.foregroundLoadColor,
-      this.translucentTextureSurface});
+      this.translucentTextureSurface,
+      this.featureTapsTriggersMapClick});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -462,6 +471,7 @@ class _MapLibreMapOptions {
           scaleControlUnit: map.scaleControlUnit,
           foregroundLoadColor: map.foregroundLoadColor,
           translucentTextureSurface: map.translucentTextureSurface,
+          featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
         );
 
   final bool? compassEnabled;
@@ -515,6 +525,8 @@ class _MapLibreMapOptions {
   final Color? foregroundLoadColor;
 
   final bool? translucentTextureSurface;
+
+  final bool? featureTapsTriggersMapClick;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -570,6 +582,7 @@ class _MapLibreMapOptions {
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
+    addIfNonNull('featureTapsTriggersMapClick', featureTapsTriggersMapClick);
     return optionsMap;
   }
 
