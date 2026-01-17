@@ -236,6 +236,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     this.dragEnabled = enabled;
   }
 
+  public void setFeatureTapsTriggersMapClick(boolean triggers) {
+    options.featureTapsTriggersMapClick(triggers);
+  }
+
   @Override
   public void setLocationEngineProperties(@NonNull LocationEngineRequest locationEngineRequest) {
     this.locationEngineRequest = locationEngineRequest;
