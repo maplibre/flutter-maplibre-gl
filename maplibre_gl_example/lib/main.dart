@@ -22,6 +22,7 @@ import 'examples/camera/camera_bounds_example.dart';
 // Interaction examples
 import 'examples/interaction/map_controls_example.dart';
 import 'examples/interaction/map_gestures_example.dart';
+import 'examples/interaction/hover_effect_example.dart';
 
 // Annotations examples
 import 'examples/annotations/annotations_example.dart';
@@ -88,6 +89,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
+  if (kIsWeb) const HoverEffectExample(),
 
   // Annotations
   const AnnotationsExample(),
