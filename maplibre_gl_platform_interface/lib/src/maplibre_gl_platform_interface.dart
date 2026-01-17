@@ -54,6 +54,8 @@ abstract class MapLibrePlatform {
 
   final onMapLongClickPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
+  final onMapMouseMovePlatform = ArgumentCallbacks<Map<String, dynamic>>();
+
   final onCameraTrackingChangedPlatform =
       ArgumentCallbacks<MyLocationTrackingMode>();
 
@@ -188,7 +190,29 @@ abstract class MapLibrePlatform {
   });
 
   Future<void> setFeatureForGeoJsonSource(
-      String sourceId, Map<String, dynamic> geojsonFeature);
+    String sourceId,
+    Map<String, dynamic> geojsonFeature,
+  );
+
+  Future<void> setFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, dynamic> state, {
+    String? sourceLayer,
+  });
+
+  Future<void> removeFeatureState(
+    String sourceId, {
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  });
+
+  Future<Map<String, dynamic>?> getFeatureState(
+    String sourceId,
+    String featureId, {
+    String? sourceLayer,
+  });
 
   Future<void> removeSource(String sourceId);
 
@@ -309,6 +333,7 @@ abstract class MapLibrePlatform {
 
     onMapClickPlatform.clear();
     onMapLongClickPlatform.clear();
+    onMapMouseMovePlatform.clear();
     onCameraTrackingChangedPlatform.clear();
     onCameraTrackingDismissedPlatform.clear();
     onMapIdlePlatform.clear();
