@@ -20,6 +20,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
+  private boolean featureTapsTriggersMapClick = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private String styleString = "";
@@ -34,7 +35,15 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     final MapLibreMapController controller =
         new MapLibreMapController(
-            id, context, messenger, lifecycleProvider, options, styleString, dragEnabled);
+            id, 
+            context, 
+            messenger, 
+            lifecycleProvider, 
+            options, 
+            styleString, 
+            dragEnabled, 
+            featureTapsTriggersMapClick
+        );
     controller.init();
     controller.setMyLocationEnabled(myLocationEnabled);
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
@@ -237,7 +246,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   public void setFeatureTapsTriggersMapClick(boolean triggers) {
-    options.featureTapsTriggersMapClick(triggers);
+    this.featureTapsTriggersMapClick = triggers;
   }
 
   @Override
