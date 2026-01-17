@@ -10,6 +10,7 @@ class MapLibreMapController extends MapLibrePlatform
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
   bool _dragEnabled = true;
+  bool _featureTapsTriggersMapClick = false;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
   Set<String>? _assetManifest;
@@ -630,10 +631,14 @@ class MapLibreMapController extends MapLibrePlatform
       payload['layerId'] = filtered.first.layerId;
       payload['id'] = filtered.first.id;
       onFeatureTappedPlatform(payload);
+      // Fire onMapClickPlatform only if featureTapsTriggersMapClick is true
+      if (_featureTapsTriggersMapClick) {
+        onMapClickPlatform(payload);
+      }
+    } else {
+      // Always fire onMapClickPlatform when no feature is tapped
+      onMapClickPlatform(payload);
     }
-
-    // Always fire onMapClickPlatform for all map clicks
-    onMapClickPlatform(payload);
   }
 
   void _onMapLongClick(e) {
@@ -831,6 +836,11 @@ class MapLibreMapController extends MapLibrePlatform
       };
       _scaleControl!.setUnit(unitString);
     }
+  }
+
+  @override
+  void setFeatureTapsTriggersMapClick(bool triggers) {
+    _featureTapsTriggersMapClick = triggers;
   }
 
   void _addScaleControl({ScaleControlPosition? position}) {
