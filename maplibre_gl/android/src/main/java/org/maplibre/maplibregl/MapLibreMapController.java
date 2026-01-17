@@ -140,6 +140,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
@@ -187,11 +188,14 @@ final class MapLibreMapController
       MapLibreMapsPlugin.LifecycleProvider lifecycleProvider,
       MapLibreMapOptions options,
       String styleStringInitial,
-      boolean dragEnabled) {
+      boolean dragEnabled,
+      boolean featureTapsTriggersMapClick
+  ) {
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
     this.dragEnabled = dragEnabled;
+    this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
     this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
@@ -1951,9 +1955,14 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
+      // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+      if (featureTapsTriggersMapClick) {
+        methodChannel.invokeMethod("map#onMapClick", arguments);
+      }
+    } else {
+      // Always fire map#onMapClick when no feature is tapped
+      methodChannel.invokeMethod("map#onMapClick", arguments);
     }
-    // Always fire map#onMapClick for all map clicks
-    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
@@ -2369,6 +2378,11 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setFeatureTapsTriggersMapClick(boolean triggers) {
+    this.featureTapsTriggersMapClick = triggers;
   }
 
   private void updateMyLocationEnabled() {
