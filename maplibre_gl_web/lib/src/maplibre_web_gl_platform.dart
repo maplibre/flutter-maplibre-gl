@@ -93,6 +93,8 @@ class MapLibreMapController extends MapLibrePlatform
       _map.on('mouseup', _onMouseUp);
       _map.on('mousemove', _onMouseMove);
     }
+    // Always listen to mousemove for general map mouse move events
+    _map.on('mousemove', _onMapMouseMove);
 
     _initResizeObserver();
 
@@ -211,6 +213,14 @@ class MapLibreMapController extends MapLibrePlatform
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
     }
+  }
+
+  _onMapMouseMove(Event e) {
+    // Simple mouse move event - just provides position
+    onMapMouseMovePlatform({
+      'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
+      'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+    });
   }
 
   @override
@@ -394,7 +404,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<List> queryRenderedFeatures(
+  Future<List<Map<String, dynamic>>> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     if (!_map.isStyleLoaded()) {
       // Style is not loaded yet, return empty list
@@ -1450,6 +1460,57 @@ class MapLibreMapController extends MapLibrePlatform
         source.setData(newData);
       }
     }
+  }
+
+  @override
+  Future<void> setFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, dynamic> state, {
+    String? sourceLayer,
+  }) async {
+    final feature = FeatureIdentifierJsImpl(
+      source: sourceId,
+      id: featureId.jsify(),
+      sourceLayer: sourceLayer,
+    );
+
+    _map.setFeatureState(feature, state.jsify());
+  }
+
+  @override
+  Future<void> removeFeatureState(
+    String sourceId, {
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  }) async {
+    final feature = FeatureIdentifierJsImpl(
+      source: sourceId,
+      id: featureId.jsify(),
+      sourceLayer: sourceLayer,
+    );
+
+    _map.removeFeatureState(feature, stateKey);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getFeatureState(
+    String sourceId,
+    String featureId, {
+    String? sourceLayer,
+  }) async {
+    final feature = FeatureIdentifierJsImpl(
+      source: sourceId,
+      id: featureId.jsify(),
+      sourceLayer: sourceLayer,
+    );
+
+    final state = _map.getFeatureState(feature);
+    if (state == null) return null;
+
+    // Convert JSObject to Dart Map
+    return (state as JSObject).dartify() as Map<String, dynamic>?;
   }
 
   @override
