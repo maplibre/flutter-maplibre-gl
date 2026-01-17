@@ -40,6 +40,10 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
   String? _lastTappedAnnotation;
 
   void _onMapCreated(MapLibreMapController controller) {
+    controller.onFeatureTapped.add(
+      (point, coordinates, id, layerId, annotation) =>
+          print('AnnotationsExample: Feature tapped with id $id'),
+    );
     controller.onSymbolTapped.add(_onSymbolTapped);
     controller.onCircleTapped.add(_onCircleTapped);
     controller.onFillTapped.add(_onFillTapped);
@@ -424,6 +428,11 @@ class _AnnotationsBodyState extends State<_AnnotationsBody> {
           zoom: 8,
         ),
         trackCameraPosition: true,
+        // As true calls onMapClick also when annotations are tapped
+        featureTapsTriggersMapClick: true,
+        onMapClick: (point, coordinates) {
+          print('AnnotationsExample: Map clicked at $coordinates');
+        },
       ),
       controls: [
         InfoCard(
