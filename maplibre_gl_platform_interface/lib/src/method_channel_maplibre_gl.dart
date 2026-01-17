@@ -895,6 +895,35 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setFeatureState(
+      String sourceId, String featureId, Map<String, dynamic> state,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'setFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<void> removeFeatureState(String sourceId,
+      {String? featureId, String? stateKey, String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'removeFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getFeatureState(
+      String sourceId, String featureId,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'getFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
