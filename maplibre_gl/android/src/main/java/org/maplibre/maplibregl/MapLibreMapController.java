@@ -409,6 +409,12 @@ final class MapLibreMapController
   }
 
   private void addGeoJsonSource(String sourceName, String source) {
+    // Check if source already exists to prevent CannotAddSourceException
+    // which can lead to native crashes
+    if (style.getSource(sourceName) != null) {
+      return;
+    }
+
     FeatureCollection featureCollection = FeatureCollection.fromJson(source);
 
     // Enable synchronous updates to reduce flicker during animations/dragging if dragEnabled option is true
