@@ -303,7 +303,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#setMaximumFps":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             if let fps = arguments["fps"] as? Int {
-                mapView.preferredFramesPerSecond = fps
+                mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
             }
             result(nil)
         case "map#forceOnlineMode":
