@@ -422,15 +422,16 @@ class MapLibreMap extends Camera {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  List<Feature> queryRenderedFeatures(dynamic geometry,
+  List<Feature> queryRenderedFeatures(JSAny geometry,
       [Map<String, dynamic>? options]) {
+    final jsOptions = options != null ? utils.jsify(options) : null;
+
     if (options == null) {
       return (jsObject.queryRenderedFeatures(geometry).toDart as List)
           .map((dynamic f) => Feature.fromJsObject(f))
           .toList();
     }
-    return (jsObject.queryRenderedFeatures(geometry, options.jsify()).toDart
-            as List)
+    return (jsObject.queryRenderedFeatures(geometry, jsOptions).toDart as List)
         .map((dynamic f) => Feature.fromJsObject(f))
         .toList();
   }
@@ -495,17 +496,9 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) {
-    JSAny? styleJs;
-    if (style is String) {
-      styleJs = style.toJS;
-    } else if (style is Style) {
-      styleJs = style.jsObject as JSAny;
-    } else if (style is Map) {
-      styleJs = style.jsify();
-    } else {
-      styleJs = style as JSAny?;
-    }
-    final optionsJs = options is Map ? options.jsify() : options?.toJS;
+    final styleJs =
+        style is Style ? style.jsObject as JSAny : utils.jsify(style);
+    final optionsJs = utils.jsify(options);
     return MapLibreMap.fromJsObject(jsObject.setStyle(styleJs, optionsJs));
   }
 
@@ -515,12 +508,25 @@ class MapLibreMap extends Camera {
   ///
   ///  @example
   ///  var styleJson = map.getStyle();
-  dynamic getStyle() => jsObject.getStyle();
+  StyleJsImpl? getStyle() => jsObject.getStyle();
 
   /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
-  List<dynamic> getLayers() {
+  List<StyleLayerJsImpl> getLayers() {
     final style = jsObject.getStyle();
     return style != null ? Style.fromJsObject(style).layers : [];
+  }
+
+  /// Returns the source IDs from the map style.
+  List<String> getSourceIds() {
+    final style = jsObject.getStyle();
+    if (style == null) return [];
+
+    final styleObj = Style.fromJsObject(style);
+    final sourcesObj = styleObj.sources;
+    if (sourcesObj == null) return [];
+
+    // The sources object is a dictionary where keys are the source IDs
+    return objectKeys(sourcesObj);
   }
 
   ///  Returns a Boolean indicating whether the map's style is fully loaded.

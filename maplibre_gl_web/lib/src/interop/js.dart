@@ -47,3 +47,7 @@ external JSObject _createJsObject(JSAny? prototype);
 JSObject createJsObject() {
   return _createJsObject(null);
 }
+
+/// Parse a JSON string using JavaScript's native JSON.parse.
+@JS('JSON.parse')
+external JSAny jsonParse(String text);

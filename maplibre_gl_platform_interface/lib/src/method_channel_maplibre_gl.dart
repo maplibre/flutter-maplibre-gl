@@ -895,11 +895,75 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setFeatureState(
+      String sourceId, String featureId, Map<String, dynamic> state,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'setFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<void> removeFeatureState(String sourceId,
+      {String? featureId, String? stateKey, String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'removeFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getFeatureState(
+      String sourceId, String featureId,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'getFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
       'visible': visible,
     });
+  }
+
+  @override
+  Future<bool?> getLayerVisibility(String layerId) async {
+    try {
+      final result =
+          await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
+        'layerId': layerId,
+      });
+      return result as bool?;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
+  Future<Size> setWebMapToCustomSize(Size size) async {
+    // Not supported on native platforms, return the requested size
+    return size;
+  }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() async {
+    // On native platforms, this is a no-op as camera animations complete synchronously
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() async {
+    // On native platforms, this is a no-op
+  }
+
+  @override
+  Future<String> takeWebSnapshot() async {
+    // Not supported on native platforms
+    throw UnsupportedError('takeWebSnapshot is only supported on web platform');
   }
 
   @override

@@ -1,13 +1,26 @@
 import 'dart:js_interop';
 import 'interop/js.dart';
 
-// Import this file as a library to reference its functions
-import 'utils.dart' as utils;
-
 /// Returns Dart representation from JS Object.
 dynamic dartify(Object? jsObject) {
   if (_isBasicType(jsObject)) {
     return jsObject;
+  }
+
+  // Convert JSAny types to Dart primitives
+  // ignore: invalid_runtime_check_with_js_interop_types
+  if (jsObject is JSAny) {
+    if (jsObject.isA<JSBoolean>()) {
+      return (jsObject as JSBoolean).toDart;
+    }
+
+    if (jsObject.isA<JSNumber>()) {
+      return (jsObject as JSNumber).toDartDouble;
+    }
+
+    if (jsObject.isA<JSString>()) {
+      return (jsObject as JSString).toDart;
+    }
   }
 
   // Handle list
@@ -29,10 +42,12 @@ bool _isBasicType(Object? value) {
 }
 
 Map<String, dynamic> dartifyMap(Object? jsObject) {
+  if (jsObject == null) return {};
+
   final keys = objectKeys(jsObject);
   final map = <String, dynamic>{};
   for (final key in keys) {
-    final value = getJsProperty(jsObject! as JSObject, key);
+    final value = getJsProperty(jsObject as JSObject, key);
     map[key] = dartify(value);
   }
   return map;
@@ -48,8 +63,8 @@ JSAny? jsify(Object? dartObject) {
     final jsArray = dartObject.map((e) => jsify(e)).toList();
     return jsArray.toJS;
   }
-  if (dartObject is Map<String, dynamic>) {
-    return jsifyMap(dartObject);
+  if (dartObject is Map) {
+    return jsifyMap(Map<String, dynamic>.from(dartObject));
   }
   // For objects that already have jsObject property (like Layer, Source wrappers)
   if (dartObject is JsObjectWrapper) {
@@ -67,9 +82,4 @@ JSObject jsifyMap(Map<String, dynamic> map) {
     setJsProperty(jsObj, key, jsValue);
   });
   return jsObj;
-}
-
-/// Extension to add jsify() method to all objects
-extension JsifyExtension on Object? {
-  JSAny? jsify() => utils.jsify(this);
 }

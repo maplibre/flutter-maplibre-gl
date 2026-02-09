@@ -10,6 +10,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var mapView: MLNMapView
     private var isMapReady = false
     private var dragEnabled = true
+    private var featureTapsTriggersMapClick = false
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
     private var mapReadyResult: FlutterResult?
@@ -170,7 +171,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     isFirstStyleLoad = false
                     if let channel = channel {
                         onStyleLoadedCalled = true
-                        channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        // Defer the callback to the next run loop iteration to avoid race conditions
+                        DispatchQueue.main.async {
+                            channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        }
                     }
                 }
             } else {
@@ -1240,7 +1244,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         "lat": coordinate.latitude,
                         "layerId": result.layerId,
             ])
+            // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+            if featureTapsTriggersMapClick {
+                channel?.invokeMethod("map#onMapClick", arguments: [
+                    "x": point.x,
+                    "y": point.y,
+                    "lng": coordinate.longitude,
+                    "lat": coordinate.latitude,
+                ])
+            }
         } else {
+            // Always fire map#onMapClick when no feature is tapped
             channel?.invokeMethod("map#onMapClick", arguments: [
                 "x": point.x,
                 "y": point.y,
@@ -1385,7 +1399,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let channel = channel {
                 onStyleLoadedCalled = true
-                channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                // Defer the callback to the next run loop iteration to avoid race conditions
+                // where the map's internal state is not fully ready for operations like camera animations
+                DispatchQueue.main.async {
+                    channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                }
             }
         }
     }
@@ -2098,6 +2116,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setFeatureTapsTriggersMapClick(triggers: Bool) {
+        featureTapsTriggersMapClick = triggers
     }
 }
 

@@ -1,7 +1,7 @@
 part of '../maplibre_gl_web.dart';
 
 abstract class MapLibreMapOptionsSink {
-  // TODO: dddd replace with CameraPosition.Builder target
+  // TODO: replace with CameraPosition.Builder target
   void setCameraTargetBounds(LatLngBounds? bounds);
 
   void setCompassEnabled(bool compassEnabled);
@@ -38,4 +38,12 @@ abstract class MapLibreMapOptionsSink {
   void setAttributionButtonAlignment(AttributionButtonPosition position);
 
   void setAttributionButtonMargins(int x, int y);
+
+  void setScaleControlEnabled(bool enabled);
+
+  void setScaleControlPosition(ScaleControlPosition position);
+
+  void setScaleControlUnit(ScaleControlUnit unit);
+
+  void setFeatureTapsTriggersMapClick(bool triggers);
 }

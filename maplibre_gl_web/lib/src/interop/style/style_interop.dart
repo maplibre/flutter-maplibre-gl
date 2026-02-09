@@ -5,6 +5,7 @@ import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:maplibre_gl_web/src/interop/style/evaluation_parameters_interop.dart';
 import 'package:maplibre_gl_web/src/interop/style/style_image_interop.dart';
+import 'package:maplibre_gl_web/src/interop/style/style_layer_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 
@@ -148,10 +149,10 @@ extension StyleJsImplExtension on StyleJsImpl {
   external void getResource(
       String mapId, RequestParametersJsImpl params, JSFunction callback);
 
-  external JSArray layers;
+  external JSArray<StyleLayerJsImpl> get layers;
 
   /// Map of source IDs to source objects
-  external JSAny? get sources;
+  external JSObject? get sources;
 }
 
 @JS()
