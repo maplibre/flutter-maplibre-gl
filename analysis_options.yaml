@@ -12,6 +12,9 @@ analyzer:
 
 linter:
   rules:
+    # temporary rules (very_good_analysis 10.1.0)
+    avoid_types_on_closure_parameters: false
+    remove_deprecations_in_breaking_versions: false
     # temporary rules
     flutter_style_todos: false
     one_member_abstracts: false
