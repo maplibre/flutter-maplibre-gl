@@ -262,8 +262,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     options.translucentTextureSurface(translucentTextureSurface);
-    // TextureMode is required for translucent surfaces, but causes frame sync issues
-    // Only enable it when transparency is actually needed
+    // TextureMode (TextureView) is required for translucent surfaces and also prevents
+    // the map from turning black during resize operations. Enabled together with
+    // translucentTextureSurface; disable both only when maximum SurfaceView performance
+    // is needed and resize-without-flicker is not required.
     options.textureMode(translucentTextureSurface);
   }
 }

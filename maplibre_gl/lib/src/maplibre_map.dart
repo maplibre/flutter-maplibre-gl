@@ -66,7 +66,7 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.circle,
     ],
     this.foregroundLoadColor = Colors.transparent,
-    this.translucentTextureSurface = false,
+    this.translucentTextureSurface = true,
   })  : assert(
           myLocationRenderMode == MyLocationRenderMode.normal ||
               myLocationEnabled,
@@ -87,6 +87,11 @@ class MapLibreMap extends StatefulWidget {
 
   /// Enable translucent texture surface for the map.
   /// This allows the map to have a transparent background, useful for overlay scenarios.
+  /// Also enables TextureView-based rendering on Android, which prevents the map from
+  /// turning black during resize operations.
+  ///
+  /// Defaults to `true`. Set to `false` only if you need maximum rendering performance
+  /// and do not need transparency or resize-without-flicker behavior.
   ///
   /// **Available only on Android. Has no effect on iOS or Web.**
   final bool translucentTextureSurface;
