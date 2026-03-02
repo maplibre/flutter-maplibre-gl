@@ -16,6 +16,7 @@ export 'ui/camera_interop.dart';
 export 'ui/control/geolocate_control_interop.dart';
 export 'ui/control/logo_control_interop.dart';
 export 'ui/control/navigation_control_interop.dart';
+export 'ui/control/scale_control_interop.dart';
 export 'ui/events_interop.dart';
 export 'ui/handler/box_zoom_interop.dart';
 export 'ui/handler/dblclick_zoom_interop.dart';

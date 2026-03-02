@@ -128,8 +128,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (
-            BuildContext context,
-            PlatformViewController controller,
+            context,
+            controller,
           ) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
@@ -138,7 +138,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
+          onCreatePlatformView: (params) {
             final controller = PlatformViewsService.initAndroidView(
               id: params.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
@@ -711,7 +711,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -734,18 +733,14 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
   @override
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
-    await _channel.invokeMethod('layer#setProperties', <String, dynamic>{
-      'layerId': layerId,
-      'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
-    });
+    await _channel.invokeMethod('layer#setProperties',
+        <String, dynamic>{'layerId': layerId, 'properties': properties});
   }
 
   @override
@@ -767,7 +762,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -790,7 +784,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -813,7 +806,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -845,7 +837,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -863,7 +854,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -881,7 +871,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -895,11 +884,75 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setFeatureState(
+      String sourceId, String featureId, Map<String, dynamic> state,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'setFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<void> removeFeatureState(String sourceId,
+      {String? featureId, String? stateKey, String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'removeFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getFeatureState(
+      String sourceId, String featureId,
+      {String? sourceLayer}) async {
+    // TODO: Implement feature state support for iOS and Android
+    throw UnimplementedError(
+        'getFeatureState is not yet implemented on iOS and Android. '
+        'This feature is currently only available on web.');
+  }
+
+  @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
       'visible': visible,
     });
+  }
+
+  @override
+  Future<bool?> getLayerVisibility(String layerId) async {
+    try {
+      final result =
+          await _channel.invokeMethod('layer#getVisibility', <String, dynamic>{
+        'layerId': layerId,
+      });
+      return result as bool?;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
+  Future<Size> setWebMapToCustomSize(Size size) async {
+    // Not supported on native platforms, return the requested size
+    return size;
+  }
+
+  @override
+  Future<void> waitUntilMapIsIdleAfterMovement() async {
+    // On native platforms, this is a no-op as camera animations complete synchronously
+  }
+
+  @override
+  Future<void> waitUntilMapTilesAreLoaded() async {
+    // On native platforms, this is a no-op
+  }
+
+  @override
+  Future<String> takeWebSnapshot() async {
+    // Not supported on native platforms
+    throw UnsupportedError('takeWebSnapshot is only supported on web platform');
   }
 
   @override
