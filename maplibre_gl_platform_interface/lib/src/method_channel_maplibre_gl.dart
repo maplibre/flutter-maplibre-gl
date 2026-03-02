@@ -739,10 +739,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
-    await _channel.invokeMethod('layer#setProperties', <String, dynamic>{
-      'layerId': layerId,
-      'properties': properties
-    });
+    await _channel.invokeMethod('layer#setProperties',
+        <String, dynamic>{'layerId': layerId, 'properties': properties});
   }
 
   @override

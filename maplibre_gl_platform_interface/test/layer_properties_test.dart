@@ -9,8 +9,8 @@ void main() {
     late MapLibreMethodChannel platform;
     late List<MethodCall> methodCalls;
 
-    setUp(() {
-      platform = MapLibreMethodChannel(0);
+    setUp(() async {
+      platform = MapLibreMethodChannel();
       methodCalls = [];
 
       // Mock the method channel
@@ -22,6 +22,9 @@ void main() {
           return null;
         },
       );
+
+      await platform.initPlatform(0);
+      methodCalls.clear();
     });
 
     test('addCircleLayer passes properties without double encoding', () async {
@@ -47,7 +50,8 @@ void main() {
 
       // Verify properties are passed as native types, not JSON strings
       expect(receivedProperties['circle-radius'], 10); // Not "10"
-      expect(receivedProperties['circle-color'], '#FF0000'); // Not "\"#FF0000\""
+      expect(
+          receivedProperties['circle-color'], '#FF0000'); // Not "\"#FF0000\""
       expect(receivedProperties['circle-stroke-width'], 2.5); // Not "2.5"
       expect(receivedProperties['circle-opacity'], 0.8); // Not "0.8"
     });

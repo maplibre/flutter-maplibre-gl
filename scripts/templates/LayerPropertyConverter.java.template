@@ -26,8 +26,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         {{#paint_properties}}
         {{^isFloatArrayProperty}}
@@ -37,7 +37,7 @@ class LayerPropertyConverter {
         {{/isPatternProperty}}
         {{#isPatternProperty}}
         case "{{value}}":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.{{valueAsCamelCase}}(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
@@ -46,7 +46,7 @@ class LayerPropertyConverter {
         {{/isFloatArrayProperty}}
         {{#isFloatArrayProperty}}
         case "{{value}}":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.{{valueAsCamelCase}}(floatArray));
@@ -70,7 +70,7 @@ class LayerPropertyConverter {
         {{/isFloatArrayProperty}}
         {{#requiresLiteral}}
         case "{{value}}":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.iconImage(expression));
@@ -78,15 +78,13 @@ class LayerPropertyConverter {
         {{/requiresLiteral}}
         {{#isVisibilityProperty}}
         case "{{value}}":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.{{valueAsCamelCase}}(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
           }
         {{/isVisibilityProperty}}
         {{#isFloatArrayProperty}}
         case "{{value}}":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.{{valueAsCamelCase}}(floatArray));

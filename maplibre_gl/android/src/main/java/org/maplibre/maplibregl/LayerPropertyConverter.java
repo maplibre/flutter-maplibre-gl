@@ -25,8 +25,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "icon-opacity":
           properties.add(PropertyFactory.iconOpacity(expression));
@@ -44,7 +44,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconHaloBlur(expression));
           break;
         case "icon-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.iconTranslate(floatArray));
@@ -74,7 +74,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textHaloBlur(expression));
           break;
         case "text-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.textTranslate(floatArray));
@@ -122,7 +122,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconTextFit(expression));
           break;
         case "icon-text-fit-padding":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.iconTextFitPadding(floatArray));
@@ -134,7 +134,7 @@ class LayerPropertyConverter {
           }
           break;
         case "icon-image":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.iconImage(expression));
@@ -150,7 +150,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconKeepUpright(expression));
           break;
         case "icon-offset":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.iconOffset(floatArray));
@@ -222,7 +222,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textTransform(expression));
           break;
         case "text-offset":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.textOffset(floatArray));
@@ -243,10 +243,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textOptional(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -263,8 +261,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "circle-radius":
           properties.add(PropertyFactory.circleRadius(expression));
@@ -279,7 +277,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleOpacity(expression));
           break;
         case "circle-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.circleTranslate(floatArray));
@@ -312,10 +310,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleSortKey(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -332,8 +328,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "line-opacity":
           properties.add(PropertyFactory.lineOpacity(expression));
@@ -342,7 +338,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineColor(expression));
           break;
         case "line-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.lineTranslate(floatArray));
@@ -369,7 +365,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineBlur(expression));
           break;
         case "line-dasharray":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.lineDasharray(floatArray));
@@ -381,7 +377,7 @@ class LayerPropertyConverter {
           }
           break;
         case "line-pattern":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.linePattern(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.linePattern(expression));
@@ -406,10 +402,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineSortKey(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -426,8 +420,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "fill-antialias":
           properties.add(PropertyFactory.fillAntialias(expression));
@@ -442,7 +436,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillOutlineColor(expression));
           break;
         case "fill-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.fillTranslate(floatArray));
@@ -457,7 +451,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillTranslateAnchor(expression));
           break;
         case "fill-pattern":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.fillPattern(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.fillPattern(expression));
@@ -467,10 +461,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillSortKey(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -487,8 +479,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "fill-extrusion-opacity":
           properties.add(PropertyFactory.fillExtrusionOpacity(expression));
@@ -497,7 +489,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionColor(expression));
           break;
         case "fill-extrusion-translate":
-          if (jsonElement.isJsonArray()) {
+          if (jsonElement != null && jsonElement.isJsonArray()) {
             final Float[] floatArray = convertJsonToFloatArray(jsonElement);
             if (floatArray != null) {
               properties.add(PropertyFactory.fillExtrusionTranslate(floatArray));
@@ -512,7 +504,7 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionTranslateAnchor(expression));
           break;
         case "fill-extrusion-pattern":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.fillExtrusionPattern(jsonElement.getAsString()));
           } else {
             properties.add(PropertyFactory.fillExtrusionPattern(expression));
@@ -528,10 +520,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionVerticalGradient(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -548,8 +538,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "raster-opacity":
           properties.add(PropertyFactory.rasterOpacity(expression));
@@ -576,10 +566,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.rasterFadeDuration(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -596,8 +584,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "hillshade-illumination-direction":
           properties.add(PropertyFactory.hillshadeIlluminationDirection(expression));
@@ -618,10 +606,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.hillshadeAccentColor(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -638,8 +624,8 @@ class LayerPropertyConverter {
     final Gson gson = new Gson();
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      final JsonElement jsonElement = gson.toJsonTree(entry.getValue());
-      Expression expression = Expression.Converter.convert(jsonElement);
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
         case "heatmap-radius":
           properties.add(PropertyFactory.heatmapRadius(expression));
@@ -657,10 +643,8 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.heatmapOpacity(expression));
           break;
         case "visibility":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
-          } else {
-            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
