@@ -172,7 +172,7 @@ Map<String, dynamic> buildStyleProperty(
     'isFloatArrayProperty': typeDart == "List" && nestedTypeDart == "double",
     'isVisibilityProperty': key == "visibility",
     'isPatternProperty': key.endsWith("-pattern"),
-    'requiresLiteral': key == "icon-image",
+    'requiresLiteral': key == "icon-image" || key == "text-field",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),
     'iosAsCamelCase': renamedIosProperties[camelCase],
     'doc': value["doc"],

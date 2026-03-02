@@ -58,9 +58,6 @@ typedef OnCameraIdleCallback = void Function();
 
 typedef OnMapIdleCallback = void Function();
 
-@Deprecated('MaplibreMapController was renamed to MapLibreMapController.')
-typedef MaplibreMapController = MapLibreMapController;
-
 /// Controller for a single [MapLibreMap] instance running on the host platform.
 ///
 /// Some of its methods can only be called after the [onStyleLoaded] callback has been invoked.
@@ -319,11 +316,6 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive mouse move events over the map.
   /// Provides cursor position (screen point and geographic coordinates).
   final onMapMouseMove = <OnMapMouseMoveCallback>[];
-
-  /// Callbacks to receive tap events for info windows on symbols
-  @Deprecated("InfoWindow tapped is no longer supported")
-  final ArgumentCallbacks<Symbol> onInfoWindowTapped =
-      ArgumentCallbacks<Symbol>();
 
   /// The current set of symbols on this map added with the [addSymbol] or [addSymbols] methods.
   ///
@@ -1592,12 +1584,6 @@ class MapLibreMapController extends ChangeNotifier {
         imageSourceId, bytes, coordinates);
   }
 
-  /// Removes previously added image source by id
-  @Deprecated("This method was renamed to removeSource")
-  Future<void> removeImageSource(String imageSourceId) {
-    return _maplibrePlatform.removeSource(imageSourceId);
-  }
-
   /// Removes previously added source by id
   Future<void> removeSource(String sourceId) {
     return _maplibrePlatform.removeSource(sourceId);
@@ -1611,15 +1597,6 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
   Future<void> addImageLayerBelow(
-      String layerId, String sourceId, String imageSourceId,
-      {double? minzoom, double? maxzoom}) {
-    return _maplibrePlatform.addLayerBelow(
-        layerId, sourceId, imageSourceId, minzoom, maxzoom);
-  }
-
-  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
-  @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
-  Future<void> addLayerBelow(
       String layerId, String sourceId, String imageSourceId,
       {double? minzoom, double? maxzoom}) {
     return _maplibrePlatform.addLayerBelow(
