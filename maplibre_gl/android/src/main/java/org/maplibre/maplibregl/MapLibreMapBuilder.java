@@ -16,7 +16,7 @@ import io.flutter.plugin.common.BinaryMessenger;
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
   private final MapLibreMapOptions options =
-      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(false);
+      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
@@ -262,10 +262,9 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     options.translucentTextureSurface(translucentTextureSurface);
-    // TextureMode (TextureView) is required for translucent surfaces and also prevents
-    // the map from turning black during resize operations. Enabled together with
-    // translucentTextureSurface; disable both only when maximum SurfaceView performance
-    // is needed and resize-without-flicker is not required.
-    options.textureMode(translucentTextureSurface);
+    // TextureView (textureMode=true) is always used to prevent the map from turning black
+    // during resize operations. SurfaceView destroys and recreates its surface on resize,
+    // causing a brief black flash. TextureView renders as a standard view and resizes
+    // without this artifact. translucentTextureSurface controls only transparency.
   }
 }
