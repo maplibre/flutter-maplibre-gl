@@ -110,8 +110,8 @@ class FillOptions {
       addIfPresent(
           'geometry',
           geometry
-              ?.map((List<LatLng> latLngList) =>
-                  latLngList.map((LatLng latLng) => latLng.toJson()).toList())
+              ?.map((latLngList) =>
+                  latLngList.map((latLng) => latLng.toJson()).toList())
               .toList());
     }
     addIfPresent('draggable', draggable);
@@ -125,8 +125,8 @@ class FillOptions {
       "geometry": {
         "type": "Polygon",
         "coordinates": geometry!
-            .map((List<LatLng> latLngList) => latLngList
-                .map((LatLng latLng) => latLng.toGeoJsonCoordinates())
+            .map((latLngList) => latLngList
+                .map((latLng) => latLng.toGeoJsonCoordinates())
                 .toList())
             .toList()
       }

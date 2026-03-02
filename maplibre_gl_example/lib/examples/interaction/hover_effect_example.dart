@@ -134,8 +134,8 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
     // Listen to mouse move events and query features manually
     // NOTE: You could also use onFeatureHover listener for annotation layers
     _controller!.onMapMouseMove.add((
-      math.Point<double> point,
-      LatLng coordinates,
+      point,
+      coordinates,
     ) {
       unawaited(_handleMouseMove(point));
     });

@@ -217,7 +217,7 @@ class ExampleSegmentedButton<T> extends StatelessWidget {
               ))
           .toList(),
       selected: {selected},
-      onSelectionChanged: (Set<T> newSelection) {
+      onSelectionChanged: (newSelection) {
         if (newSelection.isNotEmpty) {
           onSelectionChanged(newSelection.first);
         }
