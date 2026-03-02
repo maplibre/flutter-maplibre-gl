@@ -126,6 +126,8 @@ extension MarkerJsImplExtension on MarkerJsImpl {
 @JS()
 @staticInterop
 class MarkerOptionsJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory MarkerOptionsJsImpl() => createJsObject() as MarkerOptionsJsImpl;
 }
 

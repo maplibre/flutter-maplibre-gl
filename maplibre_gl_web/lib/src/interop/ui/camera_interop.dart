@@ -23,6 +23,8 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 @JS()
 @staticInterop
 class CameraOptionsJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory CameraOptionsJsImpl() => createJsObject() as CameraOptionsJsImpl;
 }
 
@@ -59,6 +61,8 @@ extension CameraOptionsJsImplExtension on CameraOptionsJsImpl {
 @staticInterop
 class AnimationOptionsJsImpl {
   factory AnimationOptionsJsImpl() =>
+      // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+      // ignore: invalid_runtime_check_with_js_interop_types
       createJsObject() as AnimationOptionsJsImpl;
 }
 
@@ -90,6 +94,8 @@ extension AnimationOptionsJsImplExtension on AnimationOptionsJsImpl {
 @JS()
 @staticInterop
 class PaddingOptionsJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory PaddingOptionsJsImpl() => createJsObject() as PaddingOptionsJsImpl;
 }
 

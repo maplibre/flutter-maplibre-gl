@@ -128,8 +128,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (
-            BuildContext context,
-            PlatformViewController controller,
+            context,
+            controller,
           ) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
@@ -138,7 +138,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
+          onCreatePlatformView: (params) {
             final controller = PlatformViewsService.initAndroidView(
               id: params.id,
               viewType: 'plugins.flutter.io/maplibre_gl',

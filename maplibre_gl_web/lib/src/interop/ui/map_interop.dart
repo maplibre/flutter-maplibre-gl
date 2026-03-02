@@ -968,6 +968,8 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
 @JS()
 @staticInterop
 class MapOptionsJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory MapOptionsJsImpl() => createJsObject() as MapOptionsJsImpl;
 }
 
@@ -1166,6 +1168,8 @@ extension MapOptionsJsImplExtension on MapOptionsJsImpl {
 @staticInterop
 class RequestParametersJsImpl {
   factory RequestParametersJsImpl() =>
+      // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+      // ignore: invalid_runtime_check_with_js_interop_types
       createJsObject() as RequestParametersJsImpl;
 }
 

@@ -189,6 +189,8 @@ extension PopupJsImplExtension on PopupJsImpl {
 @JS()
 @staticInterop
 class PopupOptionsJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory PopupOptionsJsImpl() => createJsObject() as PopupOptionsJsImpl;
 }
 

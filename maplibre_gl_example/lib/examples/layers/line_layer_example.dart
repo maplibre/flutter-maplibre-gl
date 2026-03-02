@@ -443,7 +443,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                     value: _linePattern != null,
                     title: const Text('Line Pattern'),
                     subtitle: Text(_linePattern ?? 'None'),
-                    onChanged: (bool value) async {
+                    onChanged: (value) async {
                       setState(() {
                         _linePattern = value ? 'marker-pattern' : null;
                       });

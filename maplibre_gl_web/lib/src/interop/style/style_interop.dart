@@ -158,6 +158,8 @@ extension StyleJsImplExtension on StyleJsImpl {
 @JS()
 @staticInterop
 class StyleFunctionJsImpl {
+  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
+  // ignore: invalid_runtime_check_with_js_interop_types
   factory StyleFunctionJsImpl() => createJsObject() as StyleFunctionJsImpl;
 }
 

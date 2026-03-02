@@ -217,7 +217,7 @@ class LineManager extends AnnotationManager<Line> {
     super.controller, {
     super.enableInteraction = true,
   }) : super(
-          selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
+          selectLayer: (line) => line.options.linePattern == null ? 0 : 1,
         );
 
   static const _baseProperties = LineLayerProperties(
@@ -243,7 +243,7 @@ class FillManager extends AnnotationManager<Fill> {
     super.controller, {
     super.enableInteraction = true,
   }) : super(
-          selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
+          selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1,
         );
 
   @override

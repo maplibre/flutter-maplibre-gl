@@ -285,7 +285,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
                             value: 'viewport', label: Text('Viewport')),
                       ],
                       selected: {_fillTranslateAnchor},
-                      onSelectionChanged: (Set<String> selected) async {
+                      onSelectionChanged: (selected) async {
                         setState(() => _fillTranslateAnchor = selected.first);
                         await _updateLayer();
                       },
@@ -300,7 +300,7 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
                     value: _fillPattern != null,
                     title: const Text('Fill Pattern'),
                     subtitle: Text(_fillPattern ?? 'None'),
-                    onChanged: (bool value) async {
+                    onChanged: (value) async {
                       setState(() {
                         _fillPattern = value ? 'marker-pattern' : null;
                       });

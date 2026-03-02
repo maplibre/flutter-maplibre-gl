@@ -17,7 +17,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
         const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (MethodCall methodCall) async {
+        (methodCall) async {
           methodCalls.add(methodCall);
           return null;
         },

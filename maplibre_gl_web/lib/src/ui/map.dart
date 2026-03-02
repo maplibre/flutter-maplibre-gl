@@ -497,6 +497,8 @@ class MapLibreMap extends Camera {
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) {
     final styleJs =
+        // @staticInterop jsObject is representationally a JSObject/JSAny.
+        // ignore: invalid_runtime_check_with_js_interop_types
         style is Style ? style.jsObject as JSAny : utils.jsify(style);
     final optionsJs = utils.jsify(options);
     return MapLibreMap.fromJsObject(jsObject.setStyle(styleJs, optionsJs));
@@ -1322,6 +1324,8 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
       if (style is String) {
         jsImpl.style = style.toJS;
       } else if (style is Style) {
+        // @staticInterop jsObject is representationally a JSObject/JSAny.
+        // ignore: invalid_runtime_check_with_js_interop_types
         jsImpl.style = style.jsObject as JSAny;
       } else if (style is Map) {
         jsImpl.style = style.jsify();
