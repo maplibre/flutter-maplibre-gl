@@ -88,6 +88,13 @@ class MapLibreMap extends StatefulWidget {
   /// Enable translucent texture surface for the map.
   /// This allows the map to have a transparent background, useful for overlay scenarios.
   ///
+  /// Note: On Android, the map always uses [TextureView] (i.e. `textureMode = true`)
+  /// regardless of this setting. [TextureView] is required to prevent the map from
+  /// turning black during resize operations, because [SurfaceView] destroys and
+  /// recreates its surface on every resize, briefly exposing a black background.
+  /// This setting only controls whether the [TextureView] surface itself is rendered
+  /// with translucency; it does **not** switch between [TextureView] and [SurfaceView].
+  ///
   /// **Available only on Android. Has no effect on iOS or Web.**
   final bool translucentTextureSurface;
 

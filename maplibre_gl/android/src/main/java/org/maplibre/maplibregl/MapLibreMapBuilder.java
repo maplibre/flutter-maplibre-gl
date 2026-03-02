@@ -15,6 +15,17 @@ import io.flutter.plugin.common.BinaryMessenger;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
+  // textureMode=true forces TextureView rendering unconditionally.
+  // TextureView and SurfaceView are independent concerns from translucentTextureSurface:
+  //   - textureMode (TextureView vs SurfaceView): TextureView is needed to prevent the map
+  //     from turning black during resize. SurfaceView owns a separate window layer; on
+  //     resize Android destroys and recreates that surface, briefly showing black underneath.
+  //     TextureView is a normal View backed by a SurfaceTexture; it is composited by the
+  //     hardware composer as part of the regular view hierarchy and resizes without any flash.
+  //   - translucentTextureSurface: controls only whether the TextureView surface is marked
+  //     as translucent (alpha channel), useful for map-overlay use-cases.
+  // These two settings must NOT be coupled: transparency has nothing to do with whether
+  // SurfaceView or TextureView is used.
   private final MapLibreMapOptions options =
       new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(true);
   private boolean trackCameraPosition = false;
