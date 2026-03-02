@@ -10,8 +10,6 @@ import 'package:maplibre_gl_web/src/interop/util/evented_interop.dart';
 @staticInterop
 class GeolocateControlOptionsJsImpl {
   factory GeolocateControlOptionsJsImpl() =>
-      // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
-      // ignore: invalid_runtime_check_with_js_interop_types
       createJsObject() as GeolocateControlOptionsJsImpl;
 }
 
@@ -36,8 +34,6 @@ extension GeolocateControlOptionsJsImplExtension
 @JS()
 @staticInterop
 class PositionOptionsJsImpl {
-  // @staticInterop types wrap JSObject; cast is safe for plain JS objects.
-  // ignore: invalid_runtime_check_with_js_interop_types
   factory PositionOptionsJsImpl() => createJsObject() as PositionOptionsJsImpl;
 }
 

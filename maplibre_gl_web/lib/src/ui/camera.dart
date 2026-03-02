@@ -539,8 +539,6 @@ class Camera extends Evented {
   MapLibreMap flyTo(dynamic options, [String? eventData]) {
     JSAny optionsJs;
     if (options is CameraOptions) {
-      // @staticInterop jsObject is representationally a JSObject/JSAny.
-      // ignore: invalid_runtime_check_with_js_interop_types
       optionsJs = options.jsObject as JSAny;
     } else if (options is Map) {
       optionsJs = utils.jsify(options)!;
