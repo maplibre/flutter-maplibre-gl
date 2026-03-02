@@ -1,3 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
   package="org.maplibre.maplibregl">
+  
+  <!-- Remove OfflineActivity from the offline plugin as it's not needed for Flutter -->
+  <application>
+    <activity
+        android:name="org.maplibre.android.plugins.offline.ui.OfflineActivity"
+        tools:node="remove" />
+  </application>
 </manifest>

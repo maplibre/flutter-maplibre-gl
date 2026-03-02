@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
+import '../../shared/constants.dart';
 
 /// A page that demonstrates switching between multiple map styles in MapLibre GL.
 ///
@@ -36,7 +36,7 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   CameraPosition? _lastCamera;
 
   // Demo styles
-  static const String _remoteStyle = MapLibreStyles.demo;
+  static const String _remoteStyle = ExampleConstants.demoMapStyle;
   static const String _embeddedMinimalStyle =
       '{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
@@ -54,12 +54,12 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     setState(() => _isSwitching = true);
 
     final entry = _styles[index];
-    log('Switching to style: ${entry.label}');
 
     try {
       await _controller!.setStyle(entry.styleString);
     } catch (e, st) {
-      log('Failed to set style ${entry.label}: $e', stackTrace: st);
+      print(
+          'MultiStyleSwitchPage: Failed to set style ${entry.label}: $e\n$st');
       // Fallback to remote style
       await _controller!.setStyle(_remoteStyle);
       _currentIndex = 0;

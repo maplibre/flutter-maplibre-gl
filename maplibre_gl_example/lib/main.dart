@@ -22,6 +22,7 @@ import 'examples/camera/camera_bounds_example.dart';
 // Interaction examples
 import 'examples/interaction/map_controls_example.dart';
 import 'examples/interaction/map_gestures_example.dart';
+import 'examples/interaction/hover_effect_example.dart';
 
 // Annotations examples
 import 'examples/annotations/annotations_example.dart';
@@ -37,6 +38,7 @@ import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/various_sources.dart';
 
 // Advanced examples
+import 'examples/advanced/map_snapshot.dart';
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
@@ -87,6 +89,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
+  if (kIsWeb) const HoverEffectExample(),
 
   // Annotations
   const AnnotationsExample(),
@@ -102,6 +105,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const VariousSources(),
 
   // Advanced
+  const MapSnapshotPage(),
   const PMTilesPage(),
   const OfflineRegionsPage(),
   const TranslucentFullMapPage(),

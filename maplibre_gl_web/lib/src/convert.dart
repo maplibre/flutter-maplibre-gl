@@ -91,6 +91,22 @@ class Convert {
       sink.setAttributionButtonMargins(options['attributionButtonMargins'][0],
           options['attributionButtonMargins'][1]);
     }
+    if (options.containsKey('scaleControlEnabled')) {
+      sink.setScaleControlEnabled(options['scaleControlEnabled']);
+    }
+    if (options.containsKey('scaleControlPosition')) {
+      final position =
+          ScaleControlPosition.values[options['scaleControlPosition']];
+      sink.setScaleControlPosition(position);
+    }
+    if (options.containsKey('scaleControlUnit')) {
+      final unit = ScaleControlUnit.values[options['scaleControlUnit']];
+      sink.setScaleControlUnit(unit);
+    }
+    if (options.containsKey('featureTapsTriggersMapClick')) {
+      sink.setFeatureTapsTriggersMapClick(
+          options['featureTapsTriggersMapClick']);
+    }
   }
 
   static CameraOptions toCameraOptions(

@@ -10,6 +10,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var mapView: MLNMapView
     private var isMapReady = false
     private var dragEnabled = true
+    private var featureTapsTriggersMapClick = false
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
     private var mapReadyResult: FlutterResult?
@@ -170,7 +171,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     isFirstStyleLoad = false
                     if let channel = channel {
                         onStyleLoadedCalled = true
-                        channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        // Defer the callback to the next run loop iteration to avoid race conditions
+                        DispatchQueue.main.async {
+                            channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                        }
                     }
                 }
             } else {
@@ -506,7 +510,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
@@ -534,7 +538,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
@@ -561,7 +565,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "layer#setProperties":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
 
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
                 result(FlutterError(
@@ -601,7 +605,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
@@ -629,7 +633,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
@@ -657,7 +661,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
@@ -685,7 +689,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -708,7 +712,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -729,7 +733,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -1240,7 +1244,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         "lat": coordinate.latitude,
                         "layerId": result.layerId,
             ])
+            // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+            if featureTapsTriggersMapClick {
+                channel?.invokeMethod("map#onMapClick", arguments: [
+                    "x": point.x,
+                    "y": point.y,
+                    "lng": coordinate.longitude,
+                    "lat": coordinate.latitude,
+                ])
+            }
         } else {
+            // Always fire map#onMapClick when no feature is tapped
             channel?.invokeMethod("map#onMapClick", arguments: [
                 "x": point.x,
                 "y": point.y,
@@ -1385,7 +1399,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let channel = channel {
                 onStyleLoadedCalled = true
-                channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                // Defer the callback to the next run loop iteration to avoid race conditions
+                // where the map's internal state is not fully ready for operations like camera animations
+                DispatchQueue.main.async {
+                    channel.invokeMethod("map#onStyleLoaded", arguments: nil)
+                }
             }
         }
     }
@@ -1441,7 +1459,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maximumZoomLevel: Double?,
         filter: String?,
         enableInteraction: Bool,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1487,7 +1505,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maximumZoomLevel: Double?,
         filter: String?,
         enableInteraction: Bool,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1530,7 +1548,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maximumZoomLevel: Double?,
         filter: String?,
         enableInteraction: Bool,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1573,7 +1591,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maximumZoomLevel: Double?,
         filter: String?,
         enableInteraction: Bool,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1621,7 +1639,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maximumZoomLevel: Double?,
         filter: String?,
         enableInteraction: Bool,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1687,7 +1705,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         belowLayerId: String?,
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1719,7 +1737,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         belowLayerId: String?,
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
-        properties: [String: String]
+        properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -1751,7 +1769,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         belowLayerId: String?,
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
-        properties: [String: String]
+        properties: [String: Any]
     )  -> Result<Void, MethodCallError>  {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
         case .failure(let error):
@@ -2098,6 +2116,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setFeatureTapsTriggersMapClick(triggers: Bool) {
+        featureTapsTriggersMapClick = triggers
     }
 }
 
