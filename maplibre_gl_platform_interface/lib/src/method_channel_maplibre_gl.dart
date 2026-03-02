@@ -128,8 +128,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (
-            BuildContext context,
-            PlatformViewController controller,
+            context,
+            controller,
           ) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
@@ -138,7 +138,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
+          onCreatePlatformView: (params) {
             final controller = PlatformViewsService.initAndroidView(
               id: params.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
@@ -716,7 +716,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -739,18 +738,14 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
   @override
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
-    await _channel.invokeMethod('layer#setProperties', <String, dynamic>{
-      'layerId': layerId,
-      'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
-    });
+    await _channel.invokeMethod('layer#setProperties',
+        <String, dynamic>{'layerId': layerId, 'properties': properties});
   }
 
   @override
@@ -772,7 +767,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -795,7 +789,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -818,7 +811,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'filter': jsonEncode(filter),
       'enableInteraction': enableInteraction,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -850,7 +842,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -868,7 +859,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
@@ -886,7 +876,6 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties
-          .map((key, value) => MapEntry<String, String>(key, jsonEncode(value)))
     });
   }
 
