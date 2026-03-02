@@ -71,9 +71,9 @@ class LayerPropertyConverter {
         {{#requiresLiteral}}
         case "{{value}}":
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
-            properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(jsonElement.getAsString()));
           } else {
-            properties.add(PropertyFactory.iconImage(expression));
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
           }
         {{/requiresLiteral}}
         {{#isVisibilityProperty}}

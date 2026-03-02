@@ -174,7 +174,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textRotationAlignment(expression));
           break;
         case "text-field":
-          properties.add(PropertyFactory.textField(expression));
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.textField(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.textField(expression));
+          }
           break;
         case "text-font":
           properties.add(PropertyFactory.textFont(expression));

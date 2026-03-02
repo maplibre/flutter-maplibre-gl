@@ -327,7 +327,7 @@ class LayerPropertyConverter {
                 case "visibility":
                     if !(propertyValue is NSNull) {
                         if let visibilityValue = propertyValue as? String {
-                        fillExtrusionLayer.isVisible = visibilityValue == "visible"
+                            fillExtrusionLayer.isVisible = visibilityValue == "visible"
                         }
                     }
              
@@ -478,41 +478,40 @@ class LayerPropertyConverter {
         }
 
         if let offset = json as? [Any]{
-                // checks on the value of property that are literal expressions
-                if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
-                    if let vector = offset.last as? [Any]{
-                        if(vector.count == 2) {
-                            if isOffset || isTranslate {
-                                // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                                // a proper Expression if the data of a literal is an array destined for a CGVector
-                                if let x = vector.first as? Double, let y = vector.last as? Double {
-                                    return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
-                                }
+            // checks on the value of property that are literal expressions
+            if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
+                if let vector = offset.last as? [Any]{
+                    if(vector.count == 2) {
+                        if isOffset || isTranslate {
+                            // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                            // a proper Expression if the data of a literal is an array destined for a CGVector
+                            if let x = vector.first as? Double, let y = vector.last as? Double {
+                                return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
                             }
-                            return NSExpression.init(mglJSONObject: json)
                         }
-                    }
-                // checks on the value of properties that are arrays
-                } else if offset.count == 2, let x = offset.first as? Double, let y = offset.last as? Double {
-                    if isOffset || isTranslate {
-                        // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                        // a proper Expression if the data of an array is destined for a CGVector
-                        return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
-                    }
-                    // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                    // a proper Expression if the data is an array of double
-                    return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
-                } else {
-                    // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
-                    // Convert to array of NSNumbers for proper expression creation
-                    let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
-                    if numbers.count == offset.count {
-                        return NSExpression(forConstantValue: numbers)
+                        return NSExpression.init(mglJSONObject: json)
                     }
                 }
+            // checks on the value of properties that are arrays
+            } else if offset.count == 2, let x = offset.first as? Double, let y = offset.last as? Double {
+                if isOffset || isTranslate {
+                    // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                    // a proper Expression if the data of an array is destined for a CGVector
+                    return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
+                }
+                // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                // a proper Expression if the data is an array of double
+                return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
+            } else {
+                // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
+                // Convert to array of NSNumbers for proper expression creation
+                let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
+                if numbers.count == offset.count {
+                    return NSExpression(forConstantValue: numbers)
+                }
             }
-            
-            return NSExpression.init(mglJSONObject: json)
         }
+        
+        return NSExpression.init(mglJSONObject: json)
     }
 }
