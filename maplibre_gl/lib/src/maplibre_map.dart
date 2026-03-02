@@ -31,6 +31,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.featureTapsTriggersMapClick = false,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
@@ -42,6 +43,9 @@ class MapLibreMap extends StatefulWidget {
     this.compassViewMargins,
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
+    this.scaleControlEnabled = false,
+    this.scaleControlPosition = ScaleControlPosition.bottomLeft,
+    this.scaleControlUnit = ScaleControlUnit.metric,
     this.iosLongClickDuration,
     this.webPreserveDrawingBuffer = false,
     this.onMapClick,
@@ -132,6 +136,13 @@ class MapLibreMap extends StatefulWidget {
   /// Disable to avoid performance issues that from the drag event listeners.
   /// Biggest impact in android
   final bool dragEnabled;
+
+  /// Whether tapping on a feature also triggers the map click event.
+  /// Defaults to `false`.
+  ///
+  /// If `true`, both the feature tap and `onMapClick` events will fire when tapping a feature.
+  /// If `false`, only the feature tap event fires, and `onMapClick` is not called.
+  final bool featureTapsTriggersMapClick;
 
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
@@ -236,6 +247,21 @@ class MapLibreMap extends StatefulWidget {
   /// the layout between iOS and Android, since the underlying frameworks have
   /// different defaults.
   final Point? attributionButtonMargins;
+
+  /// True if the scale control should be shown on the map.
+  /// Defaults to false.
+  /// **Web only** - has no effect on other platforms.
+  final bool scaleControlEnabled;
+
+  /// Set the position for the Scale Control.
+  /// Defaults to [ScaleControlPosition.bottomLeft].
+  /// **Web only** - has no effect on other platforms.
+  final ScaleControlPosition scaleControlPosition;
+
+  /// Set the unit for the Scale Control.
+  /// Defaults to [ScaleControlUnit.metric].
+  /// **Web only** - has no effect on other platforms.
+  final ScaleControlUnit scaleControlUnit;
 
   /// Which gestures should be consumed by the map.
   ///
@@ -408,9 +434,13 @@ class _MapLibreMapOptions {
       this.compassViewMargins,
       this.attributionButtonPosition,
       this.attributionButtonMargins,
+      this.scaleControlEnabled,
+      this.scaleControlPosition,
+      this.scaleControlUnit,
       this.locationEnginePlatforms,
       this.foregroundLoadColor,
-      this.translucentTextureSurface});
+      this.translucentTextureSurface,
+      this.featureTapsTriggersMapClick});
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
       : this(
@@ -436,8 +466,12 @@ class _MapLibreMapOptions {
           compassViewMargins: map.compassViewMargins,
           attributionButtonPosition: map.attributionButtonPosition,
           attributionButtonMargins: map.attributionButtonMargins,
+          scaleControlEnabled: map.scaleControlEnabled,
+          scaleControlPosition: map.scaleControlPosition,
+          scaleControlUnit: map.scaleControlUnit,
           foregroundLoadColor: map.foregroundLoadColor,
           translucentTextureSurface: map.translucentTextureSurface,
+          featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
         );
 
   final bool? compassEnabled;
@@ -480,11 +514,19 @@ class _MapLibreMapOptions {
 
   final Point? attributionButtonMargins;
 
+  final bool? scaleControlEnabled;
+
+  final ScaleControlPosition? scaleControlPosition;
+
+  final ScaleControlUnit? scaleControlUnit;
+
   final LocationEnginePlatforms? locationEnginePlatforms;
 
   final Color? foregroundLoadColor;
 
   final bool? translucentTextureSurface;
+
+  final bool? featureTapsTriggersMapClick;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -534,9 +576,13 @@ class _MapLibreMapOptions {
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
         'attributionButtonMargins', pointToArray(attributionButtonMargins));
+    addIfNonNull('scaleControlEnabled', scaleControlEnabled);
+    addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
+    addIfNonNull('scaleControlUnit', scaleControlUnit?.index);
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
+    addIfNonNull('featureTapsTriggersMapClick', featureTapsTriggersMapClick);
     return optionsMap;
   }
 

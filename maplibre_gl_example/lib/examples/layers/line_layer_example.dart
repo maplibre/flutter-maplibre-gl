@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -83,7 +82,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
         ExampleConstants.markerPatternPath,
       );
     } catch (e) {
-      dev.log('Error loading pattern images: $e');
+      print('LineLayerExample: Error loading pattern images: $e');
     }
   }
 
@@ -114,7 +113,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
 
       setState(() {});
     } catch (e) {
-      dev.log('Error adding line layer: $e');
+      print('LineLayerExample: Error adding line layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding line layer: $e')),
@@ -176,7 +175,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
         ),
       );
     } catch (e) {
-      dev.log('Error updating line layer: $e');
+      print('LineLayerExample: Error updating line layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating layer: $e')),
@@ -579,7 +578,6 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
 
     // Only update if a selection was made (not cancelled)
     if (result != null && result is _LineDashStyle) {
-      dev.log('Selected dash style: ${result.label}');
       setState(() => _lineDasharray = result);
       await _updateLayer();
     }
