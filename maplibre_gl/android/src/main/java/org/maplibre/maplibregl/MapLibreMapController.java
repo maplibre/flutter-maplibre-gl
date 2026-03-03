@@ -1980,6 +1980,8 @@ final class MapLibreMapController
       // Always fire map#onMapClick when no feature is tapped
       methodChannel.invokeMethod("map#onMapClick", arguments);
     }
+    // Always fire map#onMapClick for all map clicks
+    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
