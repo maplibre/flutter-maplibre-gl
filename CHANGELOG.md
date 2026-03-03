@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 ### Breaking
@@ -12,6 +13,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Removed deprecated `onInfoWindowTapped` callback from `MapLibreMapController`.
 * Removed deprecated `removeImageSource` method. Use `removeSource` instead.
 * Removed deprecated `addLayerBelow` method. Use `addImageLayerBelow` instead.
+
+### Added
+* iOS: Implemented `setMaximumFps` to control the preferred frame rate (#514).
 
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 

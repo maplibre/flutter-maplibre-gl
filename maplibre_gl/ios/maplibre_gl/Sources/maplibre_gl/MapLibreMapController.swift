@@ -305,6 +305,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
             result(telemetryEnabled)
         case "map#setMaximumFps":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            if let fps = arguments["fps"] as? Int {
+                mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
+            }
             result(nil)
         case "map#forceOnlineMode":
             // Force online mode by ensuring network requests are enabled
