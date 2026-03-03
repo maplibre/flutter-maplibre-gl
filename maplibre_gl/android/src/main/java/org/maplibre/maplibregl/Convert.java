@@ -321,5 +321,9 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (translucentTextureSurface != null) {
       sink.setTranslucentTextureSurface(toBoolean(translucentTextureSurface));
     }
+    final Object featureTapsTriggersMapClick = data.get("featureTapsTriggersMapClick");
+    if (featureTapsTriggersMapClick != null) {
+      sink.setFeatureTapsTriggersMapClick(toBoolean(featureTapsTriggersMapClick));
+    }
   }
 }
