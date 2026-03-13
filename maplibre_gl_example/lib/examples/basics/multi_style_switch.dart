@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
+import '../../shared/constants.dart';
 
 /// A page that demonstrates switching between multiple map styles in MapLibre GL.
 ///
@@ -36,9 +36,9 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   CameraPosition? _lastCamera;
 
   // Demo styles
-  static const String _remoteStyle = MapLibreStyles.demo;
+  static const String _remoteStyle = ExampleConstants.demoMapStyle;
   static const String _embeddedMinimalStyle =
-      '{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
+      '{"version":8,"glyphs":"https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
   static const String _osmAssetStyle = 'assets/osm_style.json';
 
@@ -54,12 +54,12 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     setState(() => _isSwitching = true);
 
     final entry = _styles[index];
-    log('Switching to style: ${entry.label}');
 
     try {
       await _controller!.setStyle(entry.styleString);
     } catch (e, st) {
-      log('Failed to set style ${entry.label}: $e', stackTrace: st);
+      print(
+          'MultiStyleSwitchPage: Failed to set style ${entry.label}: $e\n$st');
       // Fallback to remote style
       await _controller!.setStyle(_remoteStyle);
       _currentIndex = 0;
@@ -77,13 +77,15 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     }
   }
 
-  void _onMapCreated(MapLibreMapController c) {
-    _controller = c;
+  Future<void> _onMapCreated(MapLibreMapController c) async {
+    setState(() => _controller = c);
     c.addListener(() {
       // Listen to camera changes to keep track of last position.
       if (!c.isCameraMoving) return;
       _lastCamera = c.cameraPosition;
     });
+    // Apply the initial style
+    await _applyStyle(_currentIndex);
   }
 
   void _onCameraIdle() {

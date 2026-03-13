@@ -112,8 +112,8 @@ class LineOptions {
     addIfPresent('lineBlur', lineBlur);
     addIfPresent('linePattern', linePattern);
     if (addGeometry) {
-      addIfPresent('geometry',
-          geometry?.map((LatLng latLng) => latLng.toJson()).toList());
+      addIfPresent(
+          'geometry', geometry?.map((latLng) => latLng.toJson()).toList());
     }
     addIfPresent('draggable', draggable);
     return json;

@@ -38,4 +38,12 @@ abstract class MapLibreMapOptionsSink {
   void setAttributionButtonAlignment(AttributionButtonPosition position);
 
   void setAttributionButtonMargins(int x, int y);
+
+  void setScaleControlEnabled(bool enabled);
+
+  void setScaleControlPosition(ScaleControlPosition position);
+
+  void setScaleControlUnit(ScaleControlUnit unit);
+
+  void setFeatureTapsTriggersMapClick(bool triggers);
 }

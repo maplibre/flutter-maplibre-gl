@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -91,7 +90,7 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
 
       setState(() {});
     } catch (e) {
-      dev.log('Error adding circle layer: $e');
+      print('CircleLayerExample: Error adding circle layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding circle layer: $e')),
@@ -142,7 +141,7 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
         ),
       );
     } catch (e) {
-      dev.log('Error updating circle layer: $e');
+      print('CircleLayerExample: Error updating circle layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating circle layer: $e')),

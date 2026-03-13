@@ -7,6 +7,7 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
 import 'package:maplibre_gl_web/src/interop/js.dart';
+import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dart';
 import 'package:maplibre_gl_web/src/interop/style/style_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/camera_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/handler/box_zoom_interop.dart';
@@ -821,7 +822,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  external void setFeatureState(JSAny feature, JSAny state);
+  external void setFeatureState(FeatureIdentifierJsImpl feature, JSAny state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
   ///  source is specified, removes all states of that source. If
@@ -836,7 +837,8 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  external void removeFeatureState(JSAny target, [String? key]);
+  external void removeFeatureState(FeatureIdentifierJsImpl target,
+      [String? key]);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
@@ -850,7 +852,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///   required.*
   ///
   ///  @returns {Object} The state of the feature.
-  external JSAny getFeatureState(JSAny feature);
+  external JSAny getFeatureState(FeatureIdentifierJsImpl feature);
 
   ///  Returns the map's containing HTML element.
   ///
