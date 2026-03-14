@@ -113,6 +113,12 @@ class MapLibreMap extends StatefulWidget {
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
+  ///
+  /// **Web note (MapLibre GL JS v5+):** If the map style contains camera
+  /// properties (`center`, `zoom`, `bearing`, `pitch`), the style values take
+  /// priority and this parameter is ignored. To override the style's camera on
+  /// web, call [MapLibreMapController.moveCamera] or
+  /// [MapLibreMapController.animateCamera] after the map is loaded.
   final CameraPosition initialCameraPosition;
 
   /// How long a user has to click the map **on iOS** until a long click is registered.

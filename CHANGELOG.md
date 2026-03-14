@@ -17,6 +17,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Added
 * iOS: Implemented `setMaximumFps` to control the preferred frame rate (#514).
 
+### Changed
+* Web: Upgraded MapLibre GL JS from 4.7.1 to 5.20.1 (#651).
+  * **Breaking (web)**: `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). In MapLibre GL JS v5, style-defined camera values take priority over constructor options. To override the style's camera on web, call `jumpTo()` or `animateCamera()` after the map is loaded.
+  * Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes` (v5 breaking change).
+  * Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
+  * Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
+
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
 ### Added
