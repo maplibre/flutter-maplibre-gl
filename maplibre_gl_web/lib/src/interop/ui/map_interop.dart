@@ -965,6 +965,52 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   external String get version;
 }
 
+/// WebGL context attributes for MapLibre GL JS v5+.
+///
+/// These options were previously top-level `MapOptions` properties
+/// (`preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat`).
+/// In v5 they are grouped under `canvasContextAttributes`.
+@JS()
+@staticInterop
+class CanvasContextAttributesJsImpl {
+  factory CanvasContextAttributesJsImpl() =>
+      createJsObject() as CanvasContextAttributesJsImpl;
+}
+
+extension CanvasContextAttributesJsImplExtension
+    on CanvasContextAttributesJsImpl {
+  /// If `true`, the map's canvas can be exported to a PNG using
+  /// `map.getCanvas().toDataURL()`. Defaults to `false`.
+  external JSBoolean? get preserveDrawingBuffer;
+  external set preserveDrawingBuffer(JSBoolean? value);
+
+  /// If `true`, the GL context will be created with MSAA antialiasing,
+  /// which can be useful for antialiasing custom layers. Defaults to `false`.
+  external JSBoolean? get antialias;
+  external set antialias(JSBoolean? value);
+
+  /// If `true`, map creation will fail if the performance of MapLibre GL JS
+  /// would be dramatically worse than expected (i.e. a software renderer
+  /// would be used). Defaults to `false`.
+  external JSBoolean? get failIfMajorPerformanceCaveat;
+  external set failIfMajorPerformanceCaveat(JSBoolean? value);
+
+  /// The WebGL context type to request. Defaults to `'webgl2withfallback'`.
+  /// Accepted values: `'webgl2'`, `'webgl'`, `'webgl2withfallback'`.
+  external JSString? get contextType;
+  external set contextType(JSString? value);
+
+  /// Hint to the browser about the preferred GPU power profile.
+  /// Defaults to `'high-performance'`.
+  external JSString? get powerPreference;
+  external set powerPreference(JSString? value);
+
+  /// If `true`, the drawing buffer is not cleared after rendering,
+  /// enabling off-screen composition. Defaults to `false`.
+  external JSBoolean? get desynchronized;
+  external set desynchronized(JSBoolean? value);
+}
+
 @JS()
 @staticInterop
 class MapOptionsJsImpl {
@@ -1008,27 +1054,15 @@ extension MapOptionsJsImplExtension on MapOptionsJsImpl {
   external JSBoolean get attributionControl;
   external set attributionControl(JSBoolean value);
 
-  /// String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
-  /// `String` or `List<String>`
-  external JSAny get customAttribution;
-  external set customAttribution(JSAny value);
-
   /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   external JSString get logoPosition;
   external set logoPosition(JSString value);
 
-  /// If `true`, map creation will fail if the performance of MapLibre
-  /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
-  external JSBoolean get failIfMajorPerformanceCaveat;
-  external set failIfMajorPerformanceCaveat(JSBoolean value);
-
-  /// If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
-  external JSBoolean get preserveDrawingBuffer;
-  external set preserveDrawingBuffer(JSBoolean value);
-
-  /// If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
-  external JSBoolean get antialias;
-  external set antialias(JSBoolean value);
+  /// WebGL context attributes to pass to the canvas. In MapLibre GL JS v5+,
+  /// `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat`
+  /// are configured here instead of as top-level MapOptions.
+  external CanvasContextAttributesJsImpl? get canvasContextAttributes;
+  external set canvasContextAttributes(CanvasContextAttributesJsImpl? value);
 
   /// If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
   external JSBoolean get refreshExpiredTiles;
