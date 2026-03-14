@@ -4,6 +4,7 @@ library;
 import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
+
 typedef ListenerJsImpl = JSFunction;
 
 /// A subscription returned by `on()` / `once()` in MapLibre GL JS v5+.
@@ -52,16 +53,22 @@ extension EventedJsImplExtension on EventedJsImpl {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Subscription} A subscription that can be used to unsubscribe.
-  external SubscriptionJsImpl on(String type,
-      [JSAny? layerIdOrListener, ListenerJsImpl? listener]);
+  external SubscriptionJsImpl on(
+    String type, [
+    JSAny? layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Removes a previously registered event listener.
   ///
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Subscription} A subscription that can be used to unsubscribe.
-  external SubscriptionJsImpl off(String type,
-      [JSAny? layerIdOrListener, ListenerJsImpl? listener]);
+  external SubscriptionJsImpl off(
+    String type, [
+    JSAny? layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Adds a listener that will be called only once to a specified event type.
   ///

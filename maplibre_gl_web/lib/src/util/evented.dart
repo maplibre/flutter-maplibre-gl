@@ -87,27 +87,34 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Subscription} A subscription that can be used to unsubscribe.
-  Subscription on(String type,
-      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+  Subscription on(
+    String type, [
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ]) {
     final JSFunction jsFn;
     final SubscriptionJsImpl sub;
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      jsFn = ((JSAny position) {
-        layerIdOrListener(position);
-      }).toJS;
+      jsFn =
+          ((JSAny position) {
+            layerIdOrListener(position);
+          }).toJS;
       sub = jsObject.on(type, jsFn);
     } else if (layerIdOrListener is Listener) {
-      jsFn = ((EventJsImpl object) {
-        layerIdOrListener(Event.fromJsObject(object));
-      }).toJS;
+      jsFn =
+          ((EventJsImpl object) {
+            layerIdOrListener(Event.fromJsObject(object));
+          }).toJS;
       sub = jsObject.on(type, jsFn);
     } else {
-      jsFn = ((EventJsImpl object) {
-        listener!(Event.fromJsObject(object), layerIdOrListener);
-      }).toJS;
-      final layerId = layerIdOrListener is String
-          ? layerIdOrListener.toJS
-          : layerIdOrListener.toString().toJS;
+      jsFn =
+          ((EventJsImpl object) {
+            listener!(Event.fromJsObject(object), layerIdOrListener);
+          }).toJS;
+      final layerId =
+          layerIdOrListener is String
+              ? layerIdOrListener.toJS
+              : layerIdOrListener.toString().toJS;
       sub = jsObject.on(type, layerId, jsFn);
     }
 
@@ -123,8 +130,11 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
-  void off(String type,
-      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+  void off(
+    String type, [
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ]) {
     final key = _listenerKey(type, layerIdOrListener, listener);
     final jsFn = _listeners.remove(key);
     _subscriptions.remove(key);
@@ -132,9 +142,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
     if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
       jsObject.off(type, jsFn);
     } else {
-      final layerId = layerIdOrListener is String
-          ? layerIdOrListener.toJS
-          : layerIdOrListener.toString().toJS;
+      final layerId =
+          layerIdOrListener is String
+              ? layerIdOrListener.toJS
+              : layerIdOrListener.toString().toJS;
       jsObject.off(type, layerId, jsFn);
     }
   }
@@ -148,10 +159,11 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @returns {Subscription} A subscription that can be used to unsubscribe.
   Subscription once(String type, Listener listener) {
     final sub = jsObject.once(
-        type,
-        ((EventJsImpl object) {
-          listener(Event.fromJsObject(object));
-        }).toJS);
+      type,
+      ((EventJsImpl object) {
+        listener(Event.fromJsObject(object));
+      }).toJS,
+    );
     return Subscription.fromJsObject(sub);
   }
 
