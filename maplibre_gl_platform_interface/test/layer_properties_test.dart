@@ -16,12 +16,12 @@ void main() {
       // Mock the method channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async {
-          methodCalls.add(methodCall);
-          return null;
-        },
-      );
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
+              return null;
+            },
+          );
 
       await platform.initPlatform(0);
       methodCalls.clear();
@@ -51,7 +51,9 @@ void main() {
       // Verify properties are passed as native types, not JSON strings
       expect(receivedProperties['circle-radius'], 10); // Not "10"
       expect(
-          receivedProperties['circle-color'], '#FF0000'); // Not "\"#FF0000\""
+        receivedProperties['circle-color'],
+        '#FF0000',
+      ); // Not "\"#FF0000\""
       expect(receivedProperties['circle-stroke-width'], 2.5); // Not "2.5"
       expect(receivedProperties['circle-opacity'], 0.8); // Not "0.8"
     });
@@ -81,24 +83,26 @@ void main() {
       expect(receivedProperties['text-field'], 'Hello');
     });
 
-    test('setLayerProperties passes properties without double encoding',
-        () async {
-      final properties = {
-        'visibility': 'visible',
-        'circle-radius': 15,
-      };
+    test(
+      'setLayerProperties passes properties without double encoding',
+      () async {
+        final properties = {
+          'visibility': 'visible',
+          'circle-radius': 15,
+        };
 
-      await platform.setLayerProperties('layer-id', properties);
+        await platform.setLayerProperties('layer-id', properties);
 
-      expect(methodCalls.length, 1);
-      expect(methodCalls[0].method, 'layer#setProperties');
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'layer#setProperties');
 
-      final args = methodCalls[0].arguments as Map;
-      final receivedProperties = args['properties'] as Map;
+        final args = methodCalls[0].arguments as Map;
+        final receivedProperties = args['properties'] as Map;
 
-      expect(receivedProperties['visibility'], 'visible');
-      expect(receivedProperties['circle-radius'], 15);
-    });
+        expect(receivedProperties['visibility'], 'visible');
+        expect(receivedProperties['circle-radius'], 15);
+      },
+    );
 
     test('addLineLayer passes array properties correctly', () async {
       final properties = {

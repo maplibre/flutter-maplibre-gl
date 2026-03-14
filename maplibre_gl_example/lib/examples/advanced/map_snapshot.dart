@@ -15,11 +15,11 @@ import '../../shared/shared.dart';
 /// - Display the captured snapshot in a dialog
 class MapSnapshotPage extends ExamplePage {
   const MapSnapshotPage({super.key})
-      : super(
-          const Icon(Icons.camera_alt),
-          'Map Snapshot',
-          category: ExampleCategory.advanced,
-        );
+    : super(
+        const Icon(Icons.camera_alt),
+        'Map Snapshot',
+        category: ExampleCategory.advanced,
+      );
 
   @override
   Widget build(BuildContext context) => const _MapSnapshotBody();
@@ -126,54 +126,57 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.camera_alt),
-            const SizedBox(width: 8),
-            Text(size != null
-                ? 'Snapshot (${size.width.toInt()}x${size.height.toInt()})'
-                : 'Map Snapshot'),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      imageBytes,
-                      fit: BoxFit.contain,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.camera_alt),
+                const SizedBox(width: 8),
+                Text(
+                  size != null
+                      ? 'Snapshot (${size.width.toInt()}x${size.height.toInt()})'
+                      : 'Map Snapshot',
+                ),
+              ],
+            ),
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.memory(
+                          imageBytes,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Image size: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Image size: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
-                style: Theme.of(context).textTheme.bodySmall,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -224,54 +227,62 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
             ),
         ],
       ),
-      bottomNavigationBar: !isWeb
-          ? Container(
-              padding: const EdgeInsets.all(16),
-              child: const Card(
+      bottomNavigationBar:
+          !isWeb
+              ? Container(
+                padding: const EdgeInsets.all(16),
+                child: const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Map snapshots are only available on web platform.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              )
+              : SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Map snapshots are only available on web platform.',
-                    textAlign: TextAlign.center,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 16,
+                    children: [
+                      ExampleButton(
+                        label: 'Take Snapshot',
+                        icon: Icons.camera_alt,
+                        onPressed:
+                            _canInteractWithMap && !_isCapturing && isWeb
+                                ? _takeSnapshot
+                                : null,
+                        style: ExampleButtonStyle.filled,
+                      ),
+                      ExampleButton(
+                        label: 'Custom Size (800x600)',
+                        icon: Icons.crop,
+                        onPressed:
+                            _canInteractWithMap && !_isCapturing && isWeb
+                                ? () => _takeCustomSizeSnapshot(
+                                  const Size(800, 600),
+                                )
+                                : null,
+                        style: ExampleButtonStyle.tonal,
+                      ),
+                      ExampleButton(
+                        label: 'Custom Size (360x800)',
+                        icon: Icons.crop,
+                        onPressed:
+                            _canInteractWithMap && !_isCapturing && isWeb
+                                ? () => _takeCustomSizeSnapshot(
+                                  const Size(360, 800),
+                                )
+                                : null,
+                        style: ExampleButtonStyle.tonal,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            )
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 16,
-                  children: [
-                    ExampleButton(
-                      label: 'Take Snapshot',
-                      icon: Icons.camera_alt,
-                      onPressed: _canInteractWithMap && !_isCapturing && isWeb
-                          ? _takeSnapshot
-                          : null,
-                      style: ExampleButtonStyle.filled,
-                    ),
-                    ExampleButton(
-                      label: 'Custom Size (800x600)',
-                      icon: Icons.crop,
-                      onPressed: _canInteractWithMap && !_isCapturing && isWeb
-                          ? () => _takeCustomSizeSnapshot(const Size(800, 600))
-                          : null,
-                      style: ExampleButtonStyle.tonal,
-                    ),
-                    ExampleButton(
-                      label: 'Custom Size (360x800)',
-                      icon: Icons.crop,
-                      onPressed: _canInteractWithMap && !_isCapturing && isWeb
-                          ? () => _takeCustomSizeSnapshot(const Size(360, 800))
-                          : null,
-                      style: ExampleButtonStyle.tonal,
-                    ),
-                  ],
-                ),
-              ),
-            ),
     );
   }
 }
