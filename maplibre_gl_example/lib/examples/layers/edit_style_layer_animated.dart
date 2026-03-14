@@ -241,6 +241,8 @@ class _EditStyleLayerAnimatedBodyState
 
     for (var i = 0; i < 30; i++) {
       final radius = 20 + 30 * sin(i * 0.2);
+      if (radius < 0) continue; // Skip negative radius values
+
       await _controller!.setLayerProperties(
         _circleLayerId,
         CircleLayerProperties(circleRadius: radius),
@@ -254,6 +256,8 @@ class _EditStyleLayerAnimatedBodyState
 
     for (var i = 0; i < 30; i++) {
       final width = 4 + 6 * sin(i * 0.2);
+      if (width < 0) continue; // Skip negative width values
+
       await _controller!.setLayerProperties(
         _lineLayerId,
         LineLayerProperties(lineWidth: width),
@@ -267,6 +271,7 @@ class _EditStyleLayerAnimatedBodyState
 
     for (var i = 0; i < 30; i++) {
       final opacity = 0.3 + 0.7 * sin(i * 0.2).abs();
+      if (opacity < 0) continue; // Skip negative opacity values
 
       await _controller!.setLayerProperties(
         _circleLayerId,
@@ -299,6 +304,14 @@ class _EditStyleLayerAnimatedBodyState
       final circleLng = center.longitude + 0.005 * sin(angle);
       final circleLat = center.latitude + 0.005 * cos(angle);
 
+      if (circleLat < -90 ||
+          circleLat > 90 ||
+          circleLng < -180 ||
+          circleLng > 180) {
+        // Skip invalid latitude values
+        continue;
+      }
+
       await _controller!.setGeoJsonSource(
         _circleSourceId,
         {
@@ -320,6 +333,15 @@ class _EditStyleLayerAnimatedBodyState
       for (var j = 0; j < 20; j++) {
         final x = -0.01 + (0.02 * j / 19);
         final y = 0.003 * sin(angle + j * 0.3);
+
+        // Skip invalid latitude values
+        if (center.latitude - 0.01 + y < -90 ||
+            center.latitude - 0.01 + y > 90) {
+          continue;
+        }
+        if (center.longitude + x < -180 || center.longitude + x > 180) {
+          continue;
+        }
         lineCoords.add([
           center.longitude + x,
           center.latitude - 0.01 + y,
@@ -344,6 +366,8 @@ class _EditStyleLayerAnimatedBodyState
 
       // Animate fill (rotate)
       final size = 0.005 + 0.002 * sin(angle);
+      if (size < 0) continue; // Skip negative size values
+
       await _controller!.setGeoJsonSource(
         _fillSourceId,
         {
