@@ -42,16 +42,22 @@ extension EventedJsImplExtension on EventedJsImpl {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
-  external MapLibreMapJsImpl on(String type,
-      [JSAny? layerIdOrListener, ListenerJsImpl? listener]);
+  external MapLibreMapJsImpl on(
+    String type, [
+    JSAny? layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Removes a previously registered event listener.
   ///
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
-  external MapLibreMapJsImpl off(String type,
-      [JSAny? layerIdOrListener, ListenerJsImpl? listener]);
+  external MapLibreMapJsImpl off(
+    String type, [
+    JSAny? layerIdOrListener,
+    ListenerJsImpl? listener,
+  ]);
 
   ///  Adds a listener that will be called only once to a specified event type.
   ///

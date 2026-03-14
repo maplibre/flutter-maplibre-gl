@@ -9,11 +9,11 @@ const _nullIsland = CameraPosition(target: LatLng(0, 0), zoom: 4.0);
 /// Example demonstrating PMTiles vector tiles format
 class PMTilesPage extends ExamplePage {
   const PMTilesPage({super.key})
-      : super(
-          const Icon(Icons.map_outlined),
-          'PMTiles',
-          category: ExampleCategory.advanced,
-        );
+    : super(
+        const Icon(Icons.map_outlined),
+        'PMTiles',
+        category: ExampleCategory.advanced,
+      );
 
   @override
   Widget build(BuildContext context) => const _PMTilesBody();
@@ -68,11 +68,12 @@ class _PMTilesBodyState extends State<_PMTilesBody> {
       floatingActionButton: ExampleButton(
         label: _canReset ? 'Reset camera' : 'Go to London',
         icon: _canReset ? Icons.refresh : Icons.flight_takeoff,
-        onPressed: _canInteractWithMap
-            ? _canReset
-                ? _resetCamera
-                : _moveCameraToLondon
-            : null,
+        onPressed:
+            _canInteractWithMap
+                ? _canReset
+                    ? _resetCamera
+                    : _moveCameraToLondon
+                : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

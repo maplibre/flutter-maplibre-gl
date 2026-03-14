@@ -95,8 +95,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  external MapLibreMapJsImpl addControl(IControlJsImpl? control,
-      [String? position]);
+  external MapLibreMapJsImpl addControl(
+    IControlJsImpl? control, [
+    String? position,
+  ]);
 
   ///  Removes the control from the map.
   ///
@@ -510,7 +512,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
   external void addSourceType(
-      String name, JSAny sourceType, JSFunction callback);
+    String name,
+    JSAny sourceType,
+    JSFunction callback,
+  );
 
   ///  Removes a source from the map's style.
   ///
@@ -721,7 +726,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   external MapLibreMapJsImpl setLayerZoomRange(
-      String layerId, num minzoom, num maxzoom);
+    String layerId,
+    num minzoom,
+    num maxzoom,
+  );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -738,8 +746,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapLibreMapJsImpl setFilter(String layerId, JSAny filter,
-      [StyleSetterOptionsJsImpl? options]);
+  external MapLibreMapJsImpl setFilter(
+    String layerId,
+    JSAny filter, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -761,8 +772,12 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external void setPaintProperty(String layerId, String name, JSAny? value,
-      [StyleSetterOptionsJsImpl? options]);
+  external void setPaintProperty(
+    String layerId,
+    String name,
+    JSAny? value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -782,8 +797,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, JSAny? value,
-      [StyleSetterOptionsJsImpl? options]);
+    String layerId,
+    String name,
+    JSAny? value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -799,7 +817,9 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-      JSAny light, StyleSetterOptionsJsImpl options);
+    JSAny light,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Returns the value of the light object.
   ///
@@ -837,8 +857,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  external void removeFeatureState(FeatureIdentifierJsImpl target,
-      [String? key]);
+  external void removeFeatureState(
+    FeatureIdentifierJsImpl target, [
+    String? key,
+  ]);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
