@@ -54,7 +54,10 @@ extension StyleJsImplExtension on StyleJsImpl {
   external void listImages();
 
   external void addSource(
-      String id, JSAny source, StyleSetterOptionsJsImpl options);
+    String id,
+    JSAny source,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Remove a source from this stylesheet, given its id.
   ///  @param {string} id id of the source to remove
@@ -74,8 +77,11 @@ extension StyleJsImplExtension on StyleJsImpl {
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  external void addLayer(JSAny layerObject,
-      [String? before, StyleSetterOptionsJsImpl? options]);
+  external void addLayer(
+    JSAny layerObject, [
+    String? before,
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Moves a layer to a different z-position. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
@@ -100,15 +106,22 @@ extension StyleJsImplExtension on StyleJsImpl {
   external void setLayerZoomRange(String layerId, [num? minzoom, num? maxzoom]);
 
   external void setFilter(
-      String layerId, JSAny filter, StyleSetterOptionsJsImpl options);
+    String layerId,
+    JSAny filter,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Get a layer's filter object
   ///  @param {string} layer the layer to inspect
   ///  @returns {*} the layer's filter, if any
   external JSAny getFilter(String layer);
 
-  external void setLayoutProperty(String layerId, String name, JSAny value,
-      StyleSetterOptionsJsImpl options);
+  external void setLayoutProperty(
+    String layerId,
+    String name,
+    JSAny value,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Get a layout property's value from a given layer
   ///  @param {string} layerId the layer to inspect
@@ -116,8 +129,12 @@ extension StyleJsImplExtension on StyleJsImpl {
   ///  @returns {*} the property value
   external JSAny getLayoutProperty(String layerId, String name);
 
-  external void setPaintProperty(String layerId, String name, JSAny value,
-      StyleSetterOptionsJsImpl options);
+  external void setPaintProperty(
+    String layerId,
+    String name,
+    JSAny value,
+    StyleSetterOptionsJsImpl options,
+  );
 
   external JSAny getPaintProperty(String layer, String name);
 
@@ -134,7 +151,10 @@ extension StyleJsImplExtension on StyleJsImpl {
   external JSAny querySourceFeatures(String sourceID, JSAny params);
 
   external void addSourceType(
-      String name, JSAny sourceType, JSFunction callback);
+    String name,
+    JSAny sourceType,
+    JSFunction callback,
+  );
 
   external JSAny getLight();
 
@@ -147,7 +167,10 @@ extension StyleJsImplExtension on StyleJsImpl {
   external void getGlyphs(String mapId, JSAny params, JSFunction callback);
 
   external void getResource(
-      String mapId, RequestParametersJsImpl params, JSFunction callback);
+    String mapId,
+    RequestParametersJsImpl params,
+    JSFunction callback,
+  );
 
   external JSArray<StyleLayerJsImpl> get layers;
 

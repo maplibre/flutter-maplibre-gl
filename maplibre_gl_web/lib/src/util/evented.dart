@@ -38,13 +38,15 @@ class Event extends JsObjectWrapper<EventJsImpl> {
     required Point point,
   }) {
     final jsFeatures = features.map((f) => f.jsObject).toList().jsify();
-    return Event.fromJsObject(EventJsImpl(
-      id: id,
-      type: type,
-      lngLat: lngLat.jsObject,
-      features: jsFeatures,
-      point: point.jsObject,
-    ));
+    return Event.fromJsObject(
+      EventJsImpl(
+        id: id,
+        type: type,
+        lngLat: lngLat.jsObject,
+        features: jsFeatures,
+        point: point.jsObject,
+      ),
+    );
   }
 
   preventDefault() => jsObject.preventDefault();
@@ -60,7 +62,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
 
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
-      String type, dynamic layerIdOrListener, LayerEventListener? listener) {
+    String type,
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ) {
     return '$type::${layerIdOrListener?.hashCode}::${listener?.hashCode}';
   }
 
@@ -71,27 +76,34 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
   ///  @returns {Object} `this`
-  MapLibreMap on(String type,
-      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+  MapLibreMap on(
+    String type, [
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ]) {
     final JSFunction jsFn;
     final MapLibreMapJsImpl mapJsImpl;
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      jsFn = ((JSAny position) {
-        layerIdOrListener(position);
-      }).toJS;
+      jsFn =
+          ((JSAny position) {
+            layerIdOrListener(position);
+          }).toJS;
       mapJsImpl = jsObject.on(type, jsFn);
     } else if (layerIdOrListener is Listener) {
-      jsFn = ((EventJsImpl object) {
-        layerIdOrListener(Event.fromJsObject(object));
-      }).toJS;
+      jsFn =
+          ((EventJsImpl object) {
+            layerIdOrListener(Event.fromJsObject(object));
+          }).toJS;
       mapJsImpl = jsObject.on(type, jsFn);
     } else {
-      jsFn = ((EventJsImpl object) {
-        listener!(Event.fromJsObject(object), layerIdOrListener);
-      }).toJS;
-      final layerId = layerIdOrListener is String
-          ? layerIdOrListener.toJS
-          : layerIdOrListener.toString().toJS;
+      jsFn =
+          ((EventJsImpl object) {
+            listener!(Event.fromJsObject(object), layerIdOrListener);
+          }).toJS;
+      final layerId =
+          layerIdOrListener is String
+              ? layerIdOrListener.toJS
+              : layerIdOrListener.toString().toJS;
       mapJsImpl = jsObject.on(type, layerId, jsFn);
     }
 
@@ -105,8 +117,11 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
   ///  @returns {Object} `this`
-  MapLibreMap off(String type,
-      [dynamic layerIdOrListener, LayerEventListener? listener]) {
+  MapLibreMap off(
+    String type, [
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ]) {
     final key = _listenerKey(type, layerIdOrListener, listener);
     final jsFn = _listeners.remove(key);
     final MapLibreMapJsImpl mapJsImpl;
@@ -114,9 +129,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
     if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
       mapJsImpl = jsObject.off(type, jsFn);
     } else {
-      final layerId = layerIdOrListener is String
-          ? layerIdOrListener.toJS
-          : layerIdOrListener.toString().toJS;
+      final layerId =
+          layerIdOrListener is String
+              ? layerIdOrListener.toJS
+              : layerIdOrListener.toString().toJS;
       mapJsImpl = jsObject.off(type, layerId, jsFn);
     }
     return MapLibreMap.fromJsObject(mapJsImpl);
@@ -129,12 +145,14 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ///  @param {string} type The event type to listen for.
   ///  @param {Function} listener The function to be called when the event is fired the first time.
   ///  @returns {Object} `this`
-  MapLibreMap once(String type, Listener listener) =>
-      MapLibreMap.fromJsObject(jsObject.once(
-          type,
-          ((EventJsImpl object) {
-            listener(Event.fromJsObject(object));
-          }).toJS));
+  MapLibreMap once(String type, Listener listener) => MapLibreMap.fromJsObject(
+    jsObject.once(
+      type,
+      ((EventJsImpl object) {
+        listener(Event.fromJsObject(object));
+      }).toJS,
+    ),
+  );
 
   fire(Event event, [JSAny? properties]) =>
       jsObject.fire(event.jsObject, properties);

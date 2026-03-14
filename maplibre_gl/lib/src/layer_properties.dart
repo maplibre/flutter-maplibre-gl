@@ -1889,7 +1889,8 @@ class FillExtrusionLayerProperties implements LayerProperties {
           changes.fillExtrusionPattern ?? fillExtrusionPattern,
       fillExtrusionHeight: changes.fillExtrusionHeight ?? fillExtrusionHeight,
       fillExtrusionBase: changes.fillExtrusionBase ?? fillExtrusionBase,
-      fillExtrusionVerticalGradient: changes.fillExtrusionVerticalGradient ??
+      fillExtrusionVerticalGradient:
+          changes.fillExtrusionVerticalGradient ??
           fillExtrusionVerticalGradient,
       visibility: changes.visibility ?? visibility,
     );
@@ -1908,12 +1909,16 @@ class FillExtrusionLayerProperties implements LayerProperties {
     addIfPresent('fill-extrusion-color', fillExtrusionColor);
     addIfPresent('fill-extrusion-translate', fillExtrusionTranslate);
     addIfPresent(
-        'fill-extrusion-translate-anchor', fillExtrusionTranslateAnchor);
+      'fill-extrusion-translate-anchor',
+      fillExtrusionTranslateAnchor,
+    );
     addIfPresent('fill-extrusion-pattern', fillExtrusionPattern);
     addIfPresent('fill-extrusion-height', fillExtrusionHeight);
     addIfPresent('fill-extrusion-base', fillExtrusionBase);
     addIfPresent(
-        'fill-extrusion-vertical-gradient', fillExtrusionVerticalGradient);
+      'fill-extrusion-vertical-gradient',
+      fillExtrusionVerticalGradient,
+    );
     addIfPresent('visibility', visibility);
     return json;
   }
@@ -2204,7 +2209,8 @@ class HillshadeLayerProperties implements LayerProperties {
 
   HillshadeLayerProperties copyWith(HillshadeLayerProperties changes) {
     return HillshadeLayerProperties(
-      hillshadeIlluminationDirection: changes.hillshadeIlluminationDirection ??
+      hillshadeIlluminationDirection:
+          changes.hillshadeIlluminationDirection ??
           hillshadeIlluminationDirection,
       hillshadeIlluminationAnchor:
           changes.hillshadeIlluminationAnchor ?? hillshadeIlluminationAnchor,
@@ -2230,7 +2236,9 @@ class HillshadeLayerProperties implements LayerProperties {
     }
 
     addIfPresent(
-        'hillshade-illumination-direction', hillshadeIlluminationDirection);
+      'hillshade-illumination-direction',
+      hillshadeIlluminationDirection,
+    );
     addIfPresent('hillshade-illumination-anchor', hillshadeIlluminationAnchor);
     addIfPresent('hillshade-exaggeration', hillshadeExaggeration);
     addIfPresent('hillshade-shadow-color', hillshadeShadowColor);

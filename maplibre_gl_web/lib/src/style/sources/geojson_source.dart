@@ -9,12 +9,13 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
   factory GeoJsonSource({
     required FeatureCollection data,
     String? promoteId,
-  }) =>
-      GeoJsonSource.fromJsObject(GeoJsonSourceJsImpl(
-        type: 'geojson',
-        promoteId: promoteId,
-        data: data.jsObject,
-      ));
+  }) => GeoJsonSource.fromJsObject(
+    GeoJsonSourceJsImpl(
+      type: 'geojson',
+      promoteId: promoteId,
+      data: data.jsObject,
+    ),
+  );
 
   GeoJsonSource setData(FeatureCollection featureCollection) =>
       GeoJsonSource.fromJsObject(jsObject.setData(featureCollection.jsObject));
@@ -24,8 +25,8 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
 
   @override
   get dict => {
-        'type': 'geojson',
-        'promoteId': promoteId,
-        'data': data.jsObject,
-      };
+    'type': 'geojson',
+    'promoteId': promoteId,
+    'data': data.jsObject,
+  };
 }

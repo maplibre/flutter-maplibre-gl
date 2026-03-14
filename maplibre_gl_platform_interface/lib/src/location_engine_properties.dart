@@ -48,10 +48,10 @@ class LocationEngineAndroidProperties {
 
   static const LocationEngineAndroidProperties defaultProperties =
       LocationEngineAndroidProperties(
-    interval: 1000,
-    displacement: 0,
-    priority: LocationPriority.balanced,
-  );
+        interval: 1000,
+        displacement: 0,
+        priority: LocationPriority.balanced,
+      );
 
   @override
   bool operator ==(Object other) =>

@@ -8,11 +8,12 @@ class AttributionControlOptions
   factory AttributionControlOptions({
     bool? compact,
     List<String>? customAttribution,
-  }) =>
-      AttributionControlOptions.fromJsObject(AttributionControlOptionsJsImpl(
-        compact: compact,
-        customAttribution: customAttribution?.map((s) => s.toJS).toList().toJS,
-      ));
+  }) => AttributionControlOptions.fromJsObject(
+    AttributionControlOptionsJsImpl(
+      compact: compact,
+      customAttribution: customAttribution?.map((s) => s.toJS).toList().toJS,
+    ),
+  );
 
   /// Creates a new AttributionControlOptions from a [jsObject].
   AttributionControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -34,7 +35,8 @@ class AttributionControl extends JsObjectWrapper<AttributionControlJsImpl> {
 
   factory AttributionControl(AttributionControlOptions options) =>
       AttributionControl.fromJsObject(
-          AttributionControlJsImpl(options.jsObject));
+        AttributionControlJsImpl(options.jsObject),
+      );
 
   onAdd(MapLibreMap map) => jsObject.onAdd(map.jsObject);
 
