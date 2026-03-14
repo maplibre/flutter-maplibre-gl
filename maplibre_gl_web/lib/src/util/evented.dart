@@ -22,8 +22,8 @@ class Subscription extends JsObjectWrapper<SubscriptionJsImpl> {
   }
 
   Subscription.fromJsObject(super.jsObject, {void Function()? onUnsubscribe})
-      : _onUnsubscribe = onUnsubscribe,
-        super.fromJsObject();
+    : _onUnsubscribe = onUnsubscribe,
+      super.fromJsObject();
 }
 
 class Event extends JsObjectWrapper<EventJsImpl> {
@@ -75,7 +75,6 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   /// Key is a composite of (eventType, layerIdOrListener.hashCode?, listener.hashCode)
   final _listeners = <String, JSFunction>{};
 
-
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
     String type,
@@ -125,9 +124,12 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
 
     final key = _listenerKey(type, layerIdOrListener, listener);
     _listeners[key] = jsFn;
-    final subscription = Subscription.fromJsObject(sub, onUnsubscribe: () {
-      _listeners.remove(key);
-    });
+    final subscription = Subscription.fromJsObject(
+      sub,
+      onUnsubscribe: () {
+        _listeners.remove(key);
+      },
+    );
 
     return subscription;
   }
