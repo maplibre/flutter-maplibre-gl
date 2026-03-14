@@ -67,13 +67,13 @@ class MapLibreMap extends StatefulWidget {
     ],
     this.foregroundLoadColor = Colors.transparent,
     this.translucentTextureSurface = false,
-  })  : assert(
-          myLocationRenderMode == MyLocationRenderMode.normal ||
-              myLocationEnabled,
-          "$myLocationRenderMode requires [myLocationEnabled] set to true.",
-        ),
-        assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0);
+  }) : assert(
+         myLocationRenderMode == MyLocationRenderMode.normal ||
+             myLocationEnabled,
+         "$myLocationRenderMode requires [myLocationEnabled] set to true.",
+       ),
+       assert(annotationOrder.length <= 4),
+       assert(annotationConsumeTapEvents.length > 0);
 
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
@@ -328,8 +328,9 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   Widget build(BuildContext context) {
     assert(
-        widget.annotationOrder.toSet().length == widget.annotationOrder.length,
-        "annotationOrder must not have duplicate types");
+      widget.annotationOrder.toSet().length == widget.annotationOrder.length,
+      "annotationOrder must not have duplicate types",
+    );
     final creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'styleString': widget.styleString,
@@ -342,7 +343,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
         'webPreserveDrawingBuffer': widget.webPreserveDrawingBuffer,
     };
     return _maplibrePlatform.buildView(
-        creationParams, onPlatformViewCreated, widget.gestureRecognizers);
+      creationParams,
+      onPlatformViewCreated,
+      widget.gestureRecognizers,
+    );
   }
 
   @override
@@ -389,8 +393,9 @@ class _MapLibreMapState extends State<MapLibreMap> {
         if (_controller.isCompleted) {
           widget.onStyleLoadedCallback?.call();
         } else {
-          await _controller.future
-              .then((_) => widget.onStyleLoadedCallback?.call());
+          await _controller.future.then(
+            (_) => widget.onStyleLoadedCallback?.call(),
+          );
         }
       },
       onMapClick: widget.onMapClick,
@@ -416,66 +421,67 @@ class _MapLibreMapState extends State<MapLibreMap> {
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
 class _MapLibreMapOptions {
-  _MapLibreMapOptions(
-      {this.compassEnabled,
-      this.cameraTargetBounds,
-      this.styleString,
-      this.minMaxZoomPreference,
-      required this.rotateGesturesEnabled,
-      required this.scrollGesturesEnabled,
-      required this.tiltGesturesEnabled,
-      required this.zoomGesturesEnabled,
-      required this.doubleClickZoomEnabled,
-      this.trackCameraPosition,
-      this.myLocationEnabled,
-      this.myLocationTrackingMode,
-      this.myLocationRenderMode,
-      this.logoEnabled,
-      this.logoViewPosition,
-      this.logoViewMargins,
-      this.compassViewPosition,
-      this.compassViewMargins,
-      this.attributionButtonPosition,
-      this.attributionButtonMargins,
-      this.scaleControlEnabled,
-      this.scaleControlPosition,
-      this.scaleControlUnit,
-      this.locationEnginePlatforms,
-      this.foregroundLoadColor,
-      this.translucentTextureSurface,
-      this.featureTapsTriggersMapClick});
+  _MapLibreMapOptions({
+    this.compassEnabled,
+    this.cameraTargetBounds,
+    this.styleString,
+    this.minMaxZoomPreference,
+    required this.rotateGesturesEnabled,
+    required this.scrollGesturesEnabled,
+    required this.tiltGesturesEnabled,
+    required this.zoomGesturesEnabled,
+    required this.doubleClickZoomEnabled,
+    this.trackCameraPosition,
+    this.myLocationEnabled,
+    this.myLocationTrackingMode,
+    this.myLocationRenderMode,
+    this.logoEnabled,
+    this.logoViewPosition,
+    this.logoViewMargins,
+    this.compassViewPosition,
+    this.compassViewMargins,
+    this.attributionButtonPosition,
+    this.attributionButtonMargins,
+    this.scaleControlEnabled,
+    this.scaleControlPosition,
+    this.scaleControlUnit,
+    this.locationEnginePlatforms,
+    this.foregroundLoadColor,
+    this.translucentTextureSurface,
+    this.featureTapsTriggersMapClick,
+  });
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
-      : this(
-          locationEnginePlatforms: map.locationEnginePlatforms,
-          compassEnabled: map.compassEnabled,
-          cameraTargetBounds: map.cameraTargetBounds,
-          styleString: map.styleString,
-          minMaxZoomPreference: map.minMaxZoomPreference,
-          rotateGesturesEnabled: map.rotateGesturesEnabled,
-          scrollGesturesEnabled: map.scrollGesturesEnabled,
-          tiltGesturesEnabled: map.tiltGesturesEnabled,
-          trackCameraPosition: map.trackCameraPosition,
-          zoomGesturesEnabled: map.zoomGesturesEnabled,
-          doubleClickZoomEnabled:
-              map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
-          myLocationEnabled: map.myLocationEnabled,
-          myLocationTrackingMode: map.myLocationTrackingMode,
-          myLocationRenderMode: map.myLocationRenderMode,
-          logoEnabled: map.logoEnabled,
-          logoViewPosition: map.logoViewPosition,
-          logoViewMargins: map.logoViewMargins,
-          compassViewPosition: map.compassViewPosition,
-          compassViewMargins: map.compassViewMargins,
-          attributionButtonPosition: map.attributionButtonPosition,
-          attributionButtonMargins: map.attributionButtonMargins,
-          scaleControlEnabled: map.scaleControlEnabled,
-          scaleControlPosition: map.scaleControlPosition,
-          scaleControlUnit: map.scaleControlUnit,
-          foregroundLoadColor: map.foregroundLoadColor,
-          translucentTextureSurface: map.translucentTextureSurface,
-          featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
-        );
+    : this(
+        locationEnginePlatforms: map.locationEnginePlatforms,
+        compassEnabled: map.compassEnabled,
+        cameraTargetBounds: map.cameraTargetBounds,
+        styleString: map.styleString,
+        minMaxZoomPreference: map.minMaxZoomPreference,
+        rotateGesturesEnabled: map.rotateGesturesEnabled,
+        scrollGesturesEnabled: map.scrollGesturesEnabled,
+        tiltGesturesEnabled: map.tiltGesturesEnabled,
+        trackCameraPosition: map.trackCameraPosition,
+        zoomGesturesEnabled: map.zoomGesturesEnabled,
+        doubleClickZoomEnabled:
+            map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+        myLocationEnabled: map.myLocationEnabled,
+        myLocationTrackingMode: map.myLocationTrackingMode,
+        myLocationRenderMode: map.myLocationRenderMode,
+        logoEnabled: map.logoEnabled,
+        logoViewPosition: map.logoViewPosition,
+        logoViewMargins: map.logoViewMargins,
+        compassViewPosition: map.compassViewPosition,
+        compassViewMargins: map.compassViewMargins,
+        attributionButtonPosition: map.attributionButtonPosition,
+        attributionButtonMargins: map.attributionButtonMargins,
+        scaleControlEnabled: map.scaleControlEnabled,
+        scaleControlPosition: map.scaleControlPosition,
+        scaleControlUnit: map.scaleControlUnit,
+        foregroundLoadColor: map.foregroundLoadColor,
+        translucentTextureSurface: map.translucentTextureSurface,
+        featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
+      );
 
   final bool? compassEnabled;
 
@@ -536,7 +542,7 @@ class _MapLibreMapOptions {
     'scrollGesturesEnabled',
     'tiltGesturesEnabled',
     'zoomGesturesEnabled',
-    'doubleClickZoomEnabled'
+    'doubleClickZoomEnabled',
   };
 
   Map<String, dynamic> toMap() {
@@ -578,7 +584,9 @@ class _MapLibreMapOptions {
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
-        'attributionButtonMargins', pointToArray(attributionButtonMargins));
+      'attributionButtonMargins',
+      pointToArray(attributionButtonMargins),
+    );
     addIfNonNull('scaleControlEnabled', scaleControlEnabled);
     addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
     addIfNonNull('scaleControlUnit', scaleControlUnit?.index);
@@ -596,17 +604,17 @@ class _MapLibreMapOptions {
     // if any gesture is updated also all other gestures have to the saved to
     // the update
 
-    final gesturesRequireUpdate =
-        _gestureGroup.any((key) => newOptionsMap[key] != prevOptionsMap[key]);
+    final gesturesRequireUpdate = _gestureGroup.any(
+      (key) => newOptionsMap[key] != prevOptionsMap[key],
+    );
 
-    return newOptionsMap
-      ..removeWhere((key, value) {
-        if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
-        final oldValue = prevOptionsMap[key];
-        if (oldValue is List && value is List) {
-          return listEquals(oldValue, value);
-        }
-        return oldValue == value;
-      });
+    return newOptionsMap..removeWhere((key, value) {
+      if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
+      final oldValue = prevOptionsMap[key];
+      if (oldValue is List && value is List) {
+        return listEquals(oldValue, value);
+      }
+      return oldValue == value;
+    });
   }
 }

@@ -46,13 +46,15 @@ class Event extends JsObjectWrapper<EventJsImpl> {
     required Point point,
   }) {
     final jsFeatures = features.map((f) => f.jsObject).toList().jsify();
-    return Event.fromJsObject(EventJsImpl(
-      id: id,
-      type: type,
-      lngLat: lngLat.jsObject,
-      features: jsFeatures,
-      point: point.jsObject,
-    ));
+    return Event.fromJsObject(
+      EventJsImpl(
+        id: id,
+        type: type,
+        lngLat: lngLat.jsObject,
+        features: jsFeatures,
+        point: point.jsObject,
+      ),
+    );
   }
 
   preventDefault() => jsObject.preventDefault();
@@ -71,7 +73,10 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
 
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
-      String type, dynamic layerIdOrListener, LayerEventListener? listener) {
+    String type,
+    dynamic layerIdOrListener,
+    LayerEventListener? listener,
+  ) {
     return '$type::${layerIdOrListener?.hashCode}::${listener?.hashCode}';
   }
 

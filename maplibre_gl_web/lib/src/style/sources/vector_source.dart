@@ -16,15 +16,19 @@ class VectorSource extends Source<VectorSourceJsImpl> {
       throw Exception('Specify only one between url and tiles');
     }
     if (url != null) {
-      return VectorSource.fromJsObject(VectorSourceJsImpl(
-        type: 'vector',
-        url: url,
-      ));
+      return VectorSource.fromJsObject(
+        VectorSourceJsImpl(
+          type: 'vector',
+          url: url,
+        ),
+      );
     }
-    return VectorSource.fromJsObject(VectorSourceJsImpl(
-      type: 'vector',
-      tiles: tiles?.map((s) => s.toJS).toList().toJS,
-    ));
+    return VectorSource.fromJsObject(
+      VectorSourceJsImpl(
+        type: 'vector',
+        tiles: tiles?.map((s) => s.toJS).toList().toJS,
+      ),
+    );
   }
 
   /// Creates a new VectorSource from a [jsObject].

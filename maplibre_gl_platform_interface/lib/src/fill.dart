@@ -65,13 +65,14 @@ class FillOptions {
   ///
   /// By default, every non-specified field is null, meaning no desire to change
   /// fill defaults or current configuration.
-  const FillOptions(
-      {this.fillOpacity,
-      this.fillColor,
-      this.fillOutlineColor,
-      this.fillPattern,
-      this.geometry,
-      this.draggable});
+  const FillOptions({
+    this.fillOpacity,
+    this.fillColor,
+    this.fillOutlineColor,
+    this.fillPattern,
+    this.geometry,
+    this.draggable,
+  });
 
   final double? fillOpacity;
   final String? fillColor;
@@ -108,11 +109,14 @@ class FillOptions {
     addIfPresent('fillPattern', fillPattern);
     if (addGeometry) {
       addIfPresent(
-          'geometry',
-          geometry
-              ?.map((latLngList) =>
-                  latLngList.map((latLng) => latLng.toJson()).toList())
-              .toList());
+        'geometry',
+        geometry
+            ?.map(
+              (latLngList) =>
+                  latLngList.map((latLng) => latLng.toJson()).toList(),
+            )
+            .toList(),
+      );
     }
     addIfPresent('draggable', draggable);
     return json;
@@ -124,12 +128,16 @@ class FillOptions {
       "properties": toJson(false),
       "geometry": {
         "type": "Polygon",
-        "coordinates": geometry!
-            .map((latLngList) => latLngList
-                .map((latLng) => latLng.toGeoJsonCoordinates())
-                .toList())
-            .toList()
-      }
+        "coordinates":
+            geometry!
+                .map(
+                  (latLngList) =>
+                      latLngList
+                          .map((latLng) => latLng.toGeoJsonCoordinates())
+                          .toList(),
+                )
+                .toList(),
+      },
     };
   }
 }

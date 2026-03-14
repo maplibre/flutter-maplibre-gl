@@ -108,7 +108,8 @@ class MapLibreMap extends Camera {
   MapLibreMap addControl(dynamic control, [String? position]) {
     if (position != null) {
       return MapLibreMap.fromJsObject(
-          jsObject.addControl(control.jsObject, position));
+        jsObject.addControl(control.jsObject, position),
+      );
     }
     return MapLibreMap.fromJsObject(jsObject.addControl(control.jsObject));
   }
@@ -279,7 +280,8 @@ class MapLibreMap extends Camera {
   ///  @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
   MapLibreMap setRenderWorldCopies([bool? renderWorldCopies]) =>
       MapLibreMap.fromJsObject(
-          jsObject.setRenderWorldCopies(renderWorldCopies));
+        jsObject.setRenderWorldCopies(renderWorldCopies),
+      );
 
   ///  Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
   ///  that correspond to the specified geographical location.
@@ -422,8 +424,10 @@ class MapLibreMap extends Camera {
   ///  @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
   ///  @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/using-box-queryrenderedfeatures/)
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
-  List<Feature> queryRenderedFeatures(JSAny geometry,
-      [Map<String, dynamic>? options]) {
+  List<Feature> queryRenderedFeatures(
+    JSAny geometry, [
+    Map<String, dynamic>? options,
+  ]) {
     final jsOptions = options != null ? utils.jsify(options) : null;
 
     if (options == null) {
@@ -555,7 +559,8 @@ class MapLibreMap extends Camera {
     }
     // source is a Map<String, dynamic>
     return MapLibreMap.fromJsObject(
-        jsObject.addSource(id, utils.jsify(source)!));
+      jsObject.addSource(id, utils.jsify(source)!),
+    );
   }
 
   ///  Returns a Boolean indicating whether the source is loaded.
@@ -760,11 +765,13 @@ class MapLibreMap extends Camera {
   MapLibreMap addLayer(dynamic layer, [String? beforeId]) {
     if (layer is Layer) {
       return MapLibreMap.fromJsObject(
-          jsObject.addLayer(layer.jsObject, beforeId));
+        jsObject.addLayer(layer.jsObject, beforeId),
+      );
     }
     // layer is a Map<String, dynamic>
     return MapLibreMap.fromJsObject(
-        jsObject.addLayer(utils.jsify(layer)!, beforeId));
+      jsObject.addLayer(utils.jsify(layer)!, beforeId),
+    );
   }
 
   //jsObject.addLayer(layer.jsObject ?? jsify(layer));
@@ -826,7 +833,8 @@ class MapLibreMap extends Camera {
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   MapLibreMap setLayerZoomRange(String layerId, num minzoom, num maxzoom) =>
       MapLibreMap.fromJsObject(
-          jsObject.setLayerZoomRange(layerId, minzoom, maxzoom));
+        jsObject.setLayerZoomRange(layerId, minzoom, maxzoom),
+      );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -843,9 +851,11 @@ class MapLibreMap extends Camera {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  MapLibreMap setFilter(String layerId, dynamic filter,
-          [StyleSetterOptions? options]) =>
-      MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
+  MapLibreMap setFilter(
+    String layerId,
+    dynamic filter, [
+    StyleSetterOptions? options,
+  ]) => MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -870,8 +880,12 @@ class MapLibreMap extends Camera {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  setPaintProperty(String layerId, String name, dynamic value,
-      [StyleSetterOptions? options]) {
+  setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptions? options,
+  ]) {
     final jsValue = utils.jsify(value);
     jsObject.setPaintProperty(layerId, name, jsValue);
   }
@@ -894,8 +908,12 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
-  MapLibreMap setLayoutProperty(String layerId, String name, dynamic value,
-      [StyleSetterOptions? options]) {
+  MapLibreMap setLayoutProperty(
+    String layerId,
+    String name,
+    dynamic value, [
+    StyleSetterOptions? options,
+  ]) {
     final jsValue = utils.jsify(value);
     return MapLibreMap.fromJsObject(
       jsObject.setLayoutProperty(layerId, name, jsValue),

@@ -55,7 +55,7 @@ Future<void> main() async {
     "raster_dem",
     "geojson",
     "video",
-    "image"
+    "image",
   ];
 
   /// Build the mustache rendering context consumed by each template.
@@ -80,16 +80,17 @@ Future<void> main() async {
           "properties": buildSourceProperties(styleJson, "source_$type"),
         },
     ],
-    'expressions': buildExpressionProperties(styleJson)
+    'expressions': buildExpressionProperties(styleJson),
   };
 
   // required for deduplication
   // Collect a set of all layout property names across layer types to enable
   // template logic for shared helpers / deduplication.
-  renderContext["all_layout_properties"] = <dynamic>{
-    for (final type in renderContext["layerTypes"]!)
-      ...type["layout_properties"].map((p) => p["value"])
-  }.map((p) => {"property": p}).toList();
+  renderContext["all_layout_properties"] =
+      <dynamic>{
+        for (final type in renderContext["layerTypes"]!)
+          ...type["layout_properties"].map((p) => p["value"]),
+      }.map((p) => {"property": p}).toList();
 
   // Ordered list of templates we render. If you add a new feature, append
   // here to keep existing diff noise minimal.
@@ -140,8 +141,9 @@ Future<String> render(
 
   print("Rendering $filename");
   final templateFile =
-      await File('$currentParentPath/scripts/templates/$filename.template')
-          .readAsString();
+      await File(
+        '$currentParentPath/scripts/templates/$filename.template',
+      ).readAsString();
 
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
@@ -153,7 +155,9 @@ Future<String> render(
 
 /// Build the (paint/layout) style properties list for a given style.json key.
 List<Map<String, dynamic>> buildStyleProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
@@ -161,9 +165,12 @@ List<Map<String, dynamic>> buildStyleProperties(
 
 /// Translate a single raw style property spec into a template-ready map.
 Map<String, dynamic> buildStyleProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final typeDart = dartTypeMappingTable[value["type"]];
-  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+  final nestedTypeDart =
+      dartTypeMappingTable[value["value"]] ??
       dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
 
@@ -177,13 +184,15 @@ Map<String, dynamic> buildStyleProperty(
     'iosAsCamelCase': renamedIosProperties[camelCase],
     'doc': value["doc"],
     'docSplit': buildDocSplit(value).map((s) => {"part": s}).toList(),
-    'valueAsCamelCase': camelCase
+    'valueAsCamelCase': camelCase,
   };
 }
 
 /// Build the list of source properties (excluding generic wildcard entries).
 List<Map<String, dynamic>> buildSourceProperties(
-    Map<String, dynamic> styleJson, String key) {
+  Map<String, dynamic> styleJson,
+  String key,
+) {
   final Map<String, dynamic> items = styleJson[key];
 
   return items.entries
@@ -195,13 +204,17 @@ List<Map<String, dynamic>> buildSourceProperties(
 /// Translate one source property spec to a template map, including default
 /// value normalization (prefixing const for literal lists, quoting strings).
 Map<String, dynamic> buildSourceProperty(
-    String key, Map<String, dynamic> value) {
+  String key,
+  Map<String, dynamic> value,
+) {
   final camelCase = ReCase(key).camelCase;
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
-  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+  final nestedTypeDart =
+      dartTypeMappingTable[value["value"]] ??
       dartTypeMappingTable[value["value"]?["type"]];
-  final nestedTypeSwift = swiftTypeMappingTable[value["value"]] ??
+  final nestedTypeSwift =
+      swiftTypeMappingTable[value["value"]] ??
       swiftTypeMappingTable[value["value"]?["type"]];
 
   var defaultValue = value["default"];
@@ -220,7 +233,7 @@ Map<String, dynamic> buildSourceProperty(
     'typeSwift':
         nestedTypeSwift == null ? typeSwift : "$typeSwift<$nestedTypeSwift>",
     'docSplit': buildDocSplit(value).map((s) => {"part": s}).toList(),
-    'valueAsCamelCase': camelCase
+    'valueAsCamelCase': camelCase,
   };
 }
 
@@ -246,7 +259,8 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
       for (final value in values.entries) {
         result.add('  "${value.key}"');
         result.addAll(
-            splitIntoChunks("${value.value["doc"]}", 70, prefix: "     "));
+          splitIntoChunks("${value.value["doc"]}", 70, prefix: "     "),
+        );
       }
     }
   }
@@ -268,8 +282,11 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
 }
 
 /// Simple greedy word-wrapping utility used for docs.
-List<String> splitIntoChunks(String input, int lineLength,
-    {String prefix = ""}) {
+List<String> splitIntoChunks(
+  String input,
+  int lineLength, {
+  String prefix = "",
+}) {
   final words = input.split(" ");
   final chunks = <String>[];
 
@@ -291,7 +308,8 @@ List<String> splitIntoChunks(String input, int lineLength,
 /// Build expression metadata (renaming reserved or symbolic operators to
 /// valid method-like identifiers for Dart code generation).
 List<Map<String, dynamic>> buildExpressionProperties(
-    Map<String, dynamic> styleJson) {
+  Map<String, dynamic> styleJson,
+) {
   final Map<String, dynamic> items = styleJson["expression_name"]["values"];
 
   final renamed = {
@@ -315,11 +333,13 @@ List<Map<String, dynamic>> buildExpressionProperties(
   };
 
   return items.entries
-      .map((e) => <String, dynamic>{
-            'value': e.key,
-            'doc': e.value["doc"],
-            'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
-            'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase
-          })
+      .map(
+        (e) => <String, dynamic>{
+          'value': e.key,
+          'doc': e.value["doc"],
+          'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
+          'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase,
+        },
+      )
       .toList();
 }
