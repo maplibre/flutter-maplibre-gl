@@ -71,9 +71,11 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  Add a layer to the map style. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
   ///  @param {string} [before] ID of an existing layer to insert before
-  addLayer(dynamic layerObject,
-          [String? before, StyleSetterOptions? options]) =>
-      jsObject.addLayer(layerObject);
+  addLayer(
+    dynamic layerObject, [
+    String? before,
+    StyleSetterOptions? options,
+  ]) => jsObject.addLayer(layerObject);
 
   ///  Moves a layer to a different z-position. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
@@ -106,9 +108,12 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   ///  @returns {*} the layer's filter, if any
   getFilter(String layer) => jsObject.getFilter(layer);
 
-  setLayoutProperty(String layerId, String name, dynamic value,
-          StyleSetterOptions options) =>
-      jsObject.setLayoutProperty(layerId, name, value, options.jsObject);
+  setLayoutProperty(
+    String layerId,
+    String name,
+    dynamic value,
+    StyleSetterOptions options,
+  ) => jsObject.setLayoutProperty(layerId, name, value, options.jsObject);
 
   ///  Get a layout property's value from a given layer
   ///  @param {string} layerId the layer to inspect
@@ -117,9 +122,12 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
   getLayoutProperty(String layerId, String name) =>
       jsObject.getLayoutProperty(layerId, name);
 
-  setPaintProperty(String layerId, String name, dynamic value,
-          StyleSetterOptions options) =>
-      jsObject.setPaintProperty(layerId, name, value, options.jsObject);
+  setPaintProperty(
+    String layerId,
+    String name,
+    dynamic value,
+    StyleSetterOptions options,
+  ) => jsObject.setPaintProperty(layerId, name, value, options.jsObject);
 
   getPaintProperty(String layer, String name) =>
       jsObject.getPaintProperty(layer, name);
@@ -156,7 +164,10 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
       jsObject.getGlyphs(mapId, params, callback.toJS as JSFunction);
 
   getResource(
-          String mapId, RequestParameters params, void Function() callback) =>
+    String mapId,
+    RequestParameters params,
+    void Function() callback,
+  ) =>
       jsObject.getResource(mapId, params.jsObject, callback.toJS as JSFunction);
 
   /// Creates a new Style from a [jsObject].

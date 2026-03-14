@@ -20,11 +20,11 @@ class ControlRow {
 /// Example demonstrating map UI controls and settings
 class MapControlsExample extends ExamplePage {
   const MapControlsExample({super.key})
-      : super(
-          const Icon(Icons.settings),
-          'Map Controls',
-          category: ExampleCategory.interaction,
-        );
+    : super(
+        const Icon(Icons.settings),
+        'Map Controls',
+        category: ExampleCategory.interaction,
+      );
 
   @override
   Widget build(BuildContext context) => const _MapControlsBody();

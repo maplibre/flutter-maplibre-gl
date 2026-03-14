@@ -12,9 +12,10 @@ class SymbolLayerJsImpl {
       dict['metadata'] = symbolLayer.metadata;
     }
     if (symbolLayer.source != null) {
-      dict['source'] = symbolLayer.source is String
-          ? symbolLayer.source
-          : symbolLayer.source.dict;
+      dict['source'] =
+          symbolLayer.source is String
+              ? symbolLayer.source
+              : symbolLayer.source.dict;
     }
     if (symbolLayer.sourceLayer != null) {
       dict['source-layer'] = symbolLayer.sourceLayer;
