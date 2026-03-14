@@ -1128,7 +1128,8 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// WebGL context attributes including `preserveDrawingBuffer`, `antialias`,
   /// and `failIfMajorPerformanceCaveat`. In MapLibre GL JS v5+, these are
   /// configured via `canvasContextAttributes` instead of top-level options.
-  dynamic get canvasContextAttributes => jsObject.canvasContextAttributes;
+  CanvasContextAttributesJsImpl? get canvasContextAttributes =>
+      jsObject.canvasContextAttributes;
 
   /// If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
   bool get refreshExpiredTiles => jsObject.refreshExpiredTiles.toDart;
