@@ -13,12 +13,13 @@ class NavigationControlOptions
     bool? showCompass,
     bool? showZoom,
     bool? visualizePitch,
-  }) =>
-      NavigationControlOptions.fromJsObject(NavigationControlOptionsJsImpl(
-        showCompass: showCompass,
-        showZoom: showZoom,
-        visualizePitch: visualizePitch,
-      ));
+  }) => NavigationControlOptions.fromJsObject(
+    NavigationControlOptionsJsImpl(
+      showCompass: showCompass,
+      showZoom: showZoom,
+      visualizePitch: visualizePitch,
+    ),
+  );
 
   /// Creates a new NavigationControlOptions from a [jsObject].
   NavigationControlOptions.fromJsObject(super.jsObject) : super.fromJsObject();

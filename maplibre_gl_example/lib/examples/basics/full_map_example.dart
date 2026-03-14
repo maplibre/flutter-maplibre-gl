@@ -7,11 +7,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating basic full-screen map
 class FullMapExample extends ExamplePage {
   const FullMapExample({super.key})
-      : super(
-          const Icon(Icons.map),
-          'Full screen map',
-          category: ExampleCategory.basics,
-        );
+    : super(
+        const Icon(Icons.map),
+        'Full screen map',
+        category: ExampleCategory.basics,
+      );
 
   @override
   Widget build(BuildContext context) => const _FullMapBody();
@@ -67,11 +67,12 @@ class _FullMapBodyState extends State<_FullMapBody> {
       floatingActionButton: ExampleButton(
         label: canReset ? 'Reset camera' : 'Go to San Francisco',
         icon: canReset ? Icons.refresh : Icons.flight_takeoff,
-        onPressed: _canInteractWithMap
-            ? canReset
-                ? _resetCamera
-                : _moveCameraToSanFrancisco
-            : null,
+        onPressed:
+            _canInteractWithMap
+                ? canReset
+                    ? _resetCamera
+                    : _moveCameraToSanFrancisco
+                : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

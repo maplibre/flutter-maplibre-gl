@@ -10,17 +10,21 @@ class StyleInfo {
   final Future<void> Function(MapLibreMapController) addDetails;
   final CameraPosition position;
 
-  const StyleInfo(
-      {required this.name,
-      required this.baseStyle,
-      required this.addDetails,
-      required this.position});
+  const StyleInfo({
+    required this.name,
+    required this.baseStyle,
+    required this.addDetails,
+    required this.position,
+  });
 }
 
 class VariousSources extends ExamplePage {
   const VariousSources({super.key})
-      : super(const Icon(Icons.map), 'Various Sources',
-            category: ExampleCategory.layers);
+    : super(
+        const Icon(Icons.map),
+        'Various Sources',
+        category: ExampleCategory.layers,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -48,94 +52,108 @@ class FullMapState extends State<FullMap> {
     await controller.addSource(
       "osm-raster",
       const RasterSourceProperties(
-          tiles: [
-            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          ],
-          tileSize: 256,
-          attribution:
-              '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>'),
+        tiles: [
+          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        ],
+        tileSize: 256,
+        attribution:
+            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>',
+      ),
     );
     await controller.addLayer(
-        "osm-raster", "osm-raster", const RasterLayerProperties());
+      "osm-raster",
+      "osm-raster",
+      const RasterLayerProperties(),
+    );
   }
 
   static Future<void> addGeojsonCluster(
-      MapLibreMapController controller) async {
+    MapLibreMapController controller,
+  ) async {
     await controller.addSource(
       "earthquakes",
       const GeojsonSourceProperties(
-          data:
-              'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
-          cluster: true,
-          clusterMaxZoom: 14, // Max zoom to cluster points on
-          clusterRadius:
-              50, // Radius of each cluster when clustering points (defaults to 50)
-          attribution:
-              '<a href="https://maplibre.org">Earthquake data © MapLibre</a>'),
+        data:
+            'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
+        cluster: true,
+        clusterMaxZoom: 14, // Max zoom to cluster points on
+        clusterRadius:
+            50, // Radius of each cluster when clustering points (defaults to 50)
+        attribution:
+            '<a href="https://maplibre.org">Earthquake data © MapLibre</a>',
+      ),
     );
     await controller.addLayer(
-        "earthquakes",
-        "earthquakes-circles",
-        const CircleLayerProperties(circleColor: [
+      "earthquakes",
+      "earthquakes-circles",
+      const CircleLayerProperties(
+        circleColor: [
           Expressions.step,
           [Expressions.get, 'point_count'],
           '#51bbd6',
           100,
           '#f1f075',
           750,
-          '#f28cb1'
-        ], circleRadius: [
+          '#f28cb1',
+        ],
+        circleRadius: [
           Expressions.step,
           [Expressions.get, 'point_count'],
           20,
           100,
           30,
           750,
-          40
-        ]));
+          40,
+        ],
+      ),
+    );
     await controller.addLayer(
-        "earthquakes",
-        "earthquakes-count",
-        const SymbolLayerProperties(
-          textField: [Expressions.get, 'point_count_abbreviated'],
-          textFont: ['Open Sans Semibold'],
-          textSize: 12,
-        ));
+      "earthquakes",
+      "earthquakes-count",
+      const SymbolLayerProperties(
+        textField: [Expressions.get, 'point_count_abbreviated'],
+        textFont: ['Open Sans Semibold'],
+        textSize: 12,
+      ),
+    );
   }
 
   static Future<void> addVector(MapLibreMapController controller) async {
     await controller.addSource(
-        "openmaptiles",
-        const VectorSourceProperties(
-          tiles: [
-            'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf',
-          ],
-          maxzoom: 14,
-          attribution:
-              '<a href="https://maplibre.org">© MapLibre contributors</a',
-        ));
+      "openmaptiles",
+      const VectorSourceProperties(
+        tiles: [
+          'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf',
+        ],
+        maxzoom: 14,
+        attribution:
+            '<a href="https://maplibre.org">© MapLibre contributors</a',
+      ),
+    );
 
     await controller.addLayer(
-        "openmaptiles",
-        "water-fill",
-        const FillLayerProperties(
-          fillColor: "#0080ff",
-          fillOpacity: 0.5,
-        ),
-        sourceLayer: "water");
+      "openmaptiles",
+      "water-fill",
+      const FillLayerProperties(
+        fillColor: "#0080ff",
+        fillOpacity: 0.5,
+      ),
+      sourceLayer: "water",
+    );
 
     await controller.addLayer(
-        "openmaptiles",
-        "roads",
-        const LineLayerProperties(
-          lineColor: "#ff69b4",
-          lineWidth: 2,
-          lineCap: "round",
-          lineJoin: "round",
-        ),
-        sourceLayer: "transportation");
+      "openmaptiles",
+      "roads",
+      const LineLayerProperties(
+        lineColor: "#ff69b4",
+        lineWidth: 2,
+        lineCap: "round",
+        lineJoin: "round",
+      ),
+      sourceLayer: "transportation",
+    );
   }
 
   static Future<void> addImage(MapLibreMapController controller) async {
@@ -147,7 +165,7 @@ class FullMapState extends State<FullMap> {
           [-80.425, 46.437],
           [-71.516, 46.437],
           [-71.516, 37.936],
-          [-80.425, 37.936]
+          [-80.425, 37.936],
         ],
       ),
     );
@@ -165,13 +183,13 @@ class FullMapState extends State<FullMap> {
       const VideoSourceProperties(
         urls: [
           'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4',
-          'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm'
+          'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm',
         ],
         coordinates: [
           [-122.51596391201019, 37.56238816766053],
           [-122.51467645168304, 37.56410183312965],
           [-122.51309394836426, 37.563391708549425],
-          [-122.51423120498657, 37.56161849366671]
+          [-122.51423120498657, 37.56161849366671],
         ],
       ),
     );
@@ -217,7 +235,7 @@ class FullMapState extends State<FullMap> {
           0,
           1,
           9,
-          3
+          3,
         ],
         // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
         // Begin color ramp at 0-stop with a 0-transparancy color
@@ -257,7 +275,7 @@ class FullMapState extends State<FullMap> {
           7,
           1,
           9,
-          0
+          0,
         ],
       ),
       maxzoom: 9,
@@ -332,7 +350,7 @@ class FullMapState extends State<FullMap> {
       "terrarium-dem",
       const RasterDemSourceProperties(
         tiles: [
-          'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
+          'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
         ],
         minzoom: 0,
         maxzoom: 15,
@@ -375,7 +393,11 @@ class FullMapState extends State<FullMap> {
       baseStyle: MapLibreStyles.demo,
       addDetails: addDemHillshade,
       position: CameraPosition(
-          target: LatLng(46.5, 8.0), zoom: 8, bearing: 80, tilt: 60),
+        target: LatLng(46.5, 8.0),
+        zoom: 8,
+        bearing: 80,
+        tilt: 60,
+      ),
     ),
     const StyleInfo(
       name: "Geojson cluster",
@@ -408,7 +430,10 @@ class FullMapState extends State<FullMap> {
         baseStyle: MapLibreStyles.demo,
         addDetails: addVideo,
         position: CameraPosition(
-            target: LatLng(37.562984, -122.514426), zoom: 17, bearing: -96),
+          target: LatLng(37.562984, -122.514426),
+          zoom: 17,
+          bearing: -96,
+        ),
       ),
   ];
 
@@ -425,8 +450,9 @@ class FullMapState extends State<FullMap> {
     if (controller == null) return;
     final styleInfo = _stylesAndLoaders[selectedStyleId];
     await styleInfo.addDetails(controller!);
-    await controller!
-        .animateCamera(CameraUpdate.newCameraPosition(styleInfo.position));
+    await controller!.animateCamera(
+      CameraUpdate.newCameraPosition(styleInfo.position),
+    );
   }
 
   @override
@@ -436,42 +462,41 @@ class FullMapState extends State<FullMap> {
         _stylesAndLoaders[(selectedStyleId + 1) % _stylesAndLoaders.length]
             .name;
     return Scaffold(
-        floatingActionButton: FloatingActionButton.extended(
-          icon: const Icon(Icons.swap_horiz),
-          label:
-              SizedBox(width: 120, child: Center(child: Text("To $nextName"))),
-          onPressed: () async {
-            setState(() {
-              selectedStyleId =
-                  (selectedStyleId + 1) % _stylesAndLoaders.length;
-            });
-            await _loadCurrentSource();
-          },
-        ),
-        body: Stack(
-          children: [
-            MapLibreMap(
-              styleString: styleInfo.baseStyle,
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: styleInfo.position,
-              onStyleLoadedCallback: _onStyleLoadedCallback,
-              logoEnabled: true,
-              attributionButtonPosition: AttributionButtonPosition.bottomLeft,
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.topCenter,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Current source: ${styleInfo.name}",
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.swap_horiz),
+        label: SizedBox(width: 120, child: Center(child: Text("To $nextName"))),
+        onPressed: () async {
+          setState(() {
+            selectedStyleId = (selectedStyleId + 1) % _stylesAndLoaders.length;
+          });
+          await _loadCurrentSource();
+        },
+      ),
+      body: Stack(
+        children: [
+          MapLibreMap(
+            styleString: styleInfo.baseStyle,
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: styleInfo.position,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            logoEnabled: true,
+            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            alignment: Alignment.topCenter,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Current source: ${styleInfo.name}",
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }

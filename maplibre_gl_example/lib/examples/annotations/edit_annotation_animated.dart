@@ -10,11 +10,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating animated annotation updates
 class EditAnnotationAnimatedExample extends ExamplePage {
   const EditAnnotationAnimatedExample({super.key})
-      : super(
-          const Icon(Icons.animation),
-          'Edit Annotation (Animated)',
-          category: ExampleCategory.annotations,
-        );
+    : super(
+        const Icon(Icons.animation),
+        'Edit Annotation (Animated)',
+        category: ExampleCategory.annotations,
+      );
 
   @override
   Widget build(BuildContext context) => const _EditAnnotationAnimatedBody();
@@ -53,14 +53,13 @@ class _EditAnnotationAnimatedBodyState
     _colorAnimation = ColorTween(
       begin: Colors.blue,
       end: Colors.red,
-    ).animate(_colorAnimationController)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          unawaited(_colorAnimationController.reverse());
-        } else if (status == AnimationStatus.dismissed) {
-          unawaited(_colorAnimationController.forward());
-        }
-      });
+    ).animate(_colorAnimationController)..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        unawaited(_colorAnimationController.reverse());
+      } else if (status == AnimationStatus.dismissed) {
+        unawaited(_colorAnimationController.forward());
+      }
+    });
 
     _colorAnimationController.addListener(() {
       unawaited(_updateAnnotationColors());
@@ -323,7 +322,8 @@ class _EditAnnotationAnimatedBodyState
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
-    final hasAnnotations = _animatedSymbol != null ||
+    final hasAnnotations =
+        _animatedSymbol != null ||
         _animatedCircle != null ||
         _animatedLine != null;
 
@@ -355,8 +355,8 @@ class _EditAnnotationAnimatedBodyState
                 Text(
                   'Edit Annotation (Animated)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -393,12 +393,13 @@ class _EditAnnotationAnimatedBodyState
             ExampleButton(
               label: hasAnnotations ? 'Reset Annotations' : 'Add Annotations',
               icon: hasAnnotations ? Icons.refresh : Icons.add,
-              onPressed: hasController
-                  ? () async {
-                      await _clearAnnotations();
-                      await _addInitialAnnotations();
-                    }
-                  : null,
+              onPressed:
+                  hasController
+                      ? () async {
+                        await _clearAnnotations();
+                        await _addInitialAnnotations();
+                      }
+                      : null,
             ),
             ExampleButton(
               label: 'Clear All',
@@ -415,9 +416,12 @@ class _EditAnnotationAnimatedBodyState
             ExampleButton(
               label: _isAnimating ? 'Stop Movement' : 'Start Movement',
               icon: _isAnimating ? Icons.stop : Icons.play_arrow,
-              onPressed: hasController && hasAnnotations
-                  ? (_isAnimating ? _stopAnimation : _startPositionAnimation)
-                  : null,
+              onPressed:
+                  hasController && hasAnnotations
+                      ? (_isAnimating
+                          ? _stopAnimation
+                          : _startPositionAnimation)
+                      : null,
             ),
           ],
         ),
