@@ -270,7 +270,6 @@ class _EditStyleLayerAnimatedBodyState
 
     for (var i = 0; i < 30; i++) {
       final opacity = 0.3 + 0.7 * sin(i * 0.2).abs();
-      if (opacity < 0) continue; // Skip negative opacity values
 
       await _controller!.setLayerProperties(
         _circleLayerId,
@@ -365,7 +364,6 @@ class _EditStyleLayerAnimatedBodyState
 
       // Animate fill (rotate)
       final size = 0.005 + 0.002 * sin(angle);
-      if (size < 0) continue; // Skip negative size values
 
       await _controller!.setGeoJsonSource(
         _fillSourceId,

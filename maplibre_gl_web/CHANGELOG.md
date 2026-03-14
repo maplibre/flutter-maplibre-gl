@@ -4,7 +4,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ### Changed
 * Upgraded MapLibre GL JS from 4.7.1 to 5.20.1 (#651)
-  * **Breaking**: `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). MapLibre GL JS v5 gives priority to style-defined camera values over constructor options. Use `jumpTo()` or `animateCamera()` after map load to override.
+  * **Breaking**: `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). MapLibre GL JS v5 gives priority to style-defined camera values over constructor options. Use `MapLibreMapController.moveCamera()` or `MapLibreMapController.animateCamera()` after map load to override.
   * `preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat` now set via `canvasContextAttributes` (MapLibre GL JS v5 API change)
   * `on()`/`off()`/`once()` adapted for v5 `Subscription` return type
   * Removed `customAttribution` from `MapOptionsJsImpl` (moved to `AttributionControl` options in v5)

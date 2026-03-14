@@ -13,10 +13,17 @@ typedef LayerEventListener = dynamic Function(Event object, String layerId);
 /// Dart wrapper around MapLibre GL JS v5+ Subscription object.
 /// Allows unsubscribing from events without storing the listener reference.
 class Subscription extends JsObjectWrapper<SubscriptionJsImpl> {
-  /// Removes the event listener associated with this subscription.
-  void unsubscribe() => jsObject.unsubscribe();
+  final void Function()? _onUnsubscribe;
 
-  Subscription.fromJsObject(super.jsObject) : super.fromJsObject();
+  /// Removes the event listener associated with this subscription.
+  void unsubscribe() {
+    jsObject.unsubscribe();
+    _onUnsubscribe?.call();
+  }
+
+  Subscription.fromJsObject(super.jsObject, {void Function()? onUnsubscribe})
+      : _onUnsubscribe = onUnsubscribe,
+        super.fromJsObject();
 }
 
 class Event extends JsObjectWrapper<EventJsImpl> {
@@ -68,8 +75,6 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   /// Key is a composite of (eventType, layerIdOrListener.hashCode?, listener.hashCode)
   final _listeners = <String, JSFunction>{};
 
-  /// Store subscriptions so they can be used for unsubscribe.
-  final _subscriptions = <String, Subscription>{};
 
   /// Build a composite key (eventType::layerId::listenerHashCode).
   String _listenerKey(
@@ -120,8 +125,9 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
 
     final key = _listenerKey(type, layerIdOrListener, listener);
     _listeners[key] = jsFn;
-    final subscription = Subscription.fromJsObject(sub);
-    _subscriptions[key] = subscription;
+    final subscription = Subscription.fromJsObject(sub, onUnsubscribe: () {
+      _listeners.remove(key);
+    });
 
     return subscription;
   }
@@ -137,7 +143,6 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
   ]) {
     final key = _listenerKey(type, layerIdOrListener, listener);
     final jsFn = _listeners.remove(key);
-    _subscriptions.remove(key);
 
     if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
       jsObject.off(type, jsFn);
