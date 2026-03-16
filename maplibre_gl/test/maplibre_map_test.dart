@@ -119,6 +119,38 @@ void main() {
     });
   });
 
+  group('onStyleLoaded manager disposal', () {
+    test('disposes old managers and re-creates them on style reload', () async {
+      final controller = MapLibreMapController(
+        maplibrePlatform: platform,
+        annotationOrder: AnnotationType.values,
+        annotationConsumeTapEvents: AnnotationType.values,
+      );
+
+      // First style load — creates managers.
+      platform.onMapStyleLoadedPlatform.call(null);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.fillManager, isNotNull);
+      expect(controller.lineManager, isNotNull);
+      expect(controller.circleManager, isNotNull);
+      expect(controller.symbolManager, isNotNull);
+
+      final oldFill = controller.fillManager;
+      final oldLine = controller.lineManager;
+
+      // Second style load — disposes old managers, creates new ones.
+      platform.onMapStyleLoadedPlatform.call(null);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.fillManager, isNotNull);
+      expect(controller.fillManager, isNot(same(oldFill)));
+      expect(controller.lineManager, isNot(same(oldLine)));
+
+      controller.dispose();
+    });
+  });
+
   group('Controller initialCameraPosition', () {
     test('cameraPosition is null when initialCameraPosition is null', () {
       final controller = MapLibreMapController(

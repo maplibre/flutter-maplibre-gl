@@ -206,13 +206,21 @@ class MapLibreMapController extends ChangeNotifier {
       // Dispose old managers before re-creating them for the new style.
       // This prevents stale in-flight method channel calls from racing
       // with a new style that has cleared the native Style reference.
-      await fillManager?.dispose();
+      try {
+        await fillManager?.dispose();
+      } catch (_) {}
       fillManager = null;
-      await lineManager?.dispose();
+      try {
+        await lineManager?.dispose();
+      } catch (_) {}
       lineManager = null;
-      await circleManager?.dispose();
+      try {
+        await circleManager?.dispose();
+      } catch (_) {}
       circleManager = null;
-      await symbolManager?.dispose();
+      try {
+        await symbolManager?.dispose();
+      } catch (_) {}
       symbolManager = null;
 
       final interactionEnabled = annotationConsumeTapEvents.toSet();
