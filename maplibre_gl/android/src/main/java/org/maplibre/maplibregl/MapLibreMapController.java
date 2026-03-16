@@ -408,6 +408,20 @@ final class MapLibreMapController
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
   }
 
+  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
+    JsonElement jsonElement = JsonParser.parseString(geojson);
+    String type = jsonElement.getAsJsonObject().get("type").getAsString();
+
+    if ("FeatureCollection".equals(type)) {
+      return FeatureCollection.fromJson(geojson);
+    } else if ("Feature".equals(type)) {
+      Feature feature = Feature.fromJson(geojson);
+      return FeatureCollection.fromFeatures(new Feature[]{ feature });
+    }
+
+    return null;
+  }
+
   private void addGeoJsonSource(String sourceName, String source) {
     if (style == null || !style.isFullyLoaded()) {
       Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
@@ -421,17 +435,9 @@ final class MapLibreMapController
     }
 
     try {
-      FeatureCollection featureCollection;
-      JsonElement jsonElement = JsonParser.parseString(source);
-      String type = jsonElement.getAsJsonObject().get("type").getAsString();
-
-      if ("FeatureCollection".equals(type)) {
-        featureCollection = FeatureCollection.fromJson(source);
-      } else if ("Feature".equals(type)) {
-        Feature feature = Feature.fromJson(source);
-        featureCollection = FeatureCollection.fromFeatures(new Feature[]{ feature });
-      } else {
-        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type '" + type + "', skipping");
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
+      if (featureCollection == null) {
+        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
         return;
       }
 
@@ -452,17 +458,9 @@ final class MapLibreMapController
     }
 
     try {
-      FeatureCollection featureCollection;
-      JsonElement jsonElement = JsonParser.parseString(geojson);
-      String type = jsonElement.getAsJsonObject().get("type").getAsString();
-
-      if ("FeatureCollection".equals(type)) {
-        featureCollection = FeatureCollection.fromJson(geojson);
-      } else if ("Feature".equals(type)) {
-        Feature feature = Feature.fromJson(geojson);
-        featureCollection = FeatureCollection.fromFeatures(Collections.singletonList(feature));
-      } else {
-        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type '" + type + "', skipping update");
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
+      if (featureCollection == null) {
+        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
         return;
       }
 
