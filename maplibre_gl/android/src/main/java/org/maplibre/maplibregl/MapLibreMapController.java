@@ -508,7 +508,7 @@ final class MapLibreMapController
     }
   }
 
-  private void addSymbolLayer(
+  private boolean addSymbolLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -518,6 +518,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addSymbolLayer: style not ready, skipping");
+      return false;
+    }
     SymbolLayer symbolLayer = new SymbolLayer(layerName, sourceName);
     symbolLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -540,9 +544,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addLineLayer(
+  private boolean addLineLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -552,6 +557,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addLineLayer: style not ready, skipping");
+      return false;
+    }
     LineLayer lineLayer = new LineLayer(layerName, sourceName);
     lineLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -574,9 +583,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addFillLayer(
+  private boolean addFillLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -586,6 +596,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillLayer: style not ready, skipping");
+      return false;
+    }
     FillLayer fillLayer = new FillLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -608,9 +622,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addFillExtrusionLayer(
+  private boolean addFillExtrusionLayer(
           String layerName,
           String sourceName,
           String belowLayerId,
@@ -620,6 +635,10 @@ final class MapLibreMapController
           PropertyValue[] properties,
           boolean enableInteraction,
           Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillExtrusionLayer: style not ready, skipping");
+      return false;
+    }
     FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -642,9 +661,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addCircleLayer(
+  private boolean addCircleLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -654,6 +674,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addCircleLayer: style not ready, skipping");
+      return false;
+    }
     CircleLayer circleLayer = new CircleLayer(layerName, sourceName);
     circleLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -676,6 +700,7 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
   private Expression parseFilter(String filter) {
@@ -684,7 +709,7 @@ final class MapLibreMapController
     return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
   }
 
-  private void addRasterLayer(
+  private boolean addRasterLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -692,6 +717,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addRasterLayer: style not ready, skipping");
+      return false;
+    }
     RasterLayer layer = new RasterLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -705,9 +734,10 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
-  private void addHillshadeLayer(
+  private boolean addHillshadeLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -715,6 +745,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHillshadeLayer: style not ready, skipping");
+      return false;
+    }
     HillshadeLayer layer = new HillshadeLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -728,9 +762,10 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
-  private void addHeatmapLayer(
+  private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -738,6 +773,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHeatmapLayer: style not ready, skipping");
+      return false;
+    }
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -751,6 +790,7 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
   private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
@@ -1274,7 +1314,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addSymbolLayer(
+          if (!addSymbolLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1283,7 +1323,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1304,7 +1347,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addLineLayer(
+          if (!addLineLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1313,7 +1356,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1379,7 +1425,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addFillLayer(
+          if (!addFillLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1388,7 +1434,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1410,7 +1459,7 @@ final class MapLibreMapController
 
         Expression filterExpression = parseFilter(filter);
 
-        addFillExtrusionLayer(
+        if (!addFillExtrusionLayer(
                 layerId,
                 sourceId,
                 belowLayerId,
@@ -1419,7 +1468,10 @@ final class MapLibreMapController
                 maxzoom != null ? maxzoom.floatValue() : null,
                 properties,
                 enableInteraction,
-                filterExpression);
+                filterExpression)) {
+          result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+          break;
+        }
         updateLocationComponentLayer();
 
         result.success(null);
@@ -1440,7 +1492,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addCircleLayer(
+          if (!addCircleLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1449,7 +1501,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1464,14 +1519,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretRasterLayerProperties(call.argument("properties"));
-          addRasterLayer(
+          if (!addRasterLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1486,14 +1544,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
-          addHillshadeLayer(
+          if (!addHillshadeLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1508,14 +1569,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
-          addHeatmapLayer(
+          if (!addHeatmapLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1655,13 +1719,7 @@ final class MapLibreMapController
         }
       case "style#addLayer":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
-          addRasterLayer(
+          if (!addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
               call.argument("minzoom") != null
@@ -1672,19 +1730,16 @@ final class MapLibreMapController
                   : null,
               null,
               new PropertyValue[] {},
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           result.success(null);
           break;
         }
       case "style#addLayerBelow":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
-          addRasterLayer(
+          if (!addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
               call.argument("minzoom") != null
@@ -1695,7 +1750,10 @@ final class MapLibreMapController
                   : null,
               call.argument("belowLayerId"),
               new PropertyValue[] {},
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           result.success(null);
           break;
         }
