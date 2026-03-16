@@ -41,7 +41,10 @@ void main() {
       );
 
       final calls = platform.callsFor('animateCamera');
-      expect(calls.first.namedArgs['duration'], const Duration(milliseconds: 500));
+      expect(
+        calls.first.namedArgs['duration'],
+        const Duration(milliseconds: 500),
+      );
     });
 
     test('moveCamera delegates to platform', () async {
@@ -115,8 +118,7 @@ void main() {
       expect(calls.first.positionalArgs.first, 'src-1');
     });
 
-    test('setGeoJsonFeature delegates to setFeatureForGeoJsonSource',
-        () async {
+    test('setGeoJsonFeature delegates to setFeatureForGeoJsonSource', () async {
       final feature = <String, dynamic>{
         'type': 'Feature',
         'id': 'f1',
@@ -233,8 +235,7 @@ void main() {
 
   group('Map queries delegation', () {
     test('toScreenLocation delegates to platform', () async {
-      final result =
-          await controller.toScreenLocation(const LatLng(10, 20));
+      final result = await controller.toScreenLocation(const LatLng(10, 20));
 
       expect(result, const Point(0, 0));
     });
@@ -290,8 +291,9 @@ void main() {
 
     test('camera idle sets isCameraMoving to false', () {
       platform.onCameraMoveStartedPlatform.call(null);
-      platform.onCameraIdlePlatform
-          .call(const CameraPosition(target: LatLng(5, 5)));
+      platform.onCameraIdlePlatform.call(
+        const CameraPosition(target: LatLng(5, 5)),
+      );
 
       expect(controller.isCameraMoving, isFalse);
     });
@@ -302,8 +304,7 @@ void main() {
 
       expect(controller.cameraPosition, newPos);
     });
-
-});
+  });
 
   group('Callback wiring', () {
     test('onMapClick fires from platform event', () {
@@ -369,8 +370,9 @@ void main() {
         },
       );
 
-      platform.onCameraTrackingChangedPlatform
-          .call(MyLocationTrackingMode.tracking);
+      platform.onCameraTrackingChangedPlatform.call(
+        MyLocationTrackingMode.tracking,
+      );
 
       expect(receivedMode, MyLocationTrackingMode.tracking);
 

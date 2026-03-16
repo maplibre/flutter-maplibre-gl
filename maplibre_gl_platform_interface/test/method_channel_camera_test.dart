@@ -107,16 +107,18 @@ void main() {
       expect(result.zoom, 15.0);
     });
 
-    test('updateMapOptions passes options and returns CameraPosition',
-        () async {
-      final result = await platform.updateMapOptions({'zoom': 10.0});
+    test(
+      'updateMapOptions passes options and returns CameraPosition',
+      () async {
+        final result = await platform.updateMapOptions({'zoom': 10.0});
 
-      expect(methodCalls.length, 1);
-      expect(methodCalls[0].method, 'map#update');
-      final args = methodCalls[0].arguments as Map;
-      expect(args['options'], {'zoom': 10.0});
-      expect(result, isNotNull);
-      expect(result!.zoom, 10.0);
-    });
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'map#update');
+        final args = methodCalls[0].arguments as Map;
+        expect(args['options'], {'zoom': 10.0});
+        expect(result, isNotNull);
+        expect(result!.zoom, 10.0);
+      },
+    );
   });
 }

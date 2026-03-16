@@ -4,7 +4,8 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 void main() {
   group('SymbolOptions', () {
     test('default options produce empty json', () {
-      final json = SymbolOptions.defaultOptions.toJson() as Map<String, dynamic>;
+      final json =
+          SymbolOptions.defaultOptions.toJson() as Map<String, dynamic>;
       expect(json, isEmpty);
     });
 
@@ -106,7 +107,8 @@ void main() {
 
   group('CircleOptions', () {
     test('default options produce empty json', () {
-      final json = CircleOptions.defaultOptions.toJson() as Map<String, dynamic>;
+      final json =
+          CircleOptions.defaultOptions.toJson() as Map<String, dynamic>;
       expect(json, isEmpty);
     });
 
@@ -137,8 +139,7 @@ void main() {
 
     test('copyWith merges changes', () {
       const original = CircleOptions(circleRadius: 10.0, circleColor: '#000');
-      final merged =
-          original.copyWith(const CircleOptions(circleRadius: 20.0));
+      final merged = original.copyWith(const CircleOptions(circleRadius: 20.0));
       expect(merged.circleRadius, 20.0);
       expect(merged.circleColor, '#000');
     });
@@ -375,8 +376,7 @@ void main() {
           [LatLng(2.0, 2.0), LatLng(5.0, 5.0)],
         ],
       );
-      final translated =
-          translateFillOptions(options, const LatLng(1.0, 1.0));
+      final translated = translateFillOptions(options, const LatLng(1.0, 1.0));
       expect(translated.geometry![0][0], const LatLng(1.0, 1.0));
       expect(translated.geometry![0][1], const LatLng(11.0, 1.0));
       expect(translated.geometry![1][0], const LatLng(3.0, 3.0));

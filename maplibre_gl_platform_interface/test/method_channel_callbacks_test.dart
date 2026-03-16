@@ -33,7 +33,7 @@ void main() {
           .handlePlatformMessage(
             'plugins.flutter.io/maplibre_gl_0',
             data,
-            (ByteData? reply) {},
+            (_) {},
           );
     }
 
@@ -83,26 +83,28 @@ void main() {
       expect(called, isTrue);
     });
 
-    test('map#onMapClick fires onMapClickPlatform with Point and LatLng',
-        () async {
-      Map<String, dynamic>? received;
-      platform.onMapClickPlatform.add((data) => received = data);
+    test(
+      'map#onMapClick fires onMapClickPlatform with Point and LatLng',
+      () async {
+        Map<String, dynamic>? received;
+        platform.onMapClickPlatform.add((data) => received = data);
 
-      await simulateNativeCallback('map#onMapClick', {
-        'x': 100.0,
-        'y': 200.0,
-        'lng': 20.0,
-        'lat': 10.0,
-      });
+        await simulateNativeCallback('map#onMapClick', {
+          'x': 100.0,
+          'y': 200.0,
+          'lng': 20.0,
+          'lat': 10.0,
+        });
 
-      expect(received, isNotNull);
-      final point = received!['point'] as Point<double>;
-      expect(point.x, 100.0);
-      expect(point.y, 200.0);
-      final latLng = received!['latLng'] as LatLng;
-      expect(latLng.latitude, 10.0);
-      expect(latLng.longitude, 20.0);
-    });
+        expect(received, isNotNull);
+        final point = received!['point'] as Point<double>;
+        expect(point.x, 100.0);
+        expect(point.y, 200.0);
+        final latLng = received!['latLng'] as LatLng;
+        expect(latLng.latitude, 10.0);
+        expect(latLng.longitude, 20.0);
+      },
+    );
 
     test('map#onMapLongClick fires onMapLongClickPlatform', () async {
       Map<String, dynamic>? received;
@@ -187,8 +189,7 @@ void main() {
       expect(received, MyLocationTrackingMode.tracking);
     });
 
-    test('map#onUserLocationUpdated fires with correct UserLocation',
-        () async {
+    test('map#onUserLocationUpdated fires with correct UserLocation', () async {
       UserLocation? received;
       platform.onUserLocationUpdatedPlatform.add((loc) => received = loc);
 

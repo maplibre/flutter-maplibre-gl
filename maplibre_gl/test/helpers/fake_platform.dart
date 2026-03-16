@@ -10,7 +10,11 @@ class PlatformCall {
   final List<dynamic> positionalArgs;
   final Map<String, dynamic> namedArgs;
 
-  PlatformCall(this.method, [this.positionalArgs = const [], this.namedArgs = const {}]);
+  PlatformCall(
+    this.method, [
+    this.positionalArgs = const [],
+    this.namedArgs = const {},
+  ]);
 
   @override
   String toString() => 'PlatformCall($method, $positionalArgs, $namedArgs)';
@@ -54,9 +58,13 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
-    calls.add(PlatformCall('animateCamera', [cameraUpdate], {'duration': duration}));
+  Future<bool?> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
+    calls.add(
+      PlatformCall('animateCamera', [cameraUpdate], {'duration': duration}),
+    );
     return true;
   }
 
@@ -70,7 +78,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<void> updateMyLocationTrackingMode(
     MyLocationTrackingMode myLocationTrackingMode,
   ) async {
-    calls.add(PlatformCall('updateMyLocationTrackingMode', [myLocationTrackingMode]));
+    calls.add(
+      PlatformCall('updateMyLocationTrackingMode', [myLocationTrackingMode]),
+    );
   }
 
   @override
@@ -103,9 +113,13 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<void> forceOnlineMode() async {}
 
   @override
-  Future<bool> easeCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
-    calls.add(PlatformCall('easeCamera', [cameraUpdate], {'duration': duration}));
+  Future<bool> easeCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
+    calls.add(
+      PlatformCall('easeCamera', [cameraUpdate], {'duration': duration}),
+    );
     return true;
   }
 
@@ -141,24 +155,21 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future invalidateAmbientCache() async {}
@@ -171,13 +182,16 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
 
   @override
   Future<LatLngBounds> getVisibleRegion() async => LatLngBounds(
-        southwest: const LatLng(-1, -1),
-        northeast: const LatLng(1, 1),
-      );
+    southwest: const LatLng(-1, -1),
+    northeast: const LatLng(1, 1),
+  );
 
   @override
-  Future<void> addImage(String name, Uint8List bytes,
-      [bool sdf = false]) async {}
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+  ]) async {}
 
   @override
   Future<void> addImageSource(
@@ -200,7 +214,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     double? minzoom,
     double? maxzoom,
   ) async {
-    calls.add(PlatformCall('addLayer', [imageLayerId, imageSourceId, minzoom, maxzoom]));
+    calls.add(
+      PlatformCall('addLayer', [imageLayerId, imageSourceId, minzoom, maxzoom]),
+    );
   }
 
   @override
@@ -211,7 +227,13 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     double? minzoom,
     double? maxzoom,
   ) async {
-    calls.add(PlatformCall('addLayerBelow', [imageLayerId, imageSourceId, belowLayerId]));
+    calls.add(
+      PlatformCall('addLayerBelow', [
+        imageLayerId,
+        imageSourceId,
+        belowLayerId,
+      ]),
+    );
   }
 
   @override
@@ -250,11 +272,13 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) async {
-    calls.add(PlatformCall(
-      'addGeoJsonSource',
-      [sourceId, geojson],
-      {'promoteId': promoteId},
-    ));
+    calls.add(
+      PlatformCall(
+        'addGeoJsonSource',
+        [sourceId, geojson],
+        {'promoteId': promoteId},
+      ),
+    );
   }
 
   @override
@@ -279,7 +303,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String sourceId,
     Map<String, dynamic> geojsonFeature,
   ) async {
-    calls.add(PlatformCall('setFeatureForGeoJsonSource', [sourceId, geojsonFeature]));
+    calls.add(
+      PlatformCall('setFeatureForGeoJsonSource', [sourceId, geojsonFeature]),
+    );
   }
 
   @override
@@ -303,8 +329,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String sourceId,
     String featureId, {
     String? sourceLayer,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<void> removeSource(String sourceId) async {
@@ -391,7 +416,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    calls.add(PlatformCall('addFillExtrusionLayer', [sourceId, layerId, properties]));
+    calls.add(
+      PlatformCall('addFillExtrusionLayer', [sourceId, layerId, properties]),
+    );
   }
 
   @override
@@ -417,7 +444,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     double? minzoom,
     double? maxzoom,
   }) async {
-    calls.add(PlatformCall('addHillshadeLayer', [sourceId, layerId, properties]));
+    calls.add(
+      PlatformCall('addHillshadeLayer', [sourceId, layerId, properties]),
+    );
   }
 
   @override

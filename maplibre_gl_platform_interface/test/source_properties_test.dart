@@ -55,8 +55,16 @@ void main() {
       const original = VectorSourceProperties(
         url: 'https://old.com',
       );
-      final updated = original.copyWith('https://new.com', null, null,
-          null, 5, null, null, null);
+      final updated = original.copyWith(
+        'https://new.com',
+        null,
+        null,
+        null,
+        5,
+        null,
+        null,
+        null,
+      );
       expect(updated.url, 'https://new.com');
       expect(updated.minzoom, 5);
       expect(updated.maxzoom, 22); // preserved default
@@ -92,7 +100,15 @@ void main() {
     test('copyWith replaces specified fields', () {
       const original = RasterSourceProperties();
       final updated = original.copyWith(
-          null, null, null, null, null, 256, null, null);
+        null,
+        null,
+        null,
+        null,
+        null,
+        256,
+        null,
+        null,
+      );
       expect(updated.tileSize, 256);
       expect(updated.scheme, 'xyz'); // preserved
     });
@@ -124,7 +140,15 @@ void main() {
     test('copyWith replaces specified fields', () {
       const original = RasterDemSourceProperties();
       final updated = original.copyWith(
-          null, null, null, null, null, null, null, 'terrarium');
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        'terrarium',
+      );
       expect(updated.encoding, 'terrarium');
     });
   });
@@ -183,8 +207,19 @@ void main() {
     test('copyWith replaces specified fields', () {
       const original = GeojsonSourceProperties();
       final updated = original.copyWith(
-          null, null, null, null, null, true, null, null, null, null, null,
-          null);
+        null,
+        null,
+        null,
+        null,
+        null,
+        true,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      );
       expect(updated.cluster, true);
       expect(updated.buffer, 128); // preserved
     });
@@ -229,8 +264,7 @@ void main() {
       const original = VideoSourceProperties(
         urls: ['https://old.com/video.mp4'],
       );
-      final updated =
-          original.copyWith(['https://new.com/video.mp4'], null);
+      final updated = original.copyWith(['https://new.com/video.mp4'], null);
       expect(updated.urls, ['https://new.com/video.mp4']);
     });
   });

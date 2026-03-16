@@ -124,8 +124,7 @@ void main() {
     });
 
     test('newLatLngZoom', () {
-      final update =
-          CameraUpdate.newLatLngZoom(const LatLng(10.0, 20.0), 12.0);
+      final update = CameraUpdate.newLatLngZoom(const LatLng(10.0, 20.0), 12.0);
       final json = update.toJson() as List;
       expect(json[0], 'newLatLngZoom');
       expect(json[1], [10.0, 20.0]);

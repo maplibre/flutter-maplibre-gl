@@ -147,8 +147,7 @@ void main() {
         fillExtrusionHeight: 100,
         fillExtrusionOpacity: 0.9,
       );
-      final restored =
-          FillExtrusionLayerProperties.fromJson(original.toJson());
+      final restored = FillExtrusionLayerProperties.fromJson(original.toJson());
       expect(restored.fillExtrusionColor, '#333333');
       expect(restored.fillExtrusionHeight, 100);
       expect(restored.fillExtrusionOpacity, 0.9);

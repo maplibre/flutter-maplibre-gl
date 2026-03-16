@@ -57,8 +57,7 @@ void main() {
       expect(args['geojson'], jsonEncode(geojson));
     });
 
-    test('addSource sends correct method with serialized properties',
-        () async {
+    test('addSource sends correct method with serialized properties', () async {
       const props = VectorSourceProperties(
         url: 'https://example.com/tiles.json',
       );
@@ -82,10 +81,11 @@ void main() {
       expect(args['sourceId'], 'test-source');
     });
 
-    test('editGeoJsonSource sends correct method and returns result',
-        () async {
-      final result =
-          await platform.editGeoJsonSource('src-1', '{"type":"Feature"}');
+    test('editGeoJsonSource sends correct method and returns result', () async {
+      final result = await platform.editGeoJsonSource(
+        'src-1',
+        '{"type":"Feature"}',
+      );
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'map#editGeoJsonSource');

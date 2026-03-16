@@ -20,8 +20,14 @@ void main() {
 
     test('multiple features', () {
       final features = [
-        {'type': 'Feature', 'properties': {'id': '1'}},
-        {'type': 'Feature', 'properties': {'id': '2'}},
+        {
+          'type': 'Feature',
+          'properties': {'id': '1'},
+        },
+        {
+          'type': 'Feature',
+          'properties': {'id': '2'},
+        },
       ];
       final result = buildFeatureCollection(features);
       expect((result['features'] as List).length, 2);
