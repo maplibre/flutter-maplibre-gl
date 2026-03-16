@@ -6,18 +6,19 @@ import MapLibre
 class LayerPropertyConverter {
     class func addSymbolProperties(symbolLayer: MLNSymbolStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values so that unset properties are not reset to their
+            // defaults.  The Dart side serialises with skipNulls: false, which
+            // sends every property — including ones the caller never set.
+            // Assigning nil here would clear previously configured values such
+            // as icon-image, icon-size, or icon-offset.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -145,18 +146,15 @@ class LayerPropertyConverter {
 
     class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -198,18 +196,15 @@ class LayerPropertyConverter {
 
     class func addLineProperties(lineLayer: MLNLineStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -259,18 +254,15 @@ class LayerPropertyConverter {
 
     class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -304,18 +296,15 @@ class LayerPropertyConverter {
 
     class func addFillExtrusionProperties(fillExtrusionLayer: MLNFillExtrusionStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -349,18 +338,15 @@ class LayerPropertyConverter {
 
     class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -394,18 +380,15 @@ class LayerPropertyConverter {
 
     class func addHillshadeProperties(hillshadeLayer: MLNHillshadeStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
@@ -435,18 +418,15 @@ class LayerPropertyConverter {
 
     class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
             let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
-            var expression: NSExpression?
+
+            // Skip null values — see addSymbolProperties for rationale.
             if trimmedValue == "null" {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
-                    continue
-                }
-                expression = expr
+                continue
+            }
+
+            guard let expression = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                continue
             }
             
             switch propertyName {
