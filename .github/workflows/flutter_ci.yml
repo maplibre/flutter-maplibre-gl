@@ -50,7 +50,13 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - run: melos run test:io
+      - run: melos run test:io:coverage --no-select
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
 
   test-web:
     name: "Run web tests"
@@ -64,7 +70,7 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - run: melos run test:web
+      - run: melos run test:web --no-select
 
   code-gen:
     name: "Generate code from templates"
