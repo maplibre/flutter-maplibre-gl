@@ -100,7 +100,8 @@ void main() {
 
     test('toString', () {
       const latLng = LatLng(45.0, 90.0);
-      expect(latLng.toString(), 'LatLng(45.0, 90.0)');
+      // On web (JS), integer doubles print without ".0" suffix
+      expect(latLng.toString(), matches(RegExp(r'LatLng\(45\.?0?, 90\.?0?\)')));
     });
   });
 
@@ -205,9 +206,12 @@ void main() {
         southwest: const LatLng(10.0, 20.0),
         northeast: const LatLng(30.0, 40.0),
       );
+      // On web (JS), integer doubles print without ".0" suffix
       expect(
         bounds.toString(),
-        'LatLngBounds(LatLng(10.0, 20.0), LatLng(30.0, 40.0))',
+        matches(RegExp(
+          r'LatLngBounds\(LatLng\(10\.?0?, 20\.?0?\), LatLng\(30\.?0?, 40\.?0?\)\)',
+        )),
       );
     });
   });

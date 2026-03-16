@@ -80,7 +80,8 @@ void main() {
     test('toString', () {
       const camera = CameraPosition(target: LatLng(10.0, 20.0), zoom: 5.0);
       expect(camera.toString(), contains('CameraPosition'));
-      expect(camera.toString(), contains('10.0'));
+      // Use regex to handle JS printing "10" vs VM printing "10.0"
+      expect(camera.toString(), matches(RegExp(r'10\.?0?')));
     });
   });
 
