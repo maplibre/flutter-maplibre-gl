@@ -19,67 +19,71 @@ class ColorPickerModal {
 
     return showModalBottomSheet<dynamic>(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: colorOptions.entries.map((entry) {
-                final color = entry.value;
-                final isSelected = currentColor == color;
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      colorOptions.entries.map((entry) {
+                        final color = entry.value;
+                        final isSelected = currentColor == color;
 
-                return InkWell(
-                  onTap: () {
-                    final result = colorFormat == ColorFormat.hex
-                        ? _colorToHex(color)
-                        : color;
-                    Navigator.pop(context, result);
-                  },
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: color,
-                      border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.grey,
-                        width: isSelected ? 3 : 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: entry.key.isNotEmpty
-                        ? Center(
-                            child: Text(
-                              entry.key,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _getContrastColor(color),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                shadows: const [
-                                  Shadow(
-                                    color: Colors.black45,
-                                    blurRadius: 2,
-                                  ),
-                                ],
+                        return InkWell(
+                          onTap: () {
+                            final result =
+                                colorFormat == ColorFormat.hex
+                                    ? _colorToHex(color)
+                                    : color;
+                            Navigator.pop(context, result);
+                          },
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: color,
+                              border: Border.all(
+                                color: isSelected ? Colors.blue : Colors.grey,
+                                width: isSelected ? 3 : 2,
                               ),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          )
-                        : null,
-                  ),
-                );
-              }).toList(),
+                            child:
+                                entry.key.isNotEmpty
+                                    ? Center(
+                                      child: Text(
+                                        entry.key,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: _getContrastColor(color),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          shadows: const [
+                                            Shadow(
+                                              color: Colors.black45,
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                    : null,
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 

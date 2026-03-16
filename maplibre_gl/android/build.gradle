@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath 'com.android.tools.build:gradle:9.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -50,10 +50,12 @@ android {
         jvmTarget = JavaVersion.VERSION_21.toString()
     }
     dependencies {
-        implementation 'org.maplibre.gl:android-sdk:12.3.1'
+        implementation 'org.maplibre.gl:android-sdk:13.0.0'
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.2'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
         implementation 'com.squareup.okhttp3:okhttp:5.3.2'
+        implementation 'com.google.android.gms:play-services-base:18.5.0'
+        implementation 'com.google.android.gms:play-services-location:21.3.0'
     }
 }
 

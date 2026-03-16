@@ -39,13 +39,13 @@ void setJsProperty(JSObject obj, String propertyName, JSAny? value) {
   (obj as JSObjectExt)[propertyName] = value;
 }
 
-/// Creates an empty JavaScript object literal.
-@JS('Object.create')
-external JSObject _createJsObject(JSAny? prototype);
+/// Creates an empty JavaScript object literal equivalent to `{}`.
+@JS('Object')
+external JSObject _newJsObject();
 
 /// Helper function to create an empty JavaScript object.
 JSObject createJsObject() {
-  return _createJsObject(null);
+  return _newJsObject();
 }
 
 /// Parse a JSON string using JavaScript's native JSON.parse.

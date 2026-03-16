@@ -35,7 +35,8 @@ extension type NavigationControlOptionsJsImpl._(JSObject _)
 @staticInterop
 class NavigationControlJsImpl {
   external factory NavigationControlJsImpl(
-      NavigationControlOptionsJsImpl options);
+    NavigationControlOptionsJsImpl options,
+  );
 }
 
 extension NavigationControlJsImplExtension on NavigationControlJsImpl {

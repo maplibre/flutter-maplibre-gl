@@ -165,9 +165,11 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
-  MapLibreMap panBy(Point offset,
-          [AnimationOptions? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
+  MapLibreMap panBy(
+    Point offset, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
 
   ///  Pans the map to the specified location, with an animated transition.
   ///
@@ -178,9 +180,11 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap panTo(LngLat lnglat,
-          [AnimationOptions? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
+  MapLibreMap panTo(
+    LngLat lnglat, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
 
   ///  Returns the map's current zoom level.
   ///
@@ -219,9 +223,11 @@ class Camera extends Evented {
   ///  @fires moveend
   ///  @fires zoomend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap zoomTo(num zoom,
-          [AnimationOptions? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
+  MapLibreMap zoomTo(
+    num zoom, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
 
   ///  Increases the map's zoom level by 1.
   ///
@@ -288,9 +294,11 @@ class Camera extends Evented {
   ///  @fires movestart
   ///  @fires moveend
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap rotateTo(num bearing,
-          [AnimationOptions? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
+  MapLibreMap rotateTo(
+    num bearing, [
+    AnimationOptions? options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
 
   ///  Rotates the map so that north is up (0° bearing), with an animated transition.
   ///
@@ -362,14 +370,20 @@ class Camera extends Evented {
   CameraOptions cameraForBounds(LngLatBounds bounds, [dynamic options]) {
     if (options == null) {
       return CameraOptions.fromJsObject(
-          jsObject.cameraForBounds(bounds.jsObject));
+        jsObject.cameraForBounds(bounds.jsObject),
+      );
     }
-    final optionsJs = options is CameraOptions
-        ? options.jsObject
-        : (options is Map ? utils.jsify(options) : options as JSAny);
+    final optionsJs =
+        options is CameraOptions
+            ? options.jsObject
+            : (options is Map ? utils.jsify(options) : options as JSAny);
 
-    return CameraOptions.fromJsObject(jsObject.cameraForBounds(
-        bounds.jsObject, optionsJs as CameraOptionsJsImpl?));
+    return CameraOptions.fromJsObject(
+      jsObject.cameraForBounds(
+        bounds.jsObject,
+        optionsJs as CameraOptionsJsImpl?,
+      ),
+    );
   }
 
   ///  Pans and zooms the map to contain its visible area within the specified geographical bounds.
@@ -396,10 +410,13 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
-  MapLibreMap fitBounds(LngLatBounds bounds,
-          [Map<String, dynamic>? options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.fitBounds(
-          bounds.jsObject, utils.jsify(options ?? {}), eventData));
+  MapLibreMap fitBounds(
+    LngLatBounds bounds, [
+    Map<String, dynamic>? options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(
+    jsObject.fitBounds(bounds.jsObject, utils.jsify(options ?? {}), eventData),
+  );
 
   ///  Pans, rotates and zooms the map to to fit the box made by points p0 and p1
   ///  once the map is rotated to the specified bearing. To zoom without rotating,
@@ -428,10 +445,15 @@ class Camera extends Evented {
   ///    padding: {top: 10, bottom:25, left: 15, right: 5}
   ///  });
   ///  @see [Used by BoxZoomHandler](https://maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.BoxZoomHandler/)
-  MapLibreMap fitScreenCoordinates(Point p0, Point p1, num bearing,
-          [dynamic options, dynamic eventData]) =>
-      MapLibreMap.fromJsObject(
-          jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing));
+  MapLibreMap fitScreenCoordinates(
+    Point p0,
+    Point p1,
+    num bearing, [
+    dynamic options,
+    dynamic eventData,
+  ]) => MapLibreMap.fromJsObject(
+    jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing),
+  );
 
   ///  Changes any combination of center, zoom, bearing, and pitch, without
   ///  an animated transition. The map will retain its current values for any
