@@ -408,21 +408,47 @@ final class MapLibreMapController
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
   }
 
+  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
+    JsonElement jsonElement = JsonParser.parseString(geojson);
+    String type = jsonElement.getAsJsonObject().get("type").getAsString();
+
+    if ("FeatureCollection".equals(type)) {
+      return FeatureCollection.fromJson(geojson);
+    } else if ("Feature".equals(type)) {
+      Feature feature = Feature.fromJson(geojson);
+      return FeatureCollection.fromFeatures(new Feature[]{ feature });
+    }
+
+    return null;
+  }
+
   private void addGeoJsonSource(String sourceName, String source) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
+      return;
+    }
+
     // Check if source already exists to prevent CannotAddSourceException
     // which can lead to native crashes
     if (style.getSource(sourceName) != null) {
       return;
     }
 
-    FeatureCollection featureCollection = FeatureCollection.fromJson(source);
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
+      if (featureCollection == null) {
+        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
+        return;
+      }
 
-    // Enable synchronous updates to reduce flicker during animations/dragging if dragEnabled option is true
-    GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
-    GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
+      addedFeaturesByLayer.put(sourceName, featureCollection);
 
-    style.addSource(geoJsonSource);
+      style.addSource(geoJsonSource);
+    } catch (Exception e) {
+      Log.e(TAG, "addGeoJsonSource: error adding source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonSource(String sourceName, String geojson) {
@@ -430,12 +456,25 @@ final class MapLibreMapController
       Log.w(TAG, "setGeoJsonSource: style not ready, skipping update");
       return;
     }
-    
-    FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
 
-    geoJsonSource.setGeoJson(featureCollection);
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
+      if (featureCollection == null) {
+        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
+        return;
+      }
+
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      if (geoJsonSource == null) {
+        Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
+        return;
+      }
+
+      addedFeaturesByLayer.put(sourceName, featureCollection);
+      geoJsonSource.setGeoJson(featureCollection);
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -443,22 +482,29 @@ final class MapLibreMapController
       Log.w(TAG, "setGeoJsonFeature: style not ready, skipping update");
       return;
     }
-    
-    Feature feature = Feature.fromJson(geojsonFeature);
-    FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    if (featureCollection != null && geoJsonSource != null) {
-      final List<Feature> features = featureCollection.features();
-      for (int i = 0; i < features.size(); i++) {
-        final String id = features.get(i).id();
-        if (id.equals(feature.id())) {
-          features.set(i, feature);
-          break;
-        }
-      }
 
-      // Synchronous updates are enabled via GeoJsonOptions at source creation when dragEnabled is true
-      geoJsonSource.setGeoJson(featureCollection);
+    try {
+      Feature feature = Feature.fromJson(geojsonFeature);
+      FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+
+      if (featureCollection != null && geoJsonSource != null) {
+        final String featureId = feature.id();
+        final List<Feature> features = featureCollection.features();
+        
+        if (featureId != null && features != null) {
+          for (int i = 0; i < features.size(); i++) {
+            if (featureId.equals(features.get(i).id())) {
+              features.set(i, feature);
+              break;
+            }
+          }
+        }
+
+        geoJsonSource.setGeoJson(featureCollection);
+      }
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
     }
   }
 
@@ -1058,7 +1104,9 @@ final class MapLibreMapController
                   source.setGeoJson((String)call.argument("data"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonSource: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
@@ -1078,7 +1126,9 @@ final class MapLibreMapController
                   source.setUrl((String)call.argument("url"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonUrl: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
