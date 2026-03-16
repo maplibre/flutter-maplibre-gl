@@ -518,6 +518,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addSymbolLayer: style not ready, skipping");
+      return;
+    }
     SymbolLayer symbolLayer = new SymbolLayer(layerName, sourceName);
     symbolLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -552,6 +556,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addLineLayer: style not ready, skipping");
+      return;
+    }
     LineLayer lineLayer = new LineLayer(layerName, sourceName);
     lineLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -586,6 +594,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillLayer: style not ready, skipping");
+      return;
+    }
     FillLayer fillLayer = new FillLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -620,6 +632,10 @@ final class MapLibreMapController
           PropertyValue[] properties,
           boolean enableInteraction,
           Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillExtrusionLayer: style not ready, skipping");
+      return;
+    }
     FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -654,6 +670,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addCircleLayer: style not ready, skipping");
+      return;
+    }
     CircleLayer circleLayer = new CircleLayer(layerName, sourceName);
     circleLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -692,6 +712,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addRasterLayer: style not ready, skipping");
+      return;
+    }
     RasterLayer layer = new RasterLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -715,6 +739,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHillshadeLayer: style not ready, skipping");
+      return;
+    }
     HillshadeLayer layer = new HillshadeLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -738,6 +766,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHeatmapLayer: style not ready, skipping");
+      return;
+    }
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
