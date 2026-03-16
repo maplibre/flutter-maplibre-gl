@@ -36,13 +36,25 @@ melos:
       description: Run IO tests
       exec: flutter test
       packageFilters:
-        scope: maplibre_gl_platform_interface
+        scope:
+          - maplibre_gl_platform_interface
+          - maplibre_gl
+
+    test:io:coverage:
+      description: Run IO tests with coverage
+      exec: flutter test --coverage
+      packageFilters:
+        scope:
+          - maplibre_gl_platform_interface
+          - maplibre_gl
 
     test:web:
       description: Run Web tests
       exec: flutter test --platform chrome
       packageFilters:
-        scope: maplibre_gl_platform_interface
+        scope:
+          - maplibre_gl_platform_interface
+          - maplibre_gl
 
     analyze-all:
       description: Run static analysis on all packages

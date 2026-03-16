@@ -107,7 +107,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
                       headingAccuracy: heading['headingAccuracy'],
                       x: heading['x'],
                       y: heading['y'],
-                      z: heading['x'],
+                      z: heading['z'],
                       timestamp: DateTime.fromMillisecondsSinceEpoch(
                         heading['timestamp'],
                       ),
