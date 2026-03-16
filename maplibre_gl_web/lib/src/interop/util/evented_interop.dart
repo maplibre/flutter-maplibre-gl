@@ -4,9 +4,20 @@ library;
 import 'dart:js_interop';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
-import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 
 typedef ListenerJsImpl = JSFunction;
+
+/// A subscription returned by `on()` / `once()` in MapLibre GL JS v5+.
+/// Call [unsubscribe] to remove the listener without needing the original
+/// function reference.
+@JS()
+@staticInterop
+class SubscriptionJsImpl {}
+
+extension SubscriptionJsImplExtension on SubscriptionJsImpl {
+  /// Removes the event listener associated with this subscription.
+  external void unsubscribe();
+}
 
 @JS()
 @staticInterop
@@ -41,8 +52,8 @@ extension EventedJsImplExtension on EventedJsImpl {
   ///  @param {Function} listener The function to be called when the event is fired.
   ///    The listener function is called with the data object passed to `fire`,
   ///    extended with `target` and `type` properties.
-  ///  @returns {Object} `this`
-  external MapLibreMapJsImpl on(
+  ///  @returns {Subscription} A subscription that can be used to unsubscribe.
+  external SubscriptionJsImpl on(
     String type, [
     JSAny? layerIdOrListener,
     ListenerJsImpl? listener,
@@ -52,8 +63,8 @@ extension EventedJsImplExtension on EventedJsImpl {
   ///
   ///  @param {string} type The event type to remove listeners for.
   ///  @param {Function} listener The listener function to remove.
-  ///  @returns {Object} `this`
-  external MapLibreMapJsImpl off(
+  ///  @returns {Subscription} A subscription that can be used to unsubscribe.
+  external SubscriptionJsImpl off(
     String type, [
     JSAny? layerIdOrListener,
     ListenerJsImpl? listener,
@@ -65,8 +76,8 @@ extension EventedJsImplExtension on EventedJsImpl {
   ///
   ///  @param {string} type The event type to listen for.
   ///  @param {Function} listener The function to be called when the event is fired the first time.
-  ///  @returns {Object} `this`
-  external MapLibreMapJsImpl once(String type, ListenerJsImpl listener);
+  ///  @returns {Subscription} A subscription that can be used to unsubscribe.
+  external SubscriptionJsImpl once(String type, ListenerJsImpl listener);
 
   external void fire(EventJsImpl event, [JSAny? properties]);
 
