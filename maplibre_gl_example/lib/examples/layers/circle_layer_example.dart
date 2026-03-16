@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -9,11 +8,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating circle layer properties
 class CircleLayerExample extends ExamplePage {
   const CircleLayerExample({super.key})
-      : super(
-          const Icon(Icons.circle_outlined),
-          'Circle Layer',
-          category: ExampleCategory.layers,
-        );
+    : super(
+        const Icon(Icons.circle_outlined),
+        'Circle Layer',
+        category: ExampleCategory.layers,
+      );
 
   @override
   Widget build(BuildContext context) => const _CircleLayerBody();
@@ -91,7 +90,7 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
 
       setState(() {});
     } catch (e) {
-      dev.log('Error adding circle layer: $e');
+      print('CircleLayerExample: Error adding circle layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding circle layer: $e')),
@@ -142,7 +141,7 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
         ),
       );
     } catch (e) {
-      dev.log('Error updating circle layer: $e');
+      print('CircleLayerExample: Error updating circle layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating circle layer: $e')),
@@ -164,195 +163,203 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
         ),
         trackCameraPosition: true,
       ),
-      controls: _controller == null
-          ? []
-          : [
-              ControlGroup(
-                title: 'Circle Size',
-                children: [
-                  ListTile(
-                    title: Text('Radius: ${_circleRadius.toStringAsFixed(1)}'),
-                    subtitle: Slider(
-                      value: _circleRadius,
-                      min: 5.0,
-                      max: 50.0,
-                      divisions: 45,
-                      onChanged: (value) async {
-                        setState(() => _circleRadius = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                  ListTile(
-                    title: Text('Blur: ${_circleBlur.toStringAsFixed(1)}'),
-                    subtitle: Slider(
-                      value: _circleBlur,
-                      min: 0.0,
-                      max: 4.0,
-                      divisions: 20,
-                      onChanged: (value) async {
-                        setState(() => _circleBlur = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              ControlGroup(
-                title: 'Circle Color',
-                children: [
-                  ListTile(
-                    title: const Text('Fill Color'),
-                    trailing: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _circleColor,
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
+      controls:
+          _controller == null
+              ? []
+              : [
+                ControlGroup(
+                  title: 'Circle Size',
+                  children: [
+                    ListTile(
+                      title: Text(
+                        'Radius: ${_circleRadius.toStringAsFixed(1)}',
+                      ),
+                      subtitle: Slider(
+                        value: _circleRadius,
+                        min: 5.0,
+                        max: 50.0,
+                        divisions: 45,
+                        onChanged: (value) async {
+                          setState(() => _circleRadius = value);
+                          await _updateLayer();
+                        },
                       ),
                     ),
-                    onTap: () => _pickColor('fill'),
-                  ),
-                  ListTile(
-                    title: Text(
-                        'Opacity: ${(_circleOpacity * 100).toStringAsFixed(0)}%'),
-                    subtitle: Slider(
-                      value: _circleOpacity,
-                      min: 0.0,
-                      max: 1.0,
-                      divisions: 20,
-                      onChanged: (value) async {
-                        setState(() => _circleOpacity = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              ControlGroup(
-                title: 'Circle Stroke',
-                children: [
-                  ListTile(
-                    title: Text(
-                        'Stroke Width: ${_circleStrokeWidth.toStringAsFixed(1)}'),
-                    subtitle: Slider(
-                      value: _circleStrokeWidth,
-                      min: 0.0,
-                      max: 10.0,
-                      divisions: 20,
-                      onChanged: (value) async {
-                        setState(() => _circleStrokeWidth = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                  ListTile(
-                    title: const Text('Stroke Color'),
-                    trailing: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _circleStrokeColor,
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
+                    ListTile(
+                      title: Text('Blur: ${_circleBlur.toStringAsFixed(1)}'),
+                      subtitle: Slider(
+                        value: _circleBlur,
+                        min: 0.0,
+                        max: 4.0,
+                        divisions: 20,
+                        onChanged: (value) async {
+                          setState(() => _circleBlur = value);
+                          await _updateLayer();
+                        },
                       ),
                     ),
-                    onTap: () => _pickColor('stroke'),
-                  ),
-                  ListTile(
-                    title: Text(
-                        'Stroke Opacity: ${(_circleStrokeOpacity * 100).toStringAsFixed(0)}%'),
-                    subtitle: Slider(
-                      value: _circleStrokeOpacity,
-                      min: 0.0,
-                      max: 1.0,
-                      divisions: 20,
-                      onChanged: (value) async {
-                        setState(() => _circleStrokeOpacity = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              ControlGroup(
-                title: 'Circle Transform',
-                children: [
-                  ListTile(
-                    title: const Text('Pitch Alignment'),
-                    subtitle: ExampleSegmentedButton<double>(
-                      segments: const [
-                        ExampleSegment(
-                          value: 0.0,
-                          label: 'Viewport',
+                  ],
+                ),
+                ControlGroup(
+                  title: 'Circle Color',
+                  children: [
+                    ListTile(
+                      title: const Text('Fill Color'),
+                      trailing: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: _circleColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        ExampleSegment(
-                          value: 1.0,
-                          label: 'Map',
+                      ),
+                      onTap: () => _pickColor('fill'),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'Opacity: ${(_circleOpacity * 100).toStringAsFixed(0)}%',
+                      ),
+                      subtitle: Slider(
+                        value: _circleOpacity,
+                        min: 0.0,
+                        max: 1.0,
+                        divisions: 20,
+                        onChanged: (value) async {
+                          setState(() => _circleOpacity = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                ControlGroup(
+                  title: 'Circle Stroke',
+                  children: [
+                    ListTile(
+                      title: Text(
+                        'Stroke Width: ${_circleStrokeWidth.toStringAsFixed(1)}',
+                      ),
+                      subtitle: Slider(
+                        value: _circleStrokeWidth,
+                        min: 0.0,
+                        max: 10.0,
+                        divisions: 20,
+                        onChanged: (value) async {
+                          setState(() => _circleStrokeWidth = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      title: const Text('Stroke Color'),
+                      trailing: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: _circleStrokeColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      ],
-                      selected: _circlePitchAlignment,
-                      onSelectionChanged: (value) async {
-                        setState(() => _circlePitchAlignment = value);
+                      ),
+                      onTap: () => _pickColor('stroke'),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'Stroke Opacity: ${(_circleStrokeOpacity * 100).toStringAsFixed(0)}%',
+                      ),
+                      subtitle: Slider(
+                        value: _circleStrokeOpacity,
+                        min: 0.0,
+                        max: 1.0,
+                        divisions: 20,
+                        onChanged: (value) async {
+                          setState(() => _circleStrokeOpacity = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                ControlGroup(
+                  title: 'Circle Transform',
+                  children: [
+                    ListTile(
+                      title: const Text('Pitch Alignment'),
+                      subtitle: ExampleSegmentedButton<double>(
+                        segments: const [
+                          ExampleSegment(
+                            value: 0.0,
+                            label: 'Viewport',
+                          ),
+                          ExampleSegment(
+                            value: 1.0,
+                            label: 'Map',
+                          ),
+                        ],
+                        selected: _circlePitchAlignment,
+                        onSelectionChanged: (value) async {
+                          setState(() => _circlePitchAlignment = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'Translate X: ${_circleTranslateX.toStringAsFixed(0)}',
+                      ),
+                      subtitle: Slider(
+                        value: _circleTranslateX,
+                        min: -50.0,
+                        max: 50.0,
+                        divisions: 100,
+                        onChanged: (value) async {
+                          setState(() => _circleTranslateX = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'Translate Y: ${_circleTranslateY.toStringAsFixed(0)}',
+                      ),
+                      subtitle: Slider(
+                        value: _circleTranslateY,
+                        min: -50.0,
+                        max: 50.0,
+                        divisions: 100,
+                        onChanged: (value) async {
+                          setState(() => _circleTranslateY = value);
+                          await _updateLayer();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                ControlGroup(
+                  title: 'Actions',
+                  children: [
+                    ExampleButton(
+                      label: 'Reset Properties',
+                      onPressed: () async {
+                        setState(() {
+                          _circleRadius = 20.0;
+                          _circleOpacity = 0.8;
+                          _circleStrokeWidth = 2.0;
+                          _circleStrokeOpacity = 1.0;
+                          _circleColor = Colors.blue;
+                          _circleStrokeColor = Colors.white;
+                          _circleBlur = 0.0;
+                          _circlePitchAlignment = 0.0;
+                          _circleTranslateX = 0.0;
+                          _circleTranslateY = 0.0;
+                        });
                         await _updateLayer();
                       },
                     ),
-                  ),
-                  ListTile(
-                    title: Text(
-                        'Translate X: ${_circleTranslateX.toStringAsFixed(0)}'),
-                    subtitle: Slider(
-                      value: _circleTranslateX,
-                      min: -50.0,
-                      max: 50.0,
-                      divisions: 100,
-                      onChanged: (value) async {
-                        setState(() => _circleTranslateX = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                  ListTile(
-                    title: Text(
-                        'Translate Y: ${_circleTranslateY.toStringAsFixed(0)}'),
-                    subtitle: Slider(
-                      value: _circleTranslateY,
-                      min: -50.0,
-                      max: 50.0,
-                      divisions: 100,
-                      onChanged: (value) async {
-                        setState(() => _circleTranslateY = value);
-                        await _updateLayer();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              ControlGroup(
-                title: 'Actions',
-                children: [
-                  ExampleButton(
-                    label: 'Reset Properties',
-                    onPressed: () async {
-                      setState(() {
-                        _circleRadius = 20.0;
-                        _circleOpacity = 0.8;
-                        _circleStrokeWidth = 2.0;
-                        _circleStrokeOpacity = 1.0;
-                        _circleColor = Colors.blue;
-                        _circleStrokeColor = Colors.white;
-                        _circleBlur = 0.0;
-                        _circlePitchAlignment = 0.0;
-                        _circleTranslateX = 0.0;
-                        _circleTranslateY = 0.0;
-                      });
-                      await _updateLayer();
-                    },
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
     );
   }
 

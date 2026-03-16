@@ -87,6 +87,9 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
+        if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
+            delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
+        }
     }
     
     class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {

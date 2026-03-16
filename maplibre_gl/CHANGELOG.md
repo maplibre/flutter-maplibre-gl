@@ -1,3 +1,18 @@
+## Unreleased
+## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
+
+### Breaking
+* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0`.
+* Removed deprecated `MaplibreMapController` typedef. Use `MapLibreMapController` instead.
+* Removed deprecated `MaplibreMap` typedef. Use `MapLibreMap` instead.
+* Removed deprecated `MaplibreStyles` typedef. Use `MapLibreStyles` instead.
+* Removed deprecated `onInfoWindowTapped` callback from `MapLibreMapController`.
+* Removed deprecated `removeImageSource` method. Use `removeSource` instead.
+* Removed deprecated `addLayerBelow` method. Use `addImageLayerBelow` instead.
+
+### Added
+* iOS: Implemented `setMaximumFps` to control the preferred frame rate (#514).
+
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
 ### Added

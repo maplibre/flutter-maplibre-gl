@@ -38,8 +38,9 @@ class Symbol implements Annotation {
 
   @override
   void translate(LatLng delta) {
-    options =
-        options.copyWith(SymbolOptions(geometry: options.geometry! + delta));
+    options = options.copyWith(
+      SymbolOptions(geometry: options.geometry! + delta),
+    );
   }
 }
 
@@ -204,8 +205,8 @@ class SymbolOptions {
       "properties": toJson(false),
       "geometry": {
         "type": "Point",
-        "coordinates": geometry!.toGeoJsonCoordinates()
-      }
+        "coordinates": geometry!.toGeoJsonCoordinates(),
+      },
     };
   }
 }

@@ -111,8 +111,9 @@ class ExampleConstants {
   static CameraPosition sydneyCameraPosition = toCameraPosition(sydneyCenter);
 
   /// Camera position for San Francisco
-  static CameraPosition sanFranciscoCameraPosition =
-      toCameraPosition(sanFrancisco);
+  static CameraPosition sanFranciscoCameraPosition = toCameraPosition(
+    sanFrancisco,
+  );
 
   /// Camera position for London
   static CameraPosition londonCameraPosition = toCameraPosition(london);
