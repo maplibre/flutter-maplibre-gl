@@ -51,13 +51,12 @@ jobs:
         with:
           run-bootstrap: true
       - run: melos run test:io:coverage --no-select
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: codecov/codecov-action@v5
         with:
-          name: coverage-reports
-          path: |
-            maplibre_gl_platform_interface/coverage/lcov.info
+          files: |
+            maplibre_gl_platform_interface/coverage/lcov.info,
             maplibre_gl/coverage/lcov.info
 
   test-web:
