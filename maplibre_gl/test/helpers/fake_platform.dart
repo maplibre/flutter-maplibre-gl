@@ -39,13 +39,23 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     calls.add(PlatformCall('initPlatform', [id]));
   }
 
+  /// The last creationParams passed to [buildView].
+  Map<String, dynamic>? lastCreationParams;
+
+  /// Whether [buildView] should automatically trigger [onPlatformViewCreated].
+  bool triggerPlatformViewCreated = false;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
     OnPlatformViewCreatedCallback onPlatformViewCreated,
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
-    calls.add(PlatformCall('buildView'));
+    lastCreationParams = creationParams;
+    calls.add(PlatformCall('buildView', [creationParams]));
+    if (triggerPlatformViewCreated) {
+      onPlatformViewCreated(0);
+    }
     return const SizedBox.shrink();
   }
 

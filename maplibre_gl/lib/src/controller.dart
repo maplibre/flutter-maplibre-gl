@@ -102,7 +102,7 @@ typedef OnMapIdleCallback = void Function();
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
     required MapLibrePlatform maplibrePlatform,
-    required CameraPosition initialCameraPosition,
+    CameraPosition? initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
     this.onStyleLoadedCallback,
@@ -203,6 +203,18 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
+      // Dispose old managers before re-creating them for the new style.
+      // This prevents stale in-flight method channel calls from racing
+      // with a new style that has cleared the native Style reference.
+      await fillManager?.dispose();
+      fillManager = null;
+      await lineManager?.dispose();
+      lineManager = null;
+      await circleManager?.dispose();
+      circleManager = null;
+      await symbolManager?.dispose();
+      symbolManager = null;
+
       final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
