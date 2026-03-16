@@ -33,8 +33,7 @@ void main() {
       expect(params, isNotNull);
       expect(params!.containsKey('initialCameraPosition'), isTrue);
 
-      final cameraMap =
-          params['initialCameraPosition'] as Map<String, dynamic>;
+      final cameraMap = params['initialCameraPosition'] as Map<String, dynamic>;
       expect(cameraMap['bearing'], 45.0);
       expect(cameraMap['zoom'], 12.0);
       expect(cameraMap['tilt'], 30.0);
@@ -53,8 +52,7 @@ void main() {
       expect(params!.containsKey('initialCameraPosition'), isFalse);
     });
 
-    testWidgets(
-        'no initialCameraPosition and style without camera settings '
+    testWidgets('no initialCameraPosition and style without camera settings '
         'falls back to platform default', (tester) async {
       // Style has no center/zoom/bearing/pitch — platform must fall back
       // to its own defaults (typically center [0,0], zoom 0).
@@ -107,8 +105,7 @@ void main() {
 
       final params = platform.lastCreationParams!;
       expect(params.containsKey('initialCameraPosition'), isTrue);
-      final cameraMap =
-          params['initialCameraPosition'] as Map<String, dynamic>;
+      final cameraMap = params['initialCameraPosition'] as Map<String, dynamic>;
       expect(cameraMap['zoom'], 0.0);
       expect(cameraMap['bearing'], 0.0);
       expect(cameraMap['tilt'], 0.0);
@@ -147,8 +144,7 @@ void main() {
       controller.dispose();
     });
 
-    test(
-        'null camera with no style camera — '
+    test('null camera with no style camera — '
         'platform reports default position on idle', () {
       // Neither initialCameraPosition nor style camera is set.
       final controller = MapLibreMapController(
@@ -171,8 +167,7 @@ void main() {
       controller.dispose();
     });
 
-    test(
-        'null camera with style camera — '
+    test('null camera with style camera — '
         'platform reports style position on idle', () {
       // initialCameraPosition is null; style has center/zoom.
       // The platform should use the style camera and report it back.
