@@ -11,6 +11,10 @@ void main() {
 
   setUp(() {
     platform = FakeMapLibrePlatform();
+    final previousFactory = MapLibrePlatform.createInstance;
+    addTearDown(() {
+      MapLibrePlatform.createInstance = previousFactory;
+    });
     MapLibrePlatform.createInstance = () => platform;
   });
 
