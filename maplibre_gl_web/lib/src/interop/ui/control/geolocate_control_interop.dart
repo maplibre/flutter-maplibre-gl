@@ -51,8 +51,9 @@ extension PositionOptionsJsImplExtension on PositionOptionsJsImpl {
 @JS('GeolocateControl')
 @staticInterop
 abstract class GeolocateControlJsImpl extends EventedJsImpl {
-  external factory GeolocateControlJsImpl(
-      [GeolocateControlOptionsJsImpl? options]);
+  external factory GeolocateControlJsImpl([
+    GeolocateControlOptionsJsImpl? options,
+  ]);
 }
 
 extension GeolocateControlJsImplExtension on GeolocateControlJsImpl {

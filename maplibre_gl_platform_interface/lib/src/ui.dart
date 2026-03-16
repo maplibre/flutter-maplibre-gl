@@ -48,6 +48,21 @@ enum LogoViewPosition {
   bottomRight,
 }
 
+/// Scale Control Position
+enum ScaleControlPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
+/// Scale Control Unit
+enum ScaleControlUnit {
+  metric,
+  imperial,
+  nautical,
+}
+
 /// Bounds for the map camera target.
 /// Used with [_MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
@@ -91,7 +106,7 @@ class CameraTargetBounds {
 @immutable
 class MinMaxZoomPreference {
   const MinMaxZoomPreference(this.minZoom, this.maxZoom)
-      : assert(minZoom == null || maxZoom == null || minZoom <= maxZoom);
+    : assert(minZoom == null || maxZoom == null || minZoom <= maxZoom);
 
   /// The preferred minimum zoom level or null, if unbounded from below.
   final double? minZoom;
@@ -100,8 +115,10 @@ class MinMaxZoomPreference {
   final double? maxZoom;
 
   /// Unbounded zooming.
-  static const MinMaxZoomPreference unbounded =
-      MinMaxZoomPreference(null, null);
+  static const MinMaxZoomPreference unbounded = MinMaxZoomPreference(
+    null,
+    null,
+  );
 
   dynamic toJson() => <dynamic>[minZoom, maxZoom];
 

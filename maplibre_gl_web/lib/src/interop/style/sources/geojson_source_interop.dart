@@ -16,5 +16,6 @@ extension type GeoJsonSourceJsImpl._(JSObject _) implements JSObject {
   });
 
   external GeoJsonSourceJsImpl setData(
-      FeatureCollectionJsImpl featureCollection);
+    FeatureCollectionJsImpl featureCollection,
+  );
 }

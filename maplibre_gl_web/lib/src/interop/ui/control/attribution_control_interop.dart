@@ -10,8 +10,10 @@ extension type AttributionControlOptionsJsImpl._(JSObject _)
 
   external JSArray<JSString>? get customAttribution;
 
-  external factory AttributionControlOptionsJsImpl(
-      {bool? compact, JSArray<JSString>? customAttribution});
+  external factory AttributionControlOptionsJsImpl({
+    bool? compact,
+    JSArray<JSString>? customAttribution,
+  });
 }
 
 /// A `AttributionControl` control contains attributions.
@@ -28,7 +30,8 @@ extension type AttributionControlOptionsJsImpl._(JSObject _)
 @staticInterop
 class AttributionControlJsImpl {
   external factory AttributionControlJsImpl(
-      AttributionControlOptionsJsImpl options);
+    AttributionControlOptionsJsImpl options,
+  );
 }
 
 extension AttributionControlJsImplExtension on AttributionControlJsImpl {

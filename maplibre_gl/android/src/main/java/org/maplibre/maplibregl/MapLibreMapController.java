@@ -18,6 +18,8 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
+import android.content.ComponentCallbacks2;
+import android.content.res.Configuration;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -74,6 +76,7 @@ import org.maplibre.android.style.layers.PropertyValue;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
 import org.maplibre.android.style.sources.CustomGeometrySource;
+import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
 import org.maplibre.android.style.sources.Source;
@@ -104,6 +107,7 @@ import io.flutter.plugin.platform.PlatformView;
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
     implements DefaultLifecycleObserver,
+        ComponentCallbacks2,
         MapLibreMap.OnCameraIdleListener,
         MapLibreMap.OnCameraMoveListener,
         MapLibreMap.OnCameraMoveStartedListener,
@@ -136,6 +140,8 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean featureTapsTriggersMapClick = false;
+  private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -182,11 +188,14 @@ final class MapLibreMapController
       MapLibreMapsPlugin.LifecycleProvider lifecycleProvider,
       MapLibreMapOptions options,
       String styleStringInitial,
-      boolean dragEnabled) {
+      boolean dragEnabled,
+      boolean featureTapsTriggersMapClick
+  ) {
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
     this.dragEnabled = dragEnabled;
+    this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
     this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
@@ -210,6 +219,7 @@ final class MapLibreMapController
 
   void init() {
     lifecycleProvider.getLifecycle().addObserver(this);
+    context.registerComponentCallbacks(this);
     mapView.getMapAsync(this);
   }
 
@@ -398,37 +408,103 @@ final class MapLibreMapController
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
   }
 
-  private void addGeoJsonSource(String sourceName, String source) {
-    FeatureCollection featureCollection = FeatureCollection.fromJson(source);
-    GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
+  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
+    JsonElement jsonElement = JsonParser.parseString(geojson);
+    String type = jsonElement.getAsJsonObject().get("type").getAsString();
 
-    style.addSource(geoJsonSource);
+    if ("FeatureCollection".equals(type)) {
+      return FeatureCollection.fromJson(geojson);
+    } else if ("Feature".equals(type)) {
+      Feature feature = Feature.fromJson(geojson);
+      return FeatureCollection.fromFeatures(new Feature[]{ feature });
+    }
+
+    return null;
+  }
+
+  private void addGeoJsonSource(String sourceName, String source) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
+      return;
+    }
+
+    // Check if source already exists to prevent CannotAddSourceException
+    // which can lead to native crashes
+    if (style.getSource(sourceName) != null) {
+      return;
+    }
+
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
+      if (featureCollection == null) {
+        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
+        return;
+      }
+
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
+      addedFeaturesByLayer.put(sourceName, featureCollection);
+
+      style.addSource(geoJsonSource);
+    } catch (Exception e) {
+      Log.e(TAG, "addGeoJsonSource: error adding source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonSource(String sourceName, String geojson) {
-    FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "setGeoJsonSource: style not ready, skipping update");
+      return;
+    }
 
-    geoJsonSource.setGeoJson(featureCollection);
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
+      if (featureCollection == null) {
+        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
+        return;
+      }
+
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      if (geoJsonSource == null) {
+        Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
+        return;
+      }
+
+      addedFeaturesByLayer.put(sourceName, featureCollection);
+      geoJsonSource.setGeoJson(featureCollection);
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
-    Feature feature = Feature.fromJson(geojsonFeature);
-    FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    if (featureCollection != null && geoJsonSource != null) {
-      final List<Feature> features = featureCollection.features();
-      for (int i = 0; i < features.size(); i++) {
-        final String id = features.get(i).id();
-        if (id.equals(feature.id())) {
-          features.set(i, feature);
-          break;
-        }
-      }
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "setGeoJsonFeature: style not ready, skipping update");
+      return;
+    }
 
-      geoJsonSource.setGeoJson(featureCollection);
+    try {
+      Feature feature = Feature.fromJson(geojsonFeature);
+      FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+
+      if (featureCollection != null && geoJsonSource != null) {
+        final String featureId = feature.id();
+        final List<Feature> features = featureCollection.features();
+        
+        if (featureId != null && features != null) {
+          for (int i = 0; i < features.size(); i++) {
+            if (featureId.equals(features.get(i).id())) {
+              features.set(i, feature);
+              break;
+            }
+          }
+        }
+
+        geoJsonSource.setGeoJson(featureCollection);
+      }
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
     }
   }
 
@@ -1017,7 +1093,9 @@ final class MapLibreMapController
                   source.setGeoJson((String)call.argument("data"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonSource: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
@@ -1037,7 +1115,9 @@ final class MapLibreMapController
                   source.setUrl((String)call.argument("url"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonUrl: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
@@ -1931,9 +2011,16 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
+      // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+      if (featureTapsTriggersMapClick) {
+        methodChannel.invokeMethod("map#onMapClick", arguments);
+      }
     } else {
+      // Always fire map#onMapClick when no feature is tapped
       methodChannel.invokeMethod("map#onMapClick", arguments);
     }
+    // Always fire map#onMapClick for all map clicks
+    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
@@ -1956,10 +2043,22 @@ final class MapLibreMapController
     }
     disposed = true;
     methodChannel.setMethodCallHandler(null);
+    // Properly cleanup MapView lifecycle before destroying
+    if (mapView != null && mapViewStarted) {
+      mapView.onPause();
+      mapView.onStop();
+      mapViewStarted = false;
+    }
     destroyMapViewIfNecessary();
     Lifecycle lifecycle = lifecycleProvider.getLifecycle();
     if (lifecycle != null) {
       lifecycle.removeObserver(this);
+    }
+
+    try {
+      context.unregisterComponentCallbacks(this);
+    } catch (Exception e) {
+      // Ignore if already unregistered
     }
   }
 
@@ -2060,7 +2159,10 @@ final class MapLibreMapController
     if (disposed) {
       return;
     }
-    mapView.onStart();
+    if (!mapViewStarted) {
+      mapView.onStart();
+      mapViewStarted = true;
+    }
   }
 
   @Override
@@ -2071,6 +2173,16 @@ final class MapLibreMapController
     mapView.onResume();
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
+    }
+    // Force a repaint to fix invisible map when returning from background
+    if (mapView != null) {
+      // Use standard Android view invalidation to trigger a repaint
+      mapView.post(new Runnable() {
+        @Override
+        public void run() {
+          mapView.invalidate();
+        }
+      });
     }
   }
 
@@ -2087,7 +2199,10 @@ final class MapLibreMapController
     if (disposed) {
       return;
     }
-    mapView.onStop();
+    if (mapViewStarted) {
+      mapView.onStop();
+      mapViewStarted = false;
+    }
   }
 
   @Override
@@ -2097,6 +2212,26 @@ final class MapLibreMapController
       return;
     }
     destroyMapViewIfNecessary();
+  }
+
+  @Override
+  public void onConfigurationChanged(@NonNull Configuration newConfig) {
+    // No-op: configuration changes are handled by the activity
+  }
+
+  @Override
+  public void onLowMemory() {
+    if (disposed || mapView == null) {
+      return;
+    }
+    Log.w(TAG, "onLowMemory has been called, telling MapView to reduce memory usage.");
+    // Forward low memory event to MapView
+    mapView.onLowMemory();
+  }
+
+  @Override
+  public void onTrimMemory(int level) {
+    // Lifecycle methods already handle resource management
   }
 
   // MapLibreMapOptionsSink methods
@@ -2301,6 +2436,11 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setFeatureTapsTriggersMapClick(boolean triggers) {
+    this.featureTapsTriggersMapClick = triggers;
   }
 
   private void updateMyLocationEnabled() {
