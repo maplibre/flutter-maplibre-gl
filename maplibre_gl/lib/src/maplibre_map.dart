@@ -13,7 +13,7 @@ typedef MapCreatedCallback = void Function(MapLibreMapController controller);
 class MapLibreMap extends StatefulWidget {
   const MapLibreMap({
     super.key,
-    required this.initialCameraPosition,
+    this.initialCameraPosition,
     this.styleString = MapLibreStyles.demo,
     this.onMapCreated,
     this.onStyleLoadedCallback,
@@ -114,12 +114,13 @@ class MapLibreMap extends StatefulWidget {
 
   /// The initial position of the map's camera.
   ///
-  /// **Web note (MapLibre GL JS v5+):** If the map style contains camera
-  /// properties (`center`, `zoom`, `bearing`, `pitch`), the style values take
-  /// priority and this parameter is ignored. To override the style's camera on
-  /// web, call [MapLibreMapController.moveCamera] or
-  /// [MapLibreMapController.animateCamera] after the map is loaded.
-  final CameraPosition initialCameraPosition;
+  /// If `null`, the map style's camera properties (`center`, `zoom`,
+  /// `bearing`, `pitch`) are used. If the style also has no camera properties,
+  /// the map defaults to center `[0, 0]` at zoom `0`.
+  ///
+  /// When set, this takes priority over the style's camera properties on all
+  /// platforms.
+  final CameraPosition? initialCameraPosition;
 
   /// How long a user has to click the map **on iOS** until a long click is registered.
   /// Has no effect on web or Android. Can not be changed at runtime, only the initial value is used.
@@ -332,7 +333,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
       "annotationOrder must not have duplicate types",
     );
     final creationParams = <String, dynamic>{
-      'initialCameraPosition': widget.initialCameraPosition.toMap(),
+      if (widget.initialCameraPosition != null)
+        'initialCameraPosition': widget.initialCameraPosition!.toMap(),
       'styleString': widget.styleString,
       'options': _MapLibreMapOptions.fromWidget(widget).toMap(),
       'dragEnabled': widget.dragEnabled,
