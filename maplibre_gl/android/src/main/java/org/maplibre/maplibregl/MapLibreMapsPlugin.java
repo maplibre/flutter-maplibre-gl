@@ -12,6 +12,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference;
 import io.flutter.plugin.common.MethodChannel;
+import org.maplibre.android.log.Logger;
 
 /**
  * Plugin for controlling a set of MapLibreMap views to be shown as overlays on top of the Flutter
@@ -33,6 +34,10 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
     flutterAssets = binding.getFlutterAssets();
+
+    // Reduce MapLibre SDK logging verbosity to prevent spam from HTTP requests
+    // INFO level includes informational messages, warnings, and errors while suppressing verbose HTTP logs
+    Logger.setVerbosity(Logger.INFO);
 
     MethodChannel methodChannel =
         new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl");

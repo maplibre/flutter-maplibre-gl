@@ -7,6 +7,7 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_bounds_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 import 'package:maplibre_gl_web/src/interop/geo/point_interop.dart';
 import 'package:maplibre_gl_web/src/interop/js.dart';
+import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dart';
 import 'package:maplibre_gl_web/src/interop/style/style_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/camera_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/handler/box_zoom_interop.dart';
@@ -94,8 +95,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  // Add zoom and rotation controls to the map.
   ///  map.addControl(new NavigationControl());
   ///  @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
-  external MapLibreMapJsImpl addControl(IControlJsImpl? control,
-      [String? position]);
+  external MapLibreMapJsImpl addControl(
+    IControlJsImpl? control, [
+    String? position,
+  ]);
 
   ///  Removes the control from the map.
   ///
@@ -509,7 +512,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {Function} SourceType A {@link Source} constructor.
   ///  @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
   external void addSourceType(
-      String name, JSAny sourceType, JSFunction callback);
+    String name,
+    JSAny sourceType,
+    JSFunction callback,
+  );
 
   ///  Removes a source from the map's style.
   ///
@@ -720,7 +726,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  map.setLayerZoomRange('my-layer', 2, 5);
   external MapLibreMapJsImpl setLayerZoomRange(
-      String layerId, num minzoom, num maxzoom);
+    String layerId,
+    num minzoom,
+    num maxzoom,
+  );
 
   ///  Sets the filter for the specified style layer.
   ///
@@ -737,8 +746,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Filter features within map view](https://maplibre.org/maplibre-gl-js/docs/examples/filter-features-within-map-view/)
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
-  external MapLibreMapJsImpl setFilter(String layerId, JSAny filter,
-      [StyleSetterOptionsJsImpl? options]);
+  external MapLibreMapJsImpl setFilter(
+    String layerId,
+    JSAny filter, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the filter applied to the specified style layer.
   ///
@@ -760,8 +772,12 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
   ///  @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js/docs/examples/adjust-layer-opacity/)
   ///  @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-  external void setPaintProperty(String layerId, String name, JSAny? value,
-      [StyleSetterOptionsJsImpl? options]);
+  external void setPaintProperty(
+    String layerId,
+    String name,
+    JSAny? value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a paint property in the specified style layer.
   ///
@@ -781,8 +797,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  map.setLayoutProperty('my-layer', 'visibility', 'none');
   external MapLibreMapJsImpl setLayoutProperty(
-      String layerId, String name, JSAny? value,
-      [StyleSetterOptionsJsImpl? options]);
+    String layerId,
+    String name,
+    JSAny? value, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
 
   ///  Returns the value of a layout property in the specified style layer.
   ///
@@ -798,7 +817,9 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-      JSAny light, StyleSetterOptionsJsImpl options);
+    JSAny light,
+    StyleSetterOptionsJsImpl options,
+  );
 
   ///  Returns the value of the light object.
   ///
@@ -821,7 +842,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  feature ids, set the `generateId` option in the `GeoJSONSourceSpecification` to auto-assign them. This
   ///  option assigns ids based on a feature's index in the source data. If you change feature data using
   ///  `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
-  external void setFeatureState(JSAny feature, JSAny state);
+  external void setFeatureState(FeatureIdentifierJsImpl feature, JSAny state);
 
   ///  Removes feature state, setting it back to the default behavior. If only
   ///  source is specified, removes all states of that source. If
@@ -836,7 +857,10 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {string} `target.sourceLayer` (optional) /// For vector tile sources, the sourceLayer is
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
-  external void removeFeatureState(JSAny target, [String? key]);
+  external void removeFeatureState(
+    FeatureIdentifierJsImpl target, [
+    String? key,
+  ]);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
@@ -850,7 +874,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///   required.*
   ///
   ///  @returns {Object} The state of the feature.
-  external JSAny getFeatureState(JSAny feature);
+  external JSAny getFeatureState(FeatureIdentifierJsImpl feature);
 
   ///  Returns the map's containing HTML element.
   ///
@@ -963,6 +987,52 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   external String get version;
 }
 
+/// WebGL context attributes for MapLibre GL JS v5+.
+///
+/// These options were previously top-level `MapOptions` properties
+/// (`preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat`).
+/// In v5 they are grouped under `canvasContextAttributes`.
+@JS()
+@staticInterop
+class CanvasContextAttributesJsImpl {
+  factory CanvasContextAttributesJsImpl() =>
+      createJsObject() as CanvasContextAttributesJsImpl;
+}
+
+extension CanvasContextAttributesJsImplExtension
+    on CanvasContextAttributesJsImpl {
+  /// If `true`, the map's canvas can be exported to a PNG using
+  /// `map.getCanvas().toDataURL()`. Defaults to `false`.
+  external JSBoolean? get preserveDrawingBuffer;
+  external set preserveDrawingBuffer(JSBoolean? value);
+
+  /// If `true`, the GL context will be created with MSAA antialiasing,
+  /// which can be useful for antialiasing custom layers. Defaults to `false`.
+  external JSBoolean? get antialias;
+  external set antialias(JSBoolean? value);
+
+  /// If `true`, map creation will fail if the performance of MapLibre GL JS
+  /// would be dramatically worse than expected (i.e. a software renderer
+  /// would be used). Defaults to `false`.
+  external JSBoolean? get failIfMajorPerformanceCaveat;
+  external set failIfMajorPerformanceCaveat(JSBoolean? value);
+
+  /// The WebGL context type to request. Defaults to `'webgl2withfallback'`.
+  /// Accepted values: `'webgl2'`, `'webgl'`, `'webgl2withfallback'`.
+  external JSString? get contextType;
+  external set contextType(JSString? value);
+
+  /// Hint to the browser about the preferred GPU power profile.
+  /// Defaults to `'high-performance'`.
+  external JSString? get powerPreference;
+  external set powerPreference(JSString? value);
+
+  /// If `true`, the drawing buffer is not cleared after rendering,
+  /// enabling off-screen composition. Defaults to `false`.
+  external JSBoolean? get desynchronized;
+  external set desynchronized(JSBoolean? value);
+}
+
 @JS()
 @staticInterop
 class MapOptionsJsImpl {
@@ -1006,27 +1076,15 @@ extension MapOptionsJsImplExtension on MapOptionsJsImpl {
   external JSBoolean get attributionControl;
   external set attributionControl(JSBoolean value);
 
-  /// String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
-  /// `String` or `List<String>`
-  external JSAny get customAttribution;
-  external set customAttribution(JSAny value);
-
   /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   external JSString get logoPosition;
   external set logoPosition(JSString value);
 
-  /// If `true`, map creation will fail if the performance of MapLibre
-  /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
-  external JSBoolean get failIfMajorPerformanceCaveat;
-  external set failIfMajorPerformanceCaveat(JSBoolean value);
-
-  /// If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
-  external JSBoolean get preserveDrawingBuffer;
-  external set preserveDrawingBuffer(JSBoolean value);
-
-  /// If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
-  external JSBoolean get antialias;
-  external set antialias(JSBoolean value);
+  /// WebGL context attributes to pass to the canvas. In MapLibre GL JS v5+,
+  /// `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat`
+  /// are configured here instead of as top-level MapOptions.
+  external CanvasContextAttributesJsImpl? get canvasContextAttributes;
+  external set canvasContextAttributes(CanvasContextAttributesJsImpl? value);
 
   /// If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
   external JSBoolean get refreshExpiredTiles;

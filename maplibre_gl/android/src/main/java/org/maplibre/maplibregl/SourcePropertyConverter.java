@@ -200,6 +200,12 @@ class SourcePropertyConverter {
   }
 
   static void addSource(String id, Map<String, Object> properties, Style style) {
+    // Check if source already exists to prevent CannotAddSourceException
+    // which can lead to native crashes
+    if (style.getSource(id) != null) {
+      return;
+    }
+
     final Object type = properties.get("type");
     Source source = null;
 

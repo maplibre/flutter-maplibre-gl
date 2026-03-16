@@ -7,11 +7,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating a translucent map with content underneath
 class TranslucentFullMapPage extends ExamplePage {
   const TranslucentFullMapPage({super.key})
-      : super(
-          const Icon(Icons.layers),
-          'Translucent map',
-          category: ExampleCategory.advanced,
-        );
+    : super(
+        const Icon(Icons.layers),
+        'Translucent map',
+        category: ExampleCategory.advanced,
+      );
 
   @override
   Widget build(BuildContext context) => const _TranslucentMapBody();
@@ -87,11 +87,12 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
       floatingActionButton: ExampleButton(
         label: _canReset ? 'Reset camera' : 'Go to Tokyo',
         icon: _canReset ? Icons.refresh : Icons.location_searching,
-        onPressed: _canInteractWithMap
-            ? _canReset
-                ? _resetCamera
-                : _moveCameraToTokyo
-            : null,
+        onPressed:
+            _canInteractWithMap
+                ? _canReset
+                    ? _resetCamera
+                    : _moveCameraToTokyo
+                : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

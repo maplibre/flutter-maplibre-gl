@@ -22,11 +22,11 @@ enum DragEventType { start, drag, end }
 enum HoverEventType { enter, move, leave }
 
 Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
-      'setOffline',
-      <String, dynamic>{
-        'offline': offline,
-      },
-    );
+  'setOffline',
+  <String, dynamic>{
+    'offline': offline,
+  },
+);
 
 Future<void> setHttpHeaders(Map<String, String> headers) {
   return _globalChannel.invokeMethod(
@@ -58,7 +58,9 @@ Future<List<OfflineRegion>> getListOfRegions() async {
 }
 
 Future<OfflineRegion> updateOfflineRegionMetadata(
-    int id, Map<String, dynamic> metadata) async {
+  int id,
+  Map<String, dynamic> metadata,
+) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
     <String, dynamic>{
@@ -79,11 +81,11 @@ Future<dynamic> setOfflineTileCountLimit(int limit) =>
     );
 
 Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
-      'deleteOfflineRegion',
-      <String, dynamic>{
-        'id': id,
-      },
-    );
+  'deleteOfflineRegion',
+  <String, dynamic>{
+    'id': id,
+  },
+);
 
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
@@ -93,44 +95,51 @@ Future<OfflineRegion> downloadOfflineRegion(
   final channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
-  await _globalChannel
-      .invokeMethod('downloadOfflineRegion#setup', <String, dynamic>{
-    'channelName': channelName,
-  });
+  await _globalChannel.invokeMethod(
+    'downloadOfflineRegion#setup',
+    <String, dynamic>{
+      'channelName': channelName,
+    },
+  );
 
   if (onEvent != null) {
-    EventChannel(channelName).receiveBroadcastStream().handleError((error) {
-      if (error is PlatformException) {
-        onEvent(Error(error));
-        return Error(error);
-      }
-      final unknownError = Error(
-        PlatformException(
-          code: 'UnknowException',
-          message:
-              'This error is unhandled by plugin. Please contact us if needed.',
-          details: error,
-        ),
-      );
-      onEvent(unknownError);
-      return unknownError;
-    }).listen((data) {
-      final Map<String, Object?> jsonData = json.decode(data);
-      final status = switch (jsonData['status']) {
-        'start' => InProgress(0.0),
-        'progress' => InProgress((jsonData['progress']! as num).toDouble()),
-        'success' => Success(),
-        _ => throw Exception('Invalid event status ${jsonData['status']}'),
-      };
-      onEvent(status);
-    });
+    EventChannel(channelName)
+        .receiveBroadcastStream()
+        .handleError((error) {
+          if (error is PlatformException) {
+            onEvent(Error(error));
+            return Error(error);
+          }
+          final unknownError = Error(
+            PlatformException(
+              code: 'UnknowException',
+              message:
+                  'This error is unhandled by plugin. Please contact us if needed.',
+              details: error,
+            ),
+          );
+          onEvent(unknownError);
+          return unknownError;
+        })
+        .listen((data) {
+          final Map<String, Object?> jsonData = json.decode(data);
+          final status = switch (jsonData['status']) {
+            'start' => InProgress(0.0),
+            'progress' => InProgress((jsonData['progress']! as num).toDouble()),
+            'success' => Success(),
+            _ => throw Exception('Invalid event status ${jsonData['status']}'),
+          };
+          onEvent(status);
+        });
   }
 
-  final result = await _globalChannel
-      .invokeMethod('downloadOfflineRegion', <String, dynamic>{
-    'definition': definition.toMap(),
-    'metadata': metadata,
-  });
+  final result = await _globalChannel.invokeMethod(
+    'downloadOfflineRegion',
+    <String, dynamic>{
+      'definition': definition.toMap(),
+      'metadata': metadata,
+    },
+  );
 
   return OfflineRegion.fromMap(json.decode(result));
 }

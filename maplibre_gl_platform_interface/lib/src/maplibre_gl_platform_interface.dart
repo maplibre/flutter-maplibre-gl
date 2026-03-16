@@ -34,6 +34,8 @@ abstract class MapLibrePlatform {
 
   final onMapLongClickPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
+  final onMapMouseMovePlatform = ArgumentCallbacks<Map<String, dynamic>>();
+
   final onCameraTrackingChangedPlatform =
       ArgumentCallbacks<MyLocationTrackingMode>();
 
@@ -45,14 +47,16 @@ abstract class MapLibrePlatform {
 
   Future<void> initPlatform(int id);
   Widget buildView(
-      Map<String, dynamic> creationParams,
-      OnPlatformViewCreatedCallback onPlatformViewCreated,
-      Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers);
+    Map<String, dynamic> creationParams,
+    OnPlatformViewCreatedCallback onPlatformViewCreated,
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+  );
   Future<CameraPosition?> updateMapOptions(Map<String, dynamic> optionsUpdate);
   Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration});
   Future<bool?> moveCamera(CameraUpdate cameraUpdate);
   Future<void> updateMyLocationTrackingMode(
-      MyLocationTrackingMode myLocationTrackingMode);
+    MyLocationTrackingMode myLocationTrackingMode,
+  );
 
   Future<void> matchMapLanguageWithDeviceDefault();
 
@@ -92,19 +96,30 @@ abstract class MapLibrePlatform {
 
   /// Sets custom HTTP headers for map requests.
   Future<void> setCustomHeaders(
-      Map<String, String> headers, List<String> filter);
+    Map<String, String> headers,
+    List<String> filter,
+  );
 
   /// Gets the current custom HTTP headers.
   Future<Map<String, String>> getCustomHeaders();
 
   Future<List> queryRenderedFeatures(
-      Point<double> point, List<String> layerIds, List<Object>? filter);
+    Point<double> point,
+    List<String> layerIds,
+    List<Object>? filter,
+  );
 
   Future<List> queryRenderedFeaturesInRect(
-      Rect rect, List<String> layerIds, String? filter);
+    Rect rect,
+    List<String> layerIds,
+    String? filter,
+  );
 
   Future<List> querySourceFeatures(
-      String sourceId, String? sourceLayerId, List<Object>? filter);
+    String sourceId,
+    String? sourceLayerId,
+    List<Object>? filter,
+  );
   Future invalidateAmbientCache();
   Future clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
@@ -114,16 +129,31 @@ abstract class MapLibrePlatform {
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]);
 
   Future<void> addImageSource(
-      String imageSourceId, Uint8List bytes, LatLngQuad coordinates);
+    String imageSourceId,
+    Uint8List bytes,
+    LatLngQuad coordinates,
+  );
 
   Future<void> updateImageSource(
-      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates);
+    String imageSourceId,
+    Uint8List? bytes,
+    LatLngQuad? coordinates,
+  );
 
-  Future<void> addLayer(String imageLayerId, String imageSourceId,
-      double? minzoom, double? maxzoom);
+  Future<void> addLayer(
+    String imageLayerId,
+    String imageSourceId,
+    double? minzoom,
+    double? maxzoom,
+  );
 
-  Future<void> addLayerBelow(String imageLayerId, String imageSourceId,
-      String belowLayerId, double? minzoom, double? maxzoom);
+  Future<void> addLayerBelow(
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  );
 
   Future<void> removeLayer(String imageLayerId);
 
@@ -143,8 +173,11 @@ abstract class MapLibrePlatform {
 
   Future<double> getMetersPerPixelAtLatitude(double latitude);
 
-  Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
-      {String? promoteId});
+  Future<void> addGeoJsonSource(
+    String sourceId,
+    Map<String, dynamic> geojson, {
+    String? promoteId,
+  });
 
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson);
 
@@ -157,82 +190,148 @@ abstract class MapLibrePlatform {
   });
 
   Future<void> setFeatureForGeoJsonSource(
-      String sourceId, Map<String, dynamic> geojsonFeature);
+    String sourceId,
+    Map<String, dynamic> geojsonFeature,
+  );
+
+  Future<void> setFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, dynamic> state, {
+    String? sourceLayer,
+  });
+
+  Future<void> removeFeatureState(
+    String sourceId, {
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  });
+
+  Future<Map<String, dynamic>?> getFeatureState(
+    String sourceId,
+    String featureId, {
+    String? sourceLayer,
+  });
 
   Future<void> removeSource(String sourceId);
 
   Future<void> addSymbolLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    required bool enableInteraction,
+  });
 
   Future<void> addLineLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    required bool enableInteraction,
+  });
 
   Future<void> setLayerProperties(
-      String layerId, Map<String, dynamic> properties);
+    String layerId,
+    Map<String, dynamic> properties,
+  );
 
   Future<void> addCircleLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    required bool enableInteraction,
+  });
 
   Future<void> addFillLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    required bool enableInteraction,
+  });
 
   Future<void> addFillExtrusionLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      required bool enableInteraction});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    required bool enableInteraction,
+  });
 
   Future<void> addRasterLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  });
 
   Future<void> addHillshadeLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  });
 
   Future<void> addHeatmapLayer(
-      String sourceId, String layerId, Map<String, dynamic> properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom});
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  });
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
+
+  /// Returns the visibility of a layer.
+  /// Returns true if visible, false if hidden, null if layer not found.
+  Future<bool?> getLayerVisibility(String layerId);
+
+  /// Sets the web map to a custom size for rendering.
+  /// Returns the previous/initial size of the web map before this change.
+  Future<Size> setWebMapToCustomSize(Size size);
+
+  /// Waits until the map is idle after camera movement.
+  Future<void> waitUntilMapIsIdleAfterMovement();
+
+  /// Waits until all visible map tiles are loaded.
+  Future<void> waitUntilMapTilesAreLoaded();
+
+  /// Takes a screenshot of the web map.
+  /// Returns a base64-encoded PNG image string.
+  Future<String> takeWebSnapshot();
 
   /// Method to set style string
   /// A MapLibre GL style document defining the map's appearance.
@@ -260,6 +359,7 @@ abstract class MapLibrePlatform {
 
     onMapClickPlatform.clear();
     onMapLongClickPlatform.clear();
+    onMapMouseMovePlatform.clear();
     onCameraTrackingChangedPlatform.clear();
     onCameraTrackingDismissedPlatform.clear();
     onMapIdlePlatform.clear();
