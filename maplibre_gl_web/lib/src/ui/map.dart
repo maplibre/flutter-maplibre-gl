@@ -1140,23 +1140,14 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
   /// If `true`, an {@link AttributionControl} will be added to the map.
   bool get attributionControl => jsObject.attributionControl.toDart;
 
-  /// String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
-  /// `String` or `List<String>`
-  dynamic get customAttribution => jsObject.customAttribution;
-
   /// A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
   String get logoPosition => jsObject.logoPosition.toDart;
 
-  /// If `true`, map creation will fail if the performance of MapLibre
-  /// GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
-  bool get failIfMajorPerformanceCaveat =>
-      jsObject.failIfMajorPerformanceCaveat.toDart;
-
-  /// If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
-  bool get preserveDrawingBuffer => jsObject.preserveDrawingBuffer.toDart;
-
-  /// If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
-  bool get antialias => jsObject.antialias.toDart;
+  /// WebGL context attributes including `preserveDrawingBuffer`, `antialias`,
+  /// and `failIfMajorPerformanceCaveat`. In MapLibre GL JS v5+, these are
+  /// configured via `canvasContextAttributes` instead of top-level options.
+  CanvasContextAttributesJsImpl? get canvasContextAttributes =>
+      jsObject.canvasContextAttributes;
 
   /// If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
   bool get refreshExpiredTiles => jsObject.refreshExpiredTiles.toDart;
@@ -1268,7 +1259,6 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
     bool? pitchWithRotate,
     num? clickTolerance,
     bool? attributionControl,
-    dynamic customAttribution,
     String? logoPosition,
     bool? failIfMajorPerformanceCaveat,
     bool? preserveDrawingBuffer,
@@ -1316,17 +1306,24 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
     jsImpl.pitchWithRotate = (pitchWithRotate ?? true).toJS;
     if (clickTolerance != null) jsImpl.clickTolerance = clickTolerance.toJS;
     jsImpl.attributionControl = (attributionControl ?? true).toJS;
-    if (customAttribution != null) {
-      jsImpl.customAttribution = customAttribution.toJS;
-    }
     jsImpl.logoPosition = (logoPosition ?? 'bottom-left').toJS;
-    if (failIfMajorPerformanceCaveat != null) {
-      jsImpl.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat.toJS;
+    // In MapLibre GL JS v5+, WebGL context options moved into canvasContextAttributes
+    if (preserveDrawingBuffer != null ||
+        antialias != null ||
+        failIfMajorPerformanceCaveat != null) {
+      final canvasAttrs = CanvasContextAttributesJsImpl();
+      if (preserveDrawingBuffer != null) {
+        canvasAttrs.preserveDrawingBuffer = preserveDrawingBuffer.toJS;
+      }
+      if (antialias != null) {
+        canvasAttrs.antialias = antialias.toJS;
+      }
+      if (failIfMajorPerformanceCaveat != null) {
+        canvasAttrs.failIfMajorPerformanceCaveat =
+            failIfMajorPerformanceCaveat.toJS;
+      }
+      jsImpl.canvasContextAttributes = canvasAttrs;
     }
-    if (preserveDrawingBuffer != null) {
-      jsImpl.preserveDrawingBuffer = preserveDrawingBuffer.toJS;
-    }
-    if (antialias != null) jsImpl.antialias = antialias.toJS;
     if (refreshExpiredTiles != null) {
       jsImpl.refreshExpiredTiles = refreshExpiredTiles.toJS;
     }
