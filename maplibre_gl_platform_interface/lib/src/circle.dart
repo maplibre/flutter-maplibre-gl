@@ -39,8 +39,9 @@ class Circle implements Annotation {
 
   @override
   void translate(LatLng delta) {
-    options =
-        options.copyWith(CircleOptions(geometry: options.geometry! + delta));
+    options = options.copyWith(
+      CircleOptions(geometry: options.geometry! + delta),
+    );
   }
 }
 
@@ -120,8 +121,8 @@ class CircleOptions {
       "properties": toJson(false),
       "geometry": {
         "type": "Point",
-        "coordinates": geometry!.toGeoJsonCoordinates()
-      }
+        "coordinates": geometry!.toGeoJsonCoordinates(),
+      },
     };
   }
 }

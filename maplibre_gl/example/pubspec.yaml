@@ -4,7 +4,7 @@ description: Minimal example app for the maplibre_gl package published on pub.de
 version: 0.0.1
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ">=3.7.0 <4.0.0"
   flutter: ">=3.22.0"
 
 dependencies:
