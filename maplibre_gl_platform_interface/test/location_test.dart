@@ -209,9 +209,11 @@ void main() {
       // On web (JS), integer doubles print without ".0" suffix
       expect(
         bounds.toString(),
-        matches(RegExp(
-          r'LatLngBounds\(LatLng\(10\.?0?, 20\.?0?\), LatLng\(30\.?0?, 40\.?0?\)\)',
-        )),
+        matches(
+          RegExp(
+            r'LatLngBounds\(LatLng\(10\.?0?, 20\.?0?\), LatLng\(30\.?0?, 40\.?0?\)\)',
+          ),
+        ),
       );
     });
   });
