@@ -55,9 +55,8 @@ jobs:
         if: always()
         uses: codecov/codecov-action@v5
         with:
-          files: |
-            maplibre_gl_platform_interface/coverage/lcov.info,
-            maplibre_gl/coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
 
   test-web:
     name: "Run web tests"

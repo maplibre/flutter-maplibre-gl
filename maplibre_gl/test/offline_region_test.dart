@@ -90,7 +90,7 @@ void main() {
         maxZoom: 15.0,
       );
       expect(def.toString(), contains('OfflineRegionDefinition'));
-      expect(def.toString(), contains('5.0'));
+      expect(def.toString(), contains('minZoom = 5'));
     });
   });
 
