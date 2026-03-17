@@ -6,11 +6,11 @@ import '../../shared/shared.dart';
 /// Comprehensive camera control example with animated and instant movements
 class CameraControlsExample extends ExamplePage {
   const CameraControlsExample({super.key})
-      : super(
-          const Icon(Icons.videocam),
-          'Camera Controls',
-          category: ExampleCategory.camera,
-        );
+    : super(
+        const Icon(Icons.videocam),
+        'Camera Controls',
+        category: ExampleCategory.camera,
+      );
 
   @override
   Widget build(BuildContext context) => const _CameraControlsBody();
@@ -76,22 +76,21 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
   }
 
   Future<void> _resetCamera() => _moveCamera(
-        CameraUpdate.newCameraPosition(ExampleConstants.defaultCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.defaultCameraPosition),
+  );
 
   Future<void> _goToSydney() => _moveCamera(
-        CameraUpdate.newCameraPosition(ExampleConstants.sydneyCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.sydneyCameraPosition),
+  );
   Future<void> _goToSanFrancisco() => _moveCamera(
-        CameraUpdate.newCameraPosition(
-            ExampleConstants.sanFranciscoCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.sanFranciscoCameraPosition),
+  );
 
   Future<void> _goToLondon() => _moveCamera(
-        CameraUpdate.newCameraPosition(
-          ExampleConstants.londonCameraPosition,
-        ),
-      );
+    CameraUpdate.newCameraPosition(
+      ExampleConstants.londonCameraPosition,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {

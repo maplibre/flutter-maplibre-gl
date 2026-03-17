@@ -30,70 +30,70 @@ class ExampleButton extends StatelessWidget {
       case ExampleButtonStyle.filled:
         return icon != null
             ? FilledButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-              )
+              onPressed: onPressed,
+              icon: Icon(icon),
+              label: Text(label),
+            )
             : FilledButton(
-                onPressed: onPressed,
-                child: Text(label),
-              );
+              onPressed: onPressed,
+              child: Text(label),
+            );
 
       case ExampleButtonStyle.tonal:
         return icon != null
             ? FilledButton.tonalIcon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-              )
+              onPressed: onPressed,
+              icon: Icon(icon),
+              label: Text(label),
+            )
             : FilledButton.tonal(
-                onPressed: onPressed,
-                child: Text(label),
-              );
+              onPressed: onPressed,
+              child: Text(label),
+            );
 
       case ExampleButtonStyle.outlined:
         return icon != null
             ? OutlinedButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-              )
+              onPressed: onPressed,
+              icon: Icon(icon),
+              label: Text(label),
+            )
             : OutlinedButton(
-                onPressed: onPressed,
-                child: Text(label),
-              );
+              onPressed: onPressed,
+              child: Text(label),
+            );
 
       case ExampleButtonStyle.text:
         return icon != null
             ? TextButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-              )
+              onPressed: onPressed,
+              icon: Icon(icon),
+              label: Text(label),
+            )
             : TextButton(
-                onPressed: onPressed,
-                child: Text(label),
-              );
+              onPressed: onPressed,
+              child: Text(label),
+            );
 
       case ExampleButtonStyle.destructive:
         return icon != null
             ? FilledButton.tonalIcon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.errorContainer,
-                  foregroundColor: theme.colorScheme.onErrorContainer,
-                ),
-              )
+              onPressed: onPressed,
+              icon: Icon(icon),
+              label: Text(label),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.errorContainer,
+                foregroundColor: theme.colorScheme.onErrorContainer,
+              ),
+            )
             : FilledButton.tonal(
-                onPressed: onPressed,
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.errorContainer,
-                  foregroundColor: theme.colorScheme.onErrorContainer,
-                ),
-                child: Text(label),
-              );
+              onPressed: onPressed,
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.errorContainer,
+                foregroundColor: theme.colorScheme.onErrorContainer,
+              ),
+              child: Text(label),
+            );
     }
   }
 }
@@ -209,15 +209,16 @@ class ExampleSegmentedButton<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SegmentedButton<T>(
-      segments: segments
-          .map(
-            (segment) => ButtonSegment<T>(
-              value: segment.value,
-              label: Text(segment.label),
-              icon: segment.icon != null ? Icon(segment.icon) : null,
-            ),
-          )
-          .toList(),
+      segments:
+          segments
+              .map(
+                (segment) => ButtonSegment<T>(
+                  value: segment.value,
+                  label: Text(segment.label),
+                  icon: segment.icon != null ? Icon(segment.icon) : null,
+                ),
+              )
+              .toList(),
       selected: {selected},
       onSelectionChanged: (newSelection) {
         if (newSelection.isNotEmpty) {
@@ -284,11 +285,12 @@ class InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cardColor = color ?? theme.colorScheme.secondaryContainer;
-    final textColor = color != null
-        ? ThemeData.estimateBrightnessForColor(color!) == Brightness.light
-            ? Colors.black87
-            : Colors.white
-        : theme.colorScheme.onSecondaryContainer;
+    final textColor =
+        color != null
+            ? ThemeData.estimateBrightnessForColor(color!) == Brightness.light
+                ? Colors.black87
+                : Colors.white
+            : theme.colorScheme.onSecondaryContainer;
 
     return Card(
       color: cardColor,

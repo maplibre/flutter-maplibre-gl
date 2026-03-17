@@ -9,11 +9,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating animated style layer property updates
 class EditStyleLayerAnimatedExample extends ExamplePage {
   const EditStyleLayerAnimatedExample({super.key})
-      : super(
-          const Icon(Icons.animation),
-          'Edit Style Layer (Animated)',
-          category: ExampleCategory.layers,
-        );
+    : super(
+        const Icon(Icons.animation),
+        'Edit Style Layer (Animated)',
+        category: ExampleCategory.layers,
+      );
 
   @override
   Widget build(BuildContext context) => const _EditStyleLayerAnimatedBody();
@@ -56,14 +56,13 @@ class _EditStyleLayerAnimatedBodyState
     _colorAnimation = ColorTween(
       begin: Colors.blue,
       end: Colors.purple,
-    ).animate(_colorAnimationController)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          unawaited(_colorAnimationController.reverse());
-        } else if (status == AnimationStatus.dismissed) {
-          unawaited(_colorAnimationController.forward());
-        }
-      });
+    ).animate(_colorAnimationController)..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        unawaited(_colorAnimationController.reverse());
+      } else if (status == AnimationStatus.dismissed) {
+        unawaited(_colorAnimationController.forward());
+      }
+    });
 
     _colorAnimationController.addListener(() {
       unawaited(_updateLayerColors());
@@ -448,8 +447,8 @@ class _EditStyleLayerAnimatedBodyState
                 Text(
                   'Edit Style Layer (Animated)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -487,12 +486,13 @@ class _EditStyleLayerAnimatedBodyState
             ExampleButton(
               label: 'Reset Layers',
               icon: Icons.refresh,
-              onPressed: hasController
-                  ? () async {
-                      await _removeLayers();
-                      await _addStyleLayers();
-                    }
-                  : null,
+              onPressed:
+                  hasController
+                      ? () async {
+                        await _removeLayers();
+                        await _addStyleLayers();
+                      }
+                      : null,
             ),
             ExampleButton(
               label: 'Remove Layers',
@@ -508,9 +508,10 @@ class _EditStyleLayerAnimatedBodyState
             ExampleButton(
               label: _isAnimating ? 'Stop Color' : 'Animate Color',
               icon: _isAnimating ? Icons.stop : Icons.palette,
-              onPressed: hasController
-                  ? (_isAnimating ? _stopAnimation : _startColorAnimation)
-                  : null,
+              onPressed:
+                  hasController
+                      ? (_isAnimating ? _stopAnimation : _startColorAnimation)
+                      : null,
             ),
           ],
         ),

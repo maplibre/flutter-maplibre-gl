@@ -15,26 +15,26 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async {
-          methodCalls.add(methodCall);
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
 
-          switch (methodCall.method) {
-            case 'style#getLayerIds':
-              return <dynamic, dynamic>{
-                'layers': ['layer-1', 'layer-2', 'layer-3'],
-              };
-            case 'style#getSourceIds':
-              return <dynamic, dynamic>{
-                'sources': ['source-1', 'source-2'],
-              };
-            case 'layer#getVisibility':
-              return true;
-            default:
-              return null;
-          }
-        },
-      );
+              switch (methodCall.method) {
+                case 'style#getLayerIds':
+                  return <dynamic, dynamic>{
+                    'layers': ['layer-1', 'layer-2', 'layer-3'],
+                  };
+                case 'style#getSourceIds':
+                  return <dynamic, dynamic>{
+                    'sources': ['source-1', 'source-2'],
+                  };
+                case 'layer#getVisibility':
+                  return true;
+                default:
+                  return null;
+              }
+            },
+          );
 
       await platform.initPlatform(0);
       methodCalls.clear();

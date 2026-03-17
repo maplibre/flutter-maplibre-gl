@@ -18,25 +18,25 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async {
-          methodCalls.add(methodCall);
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
 
-          switch (methodCall.method) {
-            case 'map#takeSnapshot':
-              return fakePng;
-            case 'map#update':
-              return <String, dynamic>{
-                'bearing': 0.0,
-                'target': <double>[0.0, 0.0],
-                'tilt': 0.0,
-                'zoom': 10.0,
-              };
-            default:
-              return null;
-          }
-        },
-      );
+              switch (methodCall.method) {
+                case 'map#takeSnapshot':
+                  return fakePng;
+                case 'map#update':
+                  return <String, dynamic>{
+                    'bearing': 0.0,
+                    'target': <double>[0.0, 0.0],
+                    'tilt': 0.0,
+                    'zoom': 10.0,
+                  };
+                default:
+                  return null;
+              }
+            },
+          );
 
       await platform.initPlatform(0);
       methodCalls.clear();
@@ -67,9 +67,9 @@ void main() {
     test('takeSnapshot throws when platform returns null', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async => null,
-      );
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async => null,
+          );
 
       expect(
         () => platform.takeSnapshot(),

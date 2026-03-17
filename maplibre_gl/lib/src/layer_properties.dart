@@ -1889,7 +1889,8 @@ class FillExtrusionLayerProperties implements LayerProperties {
           changes.fillExtrusionPattern ?? fillExtrusionPattern,
       fillExtrusionHeight: changes.fillExtrusionHeight ?? fillExtrusionHeight,
       fillExtrusionBase: changes.fillExtrusionBase ?? fillExtrusionBase,
-      fillExtrusionVerticalGradient: changes.fillExtrusionVerticalGradient ??
+      fillExtrusionVerticalGradient:
+          changes.fillExtrusionVerticalGradient ??
           fillExtrusionVerticalGradient,
       visibility: changes.visibility ?? visibility,
     );
@@ -2208,7 +2209,8 @@ class HillshadeLayerProperties implements LayerProperties {
 
   HillshadeLayerProperties copyWith(HillshadeLayerProperties changes) {
     return HillshadeLayerProperties(
-      hillshadeIlluminationDirection: changes.hillshadeIlluminationDirection ??
+      hillshadeIlluminationDirection:
+          changes.hillshadeIlluminationDirection ??
           hillshadeIlluminationDirection,
       hillshadeIlluminationAnchor:
           changes.hillshadeIlluminationAnchor ?? hillshadeIlluminationAnchor,

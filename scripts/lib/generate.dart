@@ -86,10 +86,11 @@ Future<void> main() async {
   // required for deduplication
   // Collect a set of all layout property names across layer types to enable
   // template logic for shared helpers / deduplication.
-  renderContext["all_layout_properties"] = <dynamic>{
-    for (final type in renderContext["layerTypes"]!)
-      ...type["layout_properties"].map((p) => p["value"]),
-  }.map((p) => {"property": p}).toList();
+  renderContext["all_layout_properties"] =
+      <dynamic>{
+        for (final type in renderContext["layerTypes"]!)
+          ...type["layout_properties"].map((p) => p["value"]),
+      }.map((p) => {"property": p}).toList();
 
   // Ordered list of templates we render. If you add a new feature, append
   // here to keep existing diff noise minimal.
@@ -139,9 +140,10 @@ Future<String> render(
   final outputPath = '$currentParentPath/${pathItems.join("/")}';
 
   print("Rendering $filename");
-  final templateFile = await File(
-    '$currentParentPath/scripts/templates/$filename.template',
-  ).readAsString();
+  final templateFile =
+      await File(
+        '$currentParentPath/scripts/templates/$filename.template',
+      ).readAsString();
 
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
@@ -167,7 +169,8 @@ Map<String, dynamic> buildStyleProperty(
   Map<String, dynamic> value,
 ) {
   final typeDart = dartTypeMappingTable[value["type"]];
-  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+  final nestedTypeDart =
+      dartTypeMappingTable[value["value"]] ??
       dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
 
@@ -207,9 +210,11 @@ Map<String, dynamic> buildSourceProperty(
   final camelCase = ReCase(key).camelCase;
   final typeDart = dartTypeMappingTable[value["type"]];
   final typeSwift = swiftTypeMappingTable[value["type"]];
-  final nestedTypeDart = dartTypeMappingTable[value["value"]] ??
+  final nestedTypeDart =
+      dartTypeMappingTable[value["value"]] ??
       dartTypeMappingTable[value["value"]?["type"]];
-  final nestedTypeSwift = swiftTypeMappingTable[value["value"]] ??
+  final nestedTypeSwift =
+      swiftTypeMappingTable[value["value"]] ??
       swiftTypeMappingTable[value["value"]?["type"]];
 
   var defaultValue = value["default"];

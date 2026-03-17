@@ -262,21 +262,22 @@ void main() {
   });
 
   group('Snapshot delegation', () {
-    test('takeSnapshot captures current view when no dimensions given',
-        () async {
-      final result = await controller.takeSnapshot();
+    test(
+      'takeSnapshot captures current view when no dimensions given',
+      () async {
+        final result = await controller.takeSnapshot();
 
-      final calls = platform.callsFor('takeSnapshot');
-      expect(calls.length, 1);
-      expect(calls.first.namedArgs['width'], isNull);
-      expect(calls.first.namedArgs['height'], isNull);
-      expect(result, isA<Uint8List>());
-      expect(result.isNotEmpty, isTrue);
-    });
+        final calls = platform.callsFor('takeSnapshot');
+        expect(calls.length, 1);
+        expect(calls.first.namedArgs['width'], isNull);
+        expect(calls.first.namedArgs['height'], isNull);
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, isTrue);
+      },
+    );
 
     test('takeSnapshot at landscape resolution', () async {
-      final result =
-          await controller.takeSnapshot(width: 800, height: 600);
+      final result = await controller.takeSnapshot(width: 800, height: 600);
 
       final calls = platform.callsFor('takeSnapshot');
       expect(calls.length, 1);
@@ -287,8 +288,7 @@ void main() {
     });
 
     test('takeSnapshot at portrait resolution', () async {
-      final result =
-          await controller.takeSnapshot(width: 360, height: 800);
+      final result = await controller.takeSnapshot(width: 360, height: 800);
 
       final calls = platform.callsFor('takeSnapshot');
       expect(calls.length, 1);

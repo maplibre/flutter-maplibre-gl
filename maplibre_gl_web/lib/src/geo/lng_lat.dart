@@ -27,13 +27,12 @@ class LngLat extends JsObjectWrapper<LngLatJsImpl> {
   factory LngLat(
     num lng,
     num lat,
-  ) =>
-      LngLat.fromJsObject(
-        LngLatJsImpl(
-          lng,
-          lat,
-        ),
-      );
+  ) => LngLat.fromJsObject(
+    LngLatJsImpl(
+      lng,
+      lat,
+    ),
+  );
 
   /// Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
   ///

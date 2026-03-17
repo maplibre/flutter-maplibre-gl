@@ -17,19 +17,19 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async {
-          methodCalls.add(methodCall);
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
 
-          switch (methodCall.method) {
-            case 'map#editGeoJsonSource':
-            case 'map#editGeoJsonUrl':
-              return <Object?, Object?>{'result': true};
-            default:
-              return null;
-          }
-        },
-      );
+              switch (methodCall.method) {
+                case 'map#editGeoJsonSource':
+                case 'map#editGeoJsonUrl':
+                  return <Object?, Object?>{'result': true};
+                default:
+                  return null;
+              }
+            },
+          );
 
       await platform.initPlatform(0);
       methodCalls.clear();

@@ -165,24 +165,21 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Point<double> point,
     List<String> layerIds,
     List<Object>? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
     String? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
     List<Object>? filter,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future invalidateAmbientCache() async {}
@@ -195,9 +192,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
 
   @override
   Future<LatLngBounds> getVisibleRegion() async => LatLngBounds(
-        southwest: const LatLng(-1, -1),
-        northeast: const LatLng(1, 1),
-      );
+    southwest: const LatLng(-1, -1),
+    northeast: const LatLng(1, 1),
+  );
 
   @override
   Future<void> addImage(
@@ -342,8 +339,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String sourceId,
     String featureId, {
     String? sourceLayer,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<void> removeSource(String sourceId) async {

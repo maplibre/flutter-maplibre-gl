@@ -16,12 +16,12 @@ void main() {
       // Mock the method channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-        (methodCall) async {
-          methodCalls.add(methodCall);
-          return null;
-        },
-      );
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
+              return null;
+            },
+          );
 
       await platform.initPlatform(0);
       methodCalls.clear();

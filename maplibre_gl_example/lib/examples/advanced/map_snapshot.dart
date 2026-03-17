@@ -12,11 +12,11 @@ import '../../shared/shared.dart';
 /// as PNG bytes. Works on Android, iOS, and Web with the same code.
 class MapSnapshotPage extends ExamplePage {
   const MapSnapshotPage({super.key})
-      : super(
-          const Icon(Icons.camera_alt),
-          'Map Snapshot',
-          category: ExampleCategory.advanced,
-        );
+    : super(
+        const Icon(Icons.camera_alt),
+        'Map Snapshot',
+        category: ExampleCategory.advanced,
+      );
 
   @override
   Widget build(BuildContext context) => const _MapSnapshotBody();
@@ -78,58 +78,59 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.camera_alt),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Map Snapshot $sizeLabel',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-              ),
-            ),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      imageBytes,
-                      fit: BoxFit.contain,
-                    ),
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.camera_alt),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Map Snapshot $sizeLabel',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                 ),
+              ],
+            ),
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Image size: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
-                style: Theme.of(context).textTheme.bodySmall,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.memory(
+                          imageBytes,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Image size: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -184,17 +185,19 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
               ExampleButton(
                 label: '800x600',
                 icon: Icons.crop,
-                onPressed: enabled
-                    ? () => _takeSnapshot(width: 800, height: 600)
-                    : null,
+                onPressed:
+                    enabled
+                        ? () => _takeSnapshot(width: 800, height: 600)
+                        : null,
                 style: ExampleButtonStyle.tonal,
               ),
               ExampleButton(
                 label: '360x800',
                 icon: Icons.crop,
-                onPressed: enabled
-                    ? () => _takeSnapshot(width: 360, height: 800)
-                    : null,
+                onPressed:
+                    enabled
+                        ? () => _takeSnapshot(width: 360, height: 800)
+                        : null,
                 style: ExampleButtonStyle.tonal,
               ),
             ],

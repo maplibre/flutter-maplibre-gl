@@ -46,9 +46,9 @@ class MapExampleScaffold extends StatelessWidget {
     this.controlsPadding,
     this.wrapInCard = false,
   }) : assert(
-          mapHeightRatio > 0.0 && mapHeightRatio <= 1.0,
-          'mapHeightRatio must be between 0.0 and 1.0',
-        );
+         mapHeightRatio > 0.0 && mapHeightRatio <= 1.0,
+         'mapHeightRatio must be between 0.0 and 1.0',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -74,19 +74,21 @@ class MapExampleScaffold extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: showAppBar && title != null
-          ? AppBar(
-              title: Text(title!),
-              elevation: 0,
-            )
-          : null,
+      appBar:
+          showAppBar && title != null
+              ? AppBar(
+                title: Text(title!),
+                elevation: 0,
+              )
+              : null,
       body: body,
       floatingActionButton: floatingActionButton,
     );
   }
 
   Widget _buildControls(ThemeData theme) {
-    final padding = controlsPadding ??
+    final padding =
+        controlsPadding ??
         const EdgeInsets.all(ExampleConstants.paddingStandard);
 
     final wrappedControls = Wrap(
@@ -168,12 +170,13 @@ class MapExampleScaffoldBuilder extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: showAppBar && title != null
-          ? AppBar(
-              title: Text(title!),
-              elevation: 0,
-            )
-          : null,
+      appBar:
+          showAppBar && title != null
+              ? AppBar(
+                title: Text(title!),
+                elevation: 0,
+              )
+              : null,
       body: body,
       floatingActionButton: floatingActionButton,
     );

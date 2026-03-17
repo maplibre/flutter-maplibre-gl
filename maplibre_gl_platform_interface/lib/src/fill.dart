@@ -128,13 +128,15 @@ class FillOptions {
       "properties": toJson(false),
       "geometry": {
         "type": "Polygon",
-        "coordinates": geometry!
-            .map(
-              (latLngList) => latLngList
-                  .map((latLng) => latLng.toGeoJsonCoordinates())
-                  .toList(),
-            )
-            .toList(),
+        "coordinates":
+            geometry!
+                .map(
+                  (latLngList) =>
+                      latLngList
+                          .map((latLng) => latLng.toGeoJsonCoordinates())
+                          .toList(),
+                )
+                .toList(),
       },
     };
   }

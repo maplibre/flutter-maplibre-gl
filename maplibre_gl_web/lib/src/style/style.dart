@@ -75,8 +75,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
     dynamic layerObject, [
     String? before,
     StyleSetterOptions? options,
-  ]) =>
-      jsObject.addLayer(layerObject);
+  ]) => jsObject.addLayer(layerObject);
 
   ///  Moves a layer to a different z-position. The layer will be inserted before the layer with
   ///  ID `before`, or appended if `before` is omitted.
@@ -114,8 +113,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
     String name,
     dynamic value,
     StyleSetterOptions options,
-  ) =>
-      jsObject.setLayoutProperty(layerId, name, value, options.jsObject);
+  ) => jsObject.setLayoutProperty(layerId, name, value, options.jsObject);
 
   ///  Get a layout property's value from a given layer
   ///  @param {string} layerId the layer to inspect
@@ -129,8 +127,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
     String name,
     dynamic value,
     StyleSetterOptions options,
-  ) =>
-      jsObject.setPaintProperty(layerId, name, value, options.jsObject);
+  ) => jsObject.setPaintProperty(layerId, name, value, options.jsObject);
 
   getPaintProperty(String layer, String name) =>
       jsObject.getPaintProperty(layer, name);

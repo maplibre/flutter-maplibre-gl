@@ -21,12 +21,12 @@ import '../../shared/shared.dart';
 /// Based on: https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/
 class HoverEffectExample extends ExamplePage {
   const HoverEffectExample({super.key})
-      : super(
-          const Icon(Icons.touch_app),
-          'Hover Effect',
-          category: ExampleCategory.interaction,
-          needsLocationPermission: false,
-        );
+    : super(
+        const Icon(Icons.touch_app),
+        'Hover Effect',
+        category: ExampleCategory.interaction,
+        needsLocationPermission: false,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -248,9 +248,10 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
+                            color:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],
