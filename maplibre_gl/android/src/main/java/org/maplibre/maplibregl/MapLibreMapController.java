@@ -126,7 +126,7 @@ final class MapLibreMapController
   private final int id;
   private final MethodChannel methodChannel;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
-  private final float density;
+  private float density;
   private final Context context;
   private final String styleStringInitial;
   /**
@@ -2325,7 +2325,7 @@ final class MapLibreMapController
 
   @Override
   public void onConfigurationChanged(@NonNull Configuration newConfig) {
-    // No-op: configuration changes are handled by the activity
+    this.density = context.getResources().getDisplayMetrics().density;
   }
 
   @Override
