@@ -1,3 +1,18 @@
+## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Breaking
+* `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+
+### Added
+* Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
+* `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks (#729).
+* Feature state management APIs (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
+
+### Changed
+* Updated to align with main package v0.26.0.
+
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
