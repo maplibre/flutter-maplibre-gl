@@ -75,9 +75,11 @@ JSAny? jsify(Object? dartObject) {
 }
 
 /// Converts a Dart Map to a JavaScript object.
+/// Null values are omitted to avoid MapLibre GL JS style validation errors.
 JSObject jsifyMap(Map<String, dynamic> map) {
   final jsObj = createJsObject();
   map.forEach((key, value) {
+    if (value == null) return;
     final jsValue = jsify(value);
     setJsProperty(jsObj, key, jsValue);
   });

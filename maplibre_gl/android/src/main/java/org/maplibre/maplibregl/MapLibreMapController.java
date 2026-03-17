@@ -143,6 +143,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
@@ -191,11 +192,14 @@ final class MapLibreMapController
       MapLibreMapsPlugin.LifecycleProvider lifecycleProvider,
       MapLibreMapOptions options,
       String styleStringInitial,
-      boolean dragEnabled) {
+      boolean dragEnabled,
+      boolean featureTapsTriggersMapClick
+  ) {
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
     this.dragEnabled = dragEnabled;
+    this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
     this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
@@ -408,15 +412,47 @@ final class MapLibreMapController
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
   }
 
+  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
+    JsonElement jsonElement = JsonParser.parseString(geojson);
+    String type = jsonElement.getAsJsonObject().get("type").getAsString();
+
+    if ("FeatureCollection".equals(type)) {
+      return FeatureCollection.fromJson(geojson);
+    } else if ("Feature".equals(type)) {
+      Feature feature = Feature.fromJson(geojson);
+      return FeatureCollection.fromFeatures(new Feature[]{ feature });
+    }
+
+    return null;
+  }
+
   private void addGeoJsonSource(String sourceName, String source) {
-    FeatureCollection featureCollection = FeatureCollection.fromJson(source);
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
+      return;
+    }
 
-    // Enable synchronous updates to reduce flicker during animations/dragging if dragEnabled option is true
-    GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
-    GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
+    // Check if source already exists to prevent CannotAddSourceException
+    // which can lead to native crashes
+    if (style.getSource(sourceName) != null) {
+      return;
+    }
 
-    style.addSource(geoJsonSource);
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
+      if (featureCollection == null) {
+        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
+        return;
+      }
+
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
+      addedFeaturesByLayer.put(sourceName, featureCollection);
+
+      style.addSource(geoJsonSource);
+    } catch (Exception e) {
+      Log.e(TAG, "addGeoJsonSource: error adding source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonSource(String sourceName, String geojson) {
@@ -424,12 +460,25 @@ final class MapLibreMapController
       Log.w(TAG, "setGeoJsonSource: style not ready, skipping update");
       return;
     }
-    
-    FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
 
-    geoJsonSource.setGeoJson(featureCollection);
+    try {
+      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
+      if (featureCollection == null) {
+        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
+        return;
+      }
+
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      if (geoJsonSource == null) {
+        Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
+        return;
+      }
+
+      addedFeaturesByLayer.put(sourceName, featureCollection);
+      geoJsonSource.setGeoJson(featureCollection);
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -437,26 +486,33 @@ final class MapLibreMapController
       Log.w(TAG, "setGeoJsonFeature: style not ready, skipping update");
       return;
     }
-    
-    Feature feature = Feature.fromJson(geojsonFeature);
-    FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    if (featureCollection != null && geoJsonSource != null) {
-      final List<Feature> features = featureCollection.features();
-      for (int i = 0; i < features.size(); i++) {
-        final String id = features.get(i).id();
-        if (id.equals(feature.id())) {
-          features.set(i, feature);
-          break;
-        }
-      }
 
-      // Synchronous updates are enabled via GeoJsonOptions at source creation when dragEnabled is true
-      geoJsonSource.setGeoJson(featureCollection);
+    try {
+      Feature feature = Feature.fromJson(geojsonFeature);
+      FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+
+      if (featureCollection != null && geoJsonSource != null) {
+        final String featureId = feature.id();
+        final List<Feature> features = featureCollection.features();
+        
+        if (featureId != null && features != null) {
+          for (int i = 0; i < features.size(); i++) {
+            if (featureId.equals(features.get(i).id())) {
+              features.set(i, feature);
+              break;
+            }
+          }
+        }
+
+        geoJsonSource.setGeoJson(featureCollection);
+      }
+    } catch (Exception e) {
+      Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
     }
   }
 
-  private void addSymbolLayer(
+  private boolean addSymbolLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -466,6 +522,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addSymbolLayer: style not ready, skipping");
+      return false;
+    }
     SymbolLayer symbolLayer = new SymbolLayer(layerName, sourceName);
     symbolLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -488,9 +548,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addLineLayer(
+  private boolean addLineLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -500,6 +561,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addLineLayer: style not ready, skipping");
+      return false;
+    }
     LineLayer lineLayer = new LineLayer(layerName, sourceName);
     lineLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -522,9 +587,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addFillLayer(
+  private boolean addFillLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -534,6 +600,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillLayer: style not ready, skipping");
+      return false;
+    }
     FillLayer fillLayer = new FillLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -556,9 +626,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addFillExtrusionLayer(
+  private boolean addFillExtrusionLayer(
           String layerName,
           String sourceName,
           String belowLayerId,
@@ -568,6 +639,10 @@ final class MapLibreMapController
           PropertyValue[] properties,
           boolean enableInteraction,
           Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addFillExtrusionLayer: style not ready, skipping");
+      return false;
+    }
     FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
     fillLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -590,9 +665,10 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
-  private void addCircleLayer(
+  private boolean addCircleLayer(
       String layerName,
       String sourceName,
       String belowLayerId,
@@ -602,6 +678,10 @@ final class MapLibreMapController
       PropertyValue[] properties,
       boolean enableInteraction,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addCircleLayer: style not ready, skipping");
+      return false;
+    }
     CircleLayer circleLayer = new CircleLayer(layerName, sourceName);
     circleLayer.setProperties(properties);
     if (sourceLayer != null) {
@@ -624,6 +704,7 @@ final class MapLibreMapController
     if (enableInteraction) {
       interactiveFeatureLayerIds.add(layerName);
     }
+    return true;
   }
 
   private Expression parseFilter(String filter) {
@@ -632,7 +713,7 @@ final class MapLibreMapController
     return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
   }
 
-  private void addRasterLayer(
+  private boolean addRasterLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -640,6 +721,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addRasterLayer: style not ready, skipping");
+      return false;
+    }
     RasterLayer layer = new RasterLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -653,9 +738,10 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
-  private void addHillshadeLayer(
+  private boolean addHillshadeLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -663,6 +749,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHillshadeLayer: style not ready, skipping");
+      return false;
+    }
     HillshadeLayer layer = new HillshadeLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -676,9 +766,10 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
-  private void addHeatmapLayer(
+  private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
       Float minZoom,
@@ -686,6 +777,10 @@ final class MapLibreMapController
       String belowLayerId,
       PropertyValue[] properties,
       Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addHeatmapLayer: style not ready, skipping");
+      return false;
+    }
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -699,6 +794,7 @@ final class MapLibreMapController
     } else {
       style.addLayer(layer);
     }
+    return true;
   }
 
   private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
@@ -1041,7 +1137,9 @@ final class MapLibreMapController
                   source.setGeoJson((String)call.argument("data"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonSource: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
@@ -1061,7 +1159,9 @@ final class MapLibreMapController
                   source.setUrl((String)call.argument("url"));
                   ret = true;
                 }
-              } catch (Exception e) {}
+              } catch (Exception e) {
+                Log.e(TAG, "editGeoJsonUrl: error updating source '" + call.argument("id") + "'", e);
+              }
             }
           }
           Map<String, Boolean> reply = new HashMap<>();
@@ -1218,7 +1318,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addSymbolLayer(
+          if (!addSymbolLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1227,7 +1327,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1248,7 +1351,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addLineLayer(
+          if (!addLineLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1257,7 +1360,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1323,7 +1429,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addFillLayer(
+          if (!addFillLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1332,7 +1438,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1354,7 +1463,7 @@ final class MapLibreMapController
 
         Expression filterExpression = parseFilter(filter);
 
-        addFillExtrusionLayer(
+        if (!addFillExtrusionLayer(
                 layerId,
                 sourceId,
                 belowLayerId,
@@ -1363,7 +1472,10 @@ final class MapLibreMapController
                 maxzoom != null ? maxzoom.floatValue() : null,
                 properties,
                 enableInteraction,
-                filterExpression);
+                filterExpression)) {
+          result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+          break;
+        }
         updateLocationComponentLayer();
 
         result.success(null);
@@ -1384,7 +1496,7 @@ final class MapLibreMapController
 
           Expression filterExpression = parseFilter(filter);
 
-          addCircleLayer(
+          if (!addCircleLayer(
               layerId,
               sourceId,
               belowLayerId,
@@ -1393,7 +1505,10 @@ final class MapLibreMapController
               maxzoom != null ? maxzoom.floatValue() : null,
               properties,
               enableInteraction,
-              filterExpression);
+              filterExpression)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1408,14 +1523,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretRasterLayerProperties(call.argument("properties"));
-          addRasterLayer(
+          if (!addRasterLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1430,14 +1548,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
-          addHillshadeLayer(
+          if (!addHillshadeLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1452,14 +1573,17 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
-          addHeatmapLayer(
+          if (!addHeatmapLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1599,13 +1723,7 @@ final class MapLibreMapController
         }
       case "style#addLayer":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
-          addRasterLayer(
+          if (!addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
               call.argument("minzoom") != null
@@ -1616,19 +1734,16 @@ final class MapLibreMapController
                   : null,
               null,
               new PropertyValue[] {},
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           result.success(null);
           break;
         }
       case "style#addLayerBelow":
         {
-          if (style == null) {
-            result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
-                null);
-          }
-          addRasterLayer(
+          if (!addRasterLayer(
               call.argument("imageLayerId"),
               call.argument("imageSourceId"),
               call.argument("minzoom") != null
@@ -1639,7 +1754,10 @@ final class MapLibreMapController
                   : null,
               call.argument("belowLayerId"),
               new PropertyValue[] {},
-              null);
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
           result.success(null);
           break;
         }
@@ -1998,6 +2116,13 @@ final class MapLibreMapController
       arguments.put("layerId", featureLayerPair.second);
       arguments.put("id", featureLayerPair.first.id());
       methodChannel.invokeMethod("feature#onTap", arguments);
+      // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+      if (featureTapsTriggersMapClick) {
+        methodChannel.invokeMethod("map#onMapClick", arguments);
+      }
+    } else {
+      // Always fire map#onMapClick when no feature is tapped
+      methodChannel.invokeMethod("map#onMapClick", arguments);
     }
     // Always fire map#onMapClick for all map clicks
     methodChannel.invokeMethod("map#onMapClick", arguments);
@@ -2420,6 +2545,11 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setFeatureTapsTriggersMapClick(boolean triggers) {
+    this.featureTapsTriggersMapClick = triggers;
   }
 
   private void updateMyLocationEnabled() {
