@@ -932,9 +932,22 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<String> takeWebSnapshot() async {
-    // Not supported on native platforms
-    throw UnsupportedError('takeWebSnapshot is only supported on web platform');
+  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
+    try {
+      final result = await _channel.invokeMethod<Uint8List>(
+        'map#takeSnapshot',
+        <String, dynamic>{
+          if (width != null) 'width': width,
+          if (height != null) 'height': height,
+        },
+      );
+      if (result == null) {
+        throw Exception('Failed to take map snapshot');
+      }
+      return result;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
   }
 
   @override

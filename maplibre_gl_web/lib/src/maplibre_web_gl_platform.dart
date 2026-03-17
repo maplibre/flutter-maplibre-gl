@@ -1526,11 +1526,20 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<String> takeWebSnapshot() async {
+  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
+    ui.Size? originalSize;
+
+    // If custom size requested, temporarily resize the map
+    if (width != null && height != null) {
+      originalSize = await setWebMapToCustomSize(
+        ui.Size(width.toDouble(), height.toDouble()),
+      );
+      await waitUntilMapTilesAreLoaded();
+    }
+
     // "preserveDrawingBuffer" is set to false in the WebGL context to get the best possible performance,
     // therefore we cannot directly use the canvas.toDataURL() method to get a snapshot of the map because it would be blank then.
     // That's the reason why we trigger a repaint and then directly catch the image data from the canvas during the rendering.
-
     final completer = Completer<String>();
     _map.once('render', (_) {
       final canvas = _map.getCanvas();
@@ -1538,6 +1547,14 @@ class MapLibreMapController extends MapLibrePlatform
       completer.complete(dataUrl);
     });
     _map.triggerRepaint();
-    return completer.future;
+    final dataUrl = await completer.future;
+
+    // Restore original size if we changed it
+    if (originalSize != null) {
+      await setWebMapToCustomSize(originalSize);
+    }
+
+    final base64Data = dataUrl.split(',').last;
+    return base64Decode(base64Data);
   }
 }

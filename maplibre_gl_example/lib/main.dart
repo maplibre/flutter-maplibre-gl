@@ -40,8 +40,7 @@ import 'examples/layers/various_sources.dart';
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
-import 'examples/advanced/map_snapshot_web.dart';
-import 'examples/advanced/map_snapshot_mobile.dart';
+import 'examples/advanced/map_snapshot.dart';
 
 void main() {
   runApp(const MapLibreExampleApp());
@@ -107,8 +106,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const PMTilesPage(),
   const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
-  const MapSnapshotPageWeb(),
-  const MapSnapshotPageMobile(),
+  const MapSnapshotPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
