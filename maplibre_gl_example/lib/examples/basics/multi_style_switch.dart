@@ -14,11 +14,11 @@ import '../../shared/constants.dart';
 /// The styles include a remote style, an embedded minimal style, and styles loaded from assets.
 class MultiStyleSwitchPage extends ExamplePage {
   const MultiStyleSwitchPage({super.key})
-    : super(
-        const Icon(Icons.style),
-        'Multi style switch',
-        category: ExampleCategory.basics,
-      );
+      : super(
+          const Icon(Icons.style),
+          'Multi style switch',
+          category: ExampleCategory.basics,
+        );
 
   @override
   Widget build(BuildContext context) => const _MultiStyleSwitchBody();
@@ -148,8 +148,8 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
                               style: Theme.of(
                                 context,
                               ).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                               children: [
                                 TextSpan(
                                   text: current.label,

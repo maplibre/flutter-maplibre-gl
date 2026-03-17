@@ -10,11 +10,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating interactive style layer editing with draggable features
 class EditStyleLayerDraggableExample extends ExamplePage {
   const EditStyleLayerDraggableExample({super.key})
-    : super(
-        const Icon(Icons.pan_tool),
-        'Edit Style Layer (Draggable)',
-        category: ExampleCategory.layers,
-      );
+      : super(
+          const Icon(Icons.pan_tool),
+          'Edit Style Layer (Draggable)',
+          category: ExampleCategory.layers,
+        );
 
   @override
   Widget build(BuildContext context) => const _EditStyleLayerDraggableBody();
@@ -374,8 +374,8 @@ class _EditStyleLayerDraggableBodyState
                 Text(
                   'Edit Style Layer (Draggable)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -389,10 +389,9 @@ class _EditStyleLayerDraggableBodyState
         if (_draggedFeatureId != null && _lastDragEvent != null)
           Card(
             margin: const EdgeInsets.all(ExampleConstants.paddingStandard),
-            color:
-                _lastDragEvent == DragEventType.start
-                    ? Colors.green.shade50
-                    : _lastDragEvent == DragEventType.drag
+            color: _lastDragEvent == DragEventType.start
+                ? Colors.green.shade50
+                : _lastDragEvent == DragEventType.drag
                     ? Colors.blue.shade50
                     : Colors.orange.shade50,
             child: Padding(
@@ -406,12 +405,11 @@ class _EditStyleLayerDraggableBodyState
                         _lastDragEvent == DragEventType.start
                             ? Icons.touch_app
                             : _lastDragEvent == DragEventType.drag
-                            ? Icons.pan_tool
-                            : Icons.check_circle,
-                        color:
-                            _lastDragEvent == DragEventType.start
-                                ? Colors.green
-                                : _lastDragEvent == DragEventType.drag
+                                ? Icons.pan_tool
+                                : Icons.check_circle,
+                        color: _lastDragEvent == DragEventType.start
+                            ? Colors.green
+                            : _lastDragEvent == DragEventType.drag
                                 ? Colors.blue
                                 : Colors.orange,
                       ),
@@ -422,9 +420,9 @@ class _EditStyleLayerDraggableBodyState
                           style: Theme.of(
                             context,
                           ).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                         ),
                       ),
                     ],

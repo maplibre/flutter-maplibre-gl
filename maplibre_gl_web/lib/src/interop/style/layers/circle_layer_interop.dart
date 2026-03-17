@@ -9,10 +9,9 @@ class CircleLayerJsImpl {
       'type': 'circle',
     };
     if (circleLayer.source != null) {
-      dict['source'] =
-          circleLayer.source is String
-              ? circleLayer.source
-              : circleLayer.source.dict;
+      dict['source'] = circleLayer.source is String
+          ? circleLayer.source
+          : circleLayer.source.dict;
     }
     if (circleLayer.sourceLayer != null) {
       dict['source-layer'] = circleLayer.sourceLayer;

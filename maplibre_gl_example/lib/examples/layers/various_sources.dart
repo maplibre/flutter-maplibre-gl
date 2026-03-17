@@ -20,11 +20,11 @@ class StyleInfo {
 
 class VariousSources extends ExamplePage {
   const VariousSources({super.key})
-    : super(
-        const Icon(Icons.map),
-        'Various Sources',
-        category: ExampleCategory.layers,
-      );
+      : super(
+          const Icon(Icons.map),
+          'Various Sources',
+          category: ExampleCategory.layers,
+        );
 
   @override
   Widget build(BuildContext context) {

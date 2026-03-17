@@ -67,13 +67,13 @@ class MapLibreMap extends StatefulWidget {
     ],
     this.foregroundLoadColor = Colors.transparent,
     this.translucentTextureSurface = false,
-  }) : assert(
-         myLocationRenderMode == MyLocationRenderMode.normal ||
-             myLocationEnabled,
-         "$myLocationRenderMode requires [myLocationEnabled] set to true.",
-       ),
-       assert(annotationOrder.length <= 4),
-       assert(annotationConsumeTapEvents.length > 0);
+  })  : assert(
+          myLocationRenderMode == MyLocationRenderMode.normal ||
+              myLocationEnabled,
+          "$myLocationRenderMode requires [myLocationEnabled] set to true.",
+        ),
+        assert(annotationOrder.length <= 4),
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
@@ -454,36 +454,36 @@ class _MapLibreMapOptions {
   });
 
   _MapLibreMapOptions.fromWidget(MapLibreMap map)
-    : this(
-        locationEnginePlatforms: map.locationEnginePlatforms,
-        compassEnabled: map.compassEnabled,
-        cameraTargetBounds: map.cameraTargetBounds,
-        styleString: map.styleString,
-        minMaxZoomPreference: map.minMaxZoomPreference,
-        rotateGesturesEnabled: map.rotateGesturesEnabled,
-        scrollGesturesEnabled: map.scrollGesturesEnabled,
-        tiltGesturesEnabled: map.tiltGesturesEnabled,
-        trackCameraPosition: map.trackCameraPosition,
-        zoomGesturesEnabled: map.zoomGesturesEnabled,
-        doubleClickZoomEnabled:
-            map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
-        myLocationEnabled: map.myLocationEnabled,
-        myLocationTrackingMode: map.myLocationTrackingMode,
-        myLocationRenderMode: map.myLocationRenderMode,
-        logoEnabled: map.logoEnabled,
-        logoViewPosition: map.logoViewPosition,
-        logoViewMargins: map.logoViewMargins,
-        compassViewPosition: map.compassViewPosition,
-        compassViewMargins: map.compassViewMargins,
-        attributionButtonPosition: map.attributionButtonPosition,
-        attributionButtonMargins: map.attributionButtonMargins,
-        scaleControlEnabled: map.scaleControlEnabled,
-        scaleControlPosition: map.scaleControlPosition,
-        scaleControlUnit: map.scaleControlUnit,
-        foregroundLoadColor: map.foregroundLoadColor,
-        translucentTextureSurface: map.translucentTextureSurface,
-        featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
-      );
+      : this(
+          locationEnginePlatforms: map.locationEnginePlatforms,
+          compassEnabled: map.compassEnabled,
+          cameraTargetBounds: map.cameraTargetBounds,
+          styleString: map.styleString,
+          minMaxZoomPreference: map.minMaxZoomPreference,
+          rotateGesturesEnabled: map.rotateGesturesEnabled,
+          scrollGesturesEnabled: map.scrollGesturesEnabled,
+          tiltGesturesEnabled: map.tiltGesturesEnabled,
+          trackCameraPosition: map.trackCameraPosition,
+          zoomGesturesEnabled: map.zoomGesturesEnabled,
+          doubleClickZoomEnabled:
+              map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+          myLocationEnabled: map.myLocationEnabled,
+          myLocationTrackingMode: map.myLocationTrackingMode,
+          myLocationRenderMode: map.myLocationRenderMode,
+          logoEnabled: map.logoEnabled,
+          logoViewPosition: map.logoViewPosition,
+          logoViewMargins: map.logoViewMargins,
+          compassViewPosition: map.compassViewPosition,
+          compassViewMargins: map.compassViewMargins,
+          attributionButtonPosition: map.attributionButtonPosition,
+          attributionButtonMargins: map.attributionButtonMargins,
+          scaleControlEnabled: map.scaleControlEnabled,
+          scaleControlPosition: map.scaleControlPosition,
+          scaleControlUnit: map.scaleControlUnit,
+          foregroundLoadColor: map.foregroundLoadColor,
+          translucentTextureSurface: map.translucentTextureSurface,
+          featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
+        );
 
   final bool? compassEnabled;
 
@@ -610,13 +610,14 @@ class _MapLibreMapOptions {
       (key) => newOptionsMap[key] != prevOptionsMap[key],
     );
 
-    return newOptionsMap..removeWhere((key, value) {
-      if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
-      final oldValue = prevOptionsMap[key];
-      if (oldValue is List && value is List) {
-        return listEquals(oldValue, value);
-      }
-      return oldValue == value;
-    });
+    return newOptionsMap
+      ..removeWhere((key, value) {
+        if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
+        final oldValue = prevOptionsMap[key];
+        if (oldValue is List && value is List) {
+          return listEquals(oldValue, value);
+        }
+        return oldValue == value;
+      });
   }
 }

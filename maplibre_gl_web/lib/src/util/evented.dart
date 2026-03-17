@@ -22,8 +22,8 @@ class Subscription extends JsObjectWrapper<SubscriptionJsImpl> {
   }
 
   Subscription.fromJsObject(super.jsObject, {void Function()? onUnsubscribe})
-    : _onUnsubscribe = onUnsubscribe,
-      super.fromJsObject();
+      : _onUnsubscribe = onUnsubscribe,
+        super.fromJsObject();
 }
 
 class Event extends JsObjectWrapper<EventJsImpl> {
@@ -99,26 +99,22 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
     final JSFunction jsFn;
     final SubscriptionJsImpl sub;
     if (this is GeolocateControl && layerIdOrListener is GeoListener) {
-      jsFn =
-          ((JSAny position) {
-            layerIdOrListener(position);
-          }).toJS;
+      jsFn = ((JSAny position) {
+        layerIdOrListener(position);
+      }).toJS;
       sub = jsObject.on(type, jsFn);
     } else if (layerIdOrListener is Listener) {
-      jsFn =
-          ((EventJsImpl object) {
-            layerIdOrListener(Event.fromJsObject(object));
-          }).toJS;
+      jsFn = ((EventJsImpl object) {
+        layerIdOrListener(Event.fromJsObject(object));
+      }).toJS;
       sub = jsObject.on(type, jsFn);
     } else {
-      jsFn =
-          ((EventJsImpl object) {
-            listener!(Event.fromJsObject(object), layerIdOrListener);
-          }).toJS;
-      final layerId =
-          layerIdOrListener is String
-              ? layerIdOrListener.toJS
-              : layerIdOrListener.toString().toJS;
+      jsFn = ((EventJsImpl object) {
+        listener!(Event.fromJsObject(object), layerIdOrListener);
+      }).toJS;
+      final layerId = layerIdOrListener is String
+          ? layerIdOrListener.toJS
+          : layerIdOrListener.toString().toJS;
       sub = jsObject.on(type, layerId, jsFn);
     }
 
@@ -149,10 +145,9 @@ class Evented extends JsObjectWrapper<EventedJsImpl> {
     if (layerIdOrListener is Listener || layerIdOrListener is GeoListener) {
       jsObject.off(type, jsFn);
     } else {
-      final layerId =
-          layerIdOrListener is String
-              ? layerIdOrListener.toJS
-              : layerIdOrListener.toString().toJS;
+      final layerId = layerIdOrListener is String
+          ? layerIdOrListener.toJS
+          : layerIdOrListener.toString().toJS;
       jsObject.off(type, layerId, jsFn);
     }
   }

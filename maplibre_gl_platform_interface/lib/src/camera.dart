@@ -50,11 +50,11 @@ class CameraPosition {
   final double zoom;
 
   dynamic toMap() => <String, dynamic>{
-    'bearing': bearing,
-    'target': target.toJson(),
-    'tilt': tilt,
-    'zoom': zoom,
-  };
+        'bearing': bearing,
+        'target': target.toJson(),
+        'tilt': tilt,
+        'zoom': zoom,
+      };
 
   @visibleForTesting
   static CameraPosition? fromMap(dynamic json) {
@@ -94,12 +94,12 @@ class CameraUpdate {
 
   /// Returns a camera update that moves the camera to the specified position.
   CameraUpdate.newCameraPosition(CameraPosition cameraPosition)
-    : this._(<dynamic>['newCameraPosition', cameraPosition.toMap()]);
+      : this._(<dynamic>['newCameraPosition', cameraPosition.toMap()]);
 
   /// Returns a camera update that moves the camera target to the specified
   /// geographical location.
   CameraUpdate.newLatLng(LatLng latLng)
-    : this._(<dynamic>['newLatLng', latLng.toJson()]);
+      : this._(<dynamic>['newLatLng', latLng.toJson()]);
 
   /// Returns a camera update that transforms the camera so that the specified
   /// geographical bounding box is centered in the map view at the greatest
@@ -113,18 +113,18 @@ class CameraUpdate {
     double right = 0,
     double bottom = 0,
   }) : this._(<dynamic>[
-         'newLatLngBounds',
-         bounds.toList(),
-         left,
-         top,
-         right,
-         bottom,
-       ]);
+          'newLatLngBounds',
+          bounds.toList(),
+          left,
+          top,
+          right,
+          bottom,
+        ]);
 
   /// Returns a camera update that moves the camera target to the specified
   /// geographical location and zoom level.
   CameraUpdate.newLatLngZoom(LatLng latLng, double zoom)
-    : this._(<dynamic>['newLatLngZoom', latLng.toJson(), zoom]);
+      : this._(<dynamic>['newLatLngZoom', latLng.toJson(), zoom]);
 
   /// Returns a camera update that moves the camera target the specified screen
   /// distance.
@@ -133,7 +133,7 @@ class CameraUpdate {
   /// the camera's target to a geographical location that is 50 to the east and
   /// 75 to the south of the current location, measured in screen coordinates.
   CameraUpdate.scrollBy(double dx, double dy)
-    : this._(<dynamic>['scrollBy', dx, dy]);
+      : this._(<dynamic>['scrollBy', dx, dy]);
 
   /// Returns a camera update that modifies the camera zoom level by the
   /// specified amount. The optional [focus] is a screen point whose underlying
@@ -167,7 +167,7 @@ class CameraUpdate {
 
   /// Returns a camera update that sets the camera bearing.
   CameraUpdate.bearingTo(double bearing)
-    : this._(<dynamic>['bearingTo', bearing]);
+      : this._(<dynamic>['bearingTo', bearing]);
 
   /// Returns a camera update that sets the camera bearing.
   CameraUpdate.tiltTo(double tilt) : this._(<dynamic>['tiltTo', tilt]);

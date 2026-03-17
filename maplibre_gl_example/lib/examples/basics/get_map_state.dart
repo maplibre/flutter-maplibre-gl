@@ -6,11 +6,11 @@ import '../../shared/shared.dart';
 
 class GetMapInfoPage extends ExamplePage {
   const GetMapInfoPage({super.key})
-    : super(
-        const Icon(Icons.info),
-        'Get map state',
-        category: ExampleCategory.basics,
-      );
+      : super(
+          const Icon(Icons.info),
+          'Get map state',
+          category: ExampleCategory.basics,
+        );
 
   @override
   Widget build(BuildContext context) => const _GetMapInfoBody();
@@ -132,7 +132,9 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                         const SizedBox(width: 8),
                         Text(
                           'Results',
-                          style: Theme.of(context).textTheme.titleMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -142,17 +144,16 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12.0),
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: SelectableText(
                         _displayData,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
+                              fontFamily: 'monospace',
+                            ),
                       ),
                     ),
                   ],

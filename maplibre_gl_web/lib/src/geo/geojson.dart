@@ -53,31 +53,34 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
     Map<String, dynamic>? properties,
     String? source,
     String? layerId,
-  }) => Feature.fromJsObject(
-    FeatureJsImpl(
-      type: 'Feature',
-      id: utils.jsify(id),
-      geometry: geometry.jsObject,
-      properties: utils.jsify(properties ?? {}),
-      source: source,
-      layer: layerId != null ? FeatureLayerJsImpl(id: layerId) : null,
-    ),
-  );
+  }) =>
+      Feature.fromJsObject(
+        FeatureJsImpl(
+          type: 'Feature',
+          id: utils.jsify(id),
+          geometry: geometry.jsObject,
+          properties: utils.jsify(properties ?? {}),
+          source: source,
+          layer: layerId != null ? FeatureLayerJsImpl(id: layerId) : null,
+        ),
+      );
 
   Feature copyWith({
     dynamic id,
     Geometry? geometry,
     Map<String, dynamic>? properties,
     String? source,
-  }) => Feature.fromJsObject(
-    FeatureJsImpl(
-      type: 'Feature',
-      id: utils.jsify(id ?? this.id),
-      geometry: geometry != null ? geometry.jsObject : this.geometry.jsObject,
-      properties: utils.jsify(properties ?? this.properties),
-      source: source ?? this.source,
-    ),
-  );
+  }) =>
+      Feature.fromJsObject(
+        FeatureJsImpl(
+          type: 'Feature',
+          id: utils.jsify(id ?? this.id),
+          geometry:
+              geometry != null ? geometry.jsObject : this.geometry.jsObject,
+          properties: utils.jsify(properties ?? this.properties),
+          source: source ?? this.source,
+        ),
+      );
 
   /// Creates a new Feature from a [jsObject].
   Feature.fromJsObject(super.jsObject) : super.fromJsObject();
@@ -91,12 +94,13 @@ class Geometry extends JsObjectWrapper<GeometryJsImpl> {
   factory Geometry({
     String? type,
     dynamic coordinates,
-  }) => Geometry.fromJsObject(
-    GeometryJsImpl(
-      type: type,
-      coordinates: utils.jsify(coordinates),
-    ),
-  );
+  }) =>
+      Geometry.fromJsObject(
+        GeometryJsImpl(
+          type: type,
+          coordinates: utils.jsify(coordinates),
+        ),
+      );
 
   /// Creates a new Geometry from a [jsObject].
   Geometry.fromJsObject(super.jsObject) : super.fromJsObject();

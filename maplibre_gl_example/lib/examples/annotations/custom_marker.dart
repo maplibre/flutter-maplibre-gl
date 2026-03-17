@@ -10,11 +10,11 @@ const randomMarkerNum = 100;
 
 class CustomMarkerPage extends ExamplePage {
   const CustomMarkerPage({super.key})
-    : super(
-        const Icon(Icons.place),
-        'Custom marker',
-        category: ExampleCategory.annotations,
-      );
+      : super(
+          const Icon(Icons.place),
+          'Custom marker',
+          category: ExampleCategory.annotations,
+        );
 
   @override
   Widget build(BuildContext context) {

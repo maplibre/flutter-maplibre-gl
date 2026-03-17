@@ -98,20 +98,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
             speed: userLocation['speed'],
             horizontalAccuracy: userLocation['horizontalAccuracy'],
             verticalAccuracy: userLocation['verticalAccuracy'],
-            heading:
-                heading == null
-                    ? null
-                    : UserHeading(
-                      magneticHeading: heading['magneticHeading'],
-                      trueHeading: heading['trueHeading'],
-                      headingAccuracy: heading['headingAccuracy'],
-                      x: heading['x'],
-                      y: heading['y'],
-                      z: heading['z'],
-                      timestamp: DateTime.fromMillisecondsSinceEpoch(
-                        heading['timestamp'],
-                      ),
+            heading: heading == null
+                ? null
+                : UserHeading(
+                    magneticHeading: heading['magneticHeading'],
+                    trueHeading: heading['trueHeading'],
+                    headingAccuracy: heading['headingAccuracy'],
+                    x: heading['x'],
+                    y: heading['y'],
+                    z: heading['z'],
+                    timestamp: DateTime.fromMillisecondsSinceEpoch(
+                      heading['timestamp'],
                     ),
+                  ),
             timestamp: DateTime.fromMillisecondsSinceEpoch(
               userLocation['timestamp'],
             ),
@@ -145,8 +144,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           ) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
-              gestureRecognizers:
-                  gestureRecognizers ??
+              gestureRecognizers: gestureRecognizers ??
                   const <Factory<OneSequenceGestureRecognizer>>{},
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );

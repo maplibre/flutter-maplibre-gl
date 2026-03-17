@@ -7,11 +7,11 @@ import '../../util.dart';
 /// Example demonstrating annotation rendering order control
 class AnnotationOrderExample extends ExamplePage {
   const AnnotationOrderExample({super.key})
-    : super(
-        const Icon(Icons.layers),
-        'Annotation Order',
-        category: ExampleCategory.annotations,
-      );
+      : super(
+          const Icon(Icons.layers),
+          'Annotation Order',
+          category: ExampleCategory.annotations,
+        );
 
   @override
   Widget build(BuildContext context) => const _AnnotationOrderBody();
@@ -172,9 +172,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                     Text(
                       'Rendering order (Last on Top)',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                     ),
                   ],
                 ),
@@ -208,10 +208,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
@@ -219,10 +218,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                                     '${index + 1}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimaryContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 ),

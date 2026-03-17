@@ -88,9 +88,8 @@ class Convert {
       );
     }
     if (options.containsKey('attributionButtonPosition')) {
-      final position =
-          AttributionButtonPosition
-              .values[options['attributionButtonPosition']];
+      final position = AttributionButtonPosition
+          .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
     } else {
       sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
@@ -375,10 +374,9 @@ class Convert {
     if (options.geometry != null) {
       geometry = Geometry(
         type: geometry.type,
-        coordinates:
-            options.geometry!
-                .map((latLng) => [latLng.longitude, latLng.latitude])
-                .toList(),
+        coordinates: options.geometry!
+            .map((latLng) => [latLng.longitude, latLng.latitude])
+            .toList(),
       );
     }
     if (options.draggable != null) {

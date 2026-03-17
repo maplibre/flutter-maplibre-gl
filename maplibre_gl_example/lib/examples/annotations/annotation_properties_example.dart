@@ -7,11 +7,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating dynamic annotation property updates
 class AnnotationPropertiesExample extends ExamplePage {
   const AnnotationPropertiesExample({super.key})
-    : super(
-        const Icon(Icons.tune),
-        'Annotation Properties',
-        category: ExampleCategory.annotations,
-      );
+      : super(
+          const Icon(Icons.tune),
+          'Annotation Properties',
+          category: ExampleCategory.annotations,
+        );
 
   @override
   Widget build(BuildContext context) => const _AnnotationPropertiesBody();
@@ -269,67 +269,66 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
         ),
         trackCameraPosition: true,
       ),
-      controls:
-          _controller == null
-              ? []
-              : [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Annotation Type',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.primary,
+      controls: _controller == null
+          ? []
+          : [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Annotation Type',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      ExampleSegmentedButton<PropertyAnnotationType>(
+                        segments: const [
+                          ExampleSegment(
+                            value: PropertyAnnotationType.symbol,
+                            label: 'Symbol',
+                            icon: Icons.place,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        ExampleSegmentedButton<PropertyAnnotationType>(
-                          segments: const [
-                            ExampleSegment(
-                              value: PropertyAnnotationType.symbol,
-                              label: 'Symbol',
-                              icon: Icons.place,
-                            ),
-                            ExampleSegment(
-                              value: PropertyAnnotationType.circle,
-                              label: 'Circle',
-                              icon: Icons.circle_outlined,
-                            ),
-                            ExampleSegment(
-                              value: PropertyAnnotationType.fill,
-                              label: 'Fill',
-                              icon: Icons.square,
-                            ),
-                            ExampleSegment(
-                              value: PropertyAnnotationType.line,
-                              label: 'Line',
-                              icon: Icons.timeline,
-                            ),
-                          ],
-                          selected: _currentType,
-                          onSelectionChanged: (type) {
-                            setState(() => _currentType = type);
-                          },
-                        ),
-                      ],
-                    ),
+                          ExampleSegment(
+                            value: PropertyAnnotationType.circle,
+                            label: 'Circle',
+                            icon: Icons.circle_outlined,
+                          ),
+                          ExampleSegment(
+                            value: PropertyAnnotationType.fill,
+                            label: 'Fill',
+                            icon: Icons.square,
+                          ),
+                          ExampleSegment(
+                            value: PropertyAnnotationType.line,
+                            label: 'Line',
+                            icon: Icons.timeline,
+                          ),
+                        ],
+                        selected: _currentType,
+                        onSelectionChanged: (type) {
+                          setState(() => _currentType = type);
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                if (_currentType == PropertyAnnotationType.symbol)
-                  ..._buildSymbolControls(),
-                if (_currentType == PropertyAnnotationType.circle)
-                  ..._buildCircleControls(),
-                if (_currentType == PropertyAnnotationType.fill)
-                  ..._buildFillControls(),
-                if (_currentType == PropertyAnnotationType.line)
-                  ..._buildLineControls(),
-              ],
+              ),
+              if (_currentType == PropertyAnnotationType.symbol)
+                ..._buildSymbolControls(),
+              if (_currentType == PropertyAnnotationType.circle)
+                ..._buildCircleControls(),
+              if (_currentType == PropertyAnnotationType.fill)
+                ..._buildFillControls(),
+              if (_currentType == PropertyAnnotationType.line)
+                ..._buildLineControls(),
+            ],
     );
   }
 

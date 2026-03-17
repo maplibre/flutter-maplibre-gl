@@ -6,11 +6,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating camera bounds and constraints
 class CameraBoundsExample extends ExamplePage {
   const CameraBoundsExample({super.key})
-    : super(
-        const Icon(Icons.crop),
-        'Camera Bounds & Constraints',
-        category: ExampleCategory.camera,
-      );
+      : super(
+          const Icon(Icons.crop),
+          'Camera Bounds & Constraints',
+          category: ExampleCategory.camera,
+        );
 
   @override
   Widget build(BuildContext context) => const _CameraBoundsBody();
@@ -121,11 +121,10 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
-    final boundsInfo =
-        _currentBounds != null
-            ? 'SW: ${_currentBounds!.southwest.latitude.toStringAsFixed(2)}, ${_currentBounds!.southwest.longitude.toStringAsFixed(2)}\n'
-                'NE: ${_currentBounds!.northeast.latitude.toStringAsFixed(2)}, ${_currentBounds!.northeast.longitude.toStringAsFixed(2)}'
-            : 'Loading...';
+    final boundsInfo = _currentBounds != null
+        ? 'SW: ${_currentBounds!.southwest.latitude.toStringAsFixed(2)}, ${_currentBounds!.southwest.longitude.toStringAsFixed(2)}\n'
+            'NE: ${_currentBounds!.northeast.latitude.toStringAsFixed(2)}, ${_currentBounds!.northeast.longitude.toStringAsFixed(2)}'
+        : 'Loading...';
 
     return MapExampleScaffold(
       map: MapLibreMap(
@@ -135,10 +134,9 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
         trackCameraPosition: true,
         initialCameraPosition: ExampleConstants.defaultCameraPosition,
         minMaxZoomPreference: MinMaxZoomPreference(_minZoom, _maxZoom),
-        cameraTargetBounds:
-            _constrainedBounds != null
-                ? CameraTargetBounds(_constrainedBounds)
-                : CameraTargetBounds.unbounded,
+        cameraTargetBounds: _constrainedBounds != null
+            ? CameraTargetBounds(_constrainedBounds)
+            : CameraTargetBounds.unbounded,
       ),
       controls: [
         InfoCard(
@@ -168,26 +166,23 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
             ExampleButton(
               label: 'Sydney',
               icon: Icons.map,
-              onPressed:
-                  hasController
-                      ? () => _setBounds(_sydneyBounds, 'Sydney')
-                      : null,
+              onPressed: hasController
+                  ? () => _setBounds(_sydneyBounds, 'Sydney')
+                  : null,
             ),
             ExampleButton(
               label: 'San Francisco',
               icon: Icons.map,
-              onPressed:
-                  hasController
-                      ? () => _setBounds(_sanFranciscoBounds, 'San Francisco')
-                      : null,
+              onPressed: hasController
+                  ? () => _setBounds(_sanFranciscoBounds, 'San Francisco')
+                  : null,
             ),
             ExampleButton(
               label: 'Europe',
               icon: Icons.map,
-              onPressed:
-                  hasController
-                      ? () => _setBounds(_europeBounds, 'Europe')
-                      : null,
+              onPressed: hasController
+                  ? () => _setBounds(_europeBounds, 'Europe')
+                  : null,
             ),
           ],
         ),
@@ -210,10 +205,9 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
             ExampleButton(
               label: 'Clear',
               icon: Icons.clear,
-              onPressed:
-                  hasController && (_minZoom != null || _maxZoom != null)
-                      ? _clearZoomConstraints
-                      : null,
+              onPressed: hasController && (_minZoom != null || _maxZoom != null)
+                  ? _clearZoomConstraints
+                  : null,
               style: ExampleButtonStyle.outlined,
             ),
           ],
@@ -224,38 +218,33 @@ class _CameraBoundsBodyState extends State<_CameraBoundsBody> {
             ExampleButton(
               label: 'Lock to Sydney',
               icon: Icons.lock,
-              onPressed:
-                  hasController
-                      ? () => _setCameraBounds(_sydneyBounds, 'Sydney')
-                      : null,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_sydneyBounds, 'Sydney')
+                  : null,
               style: ExampleButtonStyle.tonal,
             ),
             ExampleButton(
               label: 'Lock to SF',
               icon: Icons.lock,
-              onPressed:
-                  hasController
-                      ? () =>
-                          _setCameraBounds(_sanFranciscoBounds, 'San Francisco')
-                      : null,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_sanFranciscoBounds, 'San Francisco')
+                  : null,
               style: ExampleButtonStyle.tonal,
             ),
             ExampleButton(
               label: 'Lock to Europe',
               icon: Icons.lock,
-              onPressed:
-                  hasController
-                      ? () => _setCameraBounds(_europeBounds, 'Europe')
-                      : null,
+              onPressed: hasController
+                  ? () => _setCameraBounds(_europeBounds, 'Europe')
+                  : null,
               style: ExampleButtonStyle.tonal,
             ),
             ExampleButton(
               label: 'Clear',
               icon: Icons.clear,
-              onPressed:
-                  hasController && _constrainedBounds != null
-                      ? _clearCameraBounds
-                      : null,
+              onPressed: hasController && _constrainedBounds != null
+                  ? _clearCameraBounds
+                  : null,
               style: ExampleButtonStyle.outlined,
             ),
           ],

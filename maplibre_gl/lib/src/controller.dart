@@ -4,57 +4,53 @@
 
 part of '../maplibre_gl.dart';
 
-typedef OnMapClickCallback =
-    void Function(Point<double> point, LatLng coordinates);
+typedef OnMapClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
 // New generalized feature interaction callback that always provides a raw feature id.
 // If the feature also corresponds to a managed annotation, the annotation parameter
 // is non-null; otherwise it is null (e.g. raw style layer feature not managed by an AnnotationManager).
-typedef OnFeatureInteractionCallback =
-    void Function(
-      Point<double> point,
-      LatLng coordinates,
-      String id,
-      String layerId,
-      Annotation? annotation,
-    );
+typedef OnFeatureInteractionCallback = void Function(
+  Point<double> point,
+  LatLng coordinates,
+  String id,
+  String layerId,
+  Annotation? annotation,
+);
 
-typedef OnFeatureDragCallback =
-    void Function(
-      Point<double> point,
-      LatLng origin,
-      LatLng current,
-      LatLng delta,
-      String id,
-      Annotation? annotation,
-      DragEventType eventType,
-    );
+typedef OnFeatureDragCallback = void Function(
+  Point<double> point,
+  LatLng origin,
+  LatLng current,
+  LatLng delta,
+  String id,
+  Annotation? annotation,
+  DragEventType eventType,
+);
 
-typedef OnFeatureHoverCallback =
-    void Function(
-      Point<double> point,
-      LatLng coordinates,
-      String id,
-      Annotation? annotation,
-      HoverEventType eventType,
-    );
+typedef OnFeatureHoverCallback = void Function(
+  Point<double> point,
+  LatLng coordinates,
+  String id,
+  Annotation? annotation,
+  HoverEventType eventType,
+);
 
-typedef OnMapLongClickCallback =
-    void Function(Point<double> point, LatLng coordinates);
+typedef OnMapLongClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
-typedef OnMapMouseMoveCallback =
-    void Function(
-      Point<double> point,
-      LatLng coordinates,
-    );
+typedef OnMapMouseMoveCallback = void Function(
+  Point<double> point,
+  LatLng coordinates,
+);
 
 typedef OnStyleLoadedCallback = void Function();
 
 typedef OnUserLocationUpdated = void Function(UserLocation location);
 
 typedef OnCameraTrackingDismissedCallback = void Function();
-typedef OnCameraTrackingChangedCallback =
-    void Function(MyLocationTrackingMode mode);
+typedef OnCameraTrackingChangedCallback = void Function(
+    MyLocationTrackingMode mode);
 
 typedef OnCameraMoveCallback = void Function(CameraPosition cameraPosition);
 

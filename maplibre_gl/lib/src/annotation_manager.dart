@@ -30,8 +30,8 @@ abstract class AnnotationManager<T extends Annotation> {
   bool get isInitialized => _isInitialized;
 
   List<String> get layerIds => [
-    for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i),
-  ];
+        for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i),
+      ];
 
   /// If false, the manager disables user interaction (e.g. dragging) for
   /// its annotations.
@@ -230,8 +230,8 @@ class LineManager extends AnnotationManager<Line> {
     super.controller, {
     super.enableInteraction = true,
   }) : super(
-         selectLayer: (line) => line.options.linePattern == null ? 0 : 1,
-       );
+          selectLayer: (line) => line.options.linePattern == null ? 0 : 1,
+        );
 
   static const _baseProperties = LineLayerProperties(
     lineJoin: [Expressions.get, 'lineJoin'],
@@ -245,11 +245,12 @@ class LineManager extends AnnotationManager<Line> {
 
   @override
   List<LayerProperties> get allLayerProperties => [
-    _baseProperties,
-    _baseProperties.copyWith(
-      const LineLayerProperties(linePattern: [Expressions.get, 'linePattern']),
-    ),
-  ];
+        _baseProperties,
+        _baseProperties.copyWith(
+          const LineLayerProperties(
+              linePattern: [Expressions.get, 'linePattern']),
+        ),
+      ];
 }
 
 class FillManager extends AnnotationManager<Fill> {
@@ -257,23 +258,23 @@ class FillManager extends AnnotationManager<Fill> {
     super.controller, {
     super.enableInteraction = true,
   }) : super(
-         selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1,
-       );
+          selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1,
+        );
 
   @override
   List<LayerProperties> get allLayerProperties => const [
-    FillLayerProperties(
-      fillOpacity: [Expressions.get, 'fillOpacity'],
-      fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
-    ),
-    FillLayerProperties(
-      fillOpacity: [Expressions.get, 'fillOpacity'],
-      fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
-      fillPattern: [Expressions.get, 'fillPattern'],
-    ),
-  ];
+        FillLayerProperties(
+          fillOpacity: [Expressions.get, 'fillOpacity'],
+          fillColor: [Expressions.get, 'fillColor'],
+          fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+        ),
+        FillLayerProperties(
+          fillOpacity: [Expressions.get, 'fillOpacity'],
+          fillColor: [Expressions.get, 'fillColor'],
+          fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+          fillPattern: [Expressions.get, 'fillPattern'],
+        ),
+      ];
 }
 
 class CircleManager extends AnnotationManager<Circle> {
@@ -284,16 +285,16 @@ class CircleManager extends AnnotationManager<Circle> {
 
   @override
   List<LayerProperties> get allLayerProperties => const [
-    CircleLayerProperties(
-      circleRadius: [Expressions.get, 'circleRadius'],
-      circleColor: [Expressions.get, 'circleColor'],
-      circleBlur: [Expressions.get, 'circleBlur'],
-      circleOpacity: [Expressions.get, 'circleOpacity'],
-      circleStrokeWidth: [Expressions.get, 'circleStrokeWidth'],
-      circleStrokeColor: [Expressions.get, 'circleStrokeColor'],
-      circleStrokeOpacity: [Expressions.get, 'circleStrokeOpacity'],
-    ),
-  ];
+        CircleLayerProperties(
+          circleRadius: [Expressions.get, 'circleRadius'],
+          circleColor: [Expressions.get, 'circleColor'],
+          circleBlur: [Expressions.get, 'circleBlur'],
+          circleOpacity: [Expressions.get, 'circleOpacity'],
+          circleStrokeWidth: [Expressions.get, 'circleStrokeWidth'],
+          circleStrokeColor: [Expressions.get, 'circleStrokeColor'],
+          circleStrokeOpacity: [Expressions.get, 'circleStrokeOpacity'],
+        ),
+      ];
 }
 
 class SymbolManager extends AnnotationManager<Symbol> {
@@ -304,10 +305,10 @@ class SymbolManager extends AnnotationManager<Symbol> {
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
     super.enableInteraction = true,
-  }) : _iconAllowOverlap = iconAllowOverlap,
-       _textAllowOverlap = textAllowOverlap,
-       _iconIgnorePlacement = iconIgnorePlacement,
-       _textIgnorePlacement = textIgnorePlacement;
+  })  : _iconAllowOverlap = iconAllowOverlap,
+        _textAllowOverlap = textAllowOverlap,
+        _iconIgnorePlacement = iconIgnorePlacement,
+        _textIgnorePlacement = textIgnorePlacement;
 
   bool _iconAllowOverlap;
   bool _textAllowOverlap;
@@ -348,50 +349,49 @@ class SymbolManager extends AnnotationManager<Symbol> {
 
   @override
   List<LayerProperties> get allLayerProperties => [
-    SymbolLayerProperties(
-      iconSize: [Expressions.get, 'iconSize'],
-      iconImage: [Expressions.get, 'iconImage'],
-      iconRotate: [Expressions.get, 'iconRotate'],
-      iconOffset: [Expressions.get, 'iconOffset'],
-      iconAnchor: [Expressions.get, 'iconAnchor'],
-      iconOpacity: [Expressions.get, 'iconOpacity'],
-      iconColor: [Expressions.get, 'iconColor'],
-      iconHaloColor: [Expressions.get, 'iconHaloColor'],
-      iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
-      iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
-      // note that web does not support setting this in a fully data driven
-      // way this is a upstream issue
-      textFont:
-          kIsWeb
+        SymbolLayerProperties(
+          iconSize: [Expressions.get, 'iconSize'],
+          iconImage: [Expressions.get, 'iconImage'],
+          iconRotate: [Expressions.get, 'iconRotate'],
+          iconOffset: [Expressions.get, 'iconOffset'],
+          iconAnchor: [Expressions.get, 'iconAnchor'],
+          iconOpacity: [Expressions.get, 'iconOpacity'],
+          iconColor: [Expressions.get, 'iconColor'],
+          iconHaloColor: [Expressions.get, 'iconHaloColor'],
+          iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
+          iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
+          // note that web does not support setting this in a fully data driven
+          // way this is a upstream issue
+          textFont: kIsWeb
               ? null
               : [
-                Expressions.caseExpression,
-                [Expressions.has, 'fontNames'],
-                [Expressions.get, 'fontNames'],
-                [
-                  Expressions.literal,
-                  ["Open Sans Regular", "Arial Unicode MS Regular"],
+                  Expressions.caseExpression,
+                  [Expressions.has, 'fontNames'],
+                  [Expressions.get, 'fontNames'],
+                  [
+                    Expressions.literal,
+                    ["Open Sans Regular", "Arial Unicode MS Regular"],
+                  ],
                 ],
-              ],
-      textField: [Expressions.get, 'textField'],
-      textSize: [Expressions.get, 'textSize'],
-      textMaxWidth: [Expressions.get, 'textMaxWidth'],
-      textLetterSpacing: [Expressions.get, 'textLetterSpacing'],
-      textJustify: [Expressions.get, 'textJustify'],
-      textAnchor: [Expressions.get, 'textAnchor'],
-      textRotate: [Expressions.get, 'textRotate'],
-      textTransform: [Expressions.get, 'textTransform'],
-      textOffset: [Expressions.get, 'textOffset'],
-      textOpacity: [Expressions.get, 'textOpacity'],
-      textColor: [Expressions.get, 'textColor'],
-      textHaloColor: [Expressions.get, 'textHaloColor'],
-      textHaloWidth: [Expressions.get, 'textHaloWidth'],
-      textHaloBlur: [Expressions.get, 'textHaloBlur'],
-      symbolSortKey: [Expressions.get, 'zIndex'],
-      iconAllowOverlap: _iconAllowOverlap,
-      iconIgnorePlacement: _iconIgnorePlacement,
-      textAllowOverlap: _textAllowOverlap,
-      textIgnorePlacement: _textIgnorePlacement,
-    ),
-  ];
+          textField: [Expressions.get, 'textField'],
+          textSize: [Expressions.get, 'textSize'],
+          textMaxWidth: [Expressions.get, 'textMaxWidth'],
+          textLetterSpacing: [Expressions.get, 'textLetterSpacing'],
+          textJustify: [Expressions.get, 'textJustify'],
+          textAnchor: [Expressions.get, 'textAnchor'],
+          textRotate: [Expressions.get, 'textRotate'],
+          textTransform: [Expressions.get, 'textTransform'],
+          textOffset: [Expressions.get, 'textOffset'],
+          textOpacity: [Expressions.get, 'textOpacity'],
+          textColor: [Expressions.get, 'textColor'],
+          textHaloColor: [Expressions.get, 'textHaloColor'],
+          textHaloWidth: [Expressions.get, 'textHaloWidth'],
+          textHaloBlur: [Expressions.get, 'textHaloBlur'],
+          symbolSortKey: [Expressions.get, 'zIndex'],
+          iconAllowOverlap: _iconAllowOverlap,
+          iconIgnorePlacement: _iconIgnorePlacement,
+          textAllowOverlap: _textAllowOverlap,
+          textIgnorePlacement: _textIgnorePlacement,
+        ),
+      ];
 }

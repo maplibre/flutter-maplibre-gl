@@ -169,7 +169,8 @@ class Camera extends Evented {
     Point offset, [
     AnimationOptions? options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
+  ]) =>
+      MapLibreMap.fromJsObject(jsObject.panBy(offset.jsObject));
 
   ///  Pans the map to the specified location, with an animated transition.
   ///
@@ -184,7 +185,8 @@ class Camera extends Evented {
     LngLat lnglat, [
     AnimationOptions? options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
+  ]) =>
+      MapLibreMap.fromJsObject(jsObject.panTo(lnglat.jsObject));
 
   ///  Returns the map's current zoom level.
   ///
@@ -227,7 +229,8 @@ class Camera extends Evented {
     num zoom, [
     AnimationOptions? options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
+  ]) =>
+      MapLibreMap.fromJsObject(jsObject.zoomTo(zoom));
 
   ///  Increases the map's zoom level by 1.
   ///
@@ -298,7 +301,8 @@ class Camera extends Evented {
     num bearing, [
     AnimationOptions? options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
+  ]) =>
+      MapLibreMap.fromJsObject(jsObject.rotateTo(bearing));
 
   ///  Rotates the map so that north is up (0° bearing), with an animated transition.
   ///
@@ -373,10 +377,9 @@ class Camera extends Evented {
         jsObject.cameraForBounds(bounds.jsObject),
       );
     }
-    final optionsJs =
-        options is CameraOptions
-            ? options.jsObject
-            : (options is Map ? utils.jsify(options) : options as JSAny);
+    final optionsJs = options is CameraOptions
+        ? options.jsObject
+        : (options is Map ? utils.jsify(options) : options as JSAny);
 
     return CameraOptions.fromJsObject(
       jsObject.cameraForBounds(
@@ -414,9 +417,11 @@ class Camera extends Evented {
     LngLatBounds bounds, [
     Map<String, dynamic>? options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(
-    jsObject.fitBounds(bounds.jsObject, utils.jsify(options ?? {}), eventData),
-  );
+  ]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.fitBounds(
+            bounds.jsObject, utils.jsify(options ?? {}), eventData),
+      );
 
   ///  Pans, rotates and zooms the map to to fit the box made by points p0 and p1
   ///  once the map is rotated to the specified bearing. To zoom without rotating,
@@ -451,9 +456,10 @@ class Camera extends Evented {
     num bearing, [
     dynamic options,
     dynamic eventData,
-  ]) => MapLibreMap.fromJsObject(
-    jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing),
-  );
+  ]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.fitScreenCoordinates(p0.jsObject, p1.jsObject, bearing),
+      );
 
   ///  Changes any combination of center, zoom, bearing, and pitch, without
   ///  an animated transition. The map will retain its current values for any

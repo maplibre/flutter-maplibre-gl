@@ -51,13 +51,12 @@ class MapLibreMapController extends MapLibrePlatform
     ui_web.platformViewRegistry.registerViewFactory(
       'plugins.flutter.io/maplibre_gl_$identifier',
       (int viewId) {
-        _mapElement =
-            (web.document.createElement('div') as web.HTMLDivElement)
-              ..style.position = 'absolute'
-              ..style.top = '0'
-              ..style.bottom = '0'
-              ..style.height = '100%'
-              ..style.width = '100%';
+        _mapElement = (web.document.createElement('div') as web.HTMLDivElement)
+          ..style.position = 'absolute'
+          ..style.top = '0'
+          ..style.bottom = '0'
+          ..style.height = '100%'
+          ..style.width = '100%';
         callback(viewId);
         return _mapElement;
       },
@@ -74,10 +73,9 @@ class MapLibreMapController extends MapLibrePlatform
     _map = MapLibreMap(
       MapOptions(
         container: _mapElement,
-        center:
-            (camera != null)
-                ? LngLat(camera['target'][1], camera['target'][0])
-                : null,
+        center: (camera != null)
+            ? LngLat(camera['target'][1], camera['target'][0])
+            : null,
         zoom: camera?['zoom'],
         bearing: camera?['bearing'],
         pitch: camera?['tilt'],
@@ -899,8 +897,8 @@ class MapLibreMapController extends MapLibrePlatform
   void _addScaleControl({ScaleControlPosition? position}) {
     _removeScaleControl();
 
-    final positionString = switch (position ??
-        ScaleControlPosition.bottomLeft) {
+    final positionString =
+        switch (position ?? ScaleControlPosition.bottomLeft) {
       ScaleControlPosition.topLeft => 'top-left',
       ScaleControlPosition.topRight => 'top-right',
       ScaleControlPosition.bottomLeft => 'bottom-left',
@@ -1082,14 +1080,12 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List<Point<num>>> toScreenLocationBatch(
     Iterable<LatLng> latLngs,
   ) async {
-    return latLngs
-        .map((latLng) {
-          final screenPosition = _map.project(
-            LngLat(latLng.longitude, latLng.latitude),
-          );
-          return Point(screenPosition.x.round(), screenPosition.y.round());
-        })
-        .toList(growable: false);
+    return latLngs.map((latLng) {
+      final screenPosition = _map.project(
+        LngLat(latLng.longitude, latLng.latitude),
+      );
+      return Point(screenPosition.x.round(), screenPosition.y.round());
+    }).toList(growable: false);
   }
 
   @override
@@ -1131,10 +1127,9 @@ class MapLibreMapController extends MapLibrePlatform
       geojsonFeature["geometry"] as Map,
     );
     final propertiesRaw = geojsonFeature["properties"];
-    final properties =
-        propertiesRaw != null
-            ? Map<String, dynamic>.from(propertiesRaw as Map)
-            : null;
+    final properties = propertiesRaw != null
+        ? Map<String, dynamic>.from(propertiesRaw as Map)
+        : null;
 
     return Feature(
       geometry: Geometry(

@@ -15,9 +15,9 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-            (methodCall) async => null,
-          );
+        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+        (methodCall) async => null,
+      );
 
       await platform.initPlatform(0);
     });
@@ -31,10 +31,10 @@ void main() {
       );
       await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
-            'plugins.flutter.io/maplibre_gl_0',
-            data,
-            (_) {},
-          );
+        'plugins.flutter.io/maplibre_gl_0',
+        data,
+        (_) {},
+      );
     }
 
     test('camera#onMove fires onCameraMovePlatform', () async {

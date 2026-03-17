@@ -10,12 +10,12 @@ import '../../shared/shared.dart';
 /// Example demonstrating GPS location tracking
 class GpsLocationPage extends ExamplePage {
   const GpsLocationPage({super.key})
-    : super(
-        const Icon(Icons.gps_fixed),
-        'GPS Location',
-        needsLocationPermission: false,
-        category: ExampleCategory.basics,
-      );
+      : super(
+          const Icon(Icons.gps_fixed),
+          'GPS Location',
+          needsLocationPermission: false,
+          category: ExampleCategory.basics,
+        );
 
   @override
   Widget build(BuildContext context) => const _GpsLocationBody();
@@ -123,24 +123,22 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
         trackCameraPosition: true,
         myLocationEnabled: hasPermission,
         myLocationTrackingMode: _trackingMode,
-        locationEnginePlatforms:
-            _useHighAccuracy
-                ? const LocationEnginePlatforms(
-                  androidPlatform: LocationEngineAndroidProperties(
-                    interval: 1000,
-                    displacement: 1,
-                    priority: LocationPriority.highAccuracy,
-                  ),
-                )
-                : LocationEnginePlatforms.defaultPlatform,
+        locationEnginePlatforms: _useHighAccuracy
+            ? const LocationEnginePlatforms(
+                androidPlatform: LocationEngineAndroidProperties(
+                  interval: 1000,
+                  displacement: 1,
+                  priority: LocationPriority.highAccuracy,
+                ),
+              )
+            : LocationEnginePlatforms.defaultPlatform,
       ),
       controls: [
         InfoCard(
           title: 'GPS Location Tracking',
-          subtitle:
-              hasPermission
-                  ? 'Track your device location on the map'
-                  : 'Location permission required',
+          subtitle: hasPermission
+              ? 'Track your device location on the map'
+              : 'Location permission required',
           icon: hasPermission ? Icons.gps_fixed : Icons.gps_off,
           color: hasPermission ? null : Theme.of(context).colorScheme.error,
         ),

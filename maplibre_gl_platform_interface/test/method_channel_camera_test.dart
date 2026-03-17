@@ -15,35 +15,35 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
-            (methodCall) async {
-              methodCalls.add(methodCall);
+        const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+        (methodCall) async {
+          methodCalls.add(methodCall);
 
-              switch (methodCall.method) {
-                case 'map#queryCameraPosition':
-                  return <String, dynamic>{
-                    'bearing': 45.0,
-                    'target': <double>[10.0, 20.0],
-                    'tilt': 30.0,
-                    'zoom': 15.0,
-                  };
-                case 'map#update':
-                  return <String, dynamic>{
-                    'bearing': 0.0,
-                    'target': <double>[0.0, 0.0],
-                    'tilt': 0.0,
-                    'zoom': 10.0,
-                  };
-                case 'camera#animate':
-                case 'camera#move':
-                  return true;
-                case 'camera#ease':
-                  return true;
-                default:
-                  return null;
-              }
-            },
-          );
+          switch (methodCall.method) {
+            case 'map#queryCameraPosition':
+              return <String, dynamic>{
+                'bearing': 45.0,
+                'target': <double>[10.0, 20.0],
+                'tilt': 30.0,
+                'zoom': 15.0,
+              };
+            case 'map#update':
+              return <String, dynamic>{
+                'bearing': 0.0,
+                'target': <double>[0.0, 0.0],
+                'tilt': 0.0,
+                'zoom': 10.0,
+              };
+            case 'camera#animate':
+            case 'camera#move':
+              return true;
+            case 'camera#ease':
+              return true;
+            default:
+              return null;
+          }
+        },
+      );
 
       await platform.initPlatform(0);
       methodCalls.clear();

@@ -12,11 +12,11 @@ import '../../shared/shared.dart';
 /// as PNG bytes. Works on Android, iOS, and Web with the same code.
 class MapSnapshotPage extends ExamplePage {
   const MapSnapshotPage({super.key})
-    : super(
-        const Icon(Icons.camera_alt),
-        'Map Snapshot',
-        category: ExampleCategory.advanced,
-      );
+      : super(
+          const Icon(Icons.camera_alt),
+          'Map Snapshot',
+          category: ExampleCategory.advanced,
+        );
 
   @override
   Widget build(BuildContext context) => const _MapSnapshotBody();
