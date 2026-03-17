@@ -2,12 +2,21 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
-### Changed
-* Upgraded MapLibre GL JS from 4.7.1 to 5.20.1 (#651)
-  * **Breaking**: `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). MapLibre GL JS v5 gives priority to style-defined camera values over constructor options. Use `MapLibreMapController.moveCamera()` or `MapLibreMapController.animateCamera()` after map load to override.
-  * `preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat` now set via `canvasContextAttributes` (MapLibre GL JS v5 API change)
-  * `on()`/`off()`/`once()` adapted for v5 `Subscription` return type
-  * Removed `customAttribution` from `MapOptionsJsImpl` (moved to `AttributionControl` options in v5)
+### Breaking
+* Upgraded MapLibre GL JS from 4.7.1 to 5.20.1 (#761, #651).
+  * `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). MapLibre GL JS v5 gives priority to style-defined camera values over constructor options. Use `MapLibreMapController.moveCamera()` or `MapLibreMapController.animateCamera()` after map load to override.
+  * `preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat` now set via `canvasContextAttributes` (MapLibre GL JS v5 API change).
+  * `on()`/`off()`/`once()` adapted for v5 `Subscription` return type.
+  * Removed `customAttribution` from `MapOptionsJsImpl` (moved to `AttributionControl` options in v5).
+
+### Added
+* Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
+* Added `getLayerVisibility`, web snapshot, and map sizing features (#722).
+* Added Scale Control (#720).
+
+### Fixed
+* Improved `styleimagemissing` handling (#725).
+* Fixed JS Interop and WASM compilation in release mode (#714).
 
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 

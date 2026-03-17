@@ -1,17 +1,42 @@
-## Unreleased
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 ### Breaking
-* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0`.
+* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0` (#762).
 * Removed deprecated `MaplibreMapController` typedef. Use `MapLibreMapController` instead.
 * Removed deprecated `MaplibreMap` typedef. Use `MapLibreMap` instead.
 * Removed deprecated `MaplibreStyles` typedef. Use `MapLibreStyles` instead.
 * Removed deprecated `onInfoWindowTapped` callback from `MapLibreMapController`.
 * Removed deprecated `removeImageSource` method. Use `removeSource` instead.
 * Removed deprecated `addLayerBelow` method. Use `addImageLayerBelow` instead.
+* `initialCameraPosition` is now nullable to support style-defined camera options (#769).
 
 ### Added
-* iOS: Implemented `setMaximumFps` to control the preferred frame rate (#514).
+* Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
+* `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks, defaults to `false` (#729).
+* Fire `onMapClick` for all map taps, including after interactive features (#707).
+* iOS: Implemented `setMaximumFps` to control the preferred frame rate (#739).
+* Android: Google Mobile Services (GMS) Location Engine support (#721).
+* Unit tests for core packages (#765).
+
+### Changed
+* Android: MapLibre Android SDK upgraded from 12.3.1 to 13.0.0 (#759).
+* Android: Reduced MapLibre SDK logging verbosity to minimize log spam (#752).
+* Android: Enhanced GeoJSON source handling with type checks and error logging (#764).
+* Android: Check style exists and is loaded before adding a Layer (#768).
+* Android: Check source exists before adding (#734).
+* iOS: Updated project settings for UISceneDelegate compatibility (#767).
+* Gradle wrapper updated to 9.4.0, Kotlin to 2.3.10, Android Gradle Plugin to 9.1.0 (#753-#758).
+
+### Fixed
+* Android: Fix map partially not responsive in split screen (#771).
+* Fix data properties not being added to Annotation created in AnnotationManager (#770).
+* Fix double JSON encoding in layer properties causing Android/iOS type errors (#747).
+* Android: Synchronous GeoJson update fix (#716).
+* Android: Disabled texture mode by default and improved MapView lifecycle management (#723).
+* Android: Removed unnecessary `OfflineActivity` from `AndroidManifest.xml` (#724).
+* iOS: Deferred `onStyleLoaded` callback to avoid race conditions (#719).
+
+**Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
