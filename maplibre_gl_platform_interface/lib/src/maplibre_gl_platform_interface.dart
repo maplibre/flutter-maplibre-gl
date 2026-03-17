@@ -329,9 +329,15 @@ abstract class MapLibrePlatform {
   /// Waits until all visible map tiles are loaded.
   Future<void> waitUntilMapTilesAreLoaded();
 
-  /// Takes a screenshot of the web map.
-  /// Returns a base64-encoded PNG image string.
-  Future<String> takeWebSnapshot();
+  /// Takes a screenshot of the current map view as PNG bytes.
+  /// Returns a [Uint8List] containing the PNG image data.
+  /// Supported on all platforms (Android, iOS, Web).
+  ///
+  /// If [width] and [height] are provided, the snapshot is rendered at that
+  /// size (in logical pixels) using an offscreen renderer, preserving the
+  /// current camera position and style. When omitted the snapshot matches the
+  /// current map view size.
+  Future<Uint8List> takeSnapshot({int? width, int? height});
 
   /// Method to set style string
   /// A MapLibre GL style document defining the map's appearance.

@@ -6,6 +6,7 @@ import UIKit
 public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
     static var downloadOfflineRegionChannelHandler: OfflineChannelHandler? = nil
 
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = MapLibreMapFactory(withRegistrar: registrar)
         registrar.register(instance, withId: "plugins.flutter.io/maplibre_gl")

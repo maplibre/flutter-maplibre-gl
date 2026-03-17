@@ -84,7 +84,10 @@ import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.net.ConnectivityReceiver;
+import org.maplibre.android.snapshotter.MapSnapshot;
+import org.maplibre.android.snapshotter.MapSnapshotter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -151,6 +154,7 @@ final class MapLibreMapController
 
   private LatLng dragOrigin;
   private LatLng dragPrevious;
+  private MapSnapshotter activeSnapshotter;
 
   private Set<String> interactiveFeatureLayerIds;
   private Map<String, FeatureCollection> addedFeaturesByLayer;
@@ -1988,6 +1992,49 @@ final class MapLibreMapController
         }
         break;
       }
+      case "map#takeSnapshot":
+      {
+        if (mapLibreMap == null) {
+          result.error("MAP_NOT_READY", "Map is not ready", null);
+          break;
+        }
+        String styleUrl = mapLibreMap.getStyle() != null ? mapLibreMap.getStyle().getUri() : null;
+        if (styleUrl == null) {
+          result.error("STYLE_NOT_READY", "Map style is not loaded", null);
+          break;
+        }
+        Map<String, Object> snapshotArgs = (Map<String, Object>) call.arguments;
+        Integer width = snapshotArgs != null ? (Integer) snapshotArgs.get("width") : null;
+        Integer height = snapshotArgs != null ? (Integer) snapshotArgs.get("height") : null;
+
+        int snapshotWidth = width != null ? width : mapView.getWidth();
+        int snapshotHeight = height != null ? height : mapView.getHeight();
+
+        MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
+                .withStyle(styleUrl)
+                .withCameraPosition(mapLibreMap.getCameraPosition());
+        if (activeSnapshotter != null) {
+          activeSnapshotter.cancel();
+        }
+        activeSnapshotter = new MapSnapshotter(context, options);
+        activeSnapshotter.start(new MapSnapshotter.SnapshotReadyCallback() {
+          @Override
+          public void onSnapshotReady(MapSnapshot snapshot) {
+            activeSnapshotter = null;
+            Bitmap bitmap = snapshot.getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            result.success(stream.toByteArray());
+          }
+        }, new MapSnapshotter.ErrorHandler() {
+          @Override
+          public void onError(String error) {
+            activeSnapshotter = null;
+            result.error("SNAPSHOT_ERROR", error, null);
+          }
+        });
+        break;
+      }
       default:
         result.notImplemented();
     }
@@ -2100,6 +2147,10 @@ final class MapLibreMapController
       return;
     }
     disposed = true;
+    if (activeSnapshotter != null) {
+      activeSnapshotter.cancel();
+      activeSnapshotter = null;
+    }
     methodChannel.setMethodCallHandler(null);
     // Properly cleanup MapView lifecycle before destroying
     if (mapView != null && mapViewStarted) {
