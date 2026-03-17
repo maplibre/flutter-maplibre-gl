@@ -1111,7 +1111,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
-  Future<Symbol> addSymbol(SymbolOptions options, [Map? data]) async {
+  Future<Symbol> addSymbol(
+    SymbolOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(symbolManager);
 
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
@@ -1132,7 +1135,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
   Future<List<Symbol>> addSymbols(
     List<SymbolOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(symbolManager);
 
@@ -1221,7 +1224,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added line once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
-  Future<Line> addLine(LineOptions options, [Map? data]) async {
+  Future<Line> addLine(
+    LineOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(lineManager);
 
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
@@ -1241,7 +1247,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
   Future<List<Line>> addLines(
     List<LineOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(lineManager);
 
@@ -1328,7 +1334,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
-  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
+  Future<Circle> addCircle(
+    CircleOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(circleManager);
 
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
@@ -1349,7 +1358,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
   Future<List<Circle>> addCircles(
     List<CircleOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(circleManager);
 
@@ -1436,7 +1445,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
-  Future<Fill> addFill(FillOptions options, [Map? data]) async {
+  Future<Fill> addFill(
+    FillOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(fillManager);
 
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
@@ -1457,7 +1469,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
   Future<List<Fill>> addFills(
     List<FillOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(fillManager);
 

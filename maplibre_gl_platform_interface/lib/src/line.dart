@@ -17,9 +17,8 @@ class Line implements Annotation {
   @override
   String get id => _id;
 
-  final Map? _data;
-
-  Map? get data => _data;
+  final Map<String, dynamic>? _data;
+  Map<String, dynamic>? get data => _data;
 
   /// The line configuration options most recently applied programmatically
   /// via the map controller.
@@ -33,6 +32,9 @@ class Line implements Annotation {
     final geojson = options.toGeoJson();
     geojson["id"] = id;
     geojson["properties"]["id"] = id;
+    if (_data != null) {
+      geojson["properties"].addAll(_data);
+    }
 
     return geojson;
   }
