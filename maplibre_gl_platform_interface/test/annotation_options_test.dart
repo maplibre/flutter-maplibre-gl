@@ -103,6 +103,27 @@ void main() {
       );
       expect(symbol.data, {'key': 'value'});
     });
+
+    test('toGeoJson includes data in properties', () {
+      final symbol = Symbol(
+        'sym-1',
+        const SymbolOptions(geometry: LatLng(10.0, 20.0)),
+        {'type': 'bus_stop', 'name': 'Main St'},
+      );
+      final geojson = symbol.toGeoJson();
+      expect(geojson['properties']['type'], 'bus_stop');
+      expect(geojson['properties']['name'], 'Main St');
+      expect(geojson['properties']['id'], 'sym-1');
+    });
+
+    test('toGeoJson without data does not fail', () {
+      final symbol = Symbol(
+        'sym-1',
+        const SymbolOptions(geometry: LatLng(10.0, 20.0)),
+      );
+      final geojson = symbol.toGeoJson();
+      expect(geojson['properties']['id'], 'sym-1');
+    });
   });
 
   group('CircleOptions', () {
@@ -172,6 +193,27 @@ void main() {
       circle.translate(const LatLng(5.0, 5.0));
       expect(circle.options.geometry!.latitude, 15.0);
       expect(circle.options.geometry!.longitude, 25.0);
+    });
+
+    test('toGeoJson includes data in properties', () {
+      final circle = Circle(
+        'circle-1',
+        const CircleOptions(geometry: LatLng(10.0, 20.0)),
+        {'category': 'poi', 'radius': 100},
+      );
+      final geojson = circle.toGeoJson();
+      expect(geojson['properties']['category'], 'poi');
+      expect(geojson['properties']['radius'], 100);
+      expect(geojson['properties']['id'], 'circle-1');
+    });
+
+    test('toGeoJson without data does not fail', () {
+      final circle = Circle(
+        'circle-1',
+        const CircleOptions(geometry: LatLng(10.0, 20.0)),
+      );
+      final geojson = circle.toGeoJson();
+      expect(geojson['properties']['id'], 'circle-1');
     });
   });
 
@@ -258,6 +300,31 @@ void main() {
       line.translate(const LatLng(1.0, 2.0));
       expect(line.options.geometry![0], const LatLng(11.0, 22.0));
       expect(line.options.geometry![1], const LatLng(31.0, 42.0));
+    });
+
+    test('toGeoJson includes data in properties', () {
+      final line = Line(
+        'line-1',
+        const LineOptions(
+          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
+        ),
+        {'route': 'A1', 'toll': true},
+      );
+      final geojson = line.toGeoJson();
+      expect(geojson['properties']['route'], 'A1');
+      expect(geojson['properties']['toll'], true);
+      expect(geojson['properties']['id'], 'line-1');
+    });
+
+    test('toGeoJson without data does not fail', () {
+      final line = Line(
+        'line-1',
+        const LineOptions(
+          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
+        ),
+      );
+      final geojson = line.toGeoJson();
+      expect(geojson['properties']['id'], 'line-1');
     });
   });
 
@@ -365,6 +432,35 @@ void main() {
       fill.translate(const LatLng(1.0, 2.0));
       expect(fill.options.fillOpacity, 0.5);
       expect(fill.options.geometry, isNull);
+    });
+
+    test('toGeoJson includes data in properties', () {
+      final fill = Fill(
+        'fill-1',
+        const FillOptions(
+          geometry: [
+            [LatLng(0.0, 0.0), LatLng(10.0, 0.0), LatLng(10.0, 10.0)],
+          ],
+        ),
+        {'zone': 'residential', 'area': 500},
+      );
+      final geojson = fill.toGeoJson();
+      expect(geojson['properties']['zone'], 'residential');
+      expect(geojson['properties']['area'], 500);
+      expect(geojson['properties']['id'], 'fill-1');
+    });
+
+    test('toGeoJson without data does not fail', () {
+      final fill = Fill(
+        'fill-1',
+        const FillOptions(
+          geometry: [
+            [LatLng(0.0, 0.0), LatLng(10.0, 0.0), LatLng(10.0, 10.0)],
+          ],
+        ),
+      );
+      final geojson = fill.toGeoJson();
+      expect(geojson['properties']['id'], 'fill-1');
     });
   });
 
