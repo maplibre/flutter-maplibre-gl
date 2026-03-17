@@ -1955,11 +1955,17 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.waitUntilMapTilesAreLoaded();
   }
 
-  /// Takes a screenshot of the web map.
-  /// Returns a base64-encoded PNG image string.
-  /// Only supported on web platform.
-  Future<String> takeWebSnapshot() {
-    return _maplibrePlatform.takeWebSnapshot();
+  /// Takes a screenshot of the current map view as PNG bytes.
+  ///
+  /// Returns a [Uint8List] containing the PNG image data of the snapshot.
+  /// This works on all platforms (Android, iOS, and Web).
+  ///
+  /// If [width] and [height] are provided, the snapshot is rendered at that
+  /// size (in logical pixels) using an offscreen renderer while preserving the
+  /// current camera position and style. When omitted the snapshot matches the
+  /// current map view size.
+  Future<Uint8List> takeSnapshot({int? width, int? height}) {
+    return _maplibrePlatform.takeSnapshot(width: width, height: height);
   }
 
   /// Method to set style string

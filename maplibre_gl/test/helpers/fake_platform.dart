@@ -494,8 +494,16 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<void> waitUntilMapTilesAreLoaded() async {}
 
+  /// Fake PNG bytes returned by [takeSnapshot].
+  Uint8List snapshotResult = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]);
+
   @override
-  Future<String> takeWebSnapshot() async => '';
+  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
+    calls.add(
+      PlatformCall('takeSnapshot', [], {'width': width, 'height': height}),
+    );
+    return snapshotResult;
+  }
 
   @override
   Future<void> setStyle(String styleString) async {

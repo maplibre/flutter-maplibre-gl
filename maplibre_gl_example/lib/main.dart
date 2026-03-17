@@ -42,10 +42,10 @@ import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
 
 // Advanced examples
-import 'examples/advanced/map_snapshot.dart';
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
+import 'examples/advanced/map_snapshot.dart';
 
 void main() {
   if (kIsWeb) {
@@ -124,10 +124,10 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const EditStyleLayerDraggableExample(),
 
   // Advanced
-  const MapSnapshotPage(),
   const PMTilesPage(),
   const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
+  const MapSnapshotPage(),
 ];
 
 class MapsDemo extends StatefulWidget {

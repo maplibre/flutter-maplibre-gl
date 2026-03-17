@@ -152,6 +152,25 @@ void main() {
       expect(restored.fillExtrusionHeight, 100);
       expect(restored.fillExtrusionOpacity, 0.9);
     });
+
+    test('copyWith overrides specified fields', () {
+      const original = FillExtrusionLayerProperties(
+        fillExtrusionColor: '#333333',
+        fillExtrusionHeight: 100,
+        fillExtrusionVerticalGradient: true,
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const FillExtrusionLayerProperties(
+          fillExtrusionHeight: 200,
+          fillExtrusionVerticalGradient: false,
+        ),
+      );
+      expect(updated.fillExtrusionColor, '#333333');
+      expect(updated.fillExtrusionHeight, 200);
+      expect(updated.fillExtrusionVerticalGradient, false);
+      expect(updated.visibility, 'visible');
+    });
   });
 
   group('RasterLayerProperties', () {
@@ -195,6 +214,25 @@ void main() {
       final restored = HillshadeLayerProperties.fromJson(original.toJson());
       expect(restored.hillshadeExaggeration, 0.5);
       expect(restored.hillshadeShadowColor, '#000000');
+    });
+
+    test('copyWith overrides specified fields', () {
+      const original = HillshadeLayerProperties(
+        hillshadeIlluminationDirection: 335,
+        hillshadeExaggeration: 0.5,
+        hillshadeShadowColor: '#000000',
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const HillshadeLayerProperties(
+          hillshadeIlluminationDirection: 180,
+          hillshadeExaggeration: 0.8,
+        ),
+      );
+      expect(updated.hillshadeIlluminationDirection, 180);
+      expect(updated.hillshadeExaggeration, 0.8);
+      expect(updated.hillshadeShadowColor, '#000000');
+      expect(updated.visibility, 'visible');
     });
   });
 

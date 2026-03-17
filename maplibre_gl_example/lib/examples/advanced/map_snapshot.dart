@@ -1,18 +1,15 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
 import '../../shared/shared.dart';
 
-/// Example demonstrating map snapshot functionality
+/// Cross-platform map snapshot example.
 ///
-/// This example shows how to:
-/// - Take a snapshot of the current map view (web only)
-/// - Set a custom size for the map before taking a snapshot
-/// - Display the captured snapshot in a dialog
+/// Uses [MapLibreMapController.takeSnapshot] to capture the current map view
+/// as PNG bytes. Works on Android, iOS, and Web with the same code.
 class MapSnapshotPage extends ExamplePage {
   const MapSnapshotPage({super.key})
     : super(
@@ -34,35 +31,31 @@ class _MapSnapshotBody extends StatefulWidget {
 
 class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
   MapLibreMapController? _mapController;
-  bool _canInteractWithMap = false;
+  bool _canInteract = false;
   bool _isCapturing = false;
-  Size? _customSize;
 
   void _onMapCreated(MapLibreMapController controller) {
     _mapController = controller;
   }
 
   void _onStyleLoaded() {
-    setState(() => _canInteractWithMap = true);
+    setState(() => _canInteract = true);
   }
 
-  /// Takes a snapshot of the current map view
-  Future<void> _takeSnapshot() async {
-    if (_mapController == null || !kIsWeb) return;
+  Future<void> _takeSnapshot({int? width, int? height}) async {
+    if (_mapController == null) return;
 
     setState(() => _isCapturing = true);
 
     try {
-      // Wait for any pending tiles to load
-      await _mapController!.waitUntilMapTilesAreLoaded();
-
-      // Take the snapshot
-      final dataUrl = await _mapController!.takeWebSnapshot();
+      final imageBytes = await _mapController!.takeSnapshot(
+        width: width,
+        height: height,
+      );
 
       if (!mounted) return;
 
-      // Show the snapshot in a dialog
-      await _showSnapshotDialog(dataUrl);
+      await _showSnapshotDialog(imageBytes, width: width, height: height);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,54 +68,13 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
     }
   }
 
-  /// Takes a snapshot with a custom map size
-  Future<void> _takeCustomSizeSnapshot(Size size) async {
-    if (_mapController == null || !kIsWeb) return;
-
-    setState(() => _isCapturing = true);
-
-    try {
-      // Define a custom size for the snapshot (e.g., 800x600)
-      setState(() => _customSize = size);
-
-      // Temporarily resize the map
-      final originalSize = await _mapController!.setWebMapToCustomSize(size);
-
-      // Wait for tiles to load at the new size
-      await _mapController!.waitUntilMapTilesAreLoaded();
-
-      // Take the snapshot
-      final dataUrl = await _mapController!.takeWebSnapshot();
-
-      // Restore the original size
-      await _mapController!.setWebMapToCustomSize(originalSize);
-
-      if (!mounted) return;
-
-      setState(() => _customSize = null);
-
-      // Show the snapshot in a dialog
-      await _showSnapshotDialog(dataUrl, size: size);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to take snapshot: $e')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCapturing = false;
-          _customSize = null;
-        });
-      }
-    }
-  }
-
-  Future<void> _showSnapshotDialog(String dataUrl, {Size? size}) async {
-    // Parse the base64 data from the data URL
-    // Format: data:image/png;base64,<base64data>
-    final base64Data = dataUrl.split(',').last;
-    final imageBytes = base64Decode(base64Data);
+  Future<void> _showSnapshotDialog(
+    Uint8List imageBytes, {
+    int? width,
+    int? height,
+  }) async {
+    final sizeLabel =
+        width != null && height != null ? '(${width}x$height)' : '';
 
     await showDialog<void>(
       context: context,
@@ -132,10 +84,12 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
               children: [
                 const Icon(Icons.camera_alt),
                 const SizedBox(width: 8),
-                Text(
-                  size != null
-                      ? 'Snapshot (${size.width.toInt()}x${size.height.toInt()})'
-                      : 'Map Snapshot',
+                Expanded(
+                  child: Text(
+                    'Map Snapshot $sizeLabel',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
                 ),
               ],
             ),
@@ -182,7 +136,7 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
 
   @override
   Widget build(BuildContext context) {
-    const isWeb = kIsWeb;
+    final enabled = _canInteract && !_isCapturing;
 
     return Scaffold(
       body: Stack(
@@ -212,77 +166,44 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
                 ),
               ),
             ),
-          if (_customSize != null)
-            Positioned(
-              top: 16,
-              left: 16,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Custom size: ${_customSize!.width.toInt()}x${_customSize!.height.toInt()}',
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
-      bottomNavigationBar:
-          !isWeb
-              ? Container(
-                padding: const EdgeInsets.all(16),
-                child: const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      'Map snapshots are only available on web platform.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              )
-              : SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: 16,
-                    children: [
-                      ExampleButton(
-                        label: 'Take Snapshot',
-                        icon: Icons.camera_alt,
-                        onPressed:
-                            _canInteractWithMap && !_isCapturing && isWeb
-                                ? _takeSnapshot
-                                : null,
-                        style: ExampleButtonStyle.filled,
-                      ),
-                      ExampleButton(
-                        label: 'Custom Size (800x600)',
-                        icon: Icons.crop,
-                        onPressed:
-                            _canInteractWithMap && !_isCapturing && isWeb
-                                ? () => _takeCustomSizeSnapshot(
-                                  const Size(800, 600),
-                                )
-                                : null,
-                        style: ExampleButtonStyle.tonal,
-                      ),
-                      ExampleButton(
-                        label: 'Custom Size (360x800)',
-                        icon: Icons.crop,
-                        onPressed:
-                            _canInteractWithMap && !_isCapturing && isWeb
-                                ? () => _takeCustomSizeSnapshot(
-                                  const Size(360, 800),
-                                )
-                                : null,
-                        style: ExampleButtonStyle.tonal,
-                      ),
-                    ],
-                  ),
-                ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ExampleButton(
+                label: 'Snapshot',
+                icon: Icons.camera_alt,
+                onPressed: enabled ? () => _takeSnapshot() : null,
+                style: ExampleButtonStyle.filled,
               ),
+              ExampleButton(
+                label: '800x600',
+                icon: Icons.crop,
+                onPressed:
+                    enabled
+                        ? () => _takeSnapshot(width: 800, height: 600)
+                        : null,
+                style: ExampleButtonStyle.tonal,
+              ),
+              ExampleButton(
+                label: '360x800',
+                icon: Icons.crop,
+                onPressed:
+                    enabled
+                        ? () => _takeSnapshot(width: 360, height: 800)
+                        : null,
+                style: ExampleButtonStyle.tonal,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

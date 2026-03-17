@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -257,6 +258,62 @@ void main() {
       final loc = await controller.requestMyLocationLatLng();
 
       expect(loc, const LatLng(0, 0));
+    });
+  });
+
+  group('Snapshot delegation', () {
+    test(
+      'takeSnapshot captures current view when no dimensions given',
+      () async {
+        final result = await controller.takeSnapshot();
+
+        final calls = platform.callsFor('takeSnapshot');
+        expect(calls.length, 1);
+        expect(calls.first.namedArgs['width'], isNull);
+        expect(calls.first.namedArgs['height'], isNull);
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, isTrue);
+      },
+    );
+
+    test('takeSnapshot at landscape resolution', () async {
+      final result = await controller.takeSnapshot(width: 800, height: 600);
+
+      final calls = platform.callsFor('takeSnapshot');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['width'], 800);
+      expect(calls.first.namedArgs['height'], 600);
+      expect(result, isA<Uint8List>());
+      expect(result.isNotEmpty, isTrue);
+    });
+
+    test('takeSnapshot at portrait resolution', () async {
+      final result = await controller.takeSnapshot(width: 360, height: 800);
+
+      final calls = platform.callsFor('takeSnapshot');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['width'], 360);
+      expect(calls.first.namedArgs['height'], 800);
+      expect(result, isA<Uint8List>());
+      expect(result.isNotEmpty, isTrue);
+    });
+
+    test('takeSnapshot with only width forwards partial dimensions', () async {
+      await controller.takeSnapshot(width: 1024);
+
+      final calls = platform.callsFor('takeSnapshot');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['width'], 1024);
+      expect(calls.first.namedArgs['height'], isNull);
+    });
+
+    test('takeSnapshot with only height forwards partial dimensions', () async {
+      await controller.takeSnapshot(height: 768);
+
+      final calls = platform.callsFor('takeSnapshot');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['width'], isNull);
+      expect(calls.first.namedArgs['height'], 768);
     });
   });
 

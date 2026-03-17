@@ -8,6 +8,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var channel: FlutterMethodChannel?
 
     private var mapView: MLNMapView
+    private var activeSnapshotter: MLNMapSnapshotter?
     private var isMapReady = false
     private var dragEnabled = true
     private var featureTapsTriggersMapClick = false
@@ -1178,6 +1179,60 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                       details: nil
                   )
               )
+            }
+        case "map#takeSnapshot":
+            guard let styleURL = mapView.styleURL else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Map style is not loaded",
+                    details: nil
+                ))
+                return
+            }
+
+            let args = methodCall.arguments as? [String: Any]
+            let width = args?["width"] as? Int
+            let height = args?["height"] as? Int
+
+            let snapshotWidth = width ?? Int(mapView.bounds.width)
+            let snapshotHeight = height ?? Int(mapView.bounds.height)
+
+            // Cancel any in-progress snapshot before starting a new one
+            activeSnapshotter?.cancel()
+
+            let size = CGSize(width: snapshotWidth, height: snapshotHeight)
+            let options = MLNMapSnapshotOptions(
+                styleURL: styleURL,
+                camera: mapView.camera,
+                size: size
+            )
+            options.zoomLevel = mapView.zoomLevel
+
+            let snapshotter = MLNMapSnapshotter(options: options)
+            // Store strong reference before starting to avoid deallocation
+            self.activeSnapshotter = snapshotter
+
+            snapshotter.start { [weak self] snapshot, error in
+                self?.activeSnapshotter = nil
+
+                if let error = error {
+                    result(FlutterError(
+                        code: "SNAPSHOT_ERROR",
+                        message: error.localizedDescription,
+                        details: nil
+                    ))
+                    return
+                }
+                guard let snapshot = snapshot,
+                      let pngData = snapshot.image.pngData() else {
+                    result(FlutterError(
+                        code: "SNAPSHOT_ERROR",
+                        message: "Failed to generate snapshot",
+                        details: nil
+                    ))
+                    return
+                }
+                result(FlutterStandardTypedData(bytes: pngData))
             }
         default:
             result(FlutterMethodNotImplemented)
