@@ -26,6 +26,7 @@ List<String> objectKeys(Object? obj) {
 /// Extension type to add property getter/setter to JSObject.
 extension type JSObjectExt._(JSObject _) implements JSObject {
   external JSAny? operator [](String property);
+
   external void operator []=(String property, JSAny? value);
 }
 
@@ -43,9 +44,12 @@ void setJsProperty(JSObject obj, String propertyName, JSAny? value) {
 @JS('Object.create')
 external JSObject _createJsObject(JSAny? prototype);
 
+@JS('Object.prototype')
+external JSAny? _objectPrototype;
+
 /// Helper function to create an empty JavaScript object.
 JSObject createJsObject() {
-  return _createJsObject(null);
+  return _createJsObject(_objectPrototype);
 }
 
 /// Parse a JSON string using JavaScript's native JSON.parse.
