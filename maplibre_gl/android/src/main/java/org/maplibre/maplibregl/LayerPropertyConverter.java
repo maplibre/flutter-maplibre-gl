@@ -181,7 +181,16 @@ class LayerPropertyConverter {
           }
           break;
         case "text-font":
-          properties.add(PropertyFactory.textFont(expression));
+          if (jsonElement != null && jsonElement.isJsonArray()) {
+            final String[] stringArray = convertJsonToStringArray(jsonElement);
+            if (stringArray != null) {
+              properties.add(PropertyFactory.textFont(stringArray));
+            } else {
+              properties.add(PropertyFactory.textFont(expression));
+            }
+          } else {
+            properties.add(PropertyFactory.textFont(expression));
+          }
           break;
         case "text-size":
           properties.add(PropertyFactory.textSize(expression));
@@ -661,6 +670,19 @@ class LayerPropertyConverter {
 
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+  }
+
+  private static String[] convertJsonToStringArray(JsonElement jsonElement) {
+    final JsonArray jsonArray = jsonElement.getAsJsonArray();
+    String[] stringArray = new String[jsonArray.size()];
+    for (int i = 0; i < jsonArray.size(); i++) {
+      if (jsonArray.get(i).isJsonPrimitive() && jsonArray.get(i).getAsJsonPrimitive().isString()) {
+        stringArray[i] = jsonArray.get(i).getAsString();
+      } else {
+        return null;
+      }
+    }
+    return stringArray;
   }
 
   private static Float[] convertJsonToFloatArray(JsonElement jsonElement) {

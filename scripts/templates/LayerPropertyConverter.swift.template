@@ -67,6 +67,11 @@ class LayerPropertyConverter {
             return nil
         }
         
+        // text-font is a font stack (array of string names), not an expression.
+        if propertyName == "text-font", let fontNames = json as? [String] {
+            return NSExpression(forConstantValue: fontNames)
+        }
+
         // this is required because NSExpression.init(mglJSONObject: json) fails to create
         // a proper Expression if the data of is a hexString
         if isColor {

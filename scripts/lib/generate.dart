@@ -180,6 +180,7 @@ Map<String, dynamic> buildStyleProperty(
     'isVisibilityProperty': key == "visibility",
     'isPatternProperty': key.endsWith("-pattern"),
     'requiresLiteral': key == "icon-image" || key == "text-field",
+    'isFontProperty': key == "text-font",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),
     'iosAsCamelCase': renamedIosProperties[camelCase],
     'doc': value["doc"],
