@@ -62,5 +62,5 @@ temp/
 .fvm/
 .fvmrc
 
-# Claude
-.claude/
+# AI Tools
+.claude
