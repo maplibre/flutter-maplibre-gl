@@ -12,6 +12,7 @@ import 'page.dart';
 // Basics examples
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
+import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
 
@@ -37,7 +38,6 @@ import 'examples/layers/circle_layer_example.dart';
 import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
-import 'examples/layers/various_sources.dart';
 import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
 
@@ -94,6 +94,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Basics
   const FullMapExample(),
   const MultiStyleSwitchPage(),
+  const VariousSources(),
   const GpsLocationPage(),
   const GetMapInfoPage(),
 
@@ -119,7 +120,6 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const CircleLayerExample(),
   const FillLayerExample(),
   const LineLayerExample(),
-  const VariousSources(),
   const EditStyleLayerAnimatedExample(),
   const EditStyleLayerDraggableExample(),
 

@@ -130,10 +130,15 @@ class SourcePropertyConverter {
             return MLNRasterDEMSource(identifier: identifier, configurationURL: url)
         }
         if let tiles = properties["tiles"] as? [String] {
+            var options = interpretTileOptions(properties: properties)
+            if let encoding = properties["encoding"] as? String {
+                let demEncoding: MLNDEMEncoding = encoding == "terrarium" ? .terrarium : .mapbox
+                options[.demEncoding] = NSNumber(value: demEncoding.rawValue)
+            }
             return MLNRasterDEMSource(
                 identifier: identifier,
                 tileURLTemplates: tiles,
-                options: interpretTileOptions(properties: properties)
+                options: options
             )
         }
         return nil
