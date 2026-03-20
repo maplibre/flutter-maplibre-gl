@@ -16,6 +16,7 @@ class MapLibreMapController extends MapLibrePlatform
   Set<String>? _assetManifest;
 
   final _interactiveFeatureLayerIds = <String>{};
+  final _mapSubscriptions = <Subscription>[];
 
   bool _trackCameraPosition = false;
   GeolocateControl? _geolocateControl;
@@ -43,6 +44,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
+    for (final sub in _mapSubscriptions) {
+      sub.unsubscribe();
+    }
+    _mapSubscriptions.clear();
     _map.remove();
     super.dispose();
   }
@@ -86,21 +91,21 @@ class MapLibreMapController extends MapLibrePlatform
         attributionControl: false, //avoid duplicate control
       ),
     );
-    _map.on('style.load', _onStyleLoaded);
-    _map.on('click', _onMapClick);
+    _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
+    _mapSubscriptions.add(_map.on('click', _onMapClick));
     // long click not available in web, so it is mapped to double click
-    _map.on('dblclick', _onMapLongClick);
-    _map.on('movestart', _onCameraMoveStarted);
-    _map.on('move', _onCameraMove);
-    _map.on('moveend', _onCameraIdle);
-    _map.on('resize', (_) => _onMapResize());
-    _map.on('styleimagemissing', _loadFromAssets);
+    _mapSubscriptions.add(_map.on('dblclick', _onMapLongClick));
+    _mapSubscriptions.add(_map.on('movestart', _onCameraMoveStarted));
+    _mapSubscriptions.add(_map.on('move', _onCameraMove));
+    _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
+    _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
+    _mapSubscriptions.add(_map.on('styleimagemissing', _loadFromAssets));
     if (_dragEnabled) {
-      _map.on('mouseup', _onMouseUp);
-      _map.on('mousemove', _onMouseMove);
+      _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
+      _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
     }
     // Always listen to mousemove for general map mouse move events
-    _map.on('mousemove', _onMapMouseMove);
+    _mapSubscriptions.add(_map.on('mousemove', _onMapMouseMove));
 
     _initResizeObserver();
 
