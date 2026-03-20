@@ -2124,8 +2124,6 @@ final class MapLibreMapController
       // Always fire map#onMapClick when no feature is tapped
       methodChannel.invokeMethod("map#onMapClick", arguments);
     }
-    // Always fire map#onMapClick for all map clicks
-    methodChannel.invokeMethod("map#onMapClick", arguments);
     return true;
   }
 
@@ -2257,7 +2255,7 @@ final class MapLibreMapController
 
   @Override
   public void onCreate(@NonNull LifecycleOwner owner) {
-    if (disposed) {
+    if (disposed || mapView == null) {
       return;
     }
     mapView.onCreate(null);
@@ -2265,7 +2263,7 @@ final class MapLibreMapController
 
   @Override
   public void onStart(@NonNull LifecycleOwner owner) {
-    if (disposed) {
+    if (disposed || mapView == null) {
       return;
     }
     if (!mapViewStarted) {
@@ -2276,7 +2274,7 @@ final class MapLibreMapController
 
   @Override
   public void onResume(@NonNull LifecycleOwner owner) {
-    if (disposed) {
+    if (disposed || mapView == null) {
       return;
     }
     mapView.onResume();
@@ -2284,20 +2282,18 @@ final class MapLibreMapController
       startListeningForLocationUpdates();
     }
     // Force a repaint to fix invisible map when returning from background
-    if (mapView != null) {
-      // Use standard Android view invalidation to trigger a repaint
-      mapView.post(new Runnable() {
-        @Override
-        public void run() {
-          mapView.invalidate();
-        }
-      });
-    }
+    // Use standard Android view invalidation to trigger a repaint
+    mapView.post(new Runnable() {
+      @Override
+      public void run() {
+        mapView.invalidate();
+      }
+    });
   }
 
   @Override
   public void onPause(@NonNull LifecycleOwner owner) {
-    if (disposed) {
+    if (disposed || mapView == null) {
       return;
     }
     mapView.onPause();
@@ -2305,7 +2301,7 @@ final class MapLibreMapController
 
   @Override
   public void onStop(@NonNull LifecycleOwner owner) {
-    if (disposed) {
+    if (disposed || mapView == null) {
       return;
     }
     if (mapViewStarted) {
