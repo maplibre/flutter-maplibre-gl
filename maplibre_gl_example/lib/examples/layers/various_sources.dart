@@ -23,7 +23,7 @@ class VariousSources extends ExamplePage {
     : super(
         const Icon(Icons.map),
         'Various Sources',
-        category: ExampleCategory.layers,
+        category: ExampleCategory.basics,
       );
 
   @override
@@ -245,17 +245,17 @@ class FullMapState extends State<FullMap> {
           ['linear'],
           ['heatmap-density'],
           0,
-          'rgba(33.0, 102.0, 172.0, 0.0)',
+          [Expressions.rgba, 33, 102, 172, 0],
           0.2,
-          'rgb(103.0, 169.0, 207.0)',
+          [Expressions.rgb, 103, 169, 207],
           0.4,
-          'rgb(209.0, 229.0, 240.0)',
+          [Expressions.rgb, 209, 229, 240],
           0.6,
-          'rgb(253.0, 219.0, 119.0)',
+          [Expressions.rgb, 253, 219, 119],
           0.8,
-          'rgb(239.0, 138.0, 98.0)',
+          [Expressions.rgb, 239, 138, 98],
           1,
-          'rgb(178.0, 24.0, 43.0)',
+          [Expressions.rgb, 178, 24, 43],
         ],
         // Adjust the heatmap radius by zoom level
         heatmapRadius: [

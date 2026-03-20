@@ -89,8 +89,6 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
       if (!c.isCameraMoving) return;
       _lastCamera = c.cameraPosition;
     });
-    // Apply the initial style
-    await _applyStyle(_currentIndex);
   }
 
   void _onCameraIdle() {

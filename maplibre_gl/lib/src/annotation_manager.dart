@@ -359,19 +359,12 @@ class SymbolManager extends AnnotationManager<Symbol> {
       iconHaloColor: [Expressions.get, 'iconHaloColor'],
       iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
       iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
-      // note that web does not support setting this in a fully data driven
-      // way this is a upstream issue
       textFont:
           kIsWeb
               ? null
               : [
-                Expressions.caseExpression,
-                [Expressions.has, 'fontNames'],
-                [Expressions.get, 'fontNames'],
-                [
-                  Expressions.literal,
-                  ["Open Sans Regular", "Arial Unicode MS Regular"],
-                ],
+                'Open Sans Regular',
+                'Arial Unicode MS Regular',
               ],
       textField: [Expressions.get, 'textField'],
       textSize: [Expressions.get, 'textSize'],

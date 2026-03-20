@@ -196,7 +196,14 @@ class SourcePropertyConverter {
     }
 
     final TileSet tileSet = buildTileset(properties);
-    return tileSet != null ? new RasterDemSource(id, tileSet) : null;
+    if (tileSet != null) {
+      final Object encoding = properties.get("encoding");
+      if (encoding != null) {
+        tileSet.setEncoding(Convert.toString(encoding));
+      }
+      return new RasterDemSource(id, tileSet);
+    }
+    return null;
   }
 
   static void addSource(String id, Map<String, Object> properties, Style style) {
