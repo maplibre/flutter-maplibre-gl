@@ -60,3 +60,6 @@ Gemfile*
 # FVM Version Cache
 .fvm/
 .fvmrc
+
+# AI Tools
+.claude
