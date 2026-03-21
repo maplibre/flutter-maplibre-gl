@@ -46,4 +46,10 @@ abstract class MapLibreMapOptionsSink {
   void setScaleControlUnit(ScaleControlUnit unit);
 
   void setFeatureTapsTriggersMapClick(bool triggers);
+
+  void setLocationEngineProperties({
+    required bool enableHighAccuracy,
+    required int maximumAge,
+    required int timeout,
+  });
 }

@@ -1,40 +1,67 @@
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
+**Version 0.26.0 is a milestone release for flutter-maplibre-gl.** \
+This release addresses numerous long-standing bugs that have accumulated over the years and completes the transition to the **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.
+
 ### Breaking
-* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0` (#762).
-* Removed deprecated `MaplibreMapController` typedef. Use `MapLibreMapController` instead.
-* Removed deprecated `MaplibreMap` typedef. Use `MapLibreMap` instead.
-* Removed deprecated `MaplibreStyles` typedef. Use `MapLibreStyles` instead.
-* Removed deprecated `onInfoWindowTapped` callback from `MapLibreMapController`.
-* Removed deprecated `removeImageSource` method. Use `removeSource` instead.
-* Removed deprecated `addLayerBelow` method. Use `addImageLayerBelow` instead.
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
+Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead.
+* Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
+* Removed deprecated callback: `onInfoWindowTapped` from `MapLibreMapController`.
+* Removed deprecated methods: `removeImageSource` (use `removeSource`) and `addLayerBelow` (use `addImageLayerBelow`).
 
 ### Added
 * Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
 * `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks, defaults to `false` (#729).
 * Fire `onMapClick` for all map taps, including after interactive features (#707).
-* iOS: Implemented `setMaximumFps` to control the preferred frame rate (#739).
-* Android: Google Mobile Services (GMS) Location Engine support (#721).
 * Unit tests for core packages (#765).
+* **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
+* **Android**: Google Mobile Services (GMS) Location Engine support (#721).
+* **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
+* **Web**: Added `getLayerVisibility`, web snapshot, and map sizing features (#722).
+* **Web**: Added Scale Control (#720).
+* **iOS**: Location engine support — `enableHighAccuracy` and `displacement` configurable via `LocationEnginePlatforms.iOS()`.
+* **Web**: Location engine properties (`enableHighAccuracy`, `maximumAge`, `timeout`) via `LocationEnginePlatforms.web()`.
+* Platform-specific constructors for `LocationEnginePlatforms`: `.android()`, `.iOS()`, `.web()`.
 
 ### Changed
-* Android: MapLibre Android SDK upgraded from 12.3.1 to 13.0.0 (#759).
-* Android: Reduced MapLibre SDK logging verbosity to minimize log spam (#752).
-* Android: Enhanced GeoJSON source handling with type checks and error logging (#764).
-* Android: Check style exists and is loaded before adding a Layer (#768).
-* Android: Check source exists before adding (#734).
-* iOS: Updated project settings for UISceneDelegate compatibility (#767).
+* **Android**: Reduced MapLibre SDK logging verbosity to minimize log spam (#752).
+* **Android**: Enhanced GeoJSON source handling with type checks and error logging (#764).
+* **Android**: Check style exists and is loaded before adding a Layer (#768).
+* **Android**: Check source exists before adding (#734).
+* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.1, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
+* **iOS**: Updated project settings for UISceneDelegate compatibility (#767).
+* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.24.0.
+* **Web**: Upgraded MapLibre GL JS from 4.7.1 to 5.20.2 (#761, #651).
+* **Web**: Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes`.
+* **Web**: Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
+* **Web**: Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
+* **GitHub Actions**: `actions/upload-artifact` updated from v6 to v7 (#748).
+* Bumped Dart and melos version to latest (#762).
+* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0` (#762).
 * Gradle wrapper updated to 9.4.0, Kotlin to 2.3.10, Android Gradle Plugin to 9.1.0 (#753-#758).
 
 ### Fixed
-* Android: Fix map partially not responsive in split screen (#771).
 * Fix data properties not being added to Annotation created in AnnotationManager (#770).
 * Fix double JSON encoding in layer properties causing Android/iOS type errors (#747).
-* Android: Synchronous GeoJson update fix (#716).
-* Android: Disabled texture mode by default and improved MapView lifecycle management (#723).
-* Android: Removed unnecessary `OfflineActivity` from `AndroidManifest.xml` (#724).
-* iOS: Deferred `onStyleLoaded` callback to avoid race conditions (#719).
+* Fix `text-font` property handling on Android and iOS to correctly accept font stacks as string arrays instead of only expressions.
+* Fix `textFont` in `SymbolManager` to pass font names as a simple string array, resolving rendering issues on native platforms.
+* Add DEM encoding support (`terrarium`/`mapbox`) for raster-dem tile sources on Android and iOS.
+* Fix heatmap color expressions in example app to use proper `Expressions.rgba`/`Expressions.rgb` syntax.
+* **Android**: Fix map partially not responsive in split screen (#771).
+* **Android**: GeoJSON source updates are now synchronous when drag is enabled, preventing stale feature positions during drag interactions and improved performance (#716).
+* **Android**: Disabled texture mode by default and improved MapView lifecycle management (#723).
+* **Android**: Removed unnecessary `OfflineActivity` from `AndroidManifest.xml` (#724).
+* **iOS**: Deferred `onStyleLoaded` callback to avoid race conditions (#719).
+* **Web**: Improved `styleimagemissing` handling (#725).
+* **Web**: Fixed JS Interop and WASM compilation in release mode (#714).
+* **Web**: Fixed missing prototype on empty JS object created via interop.
+* **Web**: `removeLayer` and `removeSource` no longer throw when the layer/source doesn't exist.
+* **Web**: `setGeoJsonSource` returns early instead of crashing when the source doesn't exist.
+* **Web**: `GeolocateControl` now respects `MyLocationTrackingMode` and triggers programmatically.
+* **Example**: GPS location page. Fixed web permission check, wired `onUserLocationUpdated`, web-specific tracking modes.
+* **Example**: GeoJSON cluster. Added `['has', 'point_count']` filter to fix null property errors on unclustered points.
 
 **Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
