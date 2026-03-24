@@ -118,6 +118,17 @@ class Convert {
         options['featureTapsTriggersMapClick'],
       );
     }
+    if (options.containsKey('locationEngineProperties')) {
+      final props = options['locationEngineProperties'] as List?;
+      // Web serializes as [enableHighAccuracy (0/1), maximumAge, timeout]
+      if (props != null && props.isNotEmpty) {
+        sink.setLocationEngineProperties(
+          enableHighAccuracy: props[0] == 1,
+          maximumAge: props.length > 1 ? props[1] as int : 0,
+          timeout: props.length > 2 ? props[2] as int : 0,
+        );
+      }
+    }
   }
 
   static CameraOptions toCameraOptions(

@@ -67,7 +67,6 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         LatLngQuad,
         Line,
         LineOptions,
-        LocationEngineAndroidProperties,
         LocationEnginePlatforms,
         LocationPriority,
         LogoViewPosition,

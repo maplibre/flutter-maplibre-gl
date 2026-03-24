@@ -10,6 +10,8 @@ This release addresses numerous long-standing bugs that have accumulated over th
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
+Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead.
 * Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
 * Removed deprecated callback: `onInfoWindowTapped` from `MapLibreMapController`.
 * Removed deprecated methods: `removeImageSource` (use `removeSource`) and `addLayerBelow` (use `addImageLayerBelow`).
@@ -24,6 +26,9 @@ This release addresses numerous long-standing bugs that have accumulated over th
 * **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
 * **Web**: Added `getLayerVisibility`, web snapshot, and map sizing features (#722).
 * **Web**: Added Scale Control (#720).
+* **iOS**: Location engine support — `enableHighAccuracy` and `displacement` configurable via `LocationEnginePlatforms.iOS()`.
+* **Web**: Location engine properties (`enableHighAccuracy`, `maximumAge`, `timeout`) via `LocationEnginePlatforms.web()`.
+* Platform-specific constructors for `LocationEnginePlatforms`: `.android()`, `.iOS()`, `.web()`.
 
 ### Changed
 * **Android**: Reduced MapLibre SDK logging verbosity to minimize log spam (#752).
@@ -33,7 +38,7 @@ This release addresses numerous long-standing bugs that have accumulated over th
 * **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.1, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
 * **iOS**: Updated project settings for UISceneDelegate compatibility (#767).
 * **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.24.0.
-* **Web**: Upgraded MapLibre GL JS from 4.7.1 to 5.20.2 (#761, #651).
+* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.21.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
 * **Web**: Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes`.
 * **Web**: Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
 * **Web**: Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
@@ -57,6 +62,11 @@ This release addresses numerous long-standing bugs that have accumulated over th
 * **Web**: Improved `styleimagemissing` handling (#725).
 * **Web**: Fixed JS Interop and WASM compilation in release mode (#714).
 * **Web**: Fixed missing prototype on empty JS object created via interop.
+* **Web**: `removeLayer` and `removeSource` no longer throw when the layer/source doesn't exist.
+* **Web**: `setGeoJsonSource` returns early instead of crashing when the source doesn't exist.
+* **Web**: `GeolocateControl` now respects `MyLocationTrackingMode` and triggers programmatically.
+* **Example**: GPS location page. Fixed web permission check, wired `onUserLocationUpdated`, web-specific tracking modes.
+* **Example**: GeoJSON cluster. Added `['has', 'point_count']` filter to fix null property errors on unclustered points.
 
 **Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 

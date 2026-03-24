@@ -49,9 +49,8 @@ import 'examples/advanced/map_snapshot.dart';
 
 void main() {
   if (kIsWeb) {
-    const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
     print(
-      'Running with WASM: $isRunningWithWasm, in ${kReleaseMode
+      'Running with WASM: $kIsWasm, in ${kReleaseMode
           ? "release"
           : kProfileMode
           ? "profile"

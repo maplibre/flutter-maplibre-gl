@@ -395,15 +395,15 @@ class LayerPropertyConverter {
             
             switch propertyName {
                 case "hillshade-illumination-direction":
-                    hillshadeLayer.hillshadeIlluminationDirection = expression
+                    hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
                 case "hillshade-illumination-anchor":
                     hillshadeLayer.hillshadeIlluminationAnchor = expression
                 case "hillshade-exaggeration":
                     hillshadeLayer.hillshadeExaggeration = expression
                 case "hillshade-shadow-color":
-                    hillshadeLayer.hillshadeShadowColor = expression
+                    hillshadeLayer.hillshadeShadowColor = wrapColorAsArray(expression)
                 case "hillshade-highlight-color":
-                    hillshadeLayer.hillshadeHighlightColor = expression
+                    hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
                 case "hillshade-accent-color":
                     hillshadeLayer.hillshadeAccentColor = expression
                 case "visibility":
@@ -454,6 +454,26 @@ class LayerPropertyConverter {
                     break
             }
         }
+    }
+
+    /// Wraps a single-color NSExpression in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
+    private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let color = expression.constantValue as? UIColor {
+            return NSExpression(forConstantValue: [color])
+        }
+        return expression
+    }
+
+    /// Wraps a single numeric NSExpression value in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeIlluminationDirection.
+    private class func wrapValueAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let number = expression.constantValue as? NSNumber {
+            return NSExpression(forConstantValue: [number])
+        }
+        return expression
     }
 
     private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {

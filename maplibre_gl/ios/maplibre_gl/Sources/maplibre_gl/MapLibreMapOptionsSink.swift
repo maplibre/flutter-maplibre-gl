@@ -21,4 +21,5 @@ protocol MapLibreMapOptionsSink {
     func setAttributionButtonMargins(x: Double, y: Double)
     func setAttributionButtonPosition(position: MLNOrnamentPosition)
     func setFeatureTapsTriggersMapClick(triggers: Bool)
+    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double)
 }

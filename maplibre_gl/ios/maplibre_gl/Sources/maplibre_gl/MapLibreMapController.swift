@@ -2161,6 +2161,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
+    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double) {
+        guard let locationManager = mapView.locationManager else { return }
+        let accuracy = enableHighAccuracy
+            ? kCLLocationAccuracyBest
+            : kCLLocationAccuracyHundredMeters
+        let filter = distanceFilter > 0
+            ? distanceFilter
+            : kCLDistanceFilterNone
+        locationManager.setDesiredAccuracy?(accuracy)
+        locationManager.setDistanceFilter?(filter)
+    }
+
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {
         switch myLocationRenderMode {
         case .Normal:

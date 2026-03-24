@@ -1,98 +1,170 @@
 part of '../maplibre_gl_platform_interface.dart';
 
-/// iOS is not supported at the moment.
+/// Location engine properties that apply across all platforms.
+///
+/// Use the platform-specific constructors to only set relevant properties:
+/// - [LocationEnginePlatforms.android] — [enableHighAccuracy], [interval], [displacement], [priority]
+/// - [LocationEnginePlatforms.iOS] — [enableHighAccuracy], [displacement]
+/// - [LocationEnginePlatforms.web] — [enableHighAccuracy], [maximumAge], [timeout]
 @immutable
 class LocationEnginePlatforms {
-  /// The properties for the Android platform.
-  final LocationEngineAndroidProperties androidPlatform;
+  // -- Common --
 
-  /// If [androidPlatform] is not provided, it defaults to [LocationEngineAndroidProperties.defaultProperties].
-  const LocationEnginePlatforms({
-    this.androidPlatform = LocationEngineAndroidProperties.defaultProperties,
-  });
+  /// Whether to use high accuracy (GPS) mode.
+  ///
+  /// On Android, maps to [LocationPriority.highAccuracy] vs [LocationPriority.balanced].
+  /// On iOS, maps to kCLLocationAccuracyBest vs kCLLocationAccuracyHundredMeters.
+  /// On web, maps to the browser's PositionOptions.enableHighAccuracy.
+  final bool enableHighAccuracy;
 
-  static const LocationEnginePlatforms defaultPlatform =
-      LocationEnginePlatforms();
+  // -- Android --
 
-  List<int> toList() {
-    if (kIsWeb) {
-      return [];
-    }
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return androidPlatform.toList();
-    }
-    return [];
-  }
-}
+  /// The interval in milliseconds for location updates. (Android only)
+  final int? interval;
 
-@immutable
-class LocationEngineAndroidProperties {
-  /// The interval in milliseconds for location updates.
-  final int interval;
+  /// The location priority for Android.
+  ///
+  /// When [enableHighAccuracy] is true, this defaults to [LocationPriority.highAccuracy].
+  /// When false, defaults to [LocationPriority.balanced].
+  /// Set explicitly to override.
+  final LocationPriority? priority;
+
+  // -- Android & iOS --
 
   /// The minimum displacement in meters for location updates.
-  final int displacement;
+  /// On iOS, mapped to CLLocationManager.distanceFilter.
+  final int? displacement;
 
-  /// [LocationPriority.highAccuracy] only uses native GPS provider
-  /// [LocationPriority.balanced] uses a fused provider (network + GPS)-> better quality indoor
-  /// [LocationPriority.lowPower] only uses network provider
-  /// [LocationPriority.noPower] only receives location updates when another clients request them
+  // -- Web --
+
+  /// Maximum age in milliseconds of a cached position that is acceptable
+  /// to return. 0 means the device must return a fresh position. (Web only)
+  final int? maximumAge;
+
+  /// Maximum time in milliseconds the device is allowed to take in order
+  /// to return a position. 0 means no timeout. (Web only)
+  final int? timeout;
+
+  const LocationEnginePlatforms._()
+    : enableHighAccuracy = false,
+      interval = null,
+      displacement = null,
+      priority = null,
+      maximumAge = null,
+      timeout = null;
+
+  /// Android-specific constructor.
   ///
-  final LocationPriority priority;
+  /// Exposes only properties relevant to the Android location engine:
+  /// [enableHighAccuracy], [interval], [displacement], and [priority].
+  const LocationEnginePlatforms.android({
+    this.enableHighAccuracy = false,
+    this.interval = 1000,
+    this.displacement = 0,
+    this.priority,
+  }) : maximumAge = null,
+       timeout = null;
 
-  const LocationEngineAndroidProperties({
-    required this.interval,
-    required this.displacement,
-    required this.priority,
-  });
+  /// iOS-specific constructor.
+  ///
+  /// Exposes only properties relevant to the iOS CLLocationManager:
+  /// [enableHighAccuracy] and [displacement] (mapped to distanceFilter).
+  const LocationEnginePlatforms.iOS({
+    this.enableHighAccuracy = false,
+    this.displacement = 0,
+  }) : interval = null,
+       priority = null,
+       maximumAge = null,
+       timeout = null;
 
-  static const LocationEngineAndroidProperties defaultProperties =
-      LocationEngineAndroidProperties(
-        interval: 1000,
-        displacement: 0,
-        priority: LocationPriority.balanced,
-      );
+  /// Web-specific constructor.
+  ///
+  /// Exposes only properties relevant to the browser's Geolocation API:
+  /// [enableHighAccuracy], [maximumAge], and [timeout].
+  const LocationEnginePlatforms.web({
+    this.enableHighAccuracy = false,
+    this.maximumAge = 0,
+    this.timeout = 0,
+  }) : interval = null,
+       displacement = null,
+       priority = null;
+
+  static const LocationEnginePlatforms defaultPlatform =
+      LocationEnginePlatforms._();
+
+  /// Resolved priority: explicit [priority] if set, otherwise derived from
+  /// [enableHighAccuracy].
+  LocationPriority get resolvedPriority =>
+      priority ??
+      (enableHighAccuracy
+          ? LocationPriority.highAccuracy
+          : LocationPriority.balanced);
+
+  /// Serializes properties for the current (or overridden) platform.
+  ///
+  /// When [targetPlatform] is provided, serialization uses that platform
+  /// regardless of the runtime environment. This is useful for testing.
+  List<int> toList({TargetPlatform? targetPlatform}) {
+    final platform = targetPlatform ?? defaultTargetPlatform;
+    if (targetPlatform == null && kIsWeb) {
+      return [
+        if (enableHighAccuracy) 1 else 0,
+        maximumAge ?? 0,
+        timeout ?? 0,
+      ];
+    } else if (platform == TargetPlatform.android) {
+      return [
+        interval ?? 1000,
+        resolvedPriority.index,
+        displacement ?? 0,
+      ];
+    } else if (platform == TargetPlatform.iOS) {
+      return [
+        if (enableHighAccuracy) 1 else 0,
+        displacement ?? 0,
+      ];
+    }
+
+    // Fallback empty list for unsupported platforms (e.g. desktop).
+    return [];
+  }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is LocationEngineAndroidProperties &&
+      (other is LocationEnginePlatforms &&
           runtimeType == other.runtimeType &&
+          enableHighAccuracy == other.enableHighAccuracy &&
           interval == other.interval &&
           displacement == other.displacement &&
-          priority == other.priority);
+          priority == other.priority &&
+          maximumAge == other.maximumAge &&
+          timeout == other.timeout);
 
   @override
-  int get hashCode =>
-      interval.hashCode ^ displacement.hashCode ^ priority.hashCode;
+  int get hashCode => Object.hash(
+    enableHighAccuracy,
+    interval,
+    displacement,
+    priority,
+    maximumAge,
+    timeout,
+  );
 
   @override
   String toString() {
-    return 'LocationEngineAndroidProperties{ interval: $interval, displacement: $displacement, priority: $priority }';
-  }
-
-  LocationEngineAndroidProperties copyWith({
-    int? interval,
-    int? displacement,
-    LocationPriority? priority,
-  }) {
-    return LocationEngineAndroidProperties(
-      interval: interval ?? this.interval,
-      displacement: displacement ?? this.displacement,
-      priority: priority ?? this.priority,
-    );
-  }
-
-  List<int> toList() {
-    return [
-      interval,
-      priority.index,
-      displacement,
-    ];
+    final parts = <String>['enableHighAccuracy: $enableHighAccuracy'];
+    if (interval != null) parts.add('interval: $interval');
+    if (displacement != null) parts.add('displacement: $displacement');
+    if (priority != null) parts.add('priority: $priority');
+    if (maximumAge != null) parts.add('maximumAge: $maximumAge');
+    if (timeout != null) parts.add('timeout: $timeout');
+    return 'LocationEnginePlatforms{ ${parts.join(', ')} }';
   }
 }
 
 /// An enum representing the priority for location accuracy and power usage.
+/// (Android only)
 enum LocationPriority {
   /// High accuracy, may consume more power.
   highAccuracy,

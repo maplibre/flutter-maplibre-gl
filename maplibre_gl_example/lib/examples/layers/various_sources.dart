@@ -108,6 +108,10 @@ class FullMapState extends State<FullMap> {
           40,
         ],
       ),
+      filter: [
+        'has',
+        'point_count',
+      ],
     );
     await controller.addLayer(
       "earthquakes",
@@ -117,6 +121,22 @@ class FullMapState extends State<FullMap> {
         textFont: ['Open Sans Semibold'],
         textSize: 12,
       ),
+      filter: [
+        'has',
+        'point_count',
+      ],
+    );
+    await controller.addLayer(
+      "earthquakes",
+      "earthquakes-unclustered",
+      const CircleLayerProperties(
+        circleColor: '#51bbd6',
+        circleRadius: 5,
+      ),
+      filter: [
+        '!',
+        ['has', 'point_count'],
+      ],
     );
   }
 
@@ -480,7 +500,7 @@ class FullMapState extends State<FullMap> {
             initialCameraPosition: styleInfo.position,
             onStyleLoadedCallback: _onStyleLoadedCallback,
             logoEnabled: true,
-            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+            attributionButtonPosition: AttributionButtonPosition.topRight,
           ),
           Container(
             padding: const EdgeInsets.all(8),

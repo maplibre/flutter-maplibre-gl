@@ -4,11 +4,16 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* `LocationEnginePlatforms` unnamed constructor is now private. Use `.android()`, `.iOS()`, `.web()`, or `.defaultPlatform`.
+* Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.
 
 ### Added
 * Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
 * `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks (#729).
 * Feature state management APIs (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
+* Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()`.
+* iOS and web serialization support in `toList()`.
+* Expanded unit tests for platform-specific serialization and constructor behavior.
 
 ### Changed
 * Updated to align with main package v0.26.0.

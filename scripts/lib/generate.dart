@@ -174,6 +174,15 @@ Map<String, dynamic> buildStyleProperty(
       dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
 
+  // MapLibre 6.24.0+ changed some hillshade properties to array types
+  // for multidirectional hillshading support.
+  var iosExpression = 'expression';
+  if (key == 'hillshade-shadow-color' || key == 'hillshade-highlight-color') {
+    iosExpression = 'wrapColorAsArray(expression)';
+  } else if (key == 'hillshade-illumination-direction') {
+    iosExpression = 'wrapValueAsArray(expression)';
+  }
+
   return <String, dynamic>{
     'value': key,
     'isFloatArrayProperty': typeDart == "List" && nestedTypeDart == "double",
@@ -183,6 +192,7 @@ Map<String, dynamic> buildStyleProperty(
     'isFontProperty': key == "text-font",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),
     'iosAsCamelCase': renamedIosProperties[camelCase],
+    'iosExpression': iosExpression,
     'doc': value["doc"],
     'docSplit': buildDocSplit(value).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,

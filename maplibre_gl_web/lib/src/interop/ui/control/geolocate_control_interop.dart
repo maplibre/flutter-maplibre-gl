@@ -63,5 +63,32 @@ extension GeolocateControlJsImplExtension on GeolocateControlJsImpl {
 
   external void onRemove(MapLibreMapJsImpl map);
 
-  external void trigger();
+  external bool trigger();
+}
+
+/// The event data fired by GeolocateControl's 'geolocate' event.
+/// This is a MapLibre GL JS Event with GeolocationPosition properties
+/// (coords, timestamp) spread onto it.
+@JS()
+@staticInterop
+class GeolocateResultEventJsImpl {}
+
+extension GeolocateResultEventJsImplExtension on GeolocateResultEventJsImpl {
+  external GeolocationCoordsJsImpl get coords;
+  external num get timestamp;
+}
+
+/// Interop for the browser's GeolocationCoordinates interface.
+@JS()
+@staticInterop
+class GeolocationCoordsJsImpl {}
+
+extension GeolocationCoordsJsImplExtension on GeolocationCoordsJsImpl {
+  external num get latitude;
+  external num get longitude;
+  external num? get altitude;
+  external num? get accuracy;
+  external num? get altitudeAccuracy;
+  external num? get heading;
+  external num? get speed;
 }
