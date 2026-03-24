@@ -249,6 +249,15 @@ void main() {
     });
   });
 
+  group('Unsupported platform serialization', () {
+    test('returns empty list for desktop platforms', () {
+      const props = LocationEnginePlatforms.android();
+      expect(props.toList(targetPlatform: TargetPlatform.linux), isEmpty);
+      expect(props.toList(targetPlatform: TargetPlatform.windows), isEmpty);
+      expect(props.toList(targetPlatform: TargetPlatform.macOS), isEmpty);
+    });
+  });
+
   group('LocationPriority', () {
     test('enum values exist', () {
       expect(LocationPriority.values.length, 4);
