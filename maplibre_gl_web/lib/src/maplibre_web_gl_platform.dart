@@ -20,7 +20,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   bool _trackCameraPosition = false;
   GeolocateControl? _geolocateControl;
-  bool _enableHighAccuracy = true;
+  bool _enableHighAccuracy = false;
   int _maximumAge = 0;
   int _timeout = 0;
   bool _trackUserLocation = false;
