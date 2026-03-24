@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -187,24 +188,25 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
             ),
           ],
         ),
-        _buildControlCard(
-          title: 'Scale (Web only)',
-          icon: Icons.straighten,
-          enabled: _scaleControlEnabled,
-          onToggle: _updateScaleControl,
-          rows: [
-            ControlRow(
-              label: 'Position',
-              value: _scalePosition.name.capitalize(),
-              onPressed: _cycleScalePosition,
-            ),
-            ControlRow(
-              label: 'Unit',
-              value: _scaleUnit.name.capitalize(),
-              onPressed: _cycleScaleUnit,
-            ),
-          ],
-        ),
+        if (kIsWeb)
+          _buildControlCard(
+            title: 'Scale (Web only)',
+            icon: Icons.straighten,
+            enabled: _scaleControlEnabled,
+            onToggle: _updateScaleControl,
+            rows: [
+              ControlRow(
+                label: 'Position',
+                value: _scalePosition.name.capitalize(),
+                onPressed: _cycleScalePosition,
+              ),
+              ControlRow(
+                label: 'Unit',
+                value: _scaleUnit.name.capitalize(),
+                onPressed: _cycleScaleUnit,
+              ),
+            ],
+          ),
       ],
     );
   }
