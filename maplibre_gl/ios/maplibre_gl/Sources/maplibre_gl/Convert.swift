@@ -90,6 +90,17 @@ class Convert {
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
+        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter]
+        if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
+           locationEngineProperties.count >= 2
+        {
+            let enableHighAccuracy = locationEngineProperties[0] == 1
+            let distanceFilter = Double(locationEngineProperties[1])
+            delegate.setLocationEngineProperties(
+                enableHighAccuracy: enableHighAccuracy,
+                distanceFilter: distanceFilter
+            )
+        }
     }
     
     class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {

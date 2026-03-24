@@ -20,6 +20,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   bool _trackCameraPosition = false;
   GeolocateControl? _geolocateControl;
+  bool _enableHighAccuracy = false;
+  int _maximumAge = 0;
+  int _timeout = 0;
+  bool _trackUserLocation = false;
   LatLng? _myLastLocation;
 
   String? _navigationControlPosition;
@@ -610,7 +614,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> removeSource(String sourceId) async {
-    _map.removeSource(sourceId);
+    if (_map.getSource(sourceId) != null) {
+      _map.removeSource(sourceId);
+    }
   }
 
   CameraPosition? _getCameraPosition() {
@@ -726,6 +732,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onCameraTrackingChanged(bool isTracking) {
+    _trackUserLocation = isTracking;
     if (isTracking) {
       onCameraTrackingChangedPlatform(MyLocationTrackingMode.tracking);
     } else {
@@ -737,28 +744,44 @@ class MapLibreMapController extends MapLibrePlatform
     onCameraTrackingDismissedPlatform(null);
   }
 
-  void _addGeolocateControl({bool trackUserLocation = false}) {
+  void _addGeolocateControl() {
     _removeGeolocateControl();
     _geolocateControl = GeolocateControl(
       GeolocateControlOptions(
-        positionOptions: PositionOptions(enableHighAccuracy: true),
-        trackUserLocation: trackUserLocation,
+        positionOptions: PositionOptions(
+          enableHighAccuracy: _enableHighAccuracy,
+          maximumAge: _maximumAge > 0 ? _maximumAge : null,
+          timeout: _timeout > 0 ? _timeout : null,
+        ),
+        trackUserLocation: _trackUserLocation,
         showAccuracyCircle: true,
         showUserLocation: true,
       ),
     );
     _geolocateControl!.on('geolocate', (e) {
-      _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
+      final event = GeolocateResultEvent.fromJsObject(
+        e as GeolocateResultEventJsImpl,
+      );
+      final coords = event.coords;
+      _myLastLocation = LatLng(
+        coords.latitude.toDouble(),
+        coords.longitude.toDouble(),
+      );
       onUserLocationUpdatedPlatform(
         UserLocation(
-          position: LatLng(e.coords.latitude, e.coords.longitude),
-          altitude: e.coords.altitude,
-          bearing: e.coords.heading,
-          speed: e.coords.speed,
-          horizontalAccuracy: e.coords.accuracy,
-          verticalAccuracy: e.coords.altitudeAccuracy,
+          position: LatLng(
+            coords.latitude.toDouble(),
+            coords.longitude.toDouble(),
+          ),
+          altitude: coords.altitude?.toDouble(),
+          bearing: coords.heading?.toDouble(),
+          speed: coords.speed?.toDouble(),
+          horizontalAccuracy: coords.accuracy?.toDouble(),
+          verticalAccuracy: coords.altitudeAccuracy?.toDouble(),
           heading: null,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp),
+          timestamp: DateTime.fromMillisecondsSinceEpoch(
+            event.timestamp.toInt(),
+          ),
         ),
       );
     });
@@ -770,6 +793,18 @@ class MapLibreMapController extends MapLibrePlatform
       _onCameraTrackingDismissed();
     });
     _map.addControl(_geolocateControl, 'bottom-right');
+  }
+
+  /// Triggers the geolocate control, retrying if the control's internal
+  /// async setup hasn't completed yet (e.g. geolocation permission check).
+  void _triggerGeolocateControl([int retries = 5]) {
+    if (_geolocateControl == null) return;
+    final success = _geolocateControl!.trigger();
+    if (!success && retries > 0) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _triggerGeolocateControl(retries - 1);
+      });
+    }
   }
 
   void _removeGeolocateControl() {
@@ -1004,11 +1039,30 @@ class MapLibreMapController extends MapLibrePlatform
       //myLocationEnabled is false, ignore myLocationTrackingMode
       return;
     }
-    if (myLocationTrackingMode == 0) {
+    final shouldTrack = myLocationTrackingMode != 0;
+    if (shouldTrack != _trackUserLocation) {
+      _trackUserLocation = shouldTrack;
       _addGeolocateControl();
-    } else {
-      print('Only one tracking mode available in web');
-      _addGeolocateControl(trackUserLocation: true);
+      _triggerGeolocateControl();
+    }
+  }
+
+  @override
+  void setLocationEngineProperties({
+    required bool enableHighAccuracy,
+    required int maximumAge,
+    required int timeout,
+  }) {
+    final changed =
+        enableHighAccuracy != _enableHighAccuracy ||
+        maximumAge != _maximumAge ||
+        timeout != _timeout;
+    _enableHighAccuracy = enableHighAccuracy;
+    _maximumAge = maximumAge;
+    _timeout = timeout;
+    if (changed && _geolocateControl != null) {
+      _addGeolocateControl();
+      _triggerGeolocateControl();
     }
   }
 
@@ -1106,7 +1160,9 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> removeLayer(String imageLayerId) async {
     _interactiveFeatureLayerIds.remove(imageLayerId);
-    _map.removeLayer(imageLayerId);
+    if (_map.getLayer(imageLayerId) != null) {
+      _map.removeLayer(imageLayerId);
+    }
   }
 
   @override
@@ -1160,7 +1216,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojson,
   ) async {
-    final source = _map.getSource(sourceId) as GeoJsonSource;
+    final source = _map.getSource(sourceId);
+    if (source == null) return;
+    if (source is! GeoJsonSource) {
+      // Source exists but is not a GeoJsonSource; nothing to update.
+      return;
+    }
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     source.setData(data);

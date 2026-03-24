@@ -22,20 +22,20 @@ class LayerPropertyConverter {
                 {{#paint_properties}}
                 case "{{{value}}}":
                 {{#isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{iosAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{valueAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
                 {{/isIosAsCamelCase}}
                 {{/paint_properties}}
                 {{#layout_properties}}
                 case "{{{value}}}":
                 {{^isVisibilityProperty}}
                 {{#isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{iosAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
                 {{/isIosAsCamelCase}}
                 {{^isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{valueAsCamelCase}} = expression
+                    {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
                 {{/isIosAsCamelCase}}
                 {{/isVisibilityProperty}}
                 {{#isVisibilityProperty}}
@@ -54,6 +54,26 @@ class LayerPropertyConverter {
     }
 
 {{/layerTypes}}
+    /// Wraps a single-color NSExpression in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
+    private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let color = expression.constantValue as? UIColor {
+            return NSExpression(forConstantValue: [color])
+        }
+        return expression
+    }
+
+    /// Wraps a single numeric NSExpression value in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeIlluminationDirection.
+    private class func wrapValueAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let number = expression.constantValue as? NSNumber {
+            return NSExpression(forConstantValue: [number])
+        }
+        return expression
+    }
+
     private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {
         let isColor = propertyName.contains("color");
         let isOffset = propertyName.contains("offset");

@@ -13,10 +13,15 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
 * Added `getLayerVisibility`, web snapshot, and map sizing features (#722).
 * Added Scale Control (#720).
+* Location engine properties support — `enableHighAccuracy`, `maximumAge`, `timeout` from `LocationEnginePlatforms.web()` passed to `GeolocateControl`'s `PositionOptions`.
+* `trackUserLocation` on `GeolocateControl` managed based on `MyLocationTrackingMode`.
+* `GeolocateControl.trigger()` called programmatically when tracking mode is enabled.
 
 ### Fixed
 * Improved `styleimagemissing` handling (#725).
 * Fixed JS Interop and WASM compilation in release mode (#714).
+* `removeLayer` and `removeSource` no longer throw when the layer/source doesn't exist.
+* `setGeoJsonSource` returns early instead of crashing when the source doesn't exist.
 
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
