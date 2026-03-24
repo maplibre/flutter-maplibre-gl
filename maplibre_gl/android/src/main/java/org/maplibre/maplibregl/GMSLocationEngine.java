@@ -75,7 +75,9 @@ public class GMSLocationEngine implements LocationEngineImpl<LocationCallback> {
 
     @Override
     public void removeLocationUpdates(@NonNull LocationCallback listener) {
-        fusedLocationProviderClient.removeLocationUpdates(listener);
+        if (listener != null) {
+            fusedLocationProviderClient.removeLocationUpdates(listener);
+        }
     }
 
     @Override
@@ -163,11 +165,11 @@ public class GMSLocationEngine implements LocationEngineImpl<LocationCallback> {
         public void onLocationAvailability(@NonNull LocationAvailability locationAvailability) {
             super.onLocationAvailability(locationAvailability);
             if (!locationAvailability.isLocationAvailable()) {
-                // This callback indicates that location is not available, which can be
-                // treated as a failure or a temporary state.
-                // For simplicity, we'll forward this as a failure, similar to onProviderDisabled.
-                callback.onFailure(new Exception("Location not available. " +
-                        "Check location settings and permissions."));
+                // This is often a transient state (e.g. brief GPS signal loss, provider switch).
+                // Location updates may still arrive via onLocationResult, so we only log a
+                // warning instead of propagating a failure to avoid noisy error spam.
+                Log.w(TAG, "Location temporarily unavailable. You can still receive location updates.");
+                
             }
         }
     }
