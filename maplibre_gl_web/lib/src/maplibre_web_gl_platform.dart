@@ -1193,6 +1193,10 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final rawSource = _map.getSource(sourceId);
     if (rawSource == null) return;
+    if (rawSource is! GeoJsonSource) {
+      // Source exists but is not a GeoJsonSource; nothing to update.
+      return;
+    }
     final source = rawSource as GeoJsonSource;
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
