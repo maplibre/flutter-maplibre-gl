@@ -120,11 +120,9 @@ class LocationEnginePlatforms {
       ];
     }
 
-    // Fallback
-    return [
-      if (enableHighAccuracy) 1 else 0,
-      displacement ?? 0,
-    ];
+    // Fallback for unsupported/future platforms: use an empty list to avoid
+    // ambiguous payloads that could be misinterpreted as iOS-style data.
+    return [];
   }
 
   @override
