@@ -100,28 +100,32 @@ class LocationEnginePlatforms {
           ? LocationPriority.highAccuracy
           : LocationPriority.balanced);
 
-  List<int> toList() {
-    if (kIsWeb) {
+  /// Serializes properties for the current (or overridden) platform.
+  ///
+  /// When [targetPlatform] is provided, serialization uses that platform
+  /// regardless of the runtime environment. This is useful for testing.
+  List<int> toList({TargetPlatform? targetPlatform}) {
+    final platform = targetPlatform ?? defaultTargetPlatform;
+    if (targetPlatform == null && kIsWeb) {
       return [
         if (enableHighAccuracy) 1 else 0,
         maximumAge ?? 0,
         timeout ?? 0,
       ];
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
+    } else if (platform == TargetPlatform.android) {
       return [
         interval ?? 1000,
         resolvedPriority.index,
         displacement ?? 0,
       ];
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    } else if (platform == TargetPlatform.iOS) {
       return [
         if (enableHighAccuracy) 1 else 0,
         displacement ?? 0,
       ];
     }
 
-    // Fallback for unsupported/future platforms: use an empty list to avoid
-    // ambiguous payloads that could be misinterpreted as iOS-style data.
+    // Fallback empty list for unsupported platforms (e.g. desktop).
     return [];
   }
 

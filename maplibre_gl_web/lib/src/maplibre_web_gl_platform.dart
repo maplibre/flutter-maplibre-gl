@@ -732,6 +732,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onCameraTrackingChanged(bool isTracking) {
+    _trackUserLocation = isTracking;
     if (isTracking) {
       onCameraTrackingChangedPlatform(MyLocationTrackingMode.tracking);
     } else {
@@ -758,17 +759,25 @@ class MapLibreMapController extends MapLibrePlatform
       ),
     );
     _geolocateControl!.on('geolocate', (e) {
-      _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
+      final event = GeolocateResultEvent.fromJsObject(
+        e as GeolocateResultEventJsImpl,
+      );
+      final coords = event.coords;
+      _myLastLocation =
+          LatLng(coords.latitude.toDouble(), coords.longitude.toDouble());
       onUserLocationUpdatedPlatform(
         UserLocation(
-          position: LatLng(e.coords.latitude, e.coords.longitude),
-          altitude: e.coords.altitude,
-          bearing: e.coords.heading,
-          speed: e.coords.speed,
-          horizontalAccuracy: e.coords.accuracy,
-          verticalAccuracy: e.coords.altitudeAccuracy,
+          position:
+              LatLng(coords.latitude.toDouble(), coords.longitude.toDouble()),
+          altitude: coords.altitude?.toDouble(),
+          bearing: coords.heading?.toDouble(),
+          speed: coords.speed?.toDouble(),
+          horizontalAccuracy: coords.accuracy?.toDouble(),
+          verticalAccuracy: coords.altitudeAccuracy?.toDouble(),
           heading: null,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp),
+          timestamp: DateTime.fromMillisecondsSinceEpoch(
+            event.timestamp.toInt(),
+          ),
         ),
       );
     });
@@ -780,6 +789,18 @@ class MapLibreMapController extends MapLibrePlatform
       _onCameraTrackingDismissed();
     });
     _map.addControl(_geolocateControl, 'bottom-right');
+  }
+
+  /// Triggers the geolocate control, retrying if the control's internal
+  /// async setup hasn't completed yet (e.g. geolocation permission check).
+  void _triggerGeolocateControl([int retries = 5]) {
+    if (_geolocateControl == null) return;
+    final success = _geolocateControl!.trigger();
+    if (!success && retries > 0) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _triggerGeolocateControl(retries - 1);
+      });
+    }
   }
 
   void _removeGeolocateControl() {
@@ -1018,9 +1039,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (shouldTrack != _trackUserLocation) {
       _trackUserLocation = shouldTrack;
       _addGeolocateControl();
-    }
-    if (shouldTrack) {
-      _geolocateControl?.trigger();
+      _triggerGeolocateControl();
     }
   }
 
@@ -1030,14 +1049,15 @@ class MapLibreMapController extends MapLibrePlatform
     required int maximumAge,
     required int timeout,
   }) {
+    final changed = enableHighAccuracy != _enableHighAccuracy ||
+        maximumAge != _maximumAge ||
+        timeout != _timeout;
     _enableHighAccuracy = enableHighAccuracy;
     _maximumAge = maximumAge;
     _timeout = timeout;
-    if (_geolocateControl != null) {
+    if (changed && _geolocateControl != null) {
       _addGeolocateControl();
-      if (_trackUserLocation) {
-        _geolocateControl?.trigger();
-      }
+      _triggerGeolocateControl();
     }
   }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
@@ -153,25 +153,22 @@ void main() {
   });
 
   group('Android serialization', () {
-    setUp(() {
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    });
-
-    tearDown(() {
-      debugDefaultTargetPlatformOverride = null;
-    });
+    const platform = TargetPlatform.android;
 
     test(
       'default toList() returns [interval, priority.index, displacement]',
       () {
         const props = LocationEnginePlatforms.android();
-        expect(props.toList(), [1000, LocationPriority.balanced.index, 0]);
+        expect(
+          props.toList(targetPlatform: platform),
+          [1000, LocationPriority.balanced.index, 0],
+        );
       },
     );
 
     test('high accuracy maps to priority index 0', () {
       const props = LocationEnginePlatforms.android(enableHighAccuracy: true);
-      final list = props.toList();
+      final list = props.toList(targetPlatform: platform);
       expect(list[1], LocationPriority.highAccuracy.index);
     });
 
@@ -180,7 +177,7 @@ void main() {
         enableHighAccuracy: true,
         priority: LocationPriority.lowPower,
       );
-      final list = props.toList();
+      final list = props.toList(targetPlatform: platform);
       expect(list[1], LocationPriority.lowPower.index);
     });
 
@@ -190,13 +187,16 @@ void main() {
         interval: 500,
         displacement: 10,
       );
-      expect(props.toList(), [500, LocationPriority.highAccuracy.index, 10]);
+      expect(
+        props.toList(targetPlatform: platform),
+        [500, LocationPriority.highAccuracy.index, 10],
+      );
     });
 
     test('all priority values serialize correctly', () {
       for (final priority in LocationPriority.values) {
         final props = LocationEnginePlatforms.android(priority: priority);
-        expect(props.toList()[1], priority.index);
+        expect(props.toList(targetPlatform: platform)[1], priority.index);
       }
     });
 
@@ -206,32 +206,29 @@ void main() {
         timeout: 5000,
       );
       // Only interval, priority, displacement (all defaults)
-      expect(props.toList(), [1000, LocationPriority.balanced.index, 0]);
+      expect(
+        props.toList(targetPlatform: platform),
+        [1000, LocationPriority.balanced.index, 0],
+      );
     });
   });
 
   group('iOS serialization', () {
-    setUp(() {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    });
-
-    tearDown(() {
-      debugDefaultTargetPlatformOverride = null;
-    });
+    const platform = TargetPlatform.iOS;
 
     test('default toList() returns [0, 0]', () {
       const props = LocationEnginePlatforms.iOS();
-      expect(props.toList(), [0, 0]);
+      expect(props.toList(targetPlatform: platform), [0, 0]);
     });
 
     test('high accuracy serializes as 1', () {
       const props = LocationEnginePlatforms.iOS(enableHighAccuracy: true);
-      expect(props.toList(), [1, 0]);
+      expect(props.toList(targetPlatform: platform), [1, 0]);
     });
 
     test('displacement maps to distanceFilter', () {
       const props = LocationEnginePlatforms.iOS(displacement: 50);
-      expect(props.toList(), [0, 50]);
+      expect(props.toList(targetPlatform: platform), [0, 50]);
     });
 
     test('combined high accuracy and displacement', () {
@@ -239,7 +236,7 @@ void main() {
         enableHighAccuracy: true,
         displacement: 25,
       );
-      expect(props.toList(), [1, 25]);
+      expect(props.toList(targetPlatform: platform), [1, 25]);
     });
 
     test('android-only and web-only fields are ignored', () {
@@ -248,7 +245,7 @@ void main() {
         priority: LocationPriority.noPower,
       );
       // iOS only serializes enableHighAccuracy and displacement
-      expect(props.toList(), [0, 0]);
+      expect(props.toList(targetPlatform: platform), [0, 0]);
     });
   });
 

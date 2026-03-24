@@ -500,7 +500,7 @@ class FullMapState extends State<FullMap> {
             initialCameraPosition: styleInfo.position,
             onStyleLoadedCallback: _onStyleLoadedCallback,
             logoEnabled: true,
-            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+            attributionButtonPosition: AttributionButtonPosition.topRight,
           ),
           Container(
             padding: const EdgeInsets.all(8),

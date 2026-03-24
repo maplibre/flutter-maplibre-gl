@@ -63,6 +63,12 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
     setState(() => _controller = controller);
   }
 
+  void _onCameraTrackingChanged(MyLocationTrackingMode mode) {
+    if (mounted) {
+      setState(() => _trackingMode = mode);
+    }
+  }
+
   void _onUserLocationUpdated(UserLocation location) {
     if (mounted) {
       setState(() {
@@ -85,6 +91,14 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
       setState(() => _permissionStatus = status);
     }
   }
+
+  static const _highAccuracyProperties = kIsWeb
+      ? LocationEnginePlatforms.web(enableHighAccuracy: true)
+      : LocationEnginePlatforms.android(
+          enableHighAccuracy: true,
+          interval: 1000,
+          displacement: 1,
+        );
 
   Future<void> _toggleAccuracy() async {
     setState(() => _useHighAccuracy = !_useHighAccuracy);
@@ -152,6 +166,7 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
         styleString: ExampleConstants.demoMapStyle,
         onMapCreated: _onMapCreated,
         onUserLocationUpdated: _onUserLocationUpdated,
+        onCameraTrackingChanged: _onCameraTrackingChanged,
         initialCameraPosition: const CameraPosition(
           target: LatLng(37.3, -121.8),
           zoom: 7,
@@ -161,11 +176,7 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
         myLocationTrackingMode: _trackingMode,
         locationEnginePlatforms:
             _useHighAccuracy
-                ? const LocationEnginePlatforms.android(
-                  enableHighAccuracy: true,
-                  interval: 1000,
-                  displacement: 1,
-                )
+                ? _highAccuracyProperties
                 : LocationEnginePlatforms.defaultPlatform,
       ),
       controls: [

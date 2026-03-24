@@ -107,8 +107,33 @@ class GeolocateControl extends Evented {
   /// Trigger a geolocation
   ///
   /// @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
-  trigger() => jsObject.trigger();
+  bool trigger() => jsObject.trigger();
 
   /// Creates a new Camera from a [jsObject].
   GeolocateControl.fromJsObject(this.jsObject) : super.fromJsObject(jsObject);
+}
+
+/// Dart wrapper for the geolocate event data.
+/// The MapLibre GL JS 'geolocate' event contains the browser's
+/// GeolocationPosition properties (coords, timestamp) spread onto the event.
+class GeolocateResultEvent
+    extends JsObjectWrapper<GeolocateResultEventJsImpl> {
+  GeolocationCoords get coords =>
+      GeolocationCoords.fromJsObject(jsObject.coords);
+  num get timestamp => jsObject.timestamp;
+
+  GeolocateResultEvent.fromJsObject(super.jsObject) : super.fromJsObject();
+}
+
+/// Dart wrapper for the browser's GeolocationCoordinates interface.
+class GeolocationCoords extends JsObjectWrapper<GeolocationCoordsJsImpl> {
+  num get latitude => jsObject.latitude;
+  num get longitude => jsObject.longitude;
+  num? get altitude => jsObject.altitude;
+  num? get accuracy => jsObject.accuracy;
+  num? get altitudeAccuracy => jsObject.altitudeAccuracy;
+  num? get heading => jsObject.heading;
+  num? get speed => jsObject.speed;
+
+  GeolocationCoords.fromJsObject(super.jsObject) : super.fromJsObject();
 }
