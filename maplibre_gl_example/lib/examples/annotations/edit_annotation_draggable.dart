@@ -205,7 +205,7 @@ class _EditAnnotationDraggableBodyState
         ),
         onMapCreated: _onMapCreated,
         onStyleLoadedCallback: _onStyleLoaded,
-        styleString: ExampleConstants.localStyleAsset,
+        styleString: ExampleConstants.demoMapStyle,
       ),
       controls: [_buildControls(hasController, totalCount)],
     );

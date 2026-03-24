@@ -62,13 +62,6 @@ class _EditStyleLayerDraggableBodyState
     Annotation? annotation,
     DragEventType eventType,
   ) {
-    dev.log(
-      'Feature dragged: $id, '
-      'type: ${eventType.name}, '
-      'origin: ${origin.latitude},${origin.longitude}, '
-      'current: ${current.latitude},${current.longitude}',
-    );
-
     setState(() {
       _draggedFeatureId = id;
       _lastDragEvent = eventType;
