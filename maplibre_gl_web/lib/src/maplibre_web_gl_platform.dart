@@ -1216,13 +1216,12 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojson,
   ) async {
-    final rawSource = _map.getSource(sourceId);
-    if (rawSource == null) return;
-    if (rawSource is! GeoJsonSource) {
+    final source = _map.getSource(sourceId);
+    if (source == null) return;
+    if (source is! GeoJsonSource) {
       // Source exists but is not a GeoJsonSource; nothing to update.
       return;
     }
-    final source = rawSource as GeoJsonSource;
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     source.setData(data);
