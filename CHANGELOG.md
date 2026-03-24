@@ -10,6 +10,7 @@ This release addresses numerous long-standing bugs that have accumulated over th
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* `requestMyLocationLatLng()` now returns `Future<LatLng?>` instead of `Future<LatLng>`. Returns `null` when the user's location is unavailable (#372).
 * Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
 Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead.
 * Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
