@@ -1620,20 +1620,20 @@ final class MapLibreMapController
                       reply.put("altitude", lastLocation.getAltitude());
                       result.success(reply);
                     } else {
-                      result.error("", "", null); // ???
+                      result.error("LOCATION_UNAVAILABLE",
+                          "Last location is not available", null);
                     }
                   }
 
                   @Override
                   public void onFailure(@NonNull Exception exception) {
-                    result.error("", "", null); // ???
+                    result.error("LOCATION_ENGINE_FAILURE",
+                        "Failed to get last location: " + exception.getMessage(), null);
                   }
                 });
           } else {
-            result.error(
-                "LOCATION DISABLED",
-                "Location is disabled or location component is unavailable",
-                null);
+            result.error("LOCATION_DISABLED",
+                "Location is disabled or location component is unavailable", null);
           }
           break;
         }

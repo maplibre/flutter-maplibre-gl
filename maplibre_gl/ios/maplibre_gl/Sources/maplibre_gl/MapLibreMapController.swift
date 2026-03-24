@@ -247,7 +247,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 reply["longitude"] = loc.longitude as NSObject
                 result(reply)
             } else {
-                result(nil)
+                result(
+                    FlutterError(
+                        code: "LOCATION_UNAVAILABLE",
+                        message: "User location is not available",
+                        details: nil
+                    )
+                )
             }
         case "map#setMapLanguage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
