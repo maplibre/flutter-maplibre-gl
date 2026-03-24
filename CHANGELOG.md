@@ -5,13 +5,15 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
-**Version 0.26.0 is a milestone release for flutter-maplibre-gl.** \
-This release addresses numerous long-standing bugs that have accumulated over the years and completes the transition to the **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.
+#### Version 0.26.0 marks a milestone for `flutter-maplibre-gl`
+This release resolves numerous long-standing bugs accumulated over the years and completes the transition to **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.\
+It also introduces a new Example App for users to explore the latest features - see [maplibre_gl_example](maplibre_gl_example/) for details.
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* `requestMyLocationLatLng()` now returns `Future<LatLng?>` instead of `Future<LatLng>`. Returns `null` when the user's location is unavailable (#784).
 * Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
-Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead.
+Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead (#774).
 * Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
 * Removed deprecated callback: `onInfoWindowTapped` from `MapLibreMapController`.
 * Removed deprecated methods: `removeImageSource` (use `removeSource`) and `addLayerBelow` (use `addImageLayerBelow`).
