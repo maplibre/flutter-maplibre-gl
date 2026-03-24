@@ -116,8 +116,7 @@ class GeolocateControl extends Evented {
 /// Dart wrapper for the geolocate event data.
 /// The MapLibre GL JS 'geolocate' event contains the browser's
 /// GeolocationPosition properties (coords, timestamp) spread onto the event.
-class GeolocateResultEvent
-    extends JsObjectWrapper<GeolocateResultEventJsImpl> {
+class GeolocateResultEvent extends JsObjectWrapper<GeolocateResultEventJsImpl> {
   GeolocationCoords get coords =>
       GeolocationCoords.fromJsObject(jsObject.coords);
   num get timestamp => jsObject.timestamp;

@@ -92,13 +92,14 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
     }
   }
 
-  static const _highAccuracyProperties = kIsWeb
-      ? LocationEnginePlatforms.web(enableHighAccuracy: true)
-      : LocationEnginePlatforms.android(
-          enableHighAccuracy: true,
-          interval: 1000,
-          displacement: 1,
-        );
+  static const _highAccuracyProperties =
+      kIsWeb
+          ? LocationEnginePlatforms.web(enableHighAccuracy: true)
+          : LocationEnginePlatforms.android(
+            enableHighAccuracy: true,
+            interval: 1000,
+            displacement: 1,
+          );
 
   Future<void> _toggleAccuracy() async {
     setState(() => _useHighAccuracy = !_useHighAccuracy);

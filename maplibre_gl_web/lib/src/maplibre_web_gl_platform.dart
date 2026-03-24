@@ -763,12 +763,16 @@ class MapLibreMapController extends MapLibrePlatform
         e as GeolocateResultEventJsImpl,
       );
       final coords = event.coords;
-      _myLastLocation =
-          LatLng(coords.latitude.toDouble(), coords.longitude.toDouble());
+      _myLastLocation = LatLng(
+        coords.latitude.toDouble(),
+        coords.longitude.toDouble(),
+      );
       onUserLocationUpdatedPlatform(
         UserLocation(
-          position:
-              LatLng(coords.latitude.toDouble(), coords.longitude.toDouble()),
+          position: LatLng(
+            coords.latitude.toDouble(),
+            coords.longitude.toDouble(),
+          ),
           altitude: coords.altitude?.toDouble(),
           bearing: coords.heading?.toDouble(),
           speed: coords.speed?.toDouble(),
@@ -1049,7 +1053,8 @@ class MapLibreMapController extends MapLibrePlatform
     required int maximumAge,
     required int timeout,
   }) {
-    final changed = enableHighAccuracy != _enableHighAccuracy ||
+    final changed =
+        enableHighAccuracy != _enableHighAccuracy ||
         maximumAge != _maximumAge ||
         timeout != _timeout;
     _enableHighAccuracy = enableHighAccuracy;
