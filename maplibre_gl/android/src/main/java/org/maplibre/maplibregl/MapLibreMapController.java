@@ -22,10 +22,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -979,29 +975,16 @@ final class MapLibreMapController
           final Integer duration = call.argument("duration");
           final String interpolationStr = call.argument("interpolation");
 
-          // Create interpolator based on parameter
-          Interpolator interpolator = null;
-          if (interpolationStr != null) {
-            switch (interpolationStr) {
-              case "linear":
-                interpolator = new LinearInterpolator();
-                break;
-              case "easeInOut":
-                interpolator = new AccelerateDecelerateInterpolator();
-                break;
-              case "easeOut":
-                interpolator = new DecelerateInterpolator();
-                break;
-              case "fastOutLinearIn":
-                // Use LinearInterpolator as fallback for fastOutLinearIn
-                // (androidx FastOutLinearInInterpolator would require additional dependency)
-                interpolator = new LinearInterpolator();
-                break;
-              default:
-                // null = use MapLibre's default interpolation
-                interpolator = null;
-                break;
-            }
+          // MapLibre Android's easeCamera accepts a boolean for easing:
+          //   false = linear interpolation (constant velocity)
+          //   true  = default ease-in/ease-out
+          // Unlike iOS, Android doesn't support custom timing functions.
+          final boolean easingInterpolator;
+          if ("linear".equals(interpolationStr)) {
+            easingInterpolator = false;
+          } else {
+            // Default and all other modes use MapLibre's built-in easing
+            easingInterpolator = true;
           }
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
@@ -1020,15 +1003,8 @@ final class MapLibreMapController
               };
 
           if (cameraUpdate != null && duration != null && duration > 0) {
-            // Use easeCamera with custom interpolator if provided
-            if (interpolator != null) {
-              mapLibreMap.easeCamera(cameraUpdate, duration, interpolator, onCameraMoveFinishedListener);
-            } else {
-              // Use default interpolation
-              mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
-            }
+            mapLibreMap.easeCamera(cameraUpdate, duration, easingInterpolator, onCameraMoveFinishedListener);
           } else if (cameraUpdate != null) {
-            // No duration specified, use default animation
             mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
             result.success(false);
