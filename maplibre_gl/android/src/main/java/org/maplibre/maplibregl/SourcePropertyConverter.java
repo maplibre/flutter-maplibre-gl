@@ -2,6 +2,9 @@ package org.maplibre.maplibregl;
 
 import android.net.Uri;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
@@ -107,6 +110,24 @@ class SourcePropertyConverter {
     if (tolerance != null) {
       options = options.withTolerance(Convert.toFloat(tolerance));
     }
+
+    final Object clusterProperties = data.get("clusterProperties");
+    if (clusterProperties instanceof Map) {
+      final Gson gson = new Gson();
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) clusterProperties).entrySet()) {
+        final String propertyName = entry.getKey().toString();
+        if (!(entry.getValue() instanceof List)) continue;
+        final List<?> value = (List<?>) entry.getValue();
+        if (value.size() < 2) continue;
+        // Format: [operator, map_expression]
+        final JsonElement operatorJson = JsonParser.parseString(gson.toJson(value.get(0)));
+        final JsonElement mapExprJson = JsonParser.parseString(gson.toJson(value.get(1)));
+        final Expression operatorExpr = Expression.Converter.convert(operatorJson);
+        final Expression mapExpr = Expression.Converter.convert(mapExprJson);
+        options = options.withClusterProperty(propertyName, operatorExpr, mapExpr);
+      }
+    }
+
     return options;
   }
 
