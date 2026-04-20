@@ -150,6 +150,26 @@ void main() {
       expect(status.progress, 0.5);
     });
 
+    test('InProgress stores resource counts', () {
+      final status = InProgress(
+        50.0,
+        completedResourceCount: 100,
+        requiredResourceCount: 200,
+        completedResourceSize: 1024000,
+      );
+      expect(status.progress, 50.0);
+      expect(status.completedResourceCount, 100);
+      expect(status.requiredResourceCount, 200);
+      expect(status.completedResourceSize, 1024000);
+    });
+
+    test('InProgress resource counts default to zero', () {
+      final status = InProgress(0.5);
+      expect(status.completedResourceCount, 0);
+      expect(status.requiredResourceCount, 0);
+      expect(status.completedResourceSize, 0);
+    });
+
     test('InProgress toString', () {
       final status = InProgress(0.75);
       expect(status.toString(), contains('0.75'));
@@ -166,6 +186,49 @@ void main() {
       final cause = PlatformException(code: 'ERROR', message: 'fail');
       final status = Error(cause);
       expect(status.toString(), contains('Error'));
+    });
+  });
+
+  group('OfflineRegionStatus', () {
+    test('fromMap constructs correctly', () {
+      final map = <String, dynamic>{
+        'completedResourceCount': 150,
+        'requiredResourceCount': 300,
+        'completedResourceSize': 2048000,
+        'isComplete': false,
+        'downloadProgress': 50.0,
+      };
+      final status = OfflineRegionStatus.fromMap(map);
+      expect(status.completedResourceCount, 150);
+      expect(status.requiredResourceCount, 300);
+      expect(status.completedResourceSize, 2048000);
+      expect(status.isComplete, false);
+      expect(status.downloadProgress, 50.0);
+    });
+
+    test('fromMap handles integer downloadProgress', () {
+      final map = <String, dynamic>{
+        'completedResourceCount': 100,
+        'requiredResourceCount': 100,
+        'completedResourceSize': 1024,
+        'isComplete': true,
+        'downloadProgress': 100,
+      };
+      final status = OfflineRegionStatus.fromMap(map);
+      expect(status.downloadProgress, 100.0);
+      expect(status.isComplete, true);
+    });
+
+    test('toString', () {
+      const status = OfflineRegionStatus(
+        completedResourceCount: 50,
+        requiredResourceCount: 100,
+        completedResourceSize: 512000,
+        isComplete: false,
+        downloadProgress: 50.0,
+      );
+      expect(status.toString(), contains('OfflineRegionStatus'));
+      expect(status.toString(), contains('50.0'));
     });
   });
 }

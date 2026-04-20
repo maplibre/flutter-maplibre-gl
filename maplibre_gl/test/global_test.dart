@@ -156,6 +156,55 @@ void main() {
       expect(statuses[2], isA<Success>());
     });
 
+    test('onEvent receives progress with resource counts', () async {
+      final statuses = <DownloadRegionStatus>[];
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
+
+              switch (methodCall.method) {
+                case 'downloadOfflineRegion#setup':
+                  capturedChannelName =
+                      (methodCall.arguments as Map)['channelName'] as String;
+
+                  _mockEventChannel(capturedChannelName!, [
+                    json.encode({
+                      'status': 'progress',
+                      'progress': 50.0,
+                      'completedResourceCount': 100,
+                      'requiredResourceCount': 200,
+                      'completedResourceSize': 1024000,
+                    }),
+                  ]);
+                  return null;
+                case 'downloadOfflineRegion':
+                  await Future<void>.delayed(const Duration(milliseconds: 50));
+                  return fakeRegionJson;
+                default:
+                  return null;
+              }
+            },
+          );
+
+      await downloadOfflineRegion(
+        definition,
+        onEvent: statuses.add,
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(statuses, isNotEmpty);
+      expect(statuses[0], isA<InProgress>());
+      final progress = statuses[0] as InProgress;
+      expect(progress.progress, 50.0);
+      expect(progress.completedResourceCount, 100);
+      expect(progress.requiredResourceCount, 200);
+      expect(progress.completedResourceSize, 1024000);
+    });
+
     test('onEvent receives PlatformException as Error status', () async {
       final statuses = <DownloadRegionStatus>[];
 
@@ -198,6 +247,88 @@ void main() {
       expect(statuses, isNotEmpty);
       expect(statuses.first, isA<Error>());
       expect((statuses.first as Error).cause.code, 'DOWNLOAD_ERROR');
+    });
+  });
+
+  group('pauseOfflineRegionDownload', () {
+    test('sends correct method and arguments', () async {
+      await pauseOfflineRegionDownload(99);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'pauseOfflineRegionDownload');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['id'], 99);
+    });
+  });
+
+  group('resumeOfflineRegionDownload', () {
+    test('sends correct method and arguments', () async {
+      await resumeOfflineRegionDownload(99);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'resumeOfflineRegionDownload');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['id'], 99);
+    });
+  });
+
+  group('setOfflineMaxConcurrentRequests', () {
+    test('sends correct method and arguments with both params', () async {
+      await setOfflineMaxConcurrentRequests(
+        maxRequests: 32,
+        maxRequestsPerHost: 4,
+      );
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'setOfflineMaxConcurrentRequests');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['maxRequests'], 32);
+      expect(args['maxRequestsPerHost'], 4);
+    });
+
+    test('sends only provided params', () async {
+      await setOfflineMaxConcurrentRequests(maxRequestsPerHost: 2);
+
+      expect(methodCalls.length, 1);
+      final args = methodCalls[0].arguments as Map;
+      expect(args.containsKey('maxRequests'), false);
+      expect(args['maxRequestsPerHost'], 2);
+    });
+  });
+
+  group('getOfflineRegionStatus', () {
+    test('returns parsed status', () async {
+      final fakeStatusJson = json.encode({
+        'completedResourceCount': 150,
+        'requiredResourceCount': 300,
+        'completedResourceSize': 2048000,
+        'isComplete': false,
+        'downloadProgress': 50.0,
+      });
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl'),
+            (methodCall) async {
+              methodCalls.add(methodCall);
+              if (methodCall.method == 'getOfflineRegionStatus') {
+                return fakeStatusJson;
+              }
+              return null;
+            },
+          );
+
+      final status = await getOfflineRegionStatus(42);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'getOfflineRegionStatus');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['id'], 42);
+      expect(status.completedResourceCount, 150);
+      expect(status.requiredResourceCount, 300);
+      expect(status.completedResourceSize, 2048000);
+      expect(status.isComplete, false);
+      expect(status.downloadProgress, 50.0);
     });
   });
 }

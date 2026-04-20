@@ -14,8 +14,8 @@ final LatLngBounds hawaiiBounds = LatLngBounds(
 );
 
 final LatLngBounds santiagoBounds = LatLngBounds(
-  southwest: const LatLng(-33.5597, -70.49102),
-  northeast: const LatLng(-33.33282, -70.40102),
+  southwest: const LatLng(-33.65, -70.80),
+  northeast: const LatLng(-33.25, -70.40),
 );
 
 final LatLngBounds aucklandBounds = LatLngBounds(
@@ -51,25 +51,38 @@ class OfflineRegionListItem {
     required this.offlineRegionDefinition,
     required this.downloadedId,
     required this.isDownloading,
+    required this.isPaused,
     required this.name,
     required this.estimatedTiles,
+    this.downloadProgress = 0.0,
   });
 
   final OfflineRegionDefinition offlineRegionDefinition;
   final int? downloadedId;
   final bool isDownloading;
+  final bool isPaused;
   final String name;
   final int estimatedTiles;
+  final double downloadProgress;
+
+  static const _sentinel = Object();
 
   OfflineRegionListItem copyWith({
-    int? downloadedId,
+    Object? downloadedId = _sentinel,
     bool? isDownloading,
+    bool? isPaused,
+    double? downloadProgress,
   }) => OfflineRegionListItem(
     offlineRegionDefinition: offlineRegionDefinition,
     name: name,
     estimatedTiles: estimatedTiles,
-    downloadedId: downloadedId,
+    downloadedId:
+        identical(downloadedId, _sentinel)
+            ? this.downloadedId
+            : downloadedId as int?,
     isDownloading: isDownloading ?? this.isDownloading,
+    isPaused: isPaused ?? this.isPaused,
+    downloadProgress: downloadProgress ?? this.downloadProgress,
   );
 
   bool get isDownloaded => downloadedId != null;
@@ -80,6 +93,7 @@ final List<OfflineRegionListItem> allRegions = [
     offlineRegionDefinition: regionDefinitions[0],
     downloadedId: null,
     isDownloading: false,
+    isPaused: false,
     name: regionNames[0],
     estimatedTiles: 61,
   ),
@@ -87,13 +101,15 @@ final List<OfflineRegionListItem> allRegions = [
     offlineRegionDefinition: regionDefinitions[1],
     downloadedId: null,
     isDownloading: false,
+    isPaused: false,
     name: regionNames[1],
-    estimatedTiles: 3580,
+    estimatedTiles: 21000,
   ),
   OfflineRegionListItem(
     offlineRegionDefinition: regionDefinitions[2],
     downloadedId: null,
     isDownloading: false,
+    isPaused: false,
     name: regionNames[2],
     estimatedTiles: 202,
   ),
@@ -129,16 +145,51 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
 
   @override
   Widget build(BuildContext context) {
-    return _items.isEmpty
-        ? const Center(
-          child: CircularProgressIndicator(),
-        )
-        : ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _items.length,
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            return Card(
+    if (_items.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: ExampleButton(
+                  label: 'Clear Ambient Cache',
+                  icon: Icons.cleaning_services_outlined,
+                  onPressed: _handleClearAmbientCache,
+                  style: ExampleButtonStyle.outlined,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ExampleButton(
+                  label: 'Reset Database',
+                  icon: Icons.delete_forever_outlined,
+                  onPressed: _handleResetDatabase,
+                  style: ExampleButtonStyle.destructive,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            itemCount: _items.length,
+            itemBuilder: (context, index) {
+              final item = _items[index];
+              return _buildCard(item, index);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(OfflineRegionListItem item, int index) {
+    return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: Column(
                 children: [
@@ -180,17 +231,35 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                       ),
                     ),
                     subtitle: Text(
-                      'Estimated tiles: ${item.estimatedTiles}',
+                      item.isDownloading
+                          ? 'Progress: ${item.downloadProgress.toStringAsFixed(1)}%'
+                          : 'Estimated tiles: ${item.estimatedTiles}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     trailing:
                         item.isDownloading
-                            ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                            ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    item.isPaused
+                                        ? Icons.play_arrow
+                                        : Icons.pause,
+                                  ),
+                                  onPressed:
+                                      item.downloadedId != null
+                                          ? () => _togglePause(item, index)
+                                          : null,
+                                ),
+                                const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ],
                             )
                             : null,
                   ),
@@ -236,8 +305,85 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                 ],
               ),
             );
-          },
-        );
+  }
+
+  Future<void> _handleClearAmbientCache() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear ambient cache?'),
+        content: const Text(
+          'Removes every cached tile that is not pinned to an offline '
+          'region, including tiles left behind by previously deleted '
+          'regions. Offline regions themselves are kept.\n\n'
+          'After this, re-downloading a region will fetch tiles from '
+          'the network instead of reusing the local cache.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await clearAmbientCache();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ambient cache cleared')),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Clear ambient cache failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _handleResetDatabase() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset offline database?'),
+        content: const Text(
+          'This will delete all offline regions and clear the ambient '
+          'cache. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await resetOfflineDatabase();
+      if (!mounted) return;
+      await _updateListOfRegions();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Offline database reset')),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reset database failed: $e')),
+      );
+    }
   }
 
   Future<void> _updateListOfRegions() async {
@@ -261,9 +407,11 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
 
   Future<void> _downloadRegion(OfflineRegionListItem item, int index) async {
     setState(() {
-      _items.removeAt(index);
-      _items.insert(index, item.copyWith(isDownloading: true));
+      _items[index] = item.copyWith(isDownloading: true);
     });
+
+    // Use a Completer to wait for the Success/Error event from the EventChannel instead.
+    final completer = Completer<void>();
 
     try {
       final downloadingRegion = await downloadOfflineRegion(
@@ -271,50 +419,83 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         metadata: {
           'name': regionNames[index],
         },
+        onEvent: (status) {
+          if (!mounted) return;
+          if (status is InProgress) {
+            setState(() {
+              _items[index] = _items[index].copyWith(
+                downloadProgress: status.progress,
+              );
+            });
+          } else if (status is Success && !completer.isCompleted) {
+            completer.complete();
+          } else if (status is Error && !completer.isCompleted) {
+            completer.completeError(status.cause);
+          }
+        },
       );
-      setState(() {
-        _items.removeAt(index);
-        _items.insert(
-          index,
-          item.copyWith(
+
+      // Region created — set the downloadedId so pause/resume can use it,
+      // but keep isDownloading: true until the Success event arrives.
+      if (mounted) {
+        setState(() {
+          _items[index] = _items[index].copyWith(
+            downloadedId: downloadingRegion.id,
+          );
+        });
+      }
+
+      // Wait for the actual download to complete via EventChannel.
+      await completer.future;
+
+      if (mounted) {
+        setState(() {
+          _items[index] = item.copyWith(
             isDownloading: false,
             downloadedId: downloadingRegion.id,
-          ),
-        );
-      });
+          );
+        });
+      }
     } on Exception catch (_) {
-      setState(() {
-        _items.removeAt(index);
-        _items.insert(
-          index,
-          item.copyWith(
+      if (mounted) {
+        setState(() {
+          _items[index] = item.copyWith(
             isDownloading: false,
             downloadedId: null,
-          ),
-        );
-      });
+          );
+        });
+      }
       return;
     }
   }
 
+  Future<void> _togglePause(OfflineRegionListItem item, int index) async {
+    final id = item.downloadedId;
+    if (id == null) return;
+    final shouldResume = item.isPaused;
+
+    try {
+      if (shouldResume) {
+        await resumeOfflineRegionDownload(id);
+      } else {
+        await pauseOfflineRegionDownload(id);
+      }
+      if (!mounted) return;
+      setState(() {
+        _items[index] = _items[index].copyWith(isPaused: !shouldResume);
+      });
+    } on Exception catch (_) {
+      // Download may have completed between UI update and button press
+    }
+  }
+
   Future<void> _deleteRegion(OfflineRegionListItem item, int index) async {
+    await deleteOfflineRegion(item.downloadedId!);
+    if (!mounted) return;
     setState(() {
-      _items.removeAt(index);
-      _items.insert(index, item.copyWith(isDownloading: true));
-    });
-
-    await deleteOfflineRegion(
-      item.downloadedId!,
-    );
-
-    setState(() {
-      _items.removeAt(index);
-      _items.insert(
-        index,
-        item.copyWith(
-          isDownloading: false,
-          downloadedId: null,
-        ),
+      _items[index] = _items[index].copyWith(
+        downloadedId: null,
+        isPaused: false,
       );
     });
   }
