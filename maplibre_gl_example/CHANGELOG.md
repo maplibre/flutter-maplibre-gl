@@ -6,6 +6,7 @@ Example app updates aligned with the 0.26.0 plugin release.
 * Enhanced and added examples for new features (#713).
 * Feature state management and mouse hover examples (#718).
 * Map snapshot example (#726).
+* `ClusterPropertiesExample` demonstrating both the simple and reduce-expression forms of `clusterProperties` on the earthquakes dataset (#792).
 
 ### Changed
 * Updated MapLibre GL JS and PMTiles versions in `index.html`.
