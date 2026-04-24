@@ -35,6 +35,7 @@ import 'examples/annotations/edit_annotation_draggable.dart';
 
 // Layers examples
 import 'examples/layers/circle_layer_example.dart';
+import 'examples/layers/cluster_properties_example.dart';
 import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
@@ -117,6 +118,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Layers
   const SymbolLayerExample(),
   const CircleLayerExample(),
+  const ClusterPropertiesExample(),
   const FillLayerExample(),
   const LineLayerExample(),
   const EditStyleLayerAnimatedExample(),

@@ -514,10 +514,11 @@ class LayerPropertyConverter {
                             return nil
                         }
                         if values.count == 4 {
+                            // Style spec order: [top, right, bottom, left]
                             return NSExpression(forConstantValue: NSValue(
                                 uiEdgeInsets: UIEdgeInsets(
-                                    top: values[0], left: values[1],
-                                    bottom: values[2], right: values[3]
+                                    top: values[0], left: values[3],
+                                    bottom: values[2], right: values[1]
                                 )
                             ))
                         }
@@ -544,7 +545,7 @@ class LayerPropertyConverter {
                 // a proper Expression if the data is an array of double
                 return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
             } else if isEdgeInsets && offset.count == 4 {
-                // icon-text-fit-padding requires UIEdgeInsets, not an array of numbers
+                // icon-text-fit-padding requires UIEdgeInsets; style spec order is [top, right, bottom, left]
                 let values = offset.compactMap { element -> CGFloat? in
                     if let d = element as? Double { return CGFloat(d) }
                     if let i = element as? Int { return CGFloat(i) }
@@ -553,8 +554,8 @@ class LayerPropertyConverter {
                 if values.count == 4 {
                     return NSExpression(forConstantValue: NSValue(
                         uiEdgeInsets: UIEdgeInsets(
-                            top: values[0], left: values[1],
-                            bottom: values[2], right: values[3]
+                            top: values[0], left: values[3],
+                            bottom: values[2], right: values[1]
                         )
                     ))
                 }

@@ -20,6 +20,8 @@ import org.maplibre.android.style.sources.VectorSource;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -119,8 +121,20 @@ class SourcePropertyConverter {
         if (!(entry.getValue() instanceof List)) continue;
         final List<?> value = (List<?>) entry.getValue();
         if (value.size() < 2) continue;
-        // Format: [operator, map_expression]
-        final JsonElement operatorJson = JsonParser.parseString(gson.toJson(value.get(0)));
+        // Format: [operator, map_expression]. The operator may be a simple string
+        // (e.g. "+") that needs expanding to ["+", ["accumulated"], ["get", propertyName]],
+        // or a full reduce-expression array that is passed through as-is.
+        final Object opRaw = value.get(0);
+        final JsonElement operatorJson;
+        if (opRaw instanceof String) {
+          final List<Object> expanded = Arrays.asList(
+              opRaw,
+              Collections.singletonList("accumulated"),
+              Arrays.asList("get", propertyName));
+          operatorJson = JsonParser.parseString(gson.toJson(expanded));
+        } else {
+          operatorJson = JsonParser.parseString(gson.toJson(opRaw));
+        }
         final JsonElement mapExprJson = JsonParser.parseString(gson.toJson(value.get(1)));
         final Expression operatorExpr = Expression.Converter.convert(operatorJson);
         final Expression mapExpr = Expression.Converter.convert(mapExprJson);
