@@ -223,6 +223,127 @@ void main() {
       expect(updated.cluster, true);
       expect(updated.buffer, 128); // preserved
     });
+
+    // clusterProperties is passed through as an opaque Object and serialized
+    // as-is. The native converters (Android Java, iOS Swift) interpret the
+    // two documented shapes: a simple operator-string form such as
+    // {'sum': ['+', ['get', 'scalerank']]}, or a full reduce-expression form
+    // such as {'sum': [['+', ['accumulated'], ['get', 'sum']], ['get', ...]]}.
+    // There is no native unit-test harness in this repo for those converters,
+    // so these tests only cover the Dart serialization contract. End-to-end
+    // behaviour is verified manually via the ClusterPropertiesExample page.
+    group('clusterProperties', () {
+      test('toJson passes through the simple operator-string form', () {
+        const props = GeojsonSourceProperties(
+          clusterProperties: {
+            'sum': [
+              '+',
+              ['get', 'scalerank'],
+            ],
+          },
+        );
+        final json = props.toJson();
+        expect(json['clusterProperties'], {
+          'sum': [
+            '+',
+            ['get', 'scalerank'],
+          ],
+        });
+      });
+
+      test('toJson passes through the reduce-expression form', () {
+        const props = GeojsonSourceProperties(
+          clusterProperties: {
+            'sum': [
+              [
+                '+',
+                ['accumulated'],
+                ['get', 'sum'],
+              ],
+              ['get', 'scalerank'],
+            ],
+          },
+        );
+        final json = props.toJson();
+        expect(json['clusterProperties'], {
+          'sum': [
+            [
+              '+',
+              ['accumulated'],
+              ['get', 'sum'],
+            ],
+            ['get', 'scalerank'],
+          ],
+        });
+      });
+
+      test('toJson omits clusterProperties when null', () {
+        const props = GeojsonSourceProperties();
+        final json = props.toJson();
+        expect(json.containsKey('clusterProperties'), isFalse);
+      });
+
+      test('fromJson/toJson roundtrip preserves clusterProperties', () {
+        const original = GeojsonSourceProperties(
+          cluster: true,
+          clusterProperties: {
+            'max_mag': [
+              'max',
+              ['get', 'mag'],
+            ],
+            'tsunami_count': [
+              [
+                '+',
+                ['accumulated'],
+                ['get', 'tsunami_count'],
+              ],
+              [
+                'case',
+                [
+                  '==',
+                  ['get', 'tsunami'],
+                  1,
+                ],
+                1,
+                0,
+              ],
+            ],
+          },
+        );
+        final restored = GeojsonSourceProperties.fromJson(original.toJson());
+        expect(restored.clusterProperties, original.clusterProperties);
+      });
+
+      test('copyWith updates clusterProperties', () {
+        const original = GeojsonSourceProperties(cluster: true);
+        final updated = original.copyWith(
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            'sum': [
+              '+',
+              ['get', 'weight'],
+            ],
+          },
+          null,
+          null,
+          null,
+        );
+        expect(updated.clusterProperties, {
+          'sum': [
+            '+',
+            ['get', 'weight'],
+          ],
+        });
+        expect(updated.cluster, true); // preserved
+      });
+    });
   });
 
   group('VideoSourceProperties', () {
