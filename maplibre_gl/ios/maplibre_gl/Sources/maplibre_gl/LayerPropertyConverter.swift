@@ -480,15 +480,16 @@ class LayerPropertyConverter {
         let isColor = propertyName.contains("color");
         let isOffset = propertyName.contains("offset");
         let isTranslate = propertyName.contains("translate");
+        let isEdgeInsets = propertyName == "icon-text-fit-padding";
 
         // The value is already in native format (not JSON string), use it directly
         let json = value
-        
+
         // Check if value is NSNull
         if json is NSNull {
             return nil
         }
-        
+
         // text-font is a font stack (array of string names), not an expression.
         if propertyName == "text-font", let fontNames = json as? [String] {
             return NSExpression(forConstantValue: fontNames)
@@ -506,6 +507,22 @@ class LayerPropertyConverter {
             // checks on the value of property that are literal expressions
             if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
                 if let vector = offset.last as? [Any]{
+                    if isEdgeInsets && vector.count == 4 {
+                        let values = vector.compactMap { element -> CGFloat? in
+                            if let d = element as? Double { return CGFloat(d) }
+                            if let i = element as? Int { return CGFloat(i) }
+                            return nil
+                        }
+                        if values.count == 4 {
+                            // Style spec order: [top, right, bottom, left]
+                            return NSExpression(forConstantValue: NSValue(
+                                uiEdgeInsets: UIEdgeInsets(
+                                    top: values[0], left: values[3],
+                                    bottom: values[2], right: values[1]
+                                )
+                            ))
+                        }
+                    }
                     if(vector.count == 2) {
                         if isOffset || isTranslate {
                             // this is required because NSExpression.init(mglJSONObject: json) fails to create
@@ -527,16 +544,36 @@ class LayerPropertyConverter {
                 // this is required because NSExpression.init(mglJSONObject: json) fails to create
                 // a proper Expression if the data is an array of double
                 return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
+            } else if isEdgeInsets && offset.count == 4 {
+                // icon-text-fit-padding requires UIEdgeInsets; style spec order is [top, right, bottom, left]
+                let values = offset.compactMap { element -> CGFloat? in
+                    if let d = element as? Double { return CGFloat(d) }
+                    if let i = element as? Int { return CGFloat(i) }
+                    return nil
+                }
+                if values.count == 4 {
+                    return NSExpression(forConstantValue: NSValue(
+                        uiEdgeInsets: UIEdgeInsets(
+                            top: values[0], left: values[3],
+                            bottom: values[2], right: values[1]
+                        )
+                    ))
+                }
             } else {
                 // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
                 // Convert to array of NSNumbers for proper expression creation
-                let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
+                let numbers = offset.compactMap { element -> NSNumber? in
+                    if let d = element as? Double { return NSNumber(value: d) }
+                    if let i = element as? Int { return NSNumber(value: i) }
+                    if let n = element as? NSNumber { return n }
+                    return nil
+                }
                 if numbers.count == offset.count {
                     return NSExpression(forConstantValue: numbers)
                 }
             }
         }
-        
+
         return NSExpression.init(mglJSONObject: json)
     }
 }
