@@ -1,6 +1,7 @@
 package org.maplibre.maplibregl;
 
 import android.net.Uri;
+import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -243,8 +244,11 @@ class SourcePropertyConverter {
 
   static void addSource(String id, Map<String, Object> properties, Style style) {
     // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes
+    // which can lead to native crashes. Log so callers don't silently see
+    // "success" while the existing source is kept untouched — if an update
+    // is intended, the source should be removed and re-added explicitly.
     if (style.getSource(id) != null) {
+      Log.w(TAG, "addSource: source with id '" + id + "' already exists, skipping");
       return;
     }
 
