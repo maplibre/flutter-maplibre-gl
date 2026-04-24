@@ -45,11 +45,15 @@ external JSObject _newJsObject();
 
 /// Helper function to create an empty JavaScript object.
 ///
-/// Returns a plain `{}` with `Object.prototype` on its chain — i.e. methods
-/// like `hasOwnProperty` are available. MapLibre GL JS v5 relies on this,
-/// so do NOT switch this to a null-prototype object (`Object.create(null)`).
-/// If safer dictionary-style usage is ever needed for untrusted keys, add a
-/// separate helper instead of changing this one.
+/// Returns `Object()` — a plain `{}` with `Object.prototype` on its chain,
+/// so prototype methods like `hasOwnProperty` are available.
+///
+/// Previously this used `Object.create(null)` (a null-prototype object).
+/// It was changed during the MapLibre GL JS v5 migration in #761 because
+/// the null-prototype variant caused "missing prototype" failures via
+/// interop. If a null-prototype / dictionary-style object is ever needed
+/// (e.g. for untrusted keys), add a separate helper rather than altering
+/// this one.
 JSObject createJsObject() {
   return _newJsObject();
 }
