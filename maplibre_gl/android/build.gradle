@@ -57,7 +57,7 @@ android {
     dependencies {
         // Using OpenGL instead of new Vulkan-based renderer for now, as it is more stable and has better performance on older devices.
         // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
-        implementation 'org.maplibre.gl:android-sdk-opengl:13.0.1'
+        implementation 'org.maplibre.gl:android-sdk-opengl:13.0.2'
         implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.2'
         implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
         implementation 'com.squareup.okhttp3:okhttp:5.3.2'

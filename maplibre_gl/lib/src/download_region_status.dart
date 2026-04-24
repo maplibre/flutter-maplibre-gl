@@ -6,12 +6,22 @@ class Success extends DownloadRegionStatus {}
 
 class InProgress extends DownloadRegionStatus {
   final double progress;
+  final int completedResourceCount;
+  final int requiredResourceCount;
+  final int completedResourceSize;
 
-  InProgress(this.progress);
+  InProgress(
+    this.progress, {
+    this.completedResourceCount = 0,
+    this.requiredResourceCount = 0,
+    this.completedResourceSize = 0,
+  });
 
   @override
   String toString() =>
-      "Instance of 'DownloadRegionStatus.InProgress', progress = $progress";
+      "Instance of 'DownloadRegionStatus.InProgress', progress = $progress, "
+      "completedResources = $completedResourceCount/$requiredResourceCount, "
+      "bytes = $completedResourceSize";
 }
 
 class Error extends DownloadRegionStatus {
