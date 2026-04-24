@@ -128,7 +128,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
 
       setState(() {});
     } catch (e) {
-      print('SymbolLayerExample: Error adding symbol layer: $e');
+      debugPrint('SymbolLayerExample: Error adding symbol layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding symbol layer: $e')),
@@ -207,7 +207,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
         ),
       );
     } catch (e) {
-      print('SymbolLayerExample: Error updating symbol layer: $e');
+      debugPrint('SymbolLayerExample: Error updating symbol layer: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating symbol layer: $e')),
