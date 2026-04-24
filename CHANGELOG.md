@@ -29,6 +29,7 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
   * `InProgress` events now carry `completedResourceCount`, `requiredResourceCount`, and `completedResourceSize` for tile/byte progress in addition to the percentage.
   * `clearAmbientCache` and `resetOfflineDatabase` globals to evict unpinned tiles or fully reset the offline DB (in-flight downloads are terminated Dart-side before reset/deletion).
   * `setOfflineMaxConcurrentRequests` to cap tile concurrency (total on Android, per-host on both) and avoid upstream rate limiting.
+* **clusterProperties**: Introduced native implementation of `clusterProperties` for clustered GeoJSON sources. Both the simple operator-string form (e.g. `{'sum': ['+', ['get', 'x']]}`) and the explicit reduce-expression form are now applied natively; previously the property was serialized from Dart but ignored by both native converters (#792).
 * **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
 * **Android**: Google Mobile Services (GMS) Location Engine support (#721).
 * **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
@@ -58,6 +59,7 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 ### Fixed
 * Fix data properties not being added to Annotation created in AnnotationManager (#770).
 * Fix double JSON encoding in layer properties causing Android/iOS type errors (#747).
+* **iOS**: `icon-text-fit-padding` insets now use the correct style-spec order `[top, right, bottom, left]` — `left` and `right` were previously swapped (#792).
 * Fix `text-font` property handling on Android and iOS to correctly accept font stacks as string arrays instead of only expressions.
 * Fix `textFont` in `SymbolManager` to pass font names as a simple string array, resolving rendering issues on native platforms.
 * Add DEM encoding support (`terrarium`/`mapbox`) for raster-dem tile sources on Android and iOS.
@@ -78,6 +80,7 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **Web**: `GeolocateControl` now respects `MyLocationTrackingMode` and triggers programmatically.
 * **Example**: GPS location page. Fixed web permission check, wired `onUserLocationUpdated`, web-specific tracking modes.
 * **Example**: GeoJSON cluster. Added `['has', 'point_count']` filter to fix null property errors on unclustered points.
+* **Example**: Added `ClusterPropertiesExample` demonstrating both the simple and reduce-expression forms of `clusterProperties` on the earthquakes dataset (#792).
 
 **Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
