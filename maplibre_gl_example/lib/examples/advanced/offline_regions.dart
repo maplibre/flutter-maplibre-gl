@@ -190,146 +190,142 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
 
   Widget _buildCard(OfflineRegionListItem item, int index) {
     return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color:
-                            item.isDownloaded
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        item.isDownloaded
-                            ? Icons.cloud_done
-                            : Icons.cloud_download,
-                        color:
-                            item.isDownloaded
-                                ? Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    title: Text(
-                      item.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      item.isDownloading
-                          ? 'Progress: ${item.downloadProgress.toStringAsFixed(1)}%'
-                          : 'Estimated tiles: ${item.estimatedTiles}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    trailing:
-                        item.isDownloading
-                            ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    item.isPaused
-                                        ? Icons.play_arrow
-                                        : Icons.pause,
-                                  ),
-                                  onPressed:
-                                      item.downloadedId != null
-                                          ? () => _togglePause(item, index)
-                                          : null,
-                                ),
-                                const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ],
-                            )
-                            : null,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color:
+                    item.isDownloaded
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                item.isDownloaded ? Icons.cloud_done : Icons.cloud_download,
+                color:
+                    item.isDownloaded
+                        ? Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryContainer
+                        : Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            title: Text(
+              item.name,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              item.isDownloading
+                  ? 'Progress: ${item.downloadProgress.toStringAsFixed(1)}%'
+                  : 'Estimated tiles: ${item.estimatedTiles}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            trailing:
+                item.isDownloading
+                    ? Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: ExampleButton(
-                            label: 'View Map',
-                            icon: Icons.map_outlined,
-                            onPressed: () => _goToMap(item),
-                            style: ExampleButtonStyle.outlined,
+                        IconButton(
+                          icon: Icon(
+                            item.isPaused ? Icons.play_arrow : Icons.pause,
+                          ),
+                          onPressed:
+                              item.downloadedId != null
+                                  ? () => _togglePause(item, index)
+                                  : null,
+                        ),
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child:
-                              item.isDownloaded
-                                  ? ExampleButton(
-                                    label: 'Delete',
-                                    icon: Icons.delete_outline,
-                                    onPressed:
-                                        item.isDownloading
-                                            ? null
-                                            : () => _deleteRegion(item, index),
-                                    style: ExampleButtonStyle.destructive,
-                                  )
-                                  : ExampleButton(
-                                    label: 'Download',
-                                    icon: Icons.download,
-                                    onPressed:
-                                        item.isDownloading
-                                            ? null
-                                            : () =>
-                                                _downloadRegion(item, index),
-                                    style: ExampleButtonStyle.filled,
-                                  ),
-                        ),
                       ],
-                    ),
+                    )
+                    : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ExampleButton(
+                    label: 'View Map',
+                    icon: Icons.map_outlined,
+                    onPressed: () => _goToMap(item),
+                    style: ExampleButtonStyle.outlined,
                   ),
-                ],
-              ),
-            );
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child:
+                      item.isDownloaded
+                          ? ExampleButton(
+                            label: 'Delete',
+                            icon: Icons.delete_outline,
+                            onPressed:
+                                item.isDownloading
+                                    ? null
+                                    : () => _deleteRegion(item, index),
+                            style: ExampleButtonStyle.destructive,
+                          )
+                          : ExampleButton(
+                            label: 'Download',
+                            icon: Icons.download,
+                            onPressed:
+                                item.isDownloading
+                                    ? null
+                                    : () => _downloadRegion(item, index),
+                            style: ExampleButtonStyle.filled,
+                          ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleClearAmbientCache() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear ambient cache?'),
-        content: const Text(
-          'Removes every cached tile that is not pinned to an offline '
-          'region, including tiles left behind by previously deleted '
-          'regions. Offline regions themselves are kept.\n\n'
-          'After this, re-downloading a region will fetch tiles from '
-          'the network instead of reusing the local cache.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Clear ambient cache?'),
+            content: const Text(
+              'Removes every cached tile that is not pinned to an offline '
+              'region, including tiles left behind by previously deleted '
+              'regions. Offline regions themselves are kept.\n\n'
+              'After this, re-downloading a region will fetch tiles from '
+              'the network instead of reusing the local cache.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Clear'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true) return;
 
@@ -350,23 +346,24 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
   Future<void> _handleResetDatabase() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset offline database?'),
-        content: const Text(
-          'This will delete all offline regions and clear the ambient '
-          'cache. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Reset offline database?'),
+            content: const Text(
+              'This will delete all offline regions and clear the ambient '
+              'cache. This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Reset'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true) return;
 

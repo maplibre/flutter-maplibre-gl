@@ -225,10 +225,10 @@ void main() {
         requiredResourceCount: 100,
         completedResourceSize: 512000,
         isComplete: false,
-        downloadProgress: 50.0,
+        downloadProgress: 50.5,
       );
       expect(status.toString(), contains('OfflineRegionStatus'));
-      expect(status.toString(), contains('50.0'));
+      expect(status.toString(), contains('50.5'));
     });
   });
 }

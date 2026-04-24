@@ -97,28 +97,25 @@ Future<dynamic> setOfflineTileCountLimit(int limit) =>
 Future<void> setOfflineMaxConcurrentRequests({
   int? maxRequests,
   int? maxRequestsPerHost,
-}) =>
-    _globalChannel.invokeMethod(
-      'setOfflineMaxConcurrentRequests',
-      <String, dynamic>{
-        if (maxRequests != null) 'maxRequests': maxRequests,
-        if (maxRequestsPerHost != null) 'maxRequestsPerHost': maxRequestsPerHost,
-      },
-    );
+}) => _globalChannel.invokeMethod(
+  'setOfflineMaxConcurrentRequests',
+  <String, dynamic>{
+    if (maxRequests != null) 'maxRequests': maxRequests,
+    if (maxRequestsPerHost != null) 'maxRequestsPerHost': maxRequestsPerHost,
+  },
+);
 
 /// Pauses an in-progress offline region download.
-Future<void> pauseOfflineRegionDownload(int id) =>
-    _globalChannel.invokeMethod(
-      'pauseOfflineRegionDownload',
-      <String, dynamic>{'id': id},
-    );
+Future<void> pauseOfflineRegionDownload(int id) => _globalChannel.invokeMethod(
+  'pauseOfflineRegionDownload',
+  <String, dynamic>{'id': id},
+);
 
 /// Resumes a paused offline region download.
-Future<void> resumeOfflineRegionDownload(int id) =>
-    _globalChannel.invokeMethod(
-      'resumeOfflineRegionDownload',
-      <String, dynamic>{'id': id},
-    );
+Future<void> resumeOfflineRegionDownload(int id) => _globalChannel.invokeMethod(
+  'resumeOfflineRegionDownload',
+  <String, dynamic>{'id': id},
+);
 
 /// Gets the current download status of an offline region.
 Future<OfflineRegionStatus> getOfflineRegionStatus(int id) async {
@@ -217,14 +214,14 @@ Future<OfflineRegion> downloadOfflineRegion(
           final status = switch (jsonData['status']) {
             'start' => InProgress(0.0),
             'progress' => InProgress(
-                (jsonData['progress']! as num).toDouble(),
-                completedResourceCount:
-                    (jsonData['completedResourceCount'] as num?)?.toInt() ?? 0,
-                requiredResourceCount:
-                    (jsonData['requiredResourceCount'] as num?)?.toInt() ?? 0,
-                completedResourceSize:
-                    (jsonData['completedResourceSize'] as num?)?.toInt() ?? 0,
-              ),
+              (jsonData['progress']! as num).toDouble(),
+              completedResourceCount:
+                  (jsonData['completedResourceCount'] as num?)?.toInt() ?? 0,
+              requiredResourceCount:
+                  (jsonData['requiredResourceCount'] as num?)?.toInt() ?? 0,
+              completedResourceSize:
+                  (jsonData['completedResourceSize'] as num?)?.toInt() ?? 0,
+            ),
             'success' => Success(),
             _ => throw Exception('Invalid event status ${jsonData['status']}'),
           };
