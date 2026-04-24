@@ -353,14 +353,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     case "easeOut":
                         timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
                     case "fastOutLinearIn":
-                        // iOS doesn't have exact equivalent, use linear as fallback
-                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                        // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
+                        timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
                     default:
-                        // Use default if interpolation string is unrecognized
                         timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                     }
                 } else {
-                    // No interpolation specified, use default
                     timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                 }
                 

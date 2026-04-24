@@ -1095,17 +1095,13 @@ final class MapLibreMapController
           final Integer duration = call.argument("duration");
           final String interpolationStr = call.argument("interpolation");
 
-          // MapLibre Android's easeCamera accepts a boolean for easing:
-          //   false = linear interpolation (constant velocity)
+          // MapLibre Android's easeCamera only exposes a boolean:
+          //   false = linear (constant velocity)
           //   true  = default ease-in/ease-out
-          // Unlike iOS, Android doesn't support custom timing functions.
-          final boolean easingInterpolator;
-          if ("linear".equals(interpolationStr)) {
-            easingInterpolator = false;
-          } else {
-            // Default and all other modes use MapLibre's built-in easing
-            easingInterpolator = true;
-          }
+          // Custom timing curves (easeOut, fastOutLinearIn) are not supported
+          // natively, so any non-"linear" value falls back to eased. This
+          // cross-platform caveat is documented on CameraAnimationInterpolation.
+          final boolean easingInterpolator = !"linear".equals(interpolationStr);
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
               new OnCameraMoveFinishedListener() {

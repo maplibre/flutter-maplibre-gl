@@ -1,22 +1,48 @@
 part of '../maplibre_gl_platform_interface.dart';
 
-/// Camera animation interpolation modes for easeCamera.
-/// Controls how the camera position changes over time during animation.
+/// Easing curve for [MapLibreMapController.easeCamera] animations.
+///
+/// Platform support varies — iOS exposes four distinct timing functions via
+/// `CAMediaTimingFunction`, while MapLibre Android only exposes a boolean
+/// `easingInterpolator` flag (linear vs. the native ease-in/ease-out).
+/// Per-value behavior is documented below.
+///
+/// When `easeCamera` is called without an interpolation, each platform uses
+/// its historical default (iOS: ease-in/ease-out; Android: ease-in/ease-out).
 enum CameraAnimationInterpolation {
   /// Constant velocity throughout the animation (no easing).
-  /// Best for continuous tracking scenarios where smooth motion is critical.
+  ///
+  /// Best for continuous tracking scenarios (e.g. following a moving GPS
+  /// target) where velocity discontinuities between successive `easeCamera`
+  /// calls would produce perceptible "animated jumps".
+  ///
+  /// Fully supported on both iOS and Android.
   linear,
 
   /// Accelerate at the start and decelerate at the end.
-  /// Creates a smooth, natural feeling animation.
+  ///
+  /// Produces a smooth, natural-feeling movement. This is the platform
+  /// default on both iOS and Android when no interpolation is specified.
   easeInOut,
 
   /// Decelerate towards the end of the animation.
-  /// The default behavior on most platforms.
+  ///
+  /// iOS: mapped to `CAMediaTimingFunctionName.easeOut`.
+  ///
+  /// Android: MapLibre Android does not expose custom timing curves via
+  /// [easeCamera], so this falls back to the default ease-in/ease-out and
+  /// is indistinguishable from [easeInOut] on Android.
   easeOut,
 
-  /// Fast start with linear end (Android-specific).
-  /// Available on Android only, falls back to easeOut on iOS.
+  /// Material Design "fast out, linear in" curve — cubic Bezier
+  /// `(0.4, 0.0, 1.0, 1.0)`. Accelerates quickly, then approaches the target
+  /// at constant velocity.
+  ///
+  /// iOS: implemented exactly via `CAMediaTimingFunction(controlPoints:)`.
+  ///
+  /// Android: MapLibre Android does not expose custom timing curves via
+  /// [easeCamera], so this falls back to the default ease-in/ease-out and
+  /// is indistinguishable from [easeInOut] on Android.
   fastOutLinearIn,
 }
 
