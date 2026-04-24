@@ -136,8 +136,11 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
         trackCameraPosition: true,
         compassEnabled: _compassEnabled,
         compassViewPosition: _compassPosition,
-        logoEnabled: _logoEnabled,
-        logoViewPosition: _logoPosition,
+        // MapLibre GL JS has no runtime logo alignment API and the logo itself
+        // is style-driven, so we skip these options on web to avoid no-op
+        // sink calls on every rebuild.
+        logoEnabled: !kIsWeb && _logoEnabled,
+        logoViewPosition: kIsWeb ? null : _logoPosition,
         attributionButtonPosition: _attributionPosition,
         scaleControlEnabled: _scaleControlEnabled,
         scaleControlPosition: _scalePosition,
@@ -149,19 +152,23 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
           subtitle: 'Zoom: $zoom\nLat: $lat, Lng: $lng',
           icon: Icons.camera,
         ),
-        _buildControlCard(
-          title: 'Logo',
-          icon: Icons.image,
-          enabled: _logoEnabled,
-          onToggle: _updateLogo,
-          rows: [
-            ControlRow(
-              label: 'Position',
-              value: _logoPosition.name.capitalize(),
-              onPressed: _cycleLogoPosition,
-            ),
-          ],
-        ),
+        // MapLibre GL JS renders the logo only when the active style's
+        // metadata declares one and exposes no runtime alignment API, so the
+        // Logo card is a native-only control.
+        if (!kIsWeb)
+          _buildControlCard(
+            title: 'Logo',
+            icon: Icons.image,
+            enabled: _logoEnabled,
+            onToggle: _updateLogo,
+            rows: [
+              ControlRow(
+                label: 'Position',
+                value: _logoPosition.name.capitalize(),
+                onPressed: _cycleLogoPosition,
+              ),
+            ],
+          ),
         _buildControlCard(
           title: 'Attribution',
           icon: Icons.info_outline,

@@ -126,7 +126,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
 
   // Advanced
   const PMTilesPage(),
-  const OfflineRegionsPage(),
+  // Offline regions are Android/iOS only — MapLibre GL JS has no offline API.
+  if (!kIsWeb) const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
   const MapSnapshotPage(),
 ];

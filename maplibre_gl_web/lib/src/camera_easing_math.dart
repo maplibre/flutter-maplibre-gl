@@ -5,7 +5,9 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 /// Kept free of `dart:js_interop` so it can be unit-tested from the Dart VM.
 
 /// Returns the easing implementation for the given [interpolation].
-double Function(double) easingImplFor(CameraAnimationInterpolation interpolation) {
+double Function(double) easingImplFor(
+  CameraAnimationInterpolation interpolation,
+) {
   switch (interpolation) {
     case CameraAnimationInterpolation.linear:
       return (t) => t;
