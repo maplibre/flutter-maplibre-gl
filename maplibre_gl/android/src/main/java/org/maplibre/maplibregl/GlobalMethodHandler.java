@@ -125,6 +125,34 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         OfflineManagerUtils.deleteRegion(
             result, context, methodCall.<Number>argument("id").longValue());
         break;
+      case "clearAmbientCache":
+        OfflineManagerUtils.clearAmbientCache(result, context);
+        break;
+      case "resetOfflineDatabase":
+        OfflineManagerUtils.resetOfflineDatabase(result, context);
+        break;
+      case "pauseOfflineRegionDownload":
+        OfflineManagerUtils.pauseRegion(
+            result, context, methodCall.<Number>argument("id").longValue());
+        break;
+      case "resumeOfflineRegionDownload":
+        OfflineManagerUtils.resumeRegion(
+            result, context, methodCall.<Number>argument("id").longValue());
+        break;
+      case "getOfflineRegionStatus":
+        OfflineManagerUtils.getRegionStatus(
+            result, context, methodCall.<Number>argument("id").longValue());
+        break;
+      case "setOfflineMaxConcurrentRequests":
+        {
+          Number maxRequestsNum = methodCall.argument("maxRequests");
+          Number maxRequestsPerHostNum = methodCall.argument("maxRequestsPerHost");
+          Integer maxRequests = maxRequestsNum != null ? maxRequestsNum.intValue() : null;
+          Integer maxRequestsPerHost =
+              maxRequestsPerHostNum != null ? maxRequestsPerHostNum.intValue() : null;
+          MapLibreHttpRequestUtil.setMaxConcurrentRequests(maxRequests, maxRequestsPerHost, result);
+          break;
+        }
       default:
         result.notImplemented();
         break;

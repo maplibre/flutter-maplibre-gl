@@ -45,11 +45,18 @@ public class OfflineChannelHandlerImpl implements EventChannel.StreamHandler {
     sink.success(gson.toJson(body));
   }
 
-  void onProgress(double progress) {
+  void onProgress(
+      double progress,
+      long completedResourceCount,
+      long requiredResourceCount,
+      long completedResourceSize) {
     if (sink == null) return;
     Map<String, Object> body = new HashMap<>();
     body.put("status", "progress");
     body.put("progress", progress);
+    body.put("completedResourceCount", completedResourceCount);
+    body.put("requiredResourceCount", requiredResourceCount);
+    body.put("completedResourceSize", completedResourceSize);
     sink.success(gson.toJson(body));
   }
 }
