@@ -44,6 +44,12 @@ void setJsProperty(JSObject obj, String propertyName, JSAny? value) {
 external JSObject _newJsObject();
 
 /// Helper function to create an empty JavaScript object.
+///
+/// Returns a plain `{}` with `Object.prototype` on its chain — i.e. methods
+/// like `hasOwnProperty` are available. MapLibre GL JS v5 relies on this,
+/// so do NOT switch this to a null-prototype object (`Object.create(null)`).
+/// If safer dictionary-style usage is ever needed for untrusted keys, add a
+/// separate helper instead of changing this one.
 JSObject createJsObject() {
   return _newJsObject();
 }

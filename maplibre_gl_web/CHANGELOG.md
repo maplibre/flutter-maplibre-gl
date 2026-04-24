@@ -3,7 +3,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 ### Breaking
-* Upgraded MapLibre GL JS from 4.7.1 to 5.20.1 (#761, #651).
+* Upgraded MapLibre GL JS from 4.7.1 to 5.24.0 (#761, #651).
   * `initialCameraPosition` is now ignored if the map style contains camera properties (`center`, `zoom`, `bearing`, `pitch`). MapLibre GL JS v5 gives priority to style-defined camera values over constructor options. Use `MapLibreMapController.moveCamera()` or `MapLibreMapController.animateCamera()` after map load to override.
   * `preserveDrawingBuffer`, `antialias`, `failIfMajorPerformanceCaveat` now set via `canvasContextAttributes` (MapLibre GL JS v5 API change).
   * `on()`/`off()`/`once()` adapted for v5 `Subscription` return type.
