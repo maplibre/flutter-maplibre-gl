@@ -148,8 +148,25 @@ Future<void> clearAmbientCache() =>
 /// Resets the entire offline database: deletes every offline region and
 /// clears the ambient cache. Use with care — offline regions cannot be
 /// recovered afterwards.
-Future<void> resetOfflineDatabase() =>
-    _globalChannel.invokeMethod('resetOfflineDatabase');
+Future<void> resetOfflineDatabase() async {
+  try {
+    await _globalChannel.invokeMethod('resetOfflineDatabase');
+  } finally {
+    // Belt-and-suspenders: in the normal path, native emits a terminal
+    // error for every in-flight download and cleanup() in the listener
+    // has already removed the entry from the map. The short delay gives
+    // any queued EventChannel messages a chance to be processed before we
+    // forcibly cancel anything that somehow slipped through, guaranteeing
+    // we don't leak retained subscriptions if the native terminal event
+    // is ever missed.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    final stragglers = _offlineDownloadSubscriptions.values.toList();
+    _offlineDownloadSubscriptions.clear();
+    for (final sub in stragglers) {
+      unawaited(sub.cancel());
+    }
+  }
+}
 
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {

@@ -47,6 +47,19 @@ class OfflinePackDownloader {
 
     // MARK: Public methods
 
+    /// Signals the awaiting Dart side that this download will not produce
+    /// further events. Used when the caller invalidates the download via
+    /// delete or reset before it can complete naturally.
+    func terminate(errorCode: String, errorMessage: String) {
+        guard !isCompleted else { return }
+        isCompleted = true
+        channelHandler.onError(
+            errorCode: errorCode,
+            errorMessage: errorMessage,
+            errorDetails: nil
+        )
+    }
+
     func download() -> Int {
         let storage = MLNOfflineStorage.shared
         // While the Android SDK generates a region ID in createOfflineRegion, the iOS

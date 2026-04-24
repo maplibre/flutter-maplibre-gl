@@ -105,6 +105,12 @@ abstract class OfflineManagerUtils {
       } catch (Throwable ignored) {
         // Region may already be invalid; ignore.
       }
+      // Terminate the in-flight download on the Dart side so its stream
+      // subscription is cleaned up and the awaiting Future resolves.
+      ad.channelHandler.onError(
+          "DatabaseReset",
+          "Offline database was reset before the download completed",
+          null);
     }
     activeDownloads.clear();
 
@@ -323,6 +329,12 @@ abstract class OfflineManagerUtils {
     if (active != null) {
       active.isComplete.set(true);
       active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
+      // Terminate the in-flight download on the Dart side so its stream
+      // subscription is cleaned up and the awaiting Future resolves.
+      active.channelHandler.onError(
+          "RegionDeleted",
+          "Region was deleted before the download completed",
+          null);
     }
     OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(

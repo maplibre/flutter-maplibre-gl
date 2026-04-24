@@ -77,6 +77,13 @@ class OfflineManagerUtils {
         for (_, pack) in activePacks {
             pack.suspend()
         }
+        // Terminate the Dart-side subscriptions so their Futures resolve.
+        for (_, downloader) in activeDownloaders {
+            downloader.terminate(
+                errorCode: "DatabaseReset",
+                errorMessage: "Offline database was reset before the download completed"
+            )
+        }
         activePacks.removeAll()
         activeDownloaders.removeAll()
 
@@ -108,6 +115,12 @@ class OfflineManagerUtils {
         if let packToRemoveUnwrapped = packToRemove {
             // deletion is only safe if the download is suspended
             packToRemoveUnwrapped.suspend()
+            // Terminate the Dart-side subscription if a download is in flight.
+            activeDownloaders[id]?.terminate(
+                errorCode: "RegionDeleted",
+                errorMessage: "Region was deleted before the download completed"
+            )
+            activePacks.removeValue(forKey: id)
             OfflineManagerUtils.releaseDownloader(id: id)
 
             offlineStorage.removePack(packToRemoveUnwrapped) { error in

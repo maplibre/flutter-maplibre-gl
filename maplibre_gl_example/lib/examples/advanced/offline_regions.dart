@@ -448,24 +448,23 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       // Wait for the actual download to complete via EventChannel.
       await completer.future;
 
-      if (mounted) {
-        setState(() {
-          _items[index] = item.copyWith(
-            isDownloading: false,
-            downloadedId: downloadingRegion.id,
-          );
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _items[index] = _items[index].copyWith(
+          isDownloading: false,
+          downloadedId: downloadingRegion.id,
+          isPaused: false,
+        );
+      });
     } on Exception catch (_) {
-      if (mounted) {
-        setState(() {
-          _items[index] = item.copyWith(
-            isDownloading: false,
-            downloadedId: null,
-          );
-        });
-      }
-      return;
+      if (!mounted) return;
+      setState(() {
+        _items[index] = _items[index].copyWith(
+          isDownloading: false,
+          downloadedId: null,
+          isPaused: false,
+        );
+      });
     }
   }
 
