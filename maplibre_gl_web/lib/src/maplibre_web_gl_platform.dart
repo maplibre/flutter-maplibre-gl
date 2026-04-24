@@ -360,11 +360,25 @@ class MapLibreMapController extends MapLibrePlatform
     Duration? duration,
     CameraAnimationInterpolation? interpolation,
   }) async {
-    // Web implementation: MapLibre GL JS doesn't have direct duration control
-    // We can implement this by using the animate method with duration
-    print('easeCamera called in web, duration: $duration');
-    // For future implementation, we could use MapLibre GL JS animate method
-    throw UnimplementedError();
+    final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
+    final around = cameraOptions.around;
+    final bearing = cameraOptions.bearing;
+    final center = cameraOptions.center;
+    final pitch = cameraOptions.pitch;
+    final zoom = cameraOptions.zoom;
+    final easing = resolveEasing(interpolation);
+
+    _map.easeTo({
+      if (around != null) 'around': around.jsObject,
+      if (bearing != null) 'bearing': bearing,
+      if (center != null) 'center': center.jsObject,
+      if (pitch != null) 'pitch': pitch,
+      if (zoom != null) 'zoom': zoom,
+      if (duration != null) 'duration': duration.inMilliseconds,
+      if (easing != null) 'easing': easing,
+    });
+
+    return true;
   }
 
   @override

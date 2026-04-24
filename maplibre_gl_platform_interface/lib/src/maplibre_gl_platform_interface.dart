@@ -3,12 +3,13 @@ part of '../maplibre_gl_platform_interface.dart';
 /// Easing curve for [MapLibreMapController.easeCamera] animations.
 ///
 /// Platform support varies — iOS exposes four distinct timing functions via
-/// `CAMediaTimingFunction`, while MapLibre Android only exposes a boolean
-/// `easingInterpolator` flag (linear vs. the native ease-in/ease-out).
-/// Per-value behavior is documented below.
+/// `CAMediaTimingFunction`, Web implements each value as a cubic Bezier passed
+/// to MapLibre GL JS's `easeTo({easing})`, while MapLibre Android only exposes
+/// a boolean `easingInterpolator` flag (linear vs. the native
+/// ease-in/ease-out). Per-value behavior is documented below.
 ///
 /// When `easeCamera` is called without an interpolation, each platform uses
-/// its historical default (iOS: ease-in/ease-out; Android: ease-in/ease-out).
+/// its historical default (iOS, Android, and Web all default to an ease-in/ease-out curve).
 enum CameraAnimationInterpolation {
   /// Constant velocity throughout the animation (no easing).
   ///
@@ -16,18 +17,20 @@ enum CameraAnimationInterpolation {
   /// target) where velocity discontinuities between successive `easeCamera`
   /// calls would produce perceptible "animated jumps".
   ///
-  /// Fully supported on both iOS and Android.
+  /// Fully supported on iOS, Android, and Web.
   linear,
 
   /// Accelerate at the start and decelerate at the end.
   ///
   /// Produces a smooth, natural-feeling movement. This is the platform
-  /// default on both iOS and Android when no interpolation is specified.
+  /// default on iOS, Android, and Web when no interpolation is specified.
   easeInOut,
 
   /// Decelerate towards the end of the animation.
   ///
   /// iOS: mapped to `CAMediaTimingFunctionName.easeOut`.
+  ///
+  /// Web: implemented as cubic Bezier `(0, 0, 0.58, 1)`.
   ///
   /// Android: MapLibre Android does not expose custom timing curves via
   /// [easeCamera], so this falls back to the default ease-in/ease-out and
@@ -39,6 +42,8 @@ enum CameraAnimationInterpolation {
   /// at constant velocity.
   ///
   /// iOS: implemented exactly via `CAMediaTimingFunction(controlPoints:)`.
+  ///
+  /// Web: implemented exactly via MapLibre GL JS `easeTo({easing})`.
   ///
   /// Android: MapLibre Android does not expose custom timing curves via
   /// [easeCamera], so this falls back to the default ease-in/ease-out and

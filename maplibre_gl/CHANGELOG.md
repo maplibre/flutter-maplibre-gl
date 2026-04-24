@@ -26,6 +26,7 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **easeCamera interpolation**: `easeCamera` accepts an optional `CameraAnimationInterpolation` to control the animation easing curve (`linear`, `easeInOut`, `easeOut`, `fastOutLinearIn`). Use `CameraAnimationInterpolation.linear` for smooth continuous tracking (e.g. following a moving GPS target) without velocity discontinuities between successive calls. Omitting the parameter preserves the previous default behavior (#789).
   * **iOS**: all four curves are supported exactly; `fastOutLinearIn` is implemented via `CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)` (Material Design cubic Bezier).
   * **Android**: MapLibre Android only exposes a boolean easing flag on `easeCamera`, so only `linear` is distinct — `easeInOut`, `easeOut`, and `fastOutLinearIn` all map to the native ease-in/ease-out. See `CameraAnimationInterpolation` dartdoc for per-value details.
+  * **Web**: `easeCamera` is now fully implemented via MapLibre GL JS `map.easeTo({easing})`. Each interpolation value maps to a cubic-bezier callback (`easeInOut` → `(0.42, 0, 0.58, 1)`, `easeOut` → `(0, 0, 0.58, 1)`, `fastOutLinearIn` → `(0.4, 0, 1, 1)`). Previously threw `UnimplementedError`.
 * **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
 * **Android**: Google Mobile Services (GMS) Location Engine support (#721).
 * **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).

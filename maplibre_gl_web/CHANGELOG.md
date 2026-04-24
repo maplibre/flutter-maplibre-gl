@@ -16,9 +16,15 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * Location engine properties support — `enableHighAccuracy`, `maximumAge`, `timeout` from `LocationEnginePlatforms.web()` passed to `GeolocateControl`'s `PositionOptions`.
 * `trackUserLocation` on `GeolocateControl` managed based on `MyLocationTrackingMode`.
 * `GeolocateControl.trigger()` called programmatically when tracking mode is enabled.
+* `easeCamera` fully implemented via MapLibre GL JS `map.easeTo({easing})`; all four `CameraAnimationInterpolation` values are honored via cubic-bezier easing callbacks. Previously threw `UnimplementedError` (#789).
+  * `easeInOut` → cubic-bezier `(0.42, 0, 0.58, 1)`
+  * `easeOut` → cubic-bezier `(0, 0, 0.58, 1)`
+  * `fastOutLinearIn` → cubic-bezier `(0.4, 0, 1, 1)` (Material Design)
+  * `linear` → identity
+  * Omitting the parameter falls through to MapLibre GL JS's built-in default curve.
 
 ### Changed
-* `easeCamera` override signature aligned with the platform interface's new `CameraAnimationInterpolation? interpolation` parameter. Web still throws `UnimplementedError` — the parameter is accepted but ignored (#789).
+* `easeTo` wrapper on `MapLibreMap` now jsifies Dart `Map` options the same way `flyTo` already did, enabling the new `easeCamera` implementation to pass a plain Dart options dict.
 
 ### Fixed
 * Improved `styleimagemissing` handling (#725).

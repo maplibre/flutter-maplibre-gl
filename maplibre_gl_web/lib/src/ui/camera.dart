@@ -499,8 +499,17 @@ class Camera extends Evented {
   ///  @fires pitchend
   ///  @returns {MapLibreMap} `this`
   ///  @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
-  MapLibreMap easeTo(dynamic options, [dynamic eventData]) =>
-      MapLibreMap.fromJsObject(jsObject.easeTo(options));
+  MapLibreMap easeTo(dynamic options, [dynamic eventData]) {
+    JSAny optionsJs;
+    if (options is CameraOptions) {
+      optionsJs = options.jsObject as JSAny;
+    } else if (options is Map) {
+      optionsJs = utils.jsify(options)!;
+    } else {
+      optionsJs = options as JSAny;
+    }
+    return MapLibreMap.fromJsObject(jsObject.easeTo(optionsJs));
+  }
 
   ///  Changes any combination of center, zoom, bearing, and pitch, animating the transition along a curve that
   ///  evokes flight. The animation seamlessly incorporates zooming and panning to help

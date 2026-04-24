@@ -178,8 +178,7 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
                     DropdownButton<CameraAnimationInterpolation?>(
                       isExpanded: true,
                       value: _interpolation,
-                      onChanged:
-                          (value) => setState(() => _interpolation = value),
+                      onChanged: (value) => setState(() => _interpolation = value),
                       items: const [
                         DropdownMenuItem(
                           value: null,
@@ -195,11 +194,11 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
                         ),
                         DropdownMenuItem(
                           value: CameraAnimationInterpolation.easeOut,
-                          child: Text('easeOut (iOS only)'),
+                          child: Text('easeOut (iOS + Web only)'),
                         ),
                         DropdownMenuItem(
                           value: CameraAnimationInterpolation.fastOutLinearIn,
-                          child: Text('fastOutLinearIn (iOS only)'),
+                          child: Text('fastOutLinearIn (iOS + Web only)'),
                         ),
                       ],
                     ),
