@@ -30,10 +30,10 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **Android**: Enhanced GeoJSON source handling with type checks and error logging (#764).
 * **Android**: Check style exists and is loaded before adding a Layer (#768).
 * **Android**: Check source exists before adding (#734).
-* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.1, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
+* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.2, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
 * **iOS**: Updated project settings for UISceneDelegate compatibility (#767).
-* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.24.0.
-* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.21.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
+* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.25.1.
+* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.24.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
 * **Web**: Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes`.
 * **Web**: Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
 * **Web**: Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
