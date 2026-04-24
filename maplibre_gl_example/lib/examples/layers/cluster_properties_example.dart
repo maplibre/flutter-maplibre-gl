@@ -61,10 +61,17 @@ class _ClusterPropertiesBodyState extends State<_ClusterPropertiesBody> {
         clusterMaxZoom: 14,
         clusterProperties: {
           // Simple form: [operator, mapExpr].
-          'max_mag': ['max', ['get', 'mag']],
+          'max_mag': [
+            'max',
+            ['get', 'mag'],
+          ],
           // Reduce-expression form: [fullReduceExpr, mapExpr].
           'mag_sum': [
-            ['+', ['accumulated'], ['get', 'mag_sum']],
+            [
+              '+',
+              ['accumulated'],
+              ['get', 'mag_sum'],
+            ],
             ['get', 'mag'],
           ],
         },
@@ -117,7 +124,11 @@ class _ClusterPropertiesBodyState extends State<_ClusterPropertiesBody> {
               '/',
               [
                 'round',
-                ['*', ['get', 'max_mag'], 10],
+                [
+                  '*',
+                  ['get', 'max_mag'],
+                  10,
+                ],
               ],
               10,
             ],
@@ -125,7 +136,10 @@ class _ClusterPropertiesBodyState extends State<_ClusterPropertiesBody> {
           '\nsum ',
           [
             Expressions.toStringExpression,
-            ['round', ['get', 'mag_sum']],
+            [
+              'round',
+              ['get', 'mag_sum'],
+            ],
           ],
         ],
         textFont: ['Open Sans Semibold'],

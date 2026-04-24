@@ -236,20 +236,8 @@ void main() {
       test('toJson passes through the simple operator-string form', () {
         const props = GeojsonSourceProperties(
           clusterProperties: {
-            'sum': ['+', ['get', 'scalerank']],
-          },
-        );
-        final json = props.toJson();
-        expect(json['clusterProperties'], {
-          'sum': ['+', ['get', 'scalerank']],
-        });
-      });
-
-      test('toJson passes through the reduce-expression form', () {
-        const props = GeojsonSourceProperties(
-          clusterProperties: {
             'sum': [
-              ['+', ['accumulated'], ['get', 'sum']],
+              '+',
               ['get', 'scalerank'],
             ],
           },
@@ -257,7 +245,33 @@ void main() {
         final json = props.toJson();
         expect(json['clusterProperties'], {
           'sum': [
-            ['+', ['accumulated'], ['get', 'sum']],
+            '+',
+            ['get', 'scalerank'],
+          ],
+        });
+      });
+
+      test('toJson passes through the reduce-expression form', () {
+        const props = GeojsonSourceProperties(
+          clusterProperties: {
+            'sum': [
+              [
+                '+',
+                ['accumulated'],
+                ['get', 'sum'],
+              ],
+              ['get', 'scalerank'],
+            ],
+          },
+        );
+        final json = props.toJson();
+        expect(json['clusterProperties'], {
+          'sum': [
+            [
+              '+',
+              ['accumulated'],
+              ['get', 'sum'],
+            ],
             ['get', 'scalerank'],
           ],
         });
@@ -273,10 +287,26 @@ void main() {
         const original = GeojsonSourceProperties(
           cluster: true,
           clusterProperties: {
-            'max_mag': ['max', ['get', 'mag']],
+            'max_mag': [
+              'max',
+              ['get', 'mag'],
+            ],
             'tsunami_count': [
-              ['+', ['accumulated'], ['get', 'tsunami_count']],
-              ['case', ['==', ['get', 'tsunami'], 1], 1, 0],
+              [
+                '+',
+                ['accumulated'],
+                ['get', 'tsunami_count'],
+              ],
+              [
+                'case',
+                [
+                  '==',
+                  ['get', 'tsunami'],
+                  1,
+                ],
+                1,
+                0,
+              ],
             ],
           },
         );
@@ -296,14 +326,20 @@ void main() {
           null,
           null,
           {
-            'sum': ['+', ['get', 'weight']],
+            'sum': [
+              '+',
+              ['get', 'weight'],
+            ],
           },
           null,
           null,
           null,
         );
         expect(updated.clusterProperties, {
-          'sum': ['+', ['get', 'weight']],
+          'sum': [
+            '+',
+            ['get', 'weight'],
+          ],
         });
         expect(updated.cluster, true); // preserved
       });
