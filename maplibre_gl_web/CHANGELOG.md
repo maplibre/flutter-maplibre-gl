@@ -17,6 +17,9 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `trackUserLocation` on `GeolocateControl` managed based on `MyLocationTrackingMode`.
 * `GeolocateControl.trigger()` called programmatically when tracking mode is enabled.
 
+### Changed
+* `easeCamera` override signature aligned with the platform interface's new `CameraAnimationInterpolation? interpolation` parameter. Web still throws `UnimplementedError` — the parameter is accepted but ignored (#789).
+
 ### Fixed
 * Improved `styleimagemissing` handling (#725).
 * Fixed JS Interop and WASM compilation in release mode (#714).

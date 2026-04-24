@@ -6,6 +6,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
 * `LocationEnginePlatforms` unnamed constructor is now private. Use `.android()`, `.iOS()`, `.web()`, or `.defaultPlatform`.
 * Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.
+* `MapLibrePlatform.easeCamera` gained an optional named parameter `CameraAnimationInterpolation? interpolation`. Callers are unaffected, but subclasses that override `easeCamera` must add the new parameter to their signature (#789).
 
 ### Added
 * Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
@@ -14,6 +15,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()`.
 * iOS and web serialization support in `toList()`.
 * Expanded unit tests for platform-specific serialization and constructor behavior.
+* `CameraAnimationInterpolation` enum (`linear`, `easeInOut`, `easeOut`, `fastOutLinearIn`) and corresponding `interpolation` parameter on the `camera#ease` method channel (#789).
 
 ### Changed
 * Updated to align with main package v0.26.0.
