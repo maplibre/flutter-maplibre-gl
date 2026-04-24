@@ -146,8 +146,7 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
                     ),
                     Switch(
                       value: _isAnimated,
-                      onChanged: (value) =>
-                          setState(() => _isAnimated = value),
+                      onChanged: (value) => setState(() => _isAnimated = value),
                     ),
                   ],
                 ),
@@ -165,8 +164,7 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
                       ),
                       Switch(
                         value: _useEase,
-                        onChanged: (value) =>
-                            setState(() => _useEase = value),
+                        onChanged: (value) => setState(() => _useEase = value),
                       ),
                     ],
                   ),
@@ -180,8 +178,8 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
                     DropdownButton<CameraAnimationInterpolation?>(
                       isExpanded: true,
                       value: _interpolation,
-                      onChanged: (value) =>
-                          setState(() => _interpolation = value),
+                      onChanged:
+                          (value) => setState(() => _interpolation = value),
                       items: const [
                         DropdownMenuItem(
                           value: null,
