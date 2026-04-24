@@ -1,16 +1,31 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+
 import '../../page.dart';
 import '../../shared/shared.dart';
+
+/// Data class for control card rows
+class ControlRow {
+  final String label;
+  final String value;
+  final VoidCallback onPressed;
+
+  const ControlRow({
+    required this.label,
+    required this.value,
+    required this.onPressed,
+  });
+}
 
 /// Example demonstrating map UI controls and settings
 class MapControlsExample extends ExamplePage {
   const MapControlsExample({super.key})
-      : super(
-          const Icon(Icons.settings),
-          'Map Controls',
-          category: ExampleCategory.interaction,
-        );
+    : super(
+        const Icon(Icons.settings),
+        'Map Controls',
+        category: ExampleCategory.interaction,
+      );
 
   @override
   Widget build(BuildContext context) => const _MapControlsBody();
@@ -35,6 +50,10 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
 
   AttributionButtonPosition _attributionPosition =
       AttributionButtonPosition.bottomRight;
+
+  bool _scaleControlEnabled = false;
+  ScaleControlPosition _scalePosition = ScaleControlPosition.bottomLeft;
+  ScaleControlUnit _scaleUnit = ScaleControlUnit.metric;
 
   // Current Map State
   CameraPosition? _currentPosition;
@@ -83,6 +102,26 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
     });
   }
 
+  Future<void> _updateScaleControl(bool enabled) async {
+    setState(() => _scaleControlEnabled = enabled);
+  }
+
+  void _cycleScalePosition() {
+    const positions = ScaleControlPosition.values;
+    final currentIndex = positions.indexOf(_scalePosition);
+    setState(() {
+      _scalePosition = positions[(currentIndex + 1) % positions.length];
+    });
+  }
+
+  void _cycleScaleUnit() {
+    const units = ScaleControlUnit.values;
+    final currentIndex = units.indexOf(_scaleUnit);
+    setState(() {
+      _scaleUnit = units[(currentIndex + 1) % units.length];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final zoom = _currentPosition?.zoom.toStringAsFixed(1) ?? '--';
@@ -97,9 +136,15 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
         trackCameraPosition: true,
         compassEnabled: _compassEnabled,
         compassViewPosition: _compassPosition,
-        logoEnabled: _logoEnabled,
-        logoViewPosition: _logoPosition,
+        // MapLibre GL JS has no runtime logo alignment API and the logo itself
+        // is style-driven, so we skip these options on web to avoid no-op
+        // sink calls on every rebuild.
+        logoEnabled: !kIsWeb && _logoEnabled,
+        logoViewPosition: kIsWeb ? null : _logoPosition,
         attributionButtonPosition: _attributionPosition,
+        scaleControlEnabled: _scaleControlEnabled,
+        scaleControlPosition: _scalePosition,
+        scaleControlUnit: _scaleUnit,
       ),
       controls: [
         InfoCard(
@@ -107,30 +152,68 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
           subtitle: 'Zoom: $zoom\nLat: $lat, Lng: $lng',
           icon: Icons.camera,
         ),
-        _buildControlCard(
-          title: 'Logo',
-          icon: Icons.image,
-          enabled: _logoEnabled,
-          position: _logoPosition.name.capitalize(),
-          onToggle: _updateLogo,
-          onChangePosition: _cycleLogoPosition,
-        ),
+        // MapLibre GL JS renders the logo only when the active style's
+        // metadata declares one and exposes no runtime alignment API, so the
+        // Logo card is a native-only control.
+        if (!kIsWeb)
+          _buildControlCard(
+            title: 'Logo',
+            icon: Icons.image,
+            enabled: _logoEnabled,
+            onToggle: _updateLogo,
+            rows: [
+              ControlRow(
+                label: 'Position',
+                value: _logoPosition.name.capitalize(),
+                onPressed: _cycleLogoPosition,
+              ),
+            ],
+          ),
         _buildControlCard(
           title: 'Attribution',
           icon: Icons.info_outline,
           enabled: true,
-          position: _attributionPosition.name.capitalize(),
-          onChangePosition: _cycleAttributionPosition,
           showToggle: false,
+          rows: [
+            ControlRow(
+              label: 'Position',
+              value: _attributionPosition.name.capitalize(),
+              onPressed: _cycleAttributionPosition,
+            ),
+          ],
         ),
         _buildControlCard(
           title: 'Compass',
           icon: Icons.explore,
           enabled: _compassEnabled,
-          position: _compassPosition.name.capitalize(),
           onToggle: _updateCompass,
-          onChangePosition: _cycleCompassPosition,
+          rows: [
+            ControlRow(
+              label: 'Position',
+              value: _compassPosition.name.capitalize(),
+              onPressed: _cycleCompassPosition,
+            ),
+          ],
         ),
+        if (kIsWeb)
+          _buildControlCard(
+            title: 'Scale (Web only)',
+            icon: Icons.straighten,
+            enabled: _scaleControlEnabled,
+            onToggle: _updateScaleControl,
+            rows: [
+              ControlRow(
+                label: 'Position',
+                value: _scalePosition.name.capitalize(),
+                onPressed: _cycleScalePosition,
+              ),
+              ControlRow(
+                label: 'Unit',
+                value: _scaleUnit.name.capitalize(),
+                onPressed: _cycleScaleUnit,
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -139,8 +222,7 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
     required String title,
     required IconData icon,
     required bool enabled,
-    required String position,
-    required VoidCallback onChangePosition,
+    required List<ControlRow> rows,
     void Function(bool)? onToggle,
     bool showToggle = true,
   }) {
@@ -172,48 +254,50 @@ class _MapControlsBodyState extends State<_MapControlsBody> {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Position',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+            for (final row in rows) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          row.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        position,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                        const SizedBox(height: 2),
+                        Text(
+                          row.value,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                FilledButton.tonal(
-                  onPressed: (!showToggle || enabled) ? onChangePosition : null,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      ],
                     ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    'Change',
-                    style: TextStyle(fontSize: 12),
+                  FilledButton.tonal(
+                    onPressed: (!showToggle || enabled) ? row.onPressed : null,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Change',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

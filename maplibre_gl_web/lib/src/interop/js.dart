@@ -39,13 +39,23 @@ void setJsProperty(JSObject obj, String propertyName, JSAny? value) {
   (obj as JSObjectExt)[propertyName] = value;
 }
 
-/// Creates an empty JavaScript object literal.
-@JS('Object.create')
-external JSObject _createJsObject(JSAny? prototype);
+/// Creates an empty JavaScript object literal equivalent to `{}`.
+@JS('Object')
+external JSObject _newJsObject();
 
 /// Helper function to create an empty JavaScript object.
+///
+/// Returns `Object()` — a plain `{}` with `Object.prototype` on its chain,
+/// so prototype methods like `hasOwnProperty` are available.
+///
+/// Previously this used `Object.create(null)` (a null-prototype object).
+/// It was changed during the MapLibre GL JS v5 migration in #761 because
+/// the null-prototype variant caused "missing prototype" failures via
+/// interop. If a null-prototype / dictionary-style object is ever needed
+/// (e.g. for untrusted keys), add a separate helper rather than altering
+/// this one.
 JSObject createJsObject() {
-  return _createJsObject(null);
+  return _newJsObject();
 }
 
 /// Parse a JSON string using JavaScript's native JSON.parse.

@@ -6,11 +6,11 @@ import '../../shared/shared.dart';
 /// Comprehensive camera control example with animated and instant movements
 class CameraControlsExample extends ExamplePage {
   const CameraControlsExample({super.key})
-      : super(
-          const Icon(Icons.videocam),
-          'Camera Controls',
-          category: ExampleCategory.camera,
-        );
+    : super(
+        const Icon(Icons.videocam),
+        'Camera Controls',
+        category: ExampleCategory.camera,
+      );
 
   @override
   Widget build(BuildContext context) => const _CameraControlsBody();
@@ -26,6 +26,9 @@ class _CameraControlsBody extends StatefulWidget {
 class _CameraControlsBodyState extends State<_CameraControlsBody> {
   MapLibreMapController? _controller;
   bool _isAnimated = true;
+  bool _useEase = false;
+  // null = platform default (each platform's historical easeCamera curve).
+  CameraAnimationInterpolation? _interpolation;
   CameraPosition? _currentPosition;
 
   void _onMapCreated(MapLibreMapController controller) {
@@ -42,11 +45,21 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
   Future<void> _moveCamera(CameraUpdate update) async {
     if (_controller == null) return;
 
-    if (_isAnimated) {
-      await _controller!.animateCamera(update,
-          duration: ExampleConstants.cameraAnimationDuration);
-    } else {
+    if (!_isAnimated) {
       await _controller!.moveCamera(update);
+      return;
+    }
+    if (_useEase) {
+      await _controller!.easeCamera(
+        update,
+        duration: ExampleConstants.cameraAnimationDuration,
+        interpolation: _interpolation,
+      );
+    } else {
+      await _controller!.animateCamera(
+        update,
+        duration: ExampleConstants.cameraAnimationDuration,
+      );
     }
   }
 
@@ -74,22 +87,21 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
   }
 
   Future<void> _resetCamera() => _moveCamera(
-        CameraUpdate.newCameraPosition(ExampleConstants.defaultCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.defaultCameraPosition),
+  );
 
   Future<void> _goToSydney() => _moveCamera(
-        CameraUpdate.newCameraPosition(ExampleConstants.sydneyCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.sydneyCameraPosition),
+  );
   Future<void> _goToSanFrancisco() => _moveCamera(
-        CameraUpdate.newCameraPosition(
-            ExampleConstants.sanFranciscoCameraPosition),
-      );
+    CameraUpdate.newCameraPosition(ExampleConstants.sanFranciscoCameraPosition),
+  );
 
   Future<void> _goToLondon() => _moveCamera(
-        CameraUpdate.newCameraPosition(
-          ExampleConstants.londonCameraPosition,
-        ),
-      );
+    CameraUpdate.newCameraPosition(
+      ExampleConstants.londonCameraPosition,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -113,26 +125,92 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
         Card(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      _isAnimated ? Icons.play_circle : Icons.skip_next,
-                      color: Theme.of(context).colorScheme.primary,
+                    Row(
+                      children: [
+                        Icon(
+                          _isAnimated ? Icons.play_circle : Icons.skip_next,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Animation',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Animation',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Switch(
+                      value: _isAnimated,
+                      onChanged: (value) => setState(() => _isAnimated = value),
                     ),
                   ],
                 ),
-                Switch(
-                  value: _isAnimated,
-                  onChanged: (value) => setState(() => _isAnimated = value),
-                ),
+                if (_isAnimated) ...[
+                  const Divider(height: 16),
+                  // easeCamera vs animateCamera toggle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Use easeCamera\n(with interpolation control)',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                      Switch(
+                        value: _useEase,
+                        onChanged: (value) => setState(() => _useEase = value),
+                      ),
+                    ],
+                  ),
+                  if (_useEase) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Interpolation',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButton<CameraAnimationInterpolation?>(
+                      isExpanded: true,
+                      value: _interpolation,
+                      onChanged:
+                          (value) => setState(() => _interpolation = value),
+                      items: const [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text('Default (platform default curve)'),
+                        ),
+                        DropdownMenuItem(
+                          value: CameraAnimationInterpolation.linear,
+                          child: Text('linear — constant velocity'),
+                        ),
+                        DropdownMenuItem(
+                          value: CameraAnimationInterpolation.easeInOut,
+                          child: Text('easeInOut'),
+                        ),
+                        DropdownMenuItem(
+                          value: CameraAnimationInterpolation.easeOut,
+                          child: Text('easeOut (iOS + Web only)'),
+                        ),
+                        DropdownMenuItem(
+                          value: CameraAnimationInterpolation.fastOutLinearIn,
+                          child: Text('fastOutLinearIn (iOS + Web only)'),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Tip: tap two distant locations in quick succession '
+                      '— with "linear" the camera maintains constant velocity '
+                      'across consecutive calls, avoiding deceleration jumps.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
               ],
             ),
           ),

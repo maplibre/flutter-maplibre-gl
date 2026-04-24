@@ -47,6 +47,19 @@ class OfflinePackDownloader {
 
     // MARK: Public methods
 
+    /// Signals the awaiting Dart side that this download will not produce
+    /// further events. Used when the caller invalidates the download via
+    /// delete or reset before it can complete naturally.
+    func terminate(errorCode: String, errorMessage: String) {
+        guard !isCompleted else { return }
+        isCompleted = true
+        channelHandler.onError(
+            errorCode: errorCode,
+            errorMessage: errorMessage,
+            errorDetails: nil
+        )
+    }
+
     func download() -> Int {
         let storage = MLNOfflineStorage.shared
         // While the Android SDK generates a region ID in createOfflineRegion, the iOS
@@ -74,6 +87,8 @@ class OfflinePackDownloader {
         {
             // Start downloading
             self.pack = pack
+            // Track pack for pause/resume support
+            OfflineManagerUtils.activePacks[region.id] = pack
             pack.resume()
             // Provide region with generated
             result(String(data: regionData, encoding: .utf8))
@@ -111,7 +126,6 @@ class OfflinePackDownloader {
         )
         // Check if downloading is complete
         if pack.state == .complete {
-            print("Region downloaded successfully")
             // set download state to inactive
             // This can be called multiple times but result can only be called once. We use this
             // check to ensure that
@@ -120,11 +134,16 @@ class OfflinePackDownloader {
             channelHandler.onSuccess()
             result(nil)
             if let region = OfflineRegion.fromOfflinePack(pack) {
+                OfflineManagerUtils.activePacks.removeValue(forKey: region.id)
                 OfflineManagerUtils.releaseDownloader(id: region.id)
             }
         } else {
-            print("Region download progress \(downloadProgress)")
-            channelHandler.onProgress(progress: downloadProgress)
+            channelHandler.onProgress(
+                progress: downloadProgress,
+                completedResourceCount: packProgress.countOfResourcesCompleted,
+                requiredResourceCount: packProgress.countOfResourcesExpected,
+                completedResourceSize: packProgress.countOfBytesCompleted
+            )
         }
     }
 
@@ -146,6 +165,7 @@ class OfflinePackDownloader {
             details: nil
         ))
         if let region = OfflineRegion.fromOfflinePack(pack) {
+            OfflineManagerUtils.activePacks.removeValue(forKey: region.id)
             OfflineManagerUtils.deleteRegion(result: result, id: region.id)
         }
     }
@@ -169,6 +189,7 @@ class OfflinePackDownloader {
             details: nil
         ))
         if let region = OfflineRegion.fromOfflinePack(pack) {
+            OfflineManagerUtils.activePacks.removeValue(forKey: region.id)
             OfflineManagerUtils.deleteRegion(result: result, id: region.id)
         }
     }

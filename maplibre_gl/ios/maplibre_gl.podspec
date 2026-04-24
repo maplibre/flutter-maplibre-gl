@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'maplibre_gl'
-  s.version          = '0.25.0'
+  s.version          = '0.26.0'
   s.summary          = 'MapLibre GL Flutter plugin'
   s.description      = <<-DESC
 MapLibre GL Flutter plugin.
@@ -16,7 +16,7 @@ MapLibre GL Flutter plugin.
   s.dependency 'Flutter'
   # When updating the dependency version,
   # make sure to also update the version in Package.swift.
-  s.dependency 'MapLibre', '6.19.1'
+  s.dependency 'MapLibre', '6.25.1'
   s.swift_version = '5.0'
   s.ios.deployment_target = '13.0'
 end

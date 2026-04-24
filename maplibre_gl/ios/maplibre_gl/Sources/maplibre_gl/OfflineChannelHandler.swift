@@ -57,8 +57,19 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
         sink?(jsonString)
     }
 
-    func onProgress(progress: Double) {
-        let body: [String: Any] = ["status": "progress", "progress": progress]
+    func onProgress(
+        progress: Double,
+        completedResourceCount: UInt64 = 0,
+        requiredResourceCount: UInt64 = 0,
+        completedResourceSize: UInt64 = 0
+    ) {
+        let body: [String: Any] = [
+            "status": "progress",
+            "progress": progress,
+            "completedResourceCount": completedResourceCount,
+            "requiredResourceCount": requiredResourceCount,
+            "completedResourceSize": completedResourceSize,
+        ]
         guard let jsonData = try? JSONSerialization.data(
             withJSONObject: body,
             options: .prettyPrinted

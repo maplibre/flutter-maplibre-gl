@@ -8,11 +8,11 @@ import '../../shared/shared.dart';
 /// Example demonstrating gesture and interaction configuration
 class MapGesturesExample extends ExamplePage {
   const MapGesturesExample({super.key})
-      : super(
-          const Icon(Icons.touch_app),
-          'Map Gestures',
-          category: ExampleCategory.interaction,
-        );
+    : super(
+        const Icon(Icons.touch_app),
+        'Map Gestures',
+        category: ExampleCategory.interaction,
+      );
 
   @override
   Widget build(BuildContext context) => const _MapGesturesBody();

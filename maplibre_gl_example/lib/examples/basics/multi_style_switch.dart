@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
+import '../../shared/constants.dart';
 
 /// A page that demonstrates switching between multiple map styles in MapLibre GL.
 ///
@@ -14,8 +14,11 @@ import '../../page.dart';
 /// The styles include a remote style, an embedded minimal style, and styles loaded from assets.
 class MultiStyleSwitchPage extends ExamplePage {
   const MultiStyleSwitchPage({super.key})
-      : super(const Icon(Icons.style), 'Multi style switch',
-            category: ExampleCategory.basics);
+    : super(
+        const Icon(Icons.style),
+        'Multi style switch',
+        category: ExampleCategory.basics,
+      );
 
   @override
   Widget build(BuildContext context) => const _MultiStyleSwitchBody();
@@ -36,9 +39,9 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   CameraPosition? _lastCamera;
 
   // Demo styles
-  static const String _remoteStyle = MapLibreStyles.demo;
+  static const String _remoteStyle = ExampleConstants.demoMapStyle;
   static const String _embeddedMinimalStyle =
-      '{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
+      '{"version":8,"glyphs":"https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
   static const String _osmAssetStyle = 'assets/osm_style.json';
 
@@ -54,12 +57,13 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
     setState(() => _isSwitching = true);
 
     final entry = _styles[index];
-    log('Switching to style: ${entry.label}');
 
     try {
       await _controller!.setStyle(entry.styleString);
     } catch (e, st) {
-      log('Failed to set style ${entry.label}: $e', stackTrace: st);
+      print(
+        'MultiStyleSwitchPage: Failed to set style ${entry.label}: $e\n$st',
+      );
       // Fallback to remote style
       await _controller!.setStyle(_remoteStyle);
       _currentIndex = 0;
@@ -69,16 +73,17 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   Future<void> _onStyleLoaded() async {
     // Restore camera if we had one pending.
     if (_lastCamera != null && _controller != null) {
-      await _controller!
-          .moveCamera(CameraUpdate.newCameraPosition(_lastCamera!));
+      await _controller!.moveCamera(
+        CameraUpdate.newCameraPosition(_lastCamera!),
+      );
     }
     if (mounted) {
       setState(() => _isSwitching = false);
     }
   }
 
-  void _onMapCreated(MapLibreMapController c) {
-    _controller = c;
+  Future<void> _onMapCreated(MapLibreMapController c) async {
+    setState(() => _controller = c);
     c.addListener(() {
       // Listen to camera changes to keep track of last position.
       if (!c.isCameraMoving) return;
@@ -107,8 +112,10 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
         children: [
           MapLibreMap(
             trackCameraPosition: true,
-            initialCameraPosition:
-                const CameraPosition(target: LatLng(0, 0), zoom: 2),
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(0, 0),
+              zoom: 2,
+            ),
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
             onCameraIdle: _onCameraIdle,
@@ -126,20 +133,21 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
                   borderRadius: BorderRadius.circular(16),
                   color: Theme.of(context).colorScheme.surface,
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text.rich(
                             TextSpan(
                               text: 'Current style: ',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                               children: [
                                 TextSpan(
                                   text: current.label,
@@ -159,8 +167,9 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
                                 SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                                 SizedBox(width: 8),
                                 Text('Switching...'),

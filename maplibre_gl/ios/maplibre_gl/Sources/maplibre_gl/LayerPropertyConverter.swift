@@ -4,17 +4,14 @@
 import MapLibre
 
 class LayerPropertyConverter {
-    class func addSymbolProperties(symbolLayer: MLNSymbolStyleLayer, properties: [String: String]) {
+    class func addSymbolProperties(symbolLayer: MLNSymbolStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -132,9 +129,10 @@ class LayerPropertyConverter {
                 case "text-optional":
                     symbolLayer.textOptional = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        symbolLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            symbolLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -143,17 +141,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: String]) {
+    class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -185,9 +180,10 @@ class LayerPropertyConverter {
                 case "circle-sort-key":
                     circleLayer.circleSortKey = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        circleLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            circleLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -196,17 +192,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addLineProperties(lineLayer: MLNLineStyleLayer, properties: [String: String]) {
+    class func addLineProperties(lineLayer: MLNLineStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -246,9 +239,10 @@ class LayerPropertyConverter {
                 case "line-sort-key":
                     lineLayer.lineSortKey = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        lineLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            lineLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -257,17 +251,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: String]) {
+    class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -291,9 +282,10 @@ class LayerPropertyConverter {
                 case "fill-sort-key":
                     fillLayer.fillSortKey = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        fillLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            fillLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -302,17 +294,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addFillExtrusionProperties(fillExtrusionLayer: MLNFillExtrusionStyleLayer, properties: [String: String]) {
+    class func addFillExtrusionProperties(fillExtrusionLayer: MLNFillExtrusionStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -336,9 +325,10 @@ class LayerPropertyConverter {
                 case "fill-extrusion-vertical-gradient":
                     fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        fillExtrusionLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            fillExtrusionLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -347,17 +337,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: String]) {
+    class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -381,9 +368,10 @@ class LayerPropertyConverter {
                 case "raster-fade-duration":
                     rasterLayer.rasterFadeDuration = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        rasterLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            rasterLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -392,17 +380,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addHillshadeProperties(hillshadeLayer: MLNHillshadeStyleLayer, properties: [String: String]) {
+    class func addHillshadeProperties(hillshadeLayer: MLNHillshadeStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -410,21 +395,22 @@ class LayerPropertyConverter {
             
             switch propertyName {
                 case "hillshade-illumination-direction":
-                    hillshadeLayer.hillshadeIlluminationDirection = expression
+                    hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
                 case "hillshade-illumination-anchor":
                     hillshadeLayer.hillshadeIlluminationAnchor = expression
                 case "hillshade-exaggeration":
                     hillshadeLayer.hillshadeExaggeration = expression
                 case "hillshade-shadow-color":
-                    hillshadeLayer.hillshadeShadowColor = expression
+                    hillshadeLayer.hillshadeShadowColor = wrapColorAsArray(expression)
                 case "hillshade-highlight-color":
-                    hillshadeLayer.hillshadeHighlightColor = expression
+                    hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
                 case "hillshade-accent-color":
                     hillshadeLayer.hillshadeAccentColor = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        hillshadeLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            hillshadeLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -433,17 +419,14 @@ class LayerPropertyConverter {
         }
     }
 
-    class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: String]) {
+    class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Check if the value is explicitly null to clear the property
-            let trimmedValue = propertyValue.trimmingCharacters(in: .whitespaces)
-            
-            // Prepare expression: nil for "null", parsed for valid values, skip for invalid
             var expression: NSExpression?
-            if trimmedValue == "null" {
+            if propertyValue is NSNull {
                 expression = nil
             } else {
-                guard let expr = interpretExpression(propertyName: propertyName, expression: propertyValue) else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
                     continue
                 }
                 expression = expr
@@ -461,9 +444,10 @@ class LayerPropertyConverter {
                 case "heatmap-opacity":
                     heatmapLayer.heatmapOpacity = expression
                 case "visibility":
-                    if trimmedValue != "null" {
-                        let trimmedPropertyValue = propertyValue.trimmingCharacters(in: .init(charactersIn: "\""))
-                        heatmapLayer.isVisible = trimmedPropertyValue == "visible"
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            heatmapLayer.isVisible = visibilityValue == "visible"
+                        }
                     }
              
                 default:
@@ -472,65 +456,124 @@ class LayerPropertyConverter {
         }
     }
 
-    private class func interpretExpression(propertyName: String, expression: String) -> NSExpression? {
+    /// Wraps a single-color NSExpression in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
+    private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let color = expression.constantValue as? UIColor {
+            return NSExpression(forConstantValue: [color])
+        }
+        return expression
+    }
+
+    /// Wraps a single numeric NSExpression value in an array, as required by
+    /// MapLibre 6.24.0+ for hillshadeIlluminationDirection.
+    private class func wrapValueAsArray(_ expression: NSExpression?) -> NSExpression? {
+        guard let expression = expression else { return nil }
+        if let number = expression.constantValue as? NSNumber {
+            return NSExpression(forConstantValue: [number])
+        }
+        return expression
+    }
+
+    private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {
         let isColor = propertyName.contains("color");
         let isOffset = propertyName.contains("offset");
         let isTranslate = propertyName.contains("translate");
+        let isEdgeInsets = propertyName == "icon-text-fit-padding";
 
-        do {
-            let json = try JSONSerialization.jsonObject(with: expression.data(using: .utf8)!, options: .fragmentsAllowed)
-            
-            // Check if JSON contains NSNull - this would create an invalid NSExpression
-            if json is NSNull {
-                return nil
-            }
-            
-            // this is required because NSExpression.init(mglJSONObject: json) fails to create
-            // a proper Expression if the data of is a hexString
-            if isColor {
-                if let color = json as? String {
-                    return NSExpression(forConstantValue: UIColor(hexString: color))
-                }
-            }
+        // The value is already in native format (not JSON string), use it directly
+        let json = value
 
-            if let offset = json as? [Any]{
-                // checks on the value of property that are literal expressions
-                if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
-                    if let vector = offset.last as? [Any]{
-                        if(vector.count == 2) {
-                            if isOffset || isTranslate {
-                                // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                                // a proper Expression if the data of a literal is an array destined for a CGVector
-                                if let x = vector.first as? Double, let y = vector.last as? Double {
-                                    return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
-                                }
-                            }
-                            return NSExpression.init(mglJSONObject: json)
+        // Check if value is NSNull
+        if json is NSNull {
+            return nil
+        }
+
+        // text-font is a font stack (array of string names), not an expression.
+        if propertyName == "text-font", let fontNames = json as? [String] {
+            return NSExpression(forConstantValue: fontNames)
+        }
+
+        // this is required because NSExpression.init(mglJSONObject: json) fails to create
+        // a proper Expression if the data of is a hexString
+        if isColor {
+            if let color = json as? String {
+                return NSExpression(forConstantValue: UIColor(hexString: color))
+            }
+        }
+
+        if let offset = json as? [Any]{
+            // checks on the value of property that are literal expressions
+            if offset.count == 2 && offset.first is String && offset.first as? String == "literal" {
+                if let vector = offset.last as? [Any]{
+                    if isEdgeInsets && vector.count == 4 {
+                        let values = vector.compactMap { element -> CGFloat? in
+                            if let d = element as? Double { return CGFloat(d) }
+                            if let i = element as? Int { return CGFloat(i) }
+                            return nil
+                        }
+                        if values.count == 4 {
+                            // Style spec order: [top, right, bottom, left]
+                            return NSExpression(forConstantValue: NSValue(
+                                uiEdgeInsets: UIEdgeInsets(
+                                    top: values[0], left: values[3],
+                                    bottom: values[2], right: values[1]
+                                )
+                            ))
                         }
                     }
-                // checks on the value of properties that are arrays
-                } else if offset.count == 2, let x = offset.first as? Double, let y = offset.last as? Double {
-                    if isOffset || isTranslate {
-                        // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                        // a proper Expression if the data of an array is destined for a CGVector
-                        return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
-                    }
-                    // this is required because NSExpression.init(mglJSONObject: json) fails to create
-                    // a proper Expression if the data is an array of double
-                    return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
-                } else {
-                    // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
-                    // Convert to array of NSNumbers for proper expression creation
-                    let numbers = offset.compactMap { $0 as? Double }.map { NSNumber(value: $0) }
-                    if numbers.count == offset.count {
-                        return NSExpression(forConstantValue: numbers)
+                    if(vector.count == 2) {
+                        if isOffset || isTranslate {
+                            // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                            // a proper Expression if the data of a literal is an array destined for a CGVector
+                            if let x = vector.first as? Double, let y = vector.last as? Double {
+                                return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
+                            }
+                        }
+                        return NSExpression.init(mglJSONObject: json)
                     }
                 }
+            // checks on the value of properties that are arrays
+            } else if offset.count == 2, let x = offset.first as? Double, let y = offset.last as? Double {
+                if isOffset || isTranslate {
+                    // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                    // a proper Expression if the data of an array is destined for a CGVector
+                    return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
+                }
+                // this is required because NSExpression.init(mglJSONObject: json) fails to create
+                // a proper Expression if the data is an array of double
+                return NSExpression(forConstantValue: [NSNumber(value: x), NSNumber(value: y)])
+            } else if isEdgeInsets && offset.count == 4 {
+                // icon-text-fit-padding requires UIEdgeInsets; style spec order is [top, right, bottom, left]
+                let values = offset.compactMap { element -> CGFloat? in
+                    if let d = element as? Double { return CGFloat(d) }
+                    if let i = element as? Int { return CGFloat(i) }
+                    return nil
+                }
+                if values.count == 4 {
+                    return NSExpression(forConstantValue: NSValue(
+                        uiEdgeInsets: UIEdgeInsets(
+                            top: values[0], left: values[3],
+                            bottom: values[2], right: values[1]
+                        )
+                    ))
+                }
+            } else {
+                // Handle arrays with any number of elements (e.g., dash arrays with 3+ elements)
+                // Convert to array of NSNumbers for proper expression creation
+                let numbers = offset.compactMap { element -> NSNumber? in
+                    if let d = element as? Double { return NSNumber(value: d) }
+                    if let i = element as? Int { return NSNumber(value: i) }
+                    if let n = element as? NSNumber { return n }
+                    return nil
+                }
+                if numbers.count == offset.count {
+                    return NSExpression(forConstantValue: numbers)
+                }
             }
-            
-            return NSExpression.init(mglJSONObject: json)
-        } catch {
         }
-        return nil
+
+        return NSExpression.init(mglJSONObject: json)
     }
 }

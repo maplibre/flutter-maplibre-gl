@@ -4,57 +4,63 @@
 
 part of '../maplibre_gl.dart';
 
-typedef OnMapClickCallback = void Function(
-    Point<double> point, LatLng coordinates);
+typedef OnMapClickCallback =
+    void Function(Point<double> point, LatLng coordinates);
 
 // New generalized feature interaction callback that always provides a raw feature id.
 // If the feature also corresponds to a managed annotation, the annotation parameter
 // is non-null; otherwise it is null (e.g. raw style layer feature not managed by an AnnotationManager).
-typedef OnFeatureInteractionCallback = void Function(
-  Point<double> point,
-  LatLng coordinates,
-  String id,
-  String layerId,
-  Annotation? annotation,
-);
+typedef OnFeatureInteractionCallback =
+    void Function(
+      Point<double> point,
+      LatLng coordinates,
+      String id,
+      String layerId,
+      Annotation? annotation,
+    );
 
-typedef OnFeatureDragCallback = void Function(
-  Point<double> point,
-  LatLng origin,
-  LatLng current,
-  LatLng delta,
-  String id,
-  Annotation? annotation,
-  DragEventType eventType,
-);
+typedef OnFeatureDragCallback =
+    void Function(
+      Point<double> point,
+      LatLng origin,
+      LatLng current,
+      LatLng delta,
+      String id,
+      Annotation? annotation,
+      DragEventType eventType,
+    );
 
-typedef OnFeatureHoverCallback = void Function(
-  Point<double> point,
-  LatLng coordinates,
-  String id,
-  Annotation? annotation,
-  HoverEventType eventType,
-);
+typedef OnFeatureHoverCallback =
+    void Function(
+      Point<double> point,
+      LatLng coordinates,
+      String id,
+      Annotation? annotation,
+      HoverEventType eventType,
+    );
 
-typedef OnMapLongClickCallback = void Function(
-    Point<double> point, LatLng coordinates);
+typedef OnMapLongClickCallback =
+    void Function(Point<double> point, LatLng coordinates);
+
+typedef OnMapMouseMoveCallback =
+    void Function(
+      Point<double> point,
+      LatLng coordinates,
+    );
 
 typedef OnStyleLoadedCallback = void Function();
 
 typedef OnUserLocationUpdated = void Function(UserLocation location);
 
 typedef OnCameraTrackingDismissedCallback = void Function();
-typedef OnCameraTrackingChangedCallback = void Function(
-    MyLocationTrackingMode mode);
+typedef OnCameraTrackingChangedCallback =
+    void Function(MyLocationTrackingMode mode);
 
 typedef OnCameraMoveCallback = void Function(CameraPosition cameraPosition);
 
 typedef OnCameraIdleCallback = void Function();
 
 typedef OnMapIdleCallback = void Function();
-
-@Deprecated('MaplibreMapController was renamed to MapLibreMapController.')
-typedef MaplibreMapController = MapLibreMapController;
 
 /// Controller for a single [MapLibreMap] instance running on the host platform.
 ///
@@ -96,7 +102,7 @@ typedef MaplibreMapController = MapLibreMapController;
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
     required MapLibrePlatform maplibrePlatform,
-    required CameraPosition initialCameraPosition,
+    CameraPosition? initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
     this.onStyleLoadedCallback,
@@ -143,8 +149,9 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
       final id = payload["id"];
       final annotation = getAnnotationById(id);
-      final enmDragEventType = DragEventType.values
-          .firstWhere((element) => element.name == payload["eventType"]);
+      final enmDragEventType = DragEventType.values.firstWhere(
+        (element) => element.name == payload["eventType"],
+      );
       for (final fun in List.of(onFeatureDrag)) {
         fun(
           payload["point"],
@@ -161,8 +168,9 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
       final id = payload["id"];
       final annotation = getAnnotationById(id);
-      final hoverEventType = HoverEventType.values
-          .firstWhere((e) => e.name == payload["eventType"]);
+      final hoverEventType = HoverEventType.values.firstWhere(
+        (e) => e.name == payload["eventType"],
+      );
       for (final fun in List.of(onFeatureHover)) {
         fun(
           payload["point"],
@@ -195,6 +203,26 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
+      // Dispose old managers before re-creating them for the new style.
+      // This prevents stale in-flight method channel calls from racing
+      // with a new style that has cleared the native Style reference.
+      try {
+        await fillManager?.dispose();
+      } catch (_) {}
+      fillManager = null;
+      try {
+        await lineManager?.dispose();
+      } catch (_) {}
+      lineManager = null;
+      try {
+        await circleManager?.dispose();
+      } catch (_) {}
+      circleManager = null;
+      try {
+        await symbolManager?.dispose();
+      } catch (_) {}
+      symbolManager = null;
+
       final interactionEnabled = annotationConsumeTapEvents.toSet();
       for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
@@ -234,6 +262,15 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onMapLongClickPlatform.add((dict) {
       onMapLongClick?.call(dict['point'], dict['latLng']);
+    });
+
+    _maplibrePlatform.onMapMouseMovePlatform.add((payload) {
+      for (final fun in List.of(onMapMouseMove)) {
+        fun(
+          payload["point"],
+          payload["latLng"],
+        );
+      }
     });
 
     _maplibrePlatform.onCameraTrackingChangedPlatform.add((mode) {
@@ -302,10 +339,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
   final onFeatureHover = <OnFeatureHoverCallback>[];
 
-  /// Callbacks to receive tap events for info windows on symbols
-  @Deprecated("InfoWindow tapped is no longer supported")
-  final ArgumentCallbacks<Symbol> onInfoWindowTapped =
-      ArgumentCallbacks<Symbol>();
+  /// Callbacks to receive mouse move events over the map.
+  /// Provides cursor position (screen point and geographic coordinates).
+  final onMapMouseMove = <OnMapMouseMoveCallback>[];
 
   /// The current set of symbols on this map added with the [addSymbol] or [addSymbols] methods.
   ///
@@ -378,8 +414,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
+  Future<bool?> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
     return _maplibrePlatform.animateCamera(cameraUpdate, duration: duration);
   }
 
@@ -405,10 +443,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
-  Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
-      {String? promoteId}) async {
-    await _maplibrePlatform.addGeoJsonSource(sourceId, geojson,
-        promoteId: promoteId);
+  Future<void> addGeoJsonSource(
+    String sourceId,
+    Map<String, dynamic> geojson, {
+    String? promoteId,
+  }) async {
+    await _maplibrePlatform.addGeoJsonSource(
+      sourceId,
+      geojson,
+      promoteId: promoteId,
+    );
   }
 
   /// Sets new geojson data to and existing source
@@ -423,7 +467,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setGeoJsonSource(
-      String sourceId, Map<String, dynamic> geojson) async {
+    String sourceId,
+    Map<String, dynamic> geojson,
+  ) async {
     await _maplibrePlatform.setGeoJsonSource(sourceId, geojson);
   }
 
@@ -439,9 +485,108 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setGeoJsonFeature(
-      String sourceId, Map<String, dynamic> geojsonFeature) async {
+    String sourceId,
+    Map<String, dynamic> geojsonFeature,
+  ) async {
     await _maplibrePlatform.setFeatureForGeoJsonSource(
-        sourceId, geojsonFeature);
+      sourceId,
+      geojsonFeature,
+    );
+  }
+
+  /// Sets the state of a feature.
+  ///
+  /// Features are identified by their `id` attribute, which can be set using
+  /// the `promoteId` option at the time of creation of the source.
+  ///
+  /// A feature's state is a set of user-defined key-value pairs that can be
+  /// dynamically updated and used for styling with data-driven properties.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] The unique ID of the feature. Must be an integer or a string
+  ///   that can be cast to an integer.
+  /// [state] A set of key-value pairs representing the state. Values should be
+  ///   valid JSON types.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// Note: This method requires features to have an ID. For GeoJSON sources,
+  /// use the `promoteId` option when adding the source to promote a property
+  /// to be the feature's ID.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, dynamic> state, {
+    String? sourceLayer,
+  }) async {
+    await _maplibrePlatform.setFeatureState(
+      sourceId,
+      featureId,
+      state,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  /// Removes the state of a feature, setting it back to the default behavior.
+  ///
+  /// If only [sourceId] is specified, removes all states for all features in
+  /// that source. If [featureId] is also specified, removes all state keys for
+  /// that feature. If [stateKey] is also specified, removes only that key from
+  /// the feature's state.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] (Optional) The unique ID of the feature.
+  /// [stateKey] (Optional) The key in the feature state to remove.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> removeFeatureState(
+    String sourceId, {
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  }) async {
+    await _maplibrePlatform.removeFeatureState(
+      sourceId,
+      featureId: featureId,
+      stateKey: stateKey,
+      sourceLayer: sourceLayer,
+    );
+  }
+
+  /// Gets the state of a feature.
+  ///
+  /// **Note**: This feature is currently only available on web.
+  /// On Android and iOS, this method will throw an [UnimplementedError].
+  ///
+  /// [sourceId] The ID of the vector or GeoJSON source.
+  /// [featureId] The unique ID of the feature.
+  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  ///
+  /// Returns a map containing the feature's state, or null if the feature
+  /// doesn't exist or has no state.
+  ///
+  /// The returned [Future] completes with the feature state.
+  Future<Map<String, dynamic>?> getFeatureState(
+    String sourceId,
+    String featureId, {
+    String? sourceLayer,
+  }) async {
+    final result = await _maplibrePlatform.getFeatureState(
+      sourceId,
+      featureId,
+      sourceLayer: sourceLayer,
+    );
+    return result;
   }
 
   /// Add a symbol layer to the map with the given properties
@@ -464,13 +609,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addSymbolLayer(
-      String sourceId, String layerId, SymbolLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      bool enableInteraction = true}) async {
+    String sourceId,
+    String layerId,
+    SymbolLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    bool enableInteraction = true,
+  }) async {
     await _maplibrePlatform.addSymbolLayer(
       sourceId,
       layerId,
@@ -504,13 +652,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLineLayer(
-      String sourceId, String layerId, LineLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      bool enableInteraction = true}) async {
+    String sourceId,
+    String layerId,
+    LineLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    bool enableInteraction = true,
+  }) async {
     await _maplibrePlatform.addLineLayer(
       sourceId,
       layerId,
@@ -562,13 +713,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addFillLayer(
-      String sourceId, String layerId, FillLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      bool enableInteraction = true}) async {
+    String sourceId,
+    String layerId,
+    FillLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    bool enableInteraction = true,
+  }) async {
     await _maplibrePlatform.addFillLayer(
       sourceId,
       layerId,
@@ -602,13 +756,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addFillExtrusionLayer(
-      String sourceId, String layerId, FillExtrusionLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      bool enableInteraction = true}) async {
+    String sourceId,
+    String layerId,
+    FillExtrusionLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    bool enableInteraction = true,
+  }) async {
     await _maplibrePlatform.addFillExtrusionLayer(
       sourceId,
       layerId,
@@ -642,13 +799,16 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addCircleLayer(
-      String sourceId, String layerId, CircleLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter,
-      bool enableInteraction = true}) async {
+    String sourceId,
+    String layerId,
+    CircleLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+    bool enableInteraction = true,
+  }) async {
     await _maplibrePlatform.addCircleLayer(
       sourceId,
       layerId,
@@ -677,11 +837,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
   Future<void> addRasterLayer(
-      String sourceId, String layerId, RasterLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
+    String sourceId,
+    String layerId,
+    RasterLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
     await _maplibrePlatform.addRasterLayer(
       sourceId,
       layerId,
@@ -708,11 +871,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
   Future<void> addHillshadeLayer(
-      String sourceId, String layerId, HillshadeLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
+    String sourceId,
+    String layerId,
+    HillshadeLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
     await _maplibrePlatform.addHillshadeLayer(
       sourceId,
       layerId,
@@ -739,11 +905,14 @@ class MapLibreMapController extends ChangeNotifier {
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
   Future<void> addHeatmapLayer(
-      String sourceId, String layerId, HeatmapLayerProperties properties,
-      {String? belowLayerId,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom}) async {
+    String sourceId,
+    String layerId,
+    HeatmapLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
       layerId,
@@ -760,9 +929,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> updateMyLocationTrackingMode(
-      MyLocationTrackingMode myLocationTrackingMode) async {
-    return _maplibrePlatform
-        .updateMyLocationTrackingMode(myLocationTrackingMode);
+    MyLocationTrackingMode myLocationTrackingMode,
+  ) async {
+    return _maplibrePlatform.updateMyLocationTrackingMode(
+      myLocationTrackingMode,
+    );
   }
 
   /// Updates the language of the map labels to match the device's language.
@@ -784,8 +955,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
-  Future<void> updateContentInsets(EdgeInsets insets,
-      [bool animated = false]) async {
+  Future<void> updateContentInsets(
+    EdgeInsets insets, [
+    bool animated = false,
+  ]) async {
     return _maplibrePlatform.updateContentInsets(insets, animated);
   }
 
@@ -849,12 +1022,23 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]
   /// specifies the animation duration in milliseconds (optional).
+  /// The [interpolation] parameter controls the easing curve (optional).
+  ///
+  /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking
+  /// without velocity discontinuities. This is ideal for following moving objects.
   ///
   /// The returned [Future] completes with true if the animation finished successfully,
   /// or false if it was cancelled.
-  Future<bool> easeCamera(CameraUpdate cameraUpdate,
-      {Duration? duration}) async {
-    return _maplibrePlatform.easeCamera(cameraUpdate, duration: duration);
+  Future<bool> easeCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+    CameraAnimationInterpolation? interpolation,
+  }) async {
+    return _maplibrePlatform.easeCamera(
+      cameraUpdate,
+      duration: duration,
+      interpolation: interpolation,
+    );
   }
 
   /// Queries the current camera position.
@@ -915,7 +1099,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the headers are successfully set.
   Future<void> setCustomHeaders(
-      Map<String, String> headers, List<String> filter) async {
+    Map<String, String> headers,
+    List<String> filter,
+  ) async {
     return _maplibrePlatform.setCustomHeaders(headers, filter);
   }
 
@@ -934,7 +1120,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
-  Future<Symbol> addSymbol(SymbolOptions options, [Map? data]) async {
+  Future<Symbol> addSymbol(
+    SymbolOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(symbolManager);
 
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
@@ -955,7 +1144,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
   Future<List<Symbol>> addSymbols(
     List<SymbolOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(symbolManager);
 
@@ -965,7 +1154,7 @@ class MapLibreMapController extends ChangeNotifier {
           getRandomString(),
           SymbolOptions.defaultOptions.copyWith(options[i]),
           data?[i],
-        )
+        ),
     ];
     await symbolManager?.addAll(symbols);
     if (!isDisposed) notifyListeners();
@@ -1044,7 +1233,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added line once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
-  Future<Line> addLine(LineOptions options, [Map? data]) async {
+  Future<Line> addLine(
+    LineOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(lineManager);
 
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
@@ -1064,7 +1256,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
   Future<List<Line>> addLines(
     List<LineOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(lineManager);
 
@@ -1074,7 +1266,7 @@ class MapLibreMapController extends ChangeNotifier {
           getRandomString(),
           LineOptions.defaultOptions.copyWith(options[i]),
           data?[i],
-        )
+        ),
     ];
     await lineManager?.addAll(lines);
     if (!isDisposed) notifyListeners();
@@ -1151,7 +1343,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
-  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
+  Future<Circle> addCircle(
+    CircleOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(circleManager);
 
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
@@ -1172,7 +1367,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
   Future<List<Circle>> addCircles(
     List<CircleOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(circleManager);
 
@@ -1182,7 +1377,7 @@ class MapLibreMapController extends ChangeNotifier {
           getRandomString(),
           CircleOptions.defaultOptions.copyWith(options[i]),
           data?[i],
-        )
+        ),
     ];
     await circleManager?.addAll(circles);
     if (!isDisposed) notifyListeners();
@@ -1259,7 +1454,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.\
   /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
-  Future<Fill> addFill(FillOptions options, [Map? data]) async {
+  Future<Fill> addFill(
+    FillOptions options, [
+    Map<String, dynamic>? data,
+  ]) async {
     _ensureManagerInitialized(fillManager);
 
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
@@ -1280,7 +1478,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
   Future<List<Fill>> addFills(
     List<FillOptions> options, [
-    List<Map>? data,
+    List<Map<String, dynamic>>? data,
   ]) async {
     _ensureManagerInitialized(fillManager);
 
@@ -1290,7 +1488,7 @@ class MapLibreMapController extends ChangeNotifier {
           getRandomString(),
           FillOptions.defaultOptions.copyWith(options[i]),
           data?[i],
-        )
+        ),
     ];
     await fillManager?.addAll(fills);
     if (!isDisposed) notifyListeners();
@@ -1362,15 +1560,24 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
   Future<List> queryRenderedFeatures(
-      Point<double> point, List<String> layerIds, List<Object>? filter) async {
+    Point<double> point,
+    List<String> layerIds,
+    List<Object>? filter,
+  ) async {
     return _maplibrePlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
   /// Query rendered (i.e. visible) features in a Rect in screen coordinates
   Future<List> queryRenderedFeaturesInRect(
-      Rect rect, List<String> layerIds, String? filter) async {
+    Rect rect,
+    List<String> layerIds,
+    String? filter,
+  ) async {
     return _maplibrePlatform.queryRenderedFeaturesInRect(
-        rect, layerIds, filter);
+      rect,
+      layerIds,
+      filter,
+    );
   }
 
   /// Query features contained in the source with the specified [sourceId].
@@ -1380,9 +1587,15 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
   Future<List> querySourceFeatures(
-      String sourceId, String? sourceLayerId, List<Object>? filter) async {
+    String sourceId,
+    String? sourceLayerId,
+    List<Object>? filter,
+  ) async {
     return _maplibrePlatform.querySourceFeatures(
-        sourceId, sourceLayerId, filter);
+      sourceId,
+      sourceLayerId,
+      filter,
+    );
   }
 
   Future invalidateAmbientCache() async {
@@ -1467,22 +1680,25 @@ class MapLibreMapController extends ChangeNotifier {
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
   /// Not implemented on web.
   Future<void> addImageSource(
-      String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
+    String imageSourceId,
+    Uint8List bytes,
+    LatLngQuad coordinates,
+  ) {
     return _maplibrePlatform.addImageSource(imageSourceId, bytes, coordinates);
   }
 
   /// Update the image and/or coordinates of an image source.
   /// Not implemented on web.
   Future<void> updateImageSource(
-      String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
+    String imageSourceId,
+    Uint8List? bytes,
+    LatLngQuad? coordinates,
+  ) {
     return _maplibrePlatform.updateImageSource(
-        imageSourceId, bytes, coordinates);
-  }
-
-  /// Removes previously added image source by id
-  @Deprecated("This method was renamed to removeSource")
-  Future<void> removeImageSource(String imageSourceId) {
-    return _maplibrePlatform.removeSource(imageSourceId);
+      imageSourceId,
+      bytes,
+      coordinates,
+    );
   }
 
   /// Removes previously added source by id
@@ -1491,26 +1707,30 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer to the map's style at render time.
-  Future<void> addImageLayer(String layerId, String imageSourceId,
-      {double? minzoom, double? maxzoom}) {
+  Future<void> addImageLayer(
+    String layerId,
+    String imageSourceId, {
+    double? minzoom,
+    double? maxzoom,
+  }) {
     return _maplibrePlatform.addLayer(layerId, imageSourceId, minzoom, maxzoom);
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
   Future<void> addImageLayerBelow(
-      String layerId, String sourceId, String imageSourceId,
-      {double? minzoom, double? maxzoom}) {
+    String layerId,
+    String sourceId,
+    String imageSourceId, {
+    double? minzoom,
+    double? maxzoom,
+  }) {
     return _maplibrePlatform.addLayerBelow(
-        layerId, sourceId, imageSourceId, minzoom, maxzoom);
-  }
-
-  /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time. Only works for image sources!
-  @Deprecated("This method was renamed to addImageLayerBelow for clarity.")
-  Future<void> addLayerBelow(
-      String layerId, String sourceId, String imageSourceId,
-      {double? minzoom, double? maxzoom}) {
-    return _maplibrePlatform.addLayerBelow(
-        layerId, sourceId, imageSourceId, minzoom, maxzoom);
+      layerId,
+      sourceId,
+      imageSourceId,
+      minzoom,
+      maxzoom,
+    );
   }
 
   /// Removes a MapLibre style layer
@@ -1597,75 +1817,110 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
-      String sourceId, String layerId, LayerProperties properties,
-      {String? belowLayerId,
-      bool enableInteraction = true,
-      String? sourceLayer,
-      double? minzoom,
-      double? maxzoom,
-      dynamic filter}) async {
+    String sourceId,
+    String layerId,
+    LayerProperties properties, {
+    String? belowLayerId,
+    bool enableInteraction = true,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) async {
     if (properties is FillLayerProperties) {
-      await addFillLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          enableInteraction: enableInteraction,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom,
-          filter: filter);
+      await addFillLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        enableInteraction: enableInteraction,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        filter: filter,
+      );
     } else if (properties is FillExtrusionLayerProperties) {
-      await addFillExtrusionLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom);
+      await addFillExtrusionLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
     } else if (properties is LineLayerProperties) {
-      await addLineLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          enableInteraction: enableInteraction,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom,
-          filter: filter);
+      await addLineLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        enableInteraction: enableInteraction,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        filter: filter,
+      );
     } else if (properties is SymbolLayerProperties) {
-      await addSymbolLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          enableInteraction: enableInteraction,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom,
-          filter: filter);
+      await addSymbolLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        enableInteraction: enableInteraction,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        filter: filter,
+      );
     } else if (properties is CircleLayerProperties) {
-      await addCircleLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          enableInteraction: enableInteraction,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom,
-          filter: filter);
+      await addCircleLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        enableInteraction: enableInteraction,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        filter: filter,
+      );
     } else if (properties is RasterLayerProperties) {
       if (filter != null) {
         throw UnimplementedError("RasterLayer does not support filter");
       }
-      await addRasterLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom);
+      await addRasterLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
     } else if (properties is HillshadeLayerProperties) {
       if (filter != null) {
         throw UnimplementedError("HillShadeLayer does not support filter");
       }
-      await addHillshadeLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom);
+      await addHillshadeLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
     } else if (properties is HeatmapLayerProperties) {
-      await addHeatmapLayer(sourceId, layerId, properties,
-          belowLayerId: belowLayerId,
-          sourceLayer: sourceLayer,
-          minzoom: minzoom,
-          maxzoom: maxzoom);
+      await addHeatmapLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
     } else {
       throw UnimplementedError("Unknown layer type $properties");
     }
@@ -1686,6 +1941,43 @@ class MapLibreMapController extends ChangeNotifier {
     return (await _maplibrePlatform.getSourceIds())
         .whereType<String>()
         .toList();
+  }
+
+  /// Returns the visibility of a layer.
+  /// Returns true if visible, false if hidden, null if layer not found.
+  Future<bool?> getLayerVisibility(String layerId) {
+    return _maplibrePlatform.getLayerVisibility(layerId);
+  }
+
+  /// Sets the web map to a custom size for rendering.
+  /// Returns the previous size before this change was applied.
+  /// Useful for generating fixed-dimension map images.
+  Future<Size> setWebMapToCustomSize(Size size) {
+    return _maplibrePlatform.setWebMapToCustomSize(size);
+  }
+
+  /// Waits until the map is idle after camera movement.
+  Future<void> waitUntilMapIsIdleAfterMovement() {
+    return _maplibrePlatform.waitUntilMapIsIdleAfterMovement();
+  }
+
+  /// Waits until all visible map tiles are loaded.
+  /// Useful for ensuring the map is fully rendered before taking screenshots.
+  Future<void> waitUntilMapTilesAreLoaded() {
+    return _maplibrePlatform.waitUntilMapTilesAreLoaded();
+  }
+
+  /// Takes a screenshot of the current map view as PNG bytes.
+  ///
+  /// Returns a [Uint8List] containing the PNG image data of the snapshot.
+  /// This works on all platforms (Android, iOS, and Web).
+  ///
+  /// If [width] and [height] are provided, the snapshot is rendered at that
+  /// size (in logical pixels) using an offscreen renderer while preserving the
+  /// current camera position and style. When omitted the snapshot matches the
+  /// current map view size.
+  Future<Uint8List> takeSnapshot({int? width, int? height}) {
+    return _maplibrePlatform.takeSnapshot(width: width, height: height);
   }
 
   /// Method to set style string

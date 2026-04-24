@@ -53,4 +53,6 @@ internal interface MapLibreMapOptionsSink {
     fun setForegroundLoadColor(loadColor: Int)
 
     fun setTranslucentTextureSurface(translucentTextureSurface: Boolean)
+
+    fun setFeatureTapsTriggersMapClick(triggers: Boolean)
 }

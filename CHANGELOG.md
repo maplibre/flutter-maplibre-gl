@@ -3,6 +3,91 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
+
+#### Version 0.26.0 marks a milestone for `flutter-maplibre-gl`
+This release resolves numerous long-standing bugs accumulated over the years and completes the transition to **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.\
+It also introduces a new Example App for users to explore the latest features - see [maplibre_gl_example](maplibre_gl_example/) for details.
+
+### Breaking
+* `initialCameraPosition` is now nullable to support style-defined camera options (#769).
+* `requestMyLocationLatLng()` now returns `Future<LatLng?>` instead of `Future<LatLng>`. Returns `null` when the user's location is unavailable (#784).
+* Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
+Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead (#774).
+* Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
+* Removed deprecated callback: `onInfoWindowTapped` from `MapLibreMapController`.
+* Removed deprecated methods: `removeImageSource` (use `removeSource`) and `addLayerBelow` (use `addImageLayerBelow`).
+
+### Added
+* Cross-platform map snapshot functionality via `takeSnapshot()` (#726).
+* `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks, defaults to `false` (#729).
+* Fire `onMapClick` for all map taps, including after interactive features (#707).
+* Unit tests for core packages (#765).
+* **Offline Regions**: richer control and observability over downloads on Android and iOS (#795).
+  * `pauseOfflineRegionDownload` / `resumeOfflineRegionDownload` to control in-progress downloads.
+  * `getOfflineRegionStatus` returning `OfflineRegionStatus` with resource counts, bytes, progress and completion.
+  * `InProgress` events now carry `completedResourceCount`, `requiredResourceCount`, and `completedResourceSize` for tile/byte progress in addition to the percentage.
+  * `clearAmbientCache` and `resetOfflineDatabase` globals to evict unpinned tiles or fully reset the offline DB (in-flight downloads are terminated Dart-side before reset/deletion).
+  * `setOfflineMaxConcurrentRequests` to cap tile concurrency (total on Android, per-host on both) and avoid upstream rate limiting.
+* **clusterProperties**: Introduced native implementation of `clusterProperties` for clustered GeoJSON sources. Both the simple operator-string form (e.g. `{'sum': ['+', ['get', 'x']]}`) and the explicit reduce-expression form are now applied natively; previously the property was serialized from Dart but ignored by both native converters (#792).
+* **easeCamera interpolation**: `easeCamera` accepts an optional `CameraAnimationInterpolation` to control the animation easing curve (`linear`, `easeInOut`, `easeOut`, `fastOutLinearIn`). Use `CameraAnimationInterpolation.linear` for smooth continuous tracking (e.g. following a moving GPS target) without velocity discontinuities between successive calls. Omitting the parameter preserves the previous default behavior (#789).
+  * **iOS**: all four curves are supported exactly; `fastOutLinearIn` is implemented via `CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)` (Material Design cubic Bezier).
+  * **Android**: MapLibre Android only exposes a boolean easing flag on `easeCamera`, so only `linear` is distinct — `easeInOut`, `easeOut`, and `fastOutLinearIn` all map to the native ease-in/ease-out. See `CameraAnimationInterpolation` dartdoc for per-value details.
+  * **Web**: `easeCamera` is now fully implemented via MapLibre GL JS `map.easeTo({easing})`. Each interpolation value maps to a cubic-bezier callback (`easeInOut` → `(0.42, 0, 0.58, 1)`, `easeOut` → `(0, 0, 0.58, 1)`, `fastOutLinearIn` → `(0.4, 0, 1, 1)`). Previously threw `UnimplementedError`.
+* **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
+* **Android**: Google Mobile Services (GMS) Location Engine support (#721).
+* **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
+* **Web**: Added `getLayerVisibility`, web snapshot, and map sizing features (#722).
+* **Web**: Added Scale Control (#720).
+* **iOS**: Location engine support — `enableHighAccuracy` and `displacement` configurable via `LocationEnginePlatforms.iOS()`.
+* **Web**: Location engine properties (`enableHighAccuracy`, `maximumAge`, `timeout`) via `LocationEnginePlatforms.web()`.
+* Platform-specific constructors for `LocationEnginePlatforms`: `.android()`, `.iOS()`, `.web()`.
+
+### Changed
+* **Android**: Reduced MapLibre SDK logging verbosity to minimize log spam (#752).
+* **Android**: Enhanced GeoJSON source handling with type checks and error logging (#764).
+* **Android**: Check style exists and is loaded before adding a Layer (#768).
+* **Android**: Check source exists before adding (#734).
+* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.2, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
+* **iOS**: Updated project settings for UISceneDelegate compatibility (#767).
+* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.25.1.
+* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.24.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
+* **Web**: Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes`.
+* **Web**: Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
+* **Web**: Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
+* **GitHub Actions**: `actions/upload-artifact` updated from v6 to v7 (#748).
+* Bumped Dart and melos version to latest (#762).
+* Minimum Dart SDK version bumped from `3.5.0` to `3.7.0` (#762).
+* Gradle wrapper updated to 9.4.0, Kotlin to 2.3.10, Android Gradle Plugin to 9.1.0 (#753-#758).
+
+### Fixed
+* Fix data properties not being added to Annotation created in AnnotationManager (#770).
+* Fix double JSON encoding in layer properties causing Android/iOS type errors (#747).
+* **iOS**: `icon-text-fit-padding` insets now use the correct style-spec order `[top, right, bottom, left]` — `left` and `right` were previously swapped (#792).
+* Fix `text-font` property handling on Android and iOS to correctly accept font stacks as string arrays instead of only expressions.
+* Fix `textFont` in `SymbolManager` to pass font names as a simple string array, resolving rendering issues on native platforms.
+* Add DEM encoding support (`terrarium`/`mapbox`) for raster-dem tile sources on Android and iOS.
+* Fix heatmap color expressions in example app to use proper `Expressions.rgba`/`Expressions.rgb` syntax.
+* **Android**: Fix map partially not responsive in split screen (#771).
+* **Android**: GeoJSON source updates are now synchronous when drag is enabled, preventing stale feature positions during drag interactions and improved performance (#716).
+* **Android**: Disabled texture mode by default and improved MapView lifecycle management (#723).
+* **Android**: Removed unnecessary `OfflineActivity` from `AndroidManifest.xml` (#724).
+* **Offline Regions**: retain download `StreamSubscription`s in a module-level map so Dart's GC can't drop native events while a download is paused (#795).
+* **Android (Offline)**: throttle progress events to 100ms and discard non-monotonic counts so cache-served bursts don't starve the isolate and block pause taps; track in-flight downloads to support pause/resume/status (#795).
+* **iOS (Offline)**: track active `MLNOfflinePack` instances so pause/resume/status operate on the live pack rather than reloading from storage (#795).
+* **iOS**: Deferred `onStyleLoaded` callback to avoid race conditions (#719).
+* **Web**: Improved `styleimagemissing` handling (#725).
+* **Web**: Fixed JS Interop and WASM compilation in release mode (#714).
+* **Web**: Fixed missing prototype on empty JS object created via interop.
+* **Web**: `removeLayer` and `removeSource` no longer throw when the layer/source doesn't exist.
+* **Web**: `setGeoJsonSource` returns early instead of crashing when the source doesn't exist.
+* **Web**: `GeolocateControl` now respects `MyLocationTrackingMode` and triggers programmatically.
+* **Example**: GPS location page. Fixed web permission check, wired `onUserLocationUpdated`, web-specific tracking modes.
+* **Example**: GeoJSON cluster. Added `['has', 'point_count']` filter to fix null property errors on unclustered points.
+* **Example**: Added `ClusterPropertiesExample` demonstrating both the simple and reduce-expression forms of `clusterProperties` on the earthquakes dataset (#792).
+
+**Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
+
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
 ### Added

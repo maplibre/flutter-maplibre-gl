@@ -11,6 +11,7 @@ import MapLibre
 
 class OfflineManagerUtils {
     static var activeDownloaders: [Int: OfflinePackDownloader] = [:]
+    static var activePacks: [Int: MLNOfflinePack] = [:]
 
     static func downloadRegion(
         definition: OfflineRegionDefinition,
@@ -57,9 +58,70 @@ class OfflineManagerUtils {
         result(nil)
     }
 
+    static func clearAmbientCache(result: @escaping FlutterResult) {
+        MLNOfflineStorage.shared.clearAmbientCache { error in
+            if let error = error {
+                result(FlutterError(
+                    code: "ClearAmbientCacheError",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+            } else {
+                result(nil)
+            }
+        }
+    }
+
+    static func resetOfflineDatabase(result: @escaping FlutterResult) {
+        // Any tracked in-progress downloads are invalidated by the reset.
+        for (_, pack) in activePacks {
+            pack.suspend()
+        }
+        // Terminate the Dart-side subscriptions so their Futures resolve.
+        for (_, downloader) in activeDownloaders {
+            downloader.terminate(
+                errorCode: "DatabaseReset",
+                errorMessage: "Offline database was reset before the download completed"
+            )
+        }
+        activePacks.removeAll()
+        activeDownloaders.removeAll()
+
+        MLNOfflineStorage.shared.resetDatabase { error in
+            if let error = error {
+                result(FlutterError(
+                    code: "ResetDatabaseError",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+                return
+            }
+            // resetDatabase wipes the underlying SQLite DB but leaves the
+            // in-memory MLNOfflineStorage.packs array populated with stale
+            // pack references. Without a reload, a follow-up getListOfRegions
+            // call would still report the pre-reset regions as downloaded.
+            // reloadPacks is async — observe the KVO `packs` change before
+            // returning to Dart so the next getListOfRegions sees fresh state.
+            let storage = MLNOfflineStorage.shared
+            let observer = PacksReloadObserver {
+                result(nil)
+            }
+            observer.target = storage
+            storage.addObserver(observer, forKeyPath: "packs", options: [.new], context: nil)
+            storage.reloadPacks()
+        }
+    }
+
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = MLNOfflineStorage.shared
-        guard let pacs = offlineStorage.packs else { return }
+        guard let pacs = offlineStorage.packs else {
+            result(FlutterError(
+                code: "DeleteRegionError",
+                message: "Offline packs are unavailable",
+                details: nil
+            ))
+            return
+        }
         let packToRemove = pacs.first(where: { pack -> Bool in
             let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)
             let contextJsonDict = contextJsonObject as? [String: Any]
@@ -72,6 +134,12 @@ class OfflineManagerUtils {
         if let packToRemoveUnwrapped = packToRemove {
             // deletion is only safe if the download is suspended
             packToRemoveUnwrapped.suspend()
+            // Terminate the Dart-side subscription if a download is in flight.
+            activeDownloaders[id]?.terminate(
+                errorCode: "RegionDeleted",
+                errorMessage: "Region was deleted before the download completed"
+            )
+            activePacks.removeValue(forKey: id)
             OfflineManagerUtils.releaseDownloader(id: id)
 
             offlineStorage.removePack(packToRemoveUnwrapped) { error in
@@ -97,5 +165,129 @@ class OfflineManagerUtils {
     /// Removes downloader from cache so it's memory can be deallocated
     static func releaseDownloader(id: Int) {
         activeDownloaders.removeValue(forKey: id)
+    }
+
+    // MARK: Pause / Resume
+
+    static func pauseRegion(result: @escaping FlutterResult, id: Int) {
+        if let pack = findPack(id: id) {
+            pack.suspend()
+            result(nil)
+        } else {
+            result(FlutterError(
+                code: "PauseRegionError",
+                message: "There is no active region with given id to pause",
+                details: nil
+            ))
+        }
+    }
+
+    static func resumeRegion(result: @escaping FlutterResult, id: Int) {
+        if let pack = findPack(id: id) {
+            pack.resume()
+            result(nil)
+        } else {
+            result(FlutterError(
+                code: "ResumeRegionError",
+                message: "There is no active region with given id to resume",
+                details: nil
+            ))
+        }
+    }
+
+    // MARK: Region Status
+
+    static func getRegionStatus(result: @escaping FlutterResult, id: Int) {
+        if let pack = findPack(id: id) {
+            let progress = pack.progress
+            let completedCount = progress.countOfResourcesCompleted
+            let expectedCount = progress.countOfResourcesExpected
+            let downloadProgress = expectedCount > 0
+                ? 100.0 * Double(completedCount) / Double(expectedCount)
+                : 0.0
+
+            let statusDict: [String: Any] = [
+                "completedResourceCount": completedCount,
+                "requiredResourceCount": expectedCount,
+                "completedResourceSize": progress.countOfBytesCompleted,
+                "isComplete": pack.state == .complete,
+                "downloadProgress": downloadProgress,
+            ]
+
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: statusDict),
+                  let jsonString = String(data: jsonData, encoding: .utf8)
+            else {
+                result(FlutterError(code: "GetRegionStatusError", message: "Failed to serialize status", details: nil))
+                return
+            }
+            result(jsonString)
+        } else {
+            result(FlutterError(
+                code: "GetRegionStatusError",
+                message: "There is no region with given id",
+                details: nil
+            ))
+        }
+    }
+
+    // MARK: Concurrency Control
+
+    static func setMaxConcurrentRequests(result: @escaping FlutterResult, maxRequestsPerHost: Int?) {
+        let sessionConfig = MLNNetworkConfiguration.sharedManager.sessionConfiguration ?? URLSessionConfiguration.default
+        if let maxPerHost = maxRequestsPerHost {
+            sessionConfig.httpMaximumConnectionsPerHost = maxPerHost
+        }
+        MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
+        result(nil)
+    }
+
+    // MARK: Pack Lookup
+
+    /// Finds a pack by region ID, checking active packs first then falling back to storage
+    private static func findPack(id: Int) -> MLNOfflinePack? {
+        // Check active packs first (in-progress downloads)
+        if let pack = activePacks[id] {
+            return pack
+        }
+        // Fall back to storage (completed/paused regions)
+        let offlineStorage = MLNOfflineStorage.shared
+        guard let packs = offlineStorage.packs else { return nil }
+        return packs.first { pack in
+            guard let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
+                  let contextJsonDict = contextJsonObject as? [String: Any],
+                  let regionId = contextJsonDict["id"] as? Int
+            else { return false }
+            return regionId == id
+        }
+    }
+}
+
+/// One-shot KVO observer for `MLNOfflineStorage.packs`. Retains itself until
+/// the first change notification fires, then deregisters and invokes `onChange`.
+private final class PacksReloadObserver: NSObject {
+    private let onChange: () -> Void
+    private var fired = false
+    private var retainCycle: PacksReloadObserver?
+    weak var target: MLNOfflineStorage?
+
+    init(onChange: @escaping () -> Void) {
+        self.onChange = onChange
+        super.init()
+        retainCycle = self
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of _: Any?,
+        change _: [NSKeyValueChangeKey: Any]?,
+        context _: UnsafeMutableRawPointer?
+    ) {
+        guard keyPath == "packs", !fired else { return }
+        fired = true
+        target?.removeObserver(self, forKeyPath: "packs")
+        target = nil
+        let callback = onChange
+        retainCycle = nil
+        callback()
     }
 }

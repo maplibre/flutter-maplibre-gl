@@ -12,6 +12,7 @@ import 'page.dart';
 // Basics examples
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
+import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
 
@@ -22,26 +23,42 @@ import 'examples/camera/camera_bounds_example.dart';
 // Interaction examples
 import 'examples/interaction/map_controls_example.dart';
 import 'examples/interaction/map_gestures_example.dart';
+import 'examples/interaction/hover_effect_example.dart';
 
 // Annotations examples
 import 'examples/annotations/annotations_example.dart';
 import 'examples/annotations/annotation_order_example.dart';
 import 'examples/annotations/annotation_properties_example.dart';
 import 'examples/annotations/custom_marker.dart';
+import 'examples/annotations/edit_annotation_animated.dart';
+import 'examples/annotations/edit_annotation_draggable.dart';
 
 // Layers examples
 import 'examples/layers/circle_layer_example.dart';
+import 'examples/layers/cluster_properties_example.dart';
 import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
-import 'examples/layers/various_sources.dart';
+import 'examples/layers/edit_style_layer_animated.dart';
+import 'examples/layers/edit_style_layer_draggable.dart';
 
 // Advanced examples
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
+import 'examples/advanced/map_snapshot.dart';
 
 void main() {
+  if (kIsWeb) {
+    print(
+      'Running with WASM: $kIsWasm, in ${kReleaseMode
+          ? "release"
+          : kProfileMode
+          ? "profile"
+          : "debug"} mode',
+    );
+  }
+
   runApp(const MapLibreExampleApp());
 }
 
@@ -77,6 +94,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Basics
   const FullMapExample(),
   const MultiStyleSwitchPage(),
+  const VariousSources(),
   const GpsLocationPage(),
   const GetMapInfoPage(),
 
@@ -87,24 +105,31 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
+  if (kIsWeb) const HoverEffectExample(),
 
   // Annotations
   const AnnotationsExample(),
   const AnnotationPropertiesExample(),
   const AnnotationOrderExample(),
   const CustomMarkerPage(),
+  const EditAnnotationAnimatedExample(),
+  const EditAnnotationDraggableExample(),
 
   // Layers
   const SymbolLayerExample(),
   const CircleLayerExample(),
+  const ClusterPropertiesExample(),
   const FillLayerExample(),
   const LineLayerExample(),
-  const VariousSources(),
+  const EditStyleLayerAnimatedExample(),
+  const EditStyleLayerDraggableExample(),
 
   // Advanced
   const PMTilesPage(),
-  const OfflineRegionsPage(),
+  // Offline regions are Android/iOS only — MapLibre GL JS has no offline API.
+  if (!kIsWeb) const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
+  const MapSnapshotPage(),
 ];
 
 class MapsDemo extends StatefulWidget {
@@ -146,12 +171,15 @@ class _MapsDemoState extends State<MapsDemo> {
       }
     }
     if (context.mounted) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: Text(page.title)),
-          body: page,
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder:
+              (_) => Scaffold(
+                appBar: AppBar(title: Text(page.title)),
+                body: page,
+              ),
         ),
-      ));
+      );
     }
   }
 
@@ -226,17 +254,21 @@ class _MapsDemoState extends State<MapsDemo> {
                 if (index >= categories.length) {
                   // About tile at the end
                   return const Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     child: AboutListTile(
                       icon: Icon(Icons.info),
                       applicationName: "MapLibre GL Flutter",
                       aboutBoxChildren: [
                         Text(
-                            'MapLibre GL Flutter is an open-source Flutter plugin for embedding interactive maps using the MapLibre GL Native library.'),
+                          'MapLibre GL Flutter is an open-source Flutter plugin for embedding interactive maps using the MapLibre GL Native library.',
+                        ),
                         SizedBox(height: 8),
                         Text(
-                            'This example app showcases various features and capabilities of the MapLibre GL Flutter plugin through interactive examples.'),
+                          'This example app showcases various features and capabilities of the MapLibre GL Flutter plugin through interactive examples.',
+                        ),
                       ],
                     ),
                   );
@@ -249,7 +281,9 @@ class _MapsDemoState extends State<MapsDemo> {
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 4.0),
+                    horizontal: 16.0,
+                    vertical: 4.0,
+                  ),
                   child: Card(
                     clipBehavior: Clip.antiAlias,
                     child: ExpansionTile(
@@ -264,14 +298,17 @@ class _MapsDemoState extends State<MapsDemo> {
                         ),
                       ),
                       subtitle: Text('${pages.length} examples'),
-                      children: pages
-                          .map((page) => ListTile(
-                                leading: page.leading,
-                                title: Text(page.title),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => _pushPage(context, page),
-                              ))
-                          .toList(),
+                      children:
+                          pages
+                              .map(
+                                (page) => ListTile(
+                                  leading: page.leading,
+                                  title: Text(page.title),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () => _pushPage(context, page),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                 );
