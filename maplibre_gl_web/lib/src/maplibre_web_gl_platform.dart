@@ -358,6 +358,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
+    CameraAnimationInterpolation? interpolation,
   }) async {
     // Web implementation: MapLibre GL JS doesn't have direct duration control
     // We can implement this by using the animate method with duration

@@ -49,7 +49,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       case 'camera#onMoveStarted':
         onCameraMoveStartedPlatform(null);
       case 'camera#onMove':
-        final cameraPosition = CameraPosition.fromMap(call.arguments['position'])!;
+        final cameraPosition =
+            CameraPosition.fromMap(call.arguments['position'])!;
         onCameraMovePlatform(cameraPosition);
       case 'camera#onIdle':
         final cameraPosition = CameraPosition.fromMap(
@@ -144,7 +145,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
           ) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
-              gestureRecognizers: gestureRecognizers ?? const <Factory<OneSequenceGestureRecognizer>>{},
+              gestureRecognizers:
+                  gestureRecognizers ??
+                  const <Factory<OneSequenceGestureRecognizer>>{},
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
@@ -290,7 +293,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     final result = await _channel.invokeMethod('camera#ease', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
       'duration': duration?.inMilliseconds,
-      if (interpolation != null) 'interpolation': interpolation.toString().split('.').last,
+      if (interpolation != null)
+        'interpolation': interpolation.toString().split('.').last,
     });
     return result as bool;
   }
@@ -376,7 +380,8 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         <String, dynamic>{},
       );
       return result?.map(
-            (key, value) => MapEntry<String, String>(key.toString(), value.toString()),
+            (key, value) =>
+                MapEntry<String, String>(key.toString(), value.toString()),
           ) ??
           <String, String>{};
     } on PlatformException catch (e) {
