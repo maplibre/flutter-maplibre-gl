@@ -110,6 +110,41 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     return
                 }
                 OfflineManagerUtils.deleteRegion(result: result, id: id)
+            case "clearAmbientCache":
+                OfflineManagerUtils.clearAmbientCache(result: result)
+            case "resetOfflineDatabase":
+                OfflineManagerUtils.resetOfflineDatabase(result: result)
+            case "pauseOfflineRegionDownload":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let id = args["id"] as? Int
+                else {
+                    result(nil)
+                    return
+                }
+                OfflineManagerUtils.pauseRegion(result: result, id: id)
+            case "resumeOfflineRegionDownload":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let id = args["id"] as? Int
+                else {
+                    result(nil)
+                    return
+                }
+                OfflineManagerUtils.resumeRegion(result: result, id: id)
+            case "getOfflineRegionStatus":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let id = args["id"] as? Int
+                else {
+                    result(nil)
+                    return
+                }
+                OfflineManagerUtils.getRegionStatus(result: result, id: id)
+            case "setOfflineMaxConcurrentRequests":
+                let args = methodCall.arguments as? [String: Any]
+                let maxRequestsPerHost = args?["maxRequestsPerHost"] as? Int
+                OfflineManagerUtils.setMaxConcurrentRequests(
+                    result: result,
+                    maxRequestsPerHost: maxRequestsPerHost
+                )
             default:
                 result(FlutterMethodNotImplemented)
             }

@@ -74,3 +74,36 @@ class OfflineRegion {
   String toString() =>
       "OfflineRegion, id = $id, definition = $definition, metadata = $metadata";
 }
+
+/// Status of an offline region's download.
+class OfflineRegionStatus {
+  const OfflineRegionStatus({
+    required this.completedResourceCount,
+    required this.requiredResourceCount,
+    required this.completedResourceSize,
+    required this.isComplete,
+    required this.downloadProgress,
+  });
+
+  final int completedResourceCount;
+  final int requiredResourceCount;
+  final int completedResourceSize;
+  final bool isComplete;
+  final double downloadProgress;
+
+  factory OfflineRegionStatus.fromMap(Map<String, dynamic> json) {
+    return OfflineRegionStatus(
+      completedResourceCount: json['completedResourceCount'] as int,
+      requiredResourceCount: json['requiredResourceCount'] as int,
+      completedResourceSize: json['completedResourceSize'] as int,
+      isComplete: json['isComplete'] as bool,
+      downloadProgress: (json['downloadProgress'] as num).toDouble(),
+    );
+  }
+
+  @override
+  String toString() =>
+      "OfflineRegionStatus, progress = $downloadProgress, "
+      "complete = $isComplete, resources = $completedResourceCount/$requiredResourceCount, "
+      "bytes = $completedResourceSize";
+}

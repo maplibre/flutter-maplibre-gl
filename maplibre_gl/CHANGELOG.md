@@ -16,6 +16,12 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * `featureTapsTriggersMapClick` option to control whether feature taps also trigger map click callbacks, defaults to `false` (#729).
 * Fire `onMapClick` for all map taps, including after interactive features (#707).
 * Unit tests for core packages (#765).
+* **Offline Regions**: richer control and observability over downloads on Android and iOS (#795).
+  * `pauseOfflineRegionDownload` / `resumeOfflineRegionDownload` to control in-progress downloads.
+  * `getOfflineRegionStatus` returning `OfflineRegionStatus` with resource counts, bytes, progress and completion.
+  * `InProgress` events now carry `completedResourceCount`, `requiredResourceCount`, and `completedResourceSize` for tile/byte progress in addition to the percentage.
+  * `clearAmbientCache` and `resetOfflineDatabase` globals to evict unpinned tiles or fully reset the offline DB (in-flight downloads are terminated Dart-side before reset/deletion).
+  * `setOfflineMaxConcurrentRequests` to cap tile concurrency (total on Android, per-host on both) and avoid upstream rate limiting.
 * **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
 * **Android**: Google Mobile Services (GMS) Location Engine support (#721).
 * **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
@@ -30,10 +36,10 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **Android**: Enhanced GeoJSON source handling with type checks and error logging (#764).
 * **Android**: Check style exists and is loaded before adding a Layer (#768).
 * **Android**: Check source exists before adding (#734).
-* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.1, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
+* **Android**: MapLibre Android SDK upgraded from 13.0.0 to 13.0.2, switched to OpenGL renderer variant (`android-sdk-opengl`) for better stability and performance on older devices.
 * **iOS**: Updated project settings for UISceneDelegate compatibility (#767).
-* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.24.0.
-* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.21.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
+* **iOS**: MapLibre iOS SDK upgraded from 6.19.1 to 6.25.1.
+* **Web**: Upgraded MapLibre GL JS from 4.7.1 to [5.24.0](https://github.com/maplibre/maplibre-gl-js/releases/tag/v5.21.0) (#761, #651).
 * **Web**: Migrated `preserveDrawingBuffer`, `antialias`, and `failIfMajorPerformanceCaveat` from top-level `MapOptions` to `canvasContextAttributes`.
 * **Web**: Updated `on()`/`off()`/`once()` event methods to handle v5's `Subscription` return type instead of map instance.
 * **Web**: Removed obsolete `customAttribution` from `MapOptions` (now part of `AttributionControl` options in v5).
@@ -53,6 +59,9 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **Android**: GeoJSON source updates are now synchronous when drag is enabled, preventing stale feature positions during drag interactions and improved performance (#716).
 * **Android**: Disabled texture mode by default and improved MapView lifecycle management (#723).
 * **Android**: Removed unnecessary `OfflineActivity` from `AndroidManifest.xml` (#724).
+* **Offline Regions**: retain download `StreamSubscription`s in a module-level map so Dart's GC can't drop native events while a download is paused (#795).
+* **Android (Offline)**: throttle progress events to 100ms and discard non-monotonic counts so cache-served bursts don't starve the isolate and block pause taps; track in-flight downloads to support pause/resume/status (#795).
+* **iOS (Offline)**: track active `MLNOfflinePack` instances so pause/resume/status operate on the live pack rather than reloading from storage (#795).
 * **iOS**: Deferred `onStyleLoaded` callback to avoid race conditions (#719).
 * **Web**: Improved `styleimagemissing` handling (#725).
 * **Web**: Fixed JS Interop and WASM compilation in release mode (#714).
