@@ -94,15 +94,34 @@ class OfflineManagerUtils {
                     message: error.localizedDescription,
                     details: nil
                 ))
-            } else {
+                return
+            }
+            // resetDatabase wipes the underlying SQLite DB but leaves the
+            // in-memory MLNOfflineStorage.packs array populated with stale
+            // pack references. Without a reload, a follow-up getListOfRegions
+            // call would still report the pre-reset regions as downloaded.
+            // reloadPacks is async — observe the KVO `packs` change before
+            // returning to Dart so the next getListOfRegions sees fresh state.
+            let storage = MLNOfflineStorage.shared
+            let observer = PacksReloadObserver {
                 result(nil)
             }
+            observer.target = storage
+            storage.addObserver(observer, forKeyPath: "packs", options: [.new], context: nil)
+            storage.reloadPacks()
         }
     }
 
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = MLNOfflineStorage.shared
-        guard let pacs = offlineStorage.packs else { return }
+        guard let pacs = offlineStorage.packs else {
+            result(FlutterError(
+                code: "DeleteRegionError",
+                message: "Offline packs are unavailable",
+                details: nil
+            ))
+            return
+        }
         let packToRemove = pacs.first(where: { pack -> Bool in
             let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)
             let contextJsonDict = contextJsonObject as? [String: Any]
@@ -240,5 +259,35 @@ class OfflineManagerUtils {
             else { return false }
             return regionId == id
         }
+    }
+}
+
+/// One-shot KVO observer for `MLNOfflineStorage.packs`. Retains itself until
+/// the first change notification fires, then deregisters and invokes `onChange`.
+private final class PacksReloadObserver: NSObject {
+    private let onChange: () -> Void
+    private var fired = false
+    private var retainCycle: PacksReloadObserver?
+    weak var target: MLNOfflineStorage?
+
+    init(onChange: @escaping () -> Void) {
+        self.onChange = onChange
+        super.init()
+        retainCycle = self
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of _: Any?,
+        change _: [NSKeyValueChangeKey: Any]?,
+        context _: UnsafeMutableRawPointer?
+    ) {
+        guard keyPath == "packs", !fired else { return }
+        fired = true
+        target?.removeObserver(self, forKeyPath: "packs")
+        target = nil
+        let callback = onChange
+        retainCycle = nil
+        callback()
     }
 }
