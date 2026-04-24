@@ -126,9 +126,14 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
+    CameraAnimationInterpolation? interpolation,
   }) async {
     calls.add(
-      PlatformCall('easeCamera', [cameraUpdate], {'duration': duration}),
+      PlatformCall(
+        'easeCamera',
+        [cameraUpdate],
+        {'duration': duration, 'interpolation': interpolation},
+      ),
     );
     return true;
   }

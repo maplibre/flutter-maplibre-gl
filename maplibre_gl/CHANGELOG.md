@@ -22,8 +22,11 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
   * `InProgress` events now carry `completedResourceCount`, `requiredResourceCount`, and `completedResourceSize` for tile/byte progress in addition to the percentage.
   * `clearAmbientCache` and `resetOfflineDatabase` globals to evict unpinned tiles or fully reset the offline DB (in-flight downloads are terminated Dart-side before reset/deletion).
   * `setOfflineMaxConcurrentRequests` to cap tile concurrency (total on Android, per-host on both) and avoid upstream rate limiting.
+* **clusterProperties**: Introduced native implementation of `clusterProperties` for clustered GeoJSON sources. Both the simple operator-string form (e.g. `{'sum': ['+', ['get', 'x']]}`) and the explicit reduce-expression form are now applied natively; previously the property was serialized from Dart but ignored by both native converters (#792).
+* **easeCamera interpolation**: `easeCamera` accepts an optional `CameraAnimationInterpolation` to control the animation easing curve (`linear`, `easeInOut`, `easeOut`, `fastOutLinearIn`). Use `CameraAnimationInterpolation.linear` for smooth continuous tracking (e.g. following a moving GPS target) without velocity discontinuities between successive calls. Omitting the parameter preserves the previous default behavior (#789).
+  * **iOS**: all four curves are supported exactly; `fastOutLinearIn` is implemented via `CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)` (Material Design cubic Bezier).
+  * **Android**: MapLibre Android only exposes a boolean easing flag on `easeCamera`, so only `linear` is distinct — `easeInOut`, `easeOut`, and `fastOutLinearIn` all map to the native ease-in/ease-out. See `CameraAnimationInterpolation` dartdoc for per-value details.
 * **iOS**: Implemented `setMaximumFps` to control the preferred frame rate (#739).
-* **Android, iOS**: Native implementation of `clusterProperties` for clustered GeoJSON sources. Both the simple operator-string form (e.g. `{'sum': ['+', ['get', 'x']]}`) and the explicit reduce-expression form are now applied natively; previously the property was serialized from Dart but ignored by both native converters (#792).
 * **Android**: Google Mobile Services (GMS) Location Engine support (#721).
 * **Web**: Exposed `onMouseMove` and added feature state management (`setFeatureState`, `getFeatureState`, `removeFeatureState`) (#718).
 * **Web**: Added `getLayerVisibility`, web snapshot, and map sizing features (#722).

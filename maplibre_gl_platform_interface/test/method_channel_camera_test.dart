@@ -93,7 +93,35 @@ void main() {
       final args = methodCalls[0].arguments as Map;
       expect(args['cameraUpdate'], update.toJson());
       expect(args['duration'], 1000);
+      // When interpolation is omitted, the key must be absent so each
+      // platform falls back to its historical default curve.
+      expect(args.containsKey('interpolation'), isFalse);
     });
+
+    test('easeCamera serializes interpolation as enum name', () async {
+      final update = CameraUpdate.zoomTo(12.0);
+      await platform.easeCamera(
+        update,
+        duration: const Duration(seconds: 1),
+        interpolation: CameraAnimationInterpolation.linear,
+      );
+
+      final args = methodCalls[0].arguments as Map;
+      expect(args['interpolation'], 'linear');
+    });
+
+    test(
+      'easeCamera serializes each interpolation value as its enum name',
+      () async {
+        final update = CameraUpdate.zoomTo(12.0);
+        for (final value in CameraAnimationInterpolation.values) {
+          methodCalls.clear();
+          await platform.easeCamera(update, interpolation: value);
+          final args = methodCalls[0].arguments as Map;
+          expect(args['interpolation'], value.toString().split('.').last);
+        }
+      },
+    );
 
     test('queryCameraPosition returns deserialized CameraPosition', () async {
       final result = await platform.queryCameraPosition();

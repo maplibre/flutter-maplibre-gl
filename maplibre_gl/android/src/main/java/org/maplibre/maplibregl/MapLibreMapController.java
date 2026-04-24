@@ -1093,6 +1093,15 @@ final class MapLibreMapController
         {
           final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
           final Integer duration = call.argument("duration");
+          final String interpolationStr = call.argument("interpolation");
+
+          // MapLibre Android's easeCamera only exposes a boolean:
+          //   false = linear (constant velocity)
+          //   true  = default ease-in/ease-out
+          // Custom timing curves (easeOut, fastOutLinearIn) are not supported
+          // natively, so any non-"linear" value falls back to eased. This
+          // cross-platform caveat is documented on CameraAnimationInterpolation.
+          final boolean easingInterpolator = !"linear".equals(interpolationStr);
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
               new OnCameraMoveFinishedListener() {
@@ -1110,10 +1119,8 @@ final class MapLibreMapController
               };
 
           if (cameraUpdate != null && duration != null && duration > 0) {
-            // camera transformation not handled yet
-            mapLibreMap.easeCamera(cameraUpdate, duration, false, onCameraMoveFinishedListener);
+            mapLibreMap.easeCamera(cameraUpdate, duration, easingInterpolator, onCameraMoveFinishedListener);
           } else if (cameraUpdate != null) {
-            // camera transformation not handled yet
             mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
             result.success(false);

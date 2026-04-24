@@ -341,7 +341,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut), completionHandler: completion)
+                
+                // Create timing function based on interpolation parameter
+                var timingFunction: CAMediaTimingFunction?
+                if let interpolationStr = arguments["interpolation"] as? String {
+                    switch interpolationStr {
+                    case "linear":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                    case "easeInOut":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                    case "easeOut":
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+                    case "fastOutLinearIn":
+                        // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
+                        timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
+                    default:
+                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                    }
+                } else {
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                }
+                
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()

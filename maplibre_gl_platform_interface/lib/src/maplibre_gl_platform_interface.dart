@@ -1,5 +1,51 @@
 part of '../maplibre_gl_platform_interface.dart';
 
+/// Easing curve for [MapLibreMapController.easeCamera] animations.
+///
+/// Platform support varies — iOS exposes four distinct timing functions via
+/// `CAMediaTimingFunction`, while MapLibre Android only exposes a boolean
+/// `easingInterpolator` flag (linear vs. the native ease-in/ease-out).
+/// Per-value behavior is documented below.
+///
+/// When `easeCamera` is called without an interpolation, each platform uses
+/// its historical default (iOS: ease-in/ease-out; Android: ease-in/ease-out).
+enum CameraAnimationInterpolation {
+  /// Constant velocity throughout the animation (no easing).
+  ///
+  /// Best for continuous tracking scenarios (e.g. following a moving GPS
+  /// target) where velocity discontinuities between successive `easeCamera`
+  /// calls would produce perceptible "animated jumps".
+  ///
+  /// Fully supported on both iOS and Android.
+  linear,
+
+  /// Accelerate at the start and decelerate at the end.
+  ///
+  /// Produces a smooth, natural-feeling movement. This is the platform
+  /// default on both iOS and Android when no interpolation is specified.
+  easeInOut,
+
+  /// Decelerate towards the end of the animation.
+  ///
+  /// iOS: mapped to `CAMediaTimingFunctionName.easeOut`.
+  ///
+  /// Android: MapLibre Android does not expose custom timing curves via
+  /// [easeCamera], so this falls back to the default ease-in/ease-out and
+  /// is indistinguishable from [easeInOut] on Android.
+  easeOut,
+
+  /// Material Design "fast out, linear in" curve — cubic Bezier
+  /// `(0.4, 0.0, 1.0, 1.0)`. Accelerates quickly, then approaches the target
+  /// at constant velocity.
+  ///
+  /// iOS: implemented exactly via `CAMediaTimingFunction(controlPoints:)`.
+  ///
+  /// Android: MapLibre Android does not expose custom timing curves via
+  /// [easeCamera], so this falls back to the default ease-in/ease-out and
+  /// is indistinguishable from [easeInOut] on Android.
+  fastOutLinearIn,
+}
+
 /// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
@@ -76,8 +122,19 @@ abstract class MapLibrePlatform {
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
 
-  /// Animates the camera to a new position with a specified duration.
-  Future<bool> easeCamera(CameraUpdate cameraUpdate, {Duration? duration});
+  /// Animates the camera to a new position with a specified duration and interpolation.
+  ///
+  /// The [cameraUpdate] specifies the target camera position.
+  /// The [duration] specifies how long the animation should take.
+  /// The [interpolation] controls the easing curve (defaults to platform default if not specified).
+  ///
+  /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking without
+  /// velocity discontinuities. Use other modes for discrete camera movements.
+  Future<bool> easeCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+    CameraAnimationInterpolation? interpolation,
+  });
 
   /// Queries the current camera position.
   Future<CameraPosition?> queryCameraPosition();
