@@ -15,16 +15,41 @@ abstract class MapLibreHttpRequestUtil {
 
   public static void setHttpHeaders(Map<String, String> headers, MethodChannel.Result result) {
     currentHeaders = headers;
-    rebuildClient();
-    result.success(null);
+    try {
+      rebuildClient();
+      result.success(null);
+    } catch (RuntimeException e) {
+      result.error("SetHttpHeadersError", e.getMessage(), null);
+    }
   }
 
   public static void setMaxConcurrentRequests(
       Integer maxRequests, Integer maxRequestsPerHost, MethodChannel.Result result) {
+    // OkHttp's Dispatcher throws IllegalArgumentException for values < 1.
+    // Validate before mutating state so a rejected call doesn't leave the
+    // static fields half-updated.
+    if (maxRequests != null && maxRequests < 1) {
+      result.error(
+          "InvalidMaxRequests",
+          "maxRequests must be >= 1 (got " + maxRequests + ")",
+          null);
+      return;
+    }
+    if (maxRequestsPerHost != null && maxRequestsPerHost < 1) {
+      result.error(
+          "InvalidMaxRequestsPerHost",
+          "maxRequestsPerHost must be >= 1 (got " + maxRequestsPerHost + ")",
+          null);
+      return;
+    }
     currentMaxRequests = maxRequests;
     currentMaxRequestsPerHost = maxRequestsPerHost;
-    rebuildClient();
-    result.success(null);
+    try {
+      rebuildClient();
+      result.success(null);
+    } catch (RuntimeException e) {
+      result.error("SetMaxConcurrentRequestsError", e.getMessage(), null);
+    }
   }
 
   private static void rebuildClient() {

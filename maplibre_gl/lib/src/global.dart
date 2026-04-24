@@ -94,16 +94,29 @@ Future<dynamic> setOfflineTileCountLimit(int limit) =>
 /// only). [maxRequestsPerHost] controls the per-host concurrency limit
 /// (both platforms). Lowering these values can help avoid rate limiting from
 /// tile servers (e.g. Cloudflare).
+///
+/// Both values must be >= 1 when provided; OkHttp's `Dispatcher` throws on
+/// non-positive values.
 Future<void> setOfflineMaxConcurrentRequests({
   int? maxRequests,
   int? maxRequestsPerHost,
-}) => _globalChannel.invokeMethod(
-  'setOfflineMaxConcurrentRequests',
-  <String, dynamic>{
-    if (maxRequests != null) 'maxRequests': maxRequests,
-    if (maxRequestsPerHost != null) 'maxRequestsPerHost': maxRequestsPerHost,
-  },
-);
+}) {
+  assert(
+    maxRequests == null || maxRequests >= 1,
+    'maxRequests must be >= 1 (got $maxRequests)',
+  );
+  assert(
+    maxRequestsPerHost == null || maxRequestsPerHost >= 1,
+    'maxRequestsPerHost must be >= 1 (got $maxRequestsPerHost)',
+  );
+  return _globalChannel.invokeMethod(
+    'setOfflineMaxConcurrentRequests',
+    <String, dynamic>{
+      if (maxRequests != null) 'maxRequests': maxRequests,
+      if (maxRequestsPerHost != null) 'maxRequestsPerHost': maxRequestsPerHost,
+    },
+  );
+}
 
 /// Pauses an in-progress offline region download.
 Future<void> pauseOfflineRegionDownload(int id) => _globalChannel.invokeMethod(
