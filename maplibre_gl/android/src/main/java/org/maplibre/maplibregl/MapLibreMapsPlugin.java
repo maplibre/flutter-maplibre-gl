@@ -4,6 +4,7 @@
 
 package org.maplibre.maplibregl;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
@@ -24,6 +25,8 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
   static FlutterAssets flutterAssets;
   private Lifecycle lifecycle;
+  private Context context;
+  private MapLibreMapFactory mapFactory;
 
   public MapLibreMapsPlugin() {
     // no-op
@@ -47,15 +50,22 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
         .getPlatformViewRegistry()
         .registerViewFactory(
             "plugins.flutter.io/maplibre_gl",
-            new MapLibreMapFactory(
-                binding.getBinaryMessenger(),
-                new LifecycleProvider() {
-                  @Nullable
-                  @Override
-                  public Lifecycle getLifecycle() {
-                    return lifecycle;
-                  }
-                }));
+            mapFactory =
+                new MapLibreMapFactory(
+                    binding.getBinaryMessenger(),
+                    new LifecycleProvider() {
+                      @Nullable
+                      @Override
+                      public Lifecycle getLifecycle() {
+                        return lifecycle;
+                      }
+
+                      @Nullable
+                      @Override
+                      public Context getContext() {
+                        return context;
+                      }
+                    }));
   }
 
   @Override
@@ -65,28 +75,47 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
   @Override
   public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    context = binding.getActivity();
     lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding);
+    if (mapFactory != null) {
+      mapFactory.onActivityAttached();
+    }
   }
 
   @Override
   public void onDetachedFromActivityForConfigChanges() {
-    onDetachedFromActivity();
+    // Only clear references — do NOT destroy map views during config changes (e.g. rotation).
+    // The MapView survives config changes; we just need to rebind the lifecycle afterwards.
+    lifecycle = null;
+    context = null;
   }
 
   @Override
   public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
-    onAttachedToActivity(binding);
+    context = binding.getActivity();
+    lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding);
+    // Rebind controllers to the new lifecycle without recreating map views.
+    if (mapFactory != null) {
+      mapFactory.onActivityRebound();
+    }
   }
 
   @Override
   public void onDetachedFromActivity() {
+    if (mapFactory != null) {
+      mapFactory.onActivityDetached();
+    }
     lifecycle = null;
+    context = null;
   }
 
 
   interface LifecycleProvider {
     @Nullable
     Lifecycle getLifecycle();
+
+    @Nullable
+    Context getContext();
   }
 
   /** Provides a static method for extracting lifecycle objects from Flutter plugin bindings. */

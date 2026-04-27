@@ -9,12 +9,18 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public class MapLibreMapFactory extends PlatformViewFactory {
 
   private final BinaryMessenger messenger;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
+  private final Set<MapLibreMapController> controllers =
+      Collections.newSetFromMap(new WeakHashMap<MapLibreMapController, Boolean>());
 
   public MapLibreMapFactory(
       BinaryMessenger messenger, MapLibreMapsPlugin.LifecycleProvider lifecycleProvider) {
@@ -43,6 +49,28 @@ public class MapLibreMapFactory extends PlatformViewFactory {
       builder.setStyleString(styleString);
     }
 
-    return builder.build(id, context, messenger, lifecycleProvider);
+    final MapLibreMapController controller =
+        builder.build(id, context, messenger, lifecycleProvider);
+    controllers.add(controller);
+    return controller;
+  }
+
+  void onActivityAttached() {
+    for (MapLibreMapController controller : new ArrayList<>(controllers)) {
+      controller.onActivityAttached();
+    }
+  }
+
+  void onActivityDetached() {
+    for (MapLibreMapController controller : new ArrayList<>(controllers)) {
+      controller.onActivityDetached();
+    }
+  }
+
+  /** Rebind lifecycle only — used after config changes (e.g. rotation) where map views survive. */
+  void onActivityRebound() {
+    for (MapLibreMapController controller : new ArrayList<>(controllers)) {
+      controller.onActivityRebound();
+    }
   }
 }
