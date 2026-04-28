@@ -285,6 +285,16 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> pauseMap() async {
+    await _channel.invokeMethod('map#pause');
+  }
+
+  @override
+  Future<void> resumeMap() async {
+    await _channel.invokeMethod('map#resume');
+  }
+
+  @override
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,

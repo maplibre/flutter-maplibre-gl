@@ -126,7 +126,11 @@ final class MapLibreMapController
   private final int id;
   private final MethodChannel methodChannel;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
+  private final MapLibreMapOptions mapLibreMapOptions;
+  private Lifecycle boundLifecycle;
+  private CameraPosition lastCameraPosition;
   private float density;
+  private final Context applicationContext;
   private final Context context;
   private final String styleStringInitial;
   /**
@@ -145,6 +149,7 @@ final class MapLibreMapController
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
+  private boolean userPaused = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -198,10 +203,13 @@ final class MapLibreMapController
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
+    this.applicationContext =
+        context.getApplicationContext() != null ? context.getApplicationContext() : context;
+    this.mapLibreMapOptions = options;
     this.dragEnabled = dragEnabled;
     this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
-    this.mapViewContainer = new FrameLayout(context);
+    this.mapViewContainer = new FrameLayout(applicationContext);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
     this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
@@ -222,8 +230,91 @@ final class MapLibreMapController
   }
 
   void init() {
-    lifecycleProvider.getLifecycle().addObserver(this);
-    context.registerComponentCallbacks(this);
+    registerToLifecycle();
+    applicationContext.registerComponentCallbacks(this);
+    mapView.getMapAsync(this);
+  }
+
+  void onActivityAttached() {
+    if (disposed) {
+      return;
+    }
+
+    unregisterFromLifecycle();
+
+    if (mapView == null) {
+      recreateMapViewIfNecessary();
+    }
+
+    registerToLifecycle();
+  }
+
+  void onActivityDetached() {
+    saveCameraPosition();
+    destroyMapViewIfNecessary();
+    unregisterFromLifecycle();
+  }
+
+  /**
+   * Rebind after config change (e.g. rotation). The old lifecycle's onDestroy may have
+   * already destroyed the map view, so recreate if necessary.
+   */
+  void onActivityRebound() {
+    if (disposed) {
+      return;
+    }
+    unregisterFromLifecycle();
+    if (mapView == null) {
+      recreateMapViewIfNecessary();
+    }
+    registerToLifecycle();
+  }
+
+  private void registerToLifecycle() {
+    Lifecycle lifecycle = lifecycleProvider.getLifecycle();
+    if (lifecycle != null && lifecycle != boundLifecycle) {
+      lifecycle.addObserver(this);
+      boundLifecycle = lifecycle;
+    }
+  }
+
+  private void unregisterFromLifecycle() {
+    if (boundLifecycle != null) {
+      boundLifecycle.removeObserver(this);
+      boundLifecycle = null;
+    }
+  }
+
+  private void saveCameraPosition() {
+    if (mapLibreMap != null) {
+      lastCameraPosition = mapLibreMap.getCameraPosition();
+    }
+  }
+
+  private void recreateMapViewIfNecessary() {
+    if (mapView != null) {
+      return;
+    }
+
+    final Context activityContext = lifecycleProvider.getContext();
+    final Context mapContext = activityContext != null ? activityContext : context;
+
+    final boolean wasPaused = userPaused;
+
+    mapLibreMap = null;
+    style = null;
+    locationComponent = null;
+    mapViewStarted = false;
+    userPaused = wasPaused;
+    interactiveFeatureLayerIds.clear();
+    addedFeaturesByLayer.clear();
+
+    mapViewContainer.removeAllViews();
+    mapView = new MapView(mapContext, mapLibreMapOptions);
+    if (dragEnabled) {
+      androidGesturesManager = new AndroidGesturesManager(mapView.getContext(), false);
+    }
+    mapViewContainer.addView(mapView);
     mapView.getMapAsync(this);
   }
 
@@ -236,7 +327,10 @@ final class MapLibreMapController
   }
 
   private CameraPosition getCameraPosition() {
-    return trackCameraPosition ? mapLibreMap.getCameraPosition() : null;
+    if (!trackCameraPosition || mapLibreMap == null) {
+      return null;
+    }
+    return mapLibreMap.getCameraPosition();
   }
 
   @Override
@@ -253,6 +347,12 @@ final class MapLibreMapController
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
       mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
+
+    // Restore camera position after map recreation (e.g. "Don't keep activities")
+    if (lastCameraPosition != null) {
+      mapLibreMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastCameraPosition));
+      lastCameraPosition = null;
     }
 
     if (androidGesturesManager != null) {
@@ -844,6 +944,35 @@ final class MapLibreMapController
           result.success(Convert.toJson(getCameraPosition()));
           break;
         }
+      case "map#pause":
+        userPaused = true;
+        if (mapView != null && !disposed) {
+          mapView.onPause();
+        }
+        result.success(null);
+        break;
+      case "map#resume":
+        userPaused = false;
+        if (mapView != null && !disposed) {
+          mapView.onResume();
+        }
+        result.success(null);
+        break;
+      // All cases below require a live mapLibreMap. If the map is being recreated
+      // (e.g. after "Don't keep activities") we stash the result so the Flutter
+      // side gets its answer once onMapReady fires again.
+      default:
+        if (mapLibreMap == null) {
+          result.error("MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
+          return;
+        }
+        onMethodCallWithMap(call, result);
+        return;
+    }
+  }
+
+  private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
+    switch (call.method) {
       case "map#updateMyLocationTrackingMode":
         {
           int myLocationTrackingMode = call.argument("mode");
@@ -2164,13 +2293,10 @@ final class MapLibreMapController
       mapViewStarted = false;
     }
     destroyMapViewIfNecessary();
-    Lifecycle lifecycle = lifecycleProvider.getLifecycle();
-    if (lifecycle != null) {
-      lifecycle.removeObserver(this);
-    }
+    unregisterFromLifecycle();
 
     try {
-      context.unregisterComponentCallbacks(this);
+      applicationContext.unregisterComponentCallbacks(this);
     } catch (Exception e) {
       // Ignore if already unregistered
     }
@@ -2257,6 +2383,10 @@ final class MapLibreMapController
     mapView.onStop();
     mapView.onDestroy();
 
+    mapViewStarted = false;
+    mapLibreMap = null;
+    style = null;
+    locationComponent = null;
     mapView = null;
   }
 
@@ -2284,16 +2414,20 @@ final class MapLibreMapController
     if (disposed || mapView == null) {
       return;
     }
+    if (userPaused) {
+      return;
+    }
     mapView.onResume();
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
     }
-    // Force a repaint to fix invisible map when returning from background
-    // Use standard Android view invalidation to trigger a repaint
-    mapView.post(new Runnable() {
+    // Force a repaint to fix invisible map when returning from background.
+    // Capture a local reference so the Runnable is safe if mapView is nulled before execution.
+    final MapView mv = mapView;
+    mv.post(new Runnable() {
       @Override
       public void run() {
-        mapView.invalidate();
+        mv.invalidate();
       }
     });
   }
@@ -2319,10 +2453,16 @@ final class MapLibreMapController
 
   @Override
   public void onDestroy(@NonNull LifecycleOwner owner) {
-    owner.getLifecycle().removeObserver(this);
+    if (owner.getLifecycle() != boundLifecycle) {
+      // Stale callback from an old activity (e.g. after config change where we already
+      // rebound to the new lifecycle). Ignore — destroying now would kill the live map.
+      return;
+    }
+    unregisterFromLifecycle();
     if (disposed) {
       return;
     }
+    saveCameraPosition();
     destroyMapViewIfNecessary();
   }
 

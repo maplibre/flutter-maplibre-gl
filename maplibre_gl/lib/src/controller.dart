@@ -1018,6 +1018,19 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.forceOnlineMode();
   }
 
+  /// Pauses map rendering. Call [resumeMap] to resume.
+  ///
+  /// Useful for pausing maps that are not visible (e.g. on an inactive tab)
+  /// to save GPU/CPU resources.
+  Future<void> pauseMap() async {
+    return _maplibrePlatform.pauseMap();
+  }
+
+  /// Resumes map rendering after [pauseMap].
+  Future<void> resumeMap() async {
+    return _maplibrePlatform.resumeMap();
+  }
+
   /// Eases the camera to a new position with an optional duration.
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]
