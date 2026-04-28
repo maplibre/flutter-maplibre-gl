@@ -149,6 +149,7 @@ final class MapLibreMapController
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
+  private boolean userPaused = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -298,10 +299,13 @@ final class MapLibreMapController
     final Context activityContext = lifecycleProvider.getContext();
     final Context mapContext = activityContext != null ? activityContext : context;
 
+    final boolean wasPaused = userPaused;
+
     mapLibreMap = null;
     style = null;
     locationComponent = null;
     mapViewStarted = false;
+    userPaused = wasPaused;
     interactiveFeatureLayerIds.clear();
     addedFeaturesByLayer.clear();
 
@@ -940,6 +944,20 @@ final class MapLibreMapController
           result.success(Convert.toJson(getCameraPosition()));
           break;
         }
+      case "map#pause":
+        userPaused = true;
+        if (mapView != null && !disposed) {
+          mapView.onPause();
+        }
+        result.success(null);
+        break;
+      case "map#resume":
+        userPaused = false;
+        if (mapView != null && !disposed) {
+          mapView.onResume();
+        }
+        result.success(null);
+        break;
       // All cases below require a live mapLibreMap. If the map is being recreated
       // (e.g. after "Don't keep activities") we stash the result so the Flutter
       // side gets its answer once onMapReady fires again.
@@ -2394,6 +2412,9 @@ final class MapLibreMapController
   @Override
   public void onResume(@NonNull LifecycleOwner owner) {
     if (disposed || mapView == null) {
+      return;
+    }
+    if (userPaused) {
       return;
     }
     mapView.onResume();

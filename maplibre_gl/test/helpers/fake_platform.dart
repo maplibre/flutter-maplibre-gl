@@ -123,6 +123,12 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<void> forceOnlineMode() async {}
 
   @override
+  Future<void> pauseMap() async {}
+
+  @override
+  Future<void> resumeMap() async {}
+
+  @override
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
