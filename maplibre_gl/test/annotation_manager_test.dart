@@ -340,8 +340,7 @@ void main() {
       expect(controller.onFeatureDrag.length, before - 2);
     });
 
-    test('dispose preserves other managers and user-added callbacks',
-        () async {
+    test('dispose preserves other managers and user-added callbacks', () async {
       void userCallback(_, _, _, _, _, _, _) {}
       controller.onFeatureDrag.add(userCallback);
 
@@ -369,43 +368,45 @@ void main() {
       expect(controller.onFeatureDrag.length, initial);
     });
 
-    test('drag event after style reload does not target a disposed manager',
-        () async {
-      final oldSymbol = await controller.addSymbol(
-        const SymbolOptions(geometry: LatLng(0, 0), draggable: true),
-      );
+    test(
+      'drag event after style reload does not target a disposed manager',
+      () async {
+        final oldSymbol = await controller.addSymbol(
+          const SymbolOptions(geometry: LatLng(0, 0), draggable: true),
+        );
 
-      // Trigger the real style-reload code path on the controller.
-      platform.onMapStyleLoadedPlatform.call(null);
-      await pumpEventQueue();
+        // Trigger the real style-reload code path on the controller.
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
 
-      final newSymbol = await controller.addSymbol(
-        const SymbolOptions(geometry: LatLng(10, 20), draggable: true),
-      );
+        final newSymbol = await controller.addSymbol(
+          const SymbolOptions(geometry: LatLng(10, 20), draggable: true),
+        );
 
-      final dragged = <String>[];
-      controller.onFeatureDrag.add(
-        (point, origin, current, delta, id, annotation, eventType) {
-          dragged.add(id);
-        },
-      );
+        final dragged = <String>[];
+        controller.onFeatureDrag.add(
+          (point, origin, current, delta, id, annotation, eventType) {
+            dragged.add(id);
+          },
+        );
 
-      platform.onFeatureDraggedPlatform.call({
-        'id': newSymbol.id,
-        'eventType': DragEventType.drag.name,
-        'point': const Point(0.0, 0.0),
-        'origin': const LatLng(10, 20),
-        'current': const LatLng(10.001, 20.001),
-        'delta': const LatLng(0.001, 0.001),
-      });
+        platform.onFeatureDraggedPlatform.call({
+          'id': newSymbol.id,
+          'eventType': DragEventType.drag.name,
+          'point': const Point(0.0, 0.0),
+          'origin': const LatLng(10, 20),
+          'current': const LatLng(10.001, 20.001),
+          'delta': const LatLng(0.001, 0.001),
+        });
 
-      // Only the new manager (and our observer) should have been notified.
-      // With the bug, the old manager's stale _onDrag would also fire.
-      expect(dragged, [newSymbol.id]);
-      expect(controller.symbolManager!.byId(newSymbol.id), isNotNull);
-      // Old symbol's id is unrelated to anything live now.
-      expect(controller.symbolManager!.byId(oldSymbol.id), isNull);
-    });
+        // Only the new manager (and our observer) should have been notified.
+        // With the bug, the old manager's stale _onDrag would also fire.
+        expect(dragged, [newSymbol.id]);
+        expect(controller.symbolManager!.byId(newSymbol.id), isNotNull);
+        // Old symbol's id is unrelated to anything live now.
+        expect(controller.symbolManager!.byId(oldSymbol.id), isNull);
+      },
+    );
   });
 
   group('AnnotationManager GeoJSON output', () {
