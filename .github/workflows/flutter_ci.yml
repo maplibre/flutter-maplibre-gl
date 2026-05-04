@@ -53,7 +53,7 @@ jobs:
       - run: melos run test:io:coverage --no-select
       - name: Upload coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
