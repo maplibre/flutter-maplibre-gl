@@ -2557,6 +2557,13 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setUseHybridComposition(boolean useHybridComposition) {
+    // useHybridComposition selects the Platform-View backing (TextureView vs SurfaceView)
+    // and is only meaningful before the map's native view has been constructed.
+    // At runtime the chosen surface is fixed, so this is a no-op.
+  }
+
+  @Override
   public void setFeatureTapsTriggersMapClick(boolean triggers) {
     this.featureTapsTriggersMapClick = triggers;
   }
