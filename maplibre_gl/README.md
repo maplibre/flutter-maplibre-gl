@@ -164,8 +164,8 @@ Request permissions at runtime yourself (e.g. via the [`location`](https://pub.d
 Include the following JavaScript and CSS files in the `<head>` of your `web/index.html` file:
 
 ```html
-<script src="https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@^4.3/dist/maplibre-gl.css" rel="stylesheet" />
+<script src='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js'></script>
+<link href='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css' rel='stylesheet'/>
 ```
 
 ---
