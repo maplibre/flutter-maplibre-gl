@@ -26,6 +26,8 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private String styleString = "";
   private LatLngBounds bounds = null;
   private LocationEngineRequest locationEngineRequest = null;
+  private boolean translucentRequested = false;
+  private boolean hybridCompositionActive = false;
 
   MapLibreMapController build(
       int id,
@@ -261,9 +263,16 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
   @Override
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
+    this.translucentRequested = translucentTextureSurface;
     options.translucentTextureSurface(translucentTextureSurface);
-    // TextureMode is required for translucent surfaces, but causes frame sync issues
-    // Only enable it when transparency is actually needed
-    options.textureMode(translucentTextureSurface);
+    // textureMode must be on if EITHER a translucent surface is required OR Flutter is
+    // using Hybrid Composition (TLHC). Both are correctness requirements, not knobs.
+    options.textureMode(translucentRequested || hybridCompositionActive);
+  }
+
+  @Override
+  public void setUseHybridComposition(boolean useHybridComposition) {
+    this.hybridCompositionActive = useHybridComposition;
+    options.textureMode(translucentRequested || hybridCompositionActive);
   }
 }
