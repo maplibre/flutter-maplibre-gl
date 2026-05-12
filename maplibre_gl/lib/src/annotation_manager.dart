@@ -49,6 +49,15 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Returns the annotation with the given [id], or null if not found.
   T? byId(String id) => _idToAnnotation[id];
 
+  /// Stored drag callback reference so we can reliably de-register it.
+  ///
+  /// This must be the *same* function instance used with
+  /// `controller.onFeatureDrag.add(...)`, otherwise `remove(...)` may fail
+  /// (method tear-offs can create new function objects).
+  ///
+  /// Prevents duplicate/stale drag handlers after style reloads.
+  late final OnFeatureDragCallback _dragCb = _onDrag;
+
   /// Current set of managed annotations.
   Set<T> get annotations => _idToAnnotation.values.toSet();
 
@@ -84,7 +93,8 @@ abstract class AnnotationManager<T extends Annotation> {
         );
       }
 
-      controller.onFeatureDrag.add(_onDrag);
+      controller.onFeatureDrag.remove(_dragCb); // safe even if not present
+      controller.onFeatureDrag.add(_dragCb);
 
       // Mark as initialized
       _isInitialized = true;
@@ -180,6 +190,7 @@ abstract class AnnotationManager<T extends Annotation> {
   Future<void> dispose() async {
     if (controller.isDisposed) return;
     _idToAnnotation.clear();
+    controller.onFeatureDrag.remove(_dragCb);
 
     await _setAll();
     for (var i = 0; i < allLayerProperties.length; i++) {
