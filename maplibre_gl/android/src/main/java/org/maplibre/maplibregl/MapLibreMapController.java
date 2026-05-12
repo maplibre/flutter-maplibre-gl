@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.os.Bundle;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -106,7 +107,56 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.platform.PlatformView;
 
 
-/** Controller of a single MapLibreMaps MapView instance. */
+/**
+ * Controller of a single MapLibre {@link MapView} instance exposed as a Flutter
+ * {@link PlatformView}. Mediates between the Flutter method channel, the host
+ * activity {@link Lifecycle}, and the native {@link MapView}.
+ *
+ * <h2>Surviving activity recreation</h2>
+ * Android can destroy and recreate the host activity at any time (rotation,
+ * "Don't keep activities", memory pressure). Because the {@link MapView} holds
+ * GL resources tied to its constructing activity context, it must be destroyed
+ * alongside the activity and rebuilt against the new one. This controller
+ * handles that automatically so the Flutter widget tree never sees the swap.
+ *
+ * <h3>State bridge</h3>
+ * <ul>
+ *   <li>{@link #lastCameraPosition} — explicit camera snapshot, restored in
+ *       {@link #onMapReady}.</li>
+ *   <li>{@link #savedMapViewState} — opaque MapLibre bundle written via
+ *       {@link MapView#onSaveInstanceState(Bundle)} and replayed into
+ *       {@link MapView#onCreate(Bundle)} on the new instance.</li>
+ *   <li>Controller fields (e.g. {@link #myLocationEnabled},
+ *       {@link #trackCameraPosition}, {@link #bounds}) — live on the controller
+ *       which itself outlives the activity.</li>
+ * </ul>
+ *
+ * <h3>State NOT preserved</h3>
+ * Sources, layers, images, runtime style switches, runtime UI tweaks via
+ * {@code map#update}, and in-flight gestures are all lost. Dart code is
+ * expected to re-apply them when {@code map#onStyleLoaded} fires for the new
+ * MapView. See {@link #recreateMapViewIfNecessary()} for the full breakdown.
+ *
+ * <h3>Lifecycle plumbing</h3>
+ * Three hooks ({@link #onActivityAttached()}, {@link #onActivityDetached()},
+ * {@link #onActivityRebound()}) are broadcast from {@link MapLibreMapFactory}
+ * in response to Flutter's {@code ActivityAware} callbacks. Combined with the
+ * idempotent {@code mapViewCreated/Started/Resumed} flags they ensure each
+ * {@link MapView} instance sees a balanced sequence of {@code onCreate} →
+ * {@code onStart} → {@code onResume} → {@code onPause} → {@code onStop} →
+ * {@code onDestroy} regardless of how Jetpack replays lifecycle events.
+ *
+ * <h3>Method channel during recreation</h3>
+ * While the {@link MapView} is being rebuilt the controller may receive method
+ * calls from Dart. {@code map#waitForMap} parks the result and replies once
+ * {@link #onMapReady} fires again; every other map-touching call returns
+ * {@code MAP_NOT_READY} so Dart can decide whether to retry.
+ *
+ * <h3>Dart-driven pause</h3>
+ * {@code map#pause} / {@code map#resume} expose explicit rendering control via
+ * {@link #userPaused}. When set, the natural lifecycle {@code onResume} is
+ * suppressed so a paused map stays paused across backgrounding.
+ */
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
     implements DefaultLifecycleObserver,
@@ -127,14 +177,41 @@ final class MapLibreMapController
   private final MethodChannel methodChannel;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
   private final MapLibreMapOptions mapLibreMapOptions;
+  /**
+   * The {@link Lifecycle} this controller is currently observing. Used to detect
+   * stale callbacks from a destroyed activity and to avoid double-subscription
+   * when the host activity is recreated (e.g. "Don't keep activities", rotation).
+   */
   private Lifecycle boundLifecycle;
+  /**
+   * Last known camera position. Saved before destroying the {@link MapView} so it
+   * can be restored once the map is recreated in a fresh activity. Cleared after
+   * being applied in {@link #onMapReady(MapLibreMap)}.
+   */
   private CameraPosition lastCameraPosition;
+  /**
+   * State bundle written by {@link MapView#onSaveInstanceState(Bundle)} before the
+   * {@link MapView} is destroyed and read back by {@link MapView#onCreate(Bundle)}
+   * on the recreated instance. Lets MapLibre restore internal state (camera, style
+   * progress, etc.) across activity recreation, complementing {@link #lastCameraPosition}.
+   */
+  private final Bundle savedMapViewState = new Bundle();
   private float density;
   private final Context applicationContext;
-  private final Context context;
+  /**
+   * Activity context used to build the {@link MapView}. Re-pointed at the current
+   * activity on every {@link #onActivityAttached()}/{@link #onActivityRebound()} so
+   * we don't pin a destroyed activity in memory. Do NOT register long-lived listeners
+   * against this field directly — for component callbacks and similar, prefer
+   * {@link #applicationContext}.
+   */
+  private Context context;
   private final String styleStringInitial;
   /**
-   * This container is returned as the final platform view instead of returning `mapView`.
+   * Container that wraps the {@link MapView}. Returned as the platform view so the
+   * inner {@link MapView} can be swapped out (after activity recreation) without
+   * Flutter noticing. Created with {@link #applicationContext} on purpose: it lives
+   * across activities, and uses no activity-themed attributes.
    * See {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
    */
   private FrameLayout mapViewContainer;
@@ -148,7 +225,22 @@ final class MapLibreMapController
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
+  /**
+   * Idempotency guards for {@link MapView} lifecycle dispatch. Jetpack's
+   * {@code Lifecycle.addObserver} replays missed events synchronously, which would
+   * otherwise re-invoke {@code mapView.onCreate/onStart/onResume} on an already
+   * initialized {@link MapView}. These flags ensure each transition fires once
+   * per {@link MapView} instance.
+   */
+  private boolean mapViewCreated = false;
   private boolean mapViewStarted = false;
+  private boolean mapViewResumed = false;
+  /**
+   * True when Dart has explicitly requested {@code pauseMap()}. Suppresses the
+   * natural {@link #onResume(LifecycleOwner)} until {@code resumeMap()} is called,
+   * so a backgrounded map stays paused even when the host activity returns to the
+   * foreground.
+   */
   private boolean userPaused = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
@@ -229,26 +321,62 @@ final class MapLibreMapController
     return mapViewContainer;
   }
 
+  /**
+   * Initial wire-up after construction. Order matters:
+   * <ol>
+   *   <li>Register component callbacks against the {@link #applicationContext}
+   *       so we don't pin the host {@link android.app.Activity}.</li>
+   *   <li>Subscribe to the host activity {@link Lifecycle}. Jetpack replays the
+   *       missed events synchronously, which drives {@code mapView.onCreate()},
+   *       {@code onStart()} and {@code onResume()} via our lifecycle observer
+   *       methods. The {@link #savedMapViewState} bundle is empty here, which
+   *       is equivalent to "no saved state" for MapLibre.</li>
+   *   <li>Call {@link MapView#getMapAsync} only AFTER {@code onCreate} has fired,
+   *       to comply with MapLibre's documented call order.</li>
+   * </ol>
+   */
   void init() {
-    registerToLifecycle();
     applicationContext.registerComponentCallbacks(this);
+    registerToLifecycle();
     mapView.getMapAsync(this);
   }
 
+  /**
+   * Invoked by {@link MapLibreMapFactory} when the plugin re-attaches to an activity.
+   * Triggered both on first attach and after a full activity teardown (e.g. with
+   * "Don't keep activities" enabled). Refreshes context references, recreates the
+   * {@link MapView} if the previous one was destroyed, and rebinds the new lifecycle.
+   */
   void onActivityAttached() {
     if (disposed) {
       return;
     }
 
     unregisterFromLifecycle();
+    updateActivityContext();
 
-    if (mapView == null) {
+    final boolean recreated = (mapView == null);
+    if (recreated) {
       recreateMapViewIfNecessary();
     }
 
+    // Register the new lifecycle BEFORE getMapAsync so Jetpack's synchronous
+    // replay drives mapView.onCreate(savedMapViewState) first. Calling
+    // getMapAsync against a not-yet-created MapView is technically tolerated
+    // by MapLibre but violates the documented contract.
     registerToLifecycle();
+
+    if (recreated) {
+      mapView.getMapAsync(this);
+    }
   }
 
+  /**
+   * Invoked when the plugin is fully detached from the activity (i.e. the host
+   * activity is being destroyed without a config change — e.g. "Don't keep
+   * activities" or a real activity finish). Saves what state we can and tears
+   * down the native {@link MapView}.
+   */
   void onActivityDetached() {
     saveCameraPosition();
     destroyMapViewIfNecessary();
@@ -256,18 +384,42 @@ final class MapLibreMapController
   }
 
   /**
-   * Rebind after config change (e.g. rotation). The old lifecycle's onDestroy may have
-   * already destroyed the map view, so recreate if necessary.
+   * Invoked after a configuration change (e.g. rotation). In the Flutter standard
+   * ordering the old activity's {@code onDestroy} fires before this hook, so by
+   * the time we get here the {@link MapView} has already been torn down via the
+   * lifecycle observer and we go through the same path as a full re-attach. The
+   * fast-path (mapView still alive) only triggers if reattachment somehow beats
+   * the old activity's destroy callback. {@link #lastCameraPosition} and
+   * {@link #savedMapViewState} bridge the gap either way.
    */
   void onActivityRebound() {
     if (disposed) {
       return;
     }
     unregisterFromLifecycle();
-    if (mapView == null) {
+    updateActivityContext();
+
+    final boolean recreated = (mapView == null);
+    if (recreated) {
       recreateMapViewIfNecessary();
     }
     registerToLifecycle();
+    if (recreated) {
+      mapView.getMapAsync(this);
+    }
+  }
+
+  /**
+   * Re-points {@link #context} at the freshly attached activity so we never hold a
+   * destroyed activity reference. Also refreshes {@link #density} because display
+   * configuration can change across activity recreation (font scale, display size).
+   */
+  private void updateActivityContext() {
+    final Context activityContext = lifecycleProvider.getContext();
+    if (activityContext != null) {
+      this.context = activityContext;
+      this.density = activityContext.getResources().getDisplayMetrics().density;
+    }
   }
 
   private void registerToLifecycle() {
@@ -291,21 +443,46 @@ final class MapLibreMapController
     }
   }
 
+  /**
+   * Builds a fresh {@link MapView} bound to the current activity context. Caller
+   * must have already updated {@link #context} via {@link #updateActivityContext()}
+   * and must call {@link MapView#getMapAsync} AFTER the lifecycle has been bound
+   * (so {@code mapView.onCreate(savedMapViewState)} runs first via the lifecycle
+   * observer replay).
+   *
+   * <p>State preserved across recreation:
+   * <ul>
+   *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
+   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}).</li>
+   *   <li>Construction-time {@link MapLibreMapOptions} (UI flags, gestures, etc.).</li>
+   *   <li>Controller fields like {@link #trackCameraPosition}, {@link #myLocationEnabled},
+   *       {@link #myLocationTrackingMode}, {@link #myLocationRenderMode}, {@link #bounds}.</li>
+   * </ul>
+   *
+   * <p>State lost across recreation (must be re-applied from Dart on
+   * {@code onStyleLoadedCallback}):
+   * <ul>
+   *   <li>Sources / layers / images added at runtime via the method channel.</li>
+   *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
+   *       initial style).</li>
+   *   <li>Runtime tweaks to UI flags applied via {@code map#update} after
+   *       construction (compass, attribution, content insets, etc.).</li>
+   *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
+   * </ul>
+   */
   private void recreateMapViewIfNecessary() {
     if (mapView != null) {
       return;
     }
 
-    final Context activityContext = lifecycleProvider.getContext();
-    final Context mapContext = activityContext != null ? activityContext : context;
-
-    final boolean wasPaused = userPaused;
+    final Context mapContext = (context != null) ? context : applicationContext;
 
     mapLibreMap = null;
     style = null;
     locationComponent = null;
+    mapViewCreated = false;
     mapViewStarted = false;
-    userPaused = wasPaused;
+    mapViewResumed = false;
     interactiveFeatureLayerIds.clear();
     addedFeaturesByLayer.clear();
 
@@ -315,7 +492,9 @@ final class MapLibreMapController
       androidGesturesManager = new AndroidGesturesManager(mapView.getContext(), false);
     }
     mapViewContainer.addView(mapView);
-    mapView.getMapAsync(this);
+    // NOTE: getMapAsync is intentionally NOT called here. The caller is responsible
+    // for invoking it after registerToLifecycle() so that mapView.onCreate fires
+    // first (see onActivityAttached / onActivityRebound).
   }
 
   private void moveCamera(CameraUpdate cameraUpdate) {
@@ -349,9 +528,18 @@ final class MapLibreMapController
       mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
     }
 
-    // Restore camera position after map recreation (e.g. "Don't keep activities")
-    if (lastCameraPosition != null) {
-      mapLibreMap.moveCamera(CameraUpdateFactory.newCameraPosition(lastCameraPosition));
+    // Camera restoration after activity recreation.
+    // Priority order:
+    //   1. lastCameraPosition saved before the previous MapView was destroyed.
+    //   2. initial camera supplied via MapLibreMapOptions (covers the edge case
+    //      where the previous MapView was destroyed before onMapReady ever ran,
+    //      so lastCameraPosition was never populated).
+    CameraPosition restorePosition = lastCameraPosition;
+    if (restorePosition == null) {
+      restorePosition = mapLibreMapOptions.getCamera();
+    }
+    if (restorePosition != null) {
+      mapLibreMap.moveCamera(CameraUpdateFactory.newCameraPosition(restorePosition));
       lastCameraPosition = null;
     }
 
@@ -944,17 +1132,26 @@ final class MapLibreMapController
           result.success(Convert.toJson(getCameraPosition()));
           break;
         }
+      // Dart-driven pause/resume. Only flips MapView state when it's actually out
+      // of sync with the request, so we never double-call onPause/onResume against
+      // the natural Activity lifecycle (which the lifecycle observer handles).
       case "map#pause":
         userPaused = true;
-        if (mapView != null && !disposed) {
+        if (!disposed && mapView != null && mapViewResumed) {
           mapView.onPause();
+          mapViewResumed = false;
         }
         result.success(null);
         break;
       case "map#resume":
         userPaused = false;
-        if (mapView != null && !disposed) {
+        if (!disposed
+            && mapView != null
+            && !mapViewResumed
+            && boundLifecycle != null
+            && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
           mapView.onResume();
+          mapViewResumed = true;
         }
         result.success(null);
         break;
@@ -2286,12 +2483,9 @@ final class MapLibreMapController
       activeSnapshotter = null;
     }
     methodChannel.setMethodCallHandler(null);
-    // Properly cleanup MapView lifecycle before destroying
-    if (mapView != null && mapViewStarted) {
-      mapView.onPause();
-      mapView.onStop();
-      mapViewStarted = false;
-    }
+    // destroyMapViewIfNecessary drives the full pause -> stop -> destroy sequence,
+    // gated by the mapViewResumed/Started/Created flags so each step fires at most
+    // once. No manual onPause/onStop dance needed here.
     destroyMapViewIfNecessary();
     unregisterFromLifecycle();
 
@@ -2355,18 +2549,27 @@ final class MapLibreMapController
   }
 
   /**
-   * Destroy the MapView and cleans up listeners.
-   * It's very important to call mapViewContainer.removeView(mapView) to make sure
-   * that {@link TextureView#onDetachedFromWindowInternal()} is called which releases the
-   * underlying surface.
-   * This is required due to an FlutterEngine change that was introduce when updating from
-   * Flutter 2.10.5 to Flutter 3.10.0.
-   * This FlutterEngine change is not calling `removeView` on a PlatformView which causes the issue.
-   * <p>
-   * For more information check out:
-   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>
-   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter Engine commit that introduced the issue</a>
-   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the MapLibre repo</a>
+   * Destroy the {@link MapView} and clean up listeners.
+   *
+   * <p>It's very important to call {@code mapViewContainer.removeView(mapView)} to make
+   * sure that {@link TextureView#onDetachedFromWindowInternal()} is called, which
+   * releases the underlying surface. This is required due to a FlutterEngine change
+   * introduced between Flutter 2.10.5 and 3.10.0 where {@code removeView} is no longer
+   * called on a PlatformView automatically.
+   *
+   * <p>The teardown drives the MapView lifecycle backwards using the
+   * {@code mapViewResumed/Started/Created} flags, so each step fires at most once
+   * regardless of whether dispose, lifecycle-onDestroy, or a manual detach got here
+   * first. Before destroying, MapLibre's internal state is persisted into
+   * {@link #savedMapViewState} so a subsequent {@link #recreateMapViewIfNecessary()}
+   * can restore it.
+   *
+   * <p>For more information see:
+   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>,
+   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">the
+   * Flutter Engine commit that introduced the issue</a>, and
+   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">the
+   * MapLibre tracking issue</a>.
    */
   private void destroyMapViewIfNecessary() {
     if (mapView == null) {
@@ -2378,51 +2581,84 @@ final class MapLibreMapController
     }
     stopListeningForLocationUpdates();
 
+    // Persist MapView state so it can be restored when a new MapView is created
+    // (e.g. across "Don't keep activities" or rotation).
+    if (mapViewCreated) {
+      try {
+        mapView.onSaveInstanceState(savedMapViewState);
+      } catch (Exception e) {
+        Log.w(TAG, "mapView.onSaveInstanceState failed", e);
+      }
+    }
+
     mapViewContainer.removeView(mapView);
 
-    mapView.onStop();
-    mapView.onDestroy();
+    if (mapViewResumed) {
+      mapView.onPause();
+      mapViewResumed = false;
+    }
+    if (mapViewStarted) {
+      mapView.onStop();
+      mapViewStarted = false;
+    }
+    if (mapViewCreated) {
+      mapView.onDestroy();
+      mapViewCreated = false;
+    }
 
-    mapViewStarted = false;
     mapLibreMap = null;
     style = null;
     locationComponent = null;
     mapView = null;
   }
 
+  // -- Lifecycle observer ----------------------------------------------------
+  //
+  // All five state transitions below are idempotent: each only mutates the
+  // MapView once per (MapView instance, transition) pair. This matters because
+  // Jetpack's Lifecycle.addObserver replays missed events synchronously when we
+  // re-subscribe to a fresh activity Lifecycle. Without the guards the replay
+  // would re-call mapView.onCreate / onStart / onResume on an already-initialized
+  // MapView (segnalazione #2 in PR review).
+
   @Override
   public void onCreate(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewCreated) {
       return;
     }
-    mapView.onCreate(null);
+    // savedMapViewState is empty on first launch and populated on subsequent
+    // recreations via destroyMapViewIfNecessary().
+    mapView.onCreate(savedMapViewState);
+    mapViewCreated = true;
   }
 
   @Override
   public void onStart(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewStarted) {
       return;
     }
-    if (!mapViewStarted) {
-      mapView.onStart();
-      mapViewStarted = true;
-    }
+    mapView.onStart();
+    mapViewStarted = true;
   }
 
   @Override
   public void onResume(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewResumed) {
       return;
     }
     if (userPaused) {
+      // Dart has explicitly paused rendering. Stay paused until resumeMap() is
+      // called, even though the host activity is in the foreground.
       return;
     }
     mapView.onResume();
+    mapViewResumed = true;
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
     }
     // Force a repaint to fix invisible map when returning from background.
-    // Capture a local reference so the Runnable is safe if mapView is nulled before execution.
+    // Capture a local reference so the Runnable is safe if mapView is nulled
+    // before execution (e.g. by a concurrent dispose).
     final MapView mv = mapView;
     mv.post(new Runnable() {
       @Override
@@ -2434,21 +2670,20 @@ final class MapLibreMapController
 
   @Override
   public void onPause(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || !mapViewResumed) {
       return;
     }
     mapView.onPause();
+    mapViewResumed = false;
   }
 
   @Override
   public void onStop(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || !mapViewStarted) {
       return;
     }
-    if (mapViewStarted) {
-      mapView.onStop();
-      mapViewStarted = false;
-    }
+    mapView.onStop();
+    mapViewStarted = false;
   }
 
   @Override

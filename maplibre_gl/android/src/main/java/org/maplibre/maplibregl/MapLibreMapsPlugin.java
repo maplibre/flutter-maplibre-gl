@@ -73,6 +73,14 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     // no-op
   }
 
+  /**
+   * Called by Flutter when the plugin is attached to a host {@link android.app.Activity}.
+   * Fires on first launch and after the activity has been recreated (e.g. with
+   * "Don't keep activities"). Refreshes the lifecycle/context references exposed
+   * via {@link LifecycleProvider} and notifies live controllers so they can
+   * rebuild their {@link org.maplibre.android.maps.MapView} against the new
+   * activity context.
+   */
   @Override
   public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
     context = binding.getActivity();
@@ -82,24 +90,43 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     }
   }
 
+  /**
+   * Called by Flutter when the host activity is about to be destroyed and recreated
+   * for a configuration change (e.g. rotation). We deliberately do NOT broadcast a
+   * detach to controllers here: the new activity will arrive shortly via
+   * {@link #onReattachedToActivityForConfigChanges} and the controllers will rebuild
+   * then. The old activity's natural {@code Lifecycle.onDestroy} will still tear
+   * down the {@code MapView}; persisted state (camera + MapLibre instance state)
+   * is carried across by the controller itself.
+   */
   @Override
   public void onDetachedFromActivityForConfigChanges() {
-    // Only clear references — do NOT destroy map views during config changes (e.g. rotation).
-    // The MapView survives config changes; we just need to rebind the lifecycle afterwards.
     lifecycle = null;
     context = null;
   }
 
+  /**
+   * Called by Flutter after a configuration-change-driven activity recreation has
+   * produced a new {@link android.app.Activity}. Refreshes lifecycle/context and
+   * fans out a rebound notification to controllers, which rebuild their
+   * {@code MapView} against the new activity and restore camera + MapLibre state.
+   */
   @Override
   public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
     context = binding.getActivity();
     lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding);
-    // Rebind controllers to the new lifecycle without recreating map views.
     if (mapFactory != null) {
       mapFactory.onActivityRebound();
     }
   }
 
+  /**
+   * Called by Flutter when the plugin is being fully detached from the host
+   * activity (no config change is in progress — e.g. "Don't keep activities" has
+   * been triggered, or the activity is finishing). Notifies controllers to save
+   * what state they can and tear down their {@code MapView}. The state is held
+   * in the controllers themselves and will be restored on the next attach.
+   */
   @Override
   public void onDetachedFromActivity() {
     if (mapFactory != null) {
@@ -110,6 +137,15 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
   }
 
 
+  /**
+   * Late-binding accessor for the host activity {@link Lifecycle} and {@link Context}.
+   *
+   * <p>The plugin instance returned by {@link io.flutter.embedding.engine.plugins.activity.ActivityAware}
+   * callbacks can outlive any single activity, so controllers must NOT cache these
+   * values across activity recreation — they should fetch them through this provider
+   * whenever they (re)attach. Both methods return {@code null} when the plugin is
+   * not currently attached to an activity.
+   */
   interface LifecycleProvider {
     @Nullable
     Lifecycle getLifecycle();
