@@ -321,6 +321,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources
             result(nil)
+        case "map#pause", "map#resume":
+            // No-op on iOS. Android pauses the underlying MapView render loop here
+            // to save GPU/CPU when the widget is off-screen; on iOS the OS already
+            // halts rendering for off-screen views, so there is nothing to do.
+            // Kept as a recognised method so Dart callers don't get
+            // MissingPluginException on iOS.
+            result(nil)
         case "camera#ease":
             guard let arguments = methodCall.arguments as? [String: Any] else { 
                 result(false)
