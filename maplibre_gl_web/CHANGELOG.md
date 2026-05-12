@@ -1,5 +1,10 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Added
+* `pauseMap` / `resumeMap` no-op implementations to satisfy the new platform-interface contract. MapLibre GL JS handles visibility-driven pausing internally on the web, so no separate render-loop control is needed (#805).
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 ### Breaking

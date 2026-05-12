@@ -1,3 +1,18 @@
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+## Unreleased
+
+### Added
+* `pauseMap()` / `resumeMap()` on `MapLibreMapController`. Android stops the MapView render loop; iOS and web are no-op (#805).
+
+### Fixed
+* **Android**: Maps survive host activity destruction (e.g. "Don't keep activities", memory pressure) and configuration changes (e.g. rotation). The MapView is rebuilt against the fresh activity context with camera position restored automatically (#805).
+
+### Note for app developers
+On Android the `MapView` is rebuilt across activity recreation. Camera is restored automatically. Runtime-added sources/layers/images and style switches must be applied inside `onStyleLoadedCallback` (the recommended pattern, also documented on `MapLibreMap.onMapCreated`): the callback fires again on each recreation, so apps that already follow it see their style content re-applied automatically. 
+
+Apps adding style content in `onMapCreated` or `initState` will need to move that code into `onStyleLoadedCallback`.
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 **Version 0.26.0 is a milestone release for flutter-maplibre-gl.** \

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* `pauseMap()` and `resumeMap()` on `MapLibreMapController` to explicitly pause and resume map rendering. Useful for maps that are not visible (e.g. on an inactive `TabBarView` page) to save GPU/CPU. The paused state survives host-activity backgrounding (#805).
+  * **Android**: stops the underlying MapView render loop.
+  * **iOS**: no-op (the OS already halts rendering for off-screen views).
+  * **Web**: no-op.
+
+### Fixed
+* **Android**: Maps no longer go permanently blank after the host activity is destroyed and recreated by Android's "Don't keep activities" developer option or by aggressive memory pressure. The MapView is now rebuilt against the fresh activity and camera state is restored automatically (#805).
+* **Android**: Maps survive configuration changes such as device rotation, restoring camera state across the activity recreation (#805).
+
+### Note for app developers
+On Android the `MapView` is rebuilt across activity recreation. Camera is restored automatically. Runtime-added sources/layers/images and style switches must be applied inside `onStyleLoadedCallback` (the recommended pattern, also documented on `MapLibreMap.onMapCreated`): the callback fires again on each recreation, so apps that already follow it see their style content re-applied automatically. 
+
+Apps adding style content in `onMapCreated` or `initState` will need to move that code into `onStyleLoadedCallback`.
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 #### Version 0.26.0 marks a milestone for `flutter-maplibre-gl`

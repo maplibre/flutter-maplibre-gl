@@ -1,3 +1,10 @@
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+## Unreleased
+
+### Added
+* `MapLibrePlatform.pauseMap()` and `MapLibrePlatform.resumeMap()` abstract methods, with corresponding `map#pause` / `map#resume` method-channel handlers in `MapLibreMethodChannel`. Subclasses must implement the new methods (a no-op suffices for platforms without an active render loop) (#805).
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
