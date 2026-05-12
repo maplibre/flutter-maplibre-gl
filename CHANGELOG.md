@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Fixed
+* **Android**: Fix `NullPointerException` in the repaint runnable posted by `MapLibreMapController.onResume`. The runnable reads the controller's `mapView` field after the main `Looper` drains, so when `dispose()` runs first (e.g. a map hosted in a `Dialog` or `BottomSheet` that is dismissed mid-resume) the field is `null` and `mapView.invalidate()` throws. The runnable now re-checks `disposed`/`mapView`, mirroring the guard at the top of `onResume`.
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 #### Version 0.26.0 marks a milestone for `flutter-maplibre-gl`
