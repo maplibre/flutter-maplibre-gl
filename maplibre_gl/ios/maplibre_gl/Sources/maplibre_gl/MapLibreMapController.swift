@@ -109,21 +109,40 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
         var longPressRecognizerAdded = false
 
-        if let args = args as? [String: Any] {
+        // Flutter PlatformView hands us a zero-sized frame on cold launch.
+        // Any setter that touches the C++ map's camera/bounds (setCenter,
+        // maximumScreenBounds, min/max zoom, showsUserLocation → flyTo on
+        // cached CL fix) cascades into `constrainCameraAndZoomToBounds` →
+        // `Projection::unproject` on a 0×0 viewport → NaN → the `mbgl::LatLng`
+        // ctor throws `std::domain_error`, which libc++abi cannot unwind
+        // through Swift → SIGABRT (~150 ms after cold launch via force-quit
+        // + relaunch, reproducible 7/8 on iPhone 13 mini iOS 26.5). Defer
+        // the options-apply block to the next runloop turn; Flutter calls
+        // `setFrame` with the real size by then.
+        let applyArgs: () -> Void = { [weak self] in
+            guard let self = self, let args = args as? [String: Any] else { return }
 
             Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
-               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView),
+               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: self.mapView),
                let zoom = initialCameraPosition["zoom"] as? Double
             {
-                mapView.setCenter(
+                self.mapView.setCenter(
                     camera.centerCoordinate,
                     zoomLevel: zoom,
                     direction: camera.heading,
                     animated: false
                 )
-                initialTilt = camera.pitch
+                self.initialTilt = camera.pitch
             }
+        }
+        if mapView.frame.size.equalTo(.zero) {
+            DispatchQueue.main.async(execute: applyArgs)
+        } else {
+            applyArgs()
+        }
+
+        if let args = args as? [String: Any] {
             // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
             //     if onAttributionClickOverride {
             //         setupAttribution(mapView)
