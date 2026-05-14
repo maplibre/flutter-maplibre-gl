@@ -3,10 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
+
+> **Note:** Several users reported crashes on a range of Android devices after upgrading to 0.26.0, particularly on older / less recent hardware. These issues are addressed in 0.26.1 (see the Android fixes below).
 
 ### Fixed
-* **Android**: Fix `NullPointerException` in the repaint runnable posted by `MapLibreMapController.onResume`. The runnable reads the controller's `mapView` field after the main `Looper` drains, so when `dispose()` runs first (e.g. a map hosted in a `Dialog` or `BottomSheet` that is dismissed mid-resume) the field is `null` and `mapView.invalidate()` throws. The runnable now re-checks `disposed`/`mapView`, mirroring the guard at the top of `onResume`.
+* **Android**: Hybrid composition now correctly enables `textureMode` when necessary, preventing crashes and rendering and issues with platform views (#816).
+* **Android**: Null-check `mapView` inside the `onResume` repaint runnable to avoid `NullPointerException` when the map is disposed (e.g. dialogs/bottom sheets) before the posted runnable drains (#809).
+* De-register the annotation drag callback on `AnnotationManager.dispose()` to prevent jumpy drags and `_idToAnnotation.containsKey` crashes after style reloads on Android and iOS (#806).
+
+### Changed
+* **Android**: MapLibre Android SDK upgraded from 13.0.2 to 13.1.0 (#811).
+* **iOS**: MapLibre iOS upgraded from 6.25.1 to 6.26.0.
+
+### Docs
+* **Web**: Updated `maplibre-gl` JavaScript and CSS version to `5.24.0` in `README.md` to avoid `NoSuchMethodError` on `MapLibreMap` dispose with the previously referenced 4.3.0 version (#814).
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
