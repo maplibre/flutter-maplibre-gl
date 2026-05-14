@@ -317,6 +317,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (foregroundLoadColor != null) {
       sink.setForegroundLoadColor(toInt(foregroundLoadColor));
     }
+    final Object useHybridComposition = data.get("useHybridComposition");
+    if (useHybridComposition != null) {
+      sink.setUseHybridComposition(toBoolean(useHybridComposition));
+    }
     final Object translucentTextureSurface = data.get("translucentTextureSurface");
     if (translucentTextureSurface != null) {
       sink.setTranslucentTextureSurface(toBoolean(translucentTextureSurface));

@@ -2288,11 +2288,17 @@ final class MapLibreMapController
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
     }
-    // Force a repaint to fix invisible map when returning from background
-    // Use standard Android view invalidation to trigger a repaint
+    // Force a repaint to fix invisible map when returning from background.
+    // The runnable is dispatched after the message loop drains, by which time
+    // dispose() may have nulled mapView (e.g. a map hosted in a Dialog or
+    // BottomSheet that is dismissed mid-resume). Re-check disposed/mapView
+    // inside the runnable to mirror the guard at the top of onResume.
     mapView.post(new Runnable() {
       @Override
       public void run() {
+        if (disposed || mapView == null) {
+          return;
+        }
         mapView.invalidate();
       }
     });
@@ -2548,6 +2554,13 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setUseHybridComposition(boolean useHybridComposition) {
+    // useHybridComposition selects the Platform-View backing (TextureView vs SurfaceView)
+    // and is only meaningful before the map's native view has been constructed.
+    // At runtime the chosen surface is fixed, so this is a no-op.
   }
 
   @Override

@@ -1,3 +1,10 @@
+## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Fixed
+* **Android**: Forward `textureMode` through the method channel so hybrid composition can enable it when necessary (#816).
+
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.

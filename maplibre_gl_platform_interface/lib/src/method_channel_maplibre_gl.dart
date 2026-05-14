@@ -136,6 +136,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
+      creationParams['options']?['useHybridComposition'] = useHybridComposition;
       if (useHybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
