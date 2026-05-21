@@ -25,8 +25,24 @@ extension MLNMapView {
                     continue
                 }
                 
-                let properties = ["text-field": "[\"coalesce\",[\"get\",\"name:\(language)\"],[\"get\",\"name:latin\"],[\"get\",\"name\"]]"]
-                    
+                // Pass the text-field expression as a native NSArray, not a
+                // JSON-encoded string. LayerPropertyConverter.interpretExpression
+                // documents its contract as "The value is already in native
+                // format (not JSON string), use it directly" — a JSON string
+                // falls through to NSExpression(mglJSONObject:) which treats
+                // it as a constant string value, so every affected label
+                // renders as literal '[COALESCE], [GET: name:xx], ...' text
+                // on iOS (Android is unaffected because its converter takes
+                // a different path). Reported as the same root cause behind
+                // issues #250 and #336.
+                let expression: [Any] = [
+                    "coalesce",
+                    ["get", "name:\(language)"],
+                    ["get", "name:latin"],
+                    ["get", "name"],
+                ]
+                let properties: [String: Any] = ["text-field": expression]
+
                 LayerPropertyConverter.addSymbolProperties(
                     symbolLayer: symbolLayer,
                     properties: properties
