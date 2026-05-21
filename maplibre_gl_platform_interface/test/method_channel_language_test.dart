@@ -26,37 +26,27 @@ void main() {
       methodCalls.clear();
     });
 
-    test('setMapLanguage forwards the language as a String argument', () async {
+    test('setMapLanguage sends correct method and arguments', () async {
       await platform.setMapLanguage('zh-Hant');
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'map#setMapLanguage');
       final args = methodCalls[0].arguments as Map;
       expect(args['language'], 'zh-Hant');
-      // The wire format is intentionally just a String here — the native
-      // side builds the `coalesce(name:<lang>, name:latin, name)` text-field
-      // expression. The iOS implementation of that has been a recurring
-      // pain point (issues #250, #336); guarding the Dart-side contract
-      // keeps the failure mode localised on the native side if it
-      // regresses again.
     });
 
-    test('setMapLanguage preserves locale codes verbatim', () async {
+    test('setMapLanguage forwards each locale code unchanged', () async {
       for (final language in const ['en', 'zh-Hans', 'zh-Hant', 'ja', 'fr']) {
         methodCalls.clear();
         await platform.setMapLanguage(language);
 
         expect(methodCalls.length, 1);
         final args = methodCalls[0].arguments as Map;
-        expect(
-          args['language'],
-          language,
-          reason: 'language code "$language" must be forwarded unchanged',
-        );
+        expect(args['language'], language);
       }
     });
 
-    test('matchMapLanguageWithDeviceDefault sends the no-arg method', () async {
+    test('matchMapLanguageWithDeviceDefault sends correct method', () async {
       await platform.matchMapLanguageWithDeviceDefault();
 
       expect(methodCalls.length, 1);
