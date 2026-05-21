@@ -11,37 +11,19 @@ import MapLibre
 extension MLNMapView {
     func setMapLanguage(_ language: String) {
         guard let style = style else { return }
-        
-        let layers = style.layers
-        
-        for layer in layers {
+
+        let properties = Self.textFieldExpressionProperties(for: language)
+
+        for layer in style.layers {
             if let symbolLayer = layer as? MLNSymbolStyleLayer {
                 if symbolLayer.text == nil {
                     continue
                 }
-                 
+
                 // We could skip the current iteration, whenever there is not current language.
                 if !symbolLayer.text.description.containsLanguage() {
                     continue
                 }
-                
-                // Pass the text-field expression as a native NSArray, not a
-                // JSON-encoded string. LayerPropertyConverter.interpretExpression
-                // documents its contract as "The value is already in native
-                // format (not JSON string), use it directly" — a JSON string
-                // falls through to NSExpression(mglJSONObject:) which treats
-                // it as a constant string value, so every affected label
-                // renders as literal '[COALESCE], [GET: name:xx], ...' text
-                // on iOS (Android is unaffected because its converter takes
-                // a different path). Reported as the same root cause behind
-                // issues #250 and #336.
-                let expression: [Any] = [
-                    "coalesce",
-                    ["get", "name:\(language)"],
-                    ["get", "name:latin"],
-                    ["get", "name"],
-                ]
-                let properties: [String: Any] = ["text-field": expression]
 
                 LayerPropertyConverter.addSymbolProperties(
                     symbolLayer: symbolLayer,
@@ -49,6 +31,35 @@ extension MLNMapView {
                 )
             }
         }
+    }
+
+    /// Builds the `text-field` properties dictionary handed to
+    /// `LayerPropertyConverter.addSymbolProperties` by `setMapLanguage`.
+    /// Extracted so the expression-building logic is readable in isolation
+    /// (and can be exercised by future Swift unit tests via `@testable
+    /// import maplibre_gl`).
+    ///
+    /// The value MUST be a native `NSArray`-compatible `[Any]`, not a
+    /// JSON-encoded string. `interpretExpression` in
+    /// `LayerPropertyConverter` documents its contract as "The value is
+    /// already in native format (not JSON string), use it directly" — a
+    /// JSON string falls through to `NSExpression(mglJSONObject:)`, which
+    /// on a String argument constructs an expression for a constant string,
+    /// so every affected symbol layer renders its label as the literal
+    /// placeholder text `[COALESCE], [GET: name:xx], [GET: name:latin],
+    /// [GET: name]`. Android is unaffected because its converter takes a
+    /// different path. Same root cause as the still-unresolved bug in #250
+    /// and the open report in #336.
+    static func textFieldExpressionProperties(
+        for language: String
+    ) -> [String: Any] {
+        let expression: [Any] = [
+            "coalesce",
+            ["get", "name:\(language)"],
+            ["get", "name:latin"],
+            ["get", "name"],
+        ]
+        return ["text-field": expression]
     }
 }
 
