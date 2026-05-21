@@ -46,10 +46,10 @@ extension MLNMapView {
     /// JSON string falls through to `NSExpression(mglJSONObject:)`, which
     /// on a String argument constructs an expression for a constant string,
     /// so every affected symbol layer renders its label as the literal
-    /// placeholder text `[COALESCE], [GET: name:xx], [GET: name:latin],
-    /// [GET: name]`. Android is unaffected because its converter takes a
-    /// different path. Same root cause as the still-unresolved bug in #250
-    /// and the open report in #336.
+    /// JSON expression text. Android is unaffected because its converter
+    /// takes a different path (`Expression.raw` parses JSON strings via
+    /// Gson). Same root cause as the still-unresolved bug in #250 and the
+    /// open report in #336.
     static func textFieldExpressionProperties(
         for language: String
     ) -> [String: Any] {
