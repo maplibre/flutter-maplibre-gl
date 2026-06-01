@@ -28,7 +28,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
-    this.androidGeoJsonSynchronousUpdate = true,
+    this.androidGeoJsonSynchronousUpdate = false,
     this.featureTapsTriggersMapClick = false,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
@@ -145,16 +145,19 @@ class MapLibreMap extends StatefulWidget {
   /// Whether GeoJSON sources on **Android** are created with synchronous
   /// updates enabled (`GeoJsonOptions.withSynchronousUpdate`).
   ///
-  /// Synchronous updates make annotation dragging feel smoother, but they
-  /// trigger an upstream maplibre-native bug where icons in a `SymbolLayer`
-  /// disappear while the map is zoomed/scaled, and the compass may fail to
-  /// render. See https://github.com/maplibre/maplibre-native/issues/4035.
+  /// Synchronous updates make annotation dragging feel slightly smoother, but
+  /// they trigger an upstream maplibre-native bug where icons in a
+  /// `SymbolLayer` disappear while the map is zoomed/scaled, and the compass
+  /// may fail to render. See
+  /// https://github.com/maplibre/maplibre-native/issues/4035.
   ///
-  /// Set this to `false` as a workaround if you see symbols/icons disappearing
-  /// on Android. Has no effect on iOS or web. Only the initial value is used;
-  /// it can not be changed at runtime.
+  /// Defaults to `false`, which matches the async behavior used before 0.26.0
+  /// (and the behavior of maplibre-react-native, which never enables this) and
+  /// avoids the upstream bug. Set it to `true` to opt back into synchronous
+  /// updates if you rely on drag smoothness and do not use icon symbols.
   ///
-  /// Defaults to `true` to preserve the behavior introduced in 0.26.0.
+  /// Has no effect on iOS or web. Only the initial value is used; it can not be
+  /// changed at runtime.
   final bool androidGeoJsonSynchronousUpdate;
 
   /// Whether tapping on a feature also triggers the map click event.

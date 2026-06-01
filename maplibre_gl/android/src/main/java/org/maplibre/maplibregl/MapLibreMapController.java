@@ -143,7 +143,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
-  private boolean geoJsonSynchronousUpdate = true;
+  private boolean geoJsonSynchronousUpdate = false;
   private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;

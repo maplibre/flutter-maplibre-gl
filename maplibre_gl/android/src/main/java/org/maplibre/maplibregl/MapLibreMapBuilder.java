@@ -20,7 +20,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
-  private boolean geoJsonSynchronousUpdate = true;
+  private boolean geoJsonSynchronousUpdate = false;
   private boolean featureTapsTriggersMapClick = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
