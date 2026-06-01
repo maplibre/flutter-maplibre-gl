@@ -20,6 +20,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
+  private boolean geoJsonSynchronousUpdate = true;
   private boolean featureTapsTriggersMapClick = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
@@ -42,8 +43,9 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
             messenger, 
             lifecycleProvider, 
             options, 
-            styleString, 
-            dragEnabled, 
+            styleString,
+            dragEnabled,
+            geoJsonSynchronousUpdate,
             featureTapsTriggersMapClick
         );
     controller.init();
@@ -245,6 +247,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
   public void setDragEnabled(boolean enabled) {
     this.dragEnabled = enabled;
+  }
+
+  public void setGeoJsonSynchronousUpdate(boolean enabled) {
+    this.geoJsonSynchronousUpdate = enabled;
   }
 
   public void setFeatureTapsTriggersMapClick(boolean triggers) {

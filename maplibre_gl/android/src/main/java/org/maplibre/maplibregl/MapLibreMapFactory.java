@@ -38,6 +38,11 @@ public class MapLibreMapFactory extends PlatformViewFactory {
       boolean dragEnabled = Convert.toBoolean(params.get("dragEnabled"));
       builder.setDragEnabled(dragEnabled);
     }
+    if (params.containsKey("androidGeoJsonSynchronousUpdate")) {
+      boolean synchronousUpdate =
+          Convert.toBoolean(params.get("androidGeoJsonSynchronousUpdate"));
+      builder.setGeoJsonSynchronousUpdate(synchronousUpdate);
+    }
     if(params.containsKey("styleString")) {
       String styleString = Convert.toString(params.get("styleString"));
       builder.setStyleString(styleString);

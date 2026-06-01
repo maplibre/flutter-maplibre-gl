@@ -28,6 +28,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.androidGeoJsonSynchronousUpdate = true,
     this.featureTapsTriggersMapClick = false,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
@@ -140,6 +141,21 @@ class MapLibreMap extends StatefulWidget {
   /// Disable to avoid performance issues that from the drag event listeners.
   /// Biggest impact in android
   final bool dragEnabled;
+
+  /// Whether GeoJSON sources on **Android** are created with synchronous
+  /// updates enabled (`GeoJsonOptions.withSynchronousUpdate`).
+  ///
+  /// Synchronous updates make annotation dragging feel smoother, but they
+  /// trigger an upstream maplibre-native bug where icons in a `SymbolLayer`
+  /// disappear while the map is zoomed/scaled, and the compass may fail to
+  /// render. See https://github.com/maplibre/maplibre-native/issues/4035.
+  ///
+  /// Set this to `false` as a workaround if you see symbols/icons disappearing
+  /// on Android. Has no effect on iOS or web. Only the initial value is used;
+  /// it can not be changed at runtime.
+  ///
+  /// Defaults to `true` to preserve the behavior introduced in 0.26.0.
+  final bool androidGeoJsonSynchronousUpdate;
 
   /// Whether tapping on a feature also triggers the map click event.
   /// Defaults to `false`.
@@ -338,6 +354,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       'styleString': widget.styleString,
       'options': _MapLibreMapOptions.fromWidget(widget).toMap(),
       'dragEnabled': widget.dragEnabled,
+      'androidGeoJsonSynchronousUpdate': widget.androidGeoJsonSynchronousUpdate,
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
             widget.iosLongClickDuration!.inMilliseconds,

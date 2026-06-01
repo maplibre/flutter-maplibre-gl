@@ -143,6 +143,7 @@ final class MapLibreMapController
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
+  private boolean geoJsonSynchronousUpdate = true;
   private boolean featureTapsTriggersMapClick = false;
   private boolean mapViewStarted = false;
   private MethodChannel.Result mapReadyResult;
@@ -193,12 +194,14 @@ final class MapLibreMapController
       MapLibreMapOptions options,
       String styleStringInitial,
       boolean dragEnabled,
+      boolean geoJsonSynchronousUpdate,
       boolean featureTapsTriggersMapClick
   ) {
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
     this.dragEnabled = dragEnabled;
+    this.geoJsonSynchronousUpdate = geoJsonSynchronousUpdate;
     this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
     this.mapViewContainer = new FrameLayout(context);
@@ -445,7 +448,12 @@ final class MapLibreMapController
         return;
       }
 
-      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      // Synchronous updates reduce flicker while dragging, but they trigger an
+      // upstream maplibre-native bug where SymbolLayer icons disappear when the
+      // map is scaled (https://github.com/maplibre/maplibre-native/issues/4035).
+      // Allow disabling it via the androidGeoJsonSynchronousUpdate map option.
+      GeoJsonOptions options =
+          new GeoJsonOptions().withSynchronousUpdate(dragEnabled && geoJsonSynchronousUpdate);
       GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
       addedFeaturesByLayer.put(sourceName, featureCollection);
 
