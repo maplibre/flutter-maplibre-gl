@@ -109,21 +109,39 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
         var longPressRecognizerAdded = false
 
-        if let args = args as? [String: Any] {
+        // Flutter PlatformView hands us a zero-sized frame on cold launch.
+        // Any setter that touches the C++ map's camera/bounds (setCenter,
+        // maximumScreenBounds, min/max zoom, showsUserLocation → flyTo on
+        // cached CL fix) cascades into `constrainCameraAndZoomToBounds` →
+        // `Projection::unproject` on a 0×0 viewport → NaN → the `mbgl::LatLng`
+        // ctor throws `std::domain_error`, which libc++abi cannot unwind
+        // through Swift → SIGABRT (~150 ms after cold launch via force-quit
+        // + relaunch). Defer the options-apply block to the next runloop turn;
+        // Flutter calls `setFrame` with the real size by then. (issue #819)
+        let applyArgs: () -> Void = { [weak self] in
+            guard let self = self, let args = args as? [String: Any] else { return }
 
             Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
-               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView),
+               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: self.mapView),
                let zoom = initialCameraPosition["zoom"] as? Double
             {
-                mapView.setCenter(
+                self.mapView.setCenter(
                     camera.centerCoordinate,
                     zoomLevel: zoom,
                     direction: camera.heading,
                     animated: false
                 )
-                initialTilt = camera.pitch
+                self.initialTilt = camera.pitch
             }
+        }
+        if mapView.frame.size.equalTo(.zero) {
+            DispatchQueue.main.async(execute: applyArgs)
+        } else {
+            applyArgs()
+        }
+
+        if let args = args as? [String: Any] {
             // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
             //     if onAttributionClickOverride {
             //         setupAttribution(mapView)
@@ -163,6 +181,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
+        // Camera ops touch the C++ map's projection; on a zero-sized PlatformView
+        // frame (e.g. moveCamera fired from Dart onMapCreated before layout) the
+        // unproject runs on a 0×0 viewport → NaN → mbgl::LatLng throws
+        // std::domain_error → SIGABRT. Defer the whole call until the frame is
+        // real. (issue #819, onMethodCall path — not covered by the init-only fix)
+        if mapView.frame.size.equalTo(.zero), methodCall.method.hasPrefix("camera#") {
+            DispatchQueue.main.async { [weak self] in
+                self?.onMethodCall(methodCall: methodCall, result: result)
+            }
+            return
+        }
         switch methodCall.method {
         case "map#waitForMap":
             if isMapReady {
