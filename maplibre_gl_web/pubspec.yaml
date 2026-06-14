@@ -7,7 +7,7 @@ resolution: workspace
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
-  flutter: '>=3.22.0'
+  flutter: '>=3.29.0'
 
 flutter:
   plugin:
@@ -23,7 +23,7 @@ dependencies:
     sdk: flutter
   image: ^4.8.0
   maplibre_gl_platform_interface: ^0.26.1
-  meta: ^1.17.0
+  meta: ^1.16.0
   web: ^1.1.1
 
 dev_dependencies:
