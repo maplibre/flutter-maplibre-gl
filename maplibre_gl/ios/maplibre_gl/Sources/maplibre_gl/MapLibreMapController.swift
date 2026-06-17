@@ -32,6 +32,27 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return mapView
     }
 
+    deinit {
+        // The Android controller tears the map down explicitly in `dispose()`
+        // (`mapView.onStop()` / `onDestroy()`), but on iOS a `FlutterPlatformView`
+        // gets no dispose callback, so `MLNMapView` cleanup relies entirely on
+        // ARC reclaiming this controller. `MLNMapView`'s renderer runs off a
+        // `CADisplayLink` that is retained through the run loop until the view
+        // leaves its window, and it keeps tile-fetch connections open. When a
+        // host creates a new map view per screen/route (e.g. a basemap switch),
+        // the old engines can linger and contend for GPU/network resources.
+        // Drive the view out of its window and drop the remaining references so
+        // the engine is reclaimed promptly when the platform view is removed.
+        channel?.setMethodCallHandler(nil)
+        mapView.delegate = nil
+        if let recognizers = mapView.gestureRecognizers {
+            for recognizer in recognizers {
+                mapView.removeGestureRecognizer(recognizer)
+            }
+        }
+        mapView.removeFromSuperview()
+    }
+
     private var styleIsReady: Bool {
         return onStyleLoadedCalled && mapView.style != nil
     }
