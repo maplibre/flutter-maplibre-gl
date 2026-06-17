@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Fixed
+* **iOS**: Accept any color string MapLibre's style-spec parser understands (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors, ...) on layer color properties. Previously only `#RRGGBB`/`#AARRGGBB` hex was handled and anything else rendered transparent.
+
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
 > **Note:** Several users reported crashes on a range of Android devices after upgrading to 0.26.0, particularly on older / less recent hardware. These issues are addressed in 0.26.1 (see the Android fixes below).
