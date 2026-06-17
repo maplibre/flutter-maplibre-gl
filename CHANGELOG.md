@@ -3,10 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [Unreleased]
 
 ### Fixed
 * **iOS**: `setMapLanguage` now passes the `text-field` expression as a native `NSArray` to `LayerPropertyConverter` instead of a JSON-encoded string. The previous code violated the converter's documented contract, so every label on custom (non-Mapbox) styles such as OpenFreeMap Liberty rendered the literal expression text (e.g. `["coalesce",["get","name:zh-Hant"],["get","name:latin"],["get","name"]]`) on the map instead of the localised place name. Same root cause as the unresolved bug in #250 and the still-open report in #336.
+* **iOS**: Accept any color string MapLibre's style-spec parser understands (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors, ...) on layer color properties. Previously only `#RRGGBB`/`#AARRGGBB` hex was handled and anything else rendered transparent.
 
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 

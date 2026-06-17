@@ -93,11 +93,15 @@ class LayerPropertyConverter {
             return NSExpression(forConstantValue: fontNames)
         }
 
-        // this is required because NSExpression.init(mglJSONObject: json) fails to create
-        // a proper Expression if the data of is a hexString
         if isColor {
             if let color = json as? String {
-                return NSExpression(forConstantValue: UIColor(hexString: color))
+                if let parsed = UIColor(hexString: color) {
+                    return NSExpression(forConstantValue: parsed)
+                }
+                // Without the fallback argument MLN raises an uncaught
+                // NSInternalInconsistencyException at render time when the
+                // input string can't be cast.
+                return NSExpression(mglJSONObject: ["to-color", color, "#000000"])
             }
         }
 
