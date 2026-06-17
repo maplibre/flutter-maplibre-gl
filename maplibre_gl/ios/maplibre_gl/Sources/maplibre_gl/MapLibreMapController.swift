@@ -28,6 +28,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    private var userFps: MLNMapViewPreferredFramesPerSecond = .default
+    private var pausedByDart = false
+    private var isBackgroundPaused = false
+
     func view() -> UIView {
         return mapView
     }
@@ -43,6 +47,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // the old engines can linger and contend for GPU/network resources.
         // Drive the view out of its window and drop the remaining references so
         // the engine is reclaimed promptly when the platform view is removed.
+        NotificationCenter.default.removeObserver(self)
         channel?.setMethodCallHandler(nil)
         mapView.delegate = nil
         if let recognizers = mapView.gestureRecognizers {
@@ -192,6 +197,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             mapView.addGestureRecognizer(longPress)
             longPressRecognizerAdded = true
         }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+    }
+
+    // Pausing the render loop before the OS suspends the process prevents a
+    // SIGSEGV in PMTilesFileSource, which runs file I/O on a background thread
+    // that can be torn down mid-read during app backgrounding (#833).
+    // didEnterBackground (not willResignActive) is used so transient interruptions
+    // like incoming call banners or Control Center do not freeze the map.
+    @objc private func appDidEnterBackground() {
+        isBackgroundPaused = true
+        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+    }
+
+    @objc private func appWillEnterForeground() {
+        isBackgroundPaused = false
+        guard !pausedByDart else { return }
+        mapView.preferredFramesPerSecond = userFps
     }
 
     func gestureRecognizer(
@@ -364,12 +398,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#setMaximumFps":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             if let fps = arguments["fps"] as? Int {
-                mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
+                userFps = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
+                if !pausedByDart && !isBackgroundPaused {
+                    mapView.preferredFramesPerSecond = userFps
+                }
             }
             result(nil)
         case "map#forceOnlineMode":
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources
+            result(nil)
+        case "map#pause":
+            pausedByDart = true
+            mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+            result(nil)
+        case "map#resume":
+            pausedByDart = false
+            if !isBackgroundPaused {
+                mapView.preferredFramesPerSecond = userFps
+            }
             result(nil)
         case "camera#ease":
             guard let arguments = methodCall.arguments as? [String: Any] else { 
