@@ -44,6 +44,9 @@ class Convert {
         if let zoomGesturesEnabled = options["zoomGesturesEnabled"] as? Bool {
             delegate.setZoomGesturesEnabled(zoomGesturesEnabled: zoomGesturesEnabled)
         }
+        if let doubleClickZoomEnabled = options["doubleClickZoomEnabled"] as? Bool {
+            delegate.setDoubleClickZoomEnabled(doubleClickZoomEnabled: doubleClickZoomEnabled)
+        }
         if let myLocationEnabled = options["myLocationEnabled"] as? Bool {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
         }

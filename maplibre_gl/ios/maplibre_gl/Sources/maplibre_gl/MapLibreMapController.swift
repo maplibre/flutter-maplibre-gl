@@ -28,6 +28,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    private var doubleTapRecognizers: [UITapGestureRecognizer] = []
+
     private var userFps: MLNMapViewPreferredFramesPerSecond = .default
     private var pausedByDart = false
     private var isBackgroundPaused = false
@@ -126,6 +128,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         for recognizer in mapView.gestureRecognizers!
         where (recognizer as? UITapGestureRecognizer)?.numberOfTapsRequired == 2 {
             singleTap.require(toFail: recognizer)
+            doubleTapRecognizers.append(recognizer as! UITapGestureRecognizer)
         }
         mapView.addGestureRecognizer(singleTap)
 
@@ -2248,6 +2251,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool) {
         mapView.allowsZooming = zoomGesturesEnabled
+    }
+
+    func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool) {
+        for recognizer in doubleTapRecognizers {
+            recognizer.isEnabled = doubleClickZoomEnabled
+        }
     }
 
     func setMyLocationEnabled(myLocationEnabled: Bool) {
