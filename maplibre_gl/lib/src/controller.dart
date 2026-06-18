@@ -1092,12 +1092,41 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getStyle();
   }
 
-  /// Sets custom HTTP headers for map requests.
+  /// Sets custom HTTP headers that are injected into network requests made by
+  /// this map instance.
   ///
-  /// The [headers] map contains the header key-value pairs to set, and [filter]
-  /// contains URL patterns to determine which requests should include these headers.
+  /// [headers] is a map of header name to value. Pass an empty map to clear
+  /// all previously set headers.
   ///
-  /// The returned [Future] completes when the headers are successfully set.
+  /// [filter] is a list of regular-expression strings. When non-empty, headers
+  /// are only injected into requests whose URL matches **at least one** of the
+  /// patterns. When empty, headers are injected into every request.
+  ///
+  /// This is a **per-map** API and takes effect immediately — subsequent tile
+  /// requests will carry the new headers. To apply headers globally to all map
+  /// instances without URL filtering, use the top-level [setHttpHeaders]
+  /// function instead.
+  ///
+  /// Example — restrict an API key to a specific tile host:
+  /// ```dart
+  /// await controller.setCustomHeaders(
+  ///   {'X-Api-Key': 'secret'},
+  ///   [r'https://tiles\.example\.com/.*'],
+  /// );
+  /// ```
+  ///
+  /// Example — apply headers to all requests (no filter):
+  /// ```dart
+  /// await controller.setCustomHeaders(
+  ///   {'Authorization': 'Bearer $token'},
+  ///   [],
+  /// );
+  /// ```
+  ///
+  /// Example — clear all headers:
+  /// ```dart
+  /// await controller.setCustomHeaders({}, []);
+  /// ```
   Future<void> setCustomHeaders(
     Map<String, String> headers,
     List<String> filter,
@@ -1105,9 +1134,10 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setCustomHeaders(headers, filter);
   }
 
-  /// Gets the current custom HTTP headers.
+  /// Returns the custom HTTP headers currently set on this map instance.
   ///
-  /// The returned [Future] completes with a map of the current custom headers.
+  /// Returns the headers previously set via [setCustomHeaders]. Does not
+  /// include headers set via the global [setHttpHeaders] function.
   Future<Map<String, String>> getCustomHeaders() async {
     return _maplibrePlatform.getCustomHeaders();
   }

@@ -118,6 +118,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
+  public void setDoubleClickZoomEnabled(boolean doubleClickZoomEnabled) {
+    options.doubleTapGesturesEnabled(doubleClickZoomEnabled);
+  }
+
+  @Override
   public void setMyLocationEnabled(boolean myLocationEnabled) {
     this.myLocationEnabled = myLocationEnabled;
   }
