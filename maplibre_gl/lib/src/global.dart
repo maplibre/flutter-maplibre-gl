@@ -36,6 +36,34 @@ Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
   },
 );
 
+/// Sets HTTP headers that are injected into every network request MapLibre
+/// makes (tile fetches, style JSON, sprites, glyphs).
+///
+/// This is a **global** API: the headers apply to all map instances in the
+/// process. To scope headers to specific URLs or to a single map instance,
+/// use [MaplibreMapController.setCustomHeaders] instead.
+///
+/// Headers are applied at request time, so this method can be called before
+/// or after a [MaplibreMap] widget is created. Calling it again replaces the
+/// previously set headers; pass an empty map to clear all headers.
+///
+/// Example — attach a bearer token before showing any map:
+/// ```dart
+/// await setHttpHeaders({'Authorization': 'Bearer $token'});
+/// ```
+///
+/// Example — attach multiple headers:
+/// ```dart
+/// await setHttpHeaders({
+///   'Authorization': 'Bearer $token',
+///   'X-Request-ID': requestId,
+/// });
+/// ```
+///
+/// Example — clear all previously set headers:
+/// ```dart
+/// await setHttpHeaders({});
+/// ```
 Future<void> setHttpHeaders(Map<String, String> headers) {
   return _globalChannel.invokeMethod(
     'setHttpHeaders',
