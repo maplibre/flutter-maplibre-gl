@@ -3,14 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [Unreleased]
+## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 ### Fixed
-* Reduced unnecessary map widget rebuilds by fixing deep equality checks on map options. Nested-list options such as `cameraTargetBounds` were always considered changed, causing spurious platform updates on every rebuild (#849).
-* **Android, iOS**: `doubleClickZoomEnabled: false` now works on native platforms. Previously the option was parsed only on web and silently ignored on Android and iOS, so single taps always had a ~300 ms delay while the platform waited to determine whether a double-tap gesture was coming. Setting `doubleClickZoomEnabled: false` disables the double-tap-to-zoom gesture and makes single taps respond immediately (#829).
+* Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
+* **Android, iOS**: `doubleClickZoomEnabled: false` now works correctly. Previously this option was only respected on web, so single taps on Android and iOS always had a ~300 ms delay while the platform waited to rule out a double-tap (#829).
 * **iOS**: `setCustomHeaders` and `setHttpHeaders` now correctly apply to all map network requests (tiles, styles, sprites, glyphs). Both APIs were previously silently ignored on iOS (#831).
-* **iOS**: `setMapLanguage` now passes the `text-field` expression as a native `NSArray` to `LayerPropertyConverter` instead of a JSON-encoded string. The previous code violated the converter's documented contract, so every label on custom (non-Mapbox) styles such as OpenFreeMap Liberty rendered the literal expression text (e.g. `["coalesce",["get","name:zh-Hant"],["get","name:latin"],["get","name"]]`) on the map instead of the localised place name. Same root cause as the unresolved bug in #250 and the still-open report in #336.
-* **iOS**: Accept any color string MapLibre's style-spec parser understands (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors, ...) on layer color properties. Previously only `#RRGGBB`/`#AARRGGBB` hex was handled and anything else rendered transparent.
+* **iOS**: `setMapLanguage` now correctly changes map labels on non-Mapbox styles (e.g. OpenFreeMap Liberty). Previously, calling `setMapLanguage` on iOS had no effect and place names were displayed using the style's default language (#830).
+* **iOS**: Layer color properties now accept any valid CSS color string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors). Previously only hex colors were supported and anything else rendered as transparent (#832).
+* **iOS**: Fixed a crash that could occur when the app was sent to the background while using PMTiles sources (#833).
+* **iOS**: Fixed a crash on cold launch when the map was first displayed at zero size (e.g. inside a hidden widget or during app startup) (#841).
+* **iOS**: Fixed a memory leak where map resources were not fully released when the map widget was disposed (#837).
 
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
