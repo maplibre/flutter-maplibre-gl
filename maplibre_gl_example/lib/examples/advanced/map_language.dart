@@ -87,14 +87,15 @@ class _MapLanguageBodyState extends State<_MapLanguageBody> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _languages.map((lang) {
-                final isSelected = lang.code == _selected.code;
-                return FilterChip(
-                  label: Text('${lang.flag} ${lang.label}'),
-                  selected: isSelected,
-                  onSelected: _ready ? (_) => _setLanguage(lang) : null,
-                );
-              }).toList(),
+              children:
+                  _languages.map((lang) {
+                    final isSelected = lang.code == _selected.code;
+                    return FilterChip(
+                      label: Text('${lang.flag} ${lang.label}'),
+                      selected: isSelected,
+                      onSelected: _ready ? (_) => _setLanguage(lang) : null,
+                    );
+                  }).toList(),
             ),
           ],
         ),
