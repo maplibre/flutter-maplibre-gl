@@ -11,170 +11,70 @@
 [![Pub Version](https://img.shields.io/pub/v/maplibre_gl)](https://pub.dev/packages/maplibre_gl)
 [![likes](https://img.shields.io/pub/likes/maplibre_gl?logo=flutter)](https://pub.dev/packages/maplibre_gl)
 [![Pub Points](https://img.shields.io/pub/points/maplibre_gl)](https://pub.dev/packages/maplibre_gl/score)
-[![stars](https://badgen.net/github/stars/maplibre/flutter-maplibre-gl?label=stars&color=green&icon=github)](https://github.com/josxha/flutter-maplibre-gl/stargazers)
+[![stars](https://badgen.net/github/stars/maplibre/flutter-maplibre-gl?label=stars&color=green&icon=github)](https://github.com/maplibre/flutter-maplibre-gl/stargazers)
 [![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos)
 
-Flutter MapLibre GL lets you embed **interactive, vector-tile based, fully styleable maps** directly inside your Flutter app across mobile & web.
+Interactive, vector-tile, fully styleable maps for Flutter on **Android, iOS and Web**, powered by the open source [MapLibre](https://github.com/maplibre) engines. Vendor-neutral: host your own tiles or mix providers, no proprietary token required.
 
-This project is a fork of [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), replacing its usage of Mapbox GL libraries with the open source [MapLibre GL](https://github.com/maplibre) libraries.
-
-### Live Demo
+This project is a fork of [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl). If you're coming from it, see [Migration](#migration).
 
 🚀 **[Launch the interactive demo](https://maplibre.github.io/flutter-maplibre-gl/)** — explore the full example app, interact with the map, and try MapLibre GL features instantly in your browser. No installation, setup, or API keys required.
 
----
+## Platforms & feature support
 
-### Table of Contents
+Engines: [maplibre-native](https://github.com/maplibre/maplibre-native) (Android/iOS), [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) (Web). 
+Only a subset of native SDK APIs is exposed, PRs to extend coverage are welcome.
 
-<details>
-<summary>Click to expand</summary>
-
-<!-- TOC (updated manually) -->
-* [Features overview](#features-overview)
-* [Why MapLibre?](#why-maplibre)
-* [Supported Platforms & API Coverage](#supported-platforms--api-coverage)
-* [Installation](#installation)
-  * [Platform Setup](#platform-setup)
-    * [iOS](#ios)
-    * [Android](#android)
-    * [Web](#web)
-* [Quick Start](#quick-start)
-* [Usage Highlights](#usage-highlights)
-  * [Camera](#camera)
-  * [Annotations & Layers](#annotations--layers)
-  * [Map Styles](#map-styles)
-  * [Sources needing API keys](#tile-sources-requiring-an-api-key)
-* [Advanced Topics](#advanced-topics)
-  * [Offline usage / mbtiles](#offline-usage--mbtiles)
-  * [PMTiles](#pmtiles)
-  * [Expressions & Styling](#expressions--styling)
-  * [Generated Code](#generated-code)
-  * [Architecture Overview](#architecture-overview)
-* [Migration from flutter-mapbox-gl](#migration-from-flutter-mapbox-gl)
-* [Performance Tips](#performance-tips)
-* [Security & API Keys](#security--api-keys)
-* [Troubleshooting / FAQ](#troubleshooting--faq)
-* [Documentation & Examples](#documentation--examples)
-* [Versioning & Changelog](#versioning--changelog)
-* [Contributing](#contributing)
-* [Getting Help](#getting-help)
-* [License](#license)
-<!-- /TOC -->
-
-</details>
-
----
-
-## Features overview
-
-| Capability | Description |
-|------------|-------------|
-| Vector tile rendering | High quality, styleable vector maps via MapLibre engines |
-| Dynamic styling | Swap or mutate styles at runtime, apply expressions |
-| Camera control | Smooth programmatic & gesture driven map camera updates |
-| User location | Native location indicator & tracking (permissions required) |
-| Annotations | Symbols, circles, lines, fills, fill extrusions, heatmaps |
-| Web support | Backed by `maplibre-gl-js` for web targets |
-| Offline friendly | Patterns for mbtiles / cached assets (see advanced topics) |
-| Extensible | Separate platform interface & web implementation packages |
-
----
-
-## Why MapLibre?
-
-MapLibre is a **vendor-neutral, open source** set of mapping libraries born from the community. Using MapLibre helps you:
-
-* Avoid vendor lock-in & proprietary billing tie-ins
-* Host your own tiles or mix commercial/open sources
-* Keep transparent, auditable code in production
-* Align with OSS licensing and long-term sustainability
-* One of the fastest map SDKs available. Capable of drawing a large number of vector objects.
-
-If you previously used `flutter-mapbox-gl`, you can migrate with minimal changes (see [migration guide](#migration-from-flutter-mapbox-gl)).
-
----
-
-## Supported Platforms & API Coverage
-
-Underlying engines:
-* **Android / iOS** — [maplibre-native](https://github.com/maplibre/maplibre-native)
-* **Web** — [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)
-
-> **Note**: Only a subset of the native SDK APIs are currently exposed. PRs to extend surface area are welcome.
-
-| Feature        | Android | iOS | Web |
-|----------------|:-------:|:---:|:---:|
-| Style          |   ✅    | ✅  | ✅  |
-| Camera         |   ✅    | ✅  | ✅  |
-| Gesture        |   ✅    | ✅  | ✅  |
-| User Location  |   ✅    | ✅  | ✅  |
-| Symbol         |   ✅    | ✅  | ✅  |
-| Circle         |   ✅    | ✅  | ✅  |
-| Line           |   ✅    | ✅  | ✅  |
-| Fill           |   ✅    | ✅  | ✅  |
-| Fill Extrusion |   ✅    | ✅  | ✅  |
-| Heatmap Layer  |   ✅    | ✅  | ✅  |
-
----
+| Feature | Android | iOS | Web |
+|---|:---:|:---:|:---:|
+| Style, Camera, Gesture | ✅ | ✅ | ✅ |
+| User Location | ✅ | ✅ | ✅ |
+| Symbol / Circle / Line / Fill | ✅ | ✅ | ✅ |
+| Fill Extrusion | ✅ | ✅ | ✅ |
+| Heatmap Layer | ✅ | ✅ | ✅ |
 
 ## Installation
 
-Add the dependency:
-
-```yaml
-dependencies:
-  maplibre_gl: ^LATEST_VERSION
-```
-
-(See the current version badge above or on [pub.dev](https://pub.dev/packages/maplibre_gl)).
-
-Then run:
 ```bash
-flutter pub get
+flutter pub add maplibre_gl
 ```
 
-### Platform setup
+### iOS
 
-#### iOS
-
-Add permission usage description for location (if using location features) to `ios/Runner/Info.plist`:
+If you use location features, add to `ios/Runner/Info.plist`:
 
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>[Explain why the app needs the user's location]</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>[Explain why the app needs the user's location in the background]</string>
 ```
 
-#### Android
+`NSLocationAlwaysUsageDescription` is only required if you request always-on location access.
 
-Minimum supported Kotlin version: `2.1.0`. In `android/settings.gradle`:
+### Android
 
-```groovy
-plugins {
-  id "org.jetbrains.kotlin.android" version "2.1.0" apply false
-}
-```
-
-Add location permissions if required in `android/app/src/main/AndroidManifest.xml`:
+For location features, add to `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
-Request permissions at runtime yourself (e.g. via the [`location`](https://pub.dev/packages/location) plugin). The plugin does not prompt automatically.
+The plugin does not request permissions at runtime — handle that yourself (e.g. with [`location`](https://pub.dev/packages/location)).
 
-#### Web
+### Web
 
-Include the following JavaScript and CSS files in the `<head>` of your `web/index.html` file:
+Add to the `<head>` of `web/index.html`:
 
 ```html
 <script src='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js'></script>
 <link href='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css' rel='stylesheet'/>
 ```
 
----
+Always use the version that matches your installed `maplibre_gl_web` — check the example app's [`web/index.html`](./maplibre_gl_example/web/index.html) for the tag currently in use.
 
-## Quick Start
+## Quick start
 
 ```dart
 import 'dart:async';
@@ -188,41 +88,25 @@ class SimpleMapPage extends StatefulWidget {
 }
 
 class _SimpleMapPageState extends State<SimpleMapPage> {
-  final _controllerCompleter = Completer<MapLibreMapController>();
-  bool _styleLoaded = false;
-
+  final _controller = Completer<MapLibreMapController>();
   static const _initial = CameraPosition(target: LatLng(0, 0), zoom: 2);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MapLibre Quick Start')),
-      floatingActionButton: _styleLoaded
-          ? FloatingActionButton.small(
-              onPressed: _goHome,
-              child: const Icon(Icons.explore),
-            )
-          : null,
       body: MapLibreMap(
         initialCameraPosition: _initial,
-        onMapCreated: (c) => _controllerCompleter.complete(c),
-        onStyleLoadedCallback: () => setState(() => _styleLoaded = true),
+        onMapCreated: _controller.complete,
+        styleString: 'https://demotiles.maplibre.org/style.json',
       ),
     );
-  }
-
-  Future<void> _goHome() async {
-    final c = await _controllerCompleter.future;
-    await c.animateCamera(CameraUpdate.newCameraPosition(_initial));
   }
 }
 ```
 
-Check the [example project](./maplibre_gl_example) for richer demos (markers, layers, offline patterns, PMTiles, etc.).
+See the [example app](./maplibre_gl_example) for markers, layers, offline tiles and PMTiles.
 
----
-
-## Usage Highlights
+## Usage
 
 ### Camera
 
@@ -232,167 +116,92 @@ await controller.animateCamera(
 );
 ```
 
-### Annotations & Layers
+Defer camera animations until the style is ready (`onStyleLoadedCallback`).
 
-Add symbols (markers):
+### Annotations
+
 ```dart
 await controller.addSymbol(SymbolOptions(
   geometry: LatLng(37.7749, -122.4194),
-  iconImage: 'assets/icon_pin.png', // ensure added as style image first
+  iconImage: 'assets/icon_pin.png', // register as a style image first
   iconSize: 1.2,
 ));
 ```
 
-Add line layer (via geojson source) – see example app for full workflow.
+For lines/fills via a GeoJSON source, see the example app. Add sources before the layers that depend on them.
 
-### Map Styles
+### Styles
 
-Provide a `styleString`:
-1. Remote URL (`https://.../style.json`)
-2. App asset (`assets/map_style.json` with pubspec asset registration)
-3. Local file system absolute path
-4. Raw JSON string
+`styleString` accepts any of: a remote URL, a bundled asset (registered in `pubspec.yaml`), an absolute file path, or a raw JSON string.
 
-### Tile sources requiring an API key
+### Tiles requiring an API key
 
-Embed the key directly in the vector tile URL:
+Embed the key in the tile URL:
 
 ```
 https://tiles.example.com/{z}/{x}/{y}.vector.pbf?api_key=YOUR_KEY
 ```
 
----
+Restrict keys at the provider (domain/referer, usage caps) and inject them at build time rather than committing them.
 
-## Advanced Topics
+## Advanced topics
+**Offline / mbtiles** — copy mbtiles, sprites and glyphs from assets to a writable directory, then point your style sources there. See issues [#338](https://github.com/maplibre/flutter-maplibre-gl/issues/338) and [#318](https://github.com/maplibre/flutter-maplibre-gl/issues/318).
 
-### Offline usage / mbtiles
-Copy mbtiles (or sprites/glyphs) from bundled assets to a writable directory (e.g. cache) and point your style sources there. See issues [#338](https://github.com/maplibre/flutter-maplibre-gl/issues/338) & [#318](https://github.com/maplibre/flutter-maplibre-gl/issues/318) for community approaches.
+**PMTiles** — load datasets via a custom protocol handler; see `pmtiles.dart` in the example app.
 
-### PMTiles
-The example app includes a `pmtiles` usage sample demonstrating how to load datasets via a custom protocol handler / tile source. (Look for `pmtiles.dart` in `maplibre_gl_example`.)
+**Expressions** — data-driven styling follows the MapLibre style spec. For cross-platform safety use `["!", ["has", "field"]]` rather than `["!has", "field"]` (see FAQ).
 
-### Expressions & Styling
-Use data‑driven styling with expressions similar to Mapbox / MapLibre style spec. Some platform discrepancies exist (see FAQ around `!has`). For cross‑platform safety prefer form: `["!", ["has", "field"]]`.
+**Code generation** — layer/source helpers are generated. Do not edit them directly; run `melos run generate && melos format-all`.
 
-### Generated Code
-Layer/source property helpers & expression utilities are generated from templates under `scripts/`. Do **not** edit generated files directly—run:
+## Migration
 
-```
-melos run generate
-melos format-all
-```
+Most APIs are source-compatible with `flutter-mapbox-gl`:
 
-### Architecture Overview
+- Rename the dependency to `maplibre_gl`.
+- Remove Mapbox token initialization — MapLibre uses open assets or your own endpoints.
+- Replace Mapbox-specific style URLs with self-hosted or MapLibre-compatible ones.
+- Audit filter expressions for iOS (`["!has", ...]` → `["!", ["has", ...]]`).
 
-This repository is a multi-package workspace:
-* `maplibre_gl` – main Flutter plugin (mobile/native bindings)
-* `maplibre_gl_web` – web implementation
-* `maplibre_gl_platform_interface` – shared platform interface (enables adding alternative implementations)
-* `scripts/` – code generation templates & tooling
+## Troubleshooting
 
----
+**Loading mbtiles/sprites/glyphs from assets** — copy to a writable directory first, then reference the new path.
 
-## Migration from flutter-mapbox-gl
+**Android `UnsatisfiedLinkError`** — make sure `abiFilters` covers the ABIs you ship:
 
-Most APIs are source-compatible. Key differences to watch:
-* Dependency name changes to `maplibre_gl`.
-* Remove any Mapbox token initialization (MapLibre uses open assets or your own tile endpoints).
-* If you referenced Mapbox-specific style endpoints, replace with self-hosted / MapLibre friendly ones.
-* Audit expressions for iOS compatibility (`["!has", ...]` variant change noted in FAQ).
-
----
-
-## Performance Tips
-
-* Reuse a single `MapLibreMap` widget when possible instead of recreating it in tab/page switches.
-* Batch style mutations (e.g. add sources before adding dependent layers) to avoid intermediate layout recalculations.
-* Use simpler geometries or tiling strategies for very dense data.
-* Avoid large uncompressed GeoJSON inline; host as a URL source if size is large.
-* Defer camera animations until style load (`onStyleLoadedCallback`).
-
----
-
-## Security & API Keys
-
-If you embed API keys in style URLs for third-party tiles, ensure you:
-* Restrict keys at the provider (domain / referer / usage caps).
-* Avoid shipping unnecessary privileges (read-only tile scopes where possible).
-Environment variable injection at build time is recommended for CI-driven apps—avoid committing raw secrets.
-
----
-
-## Troubleshooting / FAQ
-
-### Loading .mbtiles / sprites / glyphs from app assets
-Copy them to a writable directory (cache/documents) first, then reference the new path in the style or source configuration. See issues [#338](https://github.com/maplibre/flutter-maplibre-gl/issues/338) & [#318](https://github.com/maplibre/flutter-maplibre-gl/issues/318).
-
-### Android UnsatisfiedLinkError
-Ensure `abiFilters` include the ABIs you intend to ship:
-```gradle
-buildTypes {
-  release {
-    ndk { abiFilters 'armeabi-v7a','arm64-v8a','x86_64','x86' }
-  }
-}
+```groovy
+ndk { abiFilters 'armeabi-v7a','arm64-v8a','x86_64','x86' }
 ```
 
-### iOS crash when using location features
-Add `NSLocationWhenInUseUsageDescription` (see [iOS setup](#ios)).
-<!-- 
-### Layer not displayed on iOS but works on Android
-Use hex colors like `#FFAA00` instead of CSS `rgba(...)` strings when passing color values. -->
+**iOS crash on location** — add `NSLocationWhenInUseUsageDescription` (see [iOS setup](#ios)).
 
-### iOS filter expression error
-Error: `Invalid filter value: filter property must be a string`. Replace `["!has", "value"]` with `["!", ["has", "value"]]`.
+**iOS `filter property must be a string`** — replace `["!has", "value"]` with `["!", ["has", "value"]]`.
 
----
+## Architecture
 
-## Documentation & Examples
+Multi-package melos workspace:
 
-* Minimal example (for pub.dev & quick start): see [`example/lib/main.dart`](./example/lib/main.dart)
-* Full featured example app: [`maplibre_gl_example`](./maplibre_gl_example)
-* API docs: https://pub.dev/documentation/maplibre_gl/latest/
-* MapLibre upstream projects: [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js), [maplibre-native](https://github.com/maplibre/maplibre-native)
+- `maplibre_gl` — main plugin (mobile/native bindings)
+- `maplibre_gl_web` — web implementation
+- `maplibre_gl_platform_interface` — shared platform interface
+- `scripts/` — code generation
 
----
-
-## Versioning & Changelog
-
-Releases follow semantic versioning as practical; breaking changes are documented in the [CHANGELOG](./CHANGELOG.md) (root and per package). Always consult the changelog when upgrading.
-
----
+Layer/source property helpers and expression utilities are generated. Don't edit generated files; run `melos run generate && melos format-all`.
 
 ## Contributing
 
-This is a multi-package workspace managed by [melos](https://melos.invertase.dev/~melos-latest/getting-started).
-
-Basic flow:
+```bash
+dart pub global activate melos
+melos bootstrap
 ```
-dart pub global activate melos  # activate melos package
 
-melos bootstrap                 # initialize & link local packages
-```
-Then open & run the example app to validate and check changes.
+Then run the example app to validate changes. See [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR.
 
-Please read the full [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting a PR.
+## Resources
 
-> Generated code: Some API surface (layer/source property helpers, expression utilities) is produced via a generator under `scripts/`. Do not modify generated files directly — see [Code Generation & Formatting](#generated-code) section for workflow.
-
----
-
-## Getting Help
-* Join our [Slack](https://slack.openstreetmap.us/) channel
-* StackOverflow tag: [#maplibre](https://stackoverflow.com/questions/tagged/maplibre)
-* Discussions: https://github.com/maplibre/flutter-maplibre-gl/discussions
-* Bugs / Features: [Open an issue](https://github.com/maplibre/flutter-maplibre-gl/issues/new) (include reproduction details/logs where possible)
-
----
+- API docs: https://pub.dev/documentation/maplibre_gl/latest/
+- [Changelog](./CHANGELOG.md) — always check before upgrading
+- Help: [Discussions](https://github.com/maplibre/flutter-maplibre-gl/discussions), [Issues](https://github.com/maplibre/flutter-maplibre-gl/issues/new), [Slack](https://slack.openstreetmap.us/), [StackOverflow #maplibre](https://stackoverflow.com/search?q=maplibre)
 
 ## License
 
-See [LICENSE](./LICENSE) for details.
-
----
-
-\
-If this plugin helps you build something cool, consider starring the repo to support visibility.
+See [LICENSE](./LICENSE).
