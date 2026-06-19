@@ -5,6 +5,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
+> **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
+
 ### Fixed
 * Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
 * **Android, iOS**: `doubleClickZoomEnabled: false` now works correctly. Previously this option was only respected on web, so single taps on Android and iOS always had a ~300 ms delay while the platform waited to rule out a double-tap (#829).
