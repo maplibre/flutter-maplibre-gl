@@ -1,5 +1,9 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
+
+No web-specific changes; version aligned with the `maplibre_gl` 0.26.2 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
 No web-specific changes; version aligned with the `maplibre_gl` 0.26.1 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.

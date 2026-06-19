@@ -47,6 +47,7 @@ import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
 import 'examples/advanced/map_snapshot.dart';
+import 'examples/advanced/map_language.dart';
 
 void main() {
   if (kIsWeb) {
@@ -125,6 +126,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const EditStyleLayerDraggableExample(),
 
   // Advanced
+  const MapLanguageExample(),
   const PMTilesPage(),
   // Offline regions are Android/iOS only — MapLibre GL JS has no offline API.
   if (!kIsWeb) const OfflineRegionsPage(),

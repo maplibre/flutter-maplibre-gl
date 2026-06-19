@@ -28,8 +28,36 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    private var doubleTapRecognizers: [UITapGestureRecognizer] = []
+
+    private var userFps: MLNMapViewPreferredFramesPerSecond = .default
+    private var pausedByDart = false
+    private var isBackgroundPaused = false
+
     func view() -> UIView {
         return mapView
+    }
+
+    deinit {
+        // The Android controller tears the map down explicitly in `dispose()`
+        // (`mapView.onStop()` / `onDestroy()`), but on iOS a `FlutterPlatformView`
+        // gets no dispose callback, so `MLNMapView` cleanup relies entirely on
+        // ARC reclaiming this controller. `MLNMapView`'s renderer runs off a
+        // `CADisplayLink` that is retained through the run loop until the view
+        // leaves its window, and it keeps tile-fetch connections open. When a
+        // host creates a new map view per screen/route (e.g. a basemap switch),
+        // the old engines can linger and contend for GPU/network resources.
+        // Drive the view out of its window and drop the remaining references so
+        // the engine is reclaimed promptly when the platform view is removed.
+        NotificationCenter.default.removeObserver(self)
+        channel?.setMethodCallHandler(nil)
+        mapView.delegate = nil
+        if let recognizers = mapView.gestureRecognizers {
+            for recognizer in recognizers {
+                mapView.removeGestureRecognizer(recognizer)
+            }
+        }
+        mapView.removeFromSuperview()
     }
 
     private var styleIsReady: Bool {
@@ -100,6 +128,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         for recognizer in mapView.gestureRecognizers!
         where (recognizer as? UITapGestureRecognizer)?.numberOfTapsRequired == 2 {
             singleTap.require(toFail: recognizer)
+            doubleTapRecognizers.append(recognizer as! UITapGestureRecognizer)
         }
         mapView.addGestureRecognizer(singleTap)
 
@@ -109,21 +138,39 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
         var longPressRecognizerAdded = false
 
-        if let args = args as? [String: Any] {
+        // Flutter PlatformView hands us a zero-sized frame on cold launch.
+        // Any setter that touches the C++ map's camera/bounds (setCenter,
+        // maximumScreenBounds, min/max zoom, showsUserLocation → flyTo on
+        // cached CL fix) cascades into `constrainCameraAndZoomToBounds` →
+        // `Projection::unproject` on a 0×0 viewport → NaN → the `mbgl::LatLng`
+        // ctor throws `std::domain_error`, which libc++abi cannot unwind
+        // through Swift → SIGABRT (~150 ms after cold launch via force-quit
+        // + relaunch). Defer the options-apply block to the next runloop turn;
+        // Flutter calls `setFrame` with the real size by then. (issue #819)
+        let applyArgs: () -> Void = { [weak self] in
+            guard let self = self, let args = args as? [String: Any] else { return }
 
             Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
             if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
-               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView),
+               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: self.mapView),
                let zoom = initialCameraPosition["zoom"] as? Double
             {
-                mapView.setCenter(
+                self.mapView.setCenter(
                     camera.centerCoordinate,
                     zoomLevel: zoom,
                     direction: camera.heading,
                     animated: false
                 )
-                initialTilt = camera.pitch
+                self.initialTilt = camera.pitch
             }
+        }
+        if mapView.frame.size.equalTo(.zero) {
+            DispatchQueue.main.async(execute: applyArgs)
+        } else {
+            applyArgs()
+        }
+
+        if let args = args as? [String: Any] {
             // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
             //     if onAttributionClickOverride {
             //         setupAttribution(mapView)
@@ -153,6 +200,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             mapView.addGestureRecognizer(longPress)
             longPressRecognizerAdded = true
         }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+    }
+
+    // Pausing the render loop before the OS suspends the process prevents a
+    // SIGSEGV in PMTilesFileSource, which runs file I/O on a background thread
+    // that can be torn down mid-read during app backgrounding (#833).
+    // didEnterBackground (not willResignActive) is used so transient interruptions
+    // like incoming call banners or Control Center do not freeze the map.
+    @objc private func appDidEnterBackground() {
+        isBackgroundPaused = true
+        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+    }
+
+    @objc private func appWillEnterForeground() {
+        isBackgroundPaused = false
+        guard !pausedByDart else { return }
+        mapView.preferredFramesPerSecond = userFps
     }
 
     func gestureRecognizer(
@@ -163,6 +239,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
+        // Camera ops touch the C++ map's projection; on a zero-sized PlatformView
+        // frame (e.g. moveCamera fired from Dart onMapCreated before layout) the
+        // unproject runs on a 0×0 viewport → NaN → mbgl::LatLng throws
+        // std::domain_error → SIGABRT. Defer the whole call until the frame is
+        // real. (issue #819, onMethodCall path — not covered by the init-only fix)
+        if mapView.frame.size.equalTo(.zero), methodCall.method.hasPrefix("camera#") {
+            DispatchQueue.main.async { [weak self] in
+                self?.onMethodCall(methodCall: methodCall, result: result)
+            }
+            return
+        }
         switch methodCall.method {
         case "map#waitForMap":
             if isMapReady {
@@ -314,12 +401,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#setMaximumFps":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             if let fps = arguments["fps"] as? Int {
-                mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
+                userFps = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
+                if !pausedByDart && !isBackgroundPaused {
+                    mapView.preferredFramesPerSecond = userFps
+                }
             }
             result(nil)
         case "map#forceOnlineMode":
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources
+            result(nil)
+        case "map#pause":
+            pausedByDart = true
+            mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+            result(nil)
+        case "map#resume":
+            pausedByDart = false
+            if !isBackgroundPaused {
+                mapView.preferredFramesPerSecond = userFps
+            }
             result(nil)
         case "camera#ease":
             guard let arguments = methodCall.arguments as? [String: Any] else { 
@@ -2151,6 +2251,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool) {
         mapView.allowsZooming = zoomGesturesEnabled
+    }
+
+    func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool) {
+        for recognizer in doubleTapRecognizers {
+            recognizer.isEnabled = doubleClickZoomEnabled
+        }
     }
 
     func setMyLocationEnabled(myLocationEnabled: Bool) {
