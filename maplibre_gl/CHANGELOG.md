@@ -4,11 +4,16 @@
 * Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
 * **Android, iOS**: `doubleClickZoomEnabled: false` now works correctly. Previously this option was only respected on web, so single taps on Android and iOS always had a ~300 ms delay while the platform waited to rule out a double-tap (#829).
 * **iOS**: `setCustomHeaders` and `setHttpHeaders` now correctly apply to all map network requests (tiles, styles, sprites, glyphs). Both APIs were previously silently ignored on iOS (#831).
-* **iOS**: `setMapLanguage` now correctly changes map labels on non-Mapbox styles (e.g. OpenFreeMap Liberty). Previously, calling `setMapLanguage` on iOS had no effect and place names were displayed using the style's default language (#830).
+* **iOS**: `setMapLanguage` now correctly changes map labels on non-Mapbox styles (e.g. OpenFreeMap Liberty). Previously, calling `setMapLanguage` on iOS had no effect and place names were displayed using the style's default language (#830). A new **Map Language** example in the example app demonstrates this across several languages.
 * **iOS**: Layer color properties now accept any valid CSS color string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors). Previously only hex colors were supported and anything else rendered as transparent (#832).
 * **iOS**: Fixed a crash that could occur when the app was sent to the background while using PMTiles sources (#833).
 * **iOS**: Fixed a crash on cold launch when the map was first displayed at zero size (e.g. inside a hidden widget or during app startup) (#841).
 * **iOS**: Fixed a memory leak where map resources were not fully released when the map widget was disposed (#837).
+* **Android**: Fixed a crash when style API methods were called while the map style was still loading.
+
+### Changed
+* **Android**: MapLibre Android SDK upgraded from 13.1.0 to 13.3.0.
+* **iOS**: MapLibre iOS upgraded from 6.26.0 to 6.27.0.
 
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
