@@ -18,6 +18,10 @@ Flutter MapLibre GL lets you embed **interactive, vector-tile based, fully style
 
 This project is a fork of [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl), replacing its usage of Mapbox GL libraries with the open source [MapLibre GL](https://github.com/maplibre) libraries.
 
+### Live Demo
+
+🚀 **[Launch the interactive demo](https://maplibre.github.io/flutter-maplibre-gl/)** — explore the full example app, interact with the map, and try MapLibre GL features instantly in your browser. No installation, setup, or API keys required.
+
 ---
 
 ### Table of Contents
