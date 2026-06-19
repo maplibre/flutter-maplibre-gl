@@ -23,9 +23,27 @@ dependencies:
   path_provider: ^2.1.5
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
   flutter_test:
     sdk: flutter
   very_good_analysis: ^10.2.0
+
+flutter_launcher_icons:
+  image_path: "assets/maplibre_icon.png"
+  # Android adaptive icon: logo on dark brand background
+  android: "launcher_icon"
+  adaptive_icon_background: "#111725"
+  adaptive_icon_foreground: "assets/maplibre_icon.png"
+  # iOS: fill transparent areas with dark brand background
+  ios: true
+  image_path_ios: "assets/maplibre_icon.png"
+  background_color_ios: "#111725"
+  remove_alpha_ios: true
+  # Web PWA icons
+  web:
+    generate: true
+    image_path: "assets/maplibre_icon.png"
+    background_color: "#111725"
 
 flutter:
   uses-material-design: true
