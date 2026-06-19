@@ -77,7 +77,9 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> initPlatform(int id) async {
     final camera =
         _creationParams['initialCameraPosition'] as Map<String, dynamic>?;
-    final styleString = _sanitizeStyleObject(_creationParams['styleString']);
+    final styleString = await _sanitizeStyleObject(
+      _creationParams['styleString'],
+    );
     _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
     _map = MapLibreMap(
@@ -1110,21 +1112,29 @@ class MapLibreMapController extends MapLibrePlatform
     }
     _interactiveFeatureLayerIds.clear();
 
-    final sanitizedStyle = _sanitizeStyleObject(styleObject);
+    final sanitizedStyle = await _sanitizeStyleObject(styleObject);
     _map.setStyle(sanitizedStyle, {'diff': false});
   }
 
   /// Sanitizes the style object to ensure it is in the correct format.
-  /// If the style object is a JSON string, use JavaScript's native JSON.parse
-  /// to avoid Dart object metadata leaking into web workers.
-  dynamic _sanitizeStyleObject(dynamic styleObject) {
-    if (styleObject is String &&
-        (styleObject.startsWith('{') || styleObject.startsWith('['))) {
-      // Use JavaScript's native JSON.parse to create pure JS objects
-      return jsonParse(styleObject);
-    } else {
-      return styleObject;
+  ///
+  /// - JSON strings are parsed via native JSON.parse to avoid Dart metadata
+  ///   leaking into web workers.
+  /// - Asset paths (starting with `assets/`) are loaded via [rootBundle] and
+  ///   returned as parsed JS objects, because static asset files are not
+  ///   directly addressable as HTTP resources in all Flutter web deployment
+  ///   configurations (e.g. GitHub Pages with a non-root base href).
+  Future<dynamic> _sanitizeStyleObject(dynamic styleObject) async {
+    if (styleObject is String) {
+      if (styleObject.startsWith('{') || styleObject.startsWith('[')) {
+        return jsonParse(styleObject);
+      }
+      if (styleObject.startsWith('assets/')) {
+        final jsonString = await rootBundle.loadString(styleObject);
+        return jsonParse(jsonString);
+      }
     }
+    return styleObject;
   }
 
   @override
