@@ -445,7 +445,10 @@ final class MapLibreMapController
         return;
       }
 
-      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
+      // that silently discards icons registered via addImage() in the same render frame.
+      // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
       GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
       addedFeaturesByLayer.put(sourceName, featureCollection);
 
@@ -1643,18 +1646,19 @@ final class MapLibreMapController
                 null);
             break;
           }
-          // Configure bitmap options to prevent density-based scaling
           BitmapFactory.Options options = new BitmapFactory.Options();
-          options.inScaled = false;       // Disable automatic scaling
-          options.inDensity = 0;          // No source density
-          options.inTargetDensity = 0;    // No target density
-          
+          options.inScaled = false;
+          options.inDensity = DisplayMetrics.DENSITY_DEFAULT;
+          options.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT;
           Bitmap bitmap = BitmapFactory.decodeByteArray(
-              call.argument("bytes"), 
-              0, 
+              call.argument("bytes"),
+              0,
               call.argument("length"),
               options);
-          
+          if (bitmap == null) {
+            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+            break;
+          }
           style.addImage(
               call.argument("name"),
               bitmap,
@@ -1672,6 +1676,14 @@ final class MapLibreMapController
             break;
           }
           List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
+          Bitmap addSourceBitmap = BitmapFactory.decodeByteArray(
+              call.argument("bytes"),
+              0,
+              call.argument("length"));
+          if (addSourceBitmap == null) {
+            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+            break;
+          }
           style.addSource(
               new ImageSource(
                   call.argument("imageSourceId"),
@@ -1680,8 +1692,7 @@ final class MapLibreMapController
                       coordinates.get(1),
                       coordinates.get(2),
                       coordinates.get(3)),
-                  BitmapFactory.decodeByteArray(
-                      call.argument("bytes"), 0, call.argument("length"))));
+                  addSourceBitmap));
           result.success(null);
           break;
         }
@@ -1706,7 +1717,12 @@ final class MapLibreMapController
           }
           byte[] bytes = call.argument("bytes");
           if (bytes != null) {
-            imageSource.setImage(BitmapFactory.decodeByteArray(bytes, 0, call.argument("length")));
+            Bitmap updateBitmap = BitmapFactory.decodeByteArray(bytes, 0, call.argument("length"));
+            if (updateBitmap == null) {
+              result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+              break;
+            }
+            imageSource.setImage(updateBitmap);
           }
           result.success(null);
           break;
