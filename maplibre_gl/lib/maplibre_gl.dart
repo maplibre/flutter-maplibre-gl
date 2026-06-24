@@ -47,6 +47,9 @@ import 'package:collection/collection.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
+import 'src/prewarm_native.dart'
+    if (dart.library.html) 'src/prewarm_web.dart' as prewarm;
+
 export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show
         Annotation,

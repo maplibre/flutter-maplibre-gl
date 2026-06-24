@@ -69,6 +69,10 @@ String? _initialExampleSlug() {
 }
 
 void main() {
+  // Pre-warm the MapLibre engine to overlap native initialization with
+  // Flutter's startup.
+  unawaited(preWarm());
+
   if (kIsWeb) {
     print(
       'Running with WASM: $kIsWasm, in ${kReleaseMode

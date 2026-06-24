@@ -6,6 +6,33 @@ part of '../maplibre_gl.dart';
 
 const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
 
+/// Pre-warms the MapLibre native engine to speed up the first map render.
+///
+/// Call this as early as possible — typically in `main()` before `runApp()` —
+/// to overlap the native SDK initialization with your app's startup.
+///
+/// Safe to call multiple times; subsequent calls are no-ops because the
+/// underlying initialization is idempotent after the first invocation.
+///
+/// Example:
+/// ```dart
+/// void main() {
+///   preWarm(); // fire-and-forget
+///   runApp(const MyApp());
+/// }
+/// ```
+Future<void> preWarm() async {
+  if (kIsWeb) {
+    prewarm.webPrewarm();
+    return;
+  }
+  try {
+    await _globalChannel.invokeMethod('preWarm');
+  } on MissingPluginException {
+    // Platform doesn't implement preWarm; no-op.
+  }
+}
+
 /// Retains active offline-download event-channel subscriptions so that Dart's
 /// GC cannot tear them down during idle periods (e.g. while a download is
 /// paused). If the subscription is collected, the native `EventSink` is
