@@ -1643,18 +1643,19 @@ final class MapLibreMapController
                 null);
             break;
           }
-          // Configure bitmap options to prevent density-based scaling
           BitmapFactory.Options options = new BitmapFactory.Options();
-          options.inScaled = false;       // Disable automatic scaling
-          options.inDensity = 0;          // No source density
-          options.inTargetDensity = 0;    // No target density
-          
+          options.inScaled = false;
+          options.inDensity = 0;
+          options.inTargetDensity = 0;
           Bitmap bitmap = BitmapFactory.decodeByteArray(
-              call.argument("bytes"), 
-              0, 
+              call.argument("bytes"),
+              0,
               call.argument("length"),
               options);
-          
+          if (bitmap == null) {
+            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+            break;
+          }
           style.addImage(
               call.argument("name"),
               bitmap,
