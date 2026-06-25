@@ -9,6 +9,9 @@ PMTiles is a single-file archive format for storing map tiles. Instead of a tile
   loading="lazy"
 ></iframe>
 
+!!! note "About this demo"
+    This example reads the public Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`). That upstream file is occasionally unavailable, so the map above may load empty from time to time — it's the demo source, not the plugin. For your own apps, host your own `.pmtiles` (see [Hosting options](#hosting-options)) for a stable URL.
+
 ## Why PMTiles?
 
 | Traditional tile server | PMTiles |
@@ -43,10 +46,11 @@ Options:
 - Convert an MBTiles file: `pmtiles convert input.mbtiles output.pmtiles`
 - Generate from OpenStreetMap with [planetiler](https://github.com/onthegomap/planetiler)
 
-For testing, use the Protomaps public CDN:
+For testing, use the Protomaps public demo archive:
 ```
-https://build.protomaps.com/20231001.pmtiles
+https://demo-bucket.protomaps.com/v4.pmtiles
 ```
+(Protomaps also publishes dated planet builds at `https://build.protomaps.com/<YYYYMMDD>.pmtiles`, but those are rotated out after a few days — don't hardcode one for anything long-lived.)
 
 ## Step 2: Create a style JSON
 
@@ -59,7 +63,7 @@ The style JSON references the PMTiles archive as a vector source. Save this as `
   "sources": {
     "protomaps": {
       "type": "vector",
-      "url": "pmtiles://https://build.protomaps.com/20231001.pmtiles",
+      "url": "pmtiles://https://demo-bucket.protomaps.com/v4.pmtiles",
       "attribution": "© OpenStreetMap"
     }
   },
