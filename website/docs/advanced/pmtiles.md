@@ -10,7 +10,7 @@ PMTiles is a single-file archive format for storing map tiles. Instead of a tile
 ></iframe>
 
 !!! note "About this demo"
-    This example reads the public Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`). That upstream file is occasionally unavailable, so the map above may load empty from time to time — it's the demo source, not the plugin. For your own apps, host your own `.pmtiles` (see [Hosting options](#hosting-options)) for a stable URL.
+    This example reads a public Protomaps planet build (`build.protomaps.com/<YYYYMMDD>.pmtiles`). Protomaps rotates these dated builds out after a few days, so if the pinned date has been pruned the map above may load empty — it's the demo source, not the plugin. For your own apps, host your own `.pmtiles` (see [Hosting options](#hosting-options)) for a stable URL.
 
 ## Why PMTiles?
 
@@ -50,7 +50,7 @@ For testing, use the Protomaps public demo archive:
 ```
 https://demo-bucket.protomaps.com/v4.pmtiles
 ```
-(Protomaps also publishes dated planet builds at `https://build.protomaps.com/<YYYYMMDD>.pmtiles`, but those are rotated out after a few days — don't hardcode one for anything long-lived.)
+(Protomaps also publishes dated planet builds at `https://build.protomaps.com/<YYYYMMDD>.pmtiles`, but those are rotated out after a few days, so don't hardcode one for anything long-lived. The live demo above pins a recent dated build, which is why it can go empty once that date is pruned.)
 
 ## Step 2: Create a style JSON
 
