@@ -749,7 +749,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }) async {
     await _channel.invokeMethod('source#addGeoJson', <String, dynamic>{
       'sourceId': sourceId,
-      'geojson': jsonEncode(geojson),
+      'geojson': await _encodeGeoJson(geojson),
     });
   }
 
@@ -760,8 +760,73 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     await _channel.invokeMethod('source#setGeoJson', <String, dynamic>{
       'sourceId': sourceId,
-      'geojson': jsonEncode(geojson),
+      'geojson': await _encodeGeoJson(geojson),
     });
+  }
+
+  /// Number of GeoJSON features above which encoding is moved to a background
+  /// isolate, and the coordinate-count threshold for a single large geometry.
+  ///
+  /// The native side (Android `FeatureCollection.fromJson`, iOS `MLNShape`)
+  /// only accepts a JSON string, so the string must be produced regardless.
+  /// `jsonEncode` is synchronous and was running on the main isolate, freezing
+  /// the UI for large geometries such as a line with tens of thousands of
+  /// points (#366). For large payloads we offload the encode with [compute];
+  /// small payloads stay synchronous to avoid the isolate-spawn overhead on
+  /// every call.
+  static const _geoJsonOffloadFeatureCount = 100;
+  static const _geoJsonOffloadCoordinateCount = 2000;
+
+  /// Encodes [geojson] to a JSON string, offloading to a background isolate
+  /// when the payload is large enough to be worth it. See [_isLargeGeoJson].
+  ///
+  /// We deliberately do not call [compute] unconditionally: spawning an isolate
+  /// copies the argument across the isolate boundary and back and costs on the
+  /// order of milliseconds, which would make the common small-source case both
+  /// slower and asynchronous. The cheap size check keeps small payloads on the
+  /// fast synchronous path and reserves the isolate for the cases that actually
+  /// freeze the UI (#366).
+  Future<String> _encodeGeoJson(Map<String, dynamic> geojson) {
+    // compute() has no isolate on web (it runs inline on the main thread), so
+    // there is nothing to gain from offloading there.
+    if (!kIsWeb && _isLargeGeoJson(geojson)) {
+      return compute(jsonEncode, geojson);
+    }
+    return Future.value(jsonEncode(geojson));
+  }
+
+  /// Cheap (does not walk every coordinate) heuristic for whether [geojson] is
+  /// large enough that encoding it should move off the main isolate.
+  ///
+  /// A `FeatureCollection` is considered large when it has many features, or
+  /// when any single feature carries a large coordinate array (the reported
+  /// 40k-point line is a single feature, so feature count alone is not enough).
+  /// A bare `Feature`/geometry is judged by its own coordinate count.
+  static bool _isLargeGeoJson(Map<String, dynamic> geojson) {
+    final features = geojson['features'];
+    if (features is List) {
+      if (features.length >= _geoJsonOffloadFeatureCount) return true;
+      for (final feature in features) {
+        if (feature is Map && _hasLargeGeometry(feature['geometry'])) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return _hasLargeGeometry(geojson['geometry'] ?? geojson);
+  }
+
+  /// Whether a GeoJSON geometry's top-level `coordinates` array is large.
+  /// Only the outer length is inspected (O(1)), not the full coordinate tree.
+  static bool _hasLargeGeometry(Object? geometry) {
+    if (geometry is Map) {
+      final coordinates = geometry['coordinates'];
+      if (coordinates is List &&
+          coordinates.length >= _geoJsonOffloadCoordinateCount) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
@@ -1002,7 +1067,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     await _channel.invokeMethod('source#setFeature', <String, dynamic>{
       'sourceId': sourceId,
-      'geojsonFeature': jsonEncode(geojsonFeature),
+      'geojsonFeature': await _encodeGeoJson(geojsonFeature),
     });
   }
 

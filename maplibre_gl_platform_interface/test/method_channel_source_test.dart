@@ -119,5 +119,62 @@ void main() {
       expect(args['sourceId'], 'src-1');
       expect(args['geojsonFeature'], jsonEncode(feature));
     });
+
+    // The encode for large payloads is moved off the main isolate (#366). The
+    // offloaded result must be byte-identical to a synchronous jsonEncode.
+    test(
+      'addGeoJsonSource offloads a single large geometry correctly',
+      () async {
+        final geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'properties': <String, dynamic>{},
+              'geometry': {
+                'type': 'LineString',
+                'coordinates': List.generate(
+                  40000,
+                  (i) => [i * 0.001, i * 0.002],
+                ),
+              },
+            },
+          ],
+        };
+
+        await platform.addGeoJsonSource('big-line', geojson);
+
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'source#addGeoJson');
+        final args = methodCalls[0].arguments as Map;
+        expect(args['geojson'], jsonEncode(geojson));
+      },
+    );
+
+    test(
+      'setGeoJsonSource offloads a many-feature collection correctly',
+      () async {
+        final geojson = {
+          'type': 'FeatureCollection',
+          'features': List.generate(
+            500,
+            (i) => {
+              'type': 'Feature',
+              'properties': {'id': i},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [i * 0.01, i * 0.02],
+              },
+            },
+          ),
+        };
+
+        await platform.setGeoJsonSource('many-points', geojson);
+
+        expect(methodCalls.length, 1);
+        final args = methodCalls[0].arguments as Map;
+        expect(args['geojson'], jsonEncode(geojson));
+      },
+    );
   });
 }

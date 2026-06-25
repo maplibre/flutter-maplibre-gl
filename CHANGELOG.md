@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Fixed
+* Adding or updating a GeoJSON source with very large geometry (e.g. a line with tens of thousands of points) no longer freezes the UI. The JSON encoding for large payloads now runs on a background isolate instead of blocking the main thread; small payloads keep the previous synchronous fast path (#366).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
