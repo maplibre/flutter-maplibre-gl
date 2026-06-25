@@ -88,7 +88,7 @@ jobs:
       # on the faster plain JS build above.
       - if: inputs.platform == 'web' && inputs.web-release
         name: Build web (release, WASM, Pages base-href)
-        run: flutter build web --wasm --release --base-href /flutter-maplibre-gl/
+        run: flutter build web --wasm --release --base-href /flutter-maplibre-gl/demo/
       - if: inputs.platform == 'web' && inputs.web-release
         name: Upload web build artifact
         uses: actions/upload-artifact@v7

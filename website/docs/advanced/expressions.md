@@ -7,7 +7,7 @@ Expressions are MapLibre's way of making the map respond to your data. Instead o
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-expressions"
+  src="/flutter-maplibre-gl/demo/?example=doc-expressions"
   title="Data-driven expressions"
   loading="lazy"
 ></iframe>

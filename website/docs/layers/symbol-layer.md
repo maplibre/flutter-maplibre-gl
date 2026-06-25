@@ -4,7 +4,7 @@ A symbol layer renders icons, text labels, or both at point locations from a Geo
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-symbol-layer"
+  src="/flutter-maplibre-gl/demo/?example=doc-symbol-layer"
   title="Symbol layer"
   loading="lazy"
 ></iframe>

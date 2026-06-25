@@ -176,7 +176,7 @@ This parameter is ignored on Android and iOS (native MapLibre handles feature ID
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-geojson-source"
+  src="/flutter-maplibre-gl/demo/?example=doc-geojson-source"
   title="GeoJSON source"
   loading="lazy"
 ></iframe>

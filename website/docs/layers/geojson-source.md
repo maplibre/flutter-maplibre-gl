@@ -4,7 +4,7 @@ A GeoJSON source is the data container that style layers read from. It holds a F
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-geojson-source"
+  src="/flutter-maplibre-gl/demo/?example=doc-geojson-source"
   title="GeoJSON source"
   loading="lazy"
 ></iframe>

@@ -4,7 +4,7 @@ A heatmap visualizes the density or intensity of point data as a smooth color gr
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-heatmap"
+  src="/flutter-maplibre-gl/demo/?example=doc-heatmap"
   title="Heatmap layer"
   loading="lazy"
 ></iframe>

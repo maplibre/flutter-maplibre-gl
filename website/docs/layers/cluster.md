@@ -4,7 +4,7 @@ Clustering groups nearby points into a single bubble at low zoom levels. As user
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-cluster"
+  src="/flutter-maplibre-gl/demo/?example=doc-cluster"
   title="Cluster"
   loading="lazy"
 ></iframe>

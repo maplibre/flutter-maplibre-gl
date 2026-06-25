@@ -4,7 +4,7 @@ PMTiles is a single-file archive format for storing map tiles. Instead of a tile
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=doc-pmtiles"
+  src="/flutter-maplibre-gl/demo/?example=doc-pmtiles"
   title="PMTiles example"
   loading="lazy"
 ></iframe>

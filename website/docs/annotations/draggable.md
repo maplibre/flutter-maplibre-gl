@@ -4,7 +4,7 @@ Allow users to drag annotations to new positions on the map.
 
 <iframe
   class="example-iframe"
-  src="/flutter-maplibre-gl/?example=edit-annotation-draggable"
+  src="/flutter-maplibre-gl/demo/?example=edit-annotation-draggable"
   title="Edit Annotation Draggable example"
   loading="lazy"
 ></iframe>

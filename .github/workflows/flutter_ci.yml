@@ -208,13 +208,19 @@ jobs:
         working-directory: website
         run: mkdocs build
 
-      - name: Assemble Pages bundle (web demo + docs)
-        run: cp -r website/site web-demo/docs
+      # Pages bundle layout: the docs site is the root homepage, and the
+      # Flutter web demo is served under /demo/ (built with that base-href).
+      - name: Assemble Pages bundle (docs at root + demo under /demo)
+        run: |
+          mkdir -p pages
+          cp -r website/site/. pages/
+          mkdir -p pages/demo
+          cp -r web-demo/. pages/demo/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web-demo
+          path: pages
 
   deploy-pages:
     name: "Deploy to GitHub Pages"
