@@ -1676,9 +1676,18 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> updateContentInsets(EdgeInsets insets, bool animated) {
-    // TODO: implement updateContentInsets
-    throw UnimplementedError();
+  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
+    // MapLibre GL JS expresses content insets as camera `padding`. easeTo with
+    // a zero duration applies it immediately (the non-animated case).
+    _map.easeTo({
+      'padding': {
+        'top': insets.top,
+        'bottom': insets.bottom,
+        'left': insets.left,
+        'right': insets.right,
+      },
+      'duration': animated ? 300 : 0,
+    });
   }
 
   @override
