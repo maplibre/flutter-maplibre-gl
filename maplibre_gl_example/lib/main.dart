@@ -49,6 +49,25 @@ import 'examples/advanced/translucent_full_map.dart';
 import 'examples/advanced/map_snapshot.dart';
 import 'examples/advanced/map_language.dart';
 
+// Doc-only examples (not shown in app home, only reachable via ?example=slug)
+import 'examples/docs/doc_full_map.dart';
+import 'examples/docs/doc_symbol_layer.dart';
+import 'examples/docs/doc_circle_layer.dart';
+import 'examples/docs/doc_fill_layer.dart';
+import 'examples/docs/doc_line_layer.dart';
+import 'examples/docs/doc_cluster.dart';
+import 'examples/docs/doc_annotation_markers.dart';
+import 'examples/docs/doc_camera.dart';
+import 'examples/docs/doc_geojson_source.dart';
+import 'examples/docs/doc_pmtiles.dart';
+import 'examples/docs/doc_heatmap.dart';
+import 'examples/docs/doc_expressions.dart';
+
+String? _initialExampleSlug() {
+  if (!kIsWeb) return null;
+  return Uri.base.queryParameters['example'];
+}
+
 void main() {
   if (kIsWeb) {
     print(
@@ -86,7 +105,12 @@ class MapLibreExampleApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const MapsDemo(),
+      home:
+          [
+            ..._allPages,
+            ..._docPages,
+          ].where((p) => p.slug == _initialExampleSlug()).firstOrNull ??
+          const MapsDemo(),
     );
   }
 }
@@ -132,6 +156,23 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   if (!kIsWeb) const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
   const MapSnapshotPage(),
+];
+
+// Doc-only pages: not shown in the app home list, only reachable via ?example=<slug>.
+// These render mapOnly: true — clean fullscreen map for iframe embeds in the docs site.
+final List<ExamplePage> _docPages = [
+  const DocFullMapExample(),
+  const DocSymbolLayerExample(),
+  const DocCircleLayerExample(),
+  const DocFillLayerExample(),
+  const DocLineLayerExample(),
+  const DocClusterExample(),
+  const DocAnnotationMarkersExample(),
+  const DocCameraExample(),
+  const DocGeoJsonSourceExample(),
+  const DocPMTilesExample(),
+  const DocHeatmapExample(),
+  const DocExpressionsExample(),
 ];
 
 class MapsDemo extends StatefulWidget {
