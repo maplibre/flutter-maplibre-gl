@@ -4,7 +4,7 @@ The camera defines what the user sees: the center position, zoom level, bearing 
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-camera"
+  src="/flutter-maplibre-gl/?example=doc-camera"
   title="Camera controls"
   loading="lazy"
 ></iframe>

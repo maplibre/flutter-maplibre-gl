@@ -4,7 +4,7 @@ A circle layer renders filled circles at point locations. It's ideal for data vi
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-circle-layer"
+  src="/flutter-maplibre-gl/?example=doc-circle-layer"
   title="Circle layer"
   loading="lazy"
 ></iframe>

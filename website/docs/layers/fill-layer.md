@@ -4,7 +4,7 @@ A fill layer renders polygons from a GeoJSON source. Use it for choropleth maps,
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-fill-layer"
+  src="/flutter-maplibre-gl/?example=doc-fill-layer"
   title="Fill layer"
   loading="lazy"
 ></iframe>

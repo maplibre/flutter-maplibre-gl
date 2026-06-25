@@ -4,7 +4,7 @@ Switch the map label language at runtime without reloading the style. Useful for
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=map-language"
+  src="/flutter-maplibre-gl/?example=map-language"
   title="Map Language example"
   loading="lazy"
 ></iframe>

@@ -162,7 +162,7 @@ await controller.addSymbolLayer('pts', 'pts-layer',
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-annotation-markers"
+  src="/flutter-maplibre-gl/?example=doc-annotation-markers"
   title="Annotation markers"
   loading="lazy"
 ></iframe>
@@ -171,7 +171,7 @@ await controller.addSymbolLayer('pts', 'pts-layer',
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-symbol-layer"
+  src="/flutter-maplibre-gl/?example=doc-symbol-layer"
   title="Symbol layer"
   loading="lazy"
 ></iframe>

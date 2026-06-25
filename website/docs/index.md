@@ -27,7 +27,7 @@ hide:
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-full-map"
+  src="/flutter-maplibre-gl/?example=doc-full-map"
   title="flutter-maplibre-gl live preview"
   loading="lazy"
 ></iframe>

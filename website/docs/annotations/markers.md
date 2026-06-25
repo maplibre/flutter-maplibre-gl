@@ -4,7 +4,7 @@ The Annotation API lets you place individual interactive markers, circles, lines
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-annotation-markers"
+  src="/flutter-maplibre-gl/?example=doc-annotation-markers"
   title="Annotation markers"
   loading="lazy"
 ></iframe>
