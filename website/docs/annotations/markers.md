@@ -17,22 +17,37 @@ Use annotations when you have **fewer than ~50 features** and need individual in
 
 ## Add a symbol (icon + text)
 
+`iconImage` references an image **from the active style's sprite**, or one you
+registered yourself with `addImage` / `addImageFromAsset`. There are no icons
+that exist in every style, so register your own first (see
+[Custom image markers](#custom-image-markers) below) and reference it by name:
+
 ```dart
+await addImageFromAsset(controller, 'my-pin', 'assets/markers/pin.png');
+
 final symbol = await controller.addSymbol(
   const SymbolOptions(
     geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'marker-15',     // built-in MapLibre icon
-    iconSize: 1.5,
-    iconColor: '#E74C3C',
+    iconImage: 'my-pin',        // a name you registered with addImage
+    iconSize: 1.0,
     textField: 'Paris',
     textOffset: Offset(0, 1.5),
     textAnchor: 'top',
     textSize: 14,
+    textColor: '#1a1a2e',
     textHaloColor: '#ffffff',
     textHaloWidth: 2,
   ),
 );
 ```
+
+!!! warning "Icons are style-dependent"
+    `iconImage` must name an image the map actually has. If you reference a name
+    that isn't in the style's sprite and wasn't registered with `addImage`, the
+    symbol renders nothing and the console logs *"image … could not be loaded"*.
+    Many styles (including the MapLibre demo style) ship no general-purpose
+    marker sprite, so register your own image rather than assuming a built-in
+    name exists.
 
 ## Tap callback
 
@@ -65,29 +80,29 @@ await controller.clearSymbols(); // remove all
 
 ```dart
 final symbols = await controller.addSymbols([
-  const SymbolOptions(geometry: LatLng(48.86, 2.35), iconImage: 'marker-15'),
-  const SymbolOptions(geometry: LatLng(51.50, -0.13), iconImage: 'marker-15'),
-  const SymbolOptions(geometry: LatLng(52.52, 13.40), iconImage: 'marker-15'),
+  const SymbolOptions(geometry: LatLng(48.86, 2.35), iconImage: 'my-pin'),
+  const SymbolOptions(geometry: LatLng(51.50, -0.13), iconImage: 'my-pin'),
+  const SymbolOptions(geometry: LatLng(52.52, 13.40), iconImage: 'my-pin'),
 ]);
 ```
 
-## Built-in icon names
+## Where icons come from
 
-MapLibre ships a set of built-in icons from the Maki icon set. Common ones:
+`iconImage` resolves against the images the map currently has:
 
-| Icon name | Use |
-|---|---|
-| `marker-15` | Simple teardrop marker |
-| `circle-15` | Filled circle |
-| `star-15` | Star shape |
-| `restaurant-15` | Fork and knife |
-| `lodging-15` | Bed icon |
-| `hospital-15` | Medical cross |
-| `airport-15` | Airplane |
+- **The active style's sprite** — some styles bundle a named icon set (e.g. a
+  style built on the Maki icons exposes `marker-15`, `restaurant-15`, …). These
+  names only exist if *that* style includes them; they are not guaranteed.
+- **Images you register at runtime** with `addImage` / `addImageFromAsset` —
+  always available regardless of the style. This is the portable choice.
+
+Because the MapLibre demo style (and many others) ship no general-purpose
+marker sprite, the examples here register their own image rather than relying on
+a built-in name.
 
 ### Custom image markers
 
-To use your own image instead of a built-in Maki icon, register it once with `addImage()` (in `onStyleLoadedCallback`), then reference it by name as the `iconImage`:
+Register your image once with `addImage()` (in `onStyleLoadedCallback`), then reference it by name as the `iconImage`:
 
 ```dart
 final bytes = await rootBundle.load('assets/markers/pin.png');

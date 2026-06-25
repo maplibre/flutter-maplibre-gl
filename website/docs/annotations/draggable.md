@@ -17,7 +17,7 @@ Set `draggable: true` in `SymbolOptions`:
 final symbol = await controller.addSymbol(
   const SymbolOptions(
     geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'marker-15',
+    iconImage: 'my-pin',
     draggable: true,
   ),
 );

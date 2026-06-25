@@ -32,7 +32,7 @@ Annotations are Flutter objects that represent individual features. You add them
 final symbol = await controller.addSymbol(
   const SymbolOptions(
     geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'marker-15',
+    iconImage: 'my-pin',
     textField: 'Paris',
   ),
 );
@@ -114,7 +114,7 @@ await controller.setGeoJsonSource('cities', newFeatureCollection);
 await controller.addSymbol(
   const SymbolOptions(
     geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'marker-15',
+    iconImage: 'my-pin',
     iconColor: '#E74C3C',
     textField: 'Paris',
   ),
@@ -146,7 +146,7 @@ await controller.addGeoJsonSource('pts', {
 
 await controller.addSymbolLayer('pts', 'pts-layer',
   SymbolLayerProperties(
-    iconImage: 'marker-15',
+    iconImage: 'my-pin',
     iconColor: '#E74C3C',
     textField: [Expressions.get, 'name'],
   ),
