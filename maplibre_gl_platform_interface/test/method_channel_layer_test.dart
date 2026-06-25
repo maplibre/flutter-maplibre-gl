@@ -30,6 +30,21 @@ void main() {
                   };
                 case 'layer#getVisibility':
                   return true;
+                case 'style#getLayerProperties':
+                  if (methodCall.arguments['layerId'] == 'missing') {
+                    return <dynamic, dynamic>{};
+                  }
+                  return <dynamic, dynamic>{
+                    'properties':
+                        '{"id":"my-layer","type":"circle","source":"src",'
+                        '"paint":{"circle-color":"#ff0000","circle-radius":5}}',
+                  };
+                case 'style#getSourceProperties':
+                  return <dynamic, dynamic>{
+                    'properties':
+                        '{"type":"geojson","data":'
+                        '{"type":"FeatureCollection","features":[]}}',
+                  };
                 default:
                   return null;
               }
@@ -175,6 +190,36 @@ void main() {
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'style#getSourceIds');
       expect(result, ['source-1', 'source-2']);
+    });
+
+    test('getLayerProperties decodes the style-spec map', () async {
+      final result = await platform.getLayerProperties('my-layer');
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'style#getLayerProperties');
+      expect(methodCalls[0].arguments['layerId'], 'my-layer');
+      expect(result?['id'], 'my-layer');
+      expect(result?['type'], 'circle');
+      expect(result?['source'], 'src');
+      expect((result?['paint'] as Map)['circle-color'], '#ff0000');
+      expect((result?['paint'] as Map)['circle-radius'], 5);
+    });
+
+    test('getLayerProperties returns null for a missing layer', () async {
+      final result = await platform.getLayerProperties('missing');
+
+      expect(methodCalls[0].method, 'style#getLayerProperties');
+      expect(result, isNull);
+    });
+
+    test('getSourceProperties decodes the style-spec map', () async {
+      final result = await platform.getSourceProperties('src');
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'style#getSourceProperties');
+      expect(methodCalls[0].arguments['sourceId'], 'src');
+      expect(result?['type'], 'geojson');
+      expect((result?['data'] as Map)['type'], 'FeatureCollection');
     });
 
     test('addLayer with belowLayerId and zoom bounds', () async {

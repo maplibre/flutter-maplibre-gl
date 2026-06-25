@@ -1232,6 +1232,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["sources"] = sourceIds as NSObject
             result(reply)
 
+        case "style#getLayerProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            // Read the serialized style and pluck the layer entry, rather than
+            // enumerating every NSExpression property. This guarantees the
+            // result matches the MapLibre style spec, like Android and web.
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let layers = styleObject?["layers"] as? [[String: Any]],
+               let layer = layers.first(where: { ($0["id"] as? String) == layerId }),
+               let json = jsonString(from: layer)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
+        case "style#getSourceProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let sources = styleObject?["sources"] as? [String: Any],
+               let source = sources[sourceId] as? [String: Any],
+               let json = jsonString(from: source)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
         case "style#getFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
@@ -1378,6 +1407,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private func setMapLanguage(language: String) {
         self.mapView.setMapLanguage(language)
+    }
+
+    // The current map style parsed as a JSON dictionary (style-spec shaped),
+    // or nil if it cannot be read/parsed. Used to read layer/source properties
+    // by id without enumerating every typed property.
+    private func currentStyleObject() -> [String: Any]? {
+        guard let data = mapView.styleJSON.data(using: .utf8) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
+    // Serializes a style sub-object (a layer or source entry) back to a JSON
+    // string for the Dart side, which decodes it into a Map.
+    private func jsonString(from object: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: object) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
     }
 
     /*

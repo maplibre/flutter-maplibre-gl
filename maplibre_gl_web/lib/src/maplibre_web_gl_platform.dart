@@ -1787,6 +1787,37 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
+    // The serialized style already holds each layer in MapLibre style-spec
+    // form (id/type/source/paint/layout/...), which is exactly the contract,
+    // so we read it from there rather than reassembling it from getters.
+    final layers = _styleMap()?['layers'];
+    if (layers is! List) return null;
+    for (final layer in layers) {
+      if (layer is Map && layer['id'] == layerId) {
+        return Map<String, dynamic>.from(layer);
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
+    final sources = _styleMap()?['sources'];
+    if (sources is! Map) return null;
+    final source = sources[sourceId];
+    if (source is! Map) return null;
+    return Map<String, dynamic>.from(source);
+  }
+
+  /// The current style as a Dart map (style-spec shaped), or null if unset.
+  Map<String, dynamic>? _styleMap() {
+    final styleJs = _map.getStyle();
+    if (styleJs == null) return null;
+    return dartify(styleJs) as Map<String, dynamic>?;
+  }
+
+  @override
   Future<bool?> getLayerVisibility(String layerId) async {
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;

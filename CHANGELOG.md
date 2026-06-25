@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)` on `MapLibreMapController` return a layer's or source's full properties as a MapLibre style-spec map (`id`, `type`, `source`, `paint`/`layout`, etc.), or `null` when the id is unknown. Previously only `getLayerIds()` / `getSourceIds()` were available. Implemented consistently on Android, iOS, and Web by reading the serialized style, so the returned shape matches across platforms (#513).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
