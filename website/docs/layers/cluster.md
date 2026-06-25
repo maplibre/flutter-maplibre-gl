@@ -30,7 +30,7 @@ Clustering is a source-level feature, you enable it on `GeojsonSourceProperties`
 // 1. Add source with clustering enabled, passing the data inline.
 await controller.addSource(
   'events',
-  const GeojsonSourceProperties(
+  GeojsonSourceProperties(
     data: featureCollection,   // inline GeoJSON map, or a URL string
     cluster: true,
     clusterMaxZoom: 14,   // stop clustering above this zoom
