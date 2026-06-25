@@ -17,22 +17,40 @@ permissions:
 
 jobs:
   build:
-    name: "Build web demo"
+    name: "Build web demo and docs"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v6
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - name: Build web
+
+      - name: Build Flutter web app
+        working-directory: maplibre_gl_example
         run: flutter build web --release --base-href /flutter-maplibre-gl/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: website/requirements.txt
+
+      - name: Install MkDocs Material
+        run: pip install -r website/requirements.txt
+
+      - name: Build MkDocs site
+        working-directory: website
+        run: mkdocs build
+
+      - name: Copy docs into Flutter build output
+        run: cp -r website/site maplibre_gl_example/build/web/docs
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

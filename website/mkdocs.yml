@@ -1,0 +1,118 @@
+site_name: MapLibre Flutter
+site_url: https://maplibre.github.io/flutter-maplibre-gl/docs/
+repo_url: https://github.com/maplibre/flutter-maplibre-gl
+repo_name: GitHub
+edit_uri: edit/main/website/docs/
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  favicon: assets/icon.png
+  logo: assets/icon.png
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - toc.follow
+    - content.action.edit
+    - content.code.copy
+    - content.code.annotate
+    - search.highlight
+    - search.suggest
+    - search.share
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/shortcuts.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/maplibre/flutter-maplibre-gl
+    - icon: fontawesome/brands/slack
+      link: https://osmus.slack.com/archives/C01G3D28DAB
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      toc_depth: 3
+
+nav:
+  - Home: index.md
+  - Docs:
+    - Getting Started: getting-started.md
+    - Migration Guide: migration.md
+    - Concepts:
+      - Architecture: concepts/architecture.md
+      - Annotations vs Style Layers: concepts/annotations-vs-layers.md
+      - Working with GeoJSON: concepts/geojson.md
+      - Map Styles: concepts/styles.md
+    - Camera:
+      - Camera Controls: camera/camera-controls.md
+      - Camera Bounds: camera/camera-bounds.md
+    - Annotations:
+      - Markers: annotations/markers.md
+      - Animated: annotations/animated.md
+      - Draggable: annotations/draggable.md
+    - Layers & Sources:
+      - Symbol Layer: layers/symbol-layer.md
+      - Circle Layer: layers/circle-layer.md
+      - Fill Layer: layers/fill-layer.md
+      - Line Layer: layers/line-layer.md
+      - Heatmap: layers/heatmap.md
+      - Cluster: layers/cluster.md
+      - GeoJSON Source: layers/geojson-source.md
+      - Various Sources: layers/various-sources.md
+    - Advanced:
+      - PMTiles: advanced/pmtiles.md
+      - Offline Regions: advanced/offline-regions.md
+      - Map Language: advanced/map-language.md
+      - Snapshot: advanced/snapshot.md
+      - Data-Driven Expressions: advanced/expressions.md
+  - Compare:
+    - Why MapLibre GL: compare/why-maplibre.md
+    - Feature Matrix: compare/feature-matrix.md
+  - API Reference: api.md
