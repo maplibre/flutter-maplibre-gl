@@ -218,7 +218,7 @@ jobs:
           cp -r web-demo/. pages/demo/
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: pages
 
