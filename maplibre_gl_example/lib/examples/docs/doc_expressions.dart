@@ -25,6 +25,7 @@ class _DocExpressionsBody extends StatefulWidget {
 
 class _DocExpressionsBodyState extends State<_DocExpressionsBody> {
   MapLibreMapController? _controller;
+  bool _layersAdded = false;
   static const _sourceId = 'countries-source';
   static const _fillLayerId = 'countries-fill';
   static const _labelLayerId = 'countries-labels';
@@ -117,6 +118,11 @@ class _DocExpressionsBodyState extends State<_DocExpressionsBody> {
   Future<void> _onStyleLoaded() async {
     final ctrl = _controller;
     if (ctrl == null) return;
+
+    // onStyleLoadedCallback can fire more than once (e.g. on a style reload on
+    // web). Add the source and layers only once to avoid "layer already exists".
+    if (_layersAdded) return;
+    _layersAdded = true;
 
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
