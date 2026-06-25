@@ -2,14 +2,57 @@ name: Flutter CI
 
 on: [push, pull_request, workflow_dispatch]
 
-# Ensure that new pushes/updates cancel running jobs
+# Cancel superseded runs to save CI minutes — but NOT on main: a main run
+# also publishes the Pages deploy, and cancelling it mid-publish would leave
+# the site half-deployed. So cancel-in-progress is true everywhere except
+# refs/heads/main, where runs are allowed to finish (and deploys serialize via
+# the deploy-pages job's own concurrency group).
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default: only the deploy-pages job elevates to
+# pages:write / id-token:write (via its own job-level permissions block).
+permissions:
+  contents: read
 
 jobs:
+  # Detect which parts of the repo changed so we only run the relevant jobs.
+  # `code` => Dart/native/CI sources: needs quality checks + native/web builds.
+  # `docs` => anything that changes the rendered site: needs the docs build.
+  #
+  # The doc examples (maplibre_gl_example/lib/examples/docs/**) intentionally
+  # belong to BOTH: they are real Dart that must compile/lint/build (code) AND
+  # they are embedded as live iframes on the site (docs). They live under
+  # maplibre_gl_example/** so the `code` globs below already cover them.
+  changes:
+    name: "Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'maplibre_gl/**'
+              - 'maplibre_gl_platform_interface/**'
+              - 'maplibre_gl_web/**'
+              - 'maplibre_gl_example/**'
+              - 'pubspec.yaml'
+              - '.github/workflows/**'
+            docs:
+              - 'website/**'
+              - 'maplibre_gl_example/lib/examples/docs/**'
+              - '.github/workflows/**'
+
   format:
     name: "Check formatting"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -25,6 +68,8 @@ jobs:
 
   lint:
     name: "Static code analysis"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -40,6 +85,8 @@ jobs:
 
   test:
     name: "Run tests"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -60,6 +107,8 @@ jobs:
 
   test-web:
     name: "Run web tests"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -74,6 +123,8 @@ jobs:
 
   code-gen:
     name: "Generate code from templates"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -91,72 +142,102 @@ jobs:
 
   build-android:
     name: "Build Android apk"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: maplibre_gl_example
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      - uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Build example APK
-        run: flutter build apk
-      - name: Upload apk as artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: maplibre-flutter-demo.apk
-          path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: android
 
-  build-iOS:
-    name: Build iOS package
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: maplibre_gl_example
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      - uses: maxim-lobanov/setup-cocoapods@v1
-        with:
-          podfile-path: maplibre_gl_example/ios/Podfile.lock
-      - name: Build iOS package
-        run: flutter build ios --simulator
-      - name: Upload Runner.app as artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: maplibre-flutter-demo.app
-          path: maplibre_gl_example/build/ios/iphonesimulator
+  build-ios:
+    name: "Build iOS package"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: ios
 
+  # On main, build web in release mode and upload it so the docs deploy can
+  # reuse it (no second web build). On PRs/other branches, a plain web build.
+  # Also runs for docs-only changes on main, because the Pages bundle needs a
+  # fresh web demo to ship alongside the rebuilt docs.
   build-web:
     name: "Build web"
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true'
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: web
+      web-release: ${{ github.ref == 'refs/heads/main' }}
+
+  # Build the MkDocs site and assemble the Pages bundle (web demo + docs).
+  # Runs only on main after the relevant jobs succeed, and reuses the web
+  # artifact from build-web instead of rebuilding the Flutter web app.
+  build-docs:
+    name: "Build docs + assemble Pages bundle"
+    needs: [changes, build-web, format, lint, test, test-web]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      (needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true') &&
+      needs.build-web.result == 'success' &&
+      (needs.format.result == 'success' || needs.format.result == 'skipped') &&
+      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped') &&
+      (needs.test-web.result == 'success' || needs.test-web.result == 'skipped')
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
+
+      - name: Download web demo artifact
+        uses: actions/download-artifact@v5
         with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
+          name: web-demo
+          path: web-demo
+
+      - uses: actions/setup-python@v5
         with:
-          run-bootstrap: true
-      - name: Build web
-        run: flutter build web
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: website/requirements.txt
+
+      - name: Install MkDocs Material
+        run: pip install -r website/requirements.txt
+
+      - name: Build MkDocs site
+        working-directory: website
+        run: mkdocs build
+
+      - name: Assemble Pages bundle (web demo + docs)
+        run: cp -r website/site web-demo/docs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web-demo
+
+  deploy-pages:
+    name: "Deploy to GitHub Pages"
+    needs: build-docs
+    if: needs.build-docs.result == 'success'
+    runs-on: ubuntu-latest
+    # Only this job needs the elevated Pages scopes (top-level is contents:read).
+    permissions:
+      pages: write
+      id-token: write
+    # Serialize deploys instead of cancelling: cancel-in-progress:false means a
+    # rapid second push to main QUEUES behind an in-flight deploy rather than
+    # aborting it mid-publish. This never tears down the Pages environment — it
+    # only controls whether an overlapping run waits or is cancelled. Combined
+    # with the workflow-level cancel being disabled on main, a main deploy
+    # always runs to completion; back-to-back pushes just queue in order.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
