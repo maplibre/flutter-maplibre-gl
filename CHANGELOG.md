@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* `setPadding({left, top, right, bottom, animated})` on `MapLibreMapController` sets the map's viewport padding, shifting the map center / vanishing point (useful for keeping content centered behind a bottom sheet or side panel). It is a convenience wrapper over the existing `updateContentInsets` (#258).
+
+### Fixed
+* **Web**: `updateContentInsets` (and the new `setPadding`) is now implemented on web via the camera `padding` option. Previously it threw `UnimplementedError`, so viewport padding only worked on Android and iOS.
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
