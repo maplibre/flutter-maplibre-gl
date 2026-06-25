@@ -4,10 +4,13 @@ PMTiles is a single-file archive format for storing map tiles. Instead of a tile
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-pmtiles"
+  src="/flutter-maplibre-gl/demo/?example=doc-pmtiles"
   title="PMTiles example"
   loading="lazy"
 ></iframe>
+
+!!! note "About this demo"
+    This example reads a public Protomaps planet build (`build.protomaps.com/<YYYYMMDD>.pmtiles`). Protomaps rotates these dated builds out after a few days, so if the pinned date has been pruned the map above may load empty — it's the demo source, not the plugin. For your own apps, host your own `.pmtiles` (see [Hosting options](#hosting-options)) for a stable URL.
 
 ## Why PMTiles?
 
@@ -43,10 +46,11 @@ Options:
 - Convert an MBTiles file: `pmtiles convert input.mbtiles output.pmtiles`
 - Generate from OpenStreetMap with [planetiler](https://github.com/onthegomap/planetiler)
 
-For testing, use the Protomaps public CDN:
+For testing, use the Protomaps public demo archive:
 ```
-https://build.protomaps.com/20231001.pmtiles
+https://demo-bucket.protomaps.com/v4.pmtiles
 ```
+(Protomaps also publishes dated planet builds at `https://build.protomaps.com/<YYYYMMDD>.pmtiles`, but those are rotated out after a few days, so don't hardcode one for anything long-lived. The live demo above pins a recent dated build, which is why it can go empty once that date is pruned.)
 
 ## Step 2: Create a style JSON
 
@@ -59,7 +63,7 @@ The style JSON references the PMTiles archive as a vector source. Save this as `
   "sources": {
     "protomaps": {
       "type": "vector",
-      "url": "pmtiles://https://build.protomaps.com/20231001.pmtiles",
+      "url": "pmtiles://https://demo-bucket.protomaps.com/v4.pmtiles",
       "attribution": "© OpenStreetMap"
     }
   },

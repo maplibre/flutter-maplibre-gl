@@ -20,14 +20,14 @@ hide:
   </div>
   <div class="cta-row">
     <a href="getting-started/" class="cta-btn cta-btn--primary">Get started</a>
-    <a href="https://maplibre.github.io/flutter-maplibre-gl/" class="cta-btn cta-btn--demo" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>Live demo<svg class="ext-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg></a>
+    <a href="demo/" class="cta-btn cta-btn--demo" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>Live demo<svg class="ext-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl" class="cta-btn cta-btn--secondary" target="_blank" rel="noopener">GitHub<svg class="ext-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg></a>
   </div>
 </div>
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-full-map"
+  src="/flutter-maplibre-gl/demo/?example=doc-full-map"
   title="flutter-maplibre-gl live preview"
   loading="lazy"
 ></iframe>

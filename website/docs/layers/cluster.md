@@ -4,7 +4,7 @@ Clustering groups nearby points into a single bubble at low zoom levels. As user
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-cluster"
+  src="/flutter-maplibre-gl/demo/?example=doc-cluster"
   title="Cluster"
   loading="lazy"
 ></iframe>
@@ -27,16 +27,16 @@ Clustering is a source-level feature, you enable it on `GeojsonSourceProperties`
 ## Full setup
 
 ```dart
-// 1. Add source with clustering enabled
+// 1. Add source with clustering enabled, passing the data inline.
 await controller.addSource(
   'events',
-  const GeojsonSourceProperties(
+  GeojsonSourceProperties(
+    data: featureCollection,   // inline GeoJSON map, or a URL string
     cluster: true,
     clusterMaxZoom: 14,   // stop clustering above this zoom
     clusterRadius: 50,    // pixel radius to group into one cluster
   ),
 );
-await controller.setGeoJsonSource('events', featureCollection);
 
 // 2. Cluster circles: sized by point count
 await controller.addCircleLayer(

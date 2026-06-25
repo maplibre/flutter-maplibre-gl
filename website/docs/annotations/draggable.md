@@ -4,7 +4,7 @@ Allow users to drag annotations to new positions on the map.
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=edit-annotation-draggable"
+  src="/flutter-maplibre-gl/demo/?example=edit-annotation-draggable"
   title="Edit Annotation Draggable example"
   loading="lazy"
 ></iframe>
@@ -17,7 +17,7 @@ Set `draggable: true` in `SymbolOptions`:
 final symbol = await controller.addSymbol(
   const SymbolOptions(
     geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'marker-15',
+    iconImage: 'my-pin',
     draggable: true,
   ),
 );

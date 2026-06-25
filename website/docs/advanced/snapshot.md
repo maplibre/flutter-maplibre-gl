@@ -4,7 +4,7 @@ Capture a static image of the current map view as a `Uint8List` (PNG bytes). Use
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=map-snapshot"
+  src="/flutter-maplibre-gl/demo/?example=map-snapshot"
   title="Map Snapshot example"
   loading="lazy"
 ></iframe>

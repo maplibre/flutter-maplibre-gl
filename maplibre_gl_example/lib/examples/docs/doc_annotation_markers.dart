@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
+import '../../util.dart';
 
 class DocAnnotationMarkersExample extends ExamplePage {
   const DocAnnotationMarkersExample({super.key})
@@ -57,6 +58,15 @@ class _DocAnnotationMarkersBodyState extends State<_DocAnnotationMarkersBody> {
     final ctrl = _controller;
     if (ctrl == null) return;
 
+    // The demo style has no built-in marker sprite, so register a bundled
+    // image and reference it by name. (Using a style sprite icon like
+    // "marker-15" would fail with "image could not be loaded".)
+    await addImageFromAsset(
+      ctrl,
+      'doc-marker',
+      'assets/symbols/custom-marker.png',
+    );
+
     for (final landmark in _landmarks) {
       await ctrl.addSymbol(
         SymbolOptions(
@@ -64,13 +74,14 @@ class _DocAnnotationMarkersBodyState extends State<_DocAnnotationMarkersBody> {
             (landmark['lat']! as num).toDouble(),
             (landmark['lng']! as num).toDouble(),
           ),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#E74C3C',
+          iconImage: 'doc-marker',
+          iconSize: 0.8,
+          iconOffset: const Offset(0, -10),
           textField: landmark['name']! as String,
-          textOffset: const Offset(0, 1.5),
+          textOffset: const Offset(0, 1.2),
           textAnchor: 'top',
           textSize: 13,
+          textColor: '#1a1a2e',
           textHaloColor: '#ffffff',
           textHaloWidth: 2,
         ),

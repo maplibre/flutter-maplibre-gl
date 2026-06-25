@@ -4,7 +4,7 @@ Smoothly animate annotation position changes using Flutter's animation system.
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=edit-annotation-animated"
+  src="/flutter-maplibre-gl/demo/?example=edit-annotation-animated"
   title="Edit Annotation Animated example"
   loading="lazy"
 ></iframe>

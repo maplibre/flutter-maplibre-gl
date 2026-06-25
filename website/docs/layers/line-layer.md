@@ -4,7 +4,7 @@ A line layer renders LineString and Polygon geometries as stroked paths. Use it 
 
 <iframe
   class="example-iframe"
-  src="https://maplibre.github.io/flutter-maplibre-gl/?example=doc-line-layer"
+  src="/flutter-maplibre-gl/demo/?example=doc-line-layer"
   title="Line layer"
   loading="lazy"
 ></iframe>

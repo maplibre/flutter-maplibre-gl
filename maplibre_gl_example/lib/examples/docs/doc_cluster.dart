@@ -54,18 +54,19 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
       };
     });
 
+    // Pass the data inline when creating the source. A geojson source requires
+    // its "data" property up front: on web (maplibre-gl-js) an empty addSource
+    // followed by setGeoJsonSource fails validation with
+    // 'missing required property "data"', so the dependent layers never attach.
     await ctrl.addSource(
       _sourceId,
-      const GeojsonSourceProperties(
+      GeojsonSourceProperties(
+        data: {'type': 'FeatureCollection', 'features': features},
         cluster: true,
         clusterMaxZoom: 14,
         clusterRadius: 50,
       ),
     );
-    await ctrl.setGeoJsonSource(_sourceId, {
-      'type': 'FeatureCollection',
-      'features': features,
-    });
 
     await ctrl.addCircleLayer(
       _sourceId,
