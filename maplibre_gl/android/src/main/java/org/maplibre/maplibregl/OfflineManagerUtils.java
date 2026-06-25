@@ -552,7 +552,14 @@ abstract class OfflineManagerUtils {
 
   private static Map<String, Object> metadataBytesToMap(byte[] metadataBytes) {
     if (metadataBytes != null) {
-      return new Gson().fromJson(new String(metadataBytes), HashMap.class);
+      // Gson returns null for empty or "null" payloads, which can happen with
+      // offline databases created by external tools. Fall back to an empty map
+      // so the Dart side never receives a null metadata value.
+      Map<String, Object> metadata =
+          new Gson().fromJson(new String(metadataBytes), HashMap.class);
+      if (metadata != null) {
+        return metadata;
+      }
     }
     return new HashMap();
   }
