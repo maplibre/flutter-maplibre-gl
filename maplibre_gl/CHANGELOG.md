@@ -2,6 +2,7 @@
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
+* **iOS**: `mergeOfflineRegions()` is now implemented, matching Android and Web. Regions imported from an external offline database (including ones without a Flutter-format context) are merged and returned to Dart (#886).
 
 ### Fixed
 * **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).

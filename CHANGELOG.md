@@ -7,6 +7,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
+* **iOS**: `mergeOfflineRegions()` is now implemented, matching Android and Web. Regions imported from an external offline database (including ones without a Flutter-format context) are merged and returned to Dart (#886).
 
 ### Fixed
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
