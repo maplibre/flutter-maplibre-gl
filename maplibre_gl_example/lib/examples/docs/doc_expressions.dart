@@ -143,7 +143,7 @@ class _DocExpressionsBodyState extends State<_DocExpressionsBody> {
     await ctrl.addFillLayer(
       _sourceId,
       _fillLayerId,
-       const FillLayerProperties(
+      const FillLayerProperties(
         fillColor: [
           Expressions.match,
           [Expressions.get, 'continent'],
