@@ -1135,6 +1135,40 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     }
   }
 
+  @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
+    return _getStyleObjectProperties('style#getLayerProperties', {
+      'layerId': layerId,
+    });
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
+    return _getStyleObjectProperties('style#getSourceProperties', {
+      'sourceId': sourceId,
+    });
+  }
+
+  /// Shared transport for [getLayerProperties] / [getSourceProperties].
+  ///
+  /// The native side serializes the layer/source to a MapLibre style-spec JSON
+  /// string (so nested expressions survive the platform channel intact) and
+  /// returns it under `reply['properties']`. Returns null when the object does
+  /// not exist.
+  Future<Map<String, dynamic>?> _getStyleObjectProperties(
+    String method,
+    Map<String, dynamic> arguments,
+  ) async {
+    try {
+      final reply = await _channel.invokeMethod(method, arguments);
+      final properties = reply?['properties'];
+      if (properties == null) return null;
+      return (jsonDecode(properties as String) as Map).cast<String, dynamic>();
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
   /// Method to set style string
   ///
   @override

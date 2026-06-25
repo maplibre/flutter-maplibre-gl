@@ -263,6 +263,14 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<List> getSourceIds() async => [];
 
   @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async =>
+      null;
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async =>
+      null;
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {}
 
   @override

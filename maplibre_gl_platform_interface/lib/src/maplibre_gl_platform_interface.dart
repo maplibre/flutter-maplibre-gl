@@ -246,6 +246,10 @@ abstract class MapLibrePlatform {
 
   Future<List> getSourceIds();
 
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId);
+
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId);
+
   Future<void> setFilter(String layerId, dynamic filter);
 
   Future<dynamic> getFilter(String layerId);

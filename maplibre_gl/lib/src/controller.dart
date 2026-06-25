@@ -1973,6 +1973,28 @@ class MapLibreMapController extends ChangeNotifier {
         .toList();
   }
 
+  /// Returns the properties of the layer with the given [layerId] as a
+  /// MapLibre style-spec map, or null if no such layer exists.
+  ///
+  /// The returned map mirrors a layer entry in a MapLibre style JSON: it
+  /// contains `id`, `type`, `source` (and `source-layer` when set), `minzoom`,
+  /// `maxzoom`, `filter`, and the `paint` and `layout` property objects keyed
+  /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
+  /// values are returned as JSON literals or expressions.
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
+    return _maplibrePlatform.getLayerProperties(layerId);
+  }
+
+  /// Returns the properties of the source with the given [sourceId] as a
+  /// MapLibre style-spec map, or null if no such source exists.
+  ///
+  /// The returned map mirrors a source entry in a MapLibre style JSON: it
+  /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
+  /// `data`, `attribution`, `minzoom`, `maxzoom`).
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) {
+    return _maplibrePlatform.getSourceProperties(sourceId);
+  }
+
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
   Future<bool?> getLayerVisibility(String layerId) {

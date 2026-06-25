@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -70,6 +72,58 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     }
   }
 
+  /// Reads the full style-spec properties of the first layer on the map,
+  /// demonstrating getLayerProperties (#513).
+  Future<void> _displayFirstLayerProperties() async {
+    if (_controller == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final ids = (await _controller!.getLayerIds()).cast<String>();
+      final props =
+          ids.isEmpty ? null : await _controller!.getLayerProperties(ids.first);
+      setState(() {
+        _displayData =
+            props == null
+                ? 'No layers found.'
+                : 'Layer "${ids.first}":\n'
+                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _displayData = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Reads the full style-spec properties of the first source on the map,
+  /// demonstrating getSourceProperties (#513).
+  Future<void> _displayFirstSourceProperties() async {
+    if (_controller == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final ids = await _controller!.getSourceIds();
+      final props =
+          ids.isEmpty
+              ? null
+              : await _controller!.getSourceProperties(ids.first);
+      setState(() {
+        _displayData =
+            props == null
+                ? 'No sources found.'
+                : 'Source "${ids.first}":\n'
+                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _displayData = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
@@ -104,6 +158,18 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                 onPressed: hasController ? _displaySources : null,
                 icon: Icons.source,
                 style: ExampleButtonStyle.filled,
+              ),
+              ExampleButton(
+                label: 'First Layer Props',
+                onPressed: hasController ? _displayFirstLayerProperties : null,
+                icon: Icons.data_object,
+                style: ExampleButtonStyle.outlined,
+              ),
+              ExampleButton(
+                label: 'First Source Props',
+                onPressed: hasController ? _displayFirstSourceProperties : null,
+                icon: Icons.data_object,
+                style: ExampleButtonStyle.outlined,
               ),
             ],
           ),

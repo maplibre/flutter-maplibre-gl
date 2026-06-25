@@ -34,6 +34,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.jetbrains.annotations.NotNull;
@@ -410,6 +411,40 @@ final class MapLibreMapController
     final Map<String, Object> arguments = new HashMap<>(1);
     arguments.put("userLocation", userLocation);
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
+  }
+
+  // Returns a reply map carrying the layer's MapLibre style-spec JSON under
+  // "properties" (the layer entry from the serialized style: id/type/source/
+  // paint/layout/...), or an empty map if the layer is absent. Reading the
+  // serialized style avoids enumerating every typed getter and guarantees the
+  // result matches the style spec, like the iOS and web implementations.
+  private Map<String, Object> getLayerProperties(String layerId) {
+    Map<String, Object> reply = new HashMap<>();
+    JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
+    JsonArray layers = styleJson.getAsJsonArray("layers");
+    if (layers != null) {
+      for (JsonElement element : layers) {
+        JsonObject layer = element.getAsJsonObject();
+        JsonElement id = layer.get("id");
+        if (id != null && layerId.equals(id.getAsString())) {
+          reply.put("properties", layer.toString());
+          break;
+        }
+      }
+    }
+    return reply;
+  }
+
+  // Same as getLayerProperties but for sources, which the style spec keys by id
+  // under the "sources" object rather than storing in an array.
+  private Map<String, Object> getSourceProperties(String sourceId) {
+    Map<String, Object> reply = new HashMap<>();
+    JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
+    JsonObject sources = styleJson.getAsJsonObject("sources");
+    if (sources != null && sources.has(sourceId)) {
+      reply.put("properties", sources.getAsJsonObject(sourceId).toString());
+    }
+    return reply;
   }
 
   private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
@@ -2002,6 +2037,32 @@ final class MapLibreMapController
 
         reply.put("sources", sourceIds);
         result.success(reply);
+        break;
+      }
+      case "style#getLayerProperties":
+      {
+        if (style == null || !style.isFullyLoaded()) {
+          result.error(
+                  "STYLE_NOT_READY",
+                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                  null);
+          break;
+        }
+        String layerId = call.argument("layerId");
+        result.success(getLayerProperties(layerId));
+        break;
+      }
+      case "style#getSourceProperties":
+      {
+        if (style == null || !style.isFullyLoaded()) {
+          result.error(
+                  "STYLE_NOT_READY",
+                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                  null);
+          break;
+        }
+        String sourceId = call.argument("sourceId");
+        result.success(getSourceProperties(sourceId));
         break;
       }
       case "style#setStyle":
