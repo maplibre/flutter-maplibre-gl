@@ -95,7 +95,7 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
       <td>Tile cost</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Free options</span></td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Free options</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Pay-per-use</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Free options</span></td>
     </tr>
   </tbody>
 </table>
@@ -137,7 +137,7 @@ flutter_map renders raster tiles (PNG/WebP) by default. It does not do vector st
 - You need **Google-specific features**: Street View, Places integration, Google traffic.
 - Your organization mandates Google services.
 
-Google Maps requires a paid key for production, has no offline support, and the style cannot be customized beyond basic color tweaks.
+The mobile Maps SDK (Android/iOS) is free with no map-load billing, though it still requires an API key and a billing account on file, and usage-based services (Places, Directions, the Maps JavaScript SDK for web) are billed beyond a monthly free credit. Google Maps also has no offline support, and the style cannot be customized beyond basic color tweaks.
 
 ## Performance at scale
 

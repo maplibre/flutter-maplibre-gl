@@ -41,7 +41,7 @@
   <script>
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol("pmtiles", protocol.tile);
-    const PMTILES_URL = "https://build.protomaps.com/20260625.pmtiles";
+    const PMTILES_URL = "https://demo-bucket.protomaps.com/v4.pmtiles";
     const source = new pmtiles.FetchSource(PMTILES_URL);
     protocol.add(new pmtiles.PMTiles(source));
   </script>
