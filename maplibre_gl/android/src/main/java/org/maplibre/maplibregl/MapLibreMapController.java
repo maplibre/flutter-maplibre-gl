@@ -733,7 +733,10 @@ final class MapLibreMapController
         return;
       }
 
-      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(dragEnabled);
+      // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
+      // that silently discards icons registered via addImage() in the same render frame.
+      // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
       GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
       addedFeaturesByLayer.put(sourceName, featureCollection);
 
@@ -1705,11 +1708,12 @@ final class MapLibreMapController
         case "layer#setProperties": {
           final String layerId = call.argument("layerId");
 
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
 
           Layer layer = style.getLayer(layerId);
@@ -1961,24 +1965,26 @@ final class MapLibreMapController
         }
       case "style#addImage":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
-          // Configure bitmap options to prevent density-based scaling
           BitmapFactory.Options options = new BitmapFactory.Options();
-          options.inScaled = false;       // Disable automatic scaling
-          options.inDensity = 0;          // No source density
-          options.inTargetDensity = 0;    // No target density
-          
+          options.inScaled = false;
+          options.inDensity = 0;
+          options.inTargetDensity = 0;
           Bitmap bitmap = BitmapFactory.decodeByteArray(
-              call.argument("bytes"), 
-              0, 
+              call.argument("bytes"),
+              0,
               call.argument("length"),
               options);
-          
+          if (bitmap == null) {
+            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+            break;
+          }
           style.addImage(
               call.argument("name"),
               bitmap,
@@ -1988,13 +1994,22 @@ final class MapLibreMapController
         }
       case "style#addImageSource":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
+          Bitmap addSourceBitmap = BitmapFactory.decodeByteArray(
+              call.argument("bytes"),
+              0,
+              call.argument("length"));
+          if (addSourceBitmap == null) {
+            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+            break;
+          }
           style.addSource(
               new ImageSource(
                   call.argument("imageSourceId"),
@@ -2003,18 +2018,18 @@ final class MapLibreMapController
                       coordinates.get(1),
                       coordinates.get(2),
                       coordinates.get(3)),
-                  BitmapFactory.decodeByteArray(
-                      call.argument("bytes"), 0, call.argument("length"))));
+                  addSourceBitmap));
           result.success(null);
           break;
         }
         case "style#updateImageSource":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           ImageSource imageSource = style.getSourceAs(call.argument("imageSourceId"));
           List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
@@ -2028,7 +2043,12 @@ final class MapLibreMapController
           }
           byte[] bytes = call.argument("bytes");
           if (bytes != null) {
-            imageSource.setImage(BitmapFactory.decodeByteArray(bytes, 0, call.argument("length")));
+            Bitmap updateBitmap = BitmapFactory.decodeByteArray(bytes, 0, call.argument("length"));
+            if (updateBitmap == null) {
+              result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+              break;
+            }
+            imageSource.setImage(updateBitmap);
           }
           result.success(null);
           break;
@@ -2044,11 +2064,12 @@ final class MapLibreMapController
 
       case "style#removeSource":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           style.removeSource((String) call.argument("sourceId"));
           result.success(null);
@@ -2096,11 +2117,12 @@ final class MapLibreMapController
         }
       case "style#removeLayer":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           String layerId = call.argument("layerId");
           style.removeLayer(layerId);
@@ -2131,11 +2153,12 @@ final class MapLibreMapController
         }
       case "style#setFilter":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           String layerId = call.argument("layerId");
           String filter = call.argument("filter");
@@ -2171,11 +2194,12 @@ final class MapLibreMapController
         }
         case "style#getFilter":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                    "STYLE IS NULL",
-                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    "STYLE_NOT_READY",
+                    "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                     null);
+            break;
           }
           Map<String, Object> reply = new HashMap<>();
           String layerId = call.argument("layerId");
@@ -2208,12 +2232,12 @@ final class MapLibreMapController
         }
         case "layer#setVisibility":
         {
-
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                "STYLE IS NULL",
-                "The style is null. Has onStyleLoaded() already been invoked?",
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                 null);
+            break;
           }
           String layerId = call.argument("layerId");
           boolean visible = call.argument("visible");
@@ -2268,11 +2292,12 @@ final class MapLibreMapController
         }
         case "style#getLayerIds":
         {
-          if (style == null) {
+          if (style == null || !style.isFullyLoaded()) {
             result.error(
-                    "STYLE IS NULL",
-                    "The style is null. Has onStyleLoaded() already been invoked?",
+                    "STYLE_NOT_READY",
+                    "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                     null);
+            break;
           }
           Map<String, Object> reply = new HashMap<>();
 
@@ -2287,11 +2312,12 @@ final class MapLibreMapController
         }
       case "style#getSourceIds":
       {
-        if (style == null) {
+        if (style == null || !style.isFullyLoaded()) {
           result.error(
-                  "STYLE IS NULL",
-                  "The style is null. Has onStyleLoaded() already been invoked?",
+                  "STYLE_NOT_READY",
+                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
                   null);
+          break;
         }
         Map<String, Object> reply = new HashMap<>();
 
@@ -2657,13 +2683,17 @@ final class MapLibreMapController
       startListeningForLocationUpdates();
     }
     // Force a repaint to fix invisible map when returning from background.
-    // Capture a local reference so the Runnable is safe if mapView is nulled
-    // before execution (e.g. by a concurrent dispose).
-    final MapView mv = mapView;
-    mv.post(new Runnable() {
+    // The runnable is dispatched after the message loop drains, by which time
+    // dispose() may have nulled mapView (e.g. a map hosted in a Dialog or
+    // BottomSheet that is dismissed mid-resume). Re-check disposed/mapView
+    // inside the runnable to mirror the guard at the top of onResume.
+    mapView.post(new Runnable() {
       @Override
       public void run() {
-        mv.invalidate();
+        if (disposed || mapView == null) {
+          return;
+        }
+        mapView.invalidate();
       }
     });
   }
@@ -2770,6 +2800,11 @@ final class MapLibreMapController
   @Override
   public void setZoomGesturesEnabled(boolean zoomGesturesEnabled) {
     mapLibreMap.getUiSettings().setZoomGesturesEnabled(zoomGesturesEnabled);
+  }
+
+  @Override
+  public void setDoubleClickZoomEnabled(boolean doubleClickZoomEnabled) {
+    mapLibreMap.getUiSettings().setDoubleTapGesturesEnabled(doubleClickZoomEnabled);
   }
 
   @Override
@@ -2923,6 +2958,13 @@ final class MapLibreMapController
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     // translucentTextureSurface is only useful during initial map creation
     // not for runtime updates, so this is a no-op
+  }
+
+  @Override
+  public void setUseHybridComposition(boolean useHybridComposition) {
+    // useHybridComposition selects the Platform-View backing (TextureView vs SurfaceView)
+    // and is only meaningful before the map's native view has been constructed.
+    // At runtime the chosen surface is fixed, so this is a no-op.
   }
 
   @Override

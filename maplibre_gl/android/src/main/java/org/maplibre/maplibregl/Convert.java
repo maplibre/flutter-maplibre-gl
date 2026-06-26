@@ -267,6 +267,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (zoomGesturesEnabled != null) {
       sink.setZoomGesturesEnabled(toBoolean(zoomGesturesEnabled));
     }
+    final Object doubleClickZoomEnabled = data.get("doubleClickZoomEnabled");
+    if (doubleClickZoomEnabled != null) {
+      sink.setDoubleClickZoomEnabled(toBoolean(doubleClickZoomEnabled));
+    }
     final Object myLocationEnabled = data.get("myLocationEnabled");
     if (myLocationEnabled != null) {
       sink.setMyLocationEnabled(toBoolean(myLocationEnabled));
@@ -316,6 +320,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     final Object foregroundLoadColor = data.get("foregroundLoadColor");
     if (foregroundLoadColor != null) {
       sink.setForegroundLoadColor(toInt(foregroundLoadColor));
+    }
+    final Object useHybridComposition = data.get("useHybridComposition");
+    if (useHybridComposition != null) {
+      sink.setUseHybridComposition(toBoolean(useHybridComposition));
     }
     final Object translucentTextureSurface = data.get("translucentTextureSurface");
     if (translucentTextureSurface != null) {

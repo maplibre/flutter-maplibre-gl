@@ -1,0 +1,98 @@
+name: Build example app
+
+# Reusable build job shared by Flutter CI (stable) and Flutter Beta CI.
+# Builds the example app for a single platform so callers can fan out across
+# android / ios / web without duplicating the setup boilerplate.
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Target platform: android | ios | web'
+        required: true
+        type: string
+      flutter-channel:
+        description: 'Flutter channel (stable, beta, ...)'
+        required: false
+        default: stable
+        type: string
+      web-release:
+        description: 'Build web in release mode with the Pages base-href and upload it for deploy reuse'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    name: "Build ${{ inputs.platform }}"
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        working-directory: maplibre_gl_example
+    steps:
+      - uses: actions/checkout@v6
+
+      # Android toolchain
+      - if: inputs.platform == 'android'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ inputs.flutter-channel }}
+          cache: true
+
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+
+      # iOS toolchain
+      - if: inputs.platform == 'ios'
+        uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          podfile-path: maplibre_gl_example/ios/Podfile.lock
+
+      # --- Builds ---
+      - if: inputs.platform == 'android'
+        name: Build example APK
+        run: flutter build apk
+      - if: inputs.platform == 'android'
+        name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: maplibre-flutter-demo.apk
+          path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
+
+      - if: inputs.platform == 'ios'
+        name: Build iOS package
+        run: flutter build ios --simulator
+      - if: inputs.platform == 'ios'
+        name: Upload Runner.app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: maplibre-flutter-demo.app
+          path: maplibre_gl_example/build/ios/iphonesimulator
+
+      - if: inputs.platform == 'web' && !inputs.web-release
+        name: Build web
+        run: flutter build web
+
+      # Release web build for the GitHub Pages demo. Uploaded so the deploy
+      # job can reuse it instead of building web a second time.
+      # Built with --wasm: the plugin's web side uses dart:js_interop, so it
+      # ships a WASM bundle (with an automatic JS fallback for browsers that
+      # lack WASM-GC). Only the deployed demo uses WASM; CI/PR web builds stay
+      # on the faster plain JS build above.
+      - if: inputs.platform == 'web' && inputs.web-release
+        name: Build web (release, WASM, Pages base-href)
+        run: flutter build web --wasm --release --base-href /flutter-maplibre-gl/demo/
+      - if: inputs.platform == 'web' && inputs.web-release
+        name: Upload web build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-demo
+          path: maplibre_gl_example/build/web
+          retention-days: 1

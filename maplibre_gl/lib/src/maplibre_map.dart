@@ -323,7 +323,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       Completer<MapLibreMapController>();
   MapLibreMapController? _mapController;
 
-  late _MapLibreMapOptions _maplibreMapOptions;
+  late MapLibreMapOptions _maplibreMapOptions;
   final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
 
   @override
@@ -336,7 +336,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       if (widget.initialCameraPosition != null)
         'initialCameraPosition': widget.initialCameraPosition!.toMap(),
       'styleString': widget.styleString,
-      'options': _MapLibreMapOptions.fromWidget(widget).toMap(),
+      'options': MapLibreMapOptions.fromWidget(widget).toMap(),
       'dragEnabled': widget.dragEnabled,
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
@@ -354,7 +354,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   void initState() {
     super.initState();
-    _maplibreMapOptions = _MapLibreMapOptions.fromWidget(widget);
+    _maplibreMapOptions = MapLibreMapOptions.fromWidget(widget);
   }
 
   @override
@@ -369,7 +369,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   void didUpdateWidget(MapLibreMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newOptions = _MapLibreMapOptions.fromWidget(widget);
+    final newOptions = MapLibreMapOptions.fromWidget(widget);
     final updates = _maplibreMapOptions.updatesMap(newOptions);
 
     if (updates.isNotEmpty) {
@@ -422,8 +422,12 @@ class _MapLibreMapState extends State<MapLibreMap> {
 ///
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
-class _MapLibreMapOptions {
-  _MapLibreMapOptions({
+///
+/// This class is exposed only for testing purposes; it is not intended to be
+/// used as part of the public API of this library.
+@visibleForTesting
+class MapLibreMapOptions {
+  MapLibreMapOptions({
     this.compassEnabled,
     this.cameraTargetBounds,
     this.styleString,
@@ -453,7 +457,7 @@ class _MapLibreMapOptions {
     this.featureTapsTriggersMapClick,
   });
 
-  _MapLibreMapOptions.fromWidget(MapLibreMap map)
+  MapLibreMapOptions.fromWidget(MapLibreMap map)
     : this(
         locationEnginePlatforms: map.locationEnginePlatforms,
         compassEnabled: map.compassEnabled,
@@ -599,7 +603,7 @@ class _MapLibreMapOptions {
     return optionsMap;
   }
 
-  Map<String, dynamic> updatesMap(_MapLibreMapOptions newOptions) {
+  Map<String, dynamic> updatesMap(MapLibreMapOptions newOptions) {
     final prevOptionsMap = toMap();
     final newOptionsMap = newOptions.toMap();
 
@@ -614,7 +618,12 @@ class _MapLibreMapOptions {
       if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
       final oldValue = prevOptionsMap[key];
       if (oldValue is List && value is List) {
-        return listEquals(oldValue, value);
+        // Use a deep equality check so that nested structures (e.g. the
+        // serialized `cameraTargetBounds`, which becomes a list of lists of
+        // lists) are compared by value. `listEquals` only compares the
+        // top-level elements with `==`, which always reports nested lists
+        // as unequal because Dart's `List` does not override `==`.
+        return const DeepCollectionEquality().equals(oldValue, value);
       }
       return oldValue == value;
     });

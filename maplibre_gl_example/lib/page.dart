@@ -28,4 +28,10 @@ abstract class ExamplePage extends StatelessWidget {
   final String title;
   final bool needsLocationPermission;
   final ExampleCategory category;
+
+  String get slug => title
+      .toLowerCase()
+      .replaceAll(RegExp('[^a-z0-9]+'), '-')
+      .replaceAll(RegExp('-+'), '-')
+      .replaceAll(RegExp(r'^-|-$'), '');
 }

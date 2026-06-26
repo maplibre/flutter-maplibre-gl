@@ -1,0 +1,1295 @@
+/* ============================================================
+   MapLibre Flutter, docs theme
+   Works WITH Material's responsive model:
+   - >=76.25em : persistent left sidebar (Material shows it natively)
+   - <76.25em  : Material's drawer + hamburger (do NOT hide it)
+   ============================================================ */
+
+/* ---------- Brand + neutral tokens ---------- */
+:root {
+  --ml-blue:        #1f6feb;   /* links, accents, active states */
+  --ml-blue-strong: #1a5fd0;
+  --ml-blue-soft:   #e9f1fd;   /* pale tint fills (light mode) */
+  --ml-navy:        #15233a;   /* header bar */
+  --ml-navy-deep:   #0f1a2c;
+  --ml-ink:         #1c2530;   /* body text */
+  --ml-muted:       #5b6776;   /* secondary text */
+  --ml-line:        #e7ebf0;   /* hairlines */
+
+  /* Material overrides */
+  --md-primary-fg-color:              var(--ml-navy);
+  --md-primary-fg-color--light:       #24365a;
+  --md-primary-fg-color--dark:        var(--ml-navy-deep);
+  --md-accent-fg-color:               var(--ml-blue);
+  --md-accent-fg-color--transparent:  rgba(31, 111, 235, 0.10);
+  --md-typeset-a-color:               var(--ml-blue);
+
+  --md-default-fg-color:              var(--ml-ink);
+  --md-default-fg-color--light:       var(--ml-muted);
+  --md-default-fg-color--lighter:     #aeb7c2;
+  --md-default-fg-color--lightest:    var(--ml-line);
+}
+
+[data-md-color-scheme="slate"] {
+  --ml-blue:        #4f9bff;
+  --ml-blue-strong: #6cabff;
+  --ml-blue-soft:   rgba(79, 155, 255, 0.12);
+  --ml-line:        rgba(255, 255, 255, 0.09);
+
+  --md-primary-fg-color:              #0f1a2c;
+  --md-primary-fg-color--light:       #18253c;
+  --md-accent-fg-color:               var(--ml-blue);
+  --md-typeset-a-color:               var(--ml-blue);
+
+  --md-default-bg-color:              #0d1420;
+  --md-default-fg-color:              #d7dde6;
+  --md-default-fg-color--light:       #9aa6b4;
+  --md-default-fg-color--lighter:     #5e6b7d;
+  --md-default-fg-color--lightest:    rgba(255, 255, 255, 0.09);
+  --md-code-bg-color:                 #131c2b;
+  --md-code-fg-color:                 #c9d3df;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+/* Material sets the root to 125% (20px), which inflates every rem-based size
+   across the whole theme (headings, sidebar, header, spacing). Drop it to a
+   tighter base so the ENTIRE UI gets more compact in one move. */
+html {
+  font-size: 112.5%;   /* 18px instead of Material's 20px */
+}
+
+body, .md-typeset {
+  font-feature-settings: "kern", "liga", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.md-typeset {
+  font-size: 0.85rem;   /* ~15.3px @ 18px root: comfortable docs body (WCAG) */
+  line-height: 1.7;
+  color: var(--md-default-fg-color);
+}
+
+/* Vertical rhythm: consistent spacing between blocks */
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol {
+  margin-top: 0.7em;
+  margin-bottom: 0.7em;
+}
+.md-typeset li { margin-bottom: 0.35em; }
+.md-typeset li > ul,
+.md-typeset li > ol { margin: 0.35em 0; }
+
+.md-typeset h1 {
+  font-size: 2rem;      /* ~36px */
+  font-weight: 800;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+  text-wrap: balance;
+  color: var(--md-default-fg-color);
+  margin: 0 0 0.9rem;
+}
+
+.md-typeset h2 {
+  font-size: 1.5rem;    /* ~27px */
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+  text-wrap: balance;
+  margin: 2em 0 0.7em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset h3 {
+  font-size: 1.2rem;    /* ~21.6px */
+  font-weight: 700;
+  letter-spacing: -0.006em;
+  margin: 1.5em 0 0.5em;
+}
+
+.md-typeset h4 {
+  font-size: 0.9rem;    /* ~16.2px, sits just above body */
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  text-transform: none;
+  color: var(--md-default-fg-color--light);
+  margin: 1.2em 0 0.4em;
+}
+
+/* A heading immediately after another heading shouldn't double the gap */
+.md-typeset h2 + h3,
+.md-typeset h3 + h4 { margin-top: 0.6em; }
+
+/* Inline code chips */
+.md-typeset code {
+  font-size: 0.88em;   /* ~13.5px: stays above the chip legibility floor */
+  border-radius: 5px;
+  padding: 0.12em 0.4em;
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+}
+.md-typeset pre > code {
+  border: none;
+  padding: 0;
+}
+.md-typeset pre > code,
+.md-typeset .highlight code {
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   CODE BLOCK CONTAINER — one seamless rounded panel.
+   Material paints the code background on `pre > code`. We move the panel
+   look onto `.highlight` itself (background + radius + overflow clip) and
+   make the inner title/pre/code transparent, so there is no seam and BOTH
+   top and bottom corners round. The code body is padded to align with title.
+   ============================================================ */
+.md-typeset .highlight {
+  background: var(--md-code-bg-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.md-typeset .highlight > .filename {
+  display: block;
+  margin: 0;
+  padding: 0.55rem 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+/* The scroll container (pre) must have NO padding, or it clips the right side
+   of the scrollable overflow. Padding goes on the code element so it scrolls
+   with the content; the code sizes to content width (min-width:100%) so
+   full-width line highlights fill every row. */
+.md-typeset .highlight > pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow-x: auto;
+}
+.md-typeset .highlight > pre > code {
+  display: inline-block;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1.1rem;
+  background: transparent;
+  border-radius: 0;
+}
+/* Plain fenced blocks that aren't wrapped in .highlight */
+.md-typeset > pre > code,
+.md-typeset p + pre > code {
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+}
+
+/* Links: subtle, underline on hover */
+.md-typeset a {
+  color: var(--md-typeset-a-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+.md-typeset a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================================
+   HEADER: calm navy bar
+   ============================================================ */
+.md-header {
+  background-color: var(--ml-navy);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+[data-md-color-scheme="slate"] .md-header {
+  background-color: var(--ml-navy-deep);
+  box-shadow: 0 1px 0 var(--ml-line);
+}
+
+/* A taller header bar so it doesn't feel cramped */
+.md-header__inner {
+  min-height: 3.4rem;
+}
+
+/* Tighten the gap between the logo button and the title, and enlarge the logo */
+.md-header__button.md-logo {
+  margin-right: 0;
+  padding-right: 0;
+}
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* GitHub repo info (name + stars/forks): a touch larger so it reads clearly */
+.md-source {
+  font-size: 0.78rem;
+}
+.md-source__repository {
+  font-size: 0.78rem;
+}
+.md-header__title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  margin-left: 0;
+}
+
+/* Tabs row: tucked under the header, lowercase-feel, calm */
+.md-tabs {
+  background-color: var(--ml-navy);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: var(--ml-navy-deep);
+}
+.md-tabs__list { padding-left: 0; }
+.md-tabs__item { height: 2.8rem; }
+.md-tabs__item .md-tabs__link {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 2.8rem;
+}
+.md-tabs__link {
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  opacity: 0.72;
+  transition: opacity 120ms;
+}
+.md-tabs__link:hover { opacity: 1; }
+.md-tabs__link--active {
+  opacity: 1;
+  font-weight: 600;
+  position: relative;
+}
+.md-tabs__link--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0.45rem;
+  height: 2px;
+  background: var(--ml-blue);
+  border-radius: 2px;
+}
+
+/* ---------- Search box: modern, subtle-bordered pill ---------- */
+.md-search__form {
+  position: relative;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.md-search__form:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.md-search__input {
+  font-size: 0.9rem;
+}
+.md-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+/* The search icon, slightly dimmer so the field reads calm */
+.md-search__icon[for="__search"] {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* "⌘K" keyboard hint chip on the right of the collapsed field.
+   Material renders no persistent hint, so we add one via ::after. It hides
+   once the field is focused/expanded (the input grows over it). */
+.md-search__form::after {
+  content: "⌘K";
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  padding: 0.12rem 0.4rem;
+  pointer-events: none;
+  transition: opacity 100ms ease;
+}
+/* Hide the hint once the search is active (Material toggles this on focus)
+   so it never overlaps typed text */
+[data-md-toggle="search"]:checked ~ .md-header .md-search__form::after {
+  opacity: 0;
+}
+
+/* ============================================================
+   LEFT SIDEBAR: persistent panel at wide widths only
+   ============================================================ */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary {
+    border-right: 1px solid var(--md-default-fg-color--lightest);
+  }
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    margin: 0;
+  }
+}
+
+/* Section headers in the sidebar. Material makes the primary-sidebar title
+   position:sticky; without an opaque background the scrolling nav items show
+   THROUGH it and overlap the text. Give it a solid background + z-index. */
+.md-nav__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.md-sidebar--primary .md-nav__title,
+.md-sidebar--secondary .md-nav__title {
+  background: var(--md-default-bg-color);
+  position: relative;
+  z-index: 1;
+}
+
+.md-nav {
+  font-size: 0.78rem;
+}
+
+/* Custom sidebar styling (pills, section-as-divider) applies ONLY to the
+   wide-screen persistent sidebar. Below 76.25em Material switches to the
+   slide-out DRAWER, where `navigation.sections` renders sections as
+   expandable accordion LEVELS. Styling section links as static dividers
+   (pointer-events:none) there breaks the drawer, so keep Material's default. */
+@media screen and (min-width: 76.25em) {
+  /* Leaf links (pages): full-width rounded pills (josxha-style). */
+  .md-nav--primary .md-nav__link {
+    border-radius: 8px;
+    padding: 0.42rem 0.7rem;
+    margin: 2px 0;
+    color: var(--md-default-fg-color--light);
+    transition: background 110ms ease, color 110ms ease;
+  }
+  .md-nav--primary .md-nav__link:hover {
+    background: var(--md-default-fg-color--lightest);
+    color: var(--md-default-fg-color);
+  }
+  [data-md-color-scheme="slate"] .md-nav--primary .md-nav__link:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Active PAGE: solid blue-tint pill, blue text. */
+  .md-nav--primary .md-nav__item:not(.md-nav__item--section) > .md-nav__link--active,
+  .md-nav--primary .md-nav__item--active:not(.md-nav__item--section) > .md-nav__link {
+    color: var(--ml-blue) !important;
+    font-weight: 600;
+    background: var(--ml-blue-soft);
+  }
+  .md-nav--primary .md-nav__item:not(.md-nav__item--section) > .md-nav__link--active:hover,
+  .md-nav--primary .md-nav__item--active:not(.md-nav__item--section) > .md-nav__link:hover {
+    background: var(--ml-blue-soft);
+  }
+
+  /* SECTION HEADERS: pure labels, never a box. A divider, not a row. */
+  .md-nav--primary .md-nav__item--section > .md-nav__link {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--md-default-fg-color--lighter);
+    margin: 1.4em 0 0.25em;
+    padding: 0 0.2rem;
+    border-radius: 0;
+    background: none !important;
+    box-shadow: none !important;
+    cursor: default;
+    pointer-events: none;
+  }
+  .md-nav--primary .md-nav__item--section > .md-nav__link:hover {
+    background: none !important;
+    color: var(--md-default-fg-color--lighter);
+  }
+
+  /* ---- Per-page nav icons. The slot only appears for links that set
+     --nav-ic below; mask-image inherits currentColor so the icon matches
+     the link's default / hover / active color automatically. ---- */
+  .md-nav--primary .md-nav__link::before { content: none; }
+
+  /* The ACTIVE page renders its own link as href="./" (no slug), so the
+     per-slug icon below can't match it. Material does, however, mark it
+     --active. Give it a filled "you are here" dot so it is never blank and
+     reads clearly as the current page. */
+  .md-nav--primary .md-nav__link--active::before {
+    content: "";
+    display: inline-block;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-right: 0.55rem;
+    vertical-align: -0.2rem;
+    flex: none;
+    background: currentColor;
+    -webkit-mask: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%20fill%3D%22black%22/%3E%3C/svg%3E') center / contain no-repeat;
+    mask: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%20fill%3D%22black%22/%3E%3C/svg%3E') center / contain no-repeat;
+  }
+
+  .md-nav--primary .md-nav__link[href$="/getting-started/"]::before,
+  .md-nav--primary .md-nav__link[href$="/migration/"]::before,
+  .md-nav--primary .md-nav__link[href$="/architecture/"]::before,
+  .md-nav--primary .md-nav__link[href$="/annotations-vs-layers/"]::before,
+  .md-nav--primary .md-nav__link[href$="/geojson/"]::before,
+  .md-nav--primary .md-nav__link[href$="/styles/"]::before,
+  .md-nav--primary .md-nav__link[href$="/camera-controls/"]::before,
+  .md-nav--primary .md-nav__link[href$="/camera-bounds/"]::before,
+  .md-nav--primary .md-nav__link[href$="/markers/"]::before,
+  .md-nav--primary .md-nav__link[href$="/animated/"]::before,
+  .md-nav--primary .md-nav__link[href$="/draggable/"]::before,
+  .md-nav--primary .md-nav__link[href$="/symbol-layer/"]::before,
+  .md-nav--primary .md-nav__link[href$="/circle-layer/"]::before,
+  .md-nav--primary .md-nav__link[href$="/fill-layer/"]::before,
+  .md-nav--primary .md-nav__link[href$="/line-layer/"]::before,
+  .md-nav--primary .md-nav__link[href$="/heatmap/"]::before,
+  .md-nav--primary .md-nav__link[href$="/cluster/"]::before,
+  .md-nav--primary .md-nav__link[href$="/geojson-source/"]::before,
+  .md-nav--primary .md-nav__link[href$="/various-sources/"]::before,
+  .md-nav--primary .md-nav__link[href$="/pmtiles/"]::before,
+  .md-nav--primary .md-nav__link[href$="/offline-regions/"]::before,
+  .md-nav--primary .md-nav__link[href$="/map-language/"]::before,
+  .md-nav--primary .md-nav__link[href$="/snapshot/"]::before,
+  .md-nav--primary .md-nav__link[href$="/expressions/"]::before,
+  .md-nav--primary .md-nav__link[href$="/why-maplibre/"]::before,
+  .md-nav--primary .md-nav__link[href$="/feature-matrix/"]::before,
+  .md-nav--primary .md-nav__link[href$="/api/"]::before {
+    content: "";
+    display: inline-block;
+    width: 1.05rem; height: 1.05rem;
+    margin-right: 0.55rem;
+    vertical-align: -0.2rem;
+    background-color: currentColor;
+    -webkit-mask: var(--nav-ic) center / contain no-repeat;
+    mask: var(--nav-ic) center / contain no-repeat;
+    opacity: 0.85; flex: none;
+  }
+  .md-nav--primary .md-nav__link[href$="/getting-started/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2012h14M13%206l6%206-6%206%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/migration/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M8%203%204%207l4%204%22/%3E%3Cpath%20d%3D%22M4%207h16%22/%3E%3Cpath%20d%3D%22m16%2021%204-4-4-4%22/%3E%3Cpath%20d%3D%22M20%2017H4%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/architecture/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2021h18%22/%3E%3Cpath%20d%3D%22M5%2021V7l8-4v18%22/%3E%3Cpath%20d%3D%22M19%2021V11l-6-4%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/annotations-vs-layers/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%202%202%207l10%205%2010-5-10-5Z%22/%3E%3Cpath%20d%3D%22m2%2017%2010%205%2010-5%22/%3E%3Cpath%20d%3D%22m2%2012%2010%205%2010-5%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/geojson/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2010c0%206-8%2012-8%2012s-8-6-8-12a8%208%200%200%201%2016%200Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2210%22%20r%3D%223%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/styles/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2213.5%22%20cy%3D%226.5%22%20r%3D%222.5%22/%3E%3Ccircle%20cx%3D%2217.5%22%20cy%3D%2210.5%22%20r%3D%222.5%22/%3E%3Ccircle%20cx%3D%228.5%22%20cy%3D%227.5%22%20r%3D%222.5%22/%3E%3Ccircle%20cx%3D%226.5%22%20cy%3D%2212.5%22%20r%3D%222.5%22/%3E%3Cpath%20d%3D%22M12%202a10%2010%200%200%200%200%2020%202.5%202.5%200%200%200%202-4%202.5%202.5%200%200%201%202-4h2a4%204%200%200%200%204-4%2010%2010%200%200%200-10-8Z%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/camera-controls/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M14.5%204h-5L7%207H4a2%202%200%200%200-2%202v9a2%202%200%200%200%202%202h16a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2h-3l-2.5-3Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213%22%20r%3D%223%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/camera-bounds/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%207V5a2%202%200%200%201%202-2h2M17%203h2a2%202%200%200%201%202%202v2M21%2017v2a2%202%200%200%201-2%202h-2M7%2021H5a2%202%200%200%201-2-2v-2%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/markers/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%2010c0%206-8%2012-8%2012s-8-6-8-12a8%208%200%200%201%2016%200Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2210%22%20r%3D%223%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/animated/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%203%2014%209-14%209V3Z%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/draggable/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%209%202%2012l3%203M9%205l3-3%203%203M15%2019l-3%203-3-3M19%209l3%203-3%203M2%2012h20M12%202v20%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/symbol-layer/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%207V4h16v3M9%2020h6M12%204v16%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/circle-layer/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/fill-layer/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%222%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/line-layer/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2017%209%2011l4%204%208-8%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/heatmap/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%226%22/%3E%3Cpath%20d%3D%22M12%202v2M12%2020v2M2%2012h2M20%2012h2%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/cluster/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%229%22%20r%3D%223%22/%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%228%22%20r%3D%222.5%22/%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2216%22%20r%3D%223.5%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/geojson-source/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M8%203H7a2%202%200%200%200-2%202v5a2%202%200%200%201-2%202%202%202%200%200%201%202%202v5a2%202%200%200%200%202%202h1M16%203h1a2%202%200%200%201%202%202v5a2%202%200%200%200%202%202%202%202%200%200%200-2%202v5a2%202%200%200%201-2%202h-1%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/various-sources/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2212%22%20cy%3D%225%22%20rx%3D%229%22%20ry%3D%223%22/%3E%3Cpath%20d%3D%22M3%205v14a9%203%200%200%200%2018%200V5M3%2012a9%203%200%200%200%2018%200%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/pmtiles/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2212%22%20cy%3D%225%22%20rx%3D%229%22%20ry%3D%223%22/%3E%3Cpath%20d%3D%22M3%205v14a9%203%200%200%200%2018%200V5%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/offline-regions/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012.5a9%209%200%201%201-9-9M16%203h5v5%22/%3E%3Cpath%20d%3D%22m21%203-7%207%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/map-language/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22/%3E%3Cpath%20d%3D%22M3%2012h18M12%203a15%2015%200%200%201%200%2018%2015%2015%200%200%201%200-18Z%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/snapshot/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M14.5%204h-5L7%207H4a2%202%200%200%200-2%202v9a2%202%200%200%200%202%202h16a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2h-3l-2.5-3Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213%22%20r%3D%223%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/expressions/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m18%2016%204-4-4-4M6%208l-4%204%204%204M14.5%204l-5%2016%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/why-maplibre/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%2018%2022%2012%2016%206M8%206%202%2012l6%206%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/feature-matrix/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%203h18v18H3zM3%209h18M3%2015h18M9%203v18M15%203v18%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/api/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M10%2013a5%205%200%200%200%207%200l3-3a5%205%200%200%200-7-7l-1%201M14%2011a5%205%200%200%200-7%200l-3%203a5%205%200%200%200%207%207l1-1%22/%3E%3C/svg%3E'); }
+
+}
+
+/* ============================================================
+   CONTENT WIDTH + RHYTHM
+   ============================================================ */
+/* Material caps .md-grid (.md-main__inner) at 61rem and centers it, which
+   leaves big empty gutters and pushes content toward the middle. Widen the
+   grid so the 3-column layout (sidebar | content | toc) uses more of the
+   viewport, like josxha — content then sits closer to the left/right edges
+   and reads better. min-width:0 still prevents horizontal overflow. */
+.md-grid {
+  max-width: 80rem;
+}
+.md-content { min-width: 0; }
+.md-content__inner { min-width: 0; }
+
+.md-content__inner {
+  margin: 1.4rem 1.2rem 2.4rem;
+}
+@media screen and (min-width: 60em) {
+  .md-content__inner {
+    max-width: none;
+    margin-left: 1.6rem;
+    margin-right: 1.6rem;
+  }
+}
+
+/* Pages WITH a left nav sidebar (Docs, Compare, API) cap the content column
+   and left-anchor it, so the text starts at the same place and reads at the
+   same width regardless of whether the right TOC column is shown. Without
+   this, a page whose TOC is hidden (e.g. the childless "API Reference") lets
+   max-width:none stretch content into the empty right gutter, shifting it
+   right. The HOME page has its primary sidebar [hidden] (no nav), so it is
+   excluded here and keeps the full-width hero layout. */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary:not([hidden]) ~ .md-content > .md-content__inner {
+    max-width: 46rem;
+    /* Pin BOTH margins to fixed values. margin-right:auto previously let the
+       box re-distribute leftover space, so on a page with a short TOC (API)
+       the left edge drifted a few px vs a content-rich page (Compare). Fixed
+       margins anchor the left edge deterministically across all nav pages. */
+    margin-left: 1.6rem;
+    margin-right: 1.2rem;
+  }
+}
+
+.md-typeset ul,
+.md-typeset ol { margin-left: 0.2em; }
+
+/* ============================================================
+   HIGHLIGHTED CODE LINES (hl_lines) — brand-blue band + left bar.
+   The code element is sized to content width in the CODE BLOCK CONTAINER
+   section above (display:inline-block; min-width:100%), so this block-level
+   band fills the whole row. display:block keeps it exactly one line, so it
+   never bleeds onto a blank line and never stops short on the right.
+   ============================================================ */
+.md-typeset .highlight .hll {
+  display: block;
+  margin: 0 -1.1rem;
+  padding: 0 1.1rem;
+  background: rgba(31, 111, 235, 0.12);
+  box-shadow: inset 3px 0 0 var(--ml-blue);
+}
+[data-md-color-scheme="slate"] .md-typeset .highlight .hll {
+  background: rgba(79, 155, 255, 0.14);
+}
+
+/* ============================================================
+   CONTENT TABS (pymdownx.tabbed) — brand-blue active label
+   ============================================================ */
+.md-typeset .tabbed-set > label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+  transition: color 120ms;
+}
+.md-typeset .tabbed-set > label:hover {
+  color: var(--ml-blue);
+}
+.md-typeset .tabbed-set > input:checked + label {
+  color: var(--ml-blue);
+  border-color: var(--ml-blue);
+}
+.md-typeset .tabbed-labels {
+  box-shadow: inset 0 -1px 0 var(--md-default-fg-color--lightest);
+}
+/* Material draws the active-tab underline; tint it brand blue */
+.js .md-typeset .tabbed-labels::before {
+  background: var(--ml-blue);
+}
+
+/* ============================================================
+   LIVE EXAMPLE IFRAMES
+   ============================================================ */
+.example-iframe {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 560px;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 12px;
+  box-shadow: 0 6px 28px rgba(15, 26, 44, 0.10);
+  margin: 1.6rem 0 2rem;
+  display: block;
+  background: var(--md-code-bg-color);
+}
+[data-md-color-scheme="slate"] .example-iframe {
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   ADMONITIONS
+   ============================================================ */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 10px;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left-width: 3px;
+  font-size: 0.79rem;
+  box-shadow: none;
+}
+
+/* ============================================================
+   TABLES — one unified style for EVERY table on the site.
+   Plain Markdown tables and the .comparison-table HTML tables share the
+   exact same look: navy header, zebra rows, hairline borders, rounded.
+   ============================================================ */
+.md-typeset table:not([class]),
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.79rem;
+  margin: 1rem 0 1.4rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  box-shadow: none;
+  display: table;
+}
+.md-typeset table:not([class]) th,
+.comparison-table th {
+  background: var(--ml-navy);
+  color: #fff;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  font-weight: 700;
+  border: none;
+}
+.md-typeset table:not([class]) td,
+.comparison-table td {
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  vertical-align: middle;
+}
+.md-typeset table:not([class]) tr:nth-child(even) td,
+.comparison-table tr:nth-child(even) td {
+  background: var(--md-code-bg-color);
+}
+.md-typeset table:not([class]) td:first-child,
+.comparison-table td:first-child {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+
+/* ============================================================
+   MERMAID DIAGRAMS
+   ============================================================ */
+.md-typeset .mermaid {
+  margin: 1.4rem 0 1.8rem;
+}
+
+/* Brand-blue "emphasis"/"root" nodes: force WHITE label text in BOTH themes.
+   Mermaid renders labels as HTML (foreignObject); its base theme writes a dark
+   text color that, in LIGHT mode, makes the label unreadable on the blue fill.
+
+   We use [class*="emphasis"] / [class*="root"] attribute-substring matches so
+   the rule lands even if Mermaid prefixes the classDef name, and we hit EVERY
+   element type a label can use (text, tspan, span, p, div, .nodeLabel, .label).
+   !important beats both Mermaid's generated styles and Material's
+   --md-mermaid-node-fg-color variable. */
+.mermaid [class*="emphasis"] text,
+.mermaid [class*="emphasis"] tspan,
+.mermaid [class*="emphasis"] span,
+.mermaid [class*="emphasis"] p,
+.mermaid [class*="emphasis"] div,
+.mermaid [class*="emphasis"] .nodeLabel,
+.mermaid [class*="emphasis"] .label,
+.mermaid [class*="emphasis"] foreignObject *,
+.mermaid [class*="root"] text,
+.mermaid [class*="root"] tspan,
+.mermaid [class*="root"] span,
+.mermaid [class*="root"] p,
+.mermaid [class*="root"] div,
+.mermaid [class*="root"] .nodeLabel,
+.mermaid [class*="root"] .label,
+.mermaid [class*="root"] foreignObject * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+.mermaid [class*="emphasis"] small,
+.mermaid [class*="root"] small {
+  color: rgba(255, 255, 255, 0.85) !important;
+  fill: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Secondary nodes (no classDef) follow Material's palette automatically,
+   but pin a readable label color per theme so the small sub-labels never
+   wash out against the auto-themed node fill. */
+.mermaid .node .nodeLabel small { opacity: 0.78; }
+
+/* ============================================================
+   COMPARISON TABLE — base look is shared with plain tables above.
+   This section only adds the icon-cell + variant behavior.
+   ============================================================ */
+/* Icon + label cells. The cell stays a real table-cell (never flex, or the
+   grid collapses).
+
+   DEFAULT (comparison tables with prose labels, e.g. "Yes (name:en, ...)"):
+   icon sits INLINE before the text, which flows and wraps normally. This is
+   the only layout that survives long labels with <code> chips.
+
+   STACKED (matrix / centered variants with SHORT platform labels): the badge
+   sits on top and the short label ("Limited", "Yes") centers underneath. */
+/* Icon + wrapping text. Plain inline flow: the badge sits inline before the
+   label, and the label wraps naturally like any prose. This survives long
+   labels with <code> chips (e.g. "Manual (queryRenderedFeatures)") where a
+   rigid two-column grid would squeeze the chip into a too-narrow column and
+   break it mid-token. */
+.comparison-table .cell-ic {
+  display: inline;
+  text-align: left;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+.comparison-table .cell-ic .ic {
+  margin-right: 0.35rem;
+  flex: none;
+}
+/* Keep code chips inside cells on one line so they never break mid-identifier */
+.comparison-table .cell-ic code {
+  white-space: nowrap;
+}
+
+/* Stacked layout: only where labels are short (platform matrices) */
+.comparison-table--matrix td:has(.cell-ic),
+.comparison-table--centered td:has(.cell-ic) {
+  text-align: center;
+  vertical-align: middle;
+}
+.comparison-table--matrix .cell-ic,
+.comparison-table--centered .cell-ic {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  line-height: 1.3;
+  margin: 0 auto;
+}
+.comparison-table--matrix .cell-ic .ic,
+.comparison-table--centered .cell-ic .ic {
+  margin-right: 0;
+  vertical-align: middle;
+}
+/* Legacy text classes (kept for any inline use) */
+.check   { color: #16a34a; font-weight: 700; }
+.cross   { color: #dc2626; font-weight: 700; }
+.partial { color: #d97706; font-weight: 700; }
+[data-md-color-scheme="slate"] .check { color: #4ade80; }
+[data-md-color-scheme="slate"] .cross { color: #f87171; }
+[data-md-color-scheme="slate"] .partial { color: #fbbf24; }
+
+/* ---------- Icon badges for comparison cells ---------- */
+.ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  flex: none;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+.ic--yes { background: rgba(22, 163, 74, 0.16);  color: #15803d; }
+.ic--no  { background: rgba(220, 38, 38, 0.14);  color: #dc2626; }
+.ic--mid { background: rgba(217, 119, 6, 0.16);  color: #b45309; }
+[data-md-color-scheme="slate"] .ic--yes { background: rgba(74, 222, 128, 0.18); color: #4ade80; }
+[data-md-color-scheme="slate"] .ic--no  { background: rgba(248, 113, 113, 0.18); color: #f87171; }
+[data-md-color-scheme="slate"] .ic--mid { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+
+/* Legend line under a table: icon + label pairs vertically centered */
+.md-typeset .legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--md-default-fg-color--light);
+  margin: 0.9rem 0 1.8rem;
+}
+/* When the legend sits directly under a table, pull it a touch closer */
+.md-typeset .table-scroll + .legend,
+.md-typeset table + .legend {
+  margin-top: 0.4rem;
+}
+.md-typeset .legend .ic {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+/* Platform-matrix variant: center the platform columns */
+.comparison-table--matrix th:not(:first-child),
+.comparison-table--matrix td:not(:first-child) {
+  text-align: center;
+  width: 5.5rem;
+}
+.comparison-table--matrix .ic { margin-right: 0; }
+
+/* Centered variant: no label column, so ALL columns are equal-width and
+   centered. table-layout:fixed forces equal widths regardless of header text
+   length (otherwise "Android" makes column 1 wider than "iOS"/"Web"). */
+.comparison-table--centered {
+  table-layout: fixed;
+}
+.comparison-table--centered th,
+.comparison-table--centered td {
+  text-align: center;
+  width: auto;
+}
+.comparison-table--centered td:first-child { font-weight: 400; }
+.comparison-table--centered .cell-ic { margin: 0 auto; }
+
+/* Wrap wide custom tables so the page never scrolls sideways */
+.table-scroll {
+  overflow-x: auto;
+  margin: 1rem 0 1.4rem;
+}
+.table-scroll .comparison-table { margin: 0; }
+
+/* A table right after its heading: tighten the gap so they read as a pair */
+.md-typeset h2 + .table-scroll,
+.md-typeset h3 + .table-scroll,
+.md-typeset h2 + table,
+.md-typeset h3 + table { margin-top: 0.5rem; }
+
+/* ============================================================
+   CODE COMPARE (side-by-side)
+   ============================================================ */
+.code-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+.code-compare > div { min-width: 0; }
+@media screen and (max-width: 50em) {
+  .code-compare { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   DECISION GRID — two "when to use" cards with green check bullets
+   ============================================================ */
+.decision-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.4rem 0;
+}
+.decision-card {
+  min-width: 0;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+}
+.decision-card > :first-child { margin-top: 0; }
+.decision-card > :last-child { margin-bottom: 0; }
+.md-typeset .decision-card h4 {
+  font-size: 0.9rem;
+  margin: 0 0 0.7rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+/* Green-check bullets instead of default list markers */
+.md-typeset .decision-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.md-typeset .decision-card li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.md-typeset .decision-card li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  width: 0.95rem;
+  height: 0.95rem;
+  background: #16a34a;
+  -webkit-mask: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%206%209%2017l-5-5%22/%3E%3C/svg%3E') center / contain no-repeat;
+  mask: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%206%209%2017l-5-5%22/%3E%3C/svg%3E') center / contain no-repeat;
+}
+[data-md-color-scheme="slate"] .md-typeset .decision-card li::before { background: #4ade80; }
+
+@media screen and (max-width: 50em) {
+  .decision-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   HOME PAGE: hero
+   ============================================================ */
+.hero {
+  text-align: center;
+  padding: 3.2rem 1rem 0.5rem;
+  max-width: 44rem;
+  margin: 0 auto;
+  overflow-wrap: break-word;
+}
+.hero__eyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ml-blue);
+  margin-bottom: 1rem;
+}
+.md-typeset .hero h1,
+.hero h1 {
+  font-size: clamp(1.75rem, 7vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  border: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.hero__tagline {
+  font-size: 1.02rem;
+  color: var(--md-default-fg-color--light);
+  margin: 0 auto 1.6rem;
+  max-width: 34rem;
+  line-height: 1.55;
+  text-wrap: balance;
+}
+
+/* Platform + shield badges */
+.badge-row {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+.platform-badge--android {
+  background: rgba(22, 163, 74, 0.10);
+  color: #15803d;
+  border-color: rgba(22, 163, 74, 0.22);
+}
+.platform-badge--ios {
+  background: rgba(100, 116, 139, 0.10);
+  color: var(--md-default-fg-color--light);
+  border-color: rgba(100, 116, 139, 0.20);
+}
+.platform-badge--web {
+  background: var(--ml-blue-soft);
+  color: var(--ml-blue);
+  border-color: rgba(31, 111, 235, 0.22);
+}
+[data-md-color-scheme="slate"] .platform-badge--android { color: #4ade80; }
+[data-md-color-scheme="slate"] .platform-badge--web { color: var(--ml-blue); }
+
+.badge-row img { height: 1.3rem; }
+
+/* CTA buttons */
+.cta-row {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 0.5rem;
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.62rem 1.3rem;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  text-decoration: none !important;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.cta-btn--primary {
+  background: var(--ml-blue);
+  color: #fff !important;
+  box-shadow: 0 2px 10px rgba(31, 111, 235, 0.30);
+}
+.cta-btn--primary:hover {
+  background: var(--ml-blue-strong);
+  box-shadow: 0 4px 16px rgba(31, 111, 235, 0.40);
+  transform: translateY(-1px);
+}
+.cta-btn--secondary {
+  border: 1px solid var(--md-default-fg-color--lighter);
+  color: var(--md-default-fg-color) !important;
+  background: transparent;
+}
+.cta-btn--secondary:hover {
+  border-color: var(--ml-blue);
+  color: var(--ml-blue) !important;
+  transform: translateY(-1px);
+}
+
+/* External-link glyph on CTAs that leave the site. Inherits the button color. */
+.cta-btn .ext-icon {
+  width: 0.85em;
+  height: 0.85em;
+  margin-left: -0.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  flex: none;
+}
+.cta-btn:hover .ext-icon { opacity: 1; }
+
+/* "Live demo" CTA: a glassy blue-tinted button with a pulsing "live" dot,
+   so it reads as a try-it-now action distinct from the plain GitHub button. */
+.cta-btn--demo {
+  position: relative;
+  color: var(--ml-blue) !important;
+  background: var(--ml-blue-soft);
+  border: 1px solid rgba(31, 111, 235, 0.35);
+  overflow: hidden;
+}
+.cta-btn--demo:hover {
+  border-color: var(--ml-blue);
+  box-shadow: 0 4px 16px rgba(31, 111, 235, 0.28);
+  transform: translateY(-1px);
+}
+[data-md-color-scheme="slate"] .cta-btn--demo {
+  border-color: rgba(79, 155, 255, 0.4);
+}
+
+/* Pulsing live dot */
+.cta-btn--demo .live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #22c55e;
+  flex: none;
+  position: relative;
+}
+.cta-btn--demo .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes live-ping {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  75%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Sheen sweep on hover to draw the eye */
+.cta-btn--demo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-18deg);
+  transition: left 600ms ease;
+}
+.cta-btn--demo:hover::before { left: 140%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-btn--demo .live-dot::after { animation: none; }
+  .cta-btn--demo::before { display: none; }
+}
+
+/* ============================================================
+   SECTION LABEL (home dividers)
+   ============================================================ */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 3rem 0 1.2rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.section-label::before,
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--md-default-fg-color--lightest);
+}
+
+/* ============================================================
+   FEATURE GRID + CARDS
+   ============================================================ */
+.feature-grid {
+  display: grid;
+  /* Both feature grids hold 6 cards. auto-fit packed them as 4+2 (lopsided);
+     a fixed 3 columns gives a balanced 3x2 on desktop. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+  margin: 1.4rem 0;
+}
+/* Tablet: 2 columns (3x2 -> 2x3) before collapsing to a single column */
+@media screen and (max-width: 60em) {
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.feature-card {
+  background: var(--md-default-bg-color);
+  border-radius: 12px;
+  padding: 1.2rem 1.15rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  transition: border-color 140ms, box-shadow 140ms, transform 140ms;
+}
+.feature-card:hover {
+  border-color: rgba(31, 111, 235, 0.35);
+  box-shadow: 0 4px 18px rgba(15, 26, 44, 0.08);
+  transform: translateY(-2px);
+}
+.feature-card__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.feature-card__title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.3rem;
+  color: var(--md-default-fg-color);
+}
+.feature-card__title a {
+  color: var(--ml-blue) !important;
+  text-decoration: none !important;
+}
+.feature-card__title a:hover { text-decoration: underline !important; }
+.feature-card__desc {
+  font-size: 0.79rem;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   QUICK-START callout
+   ============================================================ */
+.quickstart-block {
+  background: var(--ml-blue-soft);
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem;
+  margin: 1.4rem 0;
+  border: 1px solid rgba(31, 111, 235, 0.16);
+}
+[data-md-color-scheme="slate"] .quickstart-block {
+  border-color: rgba(79, 155, 255, 0.22);
+}
+.quickstart-block > :first-child { margin-top: 0; }
+.quickstart-block > :last-child { margin-bottom: 0; }
+
+/* Tighten step label -> its code block: the bold "1. Add the dependency"
+   line should sit right on top of the code, not float above it. */
+.quickstart-block p {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+.quickstart-block .highlight,
+.quickstart-block pre {
+  margin: 0 0 1.25rem;   /* gap BELOW each code block separates the steps */
+}
+.quickstart-block > p:not(:first-child) {
+  margin-top: 0.25rem;   /* small lead-in above step 2+ labels */
+}
+.quickstart-block > p:last-of-type {
+  margin-top: 0.9rem;    /* the trailing "See Installation & Setup" line */
+  font-weight: 400;
+}
+
+/* ============================================================
+   CLIPBOARD TOAST ("Copied to clipboard")
+   Material paints the dialog with the accent color (our blue) as background,
+   but the text inherits an accent/link color too, so it reads blue-on-blue
+   and is invisible. Force white text on the blue pill.
+   ============================================================ */
+.md-dialog {
+  background: var(--ml-blue);
+  border-radius: 10px;   /* match cards / code blocks across the site */
+  box-shadow: 0 4px 18px rgba(31, 111, 235, 0.35);
+}
+.md-dialog__inner {
+  color: #fff;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.md-footer { background: var(--ml-navy); }
+.md-footer-meta { background: var(--ml-navy-deep); }
+[data-md-color-scheme="slate"] .md-footer { background: var(--ml-navy-deep); }
+[data-md-color-scheme="slate"] .md-footer-meta { background: #0a121f; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media screen and (max-width: 50em) {
+  .hero { padding-top: 2.2rem; }
+  .hero h1 { letter-spacing: -0.02em; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .example-iframe { aspect-ratio: 4 / 5; max-height: 70vh; }
+  .cta-row .cta-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* TABLES: on narrow screens a 4-column table can't fit, and a <code> chip
+     with a long URL (no break opportunities) wraps character-by-character,
+     turning the cell into an unreadable vertical strip. Make the table scroll
+     horizontally instead so columns keep their natural width, and let chips
+     break only at sensible points if they still must wrap. */
+  .md-typeset table:not([class]),
+  .comparison-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .md-typeset table:not([class]) td,
+  .md-typeset table:not([class]) th,
+  .comparison-table td,
+  .comparison-table th {
+    white-space: normal;   /* cells wrap normally; only the URL chip is special */
+  }
+  /* A long URL chip: break at / and . instead of mid-token char-by-char */
+  .comparison-table td code,
+  .md-typeset table:not([class]) td code {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Never let any home-page element cause horizontal scroll */
+.md-content__inner > * { max-width: 100%; }
+.badge-row img { max-width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

@@ -28,6 +28,8 @@ internal interface MapLibreMapOptionsSink {
 
     fun setZoomGesturesEnabled(zoomGesturesEnabled: Boolean)
 
+    fun setDoubleClickZoomEnabled(doubleClickZoomEnabled: Boolean)
+
     fun setMyLocationEnabled(myLocationEnabled: Boolean)
 
     fun setMyLocationTrackingMode(myLocationTrackingMode: Int)
@@ -55,4 +57,6 @@ internal interface MapLibreMapOptionsSink {
     fun setTranslucentTextureSurface(translucentTextureSurface: Boolean)
 
     fun setFeatureTapsTriggersMapClick(triggers: Boolean)
+
+    fun setUseHybridComposition(useHybridComposition: Boolean)
 }

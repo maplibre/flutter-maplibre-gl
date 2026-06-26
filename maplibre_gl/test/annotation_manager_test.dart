@@ -318,6 +318,97 @@ void main() {
     });
   });
 
+  group('AnnotationManager drag callback lifecycle', () {
+    test('initialize registers one drag callback per manager', () {
+      // setUp() initializes 4 managers (fill, line, circle, symbol).
+      expect(controller.onFeatureDrag.length, 4);
+    });
+
+    test('repeated initialize is idempotent', () async {
+      final before = controller.onFeatureDrag.length;
+      await controller.symbolManager!.initialize();
+      await controller.symbolManager!.initialize();
+      expect(controller.onFeatureDrag.length, before);
+    });
+
+    test('dispose removes the manager drag callback', () async {
+      final before = controller.onFeatureDrag.length;
+      await controller.symbolManager!.dispose();
+      expect(controller.onFeatureDrag.length, before - 1);
+
+      await controller.lineManager!.dispose();
+      expect(controller.onFeatureDrag.length, before - 2);
+    });
+
+    test('dispose preserves other managers and user-added callbacks', () async {
+      void userCallback(_, _, _, _, _, _, _) {}
+      controller.onFeatureDrag.add(userCallback);
+
+      await controller.symbolManager!.dispose();
+
+      // Symbol manager removed, but the other 3 + user callback remain.
+      expect(controller.onFeatureDrag.length, 4);
+      expect(controller.onFeatureDrag, contains(userCallback));
+    });
+
+    test('style-reload cycle does not leak stale drag callbacks', () async {
+      // Reproduces the scenario from PR #806: on every style reload the
+      // controller disposes existing managers and creates new ones. Without
+      // the fix, each reload would leave the previous _onDrag registered,
+      // accumulating duplicates.
+      final initial = controller.onFeatureDrag.length;
+
+      for (var i = 0; i < 3; i++) {
+        platform.onMapStyleLoadedPlatform.call(null);
+        // The handler is async fire-and-forget through ArgumentCallbacks;
+        // drain the microtask queue until dispose+initialize complete.
+        await pumpEventQueue();
+      }
+
+      expect(controller.onFeatureDrag.length, initial);
+    });
+
+    test(
+      'drag event after style reload does not target a disposed manager',
+      () async {
+        final oldSymbol = await controller.addSymbol(
+          const SymbolOptions(geometry: LatLng(0, 0), draggable: true),
+        );
+
+        // Trigger the real style-reload code path on the controller.
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+
+        final newSymbol = await controller.addSymbol(
+          const SymbolOptions(geometry: LatLng(10, 20), draggable: true),
+        );
+
+        final dragged = <String>[];
+        controller.onFeatureDrag.add(
+          (point, origin, current, delta, id, annotation, eventType) {
+            dragged.add(id);
+          },
+        );
+
+        platform.onFeatureDraggedPlatform.call({
+          'id': newSymbol.id,
+          'eventType': DragEventType.drag.name,
+          'point': const Point(0.0, 0.0),
+          'origin': const LatLng(10, 20),
+          'current': const LatLng(10.001, 20.001),
+          'delta': const LatLng(0.001, 0.001),
+        });
+
+        // Only the new manager (and our observer) should have been notified.
+        // With the bug, the old manager's stale _onDrag would also fire.
+        expect(dragged, [newSymbol.id]);
+        expect(controller.symbolManager!.byId(newSymbol.id), isNotNull);
+        // Old symbol's id is unrelated to anything live now.
+        expect(controller.symbolManager!.byId(oldSymbol.id), isNull);
+      },
+    );
+  });
+
   group('AnnotationManager GeoJSON output', () {
     test('setGeoJsonSource is called with FeatureCollection on add', () async {
       platform.reset();

@@ -162,13 +162,36 @@ abstract class MapLibrePlatform {
   /// Gets the current map style as JSON string.
   Future<String?> getStyle();
 
-  /// Sets custom HTTP headers for map requests.
+  /// Sets custom HTTP headers for requests made by this map instance.
+  ///
+  /// [headers] is a map of header name to value. Pass an empty map to remove
+  /// all previously set headers.
+  ///
+  /// [filter] is a list of regular-expression strings. When non-empty, headers
+  /// are only injected into requests whose URL matches at least one pattern.
+  /// Pass an empty list to apply headers to every request.
+  ///
+  /// Example — send an API key only to your own tile server:
+  /// ```dart
+  /// await controller.setCustomHeaders(
+  ///   {'X-Api-Key': 'secret'},
+  ///   [r'https://tiles\.example\.com/.*'],
+  /// );
+  /// ```
+  ///
+  /// Example — send an Authorization header to all requests (no filter):
+  /// ```dart
+  /// await controller.setCustomHeaders(
+  ///   {'Authorization': 'Bearer $token'},
+  ///   [],
+  /// );
+  /// ```
   Future<void> setCustomHeaders(
     Map<String, String> headers,
     List<String> filter,
   );
 
-  /// Gets the current custom HTTP headers.
+  /// Returns the custom HTTP headers currently set on this map instance.
   Future<Map<String, String>> getCustomHeaders();
 
   Future<List> queryRenderedFeatures(

@@ -8,7 +8,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Added
 * `pauseMap()` and `resumeMap()` on `MapLibreMapController` to explicitly pause and resume map rendering. Useful for maps that are not visible (e.g. on an inactive `TabBarView` page) to save GPU/CPU. The paused state survives host-activity backgrounding (#805).
   * **Android**: stops the underlying MapView render loop.
-  * **iOS**: no-op (the OS already halts rendering for off-screen views).
+  * **iOS**: drops the preferred frame rate to 0 while paused, restoring it on resume.
   * **Web**: no-op.
 
 ### Fixed
@@ -16,9 +16,44 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: Maps survive configuration changes such as device rotation, restoring camera state across the activity recreation (#805).
 
 ### Note for app developers
-On Android the `MapView` is rebuilt across activity recreation. Camera is restored automatically. Runtime-added sources/layers/images and style switches must be applied inside `onStyleLoadedCallback` (the recommended pattern, also documented on `MapLibreMap.onMapCreated`): the callback fires again on each recreation, so apps that already follow it see their style content re-applied automatically. 
+On Android the `MapView` is rebuilt across activity recreation. Camera is restored automatically. Runtime-added sources/layers/images and style switches must be applied inside `onStyleLoadedCallback` (the recommended pattern, also documented on `MapLibreMap.onMapCreated`): the callback fires again on each recreation, so apps that already follow it see their style content re-applied automatically.
 
 Apps adding style content in `onMapCreated` or `initState` will need to move that code into `onStyleLoadedCallback`.
+
+## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
+
+> **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
+
+### Fixed
+* Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
+* **Android, iOS**: `doubleClickZoomEnabled: false` now works correctly. Previously this option was only respected on web, so single taps on Android and iOS always had a ~300 ms delay while the platform waited to rule out a double-tap (#829).
+* **iOS**: `setCustomHeaders` and `setHttpHeaders` now correctly apply to all map network requests (tiles, styles, sprites, glyphs). Both APIs were previously silently ignored on iOS (#831).
+* **iOS**: `setMapLanguage` now correctly changes map labels on non-Mapbox styles (e.g. OpenFreeMap Liberty). Previously, calling `setMapLanguage` on iOS had no effect and place names were displayed using the style's default language (#830). A new **Map Language** example in the example app demonstrates this across several languages.
+* **iOS**: Layer color properties now accept any valid CSS color string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors). Previously only hex colors were supported and anything else rendered as transparent (#832).
+* **iOS**: Fixed a crash that could occur when the app was sent to the background while using PMTiles sources (#833).
+* **iOS**: Fixed a crash on cold launch when the map was first displayed at zero size (e.g. inside a hidden widget or during app startup) (#841).
+* **iOS**: Fixed a memory leak where map resources were not fully released when the map widget was disposed (#837).
+* **Android**: Fixed a crash when style API methods were called while the map style was still loading.
+
+### Changed
+* **Android**: MapLibre Android SDK upgraded from 13.1.0 to 13.3.0.
+* **iOS**: MapLibre iOS upgraded from 6.26.0 to 6.27.0.
+
+## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
+
+> **Note:** Several users reported crashes on a range of Android devices after upgrading to 0.26.0, particularly on older / less recent hardware. These issues are addressed in 0.26.1 (see the Android fixes below).
+
+### Fixed
+* **Android**: Hybrid composition now correctly enables `textureMode` when necessary, preventing crashes and rendering and issues with platform views (#816).
+* **Android**: Null-check `mapView` inside the `onResume` repaint runnable to avoid `NullPointerException` when the map is disposed (e.g. dialogs/bottom sheets) before the posted runnable drains (#809).
+* De-register the annotation drag callback on `AnnotationManager.dispose()` to prevent jumpy drags and `_idToAnnotation.containsKey` crashes after style reloads on Android and iOS (#806).
+
+### Changed
+* **Android**: MapLibre Android SDK upgraded from 13.0.2 to 13.1.0 (#811).
+* **iOS**: MapLibre iOS upgraded from 6.25.1 to 6.26.0.
+
+### Docs
+* **Web**: Updated `maplibre-gl` JavaScript and CSS version to `5.24.0` in `README.md` to avoid `NoSuchMethodError` on `MapLibreMap` dispose with the previously referenced 4.3.0 version (#814).
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
