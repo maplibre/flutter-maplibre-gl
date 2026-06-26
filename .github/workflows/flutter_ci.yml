@@ -190,7 +190,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download web demo artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: web-demo
           path: web-demo
