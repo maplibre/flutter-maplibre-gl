@@ -12,6 +12,7 @@ import android.content.res.AssetFileDescriptor;
 import android.os.Bundle;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
@@ -522,6 +523,10 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveStartedListener(this);
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
+
+    // Tint the attribution (i) button black. The SDK default tint is
+    // maplibre_blue, which is hard to read over the map background.
+    mapLibreMap.getUiSettings().setAttributionTintColor(Color.BLACK);
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
