@@ -448,4 +448,18 @@ void main() {
       expect(controller.isDisposed, isTrue);
     });
   });
+
+  group('Rendering control delegation', () {
+    test('pauseMap delegates to platform', () async {
+      await controller.pauseMap();
+
+      expect(platform.callsFor('pauseMap').length, 1);
+    });
+
+    test('resumeMap delegates to platform', () async {
+      await controller.resumeMap();
+
+      expect(platform.callsFor('resumeMap').length, 1);
+    });
+  });
 }

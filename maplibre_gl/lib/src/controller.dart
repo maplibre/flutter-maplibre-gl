@@ -1018,6 +1018,30 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.forceOnlineMode();
   }
 
+  /// Pauses map rendering. Call [resumeMap] to resume.
+  ///
+  /// Useful for pausing maps that are not visible (e.g. on an inactive tab) to
+  /// save GPU/CPU resources. The pause survives backgrounding: a map paused via
+  /// this call stays paused when the host activity returns to the foreground
+  /// until [resumeMap] is called.
+  ///
+  /// Platform behavior:
+  /// - **Android**: stops the MapView render loop.
+  /// - **iOS**: drops the preferred frame rate to 0 while paused and restores
+  ///   it on [resumeMap].
+  /// - **Web**: no-op.
+  Future<void> pauseMap() async {
+    return _maplibrePlatform.pauseMap();
+  }
+
+  /// Resumes map rendering after [pauseMap].
+  ///
+  /// On platforms where [pauseMap] is a no-op this is also a no-op. See
+  /// [pauseMap] for platform behavior details.
+  Future<void> resumeMap() async {
+    return _maplibrePlatform.resumeMap();
+  }
+
   /// Eases the camera to a new position with an optional duration.
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]

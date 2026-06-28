@@ -357,6 +357,16 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> pauseMap() async {
+    // No-op on web.
+  }
+
+  @override
+  Future<void> resumeMap() async {
+    // No-op on web.
+  }
+
+  @override
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
