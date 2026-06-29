@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [Unreleased]
+
+### Added
+* New `preWarm()` top-level function that initializes the MapLibre engine before the first map widget is created. Call it from `main()` to overlap native initialization with your app's startup:
+  * **Android**: Calls `MapLibre.getInstance()` — loads `libmaplibre-gl.so`, opens the SQLite cache database, registers the connectivity receiver (~170–480 ms saved).
+  * **iOS**: Initializes `MLNOfflineStorage.shared` — creates the C++ RunLoop, file sources, and opens the SQLite cache database (~45–165 ms saved).
+  * **Web**: Calls `maplibregl.prewarm()` — pre-creates the Web Worker pool (~10–50 ms saved).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).

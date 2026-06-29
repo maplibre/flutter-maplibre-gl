@@ -14,6 +14,9 @@ const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
 /// Safe to call multiple times; subsequent calls are no-ops because the
 /// underlying initialization is idempotent after the first invocation.
 ///
+/// On Android, the speedup comes from issuing the channel call early: the
+/// plugin's global method handler already initializes MapLibre on every call.
+///
 /// Example:
 /// ```dart
 /// void main() {
