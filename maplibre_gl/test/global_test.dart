@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -331,6 +332,45 @@ void main() {
       expect(status.downloadProgress, 50.0);
     });
   });
+
+  if (!kIsWeb) {
+    group('preWarm', () {
+    test('sends correct method', () async {
+      await preWarm();
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'preWarm');
+    });
+
+    test('does not throw when mock returns null', () async {
+      // The default mock handler already returns null for unknown methods.
+      await expectLater(preWarm(), completes);
+    });
+
+    test('handles MissingPluginException gracefully', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl'),
+            (methodCall) async {
+              throw MissingPluginException('not implemented');
+            },
+          );
+
+      await expectLater(preWarm(), completes);
+    });
+
+    test('safe to call multiple times', () async {
+      await preWarm();
+      await preWarm();
+      await preWarm();
+
+      expect(methodCalls.length, 3);
+      for (final call in methodCalls) {
+        expect(call.method, 'preWarm');
+      }
+    });
+  });
+  }
 }
 
 /// Mocks an EventChannel to emit the given data items as a stream.
