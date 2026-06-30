@@ -34,6 +34,26 @@ class OfflineManagerUtils {
         activeDownloaders[id] = downloader
     }
 
+    static func mergeRegions(result: @escaping FlutterResult, path: String) {
+        let url = URL(fileURLWithPath: path)
+        MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
+            if let error = error {
+                result(FlutterError(code: "mergeOfflineRegions", message: error.localizedDescription, details: nil))
+                return
+            }
+            let regionsArgs = (packs ?? []).compactMap { pack in
+                OfflineRegion.fromOfflinePack(pack)?.toDictionary()
+            }
+            guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
+                  let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
+            else {
+                result(FlutterError(code: "mergeOfflineRegions", message: "Failed to serialize merged regions", details: nil))
+                return
+            }
+            result(regionsArgsJsonString)
+        })
+    }
+
     static func regionsList(result: @escaping FlutterResult) {
         let offlineStorage = MLNOfflineStorage.shared
         guard let packs = offlineStorage.packs else {
