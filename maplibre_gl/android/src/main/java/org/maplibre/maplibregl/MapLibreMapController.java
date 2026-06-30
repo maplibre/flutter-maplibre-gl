@@ -138,6 +138,7 @@ final class MapLibreMapController
   private MapLibreMap mapLibreMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+  private boolean manualLocationSource = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
@@ -319,18 +320,23 @@ final class MapLibreMapController
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
-    if (hasLocationPermission()) {
+    if (manualLocationSource || hasLocationPermission()) {
 
       locationComponent = mapLibreMap.getLocationComponent();
 
-      LocationComponentActivationOptions options =
+      LocationComponentActivationOptions.Builder optionsBuilder =
               LocationComponentActivationOptions
                       .builder(context, style)
-                      .locationComponentOptions(buildLocationComponentOptions(style))
-                      .locationEngine(myLocationEngineFactory.getLocationEngine(context))
-                      .build();
+                      .locationComponentOptions(buildLocationComponentOptions(style));
+      if (manualLocationSource) {
+        // App-provided locations: disable the native engine. Updates arrive via
+        // locationComponent#setManualLocation -> forceLocationUpdate(location).
+        optionsBuilder.useDefaultLocationEngine(false);
+      } else {
+        optionsBuilder.locationEngine(myLocationEngineFactory.getLocationEngine(context));
+      }
 
-      locationComponent.activateLocationComponent(options);
+      locationComponent.activateLocationComponent(optionsBuilder.build());
       locationComponent.setLocationComponentEnabled(true);
       locationComponent.setMaxAnimationFps(30);
       updateMyLocationTrackingMode();
@@ -1604,6 +1610,22 @@ final class MapLibreMapController
         {
           Log.e(TAG, "location component: getLastLocation");
           if (this.myLocationEnabled
+              && manualLocationSource
+              && locationComponent != null
+              && locationComponent.isLocationComponentActivated()) {
+            // Manual mode has no location engine; read the last forced location.
+            Location lastLocation = locationComponent.getLastKnownLocation();
+            if (lastLocation != null) {
+              Map<String, Object> reply = new HashMap<>();
+              reply.put("latitude", lastLocation.getLatitude());
+              reply.put("longitude", lastLocation.getLongitude());
+              reply.put("altitude", lastLocation.getAltitude());
+              result.success(reply);
+            } else {
+              result.error("LOCATION_UNAVAILABLE",
+                  "Last location is not available", null);
+            }
+          } else if (this.myLocationEnabled
               && locationComponent != null
               && locationComponent.isLocationComponentActivated()
               && locationComponent.getLocationEngine() != null) {
@@ -1635,6 +1657,61 @@ final class MapLibreMapController
             result.error("LOCATION_DISABLED",
                 "Location is disabled or location component is unavailable", null);
           }
+          break;
+        }
+      case "locationComponent#setManualLocation":
+        {
+          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+            result.error(
+                "LOCATION_COMPONENT_NOT_READY",
+                "The location component is not ready. Ensure the map was created with "
+                    + "myLocationEnabled: true and locationSource: ManualLocationSource().",
+                null);
+            break;
+          }
+          if (!manualLocationSource) {
+            result.error(
+                "MANUAL_LOCATION_SOURCE_DISABLED",
+                "Manual locations require locationSource: ManualLocationSource().",
+                null);
+            break;
+          }
+          final List<?> position = (List<?>) call.argument("position");
+          if (position == null || position.size() < 2) {
+            result.error("INVALID_ARGUMENT", "Missing or invalid 'position'.", null);
+            break;
+          }
+          final Location location = new Location("ManualLocationSource");
+          location.setLatitude(((Number) position.get(0)).doubleValue());
+          location.setLongitude(((Number) position.get(1)).doubleValue());
+          final Object altitude = call.argument("altitude");
+          if (altitude != null) {
+            location.setAltitude(((Number) altitude).doubleValue());
+          }
+          final Object bearing = call.argument("bearing");
+          if (bearing != null) {
+            location.setBearing(((Number) bearing).floatValue());
+          }
+          final Object speed = call.argument("speed");
+          if (speed != null) {
+            location.setSpeed(((Number) speed).floatValue());
+          }
+          final Object horizontalAccuracy = call.argument("horizontalAccuracy");
+          if (horizontalAccuracy != null) {
+            location.setAccuracy(((Number) horizontalAccuracy).floatValue());
+          }
+          final Object verticalAccuracy = call.argument("verticalAccuracy");
+          if (verticalAccuracy != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            location.setVerticalAccuracyMeters(((Number) verticalAccuracy).floatValue());
+          }
+          final Object timestamp = call.argument("timestamp");
+          if (timestamp != null) {
+            location.setTime(((Number) timestamp).longValue());
+          }
+          locationComponent.forceLocationUpdate(location);
+          // Keep map#onUserLocationUpdated firing, mirroring the engine path.
+          onUserLocationUpdate(location);
+          result.success(null);
           break;
         }
       case "style#addImage":
@@ -2391,6 +2468,14 @@ final class MapLibreMapController
   @Override
   public void setLocationEngineProperties(@NotNull LocationEngineRequest locationEngineRequest) {
     myLocationEngineFactory.initLocationComponent(context, locationComponent, locationEngineRequest);
+  }
+
+  @Override
+  public void setLocationSource(@NotNull String token) {
+    // The token -> behavior mapping lives here, native-side. Any value other
+    // than "manual" (e.g. "platform"/unknown) resolves to the default engine.
+    // Applied at component activation; runtime changes do not re-activate it.
+    this.manualLocationSource = "manual".equals(token);
   }
 
   @Override

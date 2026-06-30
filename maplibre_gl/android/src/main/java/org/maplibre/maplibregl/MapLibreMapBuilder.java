@@ -26,6 +26,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private String styleString = "";
   private LatLngBounds bounds = null;
   private LocationEngineRequest locationEngineRequest = null;
+  private String locationSourceToken = "platform";
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
 
@@ -51,6 +52,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
     controller.setTrackCameraPosition(trackCameraPosition);
+    controller.setLocationSource(locationSourceToken);
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
@@ -259,6 +261,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setLocationEngineProperties(@NonNull LocationEngineRequest locationEngineRequest) {
     this.locationEngineRequest = locationEngineRequest;
+  }
+
+  @Override
+  public void setLocationSource(@NonNull String token) {
+    // Store the raw token here and forward it to the controller in build();
+    // the token -> behavior mapping is resolved on the controller (native side).
+    this.locationSourceToken = token;
   }
 
   @Override

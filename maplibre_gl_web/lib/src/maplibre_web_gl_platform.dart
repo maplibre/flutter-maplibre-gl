@@ -293,6 +293,14 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setManualLocation(ManualLocationUpdate update) async {
+    throw UnsupportedError(
+      'Manual location source is not supported on web. '
+      'Use locationSource: PlatformLocationSource() (the default) on web.',
+    );
+  }
+
+  @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
     setMapLanguage(ui.PlatformDispatcher.instance.locale.languageCode);
   }
@@ -1080,6 +1088,20 @@ class MapLibreMapController extends MapLibrePlatform
     if (changed && _geolocateControl != null) {
       _addGeolocateControl();
       _triggerGeolocateControl();
+    }
+  }
+
+  @override
+  void setLocationSource(String token) {
+    // Web resolves the token here. The manual/app-provided location source is
+    // not supported on web (no equivalent to a custom native location engine);
+    // warn and keep the default browser GeolocateControl behavior.
+    if (token == 'manual') {
+      debugPrint(
+        'maplibre_gl: ManualLocationSource is not supported on web. '
+        'Falling back to the browser geolocation source. Use '
+        'PlatformLocationSource (the default) on web.',
+      );
     }
   }
 

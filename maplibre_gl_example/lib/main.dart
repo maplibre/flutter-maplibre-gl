@@ -15,6 +15,7 @@ import 'examples/basics/multi_style_switch.dart';
 import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
+import 'examples/basics/manual_location_source_page.dart';
 
 // Camera examples
 import 'examples/camera/camera_controls_example.dart';
@@ -121,6 +122,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const MultiStyleSwitchPage(),
   const VariousSources(),
   const GpsLocationPage(),
+  const ManualLocationSourcePage(),
   const GetMapInfoPage(),
 
   // Camera

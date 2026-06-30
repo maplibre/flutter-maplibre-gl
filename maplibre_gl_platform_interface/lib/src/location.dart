@@ -231,6 +231,75 @@ class UserLocation {
   });
 }
 
+/// An app-provided location update, pushed into the map's user-location
+/// component via `MapLibreMapController.updateManualLocation`.
+///
+/// Requires the map to be created with
+/// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+///
+/// All fields except [target] are optional; omitted fields are simply not sent
+/// to the native side. There is no separate `heading` field: the compass-render
+/// heading is device-sensor driven on both Android and iOS. Use [bearing] for
+/// the GPS direction of travel (the chevron/arrow direction).
+@immutable
+class ManualLocationUpdate {
+  /// Creates an app-provided location update.
+  const ManualLocationUpdate({
+    required this.target,
+    this.horizontalAccuracy,
+    this.verticalAccuracy,
+    this.altitude,
+    this.bearing,
+    this.speed,
+    this.timestamp,
+  });
+
+  /// The location's position in latitude and longitude. Required.
+  final LatLng target;
+
+  /// The radius of uncertainty for the location, measured in meters.
+  final double? horizontalAccuracy;
+
+  /// Accuracy of the altitude measurement, in meters.
+  final double? verticalAccuracy;
+
+  /// The location's altitude in meters.
+  final double? altitude;
+
+  /// Direction of travel, measured in degrees (the GPS arrow direction).
+  final double? bearing;
+
+  /// The location's speed in meters per second.
+  final double? speed;
+
+  /// Time the location was observed. Defaults to [DateTime.now] when omitted.
+  final DateTime? timestamp;
+
+  /// Serializes this update for the platform channel.
+  ///
+  /// Mirrors existing conventions: [LatLng] becomes `[lat, lng]`, the timestamp
+  /// becomes epoch milliseconds, and null fields are omitted.
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'position': <double>[target.latitude, target.longitude],
+      'timestamp': (timestamp ?? DateTime.now()).millisecondsSinceEpoch,
+    };
+
+    void addIfNonNull(String fieldName, dynamic value) {
+      if (value != null) {
+        map[fieldName] = value;
+      }
+    }
+
+    addIfNonNull('horizontalAccuracy', horizontalAccuracy);
+    addIfNonNull('verticalAccuracy', verticalAccuracy);
+    addIfNonNull('altitude', altitude);
+    addIfNonNull('bearing', bearing);
+    addIfNonNull('speed', speed);
+    return map;
+  }
+}
+
 /// Type represents a geomagnetic value, measured in microteslas, relative to a
 /// device axis in three dimensional space.
 class UserHeading {
