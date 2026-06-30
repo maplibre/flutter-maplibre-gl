@@ -50,7 +50,10 @@ class OfflineManagerUtils {
                 // Fallback for packs with unknown/missing context (e.g. imported from an
                 // external DB or from Android). Mirror Android's metadataBytesToMap: try
                 // to parse the context bytes as a JSON dict, fall back to empty dict.
-                guard let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+                // Use a deterministic ID so the same pack always receives the same ID
+                // across sessions (pack.context is read-only, so we cannot persist it).
+                guard let id = deterministicPackId(for: pack),
+                      let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
                 let metadata: [String: Any]
                 if let contextObj = try? JSONSerialization.jsonObject(with: pack.context),
                    let contextDict = contextObj as? [String: Any] {
@@ -64,7 +67,7 @@ class OfflineManagerUtils {
                     minZoom: tileRegion.minimumZoomLevel,
                     maxZoom: tileRegion.maximumZoomLevel
                 )
-                return OfflineRegion(id: UUID().hashValue, metadata: metadata, definition: definition).toDictionary()
+                return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
             }
             guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
                   let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
@@ -165,13 +168,13 @@ class OfflineManagerUtils {
             return
         }
         let packToRemove = pacs.first(where: { pack -> Bool in
-            let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)
-            let contextJsonDict = contextJsonObject as? [String: Any]
-            if let regionId = contextJsonDict?["id"] as? Int {
+            if let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
+               let contextJsonDict = contextJsonObject as? [String: Any],
+               let regionId = contextJsonDict["id"] as? Int {
                 return regionId == id
-            } else {
-                return false
             }
+            // Fallback for external packs without a Flutter-format context.
+            return deterministicPackId(for: pack) == id
         })
         if let packToRemoveUnwrapped = packToRemove {
             // deletion is only safe if the download is suspended
@@ -298,12 +301,25 @@ class OfflineManagerUtils {
         let offlineStorage = MLNOfflineStorage.shared
         guard let packs = offlineStorage.packs else { return nil }
         return packs.first { pack in
-            guard let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
-                  let contextJsonDict = contextJsonObject as? [String: Any],
-                  let regionId = contextJsonDict["id"] as? Int
-            else { return false }
-            return regionId == id
+            if let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
+               let contextJsonDict = contextJsonObject as? [String: Any],
+               let regionId = contextJsonDict["id"] as? Int {
+                return regionId == id
+            }
+            // Fallback for external packs without a Flutter-format context.
+            return deterministicPackId(for: pack) == id
         }
+    }
+
+    /// Returns a stable integer ID derived from a pack's geographic properties.
+    /// Used for packs imported from external databases that lack a Flutter-assigned
+    /// context ID. Uses djb2 so the result is deterministic across app sessions,
+    /// unlike Swift's randomised `hashValue`.
+    private static func deterministicPackId(for pack: MLNOfflinePack) -> Int? {
+        guard let region = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+        let key = "\(region.styleURL.absoluteString)|\(region.bounds.sw.latitude)|\(region.bounds.sw.longitude)|\(region.bounds.ne.latitude)|\(region.bounds.ne.longitude)|\(region.minimumZoomLevel)|\(region.maximumZoomLevel)"
+        // djb2 hash — deterministic across sessions unlike Swift's hashValue
+        return key.utf8.reduce(5381) { (31 &* $0) &+ Int($1) }
     }
 }
 
