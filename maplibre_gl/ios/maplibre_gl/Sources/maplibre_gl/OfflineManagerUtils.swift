@@ -41,8 +41,30 @@ class OfflineManagerUtils {
                 result(FlutterError(code: "mergeOfflineRegions", message: error.localizedDescription, details: nil))
                 return
             }
-            let regionsArgs = (packs ?? []).compactMap { pack in
-                OfflineRegion.fromOfflinePack(pack)?.toDictionary()
+            let regionsArgs = (packs ?? []).compactMap { pack -> [String: Any]? in
+                // Normal path: pack was created by this Flutter plugin — context holds
+                // {"id": <int>, "metadata": <dict>}.
+                if let region = OfflineRegion.fromOfflinePack(pack) {
+                    return region.toDictionary()
+                }
+                // Fallback for packs with unknown/missing context (e.g. imported from an
+                // external DB or from Android). Mirror Android's metadataBytesToMap: try
+                // to parse the context bytes as a JSON dict, fall back to empty dict.
+                guard let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+                let metadata: [String: Any]
+                if let contextObj = try? JSONSerialization.jsonObject(with: pack.context),
+                   let contextDict = contextObj as? [String: Any] {
+                    metadata = contextDict
+                } else {
+                    metadata = [:]
+                }
+                let definition = OfflineRegionDefinition(
+                    bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
+                    mapStyleUrl: tileRegion.styleURL,
+                    minZoom: tileRegion.minimumZoomLevel,
+                    maxZoom: tileRegion.maximumZoomLevel
+                )
+                return OfflineRegion(id: UUID().hashValue, metadata: metadata, definition: definition).toDictionary()
             }
             guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
                   let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
