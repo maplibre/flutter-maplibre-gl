@@ -47,6 +47,8 @@ abstract class MapLibreMapOptionsSink {
 
   void setFeatureTapsTriggersMapClick(bool triggers);
 
+  void setLocationSource(String token);
+
   void setLocationEngineProperties({
     required bool enableHighAccuracy,
     required int maximumAge,

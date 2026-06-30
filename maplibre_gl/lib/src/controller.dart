@@ -1643,6 +1643,18 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.requestMyLocationLatLng();
   }
 
+  /// Pushes an app-provided location into the map's user-location component.
+  ///
+  /// Requires the map to be created with
+  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  /// The accuracy ring, tracking modes, and [MapLibreMap.onUserLocationUpdated]
+  /// keep working. In manual mode no location permission is required.
+  ///
+  /// **Not supported on web** — throws an [UnsupportedError] there.
+  Future<void> updateManualLocation(ManualLocationUpdate update) {
+    return _maplibrePlatform.setManualLocation(update);
+  }
+
   /// This method returns the boundaries of the region currently displayed in the map.
   Future<LatLngBounds> getVisibleRegion() async {
     return _maplibrePlatform.getVisibleRegion();

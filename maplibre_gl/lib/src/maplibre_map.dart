@@ -18,6 +18,7 @@ class MapLibreMap extends StatefulWidget {
     this.onMapCreated,
     this.onStyleLoadedCallback,
     this.locationEnginePlatforms = LocationEnginePlatforms.defaultPlatform,
+    this.locationSource = const PlatformLocationSource(),
     this.gestureRecognizers,
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
@@ -78,6 +79,21 @@ class MapLibreMap extends StatefulWidget {
   /// The properties for the platform-specific location engine.
   /// Only has an impact if [myLocationEnabled] is set to true.
   final LocationEnginePlatforms locationEnginePlatforms;
+
+  /// Selects which source feeds the map's user-location component (the puck).
+  ///
+  /// Defaults to [PlatformLocationSource] (the native location engine). Use
+  /// [ManualLocationSource] to feed app-provided locations via
+  /// [MapLibreMapController.updateManualLocation] instead of the device's
+  /// location engine.
+  ///
+  /// Only has an effect when [myLocationEnabled] is set to true. In manual mode
+  /// no location permission is required. Applied at component activation;
+  /// changing it after the map is created does not re-activate the component.
+  ///
+  /// **Not supported on web** — pushing a manual location throws an
+  /// [UnsupportedError] there.
+  final LocationSource locationSource;
 
   /// The color used for the map loading foreground.
   /// Pass a [Color] and it will be converted to ARGB int for the platform.
@@ -452,6 +468,7 @@ class MapLibreMapOptions {
     this.scaleControlPosition,
     this.scaleControlUnit,
     this.locationEnginePlatforms,
+    this.locationSource = const PlatformLocationSource(),
     this.foregroundLoadColor,
     this.translucentTextureSurface,
     this.featureTapsTriggersMapClick,
@@ -460,6 +477,7 @@ class MapLibreMapOptions {
   MapLibreMapOptions.fromWidget(MapLibreMap map)
     : this(
         locationEnginePlatforms: map.locationEnginePlatforms,
+        locationSource: map.locationSource,
         compassEnabled: map.compassEnabled,
         cameraTargetBounds: map.cameraTargetBounds,
         styleString: map.styleString,
@@ -537,6 +555,8 @@ class MapLibreMapOptions {
 
   final LocationEnginePlatforms? locationEnginePlatforms;
 
+  final LocationSource locationSource;
+
   final Color? foregroundLoadColor;
 
   final bool? translucentTextureSurface;
@@ -597,6 +617,13 @@ class MapLibreMapOptions {
     addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
     addIfNonNull('scaleControlUnit', scaleControlUnit?.index);
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
+    // Convert the location source to a string token at the platform-channel
+    // boundary. The token -> behavior mapping (engine vs. app-provided updates)
+    // lives only on the native side.
+    addIfNonNull('locationSource', switch (locationSource) {
+      ManualLocationSource() => 'manual',
+      PlatformLocationSource() => 'platform',
+    });
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
     addIfNonNull('featureTapsTriggersMapClick', featureTapsTriggersMapClick);

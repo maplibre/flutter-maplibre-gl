@@ -52,6 +52,8 @@ internal interface MapLibreMapOptionsSink {
 
     fun setLocationEngineProperties(locationEngineRequest: LocationEngineRequest)
 
+    fun setLocationSource(token: String)
+
     fun setForegroundLoadColor(loadColor: Int)
 
     fun setTranslucentTextureSurface(translucentTextureSurface: Boolean)

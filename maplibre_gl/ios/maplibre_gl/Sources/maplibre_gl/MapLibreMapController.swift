@@ -22,6 +22,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var initialTilt: CGFloat?
     private var trackCameraPosition = false
     private var myLocationEnabled = false
+    private var manualLocationSource = false
+    private lazy var manualLocationManager = ManualLocationManager()
     private var scrollingEnabled = true
     private var isAdjustingCameraProgrammatically = false
 
@@ -342,6 +344,50 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     )
                 )
             }
+        case "locationComponent#setManualLocation":
+            guard manualLocationSource else {
+                result(
+                    FlutterError(
+                        code: "MANUAL_LOCATION_SOURCE_DISABLED",
+                        message: "Manual locations require locationSource: ManualLocationSource().",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let position = arguments["position"] as? [Double],
+                  position.count >= 2
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'position'.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            let coordinate = CLLocationCoordinate2D(
+                latitude: position[0],
+                longitude: position[1]
+            )
+            // Negative accuracies/course/speed mark a value as invalid in CLLocation.
+            let timestampMs = (arguments["timestamp"] as? NSNumber)?.doubleValue
+            let location = CLLocation(
+                coordinate: coordinate,
+                altitude: (arguments["altitude"] as? Double) ?? 0,
+                horizontalAccuracy: (arguments["horizontalAccuracy"] as? Double) ?? -1,
+                verticalAccuracy: (arguments["verticalAccuracy"] as? Double) ?? -1,
+                course: (arguments["bearing"] as? Double) ?? -1,
+                speed: (arguments["speed"] as? Double) ?? -1,
+                timestamp: timestampMs != nil
+                    ? Date(timeIntervalSince1970: timestampMs! / 1000.0)
+                    : Date()
+            )
+            // The map view's delegate auto-fires map#onUserLocationUpdated.
+            manualLocationManager.push(location)
+            result(nil)
         case "map#setMapLanguage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             if let localIdentifier = arguments["language"] as? String {
@@ -1369,6 +1415,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
+        // In manual mode, install the app-provided location manager before
+        // `showsUserLocation` is first enabled (per SDK ordering rule). Updates
+        // arrive via locationComponent#setManualLocation -> manualLocationManager.push.
+        if myLocationEnabled, manualLocationSource,
+           !(mapView.locationManager is ManualLocationManager)
+        {
+            mapView.locationManager = manualLocationManager
+        }
         mapView.showsUserLocation = myLocationEnabled
     }
 
@@ -2281,6 +2335,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             : kCLDistanceFilterNone
         locationManager.setDesiredAccuracy?(accuracy)
         locationManager.setDistanceFilter?(filter)
+    }
+
+    func setLocationSource(token: String) {
+        // The token -> behavior mapping lives here, native-side. Any value other
+        // than "manual" (e.g. "platform"/unknown) falls back to the default
+        // manager. Applied before `showsUserLocation` is first enabled; runtime
+        // changes do not re-activate the component.
+        manualLocationSource = (token == "manual")
     }
 
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {

@@ -94,6 +94,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setManualLocation(ManualLocationUpdate update) async {
+    calls.add(PlatformCall('setManualLocation', [update]));
+  }
+
+  @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
     calls.add(PlatformCall('matchMapLanguageWithDeviceDefault'));
   }
