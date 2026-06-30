@@ -34,6 +34,51 @@ class OfflineManagerUtils {
         activeDownloaders[id] = downloader
     }
 
+    static func mergeRegions(result: @escaping FlutterResult, path: String) {
+        let url = URL(fileURLWithPath: path)
+        MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
+            if let error = error {
+                result(FlutterError(code: "mergeOfflineRegions", message: error.localizedDescription, details: nil))
+                return
+            }
+            let regionsArgs = (packs ?? []).compactMap { pack -> [String: Any]? in
+                // Normal path: pack was created by this Flutter plugin — context holds
+                // {"id": <int>, "metadata": <dict>}.
+                if let region = OfflineRegion.fromOfflinePack(pack) {
+                    return region.toDictionary()
+                }
+                // Fallback for packs with unknown/missing context (e.g. imported from an
+                // external DB or from Android). Mirror Android's metadataBytesToMap: try
+                // to parse the context bytes as a JSON dict, fall back to empty dict.
+                // Use a deterministic ID so the same pack always receives the same ID
+                // across sessions (pack.context is read-only, so we cannot persist it).
+                guard let id = deterministicPackId(for: pack),
+                      let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+                let metadata: [String: Any]
+                if let contextObj = try? JSONSerialization.jsonObject(with: pack.context),
+                   let contextDict = contextObj as? [String: Any] {
+                    metadata = contextDict
+                } else {
+                    metadata = [:]
+                }
+                let definition = OfflineRegionDefinition(
+                    bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
+                    mapStyleUrl: tileRegion.styleURL,
+                    minZoom: tileRegion.minimumZoomLevel,
+                    maxZoom: tileRegion.maximumZoomLevel
+                )
+                return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
+            }
+            guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
+                  let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
+            else {
+                result(FlutterError(code: "mergeOfflineRegions", message: "Failed to serialize merged regions", details: nil))
+                return
+            }
+            result(regionsArgsJsonString)
+        })
+    }
+
     static func regionsList(result: @escaping FlutterResult) {
         let offlineStorage = MLNOfflineStorage.shared
         guard let packs = offlineStorage.packs else {
@@ -123,13 +168,13 @@ class OfflineManagerUtils {
             return
         }
         let packToRemove = pacs.first(where: { pack -> Bool in
-            let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)
-            let contextJsonDict = contextJsonObject as? [String: Any]
-            if let regionId = contextJsonDict?["id"] as? Int {
+            if let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
+               let contextJsonDict = contextJsonObject as? [String: Any],
+               let regionId = contextJsonDict["id"] as? Int {
                 return regionId == id
-            } else {
-                return false
             }
+            // Fallback for external packs without a Flutter-format context.
+            return deterministicPackId(for: pack) == id
         })
         if let packToRemoveUnwrapped = packToRemove {
             // deletion is only safe if the download is suspended
@@ -256,12 +301,25 @@ class OfflineManagerUtils {
         let offlineStorage = MLNOfflineStorage.shared
         guard let packs = offlineStorage.packs else { return nil }
         return packs.first { pack in
-            guard let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
-                  let contextJsonDict = contextJsonObject as? [String: Any],
-                  let regionId = contextJsonDict["id"] as? Int
-            else { return false }
-            return regionId == id
+            if let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context),
+               let contextJsonDict = contextJsonObject as? [String: Any],
+               let regionId = contextJsonDict["id"] as? Int {
+                return regionId == id
+            }
+            // Fallback for external packs without a Flutter-format context.
+            return deterministicPackId(for: pack) == id
         }
+    }
+
+    /// Returns a stable integer ID derived from a pack's geographic properties.
+    /// Used for packs imported from external databases that lack a Flutter-assigned
+    /// context ID. Uses djb2 so the result is deterministic across app sessions,
+    /// unlike Swift's randomised `hashValue`.
+    private static func deterministicPackId(for pack: MLNOfflinePack) -> Int? {
+        guard let region = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+        let key = "\(region.styleURL.absoluteString)|\(region.bounds.sw.latitude)|\(region.bounds.sw.longitude)|\(region.bounds.ne.latitude)|\(region.bounds.ne.longitude)|\(region.minimumZoomLevel)|\(region.maximumZoomLevel)"
+        // djb2 hash — deterministic across sessions unlike Swift's hashValue
+        return key.utf8.reduce(5381) { (31 &* $0) &+ Int($1) }
     }
 }
 
