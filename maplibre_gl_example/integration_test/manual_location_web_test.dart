@@ -104,7 +104,8 @@ void main() {
     expect(
       web.document.querySelector('.maplibre-gl-manual-location-arrow'),
       isNotNull,
-      reason: 'the bearing arrow element should render when bearing is provided',
+      reason:
+          'the bearing arrow element should render when bearing is provided',
     );
   });
 }
