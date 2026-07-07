@@ -1650,7 +1650,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The accuracy ring, tracking modes, and [MapLibreMap.onUserLocationUpdated]
   /// keep working. In manual mode no location permission is required.
   ///
-  /// **Not supported on web** — throws an [UnsupportedError] there.
+  /// Supported on Android, iOS and web. On Android and iOS the update drives the
+  /// SDK's native user-location component; on web the plugin draws the puck
+  /// itself (dot + accuracy circle + bearing arrow) using map markers, since
+  /// there is no native component to feed.
   Future<void> updateManualLocation(ManualLocationUpdate update) {
     return _maplibrePlatform.setManualLocation(update);
   }

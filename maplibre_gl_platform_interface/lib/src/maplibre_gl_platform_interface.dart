@@ -114,7 +114,7 @@ abstract class MapLibrePlatform {
   /// Requires the map to be created with
   /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
   ///
-  /// Not supported on web, where it throws an [UnsupportedError].
+  /// Supported on Android, iOS and web.
   Future<void> setManualLocation(ManualLocationUpdate update);
 
   Future<void> matchMapLanguageWithDeviceDefault();

@@ -91,8 +91,10 @@ class MapLibreMap extends StatefulWidget {
   /// no location permission is required. Applied at component activation;
   /// changing it after the map is created does not re-activate the component.
   ///
-  /// **Not supported on web** — pushing a manual location throws an
-  /// [UnsupportedError] there.
+  /// Supported on Android, iOS and web. On Android and iOS the updates pushed
+  /// via [MapLibreMapController.updateManualLocation] drive the SDK's native
+  /// user-location component; on web the plugin draws the puck itself (dot +
+  /// accuracy circle + bearing arrow) using map markers.
   final LocationSource locationSource;
 
   /// The color used for the map loading foreground.

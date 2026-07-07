@@ -43,8 +43,11 @@ class PlatformLocationSource extends LocationSource {
 /// No location permission is required in this mode, since the SDK does not
 /// query the device's location.
 ///
-/// **Not supported on web** — pushing a manual location throws an
-/// [UnsupportedError] there.
+/// Supported on Android, iOS and web. On Android and iOS the pushed updates
+/// drive the SDK's native user-location component. On web there is no such
+/// component to feed, so the plugin draws the puck itself (a native-styled dot
+/// + accuracy circle + bearing arrow) using map markers (this reuses
+/// MapLibre GL JS' user-location styles, so `maplibre-gl.css` must be loaded).
 class ManualLocationSource extends LocationSource {
   /// Creates a marker selecting the app-provided location source.
   const ManualLocationSource();

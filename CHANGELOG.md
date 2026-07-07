@@ -6,11 +6,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
-* **Android, iOS**: App-provided / manual location source. Create the map with `locationSource: ManualLocationSource()` (alongside `myLocationEnabled: true`) and feed your own location updates into the existing user-location puck via `controller.updateManualLocation(ManualLocationUpdate(...))`, instead of the SDK's native location engine. The accuracy ring, tracking modes, and `onUserLocationUpdated` keep working, and **no location permission is required** in this mode. The default remains `PlatformLocationSource()` (the native location engine). A new **Manual Location Source** example demonstrates a simulated moving track. **Not supported on web** — `updateManualLocation` throws an `UnsupportedError` there (#840).
-
-### Notes
-* The manual source is applied when the location component is first activated; changing `locationSource` after the map is created does not re-activate the component.
-* `MyLocationRenderMode.gps` (the directional arrow) remains Android-only, and the compass-render heading is device-sensor driven on both platforms — use `ManualLocationUpdate.bearing` for the GPS direction of travel.
+* **Android, iOS, Web**: App-provided (manual) location source. Show the user-location puck from your own updates instead of the device's GPS, with no location permission required (#840).
+  * Create the map with `locationSource: ManualLocationSource()` and `myLocationEnabled: true`, then push fixes via `controller.updateManualLocation(ManualLocationUpdate(...))`.
+  * The accuracy ring, tracking modes, and `onUserLocationUpdated` keep working; the default remains `PlatformLocationSource()`.
+  * A new **Manual Location Source** example demonstrates a simulated moving track.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
