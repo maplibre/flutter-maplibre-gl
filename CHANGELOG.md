@@ -11,6 +11,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * The accuracy ring, tracking modes, and `onUserLocationUpdated` keep working; the default remains `PlatformLocationSource()`.
   * A new **Manual Location Source** example demonstrates a simulated moving track.
 
+### Docs
+* The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
