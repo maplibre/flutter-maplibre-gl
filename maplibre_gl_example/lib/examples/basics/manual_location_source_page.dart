@@ -132,6 +132,17 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   // takes 2*pi / this ≈ 20 s.
   static const double _angularSpeed = math.pi / 10;
 
+  // How often to push a fix while simulating.
+  //
+  // On web the plugin draws the puck itself from each pushed fix, so it needs a
+  // high sample rate (~60 fps) to look smooth. On Android/iOS the fixes feed the
+  // SDK's native user-location component, which runs its own animation and
+  // interpolates between fixes; pushing at 60 fps there just floods the platform
+  // channel and makes the native animator constantly retarget (visible stutter),
+  // so we push at ~1 Hz and let the SDK smooth the motion, as a real app would.
+  static Duration get _pushInterval =>
+      kIsWeb ? const Duration(milliseconds: 16) : const Duration(seconds: 1);
+
   /// Advances the track by [elapsed] and pushes the new fix. Driven at a high
   /// frequency (see [_toggleSimulation]) so the puck animates smoothly instead
   /// of jumping once per second.
@@ -173,12 +184,12 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
       return;
     }
     setState(() => _simulating = true);
-    // ~60 fps so the puck moves smoothly. `_step` uses the real elapsed time
-    // between ticks, so the speed stays constant regardless of the frame rate.
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 16),
-      (_) => unawaited(_step(const Duration(milliseconds: 16))),
-    );
+    // `_step` uses the real elapsed time between ticks, so the loop's speed
+    // stays constant regardless of the push rate. The rate itself is
+    // per-platform (see [_pushInterval]): fast on web (self-drawn puck), ~1 Hz
+    // on native (the SDK interpolates between fixes).
+    final interval = _pushInterval;
+    _timer = Timer.periodic(interval, (_) => unawaited(_step(interval)));
   }
 
   void _onAccuracyChanged(double value) {
