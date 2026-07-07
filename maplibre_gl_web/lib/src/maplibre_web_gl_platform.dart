@@ -26,6 +26,17 @@ class MapLibreMapController extends MapLibrePlatform
   bool _trackUserLocation = false;
   LatLng? _myLastLocation;
 
+  // Manual (app-provided) location source. When `locationSource` is 'manual'
+  // and `myLocationEnabled` is true, web renders its own puck (see
+  // [ManualLocationPuck]) instead of the browser GeolocateControl, which cannot
+  // be fed an arbitrary position. This controller only tracks the two flags and
+  // the requested tracking mode; the puck itself owns its rendering state and
+  // is created lazily on the first fix.
+  bool _manualLocationSource = false;
+  bool _myLocationEnabled = false;
+  int _manualTrackingMode = 0;
+  ManualLocationPuck? _manualPuck;
+
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
   AttributionControl? _attributionControl;
@@ -48,6 +59,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
+    _removeManualPuck();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
     }
@@ -294,10 +306,65 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
-    throw UnsupportedError(
-      'Manual location source is not supported on web. '
-      'Use locationSource: PlatformLocationSource() (the default) on web.',
+    // On web, manual mode renders its own puck (no native engine, no
+    // GeolocateControl); see [ManualLocationPuck]. The wire payload uses
+    // `position: [lat, lng]`.
+    final map = update.toMap();
+    final position = (map['position'] as List).cast<num>();
+    final latLng = LatLng(position[0].toDouble(), position[1].toDouble());
+    _myLastLocation = latLng;
+
+    final horizontalAccuracy = (map['horizontalAccuracy'] as num?)?.toDouble();
+    final verticalAccuracy = (map['verticalAccuracy'] as num?)?.toDouble();
+    final altitude = (map['altitude'] as num?)?.toDouble();
+    final bearing = (map['bearing'] as num?)?.toDouble();
+    final speed = (map['speed'] as num?)?.toDouble();
+    final timestampMs = map['timestamp'] as int;
+
+    // Move / render the puck when manual mode is active. The puck is created
+    // lazily on the first fix (a maplibre Marker crashes if added without a
+    // position), so this also builds it as needed.
+    if (_manualLocationSource && _myLocationEnabled) {
+      _ensureManualPuck().update(
+        latLng,
+        accuracyMeters: horizontalAccuracy,
+        bearing: bearing,
+      );
+    }
+
+    // Keep parity with the native platforms: manual updates ride the same
+    // onUserLocationUpdated event path as engine updates.
+    onUserLocationUpdatedPlatform(
+      UserLocation(
+        position: latLng,
+        altitude: altitude,
+        bearing: bearing,
+        speed: speed,
+        horizontalAccuracy: horizontalAccuracy,
+        verticalAccuracy: verticalAccuracy,
+        heading: null,
+        timestamp: DateTime.fromMillisecondsSinceEpoch(timestampMs),
+      ),
     );
+  }
+
+  /// Lazily creates the manual-location puck, seeding it with the current
+  /// tracking mode. The puck itself defers building its markers until the first
+  /// position is pushed.
+  ManualLocationPuck _ensureManualPuck() {
+    return _manualPuck ??= ManualLocationPuck(
+      _map,
+      onTrackingChanged: (tracking) {
+        _trackUserLocation = tracking;
+        _onCameraTrackingChanged(tracking);
+      },
+    )..setTrackingMode(_manualTrackingMode);
+  }
+
+  /// Tears down the manual puck, if any.
+  void _removeManualPuck() {
+    _manualPuck?.dispose();
+    _manualPuck = null;
   }
 
   @override
@@ -1046,10 +1113,18 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setMyLocationEnabled(bool myLocationEnabled) {
+    _myLocationEnabled = myLocationEnabled;
     if (myLocationEnabled) {
-      _addGeolocateControl();
+      if (_manualLocationSource) {
+        // Never use the browser geolocation control in manual mode. The puck is
+        // (re)built lazily on the next fix pushed via setManualLocation.
+        _removeGeolocateControl();
+      } else {
+        _addGeolocateControl();
+      }
     } else {
       _removeGeolocateControl();
+      _removeManualPuck();
     }
   }
 
@@ -1060,11 +1135,23 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setMyLocationTrackingMode(int myLocationTrackingMode) {
+    final shouldTrack = myLocationTrackingMode != 0;
+    // Always remember the requested mode, even if the manual source hasn't been
+    // resolved yet. `Convert` calls this before `setLocationSource`, so at map
+    // creation the manual flag is still false here; `setLocationSource('manual')`
+    // then applies the stored mode to the puck. Without this the initial
+    // tracking mode was lost until the user toggled it manually.
+    _manualTrackingMode = myLocationTrackingMode;
+
+    if (_manualLocationSource) {
+      _manualPuck?.setTrackingMode(myLocationTrackingMode);
+      return;
+    }
+
     if (_geolocateControl == null) {
       //myLocationEnabled is false, ignore myLocationTrackingMode
       return;
     }
-    final shouldTrack = myLocationTrackingMode != 0;
     if (shouldTrack != _trackUserLocation) {
       _trackUserLocation = shouldTrack;
       _addGeolocateControl();
@@ -1093,15 +1180,23 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setLocationSource(String token) {
-    // Web resolves the token here. The manual/app-provided location source is
-    // not supported on web (no equivalent to a custom native location engine);
-    // warn and keep the default browser GeolocateControl behavior.
-    if (token == 'manual') {
-      debugPrint(
-        'maplibre_gl: ManualLocationSource is not supported on web. '
-        'Falling back to the browser geolocation source. Use '
-        'PlatformLocationSource (the default) on web.',
-      );
+    // Web resolves the token here. In 'manual' mode we render our own puck
+    // (dot + accuracy circle + bearing arrow) and never use the browser
+    // GeolocateControl; in 'platform' mode we keep the default control.
+    // Applied at activation; either call order (source vs. enabled) is fine
+    // because both consult these flags.
+    _manualLocationSource = token == 'manual';
+    if (_manualLocationSource) {
+      _removeGeolocateControl();
+      // The puck builds its markers lazily on the first fix; ensuring it here
+      // (when enabled) seeds the tracking mode that `Convert` recorded via
+      // setMyLocationTrackingMode (called before this).
+      if (_myLocationEnabled) {
+        _ensureManualPuck().setTrackingMode(_manualTrackingMode);
+      }
+    } else {
+      _removeManualPuck();
+      if (_myLocationEnabled) _addGeolocateControl();
     }
   }
 

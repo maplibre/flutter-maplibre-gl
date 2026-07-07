@@ -153,4 +153,7 @@ extension MarkerOptionsJsImplExtension on MarkerOptionsJsImpl {
 
   external String? get pitchAlignment;
   external set pitchAlignment(String? value);
+
+  external bool? get subpixelPositioning;
+  external set subpixelPositioning(bool? value);
 }
