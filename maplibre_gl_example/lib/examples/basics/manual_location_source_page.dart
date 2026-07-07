@@ -18,8 +18,10 @@ import '../../shared/shared.dart';
 /// The tracking mode and the reported horizontal accuracy (the accuracy ring)
 /// can be changed at runtime from the controls below.
 ///
-/// Not supported on web — there `updateManualLocation` throws an
-/// [UnsupportedError].
+/// On Android and iOS the pushed updates drive the SDK's native user-location
+/// component. On web there is no native component to feed, so the plugin draws
+/// the puck itself (dot + accuracy circle + bearing arrow) using map markers.
+/// The render mode is Android-only and has no effect on web/iOS.
 class ManualLocationSourcePage extends ExamplePage {
   const ManualLocationSourcePage({super.key})
     : super(
@@ -81,10 +83,21 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   }
 
   void _onUserLocationUpdated(UserLocation location) {
-    if (mounted) {
-      setState(() => _lastUpdate = location);
+    if (!mounted) return;
+    // Fixes arrive at ~60/s while simulating; throttle the info-panel rebuild
+    // to a few times per second so the whole page isn't rebuilt every frame
+    // (the puck itself still moves at full frequency, driven by the map).
+    _lastUpdate = location;
+    final now = DateTime.now();
+    if (_lastPanelUpdate != null &&
+        now.difference(_lastPanelUpdate!) < const Duration(milliseconds: 250)) {
+      return;
     }
+    _lastPanelUpdate = now;
+    setState(() {});
   }
+
+  DateTime? _lastPanelUpdate;
 
   static double _bearingBetween(LatLng from, LatLng to) {
     final lat1 = from.latitude * math.pi / 180;
@@ -115,14 +128,39 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
     );
   }
 
-  /// Advances one step along the circular track, then pushes the new fix.
-  Future<void> _step() async {
-    _angle += math.pi / 18; // advance 10° each tick
+  // Angular speed of the simulated loop, in radians per second. One full loop
+  // takes 2*pi / this ≈ 20 s.
+  static const double _angularSpeed = math.pi / 10;
+
+  /// Advances the track by [elapsed] and pushes the new fix. Driven at a high
+  /// frequency (see [_toggleSimulation]) so the puck animates smoothly instead
+  /// of jumping once per second.
+  Future<void> _step(Duration elapsed) async {
+    _angle += _angularSpeed * (elapsed.inMicroseconds / 1e6);
+    _position = LatLng(
+      _center.latitude + _radiusDeg * math.cos(_angle),
+      _center.longitude + _radiusDeg * math.sin(_angle),
+    );
+    // Analytic tangent of the circular path. Deriving the bearing from two
+    // samples 16 ms apart would be numerically noisy and make the heading (and
+    // thus the map rotation in GPS mode) jitter; the tangent is exact.
+    // position = center + r*(cos a, sin a) in (lat, lng), so the velocity
+    // direction is (-sin a, cos a) = (dLat, dLng); bearing = atan2(dLng, dLat).
+    _bearing =
+        (math.atan2(math.cos(_angle), -math.sin(_angle)) * 180 / math.pi +
+            360) %
+        360;
+    await _push();
+  }
+
+  /// Advances one discrete step (used by the "Push one update" button).
+  Future<void> _stepOnce() async {
+    _angle += math.pi / 18; // advance 10°
     final next = LatLng(
       _center.latitude + _radiusDeg * math.cos(_angle),
       _center.longitude + _radiusDeg * math.sin(_angle),
     );
-    _bearing = _bearingBetween(_position, next); // GPS arrow direction
+    _bearing = _bearingBetween(_position, next);
     _position = next;
     await _push();
   }
@@ -135,10 +173,11 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
       return;
     }
     setState(() => _simulating = true);
-    unawaited(_step());
+    // ~60 fps so the puck moves smoothly. `_step` uses the real elapsed time
+    // between ticks, so the speed stays constant regardless of the frame rate.
     _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => unawaited(_step()),
+      const Duration(milliseconds: 16),
+      (_) => unawaited(_step(const Duration(milliseconds: 16))),
     );
   }
 
@@ -160,6 +199,37 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   // method); updating state rebuilds the map and pushes the option change.
   void _setRenderMode(MyLocationRenderMode mode) {
     setState(() => _renderMode = mode);
+  }
+
+  /// Tracking modes supported on the current platform.
+  ///
+  /// `trackingCompass` needs a device compass, so it is Android/iOS only; on
+  /// web it is omitted. `none`, `tracking` and `trackingGps` work everywhere
+  /// (web treats GPS as "recenter and rotate").
+  static List<MyLocationTrackingMode> get _supportedTrackingModes {
+    if (kIsWeb) {
+      return const [
+        MyLocationTrackingMode.none,
+        MyLocationTrackingMode.tracking,
+        MyLocationTrackingMode.trackingGps,
+      ];
+    }
+    return MyLocationTrackingMode.values;
+  }
+
+  /// Render modes supported on the current platform.
+  ///
+  /// The render mode selects how the puck's heading is drawn. `gps` (the
+  /// directional arrow) is Android-only; `compass` uses the device compass
+  /// (Android/iOS). On web the render mode has no effect (the puck is a fixed
+  /// dot + arrow), so only `normal` is offered.
+  static List<MyLocationRenderMode> get _supportedRenderModes {
+    if (kIsWeb) return const [MyLocationRenderMode.normal];
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return MyLocationRenderMode.values;
+    }
+    // iOS and others: no GPS arrow render mode.
+    return const [MyLocationRenderMode.normal, MyLocationRenderMode.compass];
   }
 
   static String _trackingLabel(MyLocationTrackingMode mode) {
@@ -194,19 +264,6 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
-
-    if (kIsWeb) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: InfoCard(
-          title: 'Not supported on web',
-          subtitle:
-              'ManualLocationSource is only available on Android and iOS. '
-              'On web, use the default PlatformLocationSource.',
-          icon: Icons.public_off,
-        ),
-      );
-    }
 
     return MapExampleScaffold(
       map: MapLibreMap(
@@ -250,7 +307,7 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
               icon: Icons.my_location,
               onPressed:
                   hasController && !_simulating
-                      ? () => unawaited(_step())
+                      ? () => unawaited(_stepOnce())
                       : null,
               style: ExampleButtonStyle.tonal,
             ),
@@ -261,7 +318,7 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
           title: 'Tracking mode',
           vertical: false,
           children: [
-            for (final mode in MyLocationTrackingMode.values)
+            for (final mode in _supportedTrackingModes)
               ChoiceChip(
                 label: Text(_trackingLabel(mode)),
                 selected: _trackingMode == mode,
@@ -272,25 +329,29 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        ControlGroup(
-          title: 'Render mode',
-          vertical: true,
-          children: [
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final mode in MyLocationRenderMode.values)
-                  ChoiceChip(
-                    label: Text(_renderLabel(mode)),
-                    selected: _renderMode == mode,
-                    onSelected:
-                        hasController ? (_) => _setRenderMode(mode) : null,
-                  ),
-              ],
-            ),
-          ],
-        ),
+        // The render mode only affects Android/iOS; on web it has no effect
+        // (single option), so the group is hidden there.
+        if (_supportedRenderModes.length > 1) ...[
+          const SizedBox(height: 8),
+          ControlGroup(
+            title: 'Render mode',
+            vertical: true,
+            children: [
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final mode in _supportedRenderModes)
+                    ChoiceChip(
+                      label: Text(_renderLabel(mode)),
+                      selected: _renderMode == mode,
+                      onSelected:
+                          hasController ? (_) => _setRenderMode(mode) : null,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 8),
         ControlGroup(
           title: 'Horizontal accuracy (ring)',

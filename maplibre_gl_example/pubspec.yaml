@@ -26,7 +26,10 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   very_good_analysis: ^10.2.0
+  web: ^1.1.1
 
 flutter_launcher_icons:
   image_path: "assets/maplibre_icon.png"
