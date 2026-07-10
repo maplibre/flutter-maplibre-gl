@@ -226,6 +226,9 @@ final class MapLibreMapController
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
+  // Tint of the attribution (i) button. Defaults to black rather than the
+  // SDK's maplibre_blue, which is hard to read over the map background.
+  private int attributionButtonColor = Color.BLACK;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch. Jetpack's
    * {@code Lifecycle.addObserver} replays missed events synchronously, which would
@@ -524,9 +527,10 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
 
-    // Tint the attribution (i) button black. The SDK default tint is
-    // maplibre_blue, which is hard to read over the map background.
-    mapLibreMap.getUiSettings().setAttributionTintColor(Color.BLACK);
+    // Re-apply the attribution tint: UiSettings belongs to the MapView, so a
+    // recreated view (activity rebind) would otherwise fall back to the SDK
+    // default maplibre_blue.
+    mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
@@ -2950,6 +2954,14 @@ final class MapLibreMapController
       case Gravity.BOTTOM | Gravity.END:
         mapLibreMap.getUiSettings().setAttributionMargins(0, 0, x, y);
         break;
+    }
+  }
+
+  @Override
+  public void setAttributionButtonColor(int color) {
+    attributionButtonColor = color;
+    if (mapLibreMap != null) {
+      mapLibreMap.getUiSettings().setAttributionTintColor(color);
     }
   }
 
