@@ -468,11 +468,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 completion()
             }
         case "map#queryCameraPosition":
-            if let camera = getCamera() {
-                result(camera.toDict(mapView: mapView))
-            } else {
-                result(nil)
-            }
+            // On-demand query: read the live camera directly. Unlike the
+            // streaming paths, which go through getCamera() and honor
+            // trackCameraPosition, a one-off query always returns a value.
+            result(mapView.camera.toDict(mapView: mapView))
         case "map#editGeoJsonSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let srcId = arguments["id"] as? String else { return }
