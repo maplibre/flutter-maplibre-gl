@@ -66,7 +66,10 @@ class OfflineRegion {
     return OfflineRegion(
       id: json['id'],
       definition: OfflineRegionDefinition.fromMap(json['definition']),
-      metadata: json['metadata'],
+      // Offline databases created by external tools (e.g. maplibre-native's
+      // offline.cpp) may have no metadata, in which case the native layer
+      // returns null. Default to an empty map instead of throwing.
+      metadata: (json['metadata'] as Map?)?.cast<String, dynamic>() ?? const {},
     );
   }
 
