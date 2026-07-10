@@ -3,10 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
+
+### Added
+* **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
 
 ### Fixed
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
+* **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).
+* **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
+* **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
+
+### Changed
+* **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
+* **Example app (iOS)**: Now builds entirely with SPM (no Podfile); the CocoaPods-only `location` dependency was replaced with `permission_handler`.
+
+### Docs
+* Added a documentation website with live, interactive examples at [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
+* The PMTiles example and web demo now use the stable Protomaps demo archive instead of a dated planet build that was pruned and lacked CORS headers.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 

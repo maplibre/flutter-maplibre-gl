@@ -15,6 +15,8 @@ Icon?
 profile
 xcuserdata
 **/.generated/
+# Swift Package Manager: resolved dependency graph is generated during builds.
+**/xcshareddata/swiftpm/Package.resolved
 Flutter/App.framework
 Flutter/Flutter.framework
 Flutter/Flutter.podspec
