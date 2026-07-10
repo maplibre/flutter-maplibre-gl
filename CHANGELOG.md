@@ -5,6 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Unreleased
 
+### Changed
+* **iOS**: Added support for Flutter's Swift Package Manager (SPM) integration. On Flutter versions where SPM is enabled, MapLibre iOS is pulled in through SPM; the plugin still ships its CocoaPods podspec, so apps using CocoaPods continue to work unchanged. No migration is required in existing apps.
+* **Example app (iOS)**: The example now builds entirely with Swift Package Manager (no CocoaPods/Podfile). Its `location` dependency, which was CocoaPods-only, was replaced with `permission_handler` (which supports SPM); the map's own location dot and coordinates are unchanged.
+
 ### Docs
 * The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
