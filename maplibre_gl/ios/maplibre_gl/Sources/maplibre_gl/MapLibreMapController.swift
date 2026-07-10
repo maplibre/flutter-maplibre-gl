@@ -468,11 +468,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 completion()
             }
         case "map#queryCameraPosition":
-            // On-demand query: return the live camera regardless of
-            // trackCameraPosition. getCamera() gates on that flag, which is meant
-            // for continuous streaming, not one-off queries — Android's
-            // map#queryCameraPosition is ungated, so gating here made the query
-            // return nil (hiding all annotations) when tracking is off.
+            // On-demand query: read the live camera directly. Unlike the
+            // streaming paths, which go through getCamera() and honor
+            // trackCameraPosition, a one-off query always returns a value.
             result(mapView.camera.toDict(mapView: mapView))
         case "map#editGeoJsonSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }

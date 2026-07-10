@@ -1,3 +1,11 @@
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
+
+### Added
+* **Web**: Implemented `queryCameraPosition()`, which previously threw `UnimplementedError`. It now returns the live camera position, matching Android and iOS (#892).
+
+### Fixed
+* **iOS**: `queryCameraPosition()` now returns the live camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null`, which could break on-demand zoom/center reads (e.g. hiding annotations that depend on the current zoom) (#892).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
