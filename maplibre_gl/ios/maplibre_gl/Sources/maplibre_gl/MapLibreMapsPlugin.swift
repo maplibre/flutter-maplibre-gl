@@ -122,6 +122,10 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     return
                 }
                 OfflineManagerUtils.mergeRegions(result: result, path: path)
+            case "getOfflineDatabasePath":
+                // The shared store backing offline packs and the ambient cache.
+                // This is the same file mergeOfflineRegions imports from.
+                result(MLNOfflineStorage.shared.databaseURL.path)
             case "deleteOfflineRegion":
                 guard let args = methodCall.arguments as? [String: Any],
                       let id = args["id"] as? Int
