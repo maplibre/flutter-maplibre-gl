@@ -67,16 +67,85 @@ class OfflinePackDownloader {
         let id = UUID().hashValue
         let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
         let tilePyramidRegion = regionDefinition.toMLNTilePyramidOfflineRegion()
-        storage
-            .addPack(for: tilePyramidRegion,
-                     withContext: regionData.prepareContext()) { [weak self] pack, error in
+
+        // Downloading the same area twice would otherwise create a second, duplicate
+        // pack (addPack does not deduplicate). Remove any existing pack covering the
+        // same region first, so a re-download replaces it rather than piling up.
+        //
+        // Note: existingPack reads MLNOfflineStorage.shared.packs, which may be nil
+        // or stale until reloadPacks completes (e.g. right after launch). If the
+        // duplicate isn't loaded yet the dedup simply no-ops and a fresh pack is
+        // created — the same behavior as before this feature, never a crash.
+        if let duplicate = existingPack(matching: tilePyramidRegion, in: storage) {
+            // The old pack has its own (different) id. Tear down any tracking and
+            // in-flight download tied to it so we don't leak state or leave a Dart
+            // subscription hanging when we replace it.
+            releaseDuplicate(duplicate)
+            duplicate.suspend()
+            storage.removePack(duplicate) { [weak self] error in
+                if let error = error {
+                    print("Failed to remove duplicate offline pack: \(error.localizedDescription)")
+                }
+                // Add the new pack whether or not removal succeeded, so the Dart
+                // Future always resolves. Worst case a stale duplicate lingers,
+                // which is better than a hung download.
+                self?.addPack(tilePyramidRegion, context: regionData.prepareContext())
+            }
+        } else {
+            addPack(tilePyramidRegion, context: regionData.prepareContext())
+        }
+        return id
+    }
+
+    /// Clears any tracking/in-flight download tied to a pack we're about to
+    /// replace, so re-downloading an area does not orphan the previous pack's
+    /// `activePacks`/`activeDownloaders` entries or leave its Dart subscription
+    /// waiting forever.
+    private func releaseDuplicate(_ pack: MLNOfflinePack) {
+        guard let oldId = OfflineRegion.fromOfflinePack(pack)?.id else { return }
+        OfflineManagerUtils.activeDownloaders[oldId]?.terminate(
+            errorCode: "RegionReplaced",
+            errorMessage: "Region was replaced by a new download of the same area"
+        )
+        OfflineManagerUtils.activePacks.removeValue(forKey: oldId)
+        OfflineManagerUtils.releaseDownloader(id: oldId)
+    }
+
+    private func addPack(_ region: MLNTilePyramidOfflineRegion, context: Data) {
+        MLNOfflineStorage.shared
+            .addPack(for: region, withContext: context) { [weak self] pack, error in
                 if let pack = pack {
                     self?.onPackCreated(pack: pack)
                 } else {
                     self?.onPackCreationError(error: error)
                 }
             }
-        return id
+    }
+
+    /// Finds an already-stored pack covering the same tile-pyramid region
+    /// (style, bounds and zoom range), if any.
+    private func existingPack(
+        matching region: MLNTilePyramidOfflineRegion,
+        in storage: MLNOfflineStorage
+    ) -> MLNOfflinePack? {
+        return storage.packs?.first { pack in
+            guard let existing = pack.region as? MLNTilePyramidOfflineRegion else {
+                return false
+            }
+            // Coordinates round-trip through JSON as doubles, so compare with a
+            // small tolerance rather than requiring exact equality.
+            func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
+            return existing.styleURL == region.styleURL
+                // A region with a different ideograph setting is not equivalent
+                // (different downloaded font data), so it is not a duplicate.
+                && existing.includesIdeographicGlyphs == region.includesIdeographicGlyphs
+                && close(existing.minimumZoomLevel, region.minimumZoomLevel)
+                && close(existing.maximumZoomLevel, region.maximumZoomLevel)
+                && close(existing.bounds.sw.latitude, region.bounds.sw.latitude)
+                && close(existing.bounds.sw.longitude, region.bounds.sw.longitude)
+                && close(existing.bounds.ne.latitude, region.bounds.ne.latitude)
+                && close(existing.bounds.ne.longitude, region.bounds.ne.longitude)
+        }
     }
 
     // MARK: Pack management

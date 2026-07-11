@@ -36,39 +36,26 @@ class OfflineManagerUtils {
 
     static func mergeRegions(result: @escaping FlutterResult, path: String) {
         let url = URL(fileURLWithPath: path)
+        // addContentsOfURL's completion hands back *all known* packs, not just the
+        // ones imported from `url` (see MLNOfflineStorage.h). Snapshot the packs
+        // that already exist so we can return only the newly imported ones.
+        //
+        // We key by a content-derived identity (context bytes + geometry) rather
+        // than object identity: MLNOfflineStorage may hand back fresh MLNOfflinePack
+        // instances for pre-existing packs after the merge, which would make an
+        // ObjectIdentifier snapshot match nothing and report every pack as imported.
+        let preexisting = Set(
+            (MLNOfflineStorage.shared.packs ?? []).map(packIdentityKey(for:))
+        )
         MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
             if let error = error {
                 result(FlutterError(code: "mergeOfflineRegions", message: error.localizedDescription, details: nil))
                 return
             }
-            let regionsArgs = (packs ?? []).compactMap { pack -> [String: Any]? in
-                // Normal path: pack was created by this Flutter plugin — context holds
-                // {"id": <int>, "metadata": <dict>}.
-                if let region = OfflineRegion.fromOfflinePack(pack) {
-                    return region.toDictionary()
-                }
-                // Fallback for packs with unknown/missing context (e.g. imported from an
-                // external DB or from Android). Mirror Android's metadataBytesToMap: try
-                // to parse the context bytes as a JSON dict, fall back to empty dict.
-                // Use a deterministic ID so the same pack always receives the same ID
-                // across sessions (pack.context is read-only, so we cannot persist it).
-                guard let id = deterministicPackId(for: pack),
-                      let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
-                let metadata: [String: Any]
-                if let contextObj = try? JSONSerialization.jsonObject(with: pack.context),
-                   let contextDict = contextObj as? [String: Any] {
-                    metadata = contextDict
-                } else {
-                    metadata = [:]
-                }
-                let definition = OfflineRegionDefinition(
-                    bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
-                    mapStyleUrl: tileRegion.styleURL,
-                    minZoom: tileRegion.minimumZoomLevel,
-                    maxZoom: tileRegion.maximumZoomLevel
-                )
-                return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
+            let importedPacks = (packs ?? []).filter {
+                !preexisting.contains(packIdentityKey(for: $0))
             }
+            let regionsArgs = importedPacks.compactMap(regionDictionary(for:))
             guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
                   let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
             else {
@@ -77,6 +64,47 @@ class OfflineManagerUtils {
             }
             result(regionsArgsJsonString)
         })
+    }
+
+    /// A stable, content-derived identity for a pack, used to tell pre-existing
+    /// packs apart from newly imported ones across an `addContents` call (which
+    /// may return fresh instances). Combines the raw context bytes with the
+    /// region geometry so distinct packs never collide.
+    private static func packIdentityKey(for pack: MLNOfflinePack) -> String {
+        let contextKey = pack.context.base64EncodedString()
+        let geometryKey = deterministicPackId(for: pack).map(String.init) ?? "nil"
+        return "\(contextKey)|\(geometryKey)"
+    }
+
+    /// Converts a pack into the `[id, metadata, definition]` dictionary the Dart
+    /// side expects, or `nil` if the pack is not a tile-pyramid region.
+    private static func regionDictionary(for pack: MLNOfflinePack) -> [String: Any]? {
+        // Normal path: pack was created by this Flutter plugin — context holds
+        // {"id": <int>, "metadata": <dict>}.
+        if let region = OfflineRegion.fromOfflinePack(pack) {
+            return region.toDictionary()
+        }
+        // Fallback for packs with unknown/missing context (e.g. imported from an
+        // external DB or from Android). Mirror Android's metadataBytesToMap: try
+        // to parse the context bytes as a JSON dict, fall back to empty dict.
+        // Use a deterministic ID so the same pack always receives the same ID
+        // across sessions (pack.context is read-only, so we cannot persist it).
+        guard let id = deterministicPackId(for: pack),
+              let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
+        let metadata: [String: Any]
+        if let contextObj = try? JSONSerialization.jsonObject(with: pack.context),
+           let contextDict = contextObj as? [String: Any] {
+            metadata = contextDict
+        } else {
+            metadata = [:]
+        }
+        let definition = OfflineRegionDefinition(
+            bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
+            mapStyleUrl: tileRegion.styleURL,
+            minZoom: tileRegion.minimumZoomLevel,
+            maxZoom: tileRegion.maximumZoomLevel
+        )
+        return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
     }
 
     static func regionsList(result: @escaping FlutterResult) {
