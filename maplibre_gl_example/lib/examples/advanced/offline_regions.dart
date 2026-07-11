@@ -178,9 +178,15 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
               style: ExampleButtonStyle.tonal,
             ),
             ExampleButton(
-              label: 'Export database',
+              label: 'Share database',
               icon: Icons.ios_share_outlined,
               onPressed: _handleExportDatabase,
+              style: ExampleButtonStyle.outlined,
+            ),
+            ExampleButton(
+              label: 'Save database to file',
+              icon: Icons.save_alt_outlined,
+              onPressed: _handleSaveDatabase,
               style: ExampleButtonStyle.outlined,
             ),
           ],
@@ -327,9 +333,10 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                 step(
                   Icons.ios_share_outlined,
                   '3. Export the database',
-                  'Export database copies the whole offline store to a file '
-                      'and opens the share sheet. This exports every region '
-                      'plus the ambient cache, not a single region.',
+                  'Share database opens the share sheet, or Save database to '
+                      'file saves it somewhere you pick (e.g. Downloads). Either '
+                      'way you get the whole store: every region plus the '
+                      'ambient cache, not a single region.',
                 ),
                 step(
                   Icons.merge_outlined,
@@ -586,6 +593,59 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Export failed: $e')),
+      );
+    }
+  }
+
+  // Saves the exported database to a location the user picks via the system
+  // "save as" dialog (e.g. the Downloads folder on Android). Unlike sharing,
+  // this leaves the file in a spot the user can browse to and later re-select
+  // with "Merge regions from file". Android/iOS only.
+  Future<void> _handleSaveDatabase() async {
+    try {
+      final tmpDir = await getTemporaryDirectory();
+      final exportPath = '${tmpDir.path}/offline_regions_export.db';
+      final exported = await exportOfflineDatabase(exportPath);
+      if (exported == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No offline database to save')),
+        );
+        return;
+      }
+
+      try {
+        // saveFile writes a single file from the given bytes, so only the main
+        // database file is saved (not the -wal/-shm sidecars). That is fine for
+        // a store that has been checkpointed; if you need a guaranteed-complete
+        // copy including un-checkpointed writes, use "Share database" instead,
+        // which carries the sidecars too. The DB is tens of MB, so this loads it
+        // into memory once — fine for an example.
+        final bytes = await File(exported).readAsBytes();
+        final savedPath = await FilePicker.saveFile(
+          dialogTitle: 'Save offline database',
+          fileName: 'offline_regions_export.db',
+          bytes: bytes,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              savedPath == null ? 'Save cancelled' : 'Saved to $savedPath',
+            ),
+          ),
+        );
+      } finally {
+        // Clean up the temp copy and its sidecars.
+        for (final path in [exported, '$exported-wal', '$exported-shm']) {
+          final f = File(path);
+          if (f.existsSync()) await f.delete();
+        }
+      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Save failed: $e')),
       );
     }
   }
