@@ -27,7 +27,49 @@ final class MapLibreHeadersProtocol: URLProtocol {
         let mutable = (request as NSURLRequest).mutableCopy() as! NSMutableURLRequest
         URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutable)
 
-        // Read headers and filter atomically in one lock acquisition.
+        let originalUrl = mutable.url?.absoluteString ?? ""
+
+        // 1. Check if transformRequest is enabled
+        var transformEnabled = false
+        var targetController: MapLibreMapController? = nil
+        for controller in MapLibreMapController.activeControllers {
+            if controller.transformRequestEnabled {
+                transformEnabled = true
+                targetController = controller
+                break
+            }
+        }
+
+        if transformEnabled, let controller = targetController, let channel = controller.getMethodChannel() {
+            let semaphore = DispatchSemaphore(value: 0)
+            var transformedUrl = originalUrl
+            var transformedHeaders: [String: String]? = nil
+
+            DispatchQueue.main.async {
+                channel.invokeMethod("map#transformRequest", arguments: [
+                    "url": originalUrl,
+                    "resourceType": self.inferResourceType(originalUrl)
+                ]) { result in
+                    if let dict = result as? [String: Any] {
+                        transformedUrl = dict["url"] as? String ?? originalUrl
+                        transformedHeaders = dict["headers"] as? [String: String]
+                    }
+                    semaphore.signal()
+                }
+            }
+            _ = semaphore.wait(timeout: .distantFuture)
+
+            if let newUrl = URL(string: transformedUrl) {
+                mutable.url = newUrl
+            }
+            if let newHeaders = transformedHeaders {
+                for (key, value) in newHeaders {
+                    mutable.setValue(value, forHTTPHeaderField: key)
+                }
+            }
+        }
+
+        // 2. Read headers and filter atomically in one lock acquisition.
         let (headers, shouldApply) = MapLibreCustomHeaders.headersIfApplicable(to: mutable.url?.absoluteString ?? "")
         if shouldApply {
             for (key, value) in headers {
@@ -40,6 +82,26 @@ final class MapLibreHeadersProtocol: URLProtocol {
         activeSession = session
         activeTask = task
         task.resume()
+    }
+
+    private func inferResourceType(_ url: String) -> Int {
+        let lower = url.lowercased()
+        if lower.contains("/styles/") || lower.hasSuffix("style.json") {
+            return 1 // style
+        }
+        if lower.contains("/sprites/") || lower.contains("sprite") {
+            if lower.hasSuffix(".json") {
+                return 6 // spriteJSON
+            }
+            return 5 // spriteImage
+        }
+        if lower.contains("/fonts/") || lower.contains("/glyphs/") {
+            return 4 // glyphs
+        }
+        if lower.contains("/tiles/") || lower.contains("/tile/") || lower.hasSuffix(".pbf") || lower.hasSuffix(".mvt") {
+            return 3 // tile
+        }
+        return 0 // unknown
     }
 
     override func stopLoading() {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/services.dart';
@@ -257,6 +258,38 @@ void main() {
       });
 
       expect(received, 'sym-1');
+    });
+
+    test('map#transformRequest calls callback and returns result', () async {
+      platform.transformRequest = (url, resourceType) {
+        expect(url, 'http://example.com/tiles/0.png');
+        expect(resourceType, ResourceType.tile);
+        return RequestParameters(
+          url: 'https://example.com/tiles/0.png',
+          headers: {'Authorization': 'Bearer test-token'},
+        );
+      };
+
+      final data = const StandardMethodCodec().encodeMethodCall(
+        MethodCall('map#transformRequest', {
+          'url': 'http://example.com/tiles/0.png',
+          'resourceType': 3, // ResourceType.tile.index is 3
+        }),
+      );
+      final completer = Completer<ByteData?>();
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+            'plugins.flutter.io/maplibre_gl_0',
+            data,
+            (reply) => completer.complete(reply),
+          );
+
+      final reply = await completer.future;
+      expect(reply, isNotNull);
+      final decoded = const StandardMethodCodec().decodeEnvelope(reply!);
+      expect(decoded, isA<Map>());
+      expect(decoded['url'], 'https://example.com/tiles/0.png');
+      expect(decoded['headers'], {'Authorization': 'Bearer test-token'});
     });
   });
 }
