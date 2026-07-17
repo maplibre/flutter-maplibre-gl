@@ -7,6 +7,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var registrar: FlutterPluginRegistrar
     private var channel: FlutterMethodChannel?
 
+    private static let controllersQueue = DispatchQueue(label: "io.flutter.maplibre_gl.activeControllers", attributes: .concurrent)
+    private static var _activeControllers: [MapLibreMapController] = []
+
+    public static var activeControllers: [MapLibreMapController] {
+        var controllers: [MapLibreMapController] = []
+        controllersQueue.sync {
+            controllers = _activeControllers
+        }
+        return controllers
+    }
+
+    public static func registerController(_ controller: MapLibreMapController) {
+        controllersQueue.async(flags: .barrier) {
+            _activeControllers.append(controller)
+        }
+    }
+
+    public static func unregisterController(_ controller: MapLibreMapController) {
+        controllersQueue.async(flags: .barrier) {
+            _activeControllers.removeAll { $0 === controller }
+        }
+    }
+
+    public var transformRequestEnabled: Bool = false
+
+    func getMethodChannel() -> FlutterMethodChannel? {
+        return channel
+    }
+
     private var mapView: MLNMapView
     private var activeSnapshotter: MLNMapSnapshotter?
     private var isMapReady = false
@@ -58,6 +87,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
         mapView.removeFromSuperview()
+        Self.unregisterController(self)
     }
 
     private var styleIsReady: Bool {
@@ -111,6 +141,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         self.registrar = registrar
 
         super.init()
+
+        if let argsDict = args as? [String: Any],
+           let transformRequestEnabled = argsDict["transformRequestEnabled"] as? Bool {
+            self.transformRequestEnabled = transformRequestEnabled
+        }
+        Self.registerController(self)
 
         channel = FlutterMethodChannel(
             name: "plugins.flutter.io/maplibre_gl_\(viewId)",

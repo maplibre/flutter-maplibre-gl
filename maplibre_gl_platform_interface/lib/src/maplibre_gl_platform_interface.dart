@@ -54,6 +54,11 @@ enum CameraAnimationInterpolation {
 /// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
+typedef TransformRequestCallback = FutureOr<RequestParameters> Function(
+  String url,
+  ResourceType resourceType,
+);
+
 abstract class MapLibrePlatform {
   static MapLibreMethodChannel? _instance;
 
@@ -95,6 +100,8 @@ abstract class MapLibrePlatform {
   final onMapIdlePlatform = ArgumentCallbacks<void>();
 
   final onUserLocationUpdatedPlatform = ArgumentCallbacks<UserLocation>();
+
+  TransformRequestCallback? transformRequest;
 
   Future<void> initPlatform(int id);
   Widget buildView(

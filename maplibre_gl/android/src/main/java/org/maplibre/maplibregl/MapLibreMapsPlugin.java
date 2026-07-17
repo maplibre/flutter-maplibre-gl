@@ -38,6 +38,7 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     // Reduce MapLibre SDK logging verbosity to prevent spam from HTTP requests
     // INFO level includes informational messages, warnings, and errors while suppressing verbose HTTP logs
     Logger.setVerbosity(Logger.INFO);
+    MapLibreHttpRequestUtil.rebuildClient();
 
     MethodChannel methodChannel =
         new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl");

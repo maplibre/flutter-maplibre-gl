@@ -1142,6 +1142,13 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getCustomHeaders();
   }
 
+  set transformRequest(TransformRequestCallback? callback) {
+    _maplibrePlatform.transformRequest = callback;
+  }
+
+  TransformRequestCallback? get transformRequest =>
+      _maplibrePlatform.transformRequest;
+
   /// Adds a symbol to the map, configured using the specified custom [options].
   ///
   /// Change listeners are notified once the symbol has been added on the

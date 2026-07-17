@@ -72,7 +72,9 @@ class SourcePropertyConverter {
   }
 
   static GeoJsonOptions buildGeojsonOptions(Map<String, Object> data) {
-    GeoJsonOptions options = new GeoJsonOptions();
+    // Disabled until upstream maplibre-native#4326 is fixed: synchronousUpdate causes a
+    // texture atlas slot-reuse bug that silently discards icons added via addImage().
+    GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
 
     final Object buffer = data.get("buffer");
     if (buffer != null) {

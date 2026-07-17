@@ -117,6 +117,15 @@ class MapLibreMethodChannel extends MapLibrePlatform {
             ),
           ),
         );
+      case 'map#transformRequest':
+        final String url = call.arguments['url'];
+        final int kind = call.arguments['resourceType'];
+        final resourceType = ResourceType.values[kind];
+        if (transformRequest != null) {
+          final result = await transformRequest!(url, resourceType);
+          return result.toMap();
+        }
+        return {'url': url};
       default:
         throw MissingPluginException();
     }

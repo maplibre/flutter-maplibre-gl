@@ -28,6 +28,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private LocationEngineRequest locationEngineRequest = null;
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
+  private boolean transformRequestEnabled = false;
+
+  void setTransformRequestEnabled(boolean transformRequestEnabled) {
+    this.transformRequestEnabled = transformRequestEnabled;
+  }
 
   MapLibreMapController build(
       int id,
@@ -44,7 +49,8 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
             options, 
             styleString, 
             dragEnabled, 
-            featureTapsTriggersMapClick
+            featureTapsTriggersMapClick,
+            transformRequestEnabled
         );
     controller.init();
     controller.setMyLocationEnabled(myLocationEnabled);

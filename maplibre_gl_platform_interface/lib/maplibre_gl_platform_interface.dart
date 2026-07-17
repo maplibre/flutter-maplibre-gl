@@ -18,6 +18,8 @@ part 'src/method_channel_maplibre_gl.dart';
 part 'src/symbol.dart';
 part 'src/fill.dart';
 part 'src/ui.dart';
+part 'src/resource_type.dart';
+part 'src/request_parameters.dart';
 part 'src/maplibre_gl_platform_interface.dart';
 part 'src/source_properties.dart';
 part 'src/location_engine_properties.dart';

@@ -2,11 +2,30 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../page.dart';
 import '../../shared/shared.dart';
+
+/// Snapshot of the user's location as reported by the map's location engine.
+/// The map (via [MapLibreMap.onUserLocationUpdated]) is the source of truth
+/// here, so this is a plain value holder rather than a location plugin type.
+class _LocationSnapshot {
+  const _LocationSnapshot({
+    required this.latitude,
+    required this.longitude,
+    this.altitude,
+    this.accuracy,
+    this.speed,
+  });
+
+  final double latitude;
+  final double longitude;
+  final double? altitude;
+  final double? accuracy;
+  final double? speed;
+}
 
 /// Example demonstrating GPS location tracking
 class GpsLocationPage extends ExamplePage {
@@ -31,11 +50,10 @@ class _GpsLocationBody extends StatefulWidget {
 
 class _GpsLocationBodyState extends State<_GpsLocationBody> {
   MapLibreMapController? _controller;
-  LocationData? _currentLocation;
+  _LocationSnapshot? _currentLocation;
   bool _useHighAccuracy = false;
-  PermissionStatus? _permissionStatus;
+  bool _hasPermission = false;
   MyLocationTrackingMode _trackingMode = MyLocationTrackingMode.none;
-  final Location _location = Location();
 
   @override
   void initState() {
@@ -45,17 +63,17 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
 
   Future<void> _checkPermission() async {
     if (kIsWeb) {
-      // On web, location_web's hasPermission() is broken.
-      // Enable location directly — the browser handles the permission
-      // prompt via the GeolocateControl when it tries to access location.
+      // On web the browser handles the permission prompt via the
+      // GeolocateControl when it first tries to access location, so we
+      // enable location directly here.
       if (mounted) {
-        setState(() => _permissionStatus = PermissionStatus.granted);
+        setState(() => _hasPermission = true);
       }
       return;
     }
-    final status = await _location.hasPermission();
+    final status = await Permission.locationWhenInUse.status;
     if (mounted) {
-      setState(() => _permissionStatus = status);
+      setState(() => _hasPermission = status.isGranted);
     }
   }
 
@@ -72,23 +90,21 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
   void _onUserLocationUpdated(UserLocation location) {
     if (mounted) {
       setState(() {
-        _currentLocation = LocationData.fromMap({
-          'latitude': location.position.latitude,
-          'longitude': location.position.longitude,
-          'altitude': location.altitude,
-          'accuracy': location.horizontalAccuracy,
-          'verticalAccuracy': location.verticalAccuracy,
-          'heading': location.heading?.trueHeading,
-          'speed': location.speed,
-        });
+        _currentLocation = _LocationSnapshot(
+          latitude: location.position.latitude,
+          longitude: location.position.longitude,
+          altitude: location.altitude,
+          accuracy: location.horizontalAccuracy,
+          speed: location.speed,
+        );
       });
     }
   }
 
   Future<void> _requestPermission() async {
-    final status = await _location.requestPermission();
+    final status = await Permission.locationWhenInUse.request();
     if (mounted) {
-      setState(() => _permissionStatus = status);
+      setState(() => _hasPermission = status.isGranted);
     }
   }
 
@@ -159,7 +175,7 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
-    final hasPermission = _permissionStatus == PermissionStatus.granted;
+    final hasPermission = _hasPermission;
     final hasLocation = _currentLocation != null;
 
     return MapExampleScaffold(

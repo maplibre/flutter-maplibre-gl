@@ -82,6 +82,15 @@ class MapLibreMapController extends MapLibrePlatform
     );
     _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
+    JSFunction? jsTransformRequest;
+    if (_creationParams['transformRequestEnabled'] == true) {
+      jsTransformRequest = ((JSString url, JSString resourceType) {
+        final type = _parseResourceType(resourceType.toDart);
+        final dartFuture = _executeTransformRequest(url.toDart, type);
+        return dartFuture.toJS;
+      }).toJS;
+    }
+
     _map = MapLibreMap(
       MapOptions(
         container: _mapElement,
@@ -95,6 +104,7 @@ class MapLibreMapController extends MapLibrePlatform
         style: styleString,
         preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
         attributionControl: false, //avoid duplicate control
+        transformRequest: jsTransformRequest,
       ),
     );
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
@@ -1868,5 +1878,45 @@ class MapLibreMapController extends MapLibrePlatform
 
     final base64Data = dataUrl.split(',').last;
     return base64Decode(base64Data);
+  }
+
+  ResourceType _parseResourceType(String resourceTypeStr) {
+    switch (resourceTypeStr) {
+      case 'Style':
+        return ResourceType.style;
+      case 'Source':
+        return ResourceType.source;
+      case 'Tile':
+        return ResourceType.tile;
+      case 'Glyphs':
+        return ResourceType.glyphs;
+      case 'SpriteImage':
+        return ResourceType.spriteImage;
+      case 'SpriteJSON':
+        return ResourceType.spriteJSON;
+      case 'Image':
+        return ResourceType.image;
+      default:
+        return ResourceType.unknown;
+    }
+  }
+
+  Future<JSAny?> _executeTransformRequest(String url, ResourceType type) async {
+    if (transformRequest != null) {
+      final params = await transformRequest!(url, type);
+      final jsParams = createJsObject() as JSObjectExt;
+      jsParams['url'] = params.url.toJS;
+      if (params.headers != null) {
+        final jsHeaders = createJsObject() as JSObjectExt;
+        for (final entry in params.headers!.entries) {
+          jsHeaders[entry.key] = entry.value.toJS;
+        }
+        jsParams['headers'] = jsHeaders;
+      }
+      return jsParams;
+    }
+    final jsParams = createJsObject() as JSObjectExt;
+    jsParams['url'] = url.toJS;
+    return jsParams;
   }
 }

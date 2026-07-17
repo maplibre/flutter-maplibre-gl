@@ -45,6 +45,7 @@ class MapLibreMap extends StatefulWidget {
     this.scaleControlUnit = ScaleControlUnit.metric,
     this.iosLongClickDuration,
     this.webPreserveDrawingBuffer = false,
+    this.transformRequest,
     this.onMapClick,
     this.onUserLocationUpdated,
     this.onMapLongClick,
@@ -305,6 +306,10 @@ class MapLibreMap extends StatefulWidget {
   /// * All fade/transition animations have completed
   final OnMapIdleCallback? onMapIdle;
 
+  /// A callback run before the MapLibreMap makes a request for an external URL.
+  /// Used to dynamically rewrite request URLs or append headers.
+  final TransformRequestCallback? transformRequest;
+
   /// Set `MapLibreMap.useHybridComposition` to `false` in order use Virtual-Display
   /// (better for Android 9 and below but may result in errors on Android 12)
   /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
@@ -343,6 +348,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
             widget.iosLongClickDuration!.inMilliseconds,
       if (widget.webPreserveDrawingBuffer != null)
         'webPreserveDrawingBuffer': widget.webPreserveDrawingBuffer,
+      'transformRequestEnabled': widget.transformRequest != null,
     };
     return _maplibrePlatform.buildView(
       creationParams,
@@ -411,6 +417,9 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
+    if (widget.transformRequest != null) {
+      controller.transformRequest = widget.transformRequest;
+    }
     await _maplibrePlatform.initPlatform(id);
     _mapController = controller;
     _controller.complete(controller);
