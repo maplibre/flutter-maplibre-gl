@@ -264,14 +264,14 @@ void main() {
       platform.transformRequest = (url, resourceType) {
         expect(url, 'http://example.com/tiles/0.png');
         expect(resourceType, ResourceType.tile);
-        return RequestParameters(
+        return const RequestParameters(
           url: 'https://example.com/tiles/0.png',
           headers: {'Authorization': 'Bearer test-token'},
         );
       };
 
       final data = const StandardMethodCodec().encodeMethodCall(
-        MethodCall('map#transformRequest', {
+        const MethodCall('map#transformRequest', {
           'url': 'http://example.com/tiles/0.png',
           'resourceType': 3, // ResourceType.tile.index is 3
         }),
