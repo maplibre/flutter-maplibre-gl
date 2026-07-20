@@ -1,14 +1,16 @@
 part of '../maplibre_gl_platform_interface.dart';
 
-/// iOS is not supported at the moment.
 @immutable
 class LocationEnginePlatforms {
   /// The properties for the Android platform.
   final LocationEngineAndroidProperties androidPlatform;
 
-  /// If [androidPlatform] is not provided, it defaults to [LocationEngineAndroidProperties.defaultProperties].
+  /// The properties for the iOS platform.
+  final LocationEngineIOSProperties iOSPlatform;
+
   const LocationEnginePlatforms({
     this.androidPlatform = LocationEngineAndroidProperties.defaultProperties,
+    this.iOSPlatform = LocationEngineIOSProperties.defaultProperties,
   });
 
   static const LocationEnginePlatforms defaultPlatform =
@@ -21,8 +23,55 @@ class LocationEnginePlatforms {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return androidPlatform.toList();
     }
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return iOSPlatform.toList();
+    }
     return [];
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocationEnginePlatforms &&
+          androidPlatform == other.androidPlatform &&
+          iOSPlatform == other.iOSPlatform);
+
+  @override
+  int get hashCode => androidPlatform.hashCode ^ iOSPlatform.hashCode;
+}
+
+/// iOS location engine properties.
+///
+/// When [intervalMs] > 0 the native side pulses GPS: it starts location updates
+/// for a short window (~5 s) then stops, repeating every [intervalMs] ms.
+/// This dramatically reduces Location Energy between pulses.
+///
+/// When [intervalMs] == 0 (default), location updates are continuous.
+@immutable
+class LocationEngineIOSProperties {
+  /// Interval in milliseconds between GPS pulse windows.
+  /// 0 = continuous (default / current behaviour).
+  final int intervalMs;
+
+  const LocationEngineIOSProperties({this.intervalMs = 0});
+
+  static const LocationEngineIOSProperties defaultProperties =
+      LocationEngineIOSProperties();
+
+  List<int> toList() => [intervalMs];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocationEngineIOSProperties &&
+          intervalMs == other.intervalMs);
+
+  @override
+  int get hashCode => intervalMs.hashCode;
+
+  @override
+  String toString() =>
+      'LocationEngineIOSProperties{ intervalMs: $intervalMs }';
 }
 
 @immutable

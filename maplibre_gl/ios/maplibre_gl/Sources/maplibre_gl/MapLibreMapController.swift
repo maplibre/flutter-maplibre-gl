@@ -26,6 +26,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    // GPS pulse: start/stop location updates on a timer to save battery.
+    private var locationPulseTimer: Timer?
+    private var locationPulseWindowTimer: Timer?
+    private var locationUpdateIntervalMs: Int = 0
+    private static let pulseWindowMs: Int = 5000
+
     func view() -> UIView {
         return mapView
     }
@@ -1202,7 +1208,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
-        mapView.showsUserLocation = myLocationEnabled
+        if locationUpdateIntervalMs > 0 && myLocationEnabled {
+            restartLocationPulseIfNeeded()
+        } else {
+            locationPulseTimer?.invalidate()
+            locationPulseTimer = nil
+            locationPulseWindowTimer?.invalidate()
+            locationPulseWindowTimer = nil
+            mapView.showsUserLocation = myLocationEnabled
+        }
     }
 
     private func getCamera() -> MLNMapCamera? {
@@ -2121,6 +2135,57 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setLocationEngineProperties(intervalMs: Int) {
+        if locationUpdateIntervalMs == intervalMs { return }
+        locationUpdateIntervalMs = intervalMs
+        restartLocationPulseIfNeeded()
+    }
+
+    /// Start or stop the pulse timer based on the current interval and
+    /// whether user location is enabled.
+    private func restartLocationPulseIfNeeded() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+
+        guard myLocationEnabled, locationUpdateIntervalMs > 0 else {
+            // Continuous mode or location disabled — nothing to pulse.
+            if myLocationEnabled {
+                mapView.showsUserLocation = true
+            }
+            return
+        }
+
+        // Fire the first pulse immediately.
+        fireLocationPulse()
+
+        let interval = TimeInterval(locationUpdateIntervalMs) / 1000.0
+        locationPulseTimer = Timer.scheduledTimer(
+            withTimeInterval: interval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.fireLocationPulse()
+        }
+    }
+
+    /// One GPS pulse: enable location for a short window, then disable.
+    private func fireLocationPulse() {
+        mapView.showsUserLocation = true
+
+        let windowSec = TimeInterval(Self.pulseWindowMs) / 1000.0
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = Timer.scheduledTimer(
+            withTimeInterval: windowSec,
+            repeats: false
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if self.locationUpdateIntervalMs > 0 {
+                self.mapView.showsUserLocation = false
+            }
+        }
     }
 }
 

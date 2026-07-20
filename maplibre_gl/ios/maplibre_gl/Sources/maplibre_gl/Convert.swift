@@ -87,6 +87,12 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
+        if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
+           !locationEngineProperties.isEmpty
+        {
+            let intervalMs = locationEngineProperties[0]
+            delegate.setLocationEngineProperties(intervalMs: intervalMs)
+        }
     }
     
     class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {
