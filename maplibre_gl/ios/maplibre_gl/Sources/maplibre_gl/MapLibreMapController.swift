@@ -28,6 +28,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    // GPS pulse: start/stop location updates on a timer to save battery.
+    private var locationPulseTimer: Timer?
+    private var locationPulseWindowTimer: Timer?
+    private var locationUpdateIntervalMs: Int = 0
+    private static let pulseWindowMs: Int = 5000
+
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
     private var userFps: MLNMapViewPreferredFramesPerSecond = .default
@@ -1369,7 +1375,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
-        mapView.showsUserLocation = myLocationEnabled
+        if locationUpdateIntervalMs > 0 && myLocationEnabled {
+            restartLocationPulseIfNeeded()
+        } else {
+            locationPulseTimer?.invalidate()
+            locationPulseTimer = nil
+            locationPulseWindowTimer?.invalidate()
+            locationPulseWindowTimer = nil
+            mapView.showsUserLocation = myLocationEnabled
+        }
     }
 
     private func getCamera() -> MLNMapCamera? {
@@ -2271,7 +2285,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
-    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double) {
+    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double, intervalMs: Int) {
         guard let locationManager = mapView.locationManager else { return }
         let accuracy = enableHighAccuracy
             ? kCLLocationAccuracyBest
@@ -2281,6 +2295,51 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             : kCLDistanceFilterNone
         locationManager.setDesiredAccuracy?(accuracy)
         locationManager.setDistanceFilter?(filter)
+
+        if locationUpdateIntervalMs != intervalMs {
+            locationUpdateIntervalMs = intervalMs
+            restartLocationPulseIfNeeded()
+        }
+    }
+
+    private func restartLocationPulseIfNeeded() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+
+        guard myLocationEnabled, locationUpdateIntervalMs > 0 else {
+            if myLocationEnabled {
+                mapView.showsUserLocation = true
+            }
+            return
+        }
+
+        fireLocationPulse()
+
+        let interval = TimeInterval(locationUpdateIntervalMs) / 1000.0
+        locationPulseTimer = Timer.scheduledTimer(
+            withTimeInterval: interval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.fireLocationPulse()
+        }
+    }
+
+    private func fireLocationPulse() {
+        mapView.showsUserLocation = true
+
+        let windowSec = TimeInterval(Self.pulseWindowMs) / 1000.0
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = Timer.scheduledTimer(
+            withTimeInterval: windowSec,
+            repeats: false
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if self.locationUpdateIntervalMs > 0 {
+                self.mapView.showsUserLocation = false
+            }
+        }
     }
 
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {
