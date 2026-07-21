@@ -1375,14 +1375,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
-        if locationUpdateIntervalMs > 0 && myLocationEnabled {
+        if myLocationEnabled {
             restartLocationPulseIfNeeded()
         } else {
             locationPulseTimer?.invalidate()
             locationPulseTimer = nil
             locationPulseWindowTimer?.invalidate()
             locationPulseWindowTimer = nil
-            mapView.showsUserLocation = myLocationEnabled
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
+        }
+    }
+
+    /// Start or stop Core Location updates without toggling the user-location annotation.
+    private func setLocationUpdatesActive(_ active: Bool) {
+        guard let locationManager = mapView.locationManager else { return }
+        if active {
+            locationManager.startUpdatingLocation?()
+        } else {
+            locationManager.stopUpdatingLocation?()
         }
     }
 
@@ -2308,10 +2319,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         locationPulseWindowTimer?.invalidate()
         locationPulseWindowTimer = nil
 
-        guard myLocationEnabled, locationUpdateIntervalMs > 0 else {
-            if myLocationEnabled {
-                mapView.showsUserLocation = true
-            }
+        guard myLocationEnabled else {
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
+            return
+        }
+
+        // Keep the blue dot at the last known position between GPS pulses.
+        mapView.showsUserLocation = true
+
+        guard locationUpdateIntervalMs > 0 else {
+            setLocationUpdatesActive(true)
             return
         }
 
@@ -2327,7 +2345,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func fireLocationPulse() {
-        mapView.showsUserLocation = true
+        setLocationUpdatesActive(true)
 
         let windowSec = TimeInterval(Self.pulseWindowMs) / 1000.0
         locationPulseWindowTimer?.invalidate()
@@ -2337,7 +2355,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         ) { [weak self] _ in
             guard let self = self else { return }
             if self.locationUpdateIntervalMs > 0 {
-                self.mapView.showsUserLocation = false
+                self.setLocationUpdatesActive(false)
             }
         }
     }

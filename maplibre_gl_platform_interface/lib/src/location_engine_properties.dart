@@ -70,8 +70,9 @@ class LocationEnginePlatforms {
   // -- iOS --
 
   /// Interval in milliseconds for pulsed location updates on iOS.
-  /// When > 0, the native side starts GPS for a short window (~5 s) then
-  /// stops, repeating every [intervalMs]. 0 = continuous (default).
+  /// When > 0, GPS updates run for a short window (~5 s) then stop, repeating
+  /// every [intervalMs]. The blue dot stays at the last known position between
+  /// pulses. 0 = continuous (default).
   final int? intervalMs;
 
   /// iOS-specific constructor.
