@@ -1391,9 +1391,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private func setLocationUpdatesActive(_ active: Bool) {
         guard let locationManager = mapView.locationManager else { return }
         if active {
-            locationManager.startUpdatingLocation?()
+            locationManager.startUpdatingLocation()
         } else {
-            locationManager.stopUpdatingLocation?()
+            locationManager.stopUpdatingLocation()
         }
     }
 
