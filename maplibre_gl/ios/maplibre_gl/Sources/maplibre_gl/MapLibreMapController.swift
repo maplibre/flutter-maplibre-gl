@@ -32,7 +32,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var locationPulseTimer: Timer?
     private var locationPulseWindowTimer: Timer?
     private var locationUpdateIntervalMs: Int = 0
-    private static let pulseWindowMs: Int = 5000
+    private var locationPulseWindowMs: Int = MapLibreMapController.defaultPulseWindowMs
+    static let defaultPulseWindowMs: Int = 5000
 
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
@@ -2296,7 +2297,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
-    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double, intervalMs: Int) {
+    func setLocationEngineProperties(
+        enableHighAccuracy: Bool,
+        distanceFilter: Double,
+        intervalMs: Int,
+        pulseWindowMs: Int
+    ) {
         guard let locationManager = mapView.locationManager else { return }
         let accuracy = enableHighAccuracy
             ? kCLLocationAccuracyBest
@@ -2307,8 +2313,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         locationManager.setDesiredAccuracy?(accuracy)
         locationManager.setDistanceFilter?(filter)
 
-        if locationUpdateIntervalMs != intervalMs {
+        let resolvedPulseWindowMs = pulseWindowMs > 0
+            ? pulseWindowMs
+            : Self.defaultPulseWindowMs
+        if locationUpdateIntervalMs != intervalMs
+            || locationPulseWindowMs != resolvedPulseWindowMs
+        {
             locationUpdateIntervalMs = intervalMs
+            locationPulseWindowMs = resolvedPulseWindowMs
             restartLocationPulseIfNeeded()
         }
     }
@@ -2347,7 +2359,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private func fireLocationPulse() {
         setLocationUpdatesActive(true)
 
-        let windowSec = TimeInterval(Self.pulseWindowMs) / 1000.0
+        let windowSec = TimeInterval(locationPulseWindowMs) / 1000.0
         locationPulseWindowTimer?.invalidate()
         locationPulseWindowTimer = Timer.scheduledTimer(
             withTimeInterval: windowSec,

@@ -219,19 +219,19 @@ void main() {
   group('iOS serialization', () {
     const platform = TargetPlatform.iOS;
 
-    test('default toList() returns [0, 0, 0]', () {
+    test('default toList() returns [0, 0, 0, 5000]', () {
       const props = LocationEnginePlatforms.iOS();
-      expect(props.toList(targetPlatform: platform), [0, 0, 0]);
+      expect(props.toList(targetPlatform: platform), [0, 0, 0, 5000]);
     });
 
     test('high accuracy serializes as 1', () {
       const props = LocationEnginePlatforms.iOS(enableHighAccuracy: true);
-      expect(props.toList(targetPlatform: platform), [1, 0, 0]);
+      expect(props.toList(targetPlatform: platform), [1, 0, 0, 5000]);
     });
 
     test('displacement maps to distanceFilter', () {
       const props = LocationEnginePlatforms.iOS(displacement: 50);
-      expect(props.toList(targetPlatform: platform), [0, 50, 0]);
+      expect(props.toList(targetPlatform: platform), [0, 50, 0, 5000]);
     });
 
     test('combined high accuracy and displacement', () {
@@ -239,7 +239,7 @@ void main() {
         enableHighAccuracy: true,
         displacement: 25,
       );
-      expect(props.toList(targetPlatform: platform), [1, 25, 0]);
+      expect(props.toList(targetPlatform: platform), [1, 25, 0, 5000]);
     });
 
     test('intervalMs serializes as third element', () {
@@ -247,7 +247,16 @@ void main() {
         enableHighAccuracy: true,
         intervalMs: 30000,
       );
-      expect(props.toList(targetPlatform: platform), [1, 0, 30000]);
+      expect(props.toList(targetPlatform: platform), [1, 0, 30000, 5000]);
+    });
+
+    test('pulseWindowMs serializes as fourth element', () {
+      const props = LocationEnginePlatforms.iOS(
+        enableHighAccuracy: true,
+        intervalMs: 30000,
+        pulseWindowMs: 3000,
+      );
+      expect(props.toList(targetPlatform: platform), [1, 0, 30000, 3000]);
     });
 
     test('android-only and web-only fields are ignored', () {
@@ -255,8 +264,8 @@ void main() {
         interval: 500,
         priority: LocationPriority.noPower,
       );
-      // iOS only serializes enableHighAccuracy, displacement, and intervalMs
-      expect(props.toList(targetPlatform: platform), [0, 0, 0]);
+      // iOS only serializes enableHighAccuracy, displacement, intervalMs, pulseWindowMs
+      expect(props.toList(targetPlatform: platform), [0, 0, 0, 5000]);
     });
   });
 

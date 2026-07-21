@@ -4,7 +4,7 @@ part of '../maplibre_gl_platform_interface.dart';
 ///
 /// Use the platform-specific constructors to only set relevant properties:
 /// - [LocationEnginePlatforms.android] — [enableHighAccuracy], [interval], [displacement], [priority]
-/// - [LocationEnginePlatforms.iOS] — [enableHighAccuracy], [displacement], [intervalMs]
+/// - [LocationEnginePlatforms.iOS] — [enableHighAccuracy], [displacement], [intervalMs], [pulseWindowMs]
 /// - [LocationEnginePlatforms.web] — [enableHighAccuracy], [maximumAge], [timeout]
 @immutable
 class LocationEnginePlatforms {
@@ -51,6 +51,7 @@ class LocationEnginePlatforms {
       displacement = null,
       priority = null,
       intervalMs = null,
+      pulseWindowMs = null,
       maximumAge = null,
       timeout = null;
 
@@ -64,6 +65,7 @@ class LocationEnginePlatforms {
     this.displacement = 0,
     this.priority,
   }) : intervalMs = null,
+       pulseWindowMs = null,
        maximumAge = null,
        timeout = null;
 
@@ -75,15 +77,22 @@ class LocationEnginePlatforms {
   /// pulses. 0 = continuous (default).
   final int? intervalMs;
 
+  /// Duration in milliseconds that GPS stays active during each pulse on iOS.
+  ///
+  /// Only used when [intervalMs] > 0. Defaults to 5000 ms when omitted.
+  final int? pulseWindowMs;
+
   /// iOS-specific constructor.
   ///
   /// Exposes only properties relevant to the iOS CLLocationManager:
   /// [enableHighAccuracy], [displacement] (mapped to distanceFilter),
-  /// and [intervalMs] (GPS pulse interval, 0 = continuous).
+  /// [intervalMs] (GPS pulse period, 0 = continuous), and [pulseWindowMs]
+  /// (GPS ON duration per pulse).
   const LocationEnginePlatforms.iOS({
     this.enableHighAccuracy = false,
     this.displacement = 0,
     this.intervalMs = 0,
+    this.pulseWindowMs = 5000,
   }) : interval = null,
        priority = null,
        maximumAge = null,
@@ -100,7 +109,8 @@ class LocationEnginePlatforms {
   }) : interval = null,
        displacement = null,
        priority = null,
-       intervalMs = null;
+       intervalMs = null,
+       pulseWindowMs = null;
 
   static const LocationEnginePlatforms defaultPlatform =
       LocationEnginePlatforms._();
@@ -136,6 +146,7 @@ class LocationEnginePlatforms {
         if (enableHighAccuracy) 1 else 0,
         displacement ?? 0,
         intervalMs ?? 0,
+        pulseWindowMs ?? 5000,
       ];
     }
 
@@ -153,6 +164,7 @@ class LocationEnginePlatforms {
           displacement == other.displacement &&
           priority == other.priority &&
           intervalMs == other.intervalMs &&
+          pulseWindowMs == other.pulseWindowMs &&
           maximumAge == other.maximumAge &&
           timeout == other.timeout);
 
@@ -163,6 +175,7 @@ class LocationEnginePlatforms {
     displacement,
     priority,
     intervalMs,
+    pulseWindowMs,
     maximumAge,
     timeout,
   );
@@ -174,6 +187,7 @@ class LocationEnginePlatforms {
     if (displacement != null) parts.add('displacement: $displacement');
     if (priority != null) parts.add('priority: $priority');
     if (intervalMs != null) parts.add('intervalMs: $intervalMs');
+    if (pulseWindowMs != null) parts.add('pulseWindowMs: $pulseWindowMs');
     if (maximumAge != null) parts.add('maximumAge: $maximumAge');
     if (timeout != null) parts.add('timeout: $timeout');
     return 'LocationEnginePlatforms{ ${parts.join(', ')} }';
