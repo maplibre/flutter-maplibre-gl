@@ -71,6 +71,14 @@ class _FfiMapViewState extends State<FfiMapView> {
   final ValueNotifier<double> _bearing = ValueNotifier(0);
   double _pitch = 0;
 
+  // Compass repaint gate: during a continuous rotation the per-frame dial
+  // repaint pushed near-budget UI frames over the 90 Hz budget (rotate jank
+  // 24% -> 47% in the phase-2 A/B), so the ornament follows at ~15 Hz while
+  // the camera streams and snaps exactly on idle.
+  static const _compassMinInterval = Duration(milliseconds: 66);
+  final Stopwatch _compassClock = Stopwatch()..start();
+  int _lastCompassUpdateMs = -1000;
+
   // Ornament signals updated from engine events without rebuilding the
   // whole Stack: camera movement collapses the attribution pill, style loads
   // refresh its content, and the scale bar follows meters-per-pixel.
@@ -275,7 +283,13 @@ class _FfiMapViewState extends State<FfiMapView> {
     if (current <= 0 || (mpp - current).abs() / current > 0.01) {
       _metersPerPixel.value = mpp;
     }
-    if ((camera.bearing - _bearing.value).abs() > 0.2) {
+    final nowMs = _compassClock.elapsedMilliseconds;
+    final settled = event is MapIdleEvent;
+    if ((camera.bearing - _bearing.value).abs() > 0.2 &&
+        (settled ||
+            nowMs - _lastCompassUpdateMs >=
+                _compassMinInterval.inMilliseconds)) {
+      _lastCompassUpdateMs = nowMs;
       _bearing.value = camera.bearing;
     }
   }
