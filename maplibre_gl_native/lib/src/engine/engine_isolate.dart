@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'engine_core.dart';
 import 'engine_protocol.dart';
-import 'texture_bridge.dart';
+import '../io/texture_bridge.dart';
 import 'vsync_pulse.dart';
 
 /// The engine host: owns the dedicated engine isolate and is the only door

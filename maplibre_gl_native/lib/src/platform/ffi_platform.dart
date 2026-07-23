@@ -12,13 +12,13 @@ import 'package:flutter/widgets.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
-import 'engine_isolate.dart';
-import 'engine_protocol.dart';
-import 'ffi_map_view.dart';
+import '../engine/engine_isolate.dart';
+import '../engine/engine_protocol.dart';
+import '../view/ffi_map_view.dart';
 import 'ffi_platform_base.dart';
-import 'ornaments.dart';
-import 'style_string_resolver.dart';
-import 'texture_bridge.dart';
+import '../view/ornaments.dart';
+import '../io/style_string_resolver.dart';
+import '../io/texture_bridge.dart';
 
 /// Style-spec layout properties, used to split the flat property maps of the
 /// existing maplibre_gl API into the paint/layout objects that raw style
@@ -1132,7 +1132,11 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
   ];
 
   @override
-  Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]) async {
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+  ]) async {
     final (host, sessionId) = _requireSession();
     final (rgba, width, height) = await _decodeRgba(bytes);
     host.send(
@@ -1367,9 +1371,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
         sessionId,
         topImage: _locationTopImage,
         // The bearing puck is used for the compass/gps render modes.
-        bearingImage: _myLocationRenderMode == 0
-            ? null
-            : _locationBearingImage,
+        bearingImage: _myLocationRenderMode == 0 ? null : _locationBearingImage,
       ),
     );
     final location = _lastLocation;

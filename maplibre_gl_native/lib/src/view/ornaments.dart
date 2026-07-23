@@ -534,7 +534,10 @@ class _ScaleBarPainter extends CustomPainter {
     )..layout();
     text.paint(
       canvas,
-      Offset((size.width - text.width) / 2, baseline - tickHeight - text.height),
+      Offset(
+        (size.width - text.width) / 2,
+        baseline - tickHeight - text.height,
+      ),
     );
   }
 

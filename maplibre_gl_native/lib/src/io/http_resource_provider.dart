@@ -116,8 +116,10 @@ class HttpResourceProvider {
       }
       handle.complete(_toResourceResponse(response, bytes));
     } catch (error) {
-      debugPrint('[maplibre_gl_native] HTTP fetch failed: '
-          '${request.url}: $error');
+      debugPrint(
+        '[maplibre_gl_native] HTTP fetch failed: '
+        '${request.url}: $error',
+      );
       if (handle.isReleased) return;
       final reason =
           error is SocketException ||

@@ -11,14 +11,18 @@ pre-1.0 native ABI.
 
 ## How it works
 
+**Read [ARCHITECTURE.md](ARCHITECTURE.md)** for the guided tour with diagrams,
+the threading rules, and the "add a new map API in 4 steps" recipe. The stack
+in one breath:
+
 ```
 maplibre_gl (unchanged public API)
   -> MapLibreFfiPlatform + FfiMapView   presentation: widget, gestures,
-     (ffi_platform.dart, ffi_map_view)  texture/surface lifecycle, ornaments
-    -> EngineHost                       message protocol (engine_protocol.dart)
-       (engine_isolate.dart)            over a SendPort to the engine isolate
-      -> FfiEngineCore                  owns every native handle; the only file
-         (engine_core.dart)             that touches mln.* types
+     (src/platform/, src/view/)         texture/surface lifecycle, ornaments
+    -> EngineHost                       message protocol (src/engine/
+       (src/engine/engine_isolate.dart) engine_protocol.dart) over a SendPort
+      -> FfiEngineCore                  owns every native handle; the only
+         (src/engine/engine_core.dart)  files that touch mln.* types
         -> maplibre_native_ffi          Dart bindings (maplibre-native-ffi PR #187)
           -> libmaplibre-native-c.so    C API over the MapLibre Native C++ core
 ```

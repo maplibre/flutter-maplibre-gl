@@ -6,9 +6,9 @@ import 'package:flutter/gestures.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show LatLng;
 
-import 'engine_isolate.dart';
-import 'engine_protocol.dart';
-import 'ffi_platform.dart';
+import '../engine/engine_isolate.dart';
+import '../engine/engine_protocol.dart';
+import '../platform/ffi_platform.dart';
 
 /// Flutter-side gesture layer of the FFI map view.
 ///
@@ -462,7 +462,8 @@ class MapGestureHandler {
     final rotationSinceStart = details.rotation.abs() * 180 / pi;
     if (!_zoomActive && !_rotateActive) {
       final rotateHit =
-          config.rotateEnabled && rotationSinceStart >= _rotateActivationDegrees;
+          config.rotateEnabled &&
+          rotationSinceStart >= _rotateActivationDegrees;
       final zoomHit =
           config.zoomEnabled && scaleSinceStart >= _zoomActivationScale;
       if (rotateHit &&

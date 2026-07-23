@@ -304,7 +304,10 @@ class CancelTransitionsCommand extends SessionCommand {
 /// Brackets a live touch gesture (platform SDK parity: set on touch down,
 /// cleared on touch up) so the core treats the camera writes as one gesture.
 class SetGestureInProgressCommand extends SessionCommand {
-  const SetGestureInProgressCommand(super.sessionId, {required this.inProgress});
+  const SetGestureInProgressCommand(
+    super.sessionId, {
+    required this.inProgress,
+  });
 
   final bool inProgress;
 }
@@ -412,7 +415,10 @@ class SetGeoJsonSourceUrlCommand extends SessionCommand {
 /// The platform disables it for the duration of a feature drag so symbol
 /// position updates apply instantly instead of fading over ~300ms.
 class SetPlacementTransitionsCommand extends SessionCommand {
-  const SetPlacementTransitionsCommand(super.sessionId, {required this.enabled});
+  const SetPlacementTransitionsCommand(
+    super.sessionId, {
+    required this.enabled,
+  });
 
   final bool enabled;
 }
@@ -583,7 +589,12 @@ class SetNetworkStatusCommand extends EngineCommand {
 }
 
 /// Ambient (non-offline-region) tile cache maintenance operations.
-enum AmbientCacheOperationKind { resetDatabase, packDatabase, invalidate, clear }
+enum AmbientCacheOperationKind {
+  resetDatabase,
+  packDatabase,
+  invalidate,
+  clear,
+}
 
 /// Starts an ambient cache maintenance operation (fire-and-forget).
 class RunAmbientCacheOperationCommand extends EngineCommand {

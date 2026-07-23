@@ -3,16 +3,17 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart' show OnPlatformViewCreatedCallback;
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
+    show OnPlatformViewCreatedCallback;
 
-import 'engine_core.dart' show FfiEngineCore;
-import 'engine_isolate.dart';
-import 'engine_protocol.dart';
-import 'ffi_platform.dart';
+import '../engine/engine_core.dart' show FfiEngineCore;
+import '../engine/engine_isolate.dart';
+import '../engine/engine_protocol.dart';
+import '../platform/ffi_platform.dart';
 import 'map_gestures.dart';
 import 'ornaments.dart';
-import 'style_string_resolver.dart';
-import 'texture_bridge.dart';
+import '../io/style_string_resolver.dart';
+import '../io/texture_bridge.dart';
 
 /// Texture-backed map view driven entirely through dart:ffi.
 ///
@@ -133,7 +134,9 @@ class _FfiMapViewState extends State<FfiMapView> {
       final host = await EngineHost.ensure();
       // The bundled native library is compiled for exactly one render
       // backend; prepare the platform texture for the matching one.
-      final backend = FfiEngineCore.supportsVulkan ? SessionBackend.vulkan : SessionBackend.opengl;
+      final backend = FfiEngineCore.supportsVulkan
+          ? SessionBackend.vulkan
+          : SessionBackend.opengl;
       final handles = await MapLibreGlNativeBridge.createTexture(
         physicalWidth: (logicalSize.width * devicePixelRatio).round(),
         physicalHeight: (logicalSize.height * devicePixelRatio).round(),
@@ -278,7 +281,12 @@ class _FfiMapViewState extends State<FfiMapView> {
     // streams repaint only the affected ornament, never the map Stack.
     // Meters per logical pixel at the camera latitude (style-spec 512px
     // world tile), for the scale bar.
-    final mpp = cos(camera.latitude * pi / 180) * 2 * pi * 6378137 / (512 * pow(2, camera.zoom));
+    final mpp =
+        cos(camera.latitude * pi / 180) *
+        2 *
+        pi *
+        6378137 /
+        (512 * pow(2, camera.zoom));
     final current = _metersPerPixel.value;
     if (current <= 0 || (mpp - current).abs() / current > 0.01) {
       _metersPerPixel.value = mpp;
@@ -302,7 +310,10 @@ class _FfiMapViewState extends State<FfiMapView> {
       return;
     }
     final applied = _appliedLogicalSize;
-    if (applied != null && (applied.width - logicalSize.width).abs() < 1 && (applied.height - logicalSize.height).abs() < 1 && _devicePixelRatio == devicePixelRatio) {
+    if (applied != null &&
+        (applied.width - logicalSize.width).abs() < 1 &&
+        (applied.height - logicalSize.height).abs() < 1 &&
+        _devicePixelRatio == devicePixelRatio) {
       return;
     }
     _resizing = true;
@@ -356,7 +367,9 @@ class _FfiMapViewState extends State<FfiMapView> {
         final textureId = _textureId;
 
         if (textureId == null) {
-          if (!_initStarted && logicalSize.width >= 1 && logicalSize.height >= 1) {
+          if (!_initStarted &&
+              logicalSize.width >= 1 &&
+              logicalSize.height >= 1) {
             unawaited(_initialize(logicalSize, devicePixelRatio));
           }
           return const ColoredBox(color: Color(0xFF111725));
@@ -441,7 +454,9 @@ class _FfiMapViewState extends State<FfiMapView> {
                 position: ornaments.attributionPosition,
                 // When the attribution shares a corner with the logo, shift
                 // it past the logo's 88px width like the native SDKs do.
-                margins: ornaments.logoEnabled && ornaments.attributionPosition == ornaments.logoPosition
+                margins:
+                    ornaments.logoEnabled &&
+                        ornaments.attributionPosition == ornaments.logoPosition
                     ? [
                         ornaments.attributionMargins[0] + 96,
                         ornaments.attributionMargins[1],
@@ -452,7 +467,9 @@ class _FfiMapViewState extends State<FfiMapView> {
                   openUri: MapLibreGlNativeBridge.openUri,
                   collapseSignal: _cameraGeneration,
                   refreshSignal: _styleGeneration,
-                  iconAtStart: ornaments.attributionPosition == 0 || ornaments.attributionPosition == 2,
+                  iconAtStart:
+                      ornaments.attributionPosition == 0 ||
+                      ornaments.attributionPosition == 2,
                 ),
               ),
             if (ornaments.scaleBarEnabled)
