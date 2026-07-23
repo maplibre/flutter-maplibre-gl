@@ -6,7 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show LatLng;
 
-import 'engine_host.dart';
+import 'engine_isolate.dart';
 import 'engine_protocol.dart';
 import 'ffi_platform.dart';
 

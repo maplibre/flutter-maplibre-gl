@@ -6,27 +6,39 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'engine_core.dart';
-import 'engine_host.dart';
 import 'engine_protocol.dart';
 import 'texture_bridge.dart';
 
-/// Phase-3 host: the engine core lives on a dedicated isolate and every
-/// message crosses a SendPort.
+/// The engine host: owns the dedicated engine isolate and is the only door
+/// through which the presentation side (widget, gestures, the
+/// `MapLibrePlatform` adapter, the offline API) talks to the engine core.
 ///
-/// The engine drives its own frame loop ([_EngineDriver]), so a heavy
-/// `renderUpdate` (tile integration) no longer stalls the UI isolate; the
-/// presentation side only owns the external texture and the gestures.
+/// Mutations go down as fire-and-forget [send]s, reads as [query]s with a
+/// reply, and engine events come back through [addEventListener]; every
+/// message crosses a SendPort to the isolate that owns all MapLibre Native
+/// handles and drives its own frame loop ([_EngineDriver]), so a heavy
+/// `renderUpdate` (tile integration) never stalls the UI isolate.
 ///
 /// MapLibre Native handles are OS-thread affine and the Dart VM does not
-/// guarantee isolate-to-thread pinning (dart-lang/sdk#46943): a device probe
-/// showed the thread to be stable in practice, the engine keeps a `gettid`
-/// watchdog to detect a migration deterministically, and the insurance plan
-/// is an upstream `mln_runtime_rebind_thread` API (see
+/// guarantee isolate-to-thread pinning (dart-lang/sdk#46943): the engine
+/// keeps a `gettid` watchdog and rebinds the runtime on migration via the
+/// local upstream patch `mln_runtime_rebind_thread` (see
 /// docs/upstream-native-ffi-proposals.md).
-class IsolateEngineHost implements EngineHost {
-  IsolateEngineHost._();
+///
+/// A test double can still `implements EngineHost` thanks to Dart's implicit
+/// interfaces.
+class EngineHost {
+  EngineHost._();
 
-  static IsolateEngineHost? _instance;
+  static EngineHost? _instance;
+
+  /// The live host, once [ensure] has completed.
+  static EngineHost? get instance => _instance;
+
+  /// Process-global HTTP headers for engine resource requests
+  /// (`MapLibreGlNative.setGlobalHttpHeaders`): applied at bootstrap, kept
+  /// in sync by the setter afterwards.
+  static Map<String, String> globalHttpHeaders = const {};
 
   SendPort? _commands;
   final List<void Function(EngineEvent)> _listeners =
@@ -35,15 +47,19 @@ class IsolateEngineHost implements EngineHost {
   int _nextRequestId = 1;
 
   /// Initializes the Android services, spawns the engine isolate, and waits
-  /// for its command port. Throws if the bootstrap fails.
-  static Future<IsolateEngineHost> ensure() async {
+  /// for its command port.
+  ///
+  /// Throws a [StateError] when the engine isolate cannot be bootstrapped:
+  /// the FFI backend has no other engine to fall back to, and failing loudly
+  /// beats rendering nothing.
+  static Future<EngineHost> ensure() async {
     final existing = _instance;
     if (existing != null) return existing;
     // mln_android_init must run before the engine isolate creates the
     // runtime; the method channel lives on the root isolate.
     await MapLibreGlNativeBridge.init();
-    final cacheDir = await FfiEngineConfig.resolveCacheDir();
-    final host = IsolateEngineHost._();
+    final cacheDir = await _resolveCacheDir();
+    final host = EngineHost._();
     final fromEngine = RawReceivePort();
     final ready = Completer<SendPort>();
     fromEngine.handler = (message) {
@@ -60,12 +76,17 @@ class IsolateEngineHost implements EngineHost {
         debugName: 'maplibre-engine',
       );
       host._commands = await ready.future.timeout(const Duration(seconds: 10));
-    } catch (error) {
+    } catch (error, stackTrace) {
       fromEngine.close();
-      rethrow;
+      Error.throwWithStackTrace(
+        StateError('The MapLibre FFI engine isolate failed to start: $error'),
+        stackTrace,
+      );
     }
     _instance = host;
-    FfiEngineConfig.applyTo(host);
+    if (globalHttpHeaders.isNotEmpty) {
+      host.send(SetHttpHeadersCommand(globalHttpHeaders));
+    }
     return host;
   }
 
@@ -84,20 +105,17 @@ class IsolateEngineHost implements EngineHost {
     }
   }
 
-  @override
-  bool get drivesFrames => true;
-
-  @override
+  /// Registers a listener for events pushed by the engine.
   void addEventListener(void Function(EngineEvent event) listener) {
     _listeners.add(listener);
   }
 
-  @override
+  /// Removes a previously registered event listener.
   void removeEventListener(void Function(EngineEvent event) listener) {
     _listeners.remove(listener);
   }
 
-  @override
+  /// Sends a fire-and-forget mutation.
   void send(EngineCommand command) {
     final commands = _commands;
     if (commands == null) {
@@ -106,7 +124,7 @@ class IsolateEngineHost implements EngineHost {
     commands.send(command);
   }
 
-  @override
+  /// Executes a read and completes with its reply.
   Future<R> query<R>(EngineQuery<R> query) {
     final commands = _commands;
     if (commands == null) {
@@ -118,13 +136,20 @@ class IsolateEngineHost implements EngineHost {
     commands.send(_QueryRequest(id, query));
     return completer.future.then((value) => value as R);
   }
+}
 
-  // Frame driving lives inside the engine isolate; the widget never ticks.
-  @override
-  bool tick(int sessionId) => false;
-
-  @override
-  bool pumpAndCheckRenderPending(int sessionId) => false;
+/// Resolves the platform cache directory backing the persistent tile cache;
+/// null selects an in-memory cache.
+Future<String?> _resolveCacheDir() async {
+  try {
+    return await MapLibreGlNativeBridge.getCacheDir();
+  } catch (error) {
+    debugPrint(
+      '[maplibre_gl_native] no platform cache directory, '
+      'using an in-memory tile cache: $error',
+    );
+    return null;
+  }
 }
 
 /// Query envelope with a correlation id for the reply.
@@ -149,24 +174,6 @@ class _QueryFailure {
 
   final int id;
   final String error;
-}
-
-/// Bootstraps (or returns) the process-wide engine host: the isolate-backed
-/// one when [engineIsolate] is set (falling back to the single-isolate
-/// engine on bootstrap failure), the local one otherwise. Shared by the map
-/// widget and the offline API.
-Future<EngineHost> ensureEngineHost({required bool engineIsolate}) async {
-  if (engineIsolate) {
-    try {
-      return await IsolateEngineHost.ensure();
-    } catch (error, stackTrace) {
-      debugPrint(
-        '[maplibre_gl_native] engine isolate bootstrap failed, '
-        'falling back to the single-isolate engine: $error\n$stackTrace',
-      );
-    }
-  }
-  return LocalEngineHost.ensure();
 }
 
 /// Spawn payload of the engine isolate.

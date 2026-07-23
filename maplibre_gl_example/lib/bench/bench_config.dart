@@ -9,7 +9,6 @@ library;
 
 enum BenchEngine {
   stable('stable'),
-  ffi('ffi'),
   ffiIsolate('ffi_isolate');
 
   const BenchEngine(this.id);

@@ -5,7 +5,7 @@
 //   dart run tool/bench/run_bench.dart [options]
 //
 // Options:
-//   --engines stable,ffi,ffi_isolate   variants to run (default: all three)
+//   --engines stable,ffi_isolate       variants to run (default: both)
 //   --scenarios a,b,c                  scenario subset (default: all)
 //   --iterations N                     measured iterations (default: 3)
 //   --no-warmup                        skip the discarded cache-warm pass
@@ -29,7 +29,7 @@ import 'dart:io';
 const String appId = 'org.maplibre.example';
 const String activity = 'io.flutter.embedding.android.FlutterActivity';
 
-const List<String> allEngines = ['stable', 'ffi', 'ffi_isolate'];
+const List<String> allEngines = ['stable', 'ffi_isolate'];
 const List<String> allScenarios = [
   'style_load',
   'world_tour',
@@ -300,7 +300,6 @@ Future<Map<String, dynamic>> _executeRun({
     final transport = (result['metadata'] as Map)['engineTransport'];
     final expected = switch (engine) {
       'ffi_isolate' => 'isolate',
-      'ffi' => 'local',
       _ => 'platform-view',
     };
     if (transport != expected) {

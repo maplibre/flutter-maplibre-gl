@@ -93,23 +93,6 @@ class FfiEngineCore {
 
   // --- Frame driving ---------------------------------------------------------
 
-  /// Runs one owner-thread task and dispatches queued runtime events, then
-  /// renders the given session if it is dirty. Returns whether a frame was
-  /// actually rendered. Called once per presentation frame.
-  bool tick(int sessionId) {
-    pump();
-    final session = _sessions[sessionId];
-    final rendered = session != null && session.renderIfNeeded();
-    return _renderSnapshots() || rendered;
-  }
-
-  /// Pumps the runtime without rendering and reports whether the session has
-  /// a frame pending (used by the low-frequency idle pump).
-  bool pumpAndCheckRenderPending(int sessionId) {
-    pump();
-    return _sessions[sessionId]?.renderPending ?? false;
-  }
-
   /// Pumps the runtime and renders every dirty session. Returns whether any
   /// frame was actually rendered. Used by the self-driving isolate loop.
   bool frame() {

@@ -14,37 +14,30 @@ pre-1.0 native ABI.
 ```
 maplibre_gl (unchanged public API)
   -> MapLibreFfiPlatform + FfiMapView   presentation: widget, gestures,
-     (ffi_platform.dart, ffi_map_view)  texture/EGL lifecycle, frame pacing
-    -> EngineHost                       message protocol (engine_protocol.dart);
-       (engine_host.dart)               LocalEngineHost = direct calls today,
-                                        SendPort transport = render isolate next
+     (ffi_platform.dart, ffi_map_view)  texture/surface lifecycle, ornaments
+    -> EngineHost                       message protocol (engine_protocol.dart)
+       (engine_isolate.dart)            over a SendPort to the engine isolate
       -> FfiEngineCore                  owns every native handle; the only file
          (engine_core.dart)             that touches mln.* types
         -> maplibre_native_ffi          Dart bindings (maplibre-native-ffi PR #187)
           -> libmaplibre-native-c.so    C API over the MapLibre Native C++ core
 ```
 
-The presentation/engine split is phase 2 of the render-isolate plan (see the
-RFC's "Performance profiling" section): every command, query, and event
-crossing the boundary is isolate-sendable, so moving `FfiEngineCore` to a
-dedicated isolate is a transport swap, not a redesign.
-
-Phase 3 ships that transport: `MapLibreGlNative.use(engineIsolate: true)`
-runs the engine core on a dedicated isolate (`engine_isolate.dart`,
-`IsolateEngineHost`). The engine drives its own frame loop there, so heavy
-tile-integration `renderUpdate` calls no longer stall the UI thread; the
-widget stops ticking entirely. A `gettid` watchdog logs if the VM ever
+The MapLibre runtime, maps, and rendering live on a **dedicated engine
+isolate**: every command, query, and event crossing the boundary is
+isolate-sendable, the engine drives its own frame loop there, and heavy
+tile-integration `renderUpdate` calls never stall the UI thread. (Benchmarks
+of the retired single-isolate mode against this architecture are in
+`docs/ffi-benchmark-results-2026-07.md`; the isolate won everywhere, so it is
+now the only mode.) A `gettid` watchdog rebinds the runtime if the VM ever
 migrates the isolate across OS threads (the native handles are thread-affine;
-see `upstream_patches/` and the RFC for the rebind insurance plan), and the
-bootstrap falls back to the single-isolate engine on failure.
+see `upstream_patches/`), and a failed isolate bootstrap throws instead of
+degrading silently.
 
 - The only platform channel left is the texture shim (`MapLibreGlNativePlugin`):
   it registers a `SurfaceProducer` texture, wraps its `Surface` in an EGL
   window surface (all in Kotlin via `EGL14`, raw handles passed to Dart), and
   calls `mln_android_init` through ~20 lines of JNI C.
-- Dart attaches an OpenGL surface render session to the EGL handles and drives
-  the runtime event loop plus rendering from a `Ticker` on the UI isolate,
-  mirroring the upstream `examples/android-map` Choreographer loop.
 - Gestures (pan, pinch, rotate, two-finger tilt, double-tap zoom,
   tap/long-press events) are implemented in Dart over `GestureDetector` and
   synchronous FFI camera calls.

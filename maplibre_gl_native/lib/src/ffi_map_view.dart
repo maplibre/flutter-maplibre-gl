@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart' show OnPlatformViewCreatedCallback;
 
-import '../maplibre_gl_native.dart' show MapLibreGlNative;
 import 'engine_core.dart' show FfiEngineCore;
-import 'engine_host.dart';
 import 'engine_isolate.dart';
 import 'engine_protocol.dart';
 import 'ffi_platform.dart';
@@ -19,13 +16,14 @@ import 'texture_bridge.dart';
 /// Texture-backed map view driven entirely through dart:ffi.
 ///
 /// Replaces the AndroidView/UiKitView platform view of the method-channel
-/// backend: the MapLibre Native core renders into an EGL window surface backed
-/// by a Flutter [Texture], and a [Ticker] pumps the engine once per frame.
+/// backend: the MapLibre Native core renders into a native window surface
+/// backed by a Flutter [Texture], paced by the engine isolate's own frame
+/// loop.
 ///
-/// This widget is pure presentation: it owns the external texture, frame
-/// pacing, and the ornaments overlay, wires the gesture callbacks to
-/// [MapGestureHandler], and talks to the engine core exclusively through the
-/// [EngineHost] message protocol.
+/// This widget is pure presentation: it owns the external texture and the
+/// ornaments overlay, wires the gesture callbacks to [MapGestureHandler],
+/// and talks to the engine core exclusively through the [EngineHost] message
+/// protocol.
 class FfiMapView extends StatefulWidget {
   const FfiMapView({
     super.key,
@@ -42,17 +40,7 @@ class FfiMapView extends StatefulWidget {
   State<FfiMapView> createState() => _FfiMapViewState();
 }
 
-class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateMixin {
-  /// Consecutive no-work ticks after which the ticker parks itself and the
-  /// low-frequency [_idlePump] timer takes over runtime event polling. This
-  /// keeps the UI thread frame-free when the map is idle (and lets tools that
-  /// wait for frame quiescence, like flutter_driver, operate).
-  static const _idleTickLimit = 30;
-  static const _idlePumpInterval = Duration(milliseconds: 100);
-
-  Ticker? _ticker;
-  Timer? _idlePump;
-  int _idleTicks = 0;
+class _FfiMapViewState extends State<FfiMapView> {
   EngineHost? _host;
   int? _sessionId;
   int? _textureId;
@@ -100,8 +88,6 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
     _cameraGeneration.dispose();
     _styleGeneration.dispose();
     _metersPerPixel.dispose();
-    _ticker?.dispose();
-    _idlePump?.cancel();
     final host = _host;
     final sessionId = _sessionId;
     final textureId = _textureId;
@@ -124,14 +110,12 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  static Future<EngineHost> _ensureHost() => ensureEngineHost(engineIsolate: MapLibreGlNative.engineIsolateEnabled);
-
   Future<void> _initialize(Size logicalSize, double devicePixelRatio) async {
     _initStarted = true;
     _devicePixelRatio = devicePixelRatio;
     _appliedLogicalSize = logicalSize;
     try {
-      final host = await _ensureHost();
+      final host = await EngineHost.ensure();
       // The bundled native library is compiled for exactly one render
       // backend; prepare the platform texture for the matching one.
       final backend = FfiEngineCore.supportsVulkan ? SessionBackend.vulkan : SessionBackend.opengl;
@@ -193,12 +177,6 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
         }
       };
 
-      // An isolate-backed engine drives its own frame loop; the widget
-      // ticker only exists for the single-isolate engine.
-      if (!host.drivesFrames) {
-        _ticker = createTicker(_onTick);
-        _wake();
-      }
       setState(() {});
       widget.onViewCreated(widget.platform.hashCode);
     } catch (error, stackTrace) {
@@ -267,12 +245,10 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
     );
     if (!mounted || _sessionId != sessionId) return;
     host.send(AttachSurfaceCommand(sessionId, eglSurface: eglSurface));
-    _wake();
   }
 
   void _onEngineEvent(EngineEvent event) {
     if (event.sessionId != _sessionId) return;
-    if (event is RenderPendingEvent) _wake();
     if (event is CameraWillChangeEvent) _cameraGeneration.value++;
     if (event is StyleLoadedEvent) _styleGeneration.value++;
     // Mirror the camera for the ornaments; rebuild only on visible changes
@@ -293,34 +269,6 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
     }
     if ((camera.bearing - _bearing).abs() > 0.2) {
       setState(() => _bearing = camera.bearing);
-    }
-  }
-
-  /// Restarts the frame-driven loop after idle parking.
-  void _wake() {
-    if (!mounted) return;
-    _idleTicks = 0;
-    _idlePump?.cancel();
-    _idlePump = null;
-    final ticker = _ticker;
-    if (ticker != null && !ticker.isActive) {
-      unawaited(ticker.start());
-    }
-  }
-
-  void _onTick(Duration elapsed) {
-    final host = _host;
-    final sessionId = _sessionId;
-    if (host == null || sessionId == null) return;
-    final rendered = host.tick(sessionId);
-    _idleTicks = rendered ? 0 : _idleTicks + 1;
-    if (_idleTicks > _idleTickLimit) {
-      // Park the ticker; keep draining runtime events (network responses,
-      // tile loads) on a low-frequency timer that wakes the ticker on work.
-      _ticker?.stop();
-      _idlePump ??= Timer.periodic(_idlePumpInterval, (_) {
-        if (host.pumpAndCheckRenderPending(sessionId)) _wake();
-      });
     }
   }
 
@@ -372,7 +320,6 @@ class _FfiMapViewState extends State<FfiMapView> with SingleTickerProviderStateM
           eglSurface: eglSurface,
         ),
       );
-      _wake();
     } finally {
       _resizing = false;
     }

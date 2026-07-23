@@ -36,10 +36,8 @@ Future<void> main() async {
       switch (config.engine) {
         case BenchEngine.stable:
           break;
-        case BenchEngine.ffi:
-          MapLibreGlNative.use(engineIsolate: false);
         case BenchEngine.ffiIsolate:
-          MapLibreGlNative.use(engineIsolate: true);
+          MapLibreGlNative.use();
       }
       if (config.offline) {
         // Engine-level network cut, set before the style loads: measured

@@ -83,5 +83,5 @@ This document (`docs/ffi-api-expansion-plan.md`), linked from the RFC roadmap se
 ## Verification
 
 - Per phase: `melos run analyze` + on-device smoke (profile build on the Xiaomi 11 Lite) of the EXISTING example pages that exercise that phase, unchanged: annotation managers + moving symbols (phase 1), `place_symbol`/custom marker (phase 2), `click_annotations` + drag (phase 3), custom tile-server headers (phase 4), snapshot page + language switch (phase 5), user-location page (phase 6), visual compass/scale/attribution check (phase 7), offline-regions page adapted (phase 8).
-- End-to-end proof: new `main_ffi.dart` entry point in `maplibre_gl_example` that runs the FULL example gallery under `MapLibreGlNative.use(engineIsolate: true)`; the "same API, new engine" claim tested against every page.
+- End-to-end proof: new `main_ffi.dart` entry point in `maplibre_gl_example` that runs the FULL example gallery under `MapLibreGlNative.use()`; the "same API, new engine" claim tested against every page. (Historical note: during the spike the gallery entry point actually ran the since-retired single-isolate mode; the engine isolate has been the only architecture since the July 2026 consolidation.)
 - Final pass: profile run confirming ~90 fps unchanged and stable memory over 10+ minutes (also closes the last spike exit criterion).

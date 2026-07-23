@@ -12,7 +12,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
-import 'engine_host.dart';
+import 'engine_isolate.dart';
 import 'engine_protocol.dart';
 import 'ffi_map_view.dart';
 import 'ffi_platform_base.dart';

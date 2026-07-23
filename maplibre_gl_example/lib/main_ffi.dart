@@ -12,6 +12,6 @@ import 'main.dart' as gallery;
 /// Android arm64 only. The offline page still talks to the method-channel
 /// global API; use MapLibreGlNativeOffline until the global seam PR lands.
 Future<void> main() async {
-  MapLibreGlNative.use(engineIsolate: false);
+  MapLibreGlNative.use();
   await gallery.main();
 }

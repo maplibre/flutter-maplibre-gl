@@ -65,7 +65,7 @@ Future<void> main(List<String> args) async {
   final engines = [
     for (final engine in const ['stable', 'ffi', 'ffi_isolate'])
       if (meta.containsKey(engine)) engine,
-  ];
+  ]; // 'ffi' only appears in pre-consolidation result sets.
   final report = _renderReport(table, engines, meta, runs.length);
   File('${dir.path}/report.md').writeAsStringSync(report);
   File('${dir.path}/summary.json').writeAsStringSync(

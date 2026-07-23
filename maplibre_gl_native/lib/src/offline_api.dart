@@ -6,8 +6,6 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:maplibre_gl/maplibre_gl.dart' as gl;
 
-import '../maplibre_gl_native.dart' show MapLibreGlNative;
-import 'engine_host.dart';
 import 'engine_isolate.dart';
 import 'engine_protocol.dart';
 
@@ -31,9 +29,7 @@ class MapLibreGlNativeOffline {
   static EngineHost? _listeningHost;
 
   static Future<EngineHost> _ensureHost() async {
-    final host = await ensureEngineHost(
-      engineIsolate: MapLibreGlNative.engineIsolateEnabled,
-    );
+    final host = await EngineHost.ensure();
     if (!identical(_listeningHost, host)) {
       _listeningHost = host;
       host.addEventListener(_onEvent);

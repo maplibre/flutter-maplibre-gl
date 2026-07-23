@@ -2,12 +2,9 @@
 /// `MapLibrePlatform` adapter) and the engine core that owns every MapLibre
 /// Native handle.
 ///
-/// Phase 2 of the render-isolate plan (see the "Performance profiling"
-/// section of docs/rfc-native-ffi-engine.md): the boundary is message-shaped
-/// but still crossed with direct calls on the root isolate
-/// ([LocalEngineHost]). Phase 3 swaps the transport for SendPorts, so every
-/// field in this file must stay isolate-sendable: numbers, strings, bools,
-/// lists, maps, and typed data only. No mln.* types, no closures.
+/// Every message crosses a SendPort to the engine isolate, so every field in
+/// this file must stay isolate-sendable: numbers, strings, bools, lists,
+/// maps, and typed data only. No mln.* types, no closures.
 library;
 
 import 'dart:typed_data';

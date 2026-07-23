@@ -511,10 +511,12 @@ facts now verified rather than assumed:
 **Render isolate implemented and measured (phases 2-4).** The engine core
 (runtime, maps, render sessions, the only code touching native handles) now
 sits behind an isolate-sendable message protocol
-(`engine_protocol.dart`/`engine_core.dart`/`engine_host.dart`), and
-`MapLibreGlNative.use(engineIsolate: true)` swaps the transport to a
-dedicated isolate (`engine_isolate.dart`) with a self-driving frame loop and
-automatic fallback to the single-isolate engine. Findings:
+(`engine_protocol.dart`/`engine_core.dart`), running on a dedicated isolate
+(`engine_isolate.dart`) with a self-driving frame loop. During the spike a
+single-isolate mode coexisted as `use(engineIsolate: false)` plus a silent
+bootstrap fallback; after the July 2026 benchmark suite settled the question
+(see `docs/ffi-benchmark-results-2026-07.md`) the isolate became the only
+architecture and the fallback a loud error. Findings:
 
 - **The VM thread-migration risk is real, not theoretical.** Despite the
   clean 5-minute probe, the real engine isolate was resumed on a different
