@@ -102,9 +102,9 @@ class _EditAnnotationDraggableBodyState
         ),
         iconImage: 'custom-marker',
         iconSize: 1.0,
-        textField: id,
-        textSize: 12,
-        textOffset: const Offset(0, -2),
+        // Icon only: this example is about dragging, and the dragged id is
+        // shown by the info card. (Text labels work again now that the
+        // SymbolManager defaults to a widely served font.)
         draggable: true,
       ),
     );

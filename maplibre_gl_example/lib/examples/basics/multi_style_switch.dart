@@ -39,14 +39,14 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   CameraPosition? _lastCamera;
 
   // Demo styles
-  static const String _remoteStyle = ExampleConstants.demoMapStyle;
+  static String get _remoteStyle => ExampleConstants.demoMapStyle;
   static const String _embeddedMinimalStyle =
       '{"version":8,"glyphs":"https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
   static const String _osmAssetStyle = 'assets/osm_style.json';
 
   late final List<_StyleEntry> _styles = [
-    const _StyleEntry('Remote demo style', _remoteStyle),
+    _StyleEntry('Remote demo style', _remoteStyle),
     const _StyleEntry('Empty JSON string', _embeddedMinimalStyle),
     const _StyleEntry('Asset style', _assetStyle),
     const _StyleEntry('OSM Asset style', _osmAssetStyle),
