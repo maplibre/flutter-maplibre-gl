@@ -124,6 +124,16 @@ abstract class MapLibrePlatform {
   /// Sets the maximum frames per second for the map rendering.
   Future<void> setMaximumFps(int fps);
 
+  /// Toggles per-frame render statistics collection (benchmark
+  /// instrumentation). Enabling resets any previously collected samples.
+  /// No-op on backends without instrumentation support.
+  Future<void> setFrameStatsEnabled(bool enabled) async {}
+
+  /// Drains the frame statistics collected since [setFrameStatsEnabled] (or
+  /// since the previous drain): `timestampsUs` (frame start times) plus
+  /// per-frame duration arrays, backend-dependent. Null when unsupported.
+  Future<Map<String, dynamic>?> takeFrameStats() async => null;
+
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
 

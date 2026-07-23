@@ -1007,6 +1007,23 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setMaximumFps(fps);
   }
 
+  /// Toggles per-frame render statistics collection (benchmark
+  /// instrumentation). Enabling resets any previously collected samples.
+  ///
+  /// Supported on Android (both the platform-view and the FFI backend);
+  /// a no-op elsewhere.
+  Future<void> setFrameStatsEnabled(bool enabled) async {
+    return _maplibrePlatform.setFrameStatsEnabled(enabled);
+  }
+
+  /// Drains the frame statistics collected since [setFrameStatsEnabled] (or
+  /// since the previous drain). Keys: `timestampsUs` (frame start times,
+  /// microseconds) plus backend-dependent per-frame duration arrays.
+  /// Null when the backend has no instrumentation support.
+  Future<Map<String, dynamic>?> takeFrameStats() async {
+    return _maplibrePlatform.takeFrameStats();
+  }
+
   /// Forces the map to use online mode, disabling any offline functionality.
   ///
   /// This is useful for testing or when you want to ensure the map always
