@@ -1,0 +1,447 @@
+diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
+index ecabca3..7ad4e75 100644
+--- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
++++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
+@@ -136,6 +136,36 @@ final class RenderSessionHandle {
+     );
+   }
+ 
++  /// LOCAL SPIKE PATCH (flutter-maplibre-gl): releases the native surface
++  /// while keeping the renderer and its GPU resources alive. Rendering and
++  /// resizing are suspended until [replaceSurface] provides a new surface;
++  /// after this call the host may destroy the surface handle it lent.
++  void releaseSurface() {
++    _checkNoActiveTextureFrame('release render surface');
++    _check(_c.raw.mln_render_session_release_surface(_pointer));
++  }
++
++  /// LOCAL SPIKE PATCH (flutter-maplibre-gl): points the session at a new
++  /// native surface of the same backend kind, preserving renderer state
++  /// (uploaded tiles, glyph atlases) across native surface recreation.
++  void replaceSurface(
++    NativePointer surface,
++    int width,
++    int height, {
++    double scaleFactor = 1,
++  }) {
++    _checkNoActiveTextureFrame('replace render surface');
++    _check(
++      _c.raw.mln_render_session_replace_surface(
++        _pointer,
++        Pointer<Void>.fromAddress(surface.address),
++        width,
++        height,
++        scaleFactor,
++      ),
++    );
++  }
++
+   /// Processes the latest map render update for this session.
+   void renderUpdate() {
+     _checkNoActiveTextureFrame('render update');
+diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
+index aa42f36..3c5b9c1 100644
+--- a/include/maplibre_native_c/render_session.h
++++ b/include/maplibre_native_c/render_session.h
+@@ -39,6 +39,67 @@ MLN_API mln_status mln_render_session_resize(
+   double scale_factor
+ ) MLN_NOEXCEPT;
+ 
++/**
++ * LOCAL SPIKE PATCH (flutter-maplibre-gl): releases the native surface of an
++ * attached surface render session without destroying the session.
++ *
++ * Destroys presentation objects bound to the current native surface (the
++ * Vulkan swapchain and related resources) while keeping the renderer and its
++ * GPU resources alive. After this call the host may destroy the native
++ * surface handle it lent to the session. The session is suspended: render and
++ * resize return MLN_STATUS_INVALID_STATE until a new surface is provided via
++ * mln_render_session_replace_surface. Releasing an already released surface
++ * is a no-op. Detach and destroy remain valid on a suspended session.
++ *
++ * This is the surface-recreation path embedders need when the window system
++ * recreates the native surface (for example Android device rotation), where a
++ * full detach/attach would discard every GPU-side resource and visibly
++ * re-render the map from scratch.
++ *
++ * Returns:
++ * - MLN_STATUS_OK on success.
++ * - MLN_STATUS_INVALID_ARGUMENT when session is null or not live.
++ * - MLN_STATUS_INVALID_STATE when the session is detached.
++ * - MLN_STATUS_UNSUPPORTED when the session is not a surface session or the
++ *   backend does not support surface replacement.
++ * - MLN_STATUS_WRONG_THREAD when called from a thread other than the session
++ *   owner thread.
++ * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ */
++MLN_API mln_status mln_render_session_release_surface(
++  mln_render_session* session
++) MLN_NOEXCEPT;
++
++/**
++ * LOCAL SPIKE PATCH (flutter-maplibre-gl): points an attached surface render
++ * session at a new native surface, keeping the renderer and its GPU
++ * resources.
++ *
++ * The surface handle must be of the same backend kind the session was
++ * attached with (VkSurfaceKHR for Vulkan, EGLSurface/HDC for OpenGL) and must
++ * remain valid until it is released or replaced or the session is destroyed.
++ * Width and height are logical map dimensions, as in
++ * mln_render_session_resize. Calling this on a session whose surface was not
++ * released first is valid: the current surface is released before the new one
++ * is adopted.
++ *
++ * Returns:
++ * - MLN_STATUS_OK on success.
++ * - MLN_STATUS_INVALID_ARGUMENT when session is null or not live, surface is
++ *   null, dimensions are zero, scale_factor is non-positive or non-finite, or
++ *   scaled dimensions are too large.
++ * - MLN_STATUS_INVALID_STATE when the session is detached.
++ * - MLN_STATUS_UNSUPPORTED when the session is not a surface session or the
++ *   backend does not support surface replacement.
++ * - MLN_STATUS_WRONG_THREAD when called from a thread other than the session
++ *   owner thread.
++ * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ */
++MLN_API mln_status mln_render_session_replace_surface(
++  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  double scale_factor
++) MLN_NOEXCEPT;
++
+ /**
+  * Processes the latest map render update for an attached render session.
+  *
+diff --git a/src/c_api/render_session.cpp b/src/c_api/render_session.cpp
+index 13faa7e..5a7ecd1 100644
+--- a/src/c_api/render_session.cpp
++++ b/src/c_api/render_session.cpp
+@@ -69,6 +69,25 @@ auto mln_render_session_resize(
+   });
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): see render_session.h.
++auto mln_render_session_release_surface(mln_render_session* session) noexcept
++  -> mln_status {
++  return mln::c_api::status_boundary([&]() -> mln_status {
++    return mln::core::render_session_release_surface(session);
++  });
++}
++
++auto mln_render_session_replace_surface(
++  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  double scale_factor
++) noexcept -> mln_status {
++  return mln::c_api::status_boundary([&]() -> mln_status {
++    return mln::core::render_session_replace_surface(
++      session, surface, width, height, scale_factor
++    );
++  });
++}
++
+ auto mln_render_session_render_update(mln_render_session* session) noexcept
+   -> mln_status {
+   return mln::c_api::status_boundary([&]() -> mln_status {
+diff --git a/src/render/opengl/opengl_surface_session.cpp b/src/render/opengl/opengl_surface_session.cpp
+index 1fe755c..145e80d 100644
+--- a/src/render/opengl/opengl_surface_session.cpp
++++ b/src/render/opengl/opengl_surface_session.cpp
+@@ -165,6 +165,15 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
+ 
+   void resize(mbgl::Size size_) { size = size_; }
+ 
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl): the native surface is only used
++  // by value inside activate()/swap_surface(), and nothing stays bound between
++  // calls, so replacing it is a handle swap. GL objects live in the shared
++  // context and are unaffected.
++  void replaceSurface(void* native_surface, mbgl::Size size_) {
++    descriptor_.surface = native_surface;
++    size = size_;
++  }
++
+   void updateAssumedState() override {
+     assumeFramebufferBinding(0);
+     setViewport(0, 0, size);
+@@ -346,6 +355,22 @@ class OpenGLSurfaceSessionBackend final
+     backend_.resize(mbgl::Size{physical_width, physical_height});
+   }
+ 
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl)
++  auto supports_surface_replace() const -> bool override { return true; }
++
++  void release_surface() override {
++    // Nothing is bound between calls; the suspended-session guard in the
++    // common code keeps the stale handle from being used.
++  }
++
++  void replace_surface(
++    void* native_surface, uint32_t physical_width, uint32_t physical_height
++  ) override {
++    backend_.replaceSurface(
++      native_surface, mbgl::Size{physical_width, physical_height}
++    );
++  }
++
+  private:
+   OpenGLSurfaceBackend backend_;
+ };
+diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
+index 8947767..be20ffd 100644
+--- a/src/render/render_session_common.cpp
++++ b/src/render/render_session_common.cpp
+@@ -961,6 +961,12 @@ auto render_session_resize(
+     return physical_status;
+   }
+ 
++  if (session->surface_released) {
++    set_thread_error(
++      "render surface was released; call mln_render_session_replace_surface"
++    );
++    return MLN_STATUS_INVALID_STATE;
++  }
+   const auto physical_width = physical_dimension(width, scale_factor);
+   const auto physical_height = physical_dimension(height, scale_factor);
+   if (session->kind == RenderSessionKind::Surface) {
+@@ -987,11 +993,109 @@ auto render_session_resize(
+   return MLN_STATUS_OK;
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): surface replacement that keeps the
++// renderer (and therefore every GPU-side resource) alive across native
++// surface recreation. See render_session.h for the contract.
++auto render_session_release_surface(mln_render_session* session)
++  -> mln_status {
++  const auto status = validate_live_attached_render_session(session);
++  if (status != MLN_STATUS_OK) {
++    return status;
++  }
++  if (
++    session->kind != RenderSessionKind::Surface ||
++    !session->surface.backend->supports_surface_replace()
++  ) {
++    set_thread_error("surface replacement is not supported by this session");
++    return MLN_STATUS_UNSUPPORTED;
++  }
++  if (session->surface_released) {
++    return MLN_STATUS_OK;
++  }
++  try {
++    session->surface.backend->release_surface();
++  } catch (const std::exception& exception) {
++    set_native_stage_error("releasing render surface", exception);
++    return MLN_STATUS_NATIVE_ERROR;
++  }
++  session->surface_released = true;
++  return MLN_STATUS_OK;
++}
++
++auto render_session_replace_surface(
++  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  double scale_factor
++) -> mln_status {
++  const auto status = validate_live_attached_render_session(session);
++  if (status != MLN_STATUS_OK) {
++    return status;
++  }
++  if (
++    session->kind != RenderSessionKind::Surface ||
++    !session->surface.backend->supports_surface_replace()
++  ) {
++    set_thread_error("surface replacement is not supported by this session");
++    return MLN_STATUS_UNSUPPORTED;
++  }
++  if (surface == nullptr) {
++    set_thread_error("replacement surface must not be null");
++    return MLN_STATUS_INVALID_ARGUMENT;
++  }
++  const auto dimensions_status = validate_dimensions(
++    width, height, scale_factor,
++    "surface dimensions and scale_factor must be positive"
++  );
++  if (dimensions_status != MLN_STATUS_OK) {
++    return dimensions_status;
++  }
++  const auto physical_status = validate_physical_size(
++    width, height, scale_factor, "scaled surface dimensions are too large"
++  );
++  if (physical_status != MLN_STATUS_OK) {
++    return physical_status;
++  }
++
++  const auto physical_width = physical_dimension(width, scale_factor);
++  const auto physical_height = physical_dimension(height, scale_factor);
++  try {
++    session->surface.backend->replace_surface(
++      surface, physical_width, physical_height
++    );
++  } catch (const std::exception& exception) {
++    set_native_stage_error("replacing render surface", exception);
++    return MLN_STATUS_NATIVE_ERROR;
++  }
++  if (auto* native_map = map_native(session->map); native_map != nullptr) {
++    native_map->setSize(mbgl::Size{width, height});
++  }
++  // The renderer bakes the pixel ratio in at construction; only a scale
++  // change forces a rebuild. Keeping it alive preserves uploaded tile
++  // textures, glyph atlases, and symbol placement across the swap.
++  if (session->scale_factor != scale_factor) {
++    session->renderer.reset();
++  }
++  session->width = width;
++  session->height = height;
++  session->physical_width = physical_width;
++  session->physical_height = physical_height;
++  session->scale_factor = scale_factor;
++  session->surface_released = false;
++  session->rendered_generation = 0;
++  ++session->generation;
++  return MLN_STATUS_OK;
++}
++
+ auto render_session_render_update(mln_render_session* session) -> mln_status {
+   const auto status = validate_live_attached_render_session(session);
+   if (status != MLN_STATUS_OK) {
+     return status;
+   }
++  if (session->surface_released) {
++    set_thread_error(
++      "render surface was released; call mln_render_session_replace_surface"
++    );
++    return MLN_STATUS_INVALID_STATE;
++  }
+   if (
+     session->kind == RenderSessionKind::Texture && session->texture.acquired
+   ) {
+diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
+index 62a237c..1d87fb1 100644
+--- a/src/render/render_session_common.hpp
++++ b/src/render/render_session_common.hpp
+@@ -40,6 +40,19 @@ class SurfaceSessionBackend {
+ 
+   virtual auto renderer_backend() -> mbgl::gfx::RendererBackend& = 0;
+   virtual void resize(uint32_t physical_width, uint32_t physical_height) = 0;
++
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl): native-surface replacement that
++  // keeps the renderer and its GPU resources alive. See
++  // mln_render_session_release_surface / mln_render_session_replace_surface.
++  virtual auto supports_surface_replace() const -> bool { return false; }
++  virtual void release_surface() {}
++  virtual void replace_surface(
++    void* native_surface, uint32_t physical_width, uint32_t physical_height
++  ) {
++    (void)native_surface;
++    (void)physical_width;
++    (void)physical_height;
++  }
+ };
+ 
+ class TextureSessionBackend {
+@@ -107,6 +120,9 @@ struct mln_render_session {
+   uint64_t generation = 1;
+   uint64_t rendered_generation = 0;
+   bool attached = true;
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl): true while the native surface has
++  // been released and not yet replaced; render/resize are suspended.
++  bool surface_released = false;
+ 
+   std::unique_ptr<mbgl::Renderer> renderer = nullptr;
+   mln::core::RenderSurfaceState surface;
+@@ -251,6 +267,12 @@ auto render_session_resize(
+   mln_render_session* session, uint32_t width, uint32_t height,
+   double scale_factor
+ ) -> mln_status;
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): see render_session.h.
++auto render_session_release_surface(mln_render_session* session) -> mln_status;
++auto render_session_replace_surface(
++  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  double scale_factor
++) -> mln_status;
+ auto render_session_render_update(mln_render_session* session) -> mln_status;
+ auto render_session_detach(mln_render_session* session) -> mln_status;
+ auto render_session_destroy(mln_render_session* session) -> mln_status;
+diff --git a/src/render/vulkan/vulkan_surface_session.cpp b/src/render/vulkan/vulkan_surface_session.cpp
+index bd29216..d7b3e4f 100644
+--- a/src/render/vulkan/vulkan_surface_session.cpp
++++ b/src/render/vulkan/vulkan_surface_session.cpp
+@@ -305,6 +305,39 @@ class VulkanSurfaceBackend final : public mbgl::vulkan::RendererBackend,
+       init(size.width, size.height);
+     }
+ 
++    // LOCAL SPIKE PATCH (flutter-maplibre-gl): drops every object bound to the
++    // current native surface, swapchain included, so the host may destroy the
++    // borrowed VkSurfaceKHR afterwards (Vulkan requires the swapchain to be
++    // destroyed before its surface). Device-level resources are untouched.
++    void releaseSurface() {
++      if (!surface && !swapchain) {
++        borrowed_surface = nullptr;
++        return;
++      }
++      backend.getDevice()->waitIdle(backend.getDispatcher());
++      swapchainFramebuffers.clear();
++      renderPass.reset();
++      swapchainImageViews.clear();
++      swapchainImages.clear();
++      acquireSemaphores.clear();
++      presentSemaphores.clear();
++      swapchain.reset();
++      static_cast<void>(surface.release());
++      borrowed_surface = nullptr;
++    }
++
++    // LOCAL SPIKE PATCH (flutter-maplibre-gl): adopts a new borrowed surface
++    // and rebuilds swapchain, render pass, and framebuffers over it. The same
++    // formats/attachments keep existing pipelines render-pass compatible, so
++    // the renderer created against the old pass stays valid (the core relies
++    // on the same property in SurfaceRenderableResource::recreateSwapchain).
++    void adoptSurface(VkSurfaceKHR new_surface, mbgl::Size size) {
++      releaseSurface();
++      borrowed_surface = new_surface;
++      createPlatformSurface();
++      init(size.width, size.height);
++    }
++
+    private:
+     VkSurfaceKHR borrowed_surface = nullptr;
+   };
+@@ -349,6 +382,22 @@ class VulkanSurfaceBackend final : public mbgl::vulkan::RendererBackend,
+     }
+   }
+ 
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl): see SurfaceSessionBackend.
++  void releaseSurface() {
++    if (resource) {
++      getResource<VulkanSurfaceRenderableResource>().releaseSurface();
++    }
++  }
++
++  void replaceSurface(void* native_surface, mbgl::Size size) {
++    descriptor_.surface = native_surface;
++    mbgl::vulkan::Renderable::setSize(size);
++    getDefaultRenderable();
++    getResource<VulkanSurfaceRenderableResource>().adoptSurface(
++      static_cast<VkSurfaceKHR>(native_surface), size
++    );
++  }
++
+   void activate() override {}
+   void deactivate() override {}
+ 
+@@ -438,6 +487,19 @@ class VulkanSurfaceSessionBackend final
+     backend_.resize(mbgl::Size{physical_width, physical_height});
+   }
+ 
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl)
++  auto supports_surface_replace() const -> bool override { return true; }
++
++  void release_surface() override { backend_.releaseSurface(); }
++
++  void replace_surface(
++    void* native_surface, uint32_t physical_width, uint32_t physical_height
++  ) override {
++    backend_.replaceSurface(
++      native_surface, mbgl::Size{physical_width, physical_height}
++    );
++  }
++
+  private:
+   VulkanSurfaceBackend backend_;
+ };

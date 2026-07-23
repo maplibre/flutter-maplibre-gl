@@ -1,0 +1,34 @@
+diff --git a/src/c_api/dart_shim.cpp b/src/c_api/dart_shim.cpp
+index c645966..c70e0c2 100644
+--- a/src/c_api/dart_shim.cpp
++++ b/src/c_api/dart_shim.cpp
+@@ -73,13 +73,28 @@ auto string_equals(const char* left, const char* right) -> bool {
+   return std::strcmp(left, right) == 0;
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): a route URL ending in '*' matches
++// any request URL sharing the prefix before the '*'. This lets a Dart provider
++// intercept whole URL families (tiles, glyphs, sprites) instead of exact URLs
++// only. Proposed for upstreaming alongside PR #187 feedback.
++auto url_matches_route(const char* route_url, const char* request_url) -> bool {
++  if (route_url == nullptr || request_url == nullptr) {
++    return false;
++  }
++  const auto route_length = std::strlen(route_url);
++  if (route_length > 0 && route_url[route_length - 1] == '*') {
++    return std::strncmp(route_url, request_url, route_length - 1) == 0;
++  }
++  return std::strcmp(route_url, request_url) == 0;
++}
++
+ auto request_matches_route(
+   std::span<const DartQueuedResourceProviderRoute> routes,
+   const mln_resource_request& request
+ ) -> bool {
+   return std::ranges::any_of(routes, [&request](const auto& route) -> bool {
+     return matches_rule(route.kind, request.kind) &&
+-           string_equals(route.url, request.url);
++           url_matches_route(route.url, request.url);
+   });
+ }
+ 

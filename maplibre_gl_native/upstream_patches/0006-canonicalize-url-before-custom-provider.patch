@@ -1,0 +1,76 @@
+diff --git a/src/resources/resource_loader.cpp b/src/resources/resource_loader.cpp
+index 6be4f7d..686bead 100644
+--- a/src/resources/resource_loader.cpp
++++ b/src/resources/resource_loader.cpp
+@@ -18,6 +18,7 @@
+ #include <mbgl/util/client_options.hpp>
+ #include <mbgl/util/event.hpp>
+ #include <mbgl/util/logging.hpp>
++#include <mbgl/util/mapbox.hpp>
+ #include <mbgl/util/string.hpp>
+ 
+ #include "resources/resource_loader.hpp"
+@@ -107,8 +108,14 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
+     const auto provider =
+       runtime_resource_provider(resource_options_.platformContext());
+     if (can_request_network(resource) && provider.has_value()) {
++      // LOCAL SPIKE PATCH (flutter-maplibre-gl): canonicalize scheme-alias
++      // URLs (e.g. "maplibre://tiles") BEFORE consulting the custom provider,
++      // exactly like OnlineFileSource::request does before fetching. Without
++      // this, alias URLs never match the provider's http(s) routes and
++      // silently fall through to the built-in HTTP client.
+       auto request = request_custom_resource(
+-        resource, provider->callback, provider->user_data, callback
++        canonical_resource(resource), provider->callback, provider->user_data,
++        callback
+       );
+       if (request != nullptr) {
+         return request;
+@@ -168,6 +175,47 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
+   }
+ 
+  private:
++  // LOCAL SPIKE PATCH (flutter-maplibre-gl): mirror of the per-kind URL
++  // normalization in OnlineFileSource::request, applied before custom
++  // provider dispatch so providers see the same canonical URL the built-in
++  // client would fetch.
++  [[nodiscard]] auto canonical_resource(const mbgl::Resource& resource) const
++    -> mbgl::Resource {
++    auto result = resource;
++    const auto options = resource_options_.tileServerOptions();
++    const auto apiKey = resource_options_.apiKey();
++    switch (resource.kind) {
++      case mbgl::Resource::Kind::Unknown:
++      case mbgl::Resource::Kind::Image:
++        break;
++      case mbgl::Resource::Kind::Style:
++        result.url =
++          mbgl::util::mapbox::normalizeStyleURL(options, resource.url, apiKey);
++        break;
++      case mbgl::Resource::Kind::Source:
++        result.url = mbgl::util::mapbox::normalizeSourceURL(
++          options, resource.url, apiKey
++        );
++        break;
++      case mbgl::Resource::Kind::Glyphs:
++        result.url = mbgl::util::mapbox::normalizeGlyphsURL(
++          options, resource.url, apiKey
++        );
++        break;
++      case mbgl::Resource::Kind::SpriteImage:
++      case mbgl::Resource::Kind::SpriteJSON:
++        result.url = mbgl::util::mapbox::normalizeSpriteURL(
++          options, resource.url, apiKey
++        );
++        break;
++      case mbgl::Resource::Kind::Tile:
++        result.url =
++          mbgl::util::mapbox::normalizeTileURL(options, resource.url, apiKey);
++        break;
++    }
++    return result;
++  }
++
+   static auto runtime_resource_provider(void* platform_context)
+     -> std::optional<ResourceProvider> {
+     const auto* runtime = find_runtime_for_platform_context(platform_context);

@@ -1,0 +1,72 @@
+group 'org.maplibre.maplibreglnative'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '2.4.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// rustls-platform-verifier is not published to Maven Central; the Android
+// component (a tiny AAR bundled with the Rust crate) is vendored under
+// local_maven/. Required by mln_android_init for TLS certificate verification
+// of MapLibre Native HTTP requests. Capture the path here: inside
+// allprojects{} `projectDir` would point at each project instead.
+def maplibreGlNativeLocalMaven = new File(projectDir, 'local_maven')
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url uri(maplibreGlNativeLocalMaven)
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    if (project.android.hasProperty("namespace")) {
+        namespace 'org.maplibre.maplibreglnative'
+    }
+    compileSdkVersion 36
+
+    ndkVersion "28.1.13356709"
+
+    defaultConfig {
+        // libmaplibre-native-c.so is built with ANDROID_PLATFORM=android-24.
+        minSdkVersion 24
+
+        // Spike scope: the native library is only built for arm64-v8a.
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_21.toString()
+    }
+}
+
+dependencies {
+    implementation 'rustls:rustls-platform-verifier:0.1.1'
+}

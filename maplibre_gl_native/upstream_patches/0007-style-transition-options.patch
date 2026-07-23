@@ -1,0 +1,142 @@
+diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
+index c5dd808..8a7db79 100644
+--- a/bindings/dart/lib/src/runtime/runtime.dart
++++ b/bindings/dart/lib/src/runtime/runtime.dart
+@@ -1368,6 +1368,26 @@ final class MapHandle {
+     _clearCustomGeometryCallbacks();
+   }
+ 
++  /// LOCAL SPIKE PATCH (flutter-maplibre-gl): sets the style transition
++  /// options. Negative [durationMs]/[delayMs] leave the corresponding option
++  /// unset (style defaults). [enablePlacementTransitions] controls whether
++  /// symbol placement changes cross-fade (style default true); disabling it
++  /// makes symbol updates apply instantly, e.g. while dragging a feature.
++  void setStyleTransitionOptions({
++    double durationMs = -1,
++    double delayMs = -1,
++    required bool enablePlacementTransitions,
++  }) {
++    _check(
++      _c.raw.mln_map_set_style_transition_options(
++        _pointer,
++        durationMs,
++        delayMs,
++        enablePlacementTransitions,
++      ),
++    );
++  }
++
+   /// LOCAL SPIKE PATCH (flutter-maplibre-gl): copies the current style as a
+   /// full style-spec JSON document.
+   String getStyleJson() {
+diff --git a/include/maplibre_native_c/map.h b/include/maplibre_native_c/map.h
+index 90da9ff..31df1eb 100644
+--- a/include/maplibre_native_c/map.h
++++ b/include/maplibre_native_c/map.h
+@@ -1115,6 +1115,29 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
+ MLN_API mln_status
+ mln_map_set_style_json(mln_map* map, const char* json) MLN_NOEXCEPT;
+ 
++/**
++ * LOCAL SPIKE PATCH (flutter-maplibre-gl): sets the style transition options.
++ *
++ * duration_ms and delay_ms apply to style property transitions; a negative
++ * value leaves the corresponding option unset (style defaults).
++ * enable_placement_transitions controls whether symbol placement changes
++ * cross-fade (the style default is true); disabling it makes symbol updates
++ * apply instantly, e.g. while dragging a symbol feature.
++ *
++ * This is a map command.
++ *
++ * Returns:
++ * - MLN_STATUS_OK on success.
++ * - MLN_STATUS_INVALID_ARGUMENT when map is null or not live.
++ * - MLN_STATUS_WRONG_THREAD when called from a thread other than the map owner
++ *   thread.
++ * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ */
++MLN_API mln_status mln_map_set_style_transition_options(
++  mln_map* map, double duration_ms, double delay_ms,
++  bool enable_placement_transitions
++) MLN_NOEXCEPT;
++
+ /**
+  * LOCAL SPIKE PATCH (flutter-maplibre-gl): copies the current style as a full
+  * style-spec JSON document into caller-owned memory.
+diff --git a/src/c_api/map.cpp b/src/c_api/map.cpp
+index 8aba602..9ecd3ad 100644
+--- a/src/c_api/map.cpp
++++ b/src/c_api/map.cpp
+@@ -108,6 +108,18 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
+   });
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): style transition options setter.
++auto mln_map_set_style_transition_options(
++  mln_map* map, double duration_ms, double delay_ms,
++  bool enable_placement_transitions
++) noexcept -> mln_status {
++  return mln::c_api::status_boundary([&]() -> mln_status {
++    return mln::core::map_set_style_transition_options(
++      map, duration_ms, delay_ms, enable_placement_transitions
++    );
++  });
++}
++
+ // LOCAL SPIKE PATCH (flutter-maplibre-gl): whole-style JSON snapshot copy.
+ auto mln_map_copy_style_json(
+   mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
+diff --git a/src/map/map.cpp b/src/map/map.cpp
+index 0d41bdb..66bc244 100644
+--- a/src/map/map.cpp
++++ b/src/map/map.cpp
+@@ -2873,6 +2873,32 @@ auto map_set_style_url(mln_map* map, const char* url) -> mln_status {
+   return MLN_STATUS_OK;
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): style transition options setter;
++// see mln_map_set_style_transition_options in map.h.
++auto map_set_style_transition_options(
++  mln_map* map, double duration_ms, double delay_ms,
++  bool enable_placement_transitions
++) -> mln_status {
++  const auto status = validate_map(map);
++  if (status != MLN_STATUS_OK) {
++    return status;
++  }
++  auto options = mbgl::style::TransitionOptions{};
++  if (duration_ms >= 0) {
++    options.duration = std::chrono::duration_cast<mbgl::Duration>(
++      std::chrono::duration<double, std::milli>(duration_ms)
++    );
++  }
++  if (delay_ms >= 0) {
++    options.delay = std::chrono::duration_cast<mbgl::Duration>(
++      std::chrono::duration<double, std::milli>(delay_ms)
++    );
++  }
++  options.enablePlacementTransitions = enable_placement_transitions;
++  map->map->getStyle().setTransitionOptions(options);
++  return MLN_STATUS_OK;
++}
++
+ auto map_set_style_json(mln_map* map, const char* json) -> mln_status {
+   const auto status = validate_map(map);
+   if (status != MLN_STATUS_OK) {
+diff --git a/src/map/map.hpp b/src/map/map.hpp
+index ba85a22..2dc474c 100644
+--- a/src/map/map.hpp
++++ b/src/map/map.hpp
+@@ -40,6 +40,12 @@ auto map_request_repaint(mln_map* map) -> mln_status;
+ auto map_request_still_image(mln_map* map) -> mln_status;
+ auto map_set_style_url(mln_map* map, const char* url) -> mln_status;
+ auto map_set_style_json(mln_map* map, const char* json) -> mln_status;
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): style transition options setter;
++// see mln_map_set_style_transition_options in map.h.
++auto map_set_style_transition_options(
++  mln_map* map, double duration_ms, double delay_ms,
++  bool enable_placement_transitions
++) -> mln_status;
+ // LOCAL SPIKE PATCH (flutter-maplibre-gl): whole-style JSON snapshot copy.
+ auto map_copy_style_json(
+   mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size

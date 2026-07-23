@@ -1,0 +1,13 @@
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+gradlew
+gradlew.bat
+
+# AGP externalNativeBuild output (CMake/ninja artifacts of the JNI shim)
+.cxx/

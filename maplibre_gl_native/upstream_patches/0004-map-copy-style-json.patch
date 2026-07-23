@@ -1,0 +1,147 @@
+diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
+index 87478a0..c5dd808 100644
+--- a/bindings/dart/lib/src/runtime/runtime.dart
++++ b/bindings/dart/lib/src/runtime/runtime.dart
+@@ -1368,6 +1368,29 @@ final class MapHandle {
+     _clearCustomGeometryCallbacks();
+   }
+ 
++  /// LOCAL SPIKE PATCH (flutter-maplibre-gl): copies the current style as a
++  /// full style-spec JSON document.
++  String getStyleJson() {
++    return withNativeArena((arena) {
++      final outSize = arena<Size>();
++      _check(
++        _c.raw.mln_map_copy_style_json(
++          _pointer,
++          nullptr.cast<Char>(),
++          0,
++          outSize,
++        ),
++      );
++      final size = outSize.value;
++      if (size == 0) {
++        return '';
++      }
++      final buffer = arena<Char>(size);
++      _check(_c.raw.mln_map_copy_style_json(_pointer, buffer, size, outSize));
++      return buffer.cast<Utf8>().toDartString(length: outSize.value);
++    });
++  }
++
+   /// Requests a repaint for a continuous map.
+   void requestRepaint() {
+     _check(_c.raw.mln_map_request_repaint(_pointer));
+diff --git a/include/maplibre_native_c/map.h b/include/maplibre_native_c/map.h
+index 58e33d3..90da9ff 100644
+--- a/include/maplibre_native_c/map.h
++++ b/include/maplibre_native_c/map.h
+@@ -1115,6 +1115,28 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
+ MLN_API mln_status
+ mln_map_set_style_json(mln_map* map, const char* json) MLN_NOEXCEPT;
+ 
++/**
++ * LOCAL SPIKE PATCH (flutter-maplibre-gl): copies the current style as a full
++ * style-spec JSON document into caller-owned memory.
++ *
++ * out_json may be null only when json_capacity is 0; calling with a zero
++ * capacity queries the required size without copying. On success,
++ * *out_json_size receives the byte length of the style JSON, excluding any
++ * null terminator.
++ *
++ * Returns:
++ * - MLN_STATUS_OK on success (including the zero-capacity size query).
++ * - MLN_STATUS_INVALID_ARGUMENT when map is null or not live, out_json is
++ *   null with non-zero capacity, json_capacity is non-zero but too small, or
++ *   out_json_size is null.
++ * - MLN_STATUS_WRONG_THREAD when called from a thread other than the map owner
++ *   thread.
++ * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ */
++MLN_API mln_status mln_map_copy_style_json(
++  mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
++) MLN_NOEXCEPT;
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/src/c_api/map.cpp b/src/c_api/map.cpp
+index b7eed0b..8aba602 100644
+--- a/src/c_api/map.cpp
++++ b/src/c_api/map.cpp
+@@ -108,6 +108,17 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
+   });
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): whole-style JSON snapshot copy.
++auto mln_map_copy_style_json(
++  mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
++) noexcept -> mln_status {
++  return mln::c_api::status_boundary([&]() -> mln_status {
++    return mln::core::map_copy_style_json(
++      map, out_json, json_capacity, out_json_size
++    );
++  });
++}
++
+ auto mln_style_id_list_count(
+   const mln_style_id_list* list, size_t* out_count
+ ) noexcept -> mln_status {
+diff --git a/src/map/map.cpp b/src/map/map.cpp
+index 7cd0666..89013b6 100644
+--- a/src/map/map.cpp
++++ b/src/map/map.cpp
+@@ -2902,6 +2902,38 @@ auto map_set_style_json(mln_map* map, const char* json) -> mln_status {
+   return MLN_STATUS_OK;
+ }
+ 
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): whole-style JSON snapshot copy.
++auto map_copy_style_json(
++  mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
++) -> mln_status {
++  const auto status = validate_map(map);
++  if (status != MLN_STATUS_OK) {
++    return status;
++  }
++  if (out_json == nullptr && json_capacity > 0) {
++    set_thread_error("out_json must not be null when capacity is non-zero");
++    return MLN_STATUS_INVALID_ARGUMENT;
++  }
++  if (out_json_size == nullptr) {
++    set_thread_error("out_json_size must not be null");
++    return MLN_STATUS_INVALID_ARGUMENT;
++  }
++
++  const auto json = map->map->getStyle().getJSON();
++  *out_json_size = json.size();
++  if (json_capacity == 0) {
++    return MLN_STATUS_OK;
++  }
++  if (json_capacity < json.size()) {
++    set_thread_error("json_capacity is too small");
++    return MLN_STATUS_INVALID_ARGUMENT;
++  }
++  if (!json.empty()) {
++    std::copy(json.begin(), json.end(), out_json);
++  }
++  return MLN_STATUS_OK;
++}
++
+ auto style_id_list_count(const mln_style_id_list* list, size_t* out_count)
+   -> mln_status {
+   if (list == nullptr) {
+diff --git a/src/map/map.hpp b/src/map/map.hpp
+index d203300..ba85a22 100644
+--- a/src/map/map.hpp
++++ b/src/map/map.hpp
+@@ -40,6 +40,10 @@ auto map_request_repaint(mln_map* map) -> mln_status;
+ auto map_request_still_image(mln_map* map) -> mln_status;
+ auto map_set_style_url(mln_map* map, const char* url) -> mln_status;
+ auto map_set_style_json(mln_map* map, const char* json) -> mln_status;
++// LOCAL SPIKE PATCH (flutter-maplibre-gl): whole-style JSON snapshot copy.
++auto map_copy_style_json(
++  mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
++) -> mln_status;
+ auto style_id_list_count(const mln_style_id_list* list, size_t* out_count)
+   -> mln_status;
+ auto style_id_list_get(
