@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart' show OnPlatformViewCreatedCallback;
 
@@ -41,6 +43,10 @@ class FfiMapView extends StatefulWidget {
 }
 
 class _FfiMapViewState extends State<FfiMapView> {
+  /// Pan-start touch slop for the map's scale recognizer, in logical pixels
+  /// (Android SDK parity; the recognizer's pan slop is twice this value).
+  static const _mapTouchSlop = 4.0;
+
   EngineHost? _host;
   int? _sessionId;
   int? _textureId;
@@ -64,6 +70,10 @@ class _FfiMapViewState extends State<FfiMapView> {
   // pitch feeds the fling tilt factor of the gesture handler.
   double _bearing = 0;
   double _pitch = 0;
+
+  // Latest camera waiting for the once-per-frame ornament update.
+  CameraSnapshot? _pendingOrnamentCamera;
+  bool _ornamentFlushScheduled = false;
 
   // Ornament signals updated from engine events without rebuilding the
   // whole Stack: camera movement collapses the attribution pill, style loads
@@ -251,17 +261,31 @@ class _FfiMapViewState extends State<FfiMapView> {
     if (event.sessionId != _sessionId) return;
     if (event is CameraWillChangeEvent) _cameraGeneration.value++;
     if (event is StyleLoadedEvent) _styleGeneration.value++;
-    // Mirror the camera for the ornaments; rebuild only on visible changes
-    // to keep gesture streams cheap.
     final camera = switch (event) {
       CameraIsChangingEvent(:final camera) => camera,
       MapIdleEvent(:final camera) => camera,
       _ => null,
     };
     if (camera == null || !mounted) return;
+    // Pitch feeds the gesture fling tilt factor: keep it fresh per event.
     _pitch = camera.pitch;
+    // Ornaments only need the newest camera once per UI frame: camera events
+    // can outpace frames under load, so coalesce before touching notifiers.
+    _pendingOrnamentCamera = camera;
+    if (_ornamentFlushScheduled) return;
+    _ornamentFlushScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((_) {
+      _ornamentFlushScheduled = false;
+      _applyOrnamentCamera();
+    });
+  }
+
+  void _applyOrnamentCamera() {
+    final camera = _pendingOrnamentCamera;
+    _pendingOrnamentCamera = null;
+    if (camera == null || !mounted) return;
     // Meters per logical pixel at the camera latitude (style-spec 512px
-    // world tile), for the scale bar.
+    // world tile), for the scale bar. Deadbands keep rebuilds rare.
     final mpp = cos(camera.latitude * pi / 180) * 2 * pi * 6378137 / (512 * pow(2, camera.zoom));
     final current = _metersPerPixel.value;
     if (current <= 0 || (mpp - current).abs() / current > 0.01) {
@@ -352,17 +376,59 @@ class _FfiMapViewState extends State<FfiMapView> {
               onPointerUp: _gestures.onPointerUp,
               onPointerCancel: _gestures.onPointerCancel,
               onPointerSignal: _gestures.onPointerSignal,
-              child: GestureDetector(
+              child: RawGestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onScaleStart: _gestures.onScaleStart,
-                onScaleUpdate: _gestures.onScaleUpdate,
-                onScaleEnd: _gestures.onScaleEnd,
-                onDoubleTapDown: _gestures.onDoubleTapDown,
-                onDoubleTap: _gestures.onDoubleTap,
-                onTapUp: _gestures.onTapUp,
-                onLongPressStart: _gestures.onLongPressStart,
-                onLongPressMoveUpdate: _gestures.onLongPressMoveUpdate,
-                onLongPressEnd: _gestures.onLongPressEnd,
+                gestures: <Type, GestureRecognizerFactory>{
+                  // A stock GestureDetector starts panning after Flutter's
+                  // ~18 px touch slop; the Android SDK map moves after ~4 dp.
+                  // A tighter slop on the scale recognizer only (taps and
+                  // long-presses keep stock behavior) closes the pan-start
+                  // latency gap without destabilizing the gesture arena.
+                  ScaleGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                        ScaleGestureRecognizer
+                      >(() => ScaleGestureRecognizer(debugOwner: this), (
+                        recognizer,
+                      ) {
+                        recognizer
+                          ..gestureSettings = const DeviceGestureSettings(
+                            touchSlop: _mapTouchSlop,
+                          )
+                          ..onStart = _gestures.onScaleStart
+                          ..onUpdate = _gestures.onScaleUpdate
+                          ..onEnd = _gestures.onScaleEnd;
+                      }),
+                  TapGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                        TapGestureRecognizer
+                      >(() => TapGestureRecognizer(debugOwner: this), (
+                        recognizer,
+                      ) {
+                        recognizer.onTapUp = _gestures.onTapUp;
+                      }),
+                  DoubleTapGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                        DoubleTapGestureRecognizer
+                      >(() => DoubleTapGestureRecognizer(debugOwner: this), (
+                        recognizer,
+                      ) {
+                        recognizer
+                          ..onDoubleTapDown = _gestures.onDoubleTapDown
+                          ..onDoubleTap = _gestures.onDoubleTap;
+                      }),
+                  LongPressGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                        LongPressGestureRecognizer
+                      >(() => LongPressGestureRecognizer(debugOwner: this), (
+                        recognizer,
+                      ) {
+                        recognizer
+                          ..onLongPressStart = _gestures.onLongPressStart
+                          ..onLongPressMoveUpdate =
+                              _gestures.onLongPressMoveUpdate
+                          ..onLongPressEnd = _gestures.onLongPressEnd;
+                      }),
+                },
                 child: Texture(textureId: textureId),
               ),
             ),

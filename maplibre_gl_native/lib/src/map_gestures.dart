@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show LatLng;
 
@@ -112,6 +113,96 @@ class MapGestureHandler {
   /// Cumulative camera pan applied by the current gesture, used to dismiss
   /// location tracking once the user deliberately moves the map.
   Offset _gesturePanTravel = Offset.zero;
+
+  // --- Per-frame command batch ------------------------------------------------
+  // Pointer samples arrive at up to ~120 Hz while the display shows at most
+  // one frame per vsync: camera deltas are accumulated per UI frame and
+  // flushed once, halving the SendPort traffic and giving the engine one
+  // coalesced camera write per rendered frame. Activation gating stays
+  // per-sample; only the sending batches.
+  Offset _pendingPan = Offset.zero;
+  double _pendingScaleRatio = 1;
+  double _pendingBearingDegrees = 0;
+  double _pendingPitchDegrees = 0;
+
+  /// Zoom/rotate anchor: the last focal point of the frame wins.
+  Offset? _pendingAnchor;
+  bool _flushScheduled = false;
+
+  void _queuePan(Offset delta) {
+    _pendingPan += delta;
+    _scheduleFlush();
+  }
+
+  void _queueScale(double ratio, Offset anchor) {
+    _pendingScaleRatio *= ratio;
+    _pendingAnchor = anchor;
+    _scheduleFlush();
+  }
+
+  void _queueRotate(double bearingDeltaDegrees, Offset anchor) {
+    _pendingBearingDegrees += bearingDeltaDegrees;
+    _pendingAnchor = anchor;
+    _scheduleFlush();
+  }
+
+  void _queuePitch(double deltaDegrees) {
+    _pendingPitchDegrees += deltaDegrees;
+    _scheduleFlush();
+  }
+
+  void _scheduleFlush() {
+    if (_flushScheduled) return;
+    _flushScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((_) {
+      _flushScheduled = false;
+      _flushPendingCommands();
+    });
+  }
+
+  /// Sends the accumulated frame batch; command order mirrors the former
+  /// per-sample order (pitch, pan, scale, rotate).
+  void _flushPendingCommands() {
+    final host = _host();
+    final sessionId = _sessionId();
+    final pan = _pendingPan;
+    final scaleRatio = _pendingScaleRatio;
+    final bearing = _pendingBearingDegrees;
+    final pitch = _pendingPitchDegrees;
+    final anchor = _pendingAnchor;
+    _pendingPan = Offset.zero;
+    _pendingScaleRatio = 1;
+    _pendingBearingDegrees = 0;
+    _pendingPitchDegrees = 0;
+    _pendingAnchor = null;
+    if (host == null || sessionId == null) return;
+    if (pitch != 0) {
+      host.send(PitchByCommand(sessionId, pitch));
+    }
+    if (pan != Offset.zero) {
+      host.send(MoveByCommand(sessionId, pan.dx, pan.dy));
+    }
+    if (scaleRatio != 1 && anchor != null) {
+      host.send(
+        ScaleByCommand(
+          sessionId,
+          scaleRatio,
+          anchorX: anchor.dx,
+          anchorY: anchor.dy,
+        ),
+      );
+    }
+    if (bearing != 0 && anchor != null) {
+      host.send(
+        RotateByCommand(
+          sessionId,
+          bearing,
+          anchorX: anchor.dx,
+          anchorY: anchor.dy,
+        ),
+      );
+    }
+  }
 
   // Feature drag: a one-finger pan or long-press first hit-tests the
   // draggable layers (async, one isolate round-trip); pan deltas are
@@ -324,12 +415,7 @@ class MapGestureHandler {
         // Shove excludes pan/zoom/rotate for the whole gesture, like the
         // SDK's mutually exclusive gesture sets (move disabled during shove).
         if (config.tiltEnabled && details.focalPointDelta.dy != 0) {
-          host.send(
-            PitchByCommand(
-              sessionId,
-              -details.focalPointDelta.dy * _shoveDegreesPerPixel,
-            ),
-          );
+          _queuePitch(-details.focalPointDelta.dy * _shoveDegreesPerPixel);
         }
         return;
       }
@@ -339,13 +425,7 @@ class MapGestureHandler {
     // logical pixels.
     if (config.scrollEnabled && details.focalPointDelta != Offset.zero) {
       _accumulateGesturePan(details.focalPointDelta, details.pointerCount);
-      host.send(
-        MoveByCommand(
-          sessionId,
-          details.focalPointDelta.dx,
-          details.focalPointDelta.dy,
-        ),
-      );
+      _queuePan(details.focalPointDelta);
     }
 
     if (details.pointerCount >= 2) {
@@ -361,14 +441,7 @@ class MapGestureHandler {
             ratio.isFinite &&
             ratio > 0 &&
             (ratio - 1).abs() >= 0.001) {
-          host.send(
-            ScaleByCommand(
-              sessionId,
-              ratio,
-              anchorX: anchor.dx,
-              anchorY: anchor.dy,
-            ),
-          );
+          _queueScale(ratio, anchor);
         }
       }
       if (details.rotation != _lastGestureRotation) {
@@ -380,14 +453,7 @@ class MapGestureHandler {
           // while increasing the bearing turns the map content
           // counterclockwise, so the gesture delta must be subtracted for
           // the map to follow the fingers.
-          host.send(
-            RotateByCommand(
-              sessionId,
-              -deltaDegrees,
-              anchorX: anchor.dx,
-              anchorY: anchor.dy,
-            ),
-          );
+          _queueRotate(-deltaDegrees, anchor);
         }
       }
     }
@@ -401,6 +467,9 @@ class MapGestureHandler {
       _dragGeneration++;
       _flushBufferedPan();
     }
+    // Drain the frame batch NOW: the fling command must reach the engine
+    // after the gesture's last camera delta.
+    _flushPendingCommands();
     final hadDrag = _drag != null;
     _endDrag();
     if (!hadDrag && !wasTilt) _maybeFling(details);
