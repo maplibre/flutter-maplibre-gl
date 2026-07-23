@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart' show OnPlatformViewCreatedCallback;
 
@@ -66,14 +65,11 @@ class _FfiMapViewState extends State<FfiMapView> {
     mounted: () => mounted,
   );
 
-  // Camera bearing mirrored from engine events for the compass ornament;
-  // pitch feeds the fling tilt factor of the gesture handler.
-  double _bearing = 0;
+  // Camera bearing mirrored from engine events for the compass ornament: a
+  // notifier (not setState) so a rotating camera repaints the compass alone,
+  // never the whole map Stack. Pitch feeds the gesture fling tilt factor.
+  final ValueNotifier<double> _bearing = ValueNotifier(0);
   double _pitch = 0;
-
-  // Latest camera waiting for the once-per-frame ornament update.
-  CameraSnapshot? _pendingOrnamentCamera;
-  bool _ornamentFlushScheduled = false;
 
   // Ornament signals updated from engine events without rebuilding the
   // whole Stack: camera movement collapses the attribution pill, style loads
@@ -98,6 +94,7 @@ class _FfiMapViewState extends State<FfiMapView> {
     _cameraGeneration.dispose();
     _styleGeneration.dispose();
     _metersPerPixel.dispose();
+    _bearing.dispose();
     final host = _host;
     final sessionId = _sessionId;
     final textureId = _textureId;
@@ -269,30 +266,17 @@ class _FfiMapViewState extends State<FfiMapView> {
     if (camera == null || !mounted) return;
     // Pitch feeds the gesture fling tilt factor: keep it fresh per event.
     _pitch = camera.pitch;
-    // Ornaments only need the newest camera once per UI frame: camera events
-    // can outpace frames under load, so coalesce before touching notifiers.
-    _pendingOrnamentCamera = camera;
-    if (_ornamentFlushScheduled) return;
-    _ornamentFlushScheduled = true;
-    SchedulerBinding.instance.scheduleFrameCallback((_) {
-      _ornamentFlushScheduled = false;
-      _applyOrnamentCamera();
-    });
-  }
-
-  void _applyOrnamentCamera() {
-    final camera = _pendingOrnamentCamera;
-    _pendingOrnamentCamera = null;
-    if (camera == null || !mounted) return;
+    // Ornaments are driven through notifiers with deadbands so camera
+    // streams repaint only the affected ornament, never the map Stack.
     // Meters per logical pixel at the camera latitude (style-spec 512px
-    // world tile), for the scale bar. Deadbands keep rebuilds rare.
+    // world tile), for the scale bar.
     final mpp = cos(camera.latitude * pi / 180) * 2 * pi * 6378137 / (512 * pow(2, camera.zoom));
     final current = _metersPerPixel.value;
     if (current <= 0 || (mpp - current).abs() / current > 0.01) {
       _metersPerPixel.value = mpp;
     }
-    if ((camera.bearing - _bearing).abs() > 0.2) {
-      setState(() => _bearing = camera.bearing);
+    if ((camera.bearing - _bearing.value).abs() > 0.2) {
+      _bearing.value = camera.bearing;
     }
   }
 
@@ -467,9 +451,12 @@ class _FfiMapViewState extends State<FfiMapView> {
               MapOrnament(
                 position: ornaments.compassPosition,
                 margins: ornaments.compassMargins,
-                child: CompassOrnament(
-                  bearing: _bearing,
-                  onTap: _resetBearing,
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _bearing,
+                  builder: (context, bearing, _) => CompassOrnament(
+                    bearing: bearing,
+                    onTap: _resetBearing,
+                  ),
                 ),
               ),
           ],
