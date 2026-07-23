@@ -211,3 +211,169 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
     ANativeWindow_release((ANativeWindow*)(uintptr_t)window);
   }
 }
+
+// --- Display vsync pulse service ---------------------------------------------
+//
+// Drives the engine isolate's frame loop in phase with the display: a
+// dedicated pthread (created once, never exits; "stop" only pauses) owns an
+// ALooper plus an AChoreographer and posts each frame-callback timestamp to
+// the engine isolate's native port with Dart_PostInteger_DL. Posting to a
+// dead port is a documented no-op, which makes hot restart self-healing: the
+// old isolate's port dies, the post returns false, the service parks itself
+// until the new isolate calls mln_shim_vsync_start with its own port.
+//
+// THIS THREAD MUST NEVER CALL INTO libmaplibre-native-c: MapLibre handles
+// are owner-thread affine to the engine isolate. The only cross-thread call
+// allowed here is Dart_PostInteger_DL (any-thread safe by contract).
+
+#include <android/choreographer.h>
+#include <android/log.h>
+#include <android/looper.h>
+#include <dlfcn.h>
+#include <pthread.h>
+#include <stdbool.h>
+
+#include "dart_api_dl.h"
+
+#define MLN_SHIM_LOG_TAG "maplibre_gl_native"
+#define MLN_SHIM_EXPORT __attribute__((visibility("default")))
+
+static pthread_mutex_t g_vsync_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_vsync_cond = PTHREAD_COND_INITIALIZER;
+static pthread_t g_vsync_thread;
+static bool g_vsync_thread_started = false;  // pthread_create succeeded
+static bool g_vsync_thread_ready = false;    // looper/choreographer published
+static bool g_vsync_thread_failed = false;   // no looper or choreographer
+static ALooper* g_vsync_looper = NULL;
+static AChoreographer* g_vsync_choreographer = NULL;
+static Dart_Port_DL g_vsync_port = 0;
+static bool g_vsync_running = false;           // deliver + re-post pulses
+static bool g_vsync_callback_pending = false;  // a one-shot callback is armed
+// API 29+ 64-bit frame callback, dlsym-probed once on the pulse thread; the
+// deprecated 32-bit variant (API 24) is the fallback.
+static void (*g_post_frame_callback64)(AChoreographer*,
+                                       AChoreographer_frameCallback64,
+                                       void*) = NULL;
+
+static void vsync_on_frame64(int64_t frame_time_nanos, void* data);
+static void vsync_on_frame32(long frame_time_nanos, void* data);
+
+// Re-arms the one-shot choreographer callback. Caller holds g_vsync_mutex;
+// must run on the pulse thread (registration is looper-local).
+static void vsync_post_locked(void) {
+  if (g_vsync_callback_pending || !g_vsync_running ||
+      g_vsync_choreographer == NULL) {
+    return;
+  }
+  g_vsync_callback_pending = true;
+  if (g_post_frame_callback64 != NULL) {
+    g_post_frame_callback64(g_vsync_choreographer, vsync_on_frame64, NULL);
+  } else {
+    // 'long' is 64-bit on the only shipped ABI (arm64-v8a), so no
+    // truncation; the Dart driver paces off its own clock regardless.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    AChoreographer_postFrameCallback(g_vsync_choreographer, vsync_on_frame32,
+                                     NULL);
+#pragma clang diagnostic pop
+  }
+}
+
+static void vsync_on_frame64(int64_t frame_time_nanos, void* data) {
+  (void)data;
+  pthread_mutex_lock(&g_vsync_mutex);
+  g_vsync_callback_pending = false;
+  if (g_vsync_running && g_vsync_port != 0) {
+    if (!Dart_PostInteger_DL(g_vsync_port, frame_time_nanos)) {
+      // The engine isolate is gone (hot restart): self-park, no spam.
+      __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
+                          "vsync port closed; parking pulses");
+      g_vsync_running = false;
+      g_vsync_port = 0;
+    }
+  }
+  vsync_post_locked();
+  pthread_mutex_unlock(&g_vsync_mutex);
+}
+
+static void vsync_on_frame32(long frame_time_nanos, void* data) {
+  vsync_on_frame64((int64_t)frame_time_nanos, data);
+}
+
+static void* vsync_thread_main(void* arg) {
+  (void)arg;
+  ALooper* looper = ALooper_prepare(0);
+  AChoreographer* choreographer =
+      looper != NULL ? AChoreographer_getInstance() : NULL;
+  pthread_mutex_lock(&g_vsync_mutex);
+  g_vsync_looper = looper;
+  g_vsync_choreographer = choreographer;
+  g_vsync_thread_failed = choreographer == NULL;
+  g_vsync_thread_ready = true;
+  g_post_frame_callback64 =
+      (void (*)(AChoreographer*, AChoreographer_frameCallback64, void*))dlsym(
+          RTLD_DEFAULT, "AChoreographer_postFrameCallback64");
+  pthread_cond_broadcast(&g_vsync_cond);
+  pthread_mutex_unlock(&g_vsync_mutex);
+  if (choreographer == NULL) {
+    return NULL;
+  }
+  for (;;) {
+    // Dispatches choreographer callbacks; blocks indefinitely while parked.
+    // A resume arrives as an ALooper_wake from mln_shim_vsync_start.
+    ALooper_pollOnce(-1, NULL, NULL, NULL);
+    pthread_mutex_lock(&g_vsync_mutex);
+    vsync_post_locked();
+    pthread_mutex_unlock(&g_vsync_mutex);
+  }
+}
+
+// Idempotent; data = NativeApi.initializeApiDLData. Returns 0 on success,
+// negative on Dart API DL version mismatch.
+MLN_SHIM_EXPORT int64_t mln_shim_dart_init(void* data) {
+  return (int64_t)Dart_InitializeApiDL(data);
+}
+
+// Starts (first call: spawns the pulse thread) or resumes pulses, posting
+// each frame time to dart_port. Idempotent; re-targets the port when called
+// with a new one. Returns 1 on success, 0 when pulses are unavailable.
+MLN_SHIM_EXPORT int32_t mln_shim_vsync_start(int64_t dart_port) {
+  pthread_mutex_lock(&g_vsync_mutex);
+  if (!g_vsync_thread_started) {
+    if (pthread_create(&g_vsync_thread, NULL, vsync_thread_main, NULL) != 0) {
+      pthread_mutex_unlock(&g_vsync_mutex);
+      __android_log_print(ANDROID_LOG_WARN, MLN_SHIM_LOG_TAG,
+                          "vsync pulse thread creation failed");
+      return 0;
+    }
+    g_vsync_thread_started = true;
+    pthread_setname_np(g_vsync_thread, "mln-vsync");
+  }
+  while (!g_vsync_thread_ready) {
+    pthread_cond_wait(&g_vsync_cond, &g_vsync_mutex);
+  }
+  if (g_vsync_thread_failed) {
+    pthread_mutex_unlock(&g_vsync_mutex);
+    __android_log_print(ANDROID_LOG_WARN, MLN_SHIM_LOG_TAG,
+                        "vsync choreographer unavailable");
+    return 0;
+  }
+  g_vsync_port = (Dart_Port_DL)dart_port;
+  g_vsync_running = true;
+  ALooper* looper = g_vsync_looper;
+  pthread_mutex_unlock(&g_vsync_mutex);
+  // Nudge the (possibly parked) pulse thread so it re-arms the one-shot
+  // frame callback.
+  ALooper_wake(looper);
+  return 1;
+}
+
+// Pauses pulses. After return no NEW post to the port will start; at most
+// one already-posted message may still sit in the Dart port queue (the Dart
+// driver tolerates a trailing pulse).
+MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
+  pthread_mutex_lock(&g_vsync_mutex);
+  g_vsync_running = false;
+  g_vsync_port = 0;
+  pthread_mutex_unlock(&g_vsync_mutex);
+}
