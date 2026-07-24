@@ -34,6 +34,32 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+// The shim compiles the Dart API dynamic-linking stubs (dart_api_dl.c)
+// straight from the Dart SDK bundled with the Flutter SDK performing this
+// build, instead of vendoring a copy: the stubs are then always the exact
+// version of the Dart VM shipped in the same app. Flutter tooling writes
+// flutter.sdk into local.properties on every build.
+def maplibreGlNativeLocalProperties = new Properties()
+def maplibreGlNativeLocalPropertiesFile = rootProject.file('local.properties')
+if (maplibreGlNativeLocalPropertiesFile.exists()) {
+    maplibreGlNativeLocalPropertiesFile.withReader('UTF-8') { reader ->
+        maplibreGlNativeLocalProperties.load(reader)
+    }
+}
+def maplibreGlNativeFlutterSdk = maplibreGlNativeLocalProperties.getProperty('flutter.sdk')
+if (maplibreGlNativeFlutterSdk == null) {
+    throw new GradleException(
+        'flutter.sdk not set in local.properties; maplibre_gl_native needs it ' +
+        'to compile the Dart API DL stubs from the Flutter SDK')
+}
+def maplibreGlNativeDartInclude =
+    new File(maplibreGlNativeFlutterSdk, 'bin/cache/dart-sdk/include')
+if (!new File(maplibreGlNativeDartInclude, 'dart_api_dl.c').exists()) {
+    throw new GradleException(
+        "Dart SDK include dir not found at $maplibreGlNativeDartInclude " +
+        '(expected inside the Flutter SDK from local.properties)')
+}
+
 android {
     if (project.android.hasProperty("namespace")) {
         namespace 'org.maplibre.maplibreglnative'
@@ -49,6 +75,12 @@ android {
         // Spike scope: the native library is only built for arm64-v8a.
         ndk {
             abiFilters 'arm64-v8a'
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DDART_SDK_INCLUDE_DIR=${maplibreGlNativeDartInclude.absolutePath}"
+            }
         }
     }
 
