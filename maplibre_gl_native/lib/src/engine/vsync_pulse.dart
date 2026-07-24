@@ -62,8 +62,22 @@ class _VsyncBindings {
   final int Function(int nativePort) start;
   final void Function() stop;
 
+  /// Debug knob: build with `--dart-define=MLN_FORCE_TIMER_PACING=true` to
+  /// skip the choreographer pulses and exercise the refresh-rate-matched
+  /// timer fallback instead (used by the vsync A/B benchmark).
+  static const _forceTimerPacing = bool.fromEnvironment(
+    'MLN_FORCE_TIMER_PACING',
+  );
+
   static _VsyncBindings? _tryLoad() {
     if (!Platform.isAndroid) return null;
+    if (_forceTimerPacing) {
+      debugPrint(
+        '[maplibre_gl_native] MLN_FORCE_TIMER_PACING set; '
+        'using timer frame pacing',
+      );
+      return null;
+    }
     try {
       // Open by soname: System.loadLibrary already loaded the shim and
       // dlopen returns the existing handle (DynamicLibrary.process() is not
