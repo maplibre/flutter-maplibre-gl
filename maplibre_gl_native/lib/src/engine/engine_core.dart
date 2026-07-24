@@ -23,10 +23,9 @@ const String _locationIndicatorLayerId = 'maplibre-gl-native-location';
 /// the only file allowed to touch `mln.*` types.
 ///
 /// The presentation side talks to it exclusively through the sendable
-/// [EngineMessage]/[EngineEvent] protocol, so that phase 3 of the
-/// render-isolate plan can move this whole class to a dedicated isolate by
-/// swapping the transport (see docs/rfc-native-ffi-engine.md, "Performance
-/// profiling"). Runtime, maps, and sessions are OS-thread affine: everything
+/// [EngineMessage]/[EngineEvent] protocol, which is what allows this whole
+/// class to live on a dedicated engine isolate with only the transport in
+/// between. Runtime, maps, and sessions are OS-thread affine: everything
 /// in this file must run on the thread that called [ensure].
 class FfiEngineCore {
   FfiEngineCore._(this._runtime);

@@ -24,8 +24,8 @@ import 'vsync_pulse.dart';
 /// MapLibre Native handles are OS-thread affine and the Dart VM does not
 /// guarantee isolate-to-thread pinning (dart-lang/sdk#46943): the engine
 /// keeps a `gettid` watchdog and rebinds the runtime on migration via the
-/// local upstream patch `mln_runtime_rebind_thread` (see
-/// docs/upstream-native-ffi-proposals.md).
+/// local upstream patch `mln_runtime_rebind_thread` (see the package's
+/// `upstream_patches/`).
 ///
 /// A test double can still `implements EngineHost` thanks to Dart's implicit
 /// interfaces.

@@ -14,8 +14,8 @@ import '../engine/engine_protocol.dart';
 /// Mirrors the signatures of maplibre_gl's global offline functions
 /// (`global.dart`), which talk to the method-channel backends over a global
 /// platform channel that a Dart backend cannot intercept. Until that seam
-/// moves behind `MapLibrePlatform` (a separate PR; see
-/// docs/ffi-api-expansion-plan.md), apps running on the FFI backend call
+/// moves behind `MapLibrePlatform` (a separate PR), apps running on the FFI
+/// backend call
 /// these package-level equivalents instead. Regions are stored in the
 /// engine's persistent tile cache database.
 class MapLibreGlNativeOffline {

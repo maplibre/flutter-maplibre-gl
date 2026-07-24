@@ -1,8 +1,8 @@
 /// EXPERIMENTAL: maplibre_gl backend built on the MapLibre Native C API via
 /// dart:ffi, rendering into a Flutter [Texture] instead of a platform view.
 ///
-/// This package is the Android spike of the "same API, new engine" plan (see
-/// `docs/rfc-native-ffi-engine.md`). Activate it before `runApp`:
+/// This package is the Android spike of the "same API, new engine" plan.
+/// Activate it before `runApp`:
 ///
 /// ```dart
 /// import 'package:maplibre_gl_native/maplibre_gl_native.dart';
@@ -53,8 +53,7 @@ class MapLibreGlNative {
   ///
   /// Stand-in for maplibre_gl's global `setHttpHeaders`, which talks to the
   /// method-channel backends over a global platform channel that a Dart
-  /// backend cannot intercept (see docs/ffi-api-expansion-plan.md). Safe to
-  /// call before the first map is created.
+  /// backend cannot intercept. Safe to call before the first map is created.
   static void setGlobalHttpHeaders(Map<String, String> headers) {
     EngineHost.globalHttpHeaders = Map.unmodifiable(headers);
     EngineHost.instance?.send(SetHttpHeadersCommand(headers));
