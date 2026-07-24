@@ -114,13 +114,17 @@ class HttpResourceProvider {
           'for ${request.url}',
         );
       }
-      handle.complete(_toResourceResponse(response, bytes));
+      _complete(handle, _toResourceResponse(response, bytes));
     } catch (error) {
       debugPrint(
         '[maplibre_gl_native] HTTP fetch failed: '
         '${request.url}: $error',
       );
       if (handle.isReleased) return;
+      if (handle.isCancelled) {
+        handle.close();
+        return;
+      }
       final reason =
           error is SocketException ||
               error is HandshakeException ||
@@ -128,13 +132,34 @@ class HttpResourceProvider {
               error is HttpException
           ? mln.ResourceErrorReason.connection
           : mln.ResourceErrorReason.other;
-      handle.complete(
+      _complete(
+        handle,
         mln.ResourceResponse(
           status: mln.ResourceResponseStatus.error,
           errorReason: reason,
           errorMessage: '$error',
         ),
       );
+    }
+  }
+
+  /// Completes [handle], tolerating the engine cancelling the request
+  /// concurrently: the isCancelled checks above cannot fully close the race,
+  /// and completing a natively cancelled request fails with invalidState. An
+  /// exception escaping here would kill the whole engine isolate over one
+  /// stale tile. A failed complete leaves the native reference alive, so it
+  /// is released with [mln.ResourceRequestHandle.close].
+  static void _complete(
+    mln.ResourceRequestHandle handle,
+    mln.ResourceResponse response,
+  ) {
+    try {
+      handle.complete(response);
+    } on mln.MaplibreException catch (error) {
+      debugPrint(
+        '[maplibre_gl_native] resource request completion dropped: $error',
+      );
+      handle.close();
     }
   }
 
