@@ -156,12 +156,24 @@ class _EngineSession {
   /// Creates an offscreen snapshot job: a static-mode map sharing this
   /// session's GPU context, rendering the live style and camera into an
   /// engine-owned texture that is read back when the still image finishes.
-  _SnapshotJob createSnapshotJob(mln.RuntimeHandle runtime, int requestId) {
+  ///
+  /// [width]/[height] are the requested logical size; each falls back to the
+  /// live surface dimension when null. The requested size is rendered at the
+  /// session's own scale factor with the live camera unchanged, so an
+  /// off-aspect size reveals more of the map rather than distorting it.
+  _SnapshotJob createSnapshotJob(
+    mln.RuntimeHandle runtime,
+    int requestId, {
+    int? width,
+    int? height,
+  }) {
+    final snapshotWidth = width ?? logicalWidth;
+    final snapshotHeight = height ?? logicalHeight;
     final snapshotMap = mln.MapHandle.create(
       runtime,
       options: mln.MapOptions(
-        width: logicalWidth,
-        height: logicalHeight,
+        width: snapshotWidth,
+        height: snapshotHeight,
         scaleFactor: scaleFactor,
         mapMode: mln.MapMode.staticMap,
       ),
@@ -169,8 +181,8 @@ class _EngineSession {
     mln.RenderSessionHandle? snapshotSession;
     try {
       final extent = mln.RenderTargetExtent(
-        width: logicalWidth,
-        height: logicalHeight,
+        width: snapshotWidth,
+        height: snapshotHeight,
         scaleFactor: scaleFactor,
       );
       snapshotSession = switch (_spec.backend) {

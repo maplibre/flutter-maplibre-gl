@@ -386,7 +386,12 @@ extension EngineCommandDispatch on FfiEngineCore {
         final session = _session(command.sessionId);
         try {
           _snapshots.add(
-            session.createSnapshotJob(_runtime, command.requestId),
+            session.createSnapshotJob(
+              _runtime,
+              command.requestId,
+              width: command.width,
+              height: command.height,
+            ),
           );
         } catch (error) {
           _emit(

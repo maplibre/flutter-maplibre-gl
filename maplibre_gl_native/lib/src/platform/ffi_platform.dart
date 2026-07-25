@@ -1519,13 +1519,15 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
 
   @override
   Future<Uint8List> takeSnapshot({int? width, int? height}) async {
-    // The offscreen still image renders at the current surface size; the
-    // explicit width/height override is not supported yet.
+    // A null width/height renders at the live surface size; an explicit size
+    // is honored at the session scale factor with the camera unchanged.
     final (host, sessionId) = _requireSession();
     final requestId = _nextSnapshotRequestId++;
     final completer = Completer<Uint8List>();
     _pendingSnapshots[requestId] = completer;
-    host.send(TakeSnapshotCommand(sessionId, requestId));
+    host.send(
+      TakeSnapshotCommand(sessionId, requestId, width: width, height: height),
+    );
     return completer.future.timeout(
       const Duration(seconds: 30),
       onTimeout: () {

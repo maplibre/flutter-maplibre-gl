@@ -516,10 +516,22 @@ class UpdateImageSourceCommand extends SessionCommand {
 /// camera (static-mode map over an engine-owned texture) and reports the
 /// result asynchronously via [SnapshotResultEvent], correlated by
 /// [requestId].
+///
+/// [width]/[height] are the requested logical size of the still image. When
+/// null the snapshot renders at the live surface size. They are honored at
+/// the session's own scale factor with the camera left unchanged, so an
+/// off-aspect size reveals more of the map rather than distorting it.
 class TakeSnapshotCommand extends SessionCommand {
-  const TakeSnapshotCommand(super.sessionId, this.requestId);
+  const TakeSnapshotCommand(
+    super.sessionId,
+    this.requestId, {
+    this.width,
+    this.height,
+  });
 
   final int requestId;
+  final int? width;
+  final int? height;
 }
 
 /// Adapts every style layer whose text-field references the `name` data
