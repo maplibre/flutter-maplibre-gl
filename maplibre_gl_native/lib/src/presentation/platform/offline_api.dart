@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:maplibre_gl/maplibre_gl.dart' as gl;
 
-import '../engine/engine_isolate.dart';
-import '../engine/engine_protocol.dart';
+import '../../engine/engine_host.dart';
+import '../../protocol/protocol.dart';
 
 /// Offline region support over the FFI engine.
 ///

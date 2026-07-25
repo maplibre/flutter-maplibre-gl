@@ -12,13 +12,13 @@ The one idea that shapes everything: **the engine lives on its own isolate** (th
 flowchart TD
     APP["Your Flutter app<br/><small>unchanged maplibre_gl API</small>"]
     subgraph UI["UI isolate (your app's world)"]
-        PLAT["MapLibreFfiPlatform<br/><small>src/platform/ · adapts the maplibre_gl API</small>"]
-        VIEW["FfiMapView + gestures + ornaments<br/><small>src/view/ · Texture widget, touch, compass</small>"]
-        HOST["EngineHost<br/><small>src/engine/engine_isolate.dart<br/>the only door to the engine</small>"]
+        PLAT["MapLibreFfiPlatform<br/><small>src/presentation/platform/ · adapts the maplibre_gl API</small>"]
+        VIEW["FfiMapView + gestures + ornaments<br/><small>src/presentation/ · Texture widget, touch, compass</small>"]
+        HOST["EngineHost<br/><small>src/engine/engine_host.dart<br/>the only door to the engine</small>"]
     end
     subgraph ENGINE["Engine isolate (the map's world)"]
-        DRIVER["Frame driver<br/><small>renders on display vsync</small>"]
-        CORE["FfiEngineCore<br/><small>src/engine/engine_core.dart<br/>owns every native handle</small>"]
+        DRIVER["FrameDriver<br/><small>src/engine/core/frame_driver.dart<br/>renders on display vsync</small>"]
+        CORE["FfiEngineCore<br/><small>src/engine/core/engine_core.dart<br/>owns every native handle</small>"]
     end
     NATIVE["MapLibre Native C API<br/><small>libmaplibre-native-c.so</small>"]
     GPU["GPU surface -> Flutter Texture"]
@@ -37,7 +37,7 @@ flowchart TD
     class HOST,CORE emphasis
 ```
 
-Everything that crosses between the two worlds is a plain, sendable message defined in `src/engine/engine_protocol.dart`. Three kinds:
+Everything that crosses between the two worlds is a plain, sendable message defined in `src/protocol/protocol.dart`. Three kinds:
 
 - **Command**: a fire-and-forget mutation ("move the camera", "set this GeoJSON"). No reply.
 - **Query**: a read with a reply ("where does this coordinate land on screen?"). Round trip ~0.1 ms.
@@ -95,27 +95,47 @@ Why a native pulse instead of a plain Dart timer? Because phase matters more tha
 
 ## Threading rules (the part that bites)
 
-- MapLibre Native handles are **thread-affine**: only the engine isolate may touch them. That is why `FfiEngineCore` and its parts are the ONLY files importing `mln.*` types, and why everything else talks in protocol messages.
+- MapLibre Native handles are **thread-affine**: only the engine isolate may touch them. That is why `src/engine/` is the ONLY layer importing `mln.*` types, and why everything else talks in protocol messages.
 - The Dart VM sometimes migrates an isolate to a different OS thread. A watchdog detects this before every native call and rebinds the runtime (local upstream patch `mln_runtime_rebind_thread`). You will see a "runtime rebound" log line when it happens; that is normal.
 - The vsync pulse thread never calls into MapLibre Native: it only posts a timestamp to the engine isolate's port.
 
 ## Directory map
 
+The tree mirrors the isolate boundary, so the answer to "where does my code go?" is always the answer to "which side of the port does it run on?".
+
 | Directory | What lives there | Touch it when... |
 |---|---|---|
-| `src/engine/` | protocol, host, core (+ its parts), frame driver, vsync | you add engine capabilities or change how frames render |
-| `src/view/` | `FfiMapView` (Texture + lifecycle), gestures, ornaments | you change touch behavior or on-map UI |
-| `src/platform/` | the `MapLibrePlatform` adapter, offline API | you wire an existing engine capability to the public API |
-| `src/io/` | HTTP resource provider, texture/platform channel bridge, style resolution, JSON converters | you change how bytes get in and out |
+| `src/protocol/` | every message that crosses the port: commands, queries, events, their envelopes | you add an engine capability (start here) |
+| `src/engine/` | `EngineHost` (the door, runs on the UI isolate), `render_backend.dart` | you change how the two isolates talk |
+| `src/engine/core/` | the engine isolate itself: `FfiEngineCore` + parts, frame driver, vsync, HTTP provider, JSON converters | you add engine capabilities or change how frames render |
+| `src/presentation/platform/` | the `MapLibrePlatform` adapter, offline API, style resolution | you wire an existing engine capability to the public API |
+| `src/presentation/map/` | `FfiMapView`: the Texture, the surface lifecycle | you change how the map widget is mounted or resized |
+| `src/presentation/gestures/` | gesture recognition and arbitration | you change touch behavior |
+| `src/presentation/ornaments/` | compass, attribution, logo, scale bar | you change on-map UI |
+| `src/native_bridge.dart` | the single door to the Kotlin side: textures, surfaces, location, cache dir | you need something from the Android/iOS platform |
+| `src/utils/` | values shared by any layer: Mercator projection and camera limits, mirroring `mbgl::util` | never, unless upstream changes |
 | `android/src/main/cpp/` | the C shim: `mln_android_init`, Vulkan bootstrap, vsync pulse | you need something only native code can do |
 
+Four rules keep the layers honest:
+
+1. `src/protocol/` imports no Flutter, no `dart:ui`, no `mln`, and nothing from the other layers. It crosses a SendPort: it must stay plain sendable Dart.
+2. `mln.*` appears only under `src/engine/`.
+3. `src/presentation/` reaches the engine only through `engine_host.dart` and `render_backend.dart`, never through `engine/core/`.
+4. `MethodChannel` is created only in `src/native_bridge.dart`.
+
 `engine_core.dart` is intentionally small: it holds the state and the frame pump. The dispatch lives in its `part` files (`engine_core_commands.dart`, `engine_core_queries.dart`, `engine_core_offline.dart`, `engine_core_snapshots.dart`, `engine_core_session.dart`): same library, same private access, just readable slices.
+
+## Two conventions
+
+**Comments name sections; dashes do not.** No `// --- Section -------` banners: the padding drifts, `dart format` will not fix it, and the banner outlives the code it introduced. Prefer splitting the file so its name carries the section; where a grouping inside one file is genuinely useful, a plain one-line comment does the job.
+
+**Constants are named where they are used, shared only when they must be.** A constant moves into a shared file only if it is used by more than one file, or if it mirrors an upstream native constant, where drift is a parity bug (that is what `src/utils/projection.dart` is for). Otherwise it stays a named `static const` next to its use, with a comment saying where the value comes from: see the Android SDK provenance notes in `src/presentation/gestures/`. Do not unify two constants that merely happen to share a value.
 
 ## Recipe: add a new map API in 4 steps
 
 Say you want to expose `setFoo(double value)`. Every API in this package follows the same mechanical path; `setMaximumFps` is a small worked example to imitate.
 
-1. **Protocol** (`src/engine/engine_protocol.dart`): declare the message. Sendable fields only (numbers, strings, bools, lists, maps, typed data).
+1. **Protocol** (`src/protocol/protocol.dart`): declare the message. Sendable fields only (numbers, strings, bools, lists, maps, typed data).
 
    ```dart
    /// Sets foo on the session. (Command = mutation, no reply;
@@ -126,14 +146,14 @@ Say you want to expose `setFoo(double value)`. Every API in this package follows
    }
    ```
 
-2. **Core** (`src/engine/engine_core_commands.dart`): handle it. The switch is exhaustive, so the analyzer points at the spot the moment you compile.
+2. **Core** (`src/engine/core/engine_core_commands.dart`): handle it. The switch is exhaustive, so the analyzer points at the spot the moment you compile.
 
    ```dart
    case SetFooCommand():
      _session(command.sessionId).map.setFoo(command.value);
    ```
 
-3. **Platform adapter** (`src/platform/ffi_platform.dart`): implement the `MapLibrePlatform` method by sending your message.
+3. **Platform adapter** (`src/presentation/platform/ffi_platform.dart`): implement the `MapLibrePlatform` method by sending your message.
 
    ```dart
    @override

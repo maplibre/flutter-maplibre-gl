@@ -4,11 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 
-import 'engine_protocol.dart';
+import '../../protocol/protocol.dart';
 import 'frame_stats.dart';
-import '../io/geojson_convert.dart';
-import '../io/http_resource_provider.dart';
-import '../io/json_convert.dart';
+import 'geojson_convert.dart';
+import 'http_resource_provider.dart';
+import 'json_convert.dart';
 
 part 'engine_core_commands.dart';
 part 'engine_core_offline.dart';
@@ -83,11 +83,6 @@ class FfiEngineCore {
   /// driver when the VM resumed the engine isolate on a different thread.
   void rebindThread() => _runtime.rebindThread();
 
-  /// Whether the bundled native library was compiled with the Vulkan render
-  /// backend. Decides which native surface the platform bridge prepares.
-  static bool get supportsVulkan => mln.Maplibre.supportedRenderBackends()
-      .contains(mln.RenderBackendMask.vulkan);
-
   _EngineSession _session(int sessionId) {
     final session = _sessions[sessionId];
     if (session == null) {
@@ -96,7 +91,7 @@ class FfiEngineCore {
     return session;
   }
 
-  // --- Frame driving ---------------------------------------------------------
+  // Frame driving.
 
   /// Pumps the runtime and renders every dirty session. Returns whether any
   /// frame was actually rendered. Used by the self-driving isolate loop.
@@ -152,13 +147,7 @@ class FfiEngineCore {
     }
   }
 
-  // --- Message dispatch ------------------------------------------------------
-
-  // --- Query handlers --------------------------------------------------------
-
-  // --- Offline regions -----------------------------------------------------------
-
-  // --- Offscreen snapshots -----------------------------------------------------
-
-  // --- Helpers ---------------------------------------------------------------
+  // Command dispatch, query handlers, offline regions, offscreen snapshots
+  // and their helpers live in the part files listed at the top of this
+  // library, one file per concern.
 }

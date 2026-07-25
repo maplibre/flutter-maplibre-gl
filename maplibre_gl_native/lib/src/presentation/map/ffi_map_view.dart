@@ -1,19 +1,19 @@
 import 'dart:async';
-import 'dart:math';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show OnPlatformViewCreatedCallback;
 
-import '../engine/engine_core.dart' show FfiEngineCore;
-import '../engine/engine_isolate.dart';
-import '../engine/engine_protocol.dart';
+import '../../engine/render_backend.dart';
+import '../../engine/engine_host.dart';
+import '../../protocol/protocol.dart';
 import '../platform/ffi_platform.dart';
-import 'map_gestures.dart';
-import 'ornaments.dart';
-import '../io/style_string_resolver.dart';
-import '../io/texture_bridge.dart';
+import '../gestures/map_gestures.dart';
+import 'map_gesture_detector.dart';
+import '../ornaments/ornaments_overlay.dart';
+import '../platform/style_string_resolver.dart';
+import '../../native_bridge.dart';
+import '../../utils/projection.dart';
 
 /// Texture-backed map view driven entirely through dart:ffi.
 ///
@@ -43,10 +43,6 @@ class FfiMapView extends StatefulWidget {
 }
 
 class _FfiMapViewState extends State<FfiMapView> {
-  /// Pan-start touch slop for the map's scale recognizer, in logical pixels
-  /// (Android SDK parity; the recognizer's pan slop is twice this value).
-  static const _mapTouchSlop = 4.0;
-
   EngineHost? _host;
   int? _sessionId;
   int? _textureId;
@@ -100,16 +96,18 @@ class _FfiMapViewState extends State<FfiMapView> {
   @override
   void dispose() {
     widget.platform.ornaments.removeListener(_onOrnamentsChanged);
-    _cameraGeneration.dispose();
-    _styleGeneration.dispose();
-    _metersPerPixel.dispose();
-    _bearing.dispose();
     final host = _host;
     final sessionId = _sessionId;
     final textureId = _textureId;
     _host = null;
     _sessionId = null;
+    // Unsubscribe BEFORE disposing the notifiers _onEngineEvent writes to:
+    // an event delivered in between would hit a disposed ChangeNotifier.
     host?.removeEventListener(_onEngineEvent);
+    _cameraGeneration.dispose();
+    _styleGeneration.dispose();
+    _metersPerPixel.dispose();
+    _bearing.dispose();
     if (host != null && sessionId != null) {
       host.send(DisposeSessionCommand(sessionId));
     }
@@ -134,7 +132,7 @@ class _FfiMapViewState extends State<FfiMapView> {
       final host = await EngineHost.ensure();
       // The bundled native library is compiled for exactly one render
       // backend; prepare the platform texture for the matching one.
-      final backend = FfiEngineCore.supportsVulkan
+      final backend = RenderBackendSupport.vulkan
           ? SessionBackend.vulkan
           : SessionBackend.opengl;
       final handles = await MapLibreGlNativeBridge.createTexture(
@@ -279,14 +277,10 @@ class _FfiMapViewState extends State<FfiMapView> {
     _pitch = camera.pitch;
     // Ornaments are driven through notifiers with deadbands so camera
     // streams repaint only the affected ornament, never the map Stack.
-    // Meters per logical pixel at the camera latitude (style-spec 512px
-    // world tile), for the scale bar.
-    final mpp =
-        cos(camera.latitude * pi / 180) *
-        2 *
-        pi *
-        6378137 /
-        (512 * pow(2, camera.zoom));
+    final mpp = MercatorProjection.metersPerPixel(
+      camera.latitude,
+      camera.zoom,
+    );
     final current = _metersPerPixel.value;
     if (current <= 0 || (mpp - current).abs() / current > 0.01) {
       _metersPerPixel.value = mpp;
@@ -377,119 +371,23 @@ class _FfiMapViewState extends State<FfiMapView> {
 
         _maybeResize(logicalSize, devicePixelRatio);
 
-        final ornaments = widget.platform.ornaments;
         return Stack(
           fit: StackFit.expand,
           children: [
-            Listener(
-              onPointerDown: _gestures.onPointerDown,
-              onPointerMove: _gestures.onPointerMove,
-              onPointerUp: _gestures.onPointerUp,
-              onPointerCancel: _gestures.onPointerCancel,
-              onPointerSignal: _gestures.onPointerSignal,
-              child: RawGestureDetector(
-                behavior: HitTestBehavior.opaque,
-                gestures: <Type, GestureRecognizerFactory>{
-                  // A stock GestureDetector starts panning after Flutter's
-                  // ~18 px touch slop; the Android SDK map moves after ~4 dp.
-                  // A tighter slop on the scale recognizer only (taps and
-                  // long-presses keep stock behavior) closes the pan-start
-                  // latency gap without destabilizing the gesture arena.
-                  ScaleGestureRecognizer:
-                      GestureRecognizerFactoryWithHandlers<
-                        ScaleGestureRecognizer
-                      >(() => ScaleGestureRecognizer(debugOwner: this), (
-                        recognizer,
-                      ) {
-                        recognizer
-                          ..gestureSettings = const DeviceGestureSettings(
-                            touchSlop: _mapTouchSlop,
-                          )
-                          ..onStart = _gestures.onScaleStart
-                          ..onUpdate = _gestures.onScaleUpdate
-                          ..onEnd = _gestures.onScaleEnd;
-                      }),
-                  TapGestureRecognizer:
-                      GestureRecognizerFactoryWithHandlers<
-                        TapGestureRecognizer
-                      >(() => TapGestureRecognizer(debugOwner: this), (
-                        recognizer,
-                      ) {
-                        recognizer.onTapUp = _gestures.onTapUp;
-                      }),
-                  DoubleTapGestureRecognizer:
-                      GestureRecognizerFactoryWithHandlers<
-                        DoubleTapGestureRecognizer
-                      >(() => DoubleTapGestureRecognizer(debugOwner: this), (
-                        recognizer,
-                      ) {
-                        recognizer
-                          ..onDoubleTapDown = _gestures.onDoubleTapDown
-                          ..onDoubleTap = _gestures.onDoubleTap;
-                      }),
-                  LongPressGestureRecognizer:
-                      GestureRecognizerFactoryWithHandlers<
-                        LongPressGestureRecognizer
-                      >(() => LongPressGestureRecognizer(debugOwner: this), (
-                        recognizer,
-                      ) {
-                        recognizer
-                          ..onLongPressStart = _gestures.onLongPressStart
-                          ..onLongPressMoveUpdate =
-                              _gestures.onLongPressMoveUpdate
-                          ..onLongPressEnd = _gestures.onLongPressEnd;
-                      }),
-                },
-                child: Texture(textureId: textureId),
-              ),
+            MapGestureDetector(
+              handler: _gestures,
+              child: Texture(textureId: textureId),
             ),
-            if (ornaments.logoEnabled)
-              MapOrnament(
-                position: ornaments.logoPosition,
-                margins: ornaments.logoMargins,
-                child: const LogoOrnament(),
-              ),
-            if (ornaments.attributionEnabled)
-              MapOrnament(
-                position: ornaments.attributionPosition,
-                // When the attribution shares a corner with the logo, shift
-                // it past the logo's 88px width like the native SDKs do.
-                margins:
-                    ornaments.logoEnabled &&
-                        ornaments.attributionPosition == ornaments.logoPosition
-                    ? [
-                        ornaments.attributionMargins[0] + 96,
-                        ornaments.attributionMargins[1],
-                      ]
-                    : ornaments.attributionMargins,
-                child: AttributionOrnament(
-                  loadAttributions: widget.platform.getAttributions,
-                  openUri: MapLibreGlNativeBridge.openUri,
-                  collapseSignal: _cameraGeneration,
-                  refreshSignal: _styleGeneration,
-                  iconAtStart:
-                      ornaments.attributionPosition == 0 ||
-                      ornaments.attributionPosition == 2,
-                ),
-              ),
-            if (ornaments.scaleBarEnabled)
-              MapOrnament(
-                position: ornaments.scaleBarPosition,
-                margins: ornaments.scaleBarMargins,
-                child: ScaleBarOrnament(metersPerPixel: _metersPerPixel),
-              ),
-            if (ornaments.compassEnabled)
-              MapOrnament(
-                position: ornaments.compassPosition,
-                margins: ornaments.compassMargins,
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _bearing,
-                  builder: (context, bearing, _) => CompassOrnament(
-                    bearing: bearing,
-                    onTap: _resetBearing,
-                  ),
-                ),
-              ),
+            OrnamentsOverlay(
+              config: widget.platform.ornaments,
+              bearing: _bearing,
+              metersPerPixel: _metersPerPixel,
+              cameraGeneration: _cameraGeneration,
+              styleGeneration: _styleGeneration,
+              loadAttributions: widget.platform.getAttributions,
+              openUri: MapLibreGlNativeBridge.openUri,
+              onCompassTap: _resetBearing,
+            ),
           ],
         );
       },

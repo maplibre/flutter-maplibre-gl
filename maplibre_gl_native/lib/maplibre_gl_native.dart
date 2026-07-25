@@ -16,14 +16,15 @@ library;
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
-import 'src/engine/engine_isolate.dart';
-import 'src/engine/engine_protocol.dart';
-import 'src/platform/ffi_platform.dart';
+import 'src/engine/engine_host.dart';
+import 'src/protocol/protocol.dart';
+import 'src/presentation/platform/ffi_platform.dart';
 
-export 'src/engine/engine_isolate.dart' show EngineHost;
-export 'src/engine/engine_protocol.dart';
-export 'src/platform/ffi_platform.dart' show MapLibreFfiPlatform;
-export 'src/platform/offline_api.dart' show MapLibreGlNativeOffline;
+export 'src/engine/engine_host.dart' show EngineHost;
+export 'src/protocol/protocol.dart';
+export 'src/presentation/platform/ffi_platform.dart' show MapLibreFfiPlatform;
+export 'src/presentation/platform/offline_api.dart'
+    show MapLibreGlNativeOffline;
 
 /// Entry point to opt a Flutter app into the FFI backend.
 class MapLibreGlNative {

@@ -2,9 +2,10 @@
 /// `MapLibrePlatform` adapter) and the engine core that owns every MapLibre
 /// Native handle.
 ///
-/// Every message crosses a SendPort to the engine isolate, so every field in
-/// this file must stay isolate-sendable: numbers, strings, bools, lists,
-/// maps, and typed data only. No mln.* types, no closures.
+/// This is the isolate boundary, and the rule that keeps it one: every field
+/// in this file must stay isolate-sendable (numbers, strings, bools, lists,
+/// maps, typed data), and this library must not import Flutter, `dart:ui`, or
+/// `maplibre_native_ffi`; ARCHITECTURE.md explains why.
 library;
 
 import 'dart:typed_data';
@@ -36,6 +37,32 @@ sealed class SessionQuery<R> extends EngineQuery<R> {
   const SessionQuery(this.sessionId);
 
   final int sessionId;
+}
+
+/// Query envelope with a correlation id for the reply. A command needs no
+/// envelope: it is sent as-is because it has no reply to correlate.
+class QueryRequest {
+  const QueryRequest(this.id, this.query);
+
+  final int id;
+  final EngineQuery<Object?> query;
+}
+
+/// Successful reply to the [QueryRequest] with the same [id].
+class QueryReply {
+  const QueryReply(this.id, this.result);
+
+  final int id;
+  final Object? result;
+}
+
+/// Failed reply to the [QueryRequest] with the same [id]; [error] is the
+/// stringified engine-side exception.
+class QueryFailure {
+  const QueryFailure(this.id, this.error);
+
+  final int id;
+  final String error;
 }
 
 /// Partial camera state; null fields are left unchanged by the engine.
@@ -72,7 +99,7 @@ class CameraSnapshot {
   final double pitch;
 }
 
-// --- Session lifecycle -------------------------------------------------------
+// Session lifecycle.
 
 /// Render backend of a session's native surface. Must match the backend the
 /// bundled MapLibre Native library was compiled with.
@@ -183,7 +210,7 @@ class RequestRenderCommand extends SessionCommand {
   const RequestRenderCommand(super.sessionId);
 }
 
-// --- Camera ------------------------------------------------------------------
+// Camera.
 
 /// Instant camera move; null [CameraSpec] fields stay unchanged.
 class JumpToCommand extends SessionCommand {
@@ -355,7 +382,7 @@ class SetPaddingCommand extends SessionCommand {
   final double? durationMs;
 }
 
-// --- Style -------------------------------------------------------------------
+// Style.
 
 /// Loads a style from a URL or an inline JSON document (auto-detected).
 class SetStyleCommand extends SessionCommand {
@@ -580,7 +607,7 @@ class RemoveLocationIndicatorCommand extends SessionCommand {
   const RemoveLocationIndicatorCommand(super.sessionId);
 }
 
-// --- Engine-level commands (not bound to one session) --------------------------
+// Engine-level commands (not bound to one session).
 
 /// Sets the custom HTTP headers applied by the Dart resource provider to
 /// engine resource requests. [urlFilters] are regex patterns; when non-empty
@@ -632,7 +659,7 @@ class SetFrameStatsEnabledCommand extends SessionCommand {
   final bool enabled;
 }
 
-// --- Offline regions (engine-level, async via OfflineResultEvent) --------------
+// Offline regions (engine-level, async via OfflineResultEvent).
 
 /// Creates a tile-pyramid offline region and replies with it.
 class CreateOfflineRegionCommand extends EngineCommand {
@@ -721,7 +748,7 @@ class SetOfflineRegionDownloadStateCommand extends EngineCommand {
   final bool observed;
 }
 
-// --- Queries -----------------------------------------------------------------
+// Queries.
 
 /// Replies true once every message sent before it has been processed.
 ///
@@ -940,7 +967,7 @@ class GetFeatureStateQuery extends SessionQuery<Map<String, dynamic>?> {
   final String featureId;
 }
 
-// --- Events (engine -> presentation) -----------------------------------------
+// Events (engine -> presentation).
 
 /// Base type of everything the engine pushes to the presentation side.
 sealed class EngineEvent {

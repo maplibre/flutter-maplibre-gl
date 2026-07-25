@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
-import '../engine/engine_protocol.dart' show SessionBackend;
+import 'protocol/protocol.dart' show SessionBackend;
 
 /// Handles returned by the Android shim when a texture is created.
 ///

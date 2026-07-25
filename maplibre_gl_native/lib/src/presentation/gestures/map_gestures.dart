@@ -6,8 +6,8 @@ import 'package:flutter/gestures.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show LatLng;
 
-import '../engine/engine_isolate.dart';
-import '../engine/engine_protocol.dart';
+import '../../engine/engine_host.dart';
+import '../../protocol/protocol.dart';
 import '../platform/ffi_platform.dart';
 
 /// Flutter-side gesture layer of the FFI map view.
@@ -40,7 +40,7 @@ class MapGestureHandler {
   final double Function() _cameraPitch;
   final bool Function() _mounted;
 
-  // --- Tuning constants -----------------------------------------------------
+  // Tuning constants.
   // Ported from the Android SDK gesture stack (MapGestureDetector.java,
   // MapLibreConstants.java, dimens.xml) so both backends feel the same.
   // Units: logical pixels (== dp on Android), degrees, milliseconds.
@@ -90,7 +90,7 @@ class MapGestureHandler {
   static const _panDismissThreshold = 4.0;
   static const _panDismissThresholdMultiFinger = 24.0;
 
-  // --- Gesture state ----------------------------------------------------------
+  // Gesture state.
 
   // Incremental tracking for the ScaleGestureRecognizer stream.
   double _lastGestureScale = 1;
@@ -145,7 +145,7 @@ class MapGestureHandler {
   Duration? _secondPointerDownTime;
   double _pointerTravel = 0;
 
-  // --- Raw pointer stream (Listener) -----------------------------------------
+  // Raw pointer stream (Listener).
 
   void onPointerDown(PointerDownEvent event) {
     _pointersDown++;
@@ -261,7 +261,7 @@ class MapGestureHandler {
     });
   }
 
-  // --- Scale gesture family ---------------------------------------------------
+  // Scale gesture family.
 
   void onScaleStart(ScaleStartDetails details) {
     final host = _host();
@@ -492,7 +492,7 @@ class MapGestureHandler {
     }
   }
 
-  // --- Taps -------------------------------------------------------------------
+  // Taps.
 
   void onDoubleTapDown(TapDownDetails details) {
     _doubleTapPosition = details.localPosition;
@@ -556,8 +556,7 @@ class MapGestureHandler {
     });
   }
 
-  // --- Long press and feature drag ---------------------------------------------
-
+  // Long press and feature drag.
   void onLongPressStart(LongPressStartDetails details) {
     void emitLongClick() => unawaited(
       _emitTapEvent(
