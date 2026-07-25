@@ -39,7 +39,12 @@ class OrnamentPlacement {
 
 /// Ornament (compass, attribution, logo, scale bar) configuration shared
 /// between the platform and the map widget; notifies the widget on change.
-class FfiOrnamentConfig extends ChangeNotifier {
+///
+/// A [ChangeNotifier] because these values decide what is in the widget tree
+/// and where: enabling the compass or moving the scale bar has to rebuild. The
+/// gesture flags (`GestureConfig`) are a plain object for the opposite
+/// reason: they are read per touch sample and rebuild nothing.
+class OrnamentConfig extends ChangeNotifier {
   bool compassEnabled = true;
   OrnamentPlacement compass = const OrnamentPlacement(
     OrnamentPosition.topRight,

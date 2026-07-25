@@ -3,7 +3,13 @@ import '../../protocol/protocol.dart';
 
 /// Mutable gesture configuration shared between the platform adapter and the
 /// map widget, mirroring the maplibre_gl widget options.
-class FfiGestureConfig {
+///
+/// A plain mutable object, deliberately not a [ChangeNotifier] like
+/// `OrnamentConfig`: these flags are read at the moment a gesture is
+/// sampled, so a change takes effect on the next touch sample and nothing has
+/// to rebuild. Ornaments instead affect the widget tree, which is why that one
+/// notifies.
+class GestureConfig {
   bool scrollEnabled = true;
   bool zoomEnabled = true;
   bool rotateEnabled = true;
@@ -17,7 +23,7 @@ class FfiGestureConfig {
 /// a renamed or added option has exactly one place to be handled.
 void applyGestureOptions(
   Map<String, dynamic> options, {
-  required FfiGestureConfig gestures,
+  required GestureConfig gestures,
   required void Function(bool enabled) setFeatureTapsTriggersMapClick,
 }) {
   void apply(String key, void Function(bool) setter) {
@@ -51,15 +57,14 @@ List<SessionCommand> cameraConstraintCommands(
     commands.add(
       SetBoundsCommand(
         sessionId,
-        // World bounds clear a previous constraint.
-        southwestLatitude:
-            (southwest?[0] as num?)?.toDouble() ?? MapLimits.worldSouthLatitude,
-        southwestLongitude:
-            (southwest?[1] as num?)?.toDouble() ?? MapLimits.worldWestLongitude,
-        northeastLatitude:
-            (northeast?[0] as num?)?.toDouble() ?? MapLimits.worldNorthLatitude,
-        northeastLongitude:
-            (northeast?[1] as num?)?.toDouble() ?? MapLimits.worldEastLongitude,
+        // A null corner means unbounded on that side, and the world edge is
+        // how the reference backends express it.
+        bounds: BoundsSpec(
+          south: (southwest?[0] as num?)?.toDouble() ?? BoundsSpec.world.south,
+          west: (southwest?[1] as num?)?.toDouble() ?? BoundsSpec.world.west,
+          north: (northeast?[0] as num?)?.toDouble() ?? BoundsSpec.world.north,
+          east: (northeast?[1] as num?)?.toDouble() ?? BoundsSpec.world.east,
+        ),
       ),
     );
   }

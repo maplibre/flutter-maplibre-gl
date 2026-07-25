@@ -53,7 +53,7 @@ class FeatureInteraction {
   static Object? _featureId(Map<String, dynamic> feature) =>
       feature['id'] ?? (feature['properties'] as Map?)?['id'];
 
-  Future<Map<String, dynamic>?> _topFeatureAt(Point<double> point) async {
+  Future<FeatureHit?> _topFeatureAt(Point<double> point) async {
     final session = requireSession(_session());
     return session.query(
       QueryTopFeatureQuery(
@@ -72,12 +72,11 @@ class FeatureInteraction {
   Future<void> handleTap(Point<double> point, LatLng latLng) async {
     final hit = _layerIds.isEmpty ? null : await _topFeatureAt(point);
     if (hit != null) {
-      final feature = (hit['feature'] as Map).cast<String, dynamic>();
       _onFeatureTapped(<String, dynamic>{
-        'id': _featureId(feature),
+        'id': _featureId(hit.feature),
         'point': point,
         'latLng': latLng,
-        'layerId': hit['layerId'],
+        'layerId': hit.layerId,
       });
       if (!featureTapsTriggersMapClick) return;
     }
@@ -92,9 +91,8 @@ class FeatureInteraction {
     if (!dragEnabled || _layerIds.isEmpty) return null;
     final hit = await _topFeatureAt(point);
     if (hit == null) return null;
-    final feature = (hit['feature'] as Map).cast<String, dynamic>();
-    final properties = feature['properties'] as Map?;
-    return properties?['draggable'] == true ? feature : null;
+    final properties = hit.feature['properties'] as Map?;
+    return properties?['draggable'] == true ? hit.feature : null;
   }
 
   /// Emits a feature drag event with the exact payload shape the controller

@@ -6,7 +6,7 @@
 
 part of 'engine_core.dart';
 
-extension EngineSnapshots on FfiEngineCore {
+extension EngineSnapshots on EngineCore {
   /// Renders pending offscreen snapshot jobs; returns whether any rendered.
   bool _renderSnapshots() {
     var rendered = false;

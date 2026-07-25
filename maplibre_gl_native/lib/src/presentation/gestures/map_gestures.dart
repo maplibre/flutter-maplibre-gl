@@ -6,9 +6,10 @@ import 'package:flutter/gestures.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show LatLng;
 
-import '../../engine/engine_host.dart';
+import '../../engine/map_session.dart';
 import '../../protocol/protocol.dart';
-import '../platform/ffi_platform.dart';
+import '../platform/feature_interaction.dart';
+import '../platform/map_options.dart';
 
 /// Flutter-side gesture layer of the FFI map view.
 ///
@@ -21,24 +22,46 @@ import '../platform/ffi_platform.dart';
 /// The view wires the widget callbacks (a [Listener] plus a
 /// [GestureDetector]) straight to the handler methods; the handler reaches
 /// back through the injected getters, so it never outlives or rebuilds the
-/// widget tree.
+/// widget tree. It knows nothing about the `MapLibrePlatform` adapter: what it
+/// needs is the session, the gesture flags, the feature hit-tester, and two
+/// event sinks.
 class MapGestureHandler {
   MapGestureHandler({
-    required this.platform,
-    required EngineHost? Function() host,
-    required int? Function() sessionId,
+    required MapSession? Function() session,
+    required GestureConfig config,
+    required FeatureInteraction features,
     required double Function() cameraPitch,
     required bool Function() mounted,
-  }) : _host = host,
-       _sessionId = sessionId,
+    required void Function() onUserPan,
+    required void Function(Map<String, dynamic> payload) onMapLongClick,
+  }) : _session = session,
+       _config = config,
+       _features = features,
        _cameraPitch = cameraPitch,
-       _mounted = mounted;
+       _mounted = mounted,
+       _onUserPan = onUserPan,
+       _onMapLongClick = onMapLongClick;
 
-  final MapLibreFfiPlatform platform;
-  final EngineHost? Function() _host;
-  final int? Function() _sessionId;
+  /// The live session, or null before the map is up and after it is torn down:
+  /// a gesture can be in flight across both, and a null session simply means
+  /// there is nothing to move.
+  final MapSession? Function() _session;
+
+  /// Which gestures are enabled. Read per sample, never cached: the app can
+  /// flip a flag mid-gesture through `MapLibreMap`'s properties.
+  final GestureConfig _config;
+
+  /// Hit-testing of the interactive layers, plus the feature tap/drag events.
+  final FeatureInteraction _features;
+
   final double Function() _cameraPitch;
   final bool Function() _mounted;
+
+  /// Called once a gesture has panned the camera far enough to count as the
+  /// user taking over: dismisses an active location tracking mode.
+  final void Function() _onUserPan;
+
+  final void Function(Map<String, dynamic> payload) _onMapLongClick;
 
   // Tuning constants.
   // Ported from the Android SDK gesture stack (MapGestureDetector.java,
@@ -199,24 +222,23 @@ class MapGestureHandler {
   }
 
   void _setGestureInProgress(bool inProgress) {
-    final host = _host();
-    final sessionId = _sessionId();
-    if (host == null || sessionId == null) return;
-    host.send(SetGestureInProgressCommand(sessionId, inProgress: inProgress));
+    final session = _session();
+    if (session == null) return;
+    session.send(
+      SetGestureInProgressCommand(session.id, inProgress: inProgress),
+    );
   }
 
   /// Two-finger tap zooms out one level about the finger midpoint, like the
   /// SDK's onMultiFingerTap (exactly two pointers, quick, stationary).
   void _maybeTwoFingerTap(Duration upTime) {
-    final host = _host();
-    final sessionId = _sessionId();
+    final session = _session();
     final first = _firstPointerPosition;
     final second = _secondPointerPosition;
     final secondDownTime = _secondPointerDownTime;
     final valid =
-        host != null &&
-        sessionId != null &&
-        platform.gestures.zoomEnabled &&
+        session != null &&
+        _config.zoomEnabled &&
         _maxPointersDown == 2 &&
         first != null &&
         second != null &&
@@ -227,9 +249,9 @@ class MapGestureHandler {
     _maxPointersDown = 0;
     if (!valid) return;
     final anchor = (first + second) / 2;
-    host.send(
+    session.send(
       ScaleByCommand(
-        sessionId,
+        session.id,
         0.5,
         anchorX: anchor.dx,
         anchorY: anchor.dy,
@@ -242,17 +264,16 @@ class MapGestureHandler {
   /// the SDK's onGenericMotionEvent). Registered through the resolver so the
   /// event is not also consumed by an enclosing scrollable.
   void onPointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent || !platform.gestures.zoomEnabled) return;
+    if (event is! PointerScrollEvent || !_config.zoomEnabled) return;
     GestureBinding.instance.pointerSignalResolver.register(event, (event) {
-      final host = _host();
-      final sessionId = _sessionId();
-      if (host == null || sessionId == null) return;
+      final session = _session();
+      if (session == null) return;
       final scrollEvent = event as PointerScrollEvent;
       final zoomDelta = -scrollEvent.scrollDelta.dy / _scrollWheelNotchPixels;
       if (zoomDelta == 0) return;
-      host.send(
+      session.send(
         ScaleByCommand(
-          sessionId,
+          session.id,
           pow(2.0, zoomDelta).toDouble(),
           anchorX: scrollEvent.localPosition.dx,
           anchorY: scrollEvent.localPosition.dy,
@@ -264,10 +285,9 @@ class MapGestureHandler {
   // Scale gesture family.
 
   void onScaleStart(ScaleStartDetails details) {
-    final host = _host();
-    final sessionId = _sessionId();
-    if (host == null || sessionId == null) return;
-    host.send(CancelTransitionsCommand(sessionId));
+    final session = _session();
+    if (session == null) return;
+    session.send(CancelTransitionsCommand(session.id));
     _lastGestureScale = 1;
     _lastGestureRotation = 0;
     _twoFingerMode = _TwoFingerMode.undecided;
@@ -278,7 +298,7 @@ class MapGestureHandler {
     _endDrag();
     _dragResolving = false;
     _bufferedPanDelta = Offset.zero;
-    if (details.pointerCount == 1 && platform.dragEnabled) {
+    if (details.pointerCount == 1 && _features.dragEnabled) {
       _dragResolving = true;
       _dragPosition = details.localFocalPoint;
       unawaited(
@@ -292,10 +312,8 @@ class MapGestureHandler {
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
-    final host = _host();
-    final sessionId = _sessionId();
-    if (host == null || sessionId == null) return;
-    final config = platform.gestures;
+    final session = _session();
+    if (session == null) return;
 
     // Feature drag arbitration: while the hit-test is in flight buffer the
     // movement; while a drag is active route movement to drag events.
@@ -329,10 +347,10 @@ class MapGestureHandler {
       if (_twoFingerMode == _TwoFingerMode.tilt) {
         // Shove excludes pan/zoom/rotate for the whole gesture, like the
         // SDK's mutually exclusive gesture sets (move disabled during shove).
-        if (config.tiltEnabled && details.focalPointDelta.dy != 0) {
-          host.send(
+        if (_config.tiltEnabled && details.focalPointDelta.dy != 0) {
+          session.send(
             PitchByCommand(
-              sessionId,
+              session.id,
               -details.focalPointDelta.dy * _shoveDegreesPerPixel,
             ),
           );
@@ -343,11 +361,11 @@ class MapGestureHandler {
 
     // One-finger drag or pinch focal movement: focalPointDelta is already in
     // logical pixels.
-    if (config.scrollEnabled && details.focalPointDelta != Offset.zero) {
+    if (_config.scrollEnabled && details.focalPointDelta != Offset.zero) {
       _accumulateGesturePan(details.focalPointDelta, details.pointerCount);
-      host.send(
+      session.send(
         MoveByCommand(
-          sessionId,
+          session.id,
           details.focalPointDelta.dx,
           details.focalPointDelta.dy,
         ),
@@ -367,9 +385,9 @@ class MapGestureHandler {
             ratio.isFinite &&
             ratio > 0 &&
             (ratio - 1).abs() >= 0.001) {
-          host.send(
+          session.send(
             ScaleByCommand(
-              sessionId,
+              session.id,
               ratio,
               anchorX: anchor.dx,
               anchorY: anchor.dy,
@@ -386,9 +404,9 @@ class MapGestureHandler {
           // while increasing the bearing turns the map content
           // counterclockwise, so the gesture delta must be subtracted for
           // the map to follow the fingers.
-          host.send(
+          session.send(
             RotateByCommand(
-              sessionId,
+              session.id,
               -deltaDegrees,
               anchorX: anchor.dx,
               anchorY: anchor.dy,
@@ -415,11 +433,8 @@ class MapGestureHandler {
   /// Continues a released pan with the SDK's fling: a single animated moveBy
   /// that MapLibre Native interpolates internally (no per-frame Dart work).
   void _maybeFling(ScaleEndDetails details) {
-    final host = _host();
-    final sessionId = _sessionId();
-    if (host == null || sessionId == null || !platform.gestures.scrollEnabled) {
-      return;
-    }
+    final session = _session();
+    if (session == null || !_config.scrollEnabled) return;
     final velocity = details.velocity.pixelsPerSecond;
     final speed = velocity.distance;
     if (speed < _flingVelocityThreshold) return;
@@ -428,9 +443,9 @@ class MapGestureHandler {
     final pitch = _cameraPitch();
     final tiltFactor = 1.5 + (pitch != 0 ? pitch / 10 : 0.0);
     final durationMs = speed / 7 / tiltFactor + _flingBaseTimeMs;
-    host.send(
+    session.send(
       MoveByCommand(
-        sessionId,
+        session.id,
         velocity.dx * durationMs * _flingOffsetFactor / 1000,
         velocity.dy * durationMs * _flingOffsetFactor / 1000,
         durationMs: durationMs,
@@ -457,15 +472,14 @@ class MapGestureHandler {
   /// once zoom won (disableRotateWhenScaling) and zoom needs a much larger
   /// scale change once rotation won (increaseScaleThresholdWhenRotating).
   void _updatePinchActivation(ScaleUpdateDetails details) {
-    final config = platform.gestures;
     final scaleSinceStart = (details.scale - 1).abs();
     final rotationSinceStart = details.rotation.abs() * 180 / pi;
     if (!_zoomActive && !_rotateActive) {
       final rotateHit =
-          config.rotateEnabled &&
+          _config.rotateEnabled &&
           rotationSinceStart >= _rotateActivationDegrees;
       final zoomHit =
-          config.zoomEnabled && scaleSinceStart >= _zoomActivationScale;
+          _config.zoomEnabled && scaleSinceStart >= _zoomActivationScale;
       if (rotateHit &&
           (!zoomHit ||
               rotationSinceStart / _rotateActivationDegrees >=
@@ -475,7 +489,7 @@ class MapGestureHandler {
         _zoomActive = true;
       }
     } else if (_rotateActive && !_zoomActive) {
-      if (config.zoomEnabled &&
+      if (_config.zoomEnabled &&
           scaleSinceStart >= _zoomActivationScaleWhileRotating) {
         _zoomActive = true;
       }
@@ -488,7 +502,7 @@ class MapGestureHandler {
         ? _panDismissThresholdMultiFinger
         : _panDismissThreshold;
     if (_gesturePanTravel.distance > threshold) {
-      platform.notifyUserGesture();
+      _onUserPan();
     }
   }
 
@@ -499,18 +513,16 @@ class MapGestureHandler {
   }
 
   void onDoubleTap() {
-    final host = _host();
-    final sessionId = _sessionId();
+    final session = _session();
     final position = _doubleTapPosition;
-    if (host == null ||
-        sessionId == null ||
+    if (session == null ||
         position == null ||
-        !platform.gestures.doubleClickZoomEnabled) {
+        !_config.doubleClickZoomEnabled) {
       return;
     }
-    host.send(
+    session.send(
       ScaleByCommand(
-        sessionId,
+        session.id,
         2,
         anchorX: position.dx,
         anchorY: position.dy,
@@ -522,20 +534,19 @@ class MapGestureHandler {
   void onTapUp(TapUpDetails details) {
     final position = details.localPosition;
     unawaited(() async {
-      final host = _host();
-      final sessionId = _sessionId();
-      if (host == null || sessionId == null) return;
+      final session = _session();
+      if (session == null) return;
       // A tap stops an ongoing fling or animation, like the SDK's
       // onSingleTapUp.
-      host.send(CancelTransitionsCommand(sessionId));
-      final latLng = await host.query(
-        LatLngForPixelQuery(sessionId, position.dx, position.dy),
+      session.send(CancelTransitionsCommand(session.id));
+      final latLng = await session.query(
+        LatLngForPixelQuery(session.id, position.dx, position.dy),
       );
-      // The platform hit-tests interactive layers and emits the feature tap
-      // and/or the map click.
-      await platform.handleTap(
+      // Hit-tests the interactive layers and emits the feature tap and/or the
+      // map click.
+      await _features.handleTap(
         Point<double>(position.dx, position.dy),
-        LatLng(latLng[0], latLng[1]),
+        LatLng(latLng.latitude, latLng.longitude),
       );
     }());
   }
@@ -544,29 +555,24 @@ class MapGestureHandler {
     Offset position,
     void Function(Map<String, dynamic>) sink,
   ) async {
-    final host = _host();
-    final sessionId = _sessionId();
-    if (host == null || sessionId == null) return;
-    final latLng = await host.query(
-      LatLngForPixelQuery(sessionId, position.dx, position.dy),
+    final session = _session();
+    if (session == null) return;
+    final latLng = await session.query(
+      LatLngForPixelQuery(session.id, position.dx, position.dy),
     );
     sink(<String, dynamic>{
       'point': Point<double>(position.dx, position.dy),
-      'latLng': LatLng(latLng[0], latLng[1]),
+      'latLng': LatLng(latLng.latitude, latLng.longitude),
     });
   }
 
   // Long press and feature drag.
   void onLongPressStart(LongPressStartDetails details) {
-    void emitLongClick() => unawaited(
-      _emitTapEvent(
-        details.localPosition,
-        platform.onMapLongClickPlatform.call,
-      ),
-    );
+    void emitLongClick() =>
+        unawaited(_emitTapEvent(details.localPosition, _onMapLongClick));
     // Press-and-hold on a draggable feature grabs it (the drag session then
     // follows the finger); anywhere else it is the map long-click.
-    if (platform.dragEnabled) {
+    if (_features.dragEnabled) {
       _dragResolving = true;
       _dragPosition = details.localPosition;
       unawaited(
@@ -603,14 +609,13 @@ class MapGestureHandler {
   }) async {
     final point = Point<double>(position.dx, position.dy);
     Map<String, dynamic>? feature;
-    List<double>? origin;
+    GeoPoint? origin;
     try {
-      feature = await platform.queryDraggableFeature(point);
-      final host = _host();
-      final sessionId = _sessionId();
-      if (feature != null && host != null && sessionId != null) {
-        origin = await host.query(
-          LatLngForPixelQuery(sessionId, position.dx, position.dy),
+      feature = await _features.queryDraggableFeature(point);
+      final session = _session();
+      if (feature != null && session != null) {
+        origin = await session.query(
+          LatLngForPixelQuery(session.id, position.dx, position.dy),
         );
       }
     } catch (error) {
@@ -625,14 +630,14 @@ class MapGestureHandler {
       onMiss();
       return;
     }
-    final originLatLng = LatLng(origin[0], origin[1]);
+    final originLatLng = LatLng(origin.latitude, origin.longitude);
     _drag = _DragSession(
       feature: feature,
       origin: originLatLng,
       last: originLatLng,
       lastPoint: point,
     );
-    platform.emitFeatureDrag(
+    _features.emitDrag(
       feature: feature,
       point: point,
       origin: originLatLng,
@@ -648,16 +653,12 @@ class MapGestureHandler {
   }
 
   void _flushBufferedPan() {
-    final host = _host();
-    final sessionId = _sessionId();
+    final session = _session();
     final delta = _bufferedPanDelta;
     _bufferedPanDelta = Offset.zero;
-    if (host != null &&
-        sessionId != null &&
-        platform.gestures.scrollEnabled &&
-        delta != Offset.zero) {
+    if (session != null && _config.scrollEnabled && delta != Offset.zero) {
       _accumulateGesturePan(delta, 1);
-      host.send(MoveByCommand(sessionId, delta.dx, delta.dy));
+      session.send(MoveByCommand(session.id, delta.dx, delta.dy));
     }
   }
 
@@ -669,28 +670,25 @@ class MapGestureHandler {
       return;
     }
     final drag = _drag;
-    final host = _host();
-    final sessionId = _sessionId();
+    final session = _session();
     final position = _dragPosition;
-    if (drag == null || host == null || sessionId == null || position == null) {
-      return;
-    }
+    if (drag == null || session == null || position == null) return;
     _dragQueryInFlight = true;
     unawaited(
-      host
-          .query(LatLngForPixelQuery(sessionId, position.dx, position.dy))
+      session
+          .query(LatLngForPixelQuery(session.id, position.dx, position.dy))
           .then((latLng) {
             _dragQueryInFlight = false;
             final active = _drag;
             if (!_mounted() || active == null) return;
-            final current = LatLng(latLng[0], latLng[1]);
+            final current = LatLng(latLng.latitude, latLng.longitude);
             final delta = LatLng(
               current.latitude - active.last.latitude,
               current.longitude - active.last.longitude,
             );
             active.last = current;
             active.lastPoint = Point<double>(position.dx, position.dy);
-            platform.emitFeatureDrag(
+            _features.emitDrag(
               feature: active.feature,
               point: active.lastPoint,
               origin: active.origin,
@@ -715,7 +713,7 @@ class MapGestureHandler {
     _drag = null;
     _dragDirty = false;
     if (drag == null) return;
-    platform.emitFeatureDrag(
+    _features.emitDrag(
       feature: drag.feature,
       point: drag.lastPoint,
       origin: drag.origin,

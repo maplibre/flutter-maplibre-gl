@@ -82,10 +82,12 @@ EngineCommand cameraUpdateCommand(
       final northeast = bounds[1] as List;
       return FitBoundsCommand(
         sessionId,
-        southwestLatitude: (southwest[0] as num).toDouble(),
-        southwestLongitude: (southwest[1] as num).toDouble(),
-        northeastLatitude: (northeast[0] as num).toDouble(),
-        northeastLongitude: (northeast[1] as num).toDouble(),
+        BoundsSpec(
+          south: (southwest[0] as num).toDouble(),
+          west: (southwest[1] as num).toDouble(),
+          north: (northeast[0] as num).toDouble(),
+          east: (northeast[1] as num).toDouble(),
+        ),
         paddingLeft: (json[2] as num).toDouble(),
         paddingTop: (json[3] as num).toDouble(),
         paddingRight: (json[4] as num).toDouble(),

@@ -27,10 +27,10 @@ const String _locationIndicatorLayerId = 'maplibre-gl-native-location';
 /// class to live on a dedicated engine isolate with only the transport in
 /// between. Runtime, maps, and sessions are OS-thread affine: everything
 /// in this file must run on the thread that called [ensure].
-class FfiEngineCore {
-  FfiEngineCore._(this._runtime);
+class EngineCore {
+  EngineCore._(this._runtime);
 
-  static FfiEngineCore? _instance;
+  static EngineCore? _instance;
 
   final mln.RuntimeHandle _runtime;
   final Map<int, _EngineSession> _sessions = <int, _EngineSession>{};
@@ -52,7 +52,7 @@ class FfiEngineCore {
   /// [cachePath] is the platform cache directory backing the persistent tile
   /// cache database (ambient cache, offline regions); without it the runtime
   /// falls back to an in-memory cache.
-  factory FfiEngineCore.ensure({String? cachePath}) {
+  factory EngineCore.ensure({String? cachePath}) {
     final existing = _instance;
     if (existing != null) return existing;
     mln.Maplibre.setLogCallback((record) {
@@ -71,7 +71,7 @@ class FfiEngineCore {
     // Fetch styles/tiles/glyphs/sprites through Dart instead of the built-in
     // Rust HTTP client (whose TLS verification failed on some devices).
     HttpResourceProvider.install(runtime);
-    final core = FfiEngineCore._(runtime);
+    final core = EngineCore._(runtime);
     _instance = core;
     return core;
   }

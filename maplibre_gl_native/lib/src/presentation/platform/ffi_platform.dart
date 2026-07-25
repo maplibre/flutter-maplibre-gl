@@ -12,7 +12,7 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 import '../../engine/engine_host.dart';
 import '../../engine/map_session.dart';
 import '../../protocol/protocol.dart';
-import '../map/ffi_map_view.dart';
+import '../map/map_view.dart';
 import 'camera_update_codec.dart';
 import 'feature_interaction.dart';
 import 'ffi_platform_base.dart';
@@ -41,38 +41,37 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
   final _ready = Completer<void>();
 
   /// Gesture flags consumed by the map widget.
-  final gestures = FfiGestureConfig();
+  final gestures = GestureConfig();
 
   /// Ornament (compass, attribution, logo) configuration consumed by the map
   /// widget.
-  final ornaments = FfiOrnamentConfig();
+  final ornaments = OrnamentConfig();
 
-  /// Hit-testing and the feature tap/drag events that come out of it.
-  late final FeatureInteraction _interaction = FeatureInteraction(
+  /// Hit-testing of the interactive layers and the feature tap/drag events
+  /// that come out of it; also consumed directly by the gesture handler.
+  late final FeatureInteraction features = FeatureInteraction(
     session: () => _session,
     onFeatureTapped: onFeatureTappedPlatform.call,
     onMapClick: onMapClickPlatform.call,
     onFeatureDragged: onFeatureDraggedPlatform.call,
   );
 
-  /// Whether annotation drag is enabled (widget `dragEnabled`).
-  bool get dragEnabled => _interaction.dragEnabled;
-  set dragEnabled(bool value) => _interaction.dragEnabled = value;
-
   MapSession _requireSession() => requireSession(_session);
 
   void _send(EngineCommand command) => _requireSession().send(command);
 
   /// Called by the widget once the texture, map, and render session exist.
-  void attach(EngineHost host, int sessionId) {
-    _session = MapSession(host, sessionId);
-    host.addEventListener(_onEngineEvent);
+  void attach(MapSession session) {
+    _session = session;
+    session.host.addEventListener(_onEngineEvent);
     _location.onSessionAttached();
     if (!_ready.isCompleted) _ready.complete();
   }
 
   void _onEngineEvent(EngineEvent event) {
-    if (event.sessionId != _session?.id) return;
+    // Engine-scoped events (the offline database) are not ours: they have
+    // their own listener in MapLibreGlNativeOffline.
+    if (event is! SessionEvent || event.sessionId != _session?.id) return;
     switch (event) {
       case CameraWillChangeEvent():
         onCameraMoveStartedPlatform(null);
@@ -87,12 +86,6 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
       case SnapshotResultEvent():
         _snapshots.resolve(event);
       case MapLoadingFailedEvent() || RenderPendingEvent():
-        break;
-      // Offline events are engine-scoped (sessionId 0) and consumed by
-      // MapLibreGlNativeOffline's own listener.
-      case OfflineResultEvent() ||
-          OfflineRegionProgressEvent() ||
-          OfflineRegionErrorEvent():
         break;
     }
   }
@@ -127,8 +120,8 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     _applyGestureOptions(options);
     _location.applyOptions(options);
     ornaments.applyOptions(options);
-    dragEnabled = creationParams['dragEnabled'] as bool? ?? true;
-    return FfiMapView(
+    features.dragEnabled = creationParams['dragEnabled'] as bool? ?? true;
+    return MapView(
       platform: this,
       creationParams: creationParams,
       onViewCreated: onPlatformViewCreated,
@@ -150,7 +143,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
         options,
         gestures: gestures,
         setFeatureTapsTriggersMapClick: (enabled) =>
-            _interaction.featureTapsTriggersMapClick = enabled,
+            features.featureTapsTriggersMapClick = enabled,
       );
 
   @override
@@ -233,10 +226,10 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
   @override
   Future<LatLngBounds> getVisibleRegion() async {
     final session = _requireSession();
-    final bounds = await session.query(GetVisibleRegionQuery(session.id));
+    final region = await session.query(GetVisibleRegionQuery(session.id));
     return LatLngBounds(
-      southwest: LatLng(bounds[0], bounds[1]),
-      northeast: LatLng(bounds[2], bounds[3]),
+      southwest: LatLng(region.south, region.west),
+      northeast: LatLng(region.north, region.east),
     );
   }
 
@@ -248,7 +241,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     final point = await session.query(
       PixelForLatLngQuery(session.id, latLng.latitude, latLng.longitude),
     );
-    return Point<double>(point[0], point[1]);
+    return Point<double>(point.x, point.y);
   }
 
   @override
@@ -279,7 +272,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
         screenLocation.y.toDouble(),
       ),
     );
-    return LatLng(coordinate[0], coordinate[1]);
+    return LatLng(coordinate.latitude, coordinate.longitude);
   }
 
   @override
@@ -323,7 +316,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
 
   @override
   Future<void> removeLayer(String imageLayerId) async {
-    _interaction.unregisterLayer(imageLayerId);
+    features.unregisterLayer(imageLayerId);
     _send(RemoveLayerCommand(_requireSession().id, imageLayerId));
   }
 
@@ -523,7 +516,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     bool enableInteraction = false,
   }) async {
     final session = _requireSession();
-    if (enableInteraction) _interaction.registerLayer(layerId);
+    if (enableInteraction) features.registerLayer(layerId);
     session.send(
       AddLayerJsonCommand(
         session.id,
@@ -790,32 +783,6 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     );
   }
 
-  /// Tap entry point for the map widget.
-  Future<void> handleTap(Point<double> point, LatLng latLng) =>
-      _interaction.handleTap(point, latLng);
-
-  /// Hit-tests for a draggable feature; the pan gesture uses it to arbitrate
-  /// between dragging a feature and panning the camera.
-  Future<Map<String, dynamic>?> queryDraggableFeature(Point<double> point) =>
-      _interaction.queryDraggableFeature(point);
-
-  /// Emits a feature drag event (eventType is a DragEventType name).
-  void emitFeatureDrag({
-    required Map<String, dynamic> feature,
-    required Point<double> point,
-    required LatLng origin,
-    required LatLng current,
-    required LatLng delta,
-    required String eventType,
-  }) => _interaction.emitDrag(
-    feature: feature,
-    point: point,
-    origin: origin,
-    current: current,
-    delta: delta,
-    eventType: eventType,
-  );
-
   // Images and image sources.
 
   @override
@@ -936,10 +903,7 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     _send(
       SetBoundsCommand(
         _requireSession().id,
-        southwestLatitude: south,
-        southwestLongitude: west,
-        northeastLatitude: north,
-        northeastLongitude: east,
+        bounds: BoundsSpec(south: south, west: west, north: north, east: east),
       ),
     );
   }

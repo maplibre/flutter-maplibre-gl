@@ -6,7 +6,7 @@
 
 part of 'engine_core.dart';
 
-extension EngineQueryDispatch on FfiEngineCore {
+extension EngineQueryDispatch on EngineCore {
   /// Executes a read and returns its reply value.
   R handleQuery<R>(EngineQuery<R> query) {
     final result = switch (query) {
@@ -72,22 +72,22 @@ extension EngineQueryDispatch on FfiEngineCore {
     return sessionId;
   }
 
-  List<double> _visibleRegion(GetVisibleRegionQuery query) {
+  BoundsSpec _visibleRegion(GetVisibleRegionQuery query) {
     final map = _session(query.sessionId).map;
     final bounds = map.latLngBoundsForCamera(map.camera());
-    return <double>[
-      bounds.southwest.latitude,
-      bounds.southwest.longitude,
-      bounds.northeast.latitude,
-      bounds.northeast.longitude,
-    ];
+    return BoundsSpec(
+      south: bounds.southwest.latitude,
+      west: bounds.southwest.longitude,
+      north: bounds.northeast.latitude,
+      east: bounds.northeast.longitude,
+    );
   }
 
-  List<double> _pixelForLatLng(PixelForLatLngQuery query) {
+  ScreenPoint _pixelForLatLng(PixelForLatLngQuery query) {
     final point = _session(query.sessionId).map.pixelForLatLng(
       mln.LatLng(query.latitude, query.longitude),
     );
-    return <double>[point.x, point.y];
+    return (x: point.x, y: point.y);
   }
 
   Float64List _pixelsForLatLngs(PixelsForLatLngsQuery query) {
@@ -104,11 +104,11 @@ extension EngineQueryDispatch on FfiEngineCore {
     return out;
   }
 
-  List<double> _latLngForPixel(LatLngForPixelQuery query) {
+  GeoPoint _latLngForPixel(LatLngForPixelQuery query) {
     final coordinate = _session(query.sessionId).map.latLngForPixel(
       mln.ScreenPoint(query.x, query.y),
     );
-    return <double>[coordinate.latitude, coordinate.longitude];
+    return (latitude: coordinate.latitude, longitude: coordinate.longitude);
   }
 
   bool? _layerVisibility(GetLayerVisibilityQuery query) {
@@ -159,7 +159,7 @@ extension EngineQueryDispatch on FfiEngineCore {
     return [for (final queried in features) featureToDart(queried.feature)];
   }
 
-  Map<String, dynamic>? _queryTopFeature(QueryTopFeatureQuery query) {
+  FeatureHit? _queryTopFeature(QueryTopFeatureQuery query) {
     final session = _session(query.sessionId);
     final renderSession = session.requireRenderSession();
     final geometry = query.tolerance > 0
@@ -182,10 +182,10 @@ extension EngineQueryDispatch on FfiEngineCore {
         options: mln.RenderedFeatureQueryOptions(layerIds: [layerId]),
       );
       if (features.isNotEmpty) {
-        return <String, dynamic>{
-          'layerId': layerId,
-          'feature': featureToDart(features.first.feature),
-        };
+        return (
+          layerId: layerId,
+          feature: featureToDart(features.first.feature),
+        );
       }
     }
     return null;

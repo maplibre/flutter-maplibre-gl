@@ -7,6 +7,14 @@ import 'engine_host.dart';
 /// Exists so the presentation side passes one object around instead of
 /// threading a host and an id (or, worse, two closures) through every
 /// collaborator and every call site.
+///
+/// Collaborators (the gesture handler, feature interaction, the location
+/// component, snapshots) receive a `MapSession? Function()` rather than a
+/// `MapSession`, because they are built with the widget while the session only
+/// exists once the engine has created it, and it becomes null again on
+/// dispose. Reading it per call is what keeps them from holding a stale one:
+/// null means "no live map", which each collaborator answers for itself, by
+/// skipping the work or by [requireSession].
 class MapSession {
   const MapSession(this.host, this.id);
 

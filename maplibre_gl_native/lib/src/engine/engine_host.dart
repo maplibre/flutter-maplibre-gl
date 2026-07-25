@@ -56,7 +56,7 @@ class EngineHost {
     if (existing != null) return existing;
     // mln_android_init must run before the engine isolate creates the
     // runtime; the method channel lives on the root isolate.
-    await MapLibreGlNativeBridge.init();
+    await NativeBridge.init();
     final cacheDir = await _resolveCacheDir();
     final host = EngineHost._();
     final fromEngine = RawReceivePort();
@@ -154,7 +154,7 @@ double _displayRefreshRate() {
 /// null selects an in-memory cache.
 Future<String?> _resolveCacheDir() async {
   try {
-    return await MapLibreGlNativeBridge.getCacheDir();
+    return await NativeBridge.getCacheDir();
   } catch (error) {
     debugPrint(
       '[maplibre_gl_native] no platform cache directory, '

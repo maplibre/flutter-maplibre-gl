@@ -6,7 +6,7 @@
 
 part of 'engine_core.dart';
 
-extension EngineOfflineOps on FfiEngineCore {
+extension EngineOfflineOps on EngineCore {
   /// Starts an async offline operation. Its runtime completion event resolves
   /// it: [take] builds the reply (consuming the handle's result); a null
   /// [take] means fire-and-forget (the handle is just discarded).

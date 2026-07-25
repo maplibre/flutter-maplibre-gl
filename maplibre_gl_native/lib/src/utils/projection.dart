@@ -16,14 +16,6 @@ abstract final class MapLimits {
   /// `util::LATITUDE_MAX`: the Web Mercator projection limit, past which a
   /// latitude cannot be projected.
   static const double latitudeMax = 85.051128779806604;
-
-  // Whole-world bounds. Setting these as the camera target bounds is how the
-  // reference backends express "unbounded", so it is also how a previously
-  // set constraint is cleared.
-  static const double worldSouthLatitude = -90;
-  static const double worldNorthLatitude = 90;
-  static const double worldWestLongitude = -180;
-  static const double worldEastLongitude = 180;
 }
 
 /// The spherical Mercator projection MapLibre renders in.

@@ -115,8 +115,8 @@ class LocationComponent {
   Future<void> _start() async {
     // The bridge streams one process-wide fix; the most recently enabled map
     // consumes it.
-    MapLibreGlNativeBridge.onLocationUpdate = _onFix;
-    final started = await MapLibreGlNativeBridge.startLocationUpdates();
+    NativeBridge.onLocationUpdate = _onFix;
+    final started = await NativeBridge.startLocationUpdates();
     if (!started) {
       debugPrint(
         '[maplibre_gl_native] myLocationEnabled: platform location updates '
@@ -130,10 +130,10 @@ class LocationComponent {
   }
 
   Future<void> _stop() async {
-    if (identical(MapLibreGlNativeBridge.onLocationUpdate, _onFix)) {
-      MapLibreGlNativeBridge.onLocationUpdate = null;
+    if (identical(NativeBridge.onLocationUpdate, _onFix)) {
+      NativeBridge.onLocationUpdate = null;
     }
-    await MapLibreGlNativeBridge.stopLocationUpdates();
+    await NativeBridge.stopLocationUpdates();
     _indicatorVisible = false;
     final session = _session();
     if (session == null) return;

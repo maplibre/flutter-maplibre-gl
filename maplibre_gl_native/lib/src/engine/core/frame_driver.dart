@@ -37,7 +37,7 @@ class FrameDriver {
   /// (the idle pump then keeps draining runtime work).
   static const _pulseStaleAfter = Duration(milliseconds: 500);
 
-  final FfiEngineCore _core;
+  final EngineCore _core;
   final Duration _fallbackInterval;
   final int _vsyncPeriodUs;
   late final VsyncPulser _pulser;

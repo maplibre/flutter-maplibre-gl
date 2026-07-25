@@ -16,8 +16,8 @@ in one breath:
 ```mermaid
 flowchart TD
     GL["maplibre_gl<br/><small>unchanged public API</small>"]
-    PRES["FfiMapView + MapLibreFfiPlatform<br/><small>UI isolate</small>"]
-    CORE["FfiEngineCore<br/><small>engine isolate, owns every native handle</small>"]
+    PRES["MapView + MapLibreFfiPlatform<br/><small>UI isolate</small>"]
+    CORE["EngineCore<br/><small>engine isolate, owns every native handle</small>"]
     SO["libmaplibre-native-c.so<br/><small>MapLibre Native C++ core</small>"]
 
     GL --> PRES

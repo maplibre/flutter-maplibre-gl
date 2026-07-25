@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:maplibre_gl/maplibre_gl.dart' as gl;
 
-import '../../engine/engine_host.dart';
-import '../../protocol/protocol.dart';
+import '../engine/engine_host.dart';
+import '../protocol/protocol.dart';
 
 /// Offline region support over the FFI engine.
 ///
@@ -154,10 +154,12 @@ class MapLibreGlNativeOffline {
       (requestId) => CreateOfflineRegionCommand(
         requestId,
         styleUrl: definition.mapStyleUrl,
-        southwestLatitude: definition.bounds.southwest.latitude,
-        southwestLongitude: definition.bounds.southwest.longitude,
-        northeastLatitude: definition.bounds.northeast.latitude,
-        northeastLongitude: definition.bounds.northeast.longitude,
+        bounds: BoundsSpec(
+          south: definition.bounds.southwest.latitude,
+          west: definition.bounds.southwest.longitude,
+          north: definition.bounds.northeast.latitude,
+          east: definition.bounds.northeast.longitude,
+        ),
         minZoom: definition.minZoom,
         maxZoom: definition.maxZoom,
         includeIdeographs: definition.includeIdeographs,

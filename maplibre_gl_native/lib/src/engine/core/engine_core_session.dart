@@ -52,7 +52,7 @@ class _EngineSession {
   FrameStatsCollector? _frameStats;
 
   // Set while draining a frame's events; flushed to a single
-  // CameraIsChangingEvent at the end of the drain (see FfiEngineCore.pump).
+  // CameraIsChangingEvent at the end of the drain (see EngineCore.pump).
   bool _cameraChangingPending = false;
 
   /// Whether a frame is waiting to be rendered.
@@ -114,20 +114,20 @@ class _EngineSession {
       height: logicalHeight,
       scaleFactor: scaleFactor,
     );
-    switch (_spec.backend) {
-      case SessionBackend.opengl:
+    switch (_spec) {
+      case final OpenGlSessionQuery spec:
         _renderSession = map.attachOpenGLSurface(
           mln.OpenGLSurfaceDescriptor(
             extent: extent,
-            context: _eglContext(),
+            context: _eglContext(spec),
             surface: mln.NativePointer(surface),
           ),
         );
-      case SessionBackend.vulkan:
+      case final VulkanSessionQuery spec:
         _renderSession = map.attachVulkanSurface(
           mln.VulkanSurfaceDescriptor(
             extent: extent,
-            context: _vulkanContext(),
+            context: _vulkanContext(spec),
             surface: mln.NativePointer(surface),
           ),
         );
@@ -137,20 +137,23 @@ class _EngineSession {
     _renderPending = true;
   }
 
-  mln.EglContextDescriptor _eglContext() => mln.EglContextDescriptor(
-    display: mln.NativePointer(_spec.eglDisplay!),
-    config: mln.NativePointer(_spec.eglConfig!),
-    shareContext: mln.NativePointer(_spec.eglContext!),
-  );
+  static mln.EglContextDescriptor _eglContext(OpenGlSessionQuery spec) =>
+      mln.EglContextDescriptor(
+        display: mln.NativePointer(spec.eglDisplay),
+        config: mln.NativePointer(spec.eglConfig),
+        shareContext: mln.NativePointer(spec.eglContext),
+      );
 
-  mln.VulkanContextDescriptor _vulkanContext() => mln.VulkanContextDescriptor(
-    instance: mln.NativePointer(_spec.vkInstance!),
-    physicalDevice: mln.NativePointer(_spec.vkPhysicalDevice!),
-    device: mln.NativePointer(_spec.vkDevice!),
-    graphicsQueue: mln.NativePointer(_spec.vkQueue!),
-    graphicsQueueFamilyIndex: _spec.vkQueueFamilyIndex!,
-    getInstanceProcAddr: mln.NativePointer(_spec.vkGetInstanceProcAddr!),
-    getDeviceProcAddr: mln.NativePointer(_spec.vkGetDeviceProcAddr!),
+  static mln.VulkanContextDescriptor _vulkanContext(
+    VulkanSessionQuery spec,
+  ) => mln.VulkanContextDescriptor(
+    instance: mln.NativePointer(spec.vkInstance),
+    physicalDevice: mln.NativePointer(spec.vkPhysicalDevice),
+    device: mln.NativePointer(spec.vkDevice),
+    graphicsQueue: mln.NativePointer(spec.vkQueue),
+    graphicsQueueFamilyIndex: spec.vkQueueFamilyIndex,
+    getInstanceProcAddr: mln.NativePointer(spec.vkGetInstanceProcAddr),
+    getDeviceProcAddr: mln.NativePointer(spec.vkGetDeviceProcAddr),
   );
 
   /// Creates an offscreen snapshot job: a static-mode map sharing this
@@ -185,17 +188,17 @@ class _EngineSession {
         height: snapshotHeight,
         scaleFactor: scaleFactor,
       );
-      snapshotSession = switch (_spec.backend) {
-        SessionBackend.opengl => snapshotMap.attachOpenGLOwnedTexture(
+      snapshotSession = switch (_spec) {
+        final OpenGlSessionQuery spec => snapshotMap.attachOpenGLOwnedTexture(
           mln.OpenGLOwnedTextureDescriptor(
             extent: extent,
-            context: _eglContext(),
+            context: _eglContext(spec),
           ),
         ),
-        SessionBackend.vulkan => snapshotMap.attachVulkanOwnedTexture(
+        final VulkanSessionQuery spec => snapshotMap.attachVulkanOwnedTexture(
           mln.VulkanOwnedTextureDescriptor(
             extent: extent,
-            context: _vulkanContext(),
+            context: _vulkanContext(spec),
           ),
         ),
       };

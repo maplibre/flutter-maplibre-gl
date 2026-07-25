@@ -50,7 +50,7 @@ class OrnamentsOverlay extends StatelessWidget {
   /// logical pixels; the native SDKs lay them out side by side.
   static const _logoGap = 8.0;
 
-  final FfiOrnamentConfig config;
+  final OrnamentConfig config;
   final ValueListenable<double> bearing;
   final ValueListenable<double> metersPerPixel;
 

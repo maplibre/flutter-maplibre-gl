@@ -31,7 +31,7 @@ class EngineIsolateBootstrap {
 void engineIsolateMain(EngineIsolateBootstrap bootstrap) {
   final toRoot = bootstrap.toRoot;
   final commands = ReceivePort();
-  final core = FfiEngineCore.ensure(cachePath: bootstrap.cachePath);
+  final core = EngineCore.ensure(cachePath: bootstrap.cachePath);
   final driver = FrameDriver(
     core,
     displayRefreshRate: bootstrap.displayRefreshRate,

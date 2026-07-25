@@ -6,7 +6,7 @@
 
 part of 'engine_core.dart';
 
-extension EngineCommandDispatch on FfiEngineCore {
+extension EngineCommandDispatch on EngineCore {
   /// Executes a fire-and-forget mutation.
   void handleCommand(EngineCommand command) {
     switch (command) {
@@ -39,16 +39,7 @@ extension EngineCommandDispatch on FfiEngineCore {
           () => _runtime.createOfflineRegion(
             mln.OfflineTilePyramidRegionDefinition(
               styleUrl: command.styleUrl,
-              bounds: mln.LatLngBounds(
-                mln.LatLng(
-                  command.southwestLatitude,
-                  command.southwestLongitude,
-                ),
-                mln.LatLng(
-                  command.northeastLatitude,
-                  command.northeastLongitude,
-                ),
-              ),
+              bounds: _latLngBounds(command.bounds),
               minZoom: command.minZoom,
               maxZoom: command.maxZoom,
               pixelRatio: command.pixelRatio,
@@ -210,10 +201,7 @@ extension EngineCommandDispatch on FfiEngineCore {
       case FitBoundsCommand():
         final session = _session(command.sessionId);
         final camera = session.map.cameraForLatLngBounds(
-          mln.LatLngBounds(
-            mln.LatLng(command.southwestLatitude, command.southwestLongitude),
-            mln.LatLng(command.northeastLatitude, command.northeastLongitude),
-          ),
+          _latLngBounds(command.bounds),
           fitOptions: mln.CameraFitOptions(
             padding: mln.EdgeInsets(
               left: command.paddingLeft,
@@ -236,25 +224,13 @@ extension EngineCommandDispatch on FfiEngineCore {
         ).map.setGestureInProgress(command.inProgress);
       case SetBoundsCommand():
         final session = _session(command.sessionId);
-        final hasBounds =
-            command.southwestLatitude != null &&
-            command.southwestLongitude != null &&
-            command.northeastLatitude != null &&
-            command.northeastLongitude != null;
+        final bounds = command.bounds;
+        // Native setBounds applies only the options that are set, so a
+        // command that carries just a zoom range preserves the target bounds
+        // set by an earlier one.
         session.map.setBounds(
           mln.BoundOptions(
-            bounds: hasBounds
-                ? mln.LatLngBounds(
-                    mln.LatLng(
-                      command.southwestLatitude!,
-                      command.southwestLongitude!,
-                    ),
-                    mln.LatLng(
-                      command.northeastLatitude!,
-                      command.northeastLongitude!,
-                    ),
-                  )
-                : null,
+            bounds: bounds == null ? null : _latLngBounds(bounds),
             minZoom: command.minZoom,
             maxZoom: command.maxZoom,
             minPitch: command.minPitch,
@@ -575,6 +551,11 @@ extension EngineCommandDispatch on FfiEngineCore {
     }
     features.add(feature);
   }
+
+  static mln.LatLngBounds _latLngBounds(BoundsSpec bounds) => mln.LatLngBounds(
+    mln.LatLng(bounds.south, bounds.west),
+    mln.LatLng(bounds.north, bounds.east),
+  );
 
   static mln.CameraOptions _cameraOptions(
     CameraSpec spec,

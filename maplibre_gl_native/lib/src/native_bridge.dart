@@ -9,46 +9,50 @@ import 'protocol/protocol.dart' show SessionBackend;
 /// platform side (EGL14 in Kotlin for OpenGL builds, the Vulkan bootstrap in
 /// shim.c for Vulkan builds) and borrowed by the MapLibre Native render
 /// session through the Dart bindings.
-class NativeTextureHandles {
-  const NativeTextureHandles({
-    required this.backend,
-    required this.textureId,
-    required this.surface,
-    this.eglDisplay,
-    this.eglConfig,
-    this.eglContext,
-    this.vkInstance,
-    this.vkPhysicalDevice,
-    this.vkDevice,
-    this.vkQueue,
-    this.vkQueueFamilyIndex,
-    this.vkGetInstanceProcAddr,
-    this.vkGetDeviceProcAddr,
-  });
+///
+/// One subtype per backend: the shim answers with the handle set of the
+/// backend it was compiled for, and [fromMap] is the single place where that
+/// untyped reply is checked. Everything downstream reads non-null fields.
+sealed class NativeTextureHandles {
+  const NativeTextureHandles({required this.textureId, required this.surface});
 
+  /// Decodes the shim's reply. Throws if the shim announced a backend but
+  /// omitted one of its handles, which would otherwise surface much later as
+  /// a crash inside the render session.
   factory NativeTextureHandles.fromMap(Map<Object?, Object?> map) {
-    final backend = map['backend'] == 'vulkan'
-        ? SessionBackend.vulkan
-        : SessionBackend.opengl;
-    return NativeTextureHandles(
-      backend: backend,
-      textureId: map['textureId']! as int,
-      surface: map['surface']! as int,
-      eglDisplay: map['eglDisplay'] as int?,
-      eglConfig: map['eglConfig'] as int?,
-      eglContext: map['eglContext'] as int?,
-      vkInstance: map['vkInstance'] as int?,
-      vkPhysicalDevice: map['vkPhysicalDevice'] as int?,
-      vkDevice: map['vkDevice'] as int?,
-      vkQueue: map['vkQueue'] as int?,
-      vkQueueFamilyIndex: map['vkQueueFamilyIndex'] as int?,
-      vkGetInstanceProcAddr: map['vkGetInstanceProcAddr'] as int?,
-      vkGetDeviceProcAddr: map['vkGetDeviceProcAddr'] as int?,
-    );
-  }
+    int handle(String key) {
+      final value = map[key];
+      if (value is! int) {
+        throw StateError(
+          'the texture shim reply is missing the "$key" handle for the '
+          '${map['backend']} backend',
+        );
+      }
+      return value;
+    }
 
-  /// Backend the handles belong to.
-  final SessionBackend backend;
+    final textureId = handle('textureId');
+    final surface = handle('surface');
+    return map['backend'] == SessionBackend.vulkan.name
+        ? VulkanTextureHandles(
+            textureId: textureId,
+            surface: surface,
+            vkInstance: handle('vkInstance'),
+            vkPhysicalDevice: handle('vkPhysicalDevice'),
+            vkDevice: handle('vkDevice'),
+            vkQueue: handle('vkQueue'),
+            vkQueueFamilyIndex: handle('vkQueueFamilyIndex'),
+            vkGetInstanceProcAddr: handle('vkGetInstanceProcAddr'),
+            vkGetDeviceProcAddr: handle('vkGetDeviceProcAddr'),
+          )
+        : OpenGlTextureHandles(
+            textureId: textureId,
+            surface: surface,
+            eglDisplay: handle('eglDisplay'),
+            eglConfig: handle('eglConfig'),
+            eglContext: handle('eglContext'),
+          );
+  }
 
   /// Flutter engine texture id, consumed by the [Texture] widget.
   final int textureId;
@@ -56,37 +60,55 @@ class NativeTextureHandles {
   /// Borrowed backend surface over the SurfaceProducer's Surface:
   /// an EGLSurface for OpenGL, a VkSurfaceKHR for Vulkan.
   final int surface;
+}
 
-  /// Borrowed EGLDisplay (OpenGL builds).
-  final int? eglDisplay;
+/// Handles of an OpenGL build: the EGL objects the render session joins.
+final class OpenGlTextureHandles extends NativeTextureHandles {
+  const OpenGlTextureHandles({
+    required super.textureId,
+    required super.surface,
+    required this.eglDisplay,
+    required this.eglConfig,
+    required this.eglContext,
+  });
 
-  /// Borrowed EGLConfig (OpenGL builds).
-  final int? eglConfig;
+  final int eglDisplay;
+  final int eglConfig;
 
-  /// Borrowed EGLContext whose share group the render session joins
-  /// (OpenGL builds).
-  final int? eglContext;
+  /// Borrowed EGLContext whose share group the render session joins.
+  final int eglContext;
+}
 
-  /// Borrowed VkInstance (Vulkan builds).
-  final int? vkInstance;
+/// Handles of a Vulkan build: the instance, device and queue the shim
+/// bootstrapped, plus the loader entry points.
+final class VulkanTextureHandles extends NativeTextureHandles {
+  const VulkanTextureHandles({
+    required super.textureId,
+    required super.surface,
+    required this.vkInstance,
+    required this.vkPhysicalDevice,
+    required this.vkDevice,
+    required this.vkQueue,
+    required this.vkQueueFamilyIndex,
+    required this.vkGetInstanceProcAddr,
+    required this.vkGetDeviceProcAddr,
+  });
 
-  /// Borrowed VkPhysicalDevice (Vulkan builds).
-  final int? vkPhysicalDevice;
+  final int vkInstance;
+  final int vkPhysicalDevice;
+  final int vkDevice;
 
-  /// Borrowed VkDevice (Vulkan builds).
-  final int? vkDevice;
+  /// Borrowed graphics VkQueue.
+  final int vkQueue;
 
-  /// Borrowed graphics VkQueue (Vulkan builds).
-  final int? vkQueue;
+  /// Queue family index of [vkQueue].
+  final int vkQueueFamilyIndex;
 
-  /// Queue family index of [vkQueue] (Vulkan builds).
-  final int? vkQueueFamilyIndex;
+  /// PFN_vkGetInstanceProcAddr of the loader.
+  final int vkGetInstanceProcAddr;
 
-  /// PFN_vkGetInstanceProcAddr of the loader (Vulkan builds).
-  final int? vkGetInstanceProcAddr;
-
-  /// PFN_vkGetDeviceProcAddr of the device loader (Vulkan builds).
-  final int? vkGetDeviceProcAddr;
+  /// PFN_vkGetDeviceProcAddr of the device loader.
+  final int vkGetDeviceProcAddr;
 }
 
 /// Dart side of the minimal per-platform texture shim.
@@ -95,8 +117,8 @@ class NativeTextureHandles {
 /// sole job is to register an external texture with the Flutter engine and
 /// hand raw backend handles to Dart. Every map/style/render call goes through
 /// dart:ffi instead.
-class MapLibreGlNativeBridge {
-  MapLibreGlNativeBridge._();
+class NativeBridge {
+  NativeBridge._();
 
   static const _channel = MethodChannel('maplibre_gl_native');
 
