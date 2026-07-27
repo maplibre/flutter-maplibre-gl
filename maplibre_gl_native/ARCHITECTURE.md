@@ -174,4 +174,4 @@ Say you want to expose `setFoo(double value)`. Every API in this package follows
 
 4. **Public API** (in `maplibre_gl`): add the method to `MapLibreMapController` (and the platform interface if it is new there), delegating to the platform.
 
-Run `dart analyze`, then the example gallery (`flutter run -t lib/main_ffi.dart` in `maplibre_gl_example`) to see it live. For performance work, the benchmark harness in `maplibre_gl_example/tool/bench/` is the regression net (see `docs/benchmarks/ffi-benchmarks.md` in this package).
+Run `dart analyze`, then the example gallery (`flutter run -t lib/main_ffi.dart` in `maplibre_gl_example`) to see it live. For performance work, the benchmark harness in `maplibre_gl_example` is the regression net: `dart run tool/bench/run_bench.dart --help`, and [its methodology](../maplibre_gl_example/docs/benchmarks/ffi-benchmarks.md) explains how to read the report.

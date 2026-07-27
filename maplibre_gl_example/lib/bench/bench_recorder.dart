@@ -30,14 +30,16 @@ class BenchPhase {
     'name': name,
     'startUs': startUs,
     'endUs': endUs,
-    'engineStats': engineStats == null
-        ? null
-        : {
-            for (final entry in engineStats!.entries)
-              entry.key: entry.value is List
-                  ? List<num>.from(entry.value as List)
-                  : entry.value,
-          },
+    'engineStats':
+        engineStats == null
+            ? null
+            : {
+              for (final entry in engineStats!.entries)
+                entry.key:
+                    entry.value is List
+                        ? List<num>.from(entry.value as List)
+                        : entry.value,
+            },
   };
 }
 
@@ -126,9 +128,8 @@ class BenchRecorder {
       'metadata': metadata,
       'startUs': _startUs,
       'endUs': nowUs,
-      'cpuJiffies': cpuStart == null || cpuEnd == null
-          ? null
-          : cpuEnd - cpuStart,
+      'cpuJiffies':
+          cpuStart == null || cpuEnd == null ? null : cpuEnd - cpuStart,
       'rssSamplesBytes': _rssSamplesBytes,
       'maxRssBytes': ProcessInfo.maxRss,
       'marks': marks,

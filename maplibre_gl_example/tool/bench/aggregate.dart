@@ -45,8 +45,7 @@ Future<void> main(List<String> args) async {
   }
 
   // scenario -> phase -> engine -> per-iteration metric maps.
-  final table =
-      <String, Map<String, Map<String, List<Map<String, num>>>>>{};
+  final table = <String, Map<String, Map<String, List<Map<String, num>>>>>{};
   final meta = <String, Map<String, dynamic>>{};
   for (final run in runs) {
     final host = (run['host'] as Map).cast<String, dynamic>();
@@ -62,10 +61,14 @@ Future<void> main(List<String> args) async {
     }
   }
 
+  // Column order, stable first because it is the delta baseline. The id
+  // 'ffi_isolate' only appears in result sets recorded before the retirement
+  // of the single-isolate variant, where 'ffi' meant that retired mode; such
+  // dirs are still aggregated, keeping their original ids.
   final engines = [
     for (final engine in const ['stable', 'ffi', 'ffi_isolate'])
       if (meta.containsKey(engine)) engine,
-  ]; // 'ffi' only appears in pre-consolidation result sets.
+  ];
   final report = _renderReport(table, engines, meta, runs.length);
   File('${dir.path}/report.md').writeAsStringSync(report);
   File('${dir.path}/summary.json').writeAsStringSync(
@@ -143,15 +146,15 @@ Map<String, Map<String, num>> _analyzeRun(Map<String, dynamic> run) {
     if (engineStats != null) {
       final timestamps = (engineStats['timestampsUs'] as List?)?.cast<num>();
       if (timestamps != null && timestamps.length > 1) {
-        final spanS =
-            (timestamps.last - timestamps.first).toDouble() / 1e6;
+        final spanS = (timestamps.last - timestamps.first).toDouble() / 1e6;
         if (spanS > 0) metrics['map_fps'] = (timestamps.length - 1) / spanS;
         // FFI reports renderUpdate wall time; the stable SDK reports the
         // encoding+rendering split. Normalize to one "render cost" series.
         final durations = (engineStats['durationsUs'] as List?)?.cast<num>();
-        final renderMs = durations != null
-            ? [for (final d in durations) d / 1000]
-            : _summedRenderMs(engineStats);
+        final renderMs =
+            durations != null
+                ? [for (final d in durations) d / 1000]
+                : _summedRenderMs(engineStats);
         if (renderMs.isNotEmpty) {
           metrics
             ..['map_render_p50_ms'] = _percentile(renderMs, 50)
@@ -241,15 +244,59 @@ num _mean(List<num> values) =>
 
 // --- Report rendering ----------------------------------------------------------
 
+/// Reading guide, emitted into every report: the tables are metric keys with
+/// no units and a bare percentage against stable, which is unreadable without
+/// knowing which direction is good.
+const String _legend = '''
+## How to read this
+
+Every value is the mean across iterations of one (engine, scenario, phase).
+Units are in the metric name (`_ms`, `_pct`, `_fps`, `_mb`). Warm-up runs, runs
+whose engine transport did not match the requested one, and runs that produced
+too few frames are excluded.
+
+| metric | what it is | better |
+|---|---|---|
+| `map_fps` | frames the map engine actually produced, per second | higher |
+| `ui_fps` | frames Flutter produced, per second (see caveats) | higher |
+| `ui_span_p50/p90/p99_ms` | total Flutter frame time (build + raster), percentiles | lower |
+| `ui_span_low1p_ms` | mean of the worst 1 % of Flutter frames | lower |
+| `ui_build_p90_ms`, `ui_raster_p90_ms` | the two halves of a Flutter frame | lower |
+| `ui_jank90hz_pct`, `ui_jank60hz_pct` | share of frames over the 11.1 / 16.7 ms budget | lower |
+| `map_render_p50/p99_ms`, `map_render_low1p_ms` | engine-side cost of one render (see caveats) | lower |
+| `mapCreated_ms`, `styleLoaded_ms`, `firstIdle_ms` | milestones measured from app init | lower |
+| `lat_*_p50/p99_ms` | round trip of one API call | lower |
+| `ctr_*` | scenario counters (updates applied, features set, ...) | context |
+| `phase_s` | wall time of the phase | context |
+| `rss_peak_mb`, `cpu_avg_pct` | peak process memory, average CPU (% of one core) | lower |
+
+The **`vs stable`** column is the plain percent difference of the value, so its
+sign is not a verdict: `+15 %` is an improvement on `map_fps` and a regression
+on anything in the "lower" rows above.
+
+Caveats that change conclusions:
+
+- **Renderer confound**: the FFI engine uses MapLibre Native's Vulkan backend,
+  the stable engine OpenGL ES, so stable-vs-FFI deltas mix transport and
+  renderer effects.
+- **`map_render_*` is not comparable across engines**: stable reports the SDK's
+  encoding + rendering split, FFI the wall time of `renderUpdate`. Use it
+  within one engine, over time.
+- **`ui_fps` in static phases is meaningless for stable**: its platform view
+  renders outside Flutter's pipeline, so Flutter legitimately produces few
+  frames. The jank percentages among the frames it did produce stay valid.
+''';
+
 String _renderReport(
   Map<String, Map<String, Map<String, List<Map<String, num>>>>> table,
   List<String> engines,
   Map<String, Map<String, dynamic>> meta,
   int runCount,
 ) {
-  final buffer = StringBuffer()
-    ..writeln('# flutter-maplibre-gl engine benchmark')
-    ..writeln();
+  final buffer =
+      StringBuffer()
+        ..writeln('# flutter-maplibre-gl engine benchmark')
+        ..writeln();
   final anyMeta = meta.values.first;
   buffer
     ..writeln(
@@ -262,12 +309,8 @@ String _renderReport(
       'profile mode: ${anyMeta['profileMode']}  |  measured runs: $runCount',
     )
     ..writeln('- Engines: ${engines.join(', ')}')
-    ..writeln(
-      '- Renderer caveat: the FFI engine uses the Vulkan backend of MapLibre '
-      'Native, the stable engine uses OpenGL ES; deltas mix transport and '
-      'renderer effects.',
-    )
-    ..writeln();
+    ..writeln()
+    ..writeln(_legend);
 
   for (final scenario in table.entries) {
     buffer
@@ -276,20 +319,27 @@ String _renderReport(
     final phases = scenario.value.keys.toList()..sort();
     for (final phaseName in phases) {
       final byEngine = scenario.value[phaseName]!;
-      final metricKeys = <String>{
-        for (final iterations in byEngine.values)
-          for (final m in iterations) ...m.keys,
-      }.toList()..sort();
+      final metricKeys =
+          <String>{
+              for (final iterations in byEngine.values)
+                for (final m in iterations) ...m.keys,
+            }.toList()
+            ..sort();
       if (metricKeys.isEmpty) continue;
       buffer
-        ..writeln('### ${phaseName == '_run' ? 'run-level metrics' : phaseName}')
+        ..writeln(
+          '### ${phaseName == '_run' ? 'run-level metrics' : phaseName}',
+        )
         ..writeln();
+      // The delta column only makes sense when the baseline is in the set:
+      // an FFI-only A/B dir would otherwise get a column of dashes.
+      final withDelta = engines.contains('stable');
       final header = StringBuffer('| metric |');
       final divider = StringBuffer('|---|');
       for (final engine in engines) {
         header.write(' $engine |');
         divider.write('---|');
-        if (engine != 'stable') {
+        if (withDelta && engine != 'stable') {
           header.write(' vs stable |');
           divider.write('---|');
         }
@@ -307,7 +357,7 @@ String _renderReport(
         for (final engine in engines) {
           final value = averaged[engine]?[key];
           row.write(value == null ? ' - |' : ' ${_format(value)} |');
-          if (engine != 'stable') {
+          if (withDelta && engine != 'stable') {
             if (value == null || baseline == null || baseline == 0) {
               row.write(' - |');
             } else {

@@ -280,7 +280,10 @@ Future<void> _apiLatency(BenchContext ctx) async {
     });
   }
 
-  await measure('toScreenLocation', () => ctx.controller.toScreenLocation(_milan));
+  await measure(
+    'toScreenLocation',
+    () => ctx.controller.toScreenLocation(_milan),
+  );
   await measure('toLatLng', () => ctx.controller.toLatLng(centerPoint));
   await measure(
     'toScreenLocationBatch100',

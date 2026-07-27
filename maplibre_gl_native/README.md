@@ -31,7 +31,8 @@ isolate-sendable, the engine drives its own display-vsync-paced frame loop
 there, and heavy
 tile-integration `renderUpdate` calls never stall the UI thread. (Benchmarks
 of the retired single-isolate mode against this architecture are in
-`docs/benchmarks/ffi-benchmark-results-2026-07.md`; the isolate won
+`../maplibre_gl_example/docs/benchmarks/ffi-benchmark-results-2026-07.md`;
+the isolate won
 everywhere, so it is
 now the only mode.) A `gettid` watchdog rebinds the runtime if the VM ever
 migrates the isolate across OS threads (the native handles are thread-affine;
@@ -243,7 +244,8 @@ Implemented:
   method-channel backends until the global-channel seam PR lands.
 - Instrumentation: per-frame engine render stats behind
   `setFrameStatsEnabled`/`takeFrameStats`, consumed by the benchmark harness
-  in `maplibre_gl_example/tool/bench/` (see `docs/benchmarks/`).
+  in `maplibre_gl_example/tool/bench/` (methodology and results in
+  `maplibre_gl_example/docs/benchmarks/`).
 
 Known gaps: `setOfflineTileCountLimit` and
 `setOfflineMaxConcurrentRequests` have no C API counterpart (no-ops); no RTL

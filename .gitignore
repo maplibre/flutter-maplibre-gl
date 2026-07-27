@@ -11,6 +11,10 @@
 migrate_working_dir/
 build/
 
+# Benchmark report rendered to PDF: regenerate it from the versioned HTML
+# instead of committing half a megabyte of binary.
+maplibre_gl_example/docs/benchmarks/*.pdf
+
 # IntelliJ related
 *.iml
 *.ipr

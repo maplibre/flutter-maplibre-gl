@@ -2,26 +2,15 @@
 // (engine x scenario x iteration) matrix on a connected Android device,
 // collecting each run's results from logcat into JSON files.
 //
-//   dart run tool/bench/run_bench.dart [options]
-//
-// Options:
-//   --engines stable,ffi_isolate       variants to run (default: both)
-//   --scenarios a,b,c                  scenario subset (default: all)
-//   --iterations N                     measured iterations (default: 3)
-//   --no-warmup                        skip the discarded cache-warm pass
-//   --online                           measured runs online (default: offline)
-//   --skip-build                       reuse the installed/built APK
-//   --cooldown S                       seconds between runs (default: 60)
-//   --thermal-max N                    max thermal status to start (default: 1)
-//   --serial S                         adb device serial
-//   --out DIR                          results dir (default: bench_results/<ts>)
-//   --leg-ms MS / --step-s S           scenario pacing overrides
+//   dart run tool/bench/run_bench.dart --help
 //
 // The measurement protocol follows the MapLibre Native world-tour benchmark:
 // one discarded warm-up pass over every configuration (which also fills the
 // tile caches), then N recorded iterations with the engine order rotated per
 // iteration, a thermal gate plus fixed cooldown between runs, and metadata
 // (git revision, transport, thermal status) attached to every result file.
+// docs/benchmarks/ffi-benchmarks.md explains the methodology and how to read
+// the report.
 
 import 'dart:convert';
 import 'dart:io';
@@ -29,7 +18,46 @@ import 'dart:io';
 const String appId = 'org.maplibre.example';
 const String activity = 'io.flutter.embedding.android.FlutterActivity';
 
-const List<String> allEngines = ['stable', 'ffi_isolate'];
+String get usage => '''
+Runs the engine benchmark matrix on a connected Android device.
+
+  dart run tool/bench/run_bench.dart [options]
+
+What to run:
+  --engines a,b            engine variants (default: ${allEngines.join(',')})
+  --scenarios a,b          scenario subset (default: all, see below)
+  --iterations N           measured iterations per pair (default: 3)
+  --only e:s:i,e:s:i       run exactly these engine:scenario:iteration tuples
+                           (hole filling: no warm-up, appends to an existing
+                           results dir passed with --out)
+  --no-warmup              skip the discarded cache-warming pass
+  --online                 keep the network on during measured runs
+                           (default: offline, served from the warmed cache)
+
+Device and pacing:
+  --serial S               adb device serial (default: the only one connected)
+  --cooldown S             seconds between runs (default: 60)
+  --thermal-max N          highest thermal status allowed to start (default: 1)
+  --leg-ms MS              world-tour: duration of one fly-to leg (default: 20000)
+  --step-s S               duration of one measured step (default: 10)
+  --style URL              style to load (default: OpenFreeMap Liberty)
+
+Output and dry runs:
+  --out DIR                results dir (default: build/bench_results/<timestamp>)
+  --skip-build             reuse the APK already built and installed
+  --dry-run                print the matrix, the run count and the estimate,
+                           then exit without touching the device
+  -h, --help               this message
+
+Scenarios: ${allScenarios.join(', ')}
+
+Results land in the output dir: one JSON per run, plus report.md and
+summary.json written by tool/bench/aggregate.dart. A full default matrix is
+${allEngines.length * allScenarios.length * 3} measured runs and takes a few hours; start with
+  --engines ${allEngines.join(',')} --scenarios gestures --iterations 1 --no-warmup
+to check the setup end to end in a few minutes.''';
+
+const List<String> allEngines = ['stable', 'ffi'];
 const List<String> allScenarios = [
   'style_load',
   'world_tour',
@@ -43,18 +71,75 @@ const List<String> allScenarios = [
 late String adbSerial;
 late Directory exampleDir;
 
+/// Rough wall time of one run at default pacing, excluding the cooldown, used
+/// only for the up-front estimate. The progress line replaces it with a
+/// measured average as soon as the first run completes.
+const int typicalRunSeconds = 120;
+
+final Stopwatch suiteClock = Stopwatch();
+int runsPlanned = 0;
+int runsStarted = 0;
+
 Future<void> main(List<String> args) async {
-  final opts = _Options.parse(args);
+  if (args.contains('--help') || args.contains('-h')) {
+    print(usage);
+    return;
+  }
+  final _Options opts;
+  try {
+    opts = _Options.parse(args);
+  } on UsageException catch (error) {
+    stderr.writeln('${error.message}\n');
+    stderr.writeln(usage);
+    exit(2);
+  }
   exampleDir = _findExampleDir();
+
+  final warmupRuns =
+      opts.only.isEmpty && opts.warmup
+          ? opts.engines.length * opts.scenarios.length
+          : 0;
+  final measuredRuns =
+      opts.only.isEmpty
+          ? opts.engines.length * opts.scenarios.length * opts.iterations
+          : opts.only.length;
+  runsPlanned = warmupRuns + measuredRuns;
+  // Warm-up runs use the capped cooldown, like _executeRun does.
+  final warmupCooldown = opts.cooldown < 10 ? opts.cooldown : 10;
+  final estimate = Duration(
+    seconds:
+        measuredRuns * (typicalRunSeconds + opts.cooldown) +
+        warmupRuns * (typicalRunSeconds + warmupCooldown),
+  );
+
+  print('== flutter-maplibre-gl benchmark ==');
+  print('engines:   ${opts.engines.join(', ')}');
+  print('scenarios: ${opts.scenarios.join(', ')}');
+  final pairs = opts.engines.length * opts.scenarios.length;
+  print(
+    'runs:      $runsPlanned total = $measuredRuns measured'
+    '${opts.only.isEmpty ? ' ($pairs pairs x ${opts.iterations} iterations)' : ''}'
+    '${warmupRuns > 0 ? ' + $warmupRuns warm-up' : ''}',
+  );
+  print(
+    'estimate:  ~${_formatDuration(estimate)} (rough; each run then reports '
+    'the remaining time from the measured average)',
+  );
+  print(
+    'network:   ${opts.online ? 'online' : 'offline (needs a warmed cache)'}',
+  );
+  if (opts.dryRun) {
+    print('\ndry run: nothing was built, installed, or measured.');
+    return;
+  }
+
   adbSerial = opts.serial ?? await _defaultSerial();
   final outDir = Directory(opts.outPath ?? _defaultOutPath())
     ..createSync(recursive: true);
   final rev = await _gitRevision();
-
-  print('== flutter-maplibre-gl benchmark ==');
-  print('device: $adbSerial  rev: $rev');
-  print('engines: ${opts.engines}  scenarios: ${opts.scenarios}');
-  print('results: ${outDir.path}');
+  print('device:    $adbSerial  rev: $rev');
+  print('results:   ${outDir.path}');
+  suiteClock.start();
 
   if (!opts.skipBuild) {
     await _buildAndInstall();
@@ -157,6 +242,7 @@ Future<void> _retryFailed(
       if (run['warmup'] != true && run['outcome'] != 'ok') run,
   ];
   if (failed.isEmpty) return;
+  runsPlanned += failed.length;
   print('\n-- retrying ${failed.length} failed run(s) --');
   for (final run in failed) {
     final retried = await _executeRun(
@@ -183,8 +269,9 @@ Future<void> _finish(
   final indexFile = File('${outDir.path}/index.json');
   var all = runs;
   if (appendIndex && indexFile.existsSync()) {
-    final previous = (jsonDecode(indexFile.readAsStringSync()) as List)
-        .cast<Map<String, dynamic>>();
+    final previous =
+        (jsonDecode(indexFile.readAsStringSync()) as List)
+            .cast<Map<String, dynamic>>();
     // Replace superseded entries of rerun ids, keep the rest.
     final rerunIds = {for (final run in runs) run['runId']};
     all = [
@@ -225,7 +312,8 @@ Future<Map<String, dynamic>> _executeRun({
 }) async {
   final runId = '$engine-$scenario-i$iteration${warmup ? 'w' : ''}';
   // Warm-up runs are discarded, so they only need a token cooldown.
-  final cooldown = warmup ? (opts.cooldown < 10 ? opts.cooldown : 10) : opts.cooldown;
+  final cooldown =
+      warmup ? (opts.cooldown < 10 ? opts.cooldown : 10) : opts.cooldown;
   if (!_firstRun && cooldown > 0) {
     print('  cooldown $cooldown s...');
     await Future<void>.delayed(Duration(seconds: cooldown));
@@ -251,7 +339,8 @@ Future<Map<String, dynamic>> _executeRun({
       'outcome': 'screen-off',
     };
   }
-  print('[$runId] thermal=$thermalBefore starting...');
+  runsStarted++;
+  print('[$runsStarted/$runsPlanned] $runId thermal=$thermalBefore${_eta()}');
   await _adb(['logcat', '-c']);
   // -S force-stops any previous instance so every run is a cold start; the
   // route extra carries the whole configuration.
@@ -263,8 +352,10 @@ Future<Map<String, dynamic>> _executeRun({
   while (DateTime.now().isBefore(deadline)) {
     await Future<void>.delayed(const Duration(seconds: 3));
     final dump = await _logcatDump();
-    final done = RegExp('^BENCH_DONE:$runId:(.*)\$', multiLine: true)
-        .firstMatch(dump);
+    final done = RegExp(
+      '^BENCH_DONE:$runId:(.*)\$',
+      multiLine: true,
+    ).firstMatch(dump);
     if (done != null) {
       outcome = done.group(1);
       break;
@@ -299,23 +390,22 @@ Future<Map<String, dynamic>> _executeRun({
     result['host'] = record;
     final transport = (result['metadata'] as Map)['engineTransport'];
     final expected = switch (engine) {
-      'ffi_isolate' => 'isolate',
+      'ffi' => 'isolate',
       _ => 'platform-view',
     };
     if (transport != expected) {
-      record['outcome'] = 'transport-mismatch: expected $expected, ran $transport';
+      record['outcome'] =
+          'transport-mismatch: expected $expected, ran $transport';
       print('[$runId] TRANSPORT MISMATCH: $transport (expected $expected)');
     }
-    final frames =
-        ((result['flutterFrames'] as Map)['buildUs'] as List).length;
+    final frames = ((result['flutterFrames'] as Map)['buildUs'] as List).length;
     // A paused/blanked activity produces a handful of frames at most; such
     // a run measured nothing and must not enter the aggregate.
     if (frames < 30 && record['outcome'] == 'ok') {
       record['outcome'] = 'too-few-frames:$frames';
       print('[$runId] REJECTED: only $frames flutter frames (screen off?)');
     }
-    File('${outDir.path}/$runId.json')
-        .writeAsStringSync(jsonEncode(result));
+    File('${outDir.path}/$runId.json').writeAsStringSync(jsonEncode(result));
     if (record['outcome'] == 'ok') {
       print('[$runId] ok, $frames flutter frames, thermal $thermalAfter');
     }
@@ -508,15 +598,22 @@ Directory _findExampleDir() {
 }
 
 String _defaultOutPath() {
-  final ts = DateTime.now()
-      .toIso8601String()
-      .replaceAll(':', '')
-      .split('.')
-      .first;
+  final ts =
+      DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
   return '${exampleDir.path}/build/bench_results/$ts';
 }
 
 // --- Options -----------------------------------------------------------------
+
+/// A bad command line: reported with the usage text instead of a stack trace.
+class UsageException implements Exception {
+  UsageException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 class _Options {
   _Options({
@@ -534,9 +631,50 @@ class _Options {
     required this.outPath,
     required this.styleUrl,
     required this.only,
+    required this.dryRun,
   });
 
+  /// Options that take a value, and boolean switches. Listed so that a typo
+  /// ("--iteration 1") is an error instead of a silently ignored argument that
+  /// would quietly run the full three-hour default matrix.
+  static const _valueOptions = <String>{
+    'engines',
+    'scenarios',
+    'iterations',
+    'only',
+    'serial',
+    'cooldown',
+    'thermal-max',
+    'leg-ms',
+    'step-s',
+    'style',
+    'out',
+  };
+  static const _switches = <String>{
+    'no-warmup',
+    'online',
+    'skip-build',
+    'dry-run',
+    'help',
+  };
+
   factory _Options.parse(List<String> args) {
+    for (var i = 0; i < args.length; i++) {
+      final arg = args[i];
+      if (!arg.startsWith('--')) {
+        throw UsageException('unexpected argument "$arg"');
+      }
+      final name = arg.substring(2);
+      if (_valueOptions.contains(name)) {
+        if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+          throw UsageException('--$name needs a value');
+        }
+        i++;
+      } else if (!_switches.contains(name)) {
+        throw UsageException('unknown option "$arg"');
+      }
+    }
+
     String? value(String name) {
       final index = args.indexOf('--$name');
       return index >= 0 && index + 1 < args.length ? args[index + 1] : null;
@@ -544,16 +682,30 @@ class _Options {
 
     bool flag(String name) => args.contains('--$name');
 
+    int number(String name, String fallback) {
+      final raw = value(name) ?? fallback;
+      final parsed = int.tryParse(raw);
+      if (parsed == null) {
+        throw UsageException('--$name expects a number, got "$raw"');
+      }
+      return parsed;
+    }
+
     final engines = value('engines')?.split(',') ?? allEngines;
     final scenarios = value('scenarios')?.split(',') ?? allScenarios;
     for (final engine in engines) {
       if (!allEngines.contains(engine)) {
-        throw ArgumentError('unknown engine "$engine"');
+        throw UsageException(
+          'unknown engine "$engine"; available: ${allEngines.join(', ')}',
+        );
       }
     }
     for (final scenario in scenarios) {
       if (!allScenarios.contains(scenario)) {
-        throw ArgumentError('unknown scenario "$scenario"');
+        throw UsageException(
+          'unknown scenario "$scenario"; available: '
+          '${allScenarios.join(', ')}',
+        );
       }
     }
     final only = value('only')?.split(',') ?? const <String>[];
@@ -563,7 +715,7 @@ class _Options {
           !allEngines.contains(parts[0]) ||
           !allScenarios.contains(parts[1]) ||
           int.tryParse(parts[2]) == null) {
-        throw ArgumentError(
+        throw UsageException(
           '--only expects engine:scenario:iteration, got "$spec"',
         );
       }
@@ -571,18 +723,19 @@ class _Options {
     return _Options(
       engines: engines,
       scenarios: scenarios,
-      iterations: int.parse(value('iterations') ?? '3'),
+      iterations: number('iterations', '3'),
       warmup: !flag('no-warmup'),
       online: flag('online'),
       skipBuild: flag('skip-build'),
-      cooldown: int.parse(value('cooldown') ?? '60'),
-      thermalMax: int.parse(value('thermal-max') ?? '1'),
-      legMs: int.parse(value('leg-ms') ?? '20000'),
-      stepSeconds: int.parse(value('step-s') ?? '10'),
+      cooldown: number('cooldown', '60'),
+      thermalMax: number('thermal-max', '1'),
+      legMs: number('leg-ms', '20000'),
+      stepSeconds: number('step-s', '10'),
       serial: value('serial'),
       outPath: value('out'),
       styleUrl: value('style'),
       only: only,
+      dryRun: flag('dry-run'),
     );
   }
 
@@ -602,4 +755,27 @@ class _Options {
 
   /// Hole-filling reruns: engine:scenario:iteration tuples.
   final List<String> only;
+
+  /// Print what would run, then exit without touching the device.
+  final bool dryRun;
+}
+
+/// Elapsed time and remaining estimate for the run about to start, based on
+/// the average of the runs already done (so it self-corrects; empty for the
+/// first run, which has nothing to average yet).
+String _eta() {
+  final done = runsStarted - 1;
+  if (done <= 0 || !suiteClock.isRunning) return '';
+  final perRun = suiteClock.elapsed ~/ done;
+  final remaining = perRun * (runsPlanned - done);
+  return ', elapsed ${_formatDuration(suiteClock.elapsed)}'
+      ', left ~${_formatDuration(remaining)}';
+}
+
+/// `1 h 47 m` / `12 m 30 s`, for estimates and elapsed times.
+String _formatDuration(Duration duration) {
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes % 60;
+  if (hours > 0) return '$hours h $minutes m';
+  return '$minutes m ${duration.inSeconds % 60} s';
 }

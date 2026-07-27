@@ -102,6 +102,7 @@ If adding platform‑channel changes, test both Android & iOS (simulator/emulato
 - Batch style or layer operations.
 - Avoid unnecessary rebuilds of `MapLibreMap` widget in example pages.
 - Profile only when needed (Flutter DevTools / native profilers). Include notes if performance-sensitive code added.
+- For engine-level work there is a device benchmark harness in `maplibre_gl_example`: `dart run tool/bench/run_bench.dart --help`, methodology and how to read the report in [`maplibre_gl_example/docs/benchmarks/ffi-benchmarks.md`](maplibre_gl_example/docs/benchmarks/ffi-benchmarks.md). Quote the numbers in the PR when a change is meant to affect performance.
 
 ## Documentation & Changelog
 Update the root `CHANGELOG.md` (and package‑specific ones if only a sub‑package changed) with a brief, user‑oriented entry:

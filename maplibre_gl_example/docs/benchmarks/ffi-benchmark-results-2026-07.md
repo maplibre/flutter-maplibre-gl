@@ -1,6 +1,8 @@
 # FFI engine benchmark results (July 2026)
 
-Full run of the methodology in `ffi-benchmarks.md`: 63 measured runs (3 engines x 7 scenarios x 3 iterations, offline on warmed caches, thermal status 0 throughout), Xiaomi 2109119DG (11 Lite 5G NE, 90 Hz, Android 14), profile mode, revision 5facad4. Raw data + full tables: `maplibre_gl_example/build/bench_results/full-2026-07-23/report.md`.
+Full run of the methodology in [`ffi-benchmarks.md`](ffi-benchmarks.md): 63 measured runs (3 engines x 7 scenarios x 3 iterations, offline on warmed caches, thermal status 0 throughout), Xiaomi 2109119DG (11 Lite 5G NE, 90 Hz, Android 14), profile mode, revision 5facad4. Every table of this suite: [`ffi-benchmark-full-tables-2026-07.md`](ffi-benchmark-full-tables-2026-07.md).
+
+Two things to know before reading the numbers. The engine ids are the ones of the time: **`ffi` is the single-isolate mode**, retired as a result of this very run, and **`ffi_isolate` is what the FFI backend is today** (and is now simply called `ffi`). The per-run JSONs live under `build/bench_results/`, which is gitignored, so they only exist on the machine that produced them; the full-tables document is the copy that survives.
 
 ## Question 1: should `engineIsolate: true` be the default? YES
 
@@ -35,7 +37,7 @@ Likely contributors (not separable in this run): Vulkan-vs-OpenGL renderer confo
 
 ## Post-optimization addendum (2026-07-23, revision 2ff8c6b)
 
-The follow-up above was implemented (vsync-aligned engine frame loop via AChoreographer, gesture recognizer with map-tuned touch slop, ornament updates through `ValueNotifier`s) together with the consolidation to the isolate-only architecture. A second full suite (2 engines x 7 scenarios x 3 iterations, same device, same methodology; raw data: `maplibre_gl_example/build/bench_results/final-2026-07-23/report.md`) re-measured both engines; the stable engine reproduced its baseline numbers within noise, confirming comparability.
+The follow-up above was implemented (vsync-aligned engine frame loop via AChoreographer, gesture recognizer with map-tuned touch slop, ornament updates through `ValueNotifier`s) together with the consolidation to the isolate-only architecture. A second full suite (2 engines x 7 scenarios x 3 iterations, same device, same methodology) re-measured both engines; the stable engine reproduced its baseline numbers within noise, confirming comparability.
 
 **The interaction gap is essentially closed.** Map render rate during gestures, ffi_isolate before -> after (stable, same suite):
 

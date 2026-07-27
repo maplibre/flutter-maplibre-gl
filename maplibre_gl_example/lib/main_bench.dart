@@ -6,7 +6,7 @@
 ///
 /// ```sh
 /// adb shell am start -n org.maplibre.example/io.flutter.embedding.android.FlutterActivity \
-///   --es route '/bench?engine=ffi_isolate&scenario=world_tour&offline=1&run=<id>'
+///   --es route '/bench?engine=ffi&scenario=world_tour&offline=1&run=<id>'
 /// ```
 ///
 /// (`FlutterActivity` exposes the `route` extra as the default route.)
@@ -36,7 +36,7 @@ Future<void> main() async {
       switch (config.engine) {
         case BenchEngine.stable:
           break;
-        case BenchEngine.ffiIsolate:
+        case BenchEngine.ffi:
           MapLibreGlNative.use();
       }
       if (config.offline) {
@@ -179,9 +179,10 @@ class _BenchShellState extends State<BenchShell> {
     final display = PlatformDispatcher.instance.displays.firstOrNull;
     // The isolate bootstrap can silently fall back to the local engine; the
     // aggregator rejects runs whose actual transport mismatches the config.
-    final transport = config.engine == BenchEngine.stable
-        ? 'platform-view'
-        : MapLibreGlNative.activeEngineTransport;
+    final transport =
+        config.engine == BenchEngine.stable
+            ? 'platform-view'
+            : MapLibreGlNative.activeEngineTransport;
     return <String, dynamic>{
       'config': config.toJson(),
       'engineTransport': transport,
