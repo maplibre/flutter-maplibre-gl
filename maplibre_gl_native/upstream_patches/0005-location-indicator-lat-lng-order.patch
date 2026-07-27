@@ -1,14 +1,14 @@
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 89013b6..0d41bdb 100644
+index 34aff01e..a56f47c5 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -4352,16 +4352,19 @@ auto map_set_location_indicator_location(
+@@ -4350,16 +4350,19 @@ auto map_set_location_indicator_location(
      return MLN_STATUS_INVALID_ARGUMENT;
    }
  
-+  // LOCAL SPIKE PATCH (flutter-maplibre-gl): the style-spec "location"
-+  // property of location-indicator layers is [latitude, longitude,
-+  // altitude], NOT GeoJSON order; the renderer reads pos[0] as latitude.
++  // The style-spec "location" property of a location-indicator layer is
++  // [latitude, longitude, altitude], not GeoJSON order: the renderer reads
++  // pos[0] as the latitude.
    auto values = std::array<mln_json_value, 3>{
      mln_json_value{
        .size = sizeof(mln_json_value),

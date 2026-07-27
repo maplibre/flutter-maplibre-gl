@@ -1,16 +1,16 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index 5f1bbe3..87478a0 100644
+index 89c43cf9..d41ab929 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -99,6 +99,15 @@ final class RuntimeHandle {
+@@ -124,6 +124,15 @@ final class RuntimeHandle {
      _check(_c.raw.mln_runtime_run_once(_pointer));
    }
  
-+  /// LOCAL SPIKE PATCH (flutter-maplibre-gl): rebinds the runtime and every
-+  /// handle it owns to the calling OS thread. Dart isolates are not pinned
-+  /// to OS threads (dart-lang/sdk#46943), so an embedder driving the engine
-+  /// from a background isolate must call this whenever the isolate resumed
-+  /// on a different thread, before any other call.
++  /// Rebinds the runtime and every handle it owns to the calling OS thread.
++  ///
++  /// Dart isolates are not pinned to OS threads (dart-lang/sdk#46943), so code
++  /// driving the engine from a background isolate must call this whenever the
++  /// isolate resumed on a different thread, before any other call.
 +  void rebindThread() {
 +    _check(_c.raw.mln_runtime_rebind_thread(_pointer));
 +  }
@@ -19,20 +19,22 @@ index 5f1bbe3..87478a0 100644
    RuntimeEvent? pollEvent() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/runtime.h b/include/maplibre_native_c/runtime.h
-index b88b927..ac5a4cf 100644
+index f7a2bdd1..41056db7 100644
 --- a/include/maplibre_native_c/runtime.h
 +++ b/include/maplibre_native_c/runtime.h
-@@ -716,6 +716,29 @@ MLN_API mln_status mln_runtime_destroy(mln_runtime* runtime) MLN_NOEXCEPT;
+@@ -737,6 +737,31 @@ MLN_API mln_status mln_runtime_destroy(mln_runtime* runtime) MLN_NOEXCEPT;
   */
  MLN_API mln_status mln_runtime_run_once(mln_runtime* runtime) MLN_NOEXCEPT;
  
 +/**
-+ * LOCAL SPIKE PATCH (flutter-maplibre-gl): rebinds the runtime and every
-+ * handle it owns (maps, projections, render sessions) to the calling thread.
++ * Rebinds the runtime and every handle it owns (maps, projections, render
++ * sessions) to the calling thread.
 + *
-+ * Rationale: garbage-collected embedders (Dart isolates) cannot promise a
-+ * stable OS thread; the VM may resume an isolate on another pool thread.
-+ * Calling this at the start of a turn re-homes the owner-thread affinity.
++ * Owner-thread affinity assumes the embedder controls which OS thread its work
++ * runs on. Runtimes with managed concurrency do not: a Dart isolate, a Go
++ * goroutine or a .NET task can resume on a different pool thread between two
++ * calls, through no action of the caller. Calling this first re-homes the
++ * affinity to the thread the caller is actually on.
 + *
 + * Contract:
 + * - No call on the runtime or any of its handles may be in flight.
@@ -53,7 +55,7 @@ index b88b927..ac5a4cf 100644
   * Pops the next queued runtime event.
   *
 diff --git a/src/c_api/runtime.cpp b/src/c_api/runtime.cpp
-index 374f523..8dfcc04 100644
+index 374f5230..8dfcc042 100644
 --- a/src/c_api/runtime.cpp
 +++ b/src/c_api/runtime.cpp
 @@ -2,7 +2,10 @@
@@ -88,14 +90,13 @@ index 374f523..8dfcc04 100644
    return mln::c_api::status_boundary([&]() -> mln_status {
      return mln::core::run_runtime_once(runtime);
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 8ef22ec..7cd0666 100644
+index f742da13..42ea3776 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -2762,6 +2762,25 @@ auto map_request_still_image(mln_map* map) -> mln_status {
+@@ -2779,6 +2779,24 @@ auto map_request_still_image(mln_map* map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
-+
 +auto rebind_maps_to_thread(const mln_runtime* runtime, std::thread::id thread)
 +  -> void {
 +  {
@@ -115,10 +116,10 @@ index 8ef22ec..7cd0666 100644
 +}
 +
  auto map_owner_thread(const mln_map* map) -> std::thread::id {
-   if (map == nullptr) {
-     return {};
+   return map->owner_thread;
+ }
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index 2144aa6..d203300 100644
+index 2144aa67..9a8ac45c 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
 @@ -360,6 +360,12 @@ auto map_set_free_camera_options(
@@ -126,19 +127,19 @@ index 2144aa6..d203300 100644
  auto validate_map(mln_map* map) -> mln_status;
  auto map_owner_thread(const mln_map* map) -> std::thread::id;
 +
-+// LOCAL SPIKE PATCH (flutter-maplibre-gl): re-homes every map owned by
-+// runtime, and every projection (no owner link; single-runtime assumption),
-+// to the given thread. See mln_runtime_rebind_thread in runtime.h.
++// Re-homes every map owned by runtime, and every projection (projections
++// carry no owner link, so they follow the single-runtime assumption), to the
++// given thread. See mln_runtime_rebind_thread in runtime.h.
 +auto rebind_maps_to_thread(const mln_runtime* runtime, std::thread::id thread)
 +  -> void;
  auto map_native(mln_map* map) -> mbgl::Map*;
  auto map_latest_update(mln_map* map) -> std::shared_ptr<mbgl::UpdateParameters>;
  auto map_renderer_observer(mln_map* map) -> mbgl::RendererObserver*;
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 7882626..8947767 100644
+index 02ed61d0..7c081312 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -834,6 +834,13 @@ auto register_render_session(
+@@ -916,6 +916,13 @@ auto register_render_session(
    render_sessions().emplace(handle, std::move(session));
  }
  
@@ -153,32 +154,32 @@ index 7882626..8947767 100644
    if (session == nullptr) {
      set_thread_error("render session must not be null");
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index d08f786..62a237c 100644
+index 8e5aa3d9..28eb531c 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
-@@ -125,6 +125,11 @@ auto register_render_session(
+@@ -127,6 +127,11 @@ auto register_render_session(
    mln_render_session* handle, std::unique_ptr<mln_render_session> session
  ) -> void;
  auto validate_render_session(mln_render_session* session) -> mln_status;
 +
-+// LOCAL SPIKE PATCH (flutter-maplibre-gl): re-homes every live render session
-+// to the given thread (no owner link; single-runtime assumption). See
++// Re-homes every live render session to the given thread (sessions carry no
++// owner link, so this follows the single-runtime assumption). See
 +// mln_runtime_rebind_thread in runtime.h.
 +auto rebind_all_render_sessions_to_thread(std::thread::id thread) -> void;
  auto validate_live_attached_render_session(mln_render_session* session)
    -> mln_status;
  auto erase_render_session(mln_render_session* session)
 diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
-index 4a6016d..9fbaff9 100644
+index d3896ed0..0a2e627d 100644
 --- a/src/runtime/runtime.cpp
 +++ b/src/runtime/runtime.cpp
 @@ -2382,6 +2382,47 @@ auto destroy_runtime(mln_runtime* runtime) -> mln_status {
    return MLN_STATUS_OK;
  }
  
-+// LOCAL SPIKE PATCH (flutter-maplibre-gl): see mln_runtime_rebind_thread in
-+// runtime.h. This handles the runtime itself; maps and render sessions are
-+// re-homed by their own modules from the C API wrapper.
++// See mln_runtime_rebind_thread in runtime.h. This handles the runtime itself;
++// maps and render sessions are re-homed by their own modules, from the C API
++// wrapper.
 +auto rebind_runtime_thread(mln_runtime* runtime) -> mln_status {
 +  if (runtime == nullptr) {
 +    set_thread_error("runtime must not be null");
@@ -221,7 +222,7 @@ index 4a6016d..9fbaff9 100644
    const auto status = validate_runtime(runtime);
    if (status != MLN_STATUS_OK) {
 diff --git a/src/runtime/runtime.hpp b/src/runtime/runtime.hpp
-index a6d3513..010919e 100644
+index a6d3513f..010919ef 100644
 --- a/src/runtime/runtime.hpp
 +++ b/src/runtime/runtime.hpp
 @@ -86,6 +86,7 @@ auto create_runtime(

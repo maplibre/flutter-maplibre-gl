@@ -1,15 +1,15 @@
 diff --git a/src/c_api/dart_shim.cpp b/src/c_api/dart_shim.cpp
-index c645966..c70e0c2 100644
+index 7d7480c6..290d60fe 100644
 --- a/src/c_api/dart_shim.cpp
 +++ b/src/c_api/dart_shim.cpp
-@@ -73,13 +73,28 @@ auto string_equals(const char* left, const char* right) -> bool {
+@@ -93,13 +93,28 @@ auto string_equals(const char* left, const char* right) -> bool {
    return std::strcmp(left, right) == 0;
  }
  
-+// LOCAL SPIKE PATCH (flutter-maplibre-gl): a route URL ending in '*' matches
-+// any request URL sharing the prefix before the '*'. This lets a Dart provider
-+// intercept whole URL families (tiles, glyphs, sprites) instead of exact URLs
-+// only. Proposed for upstreaming alongside PR #187 feedback.
++// A route URL ending in '*' matches any request URL sharing the prefix before
++// the '*'. Exact-URL routes alone cannot express the URL families a provider
++// usually wants to intercept (all tiles of a source, glyph ranges, sprite
++// variants), whose URLs are only known at request time.
 +auto url_matches_route(const char* route_url, const char* request_url) -> bool {
 +  if (route_url == nullptr || request_url == nullptr) {
 +    return false;

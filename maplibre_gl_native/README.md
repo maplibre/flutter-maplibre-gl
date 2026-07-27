@@ -93,13 +93,18 @@ assumed.
 Pinned upstream state (update together):
 
 - Repo: `maplibre/maplibre-native-ffi`, branch `dart` (PR #187),
-  commit `9b2934e8feab7259a45b1def192ca1c13e8f603b`.
+  commit `6ac6cd49e06305646ef23eba4b970fc56c92e17c`.
 - Clone location assumed by the `maplibre_native_ffi` path dependency:
   `../maplibre-native-ffi` (sibling of this repository's checkout).
 
-The pinned tree needs the local patches in `upstream_patches/`; the script
-applies them **in order** and skips any already applied. All are proposed
-for upstreaming:
+The clone is a build artifact: the script resets it to the pin and re-applies
+the whole patch stack on every run, so a re-pin needs no manual cleanup. Run
+with `MLN_KEEP_CLONE=1` when you are editing that tree by hand and want the
+script to leave it alone.
+
+The pinned tree needs the local patches in `upstream_patches/`, applied **in
+order** (they build on each other). All are proposed for upstreaming, and each
+one is one commit's worth of change.
 
 1. `0001-dart-shim-prefix-route-match.patch`: trailing-`*` prefix matching for
    Dart resource-provider routes (the pinned code matches exact URLs only,
@@ -146,7 +151,7 @@ for upstreaming:
 ```sh
 git clone --recurse-submodules https://github.com/maplibre/maplibre-native-ffi.git
 cd maplibre-native-ffi
-git checkout 9b2934e8feab7259a45b1def192ca1c13e8f603b
+git checkout 6ac6cd49e06305646ef23eba4b970fc56c92e17c
 git submodule update --init --recursive
 for p in <this package>/upstream_patches/0*.patch; do git apply "$p"; done
 

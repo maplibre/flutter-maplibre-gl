@@ -2,12 +2,13 @@
 # Builds libmaplibre-native-c.so from the pinned maplibre-native-ffi tree and
 # installs it (stripped) into this package's jniLibs, generating the ffigen
 # Dart bindings along the way. Idempotent: safe to re-run, reuses an existing
-# clone and skips patches that are already applied.
+# clone, and treats that clone as a build artifact (it is reset to the pin and
+# re-patched on every run; set MLN_KEEP_CLONE=1 to work on it by hand instead).
 #
 # Usage: tool/build_native.sh [--backend vulkan|egl] [--ffi-dir <path>]
 set -euo pipefail
 
-PIN=9b2934e8feab7259a45b1def192ca1c13e8f603b
+PIN=6ac6cd49e06305646ef23eba4b970fc56c92e17c
 NDK_PINNED_VERSION=28.1.13356709
 REPO_URL=https://github.com/maplibre/maplibre-native-ffi.git
 
@@ -65,11 +66,24 @@ if [ ! -d "$FFI_DIR/.git" ]; then
   git clone --recurse-submodules "$REPO_URL" "$FFI_DIR"
   git -C "$FFI_DIR" checkout --detach "$PIN"
   git -C "$FFI_DIR" submodule update --init --recursive
+elif [ "${MLN_KEEP_CLONE:-0}" = "1" ]; then
+  HEAD="$(git -C "$FFI_DIR" rev-parse HEAD)"
+  echo "==> MLN_KEEP_CLONE=1: leaving the clone at ${HEAD:0:7} untouched"
+  [ "$HEAD" = "$PIN" ] \
+    || echo "warning: that is not the pin ${PIN:0:7}; the patches below may not apply" >&2
 else
   HEAD="$(git -C "$FFI_DIR" rev-parse HEAD)"
   if [ "$HEAD" != "$PIN" ]; then
-    echo "warning: existing clone is at ${HEAD:0:7}, expected pin ${PIN:0:7}; continuing anyway" >&2
+    echo "==> re-pinning the clone: ${HEAD:0:7} -> ${PIN:0:7}"
+    git -C "$FFI_DIR" fetch origin
+    git -C "$FFI_DIR" checkout -f --detach "$PIN"
+    git -C "$FFI_DIR" submodule update --init --recursive
   fi
+  # The clone is a build artifact: start from the pinned tree so the patch
+  # stack applies the same way every run. Patches build on each other (0007
+  # lands next to what 0004 adds), so "is this one already applied?" has no
+  # order-independent answer and cannot replace the reset.
+  git -C "$FFI_DIR" checkout -f -- .
 fi
 
 echo "==> applying local patches"
@@ -81,7 +95,7 @@ for p in "$PKG_DIR"/upstream_patches/0*.patch; do
   elif git -C "$FFI_DIR" apply --reverse --check "$p" 2>/dev/null; then
     echo "    already applied $name"
   else
-    die "$name neither applies cleanly nor is already applied; the clone at $FFI_DIR has diverged from the pin"
+    die "$name does not apply to the clone at $FFI_DIR (pin ${PIN:0:7}); rebase it or unset MLN_KEEP_CLONE"
   fi
 done
 
