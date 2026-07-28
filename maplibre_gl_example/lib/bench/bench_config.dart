@@ -35,6 +35,7 @@ class BenchConfig {
     required this.stressSteps,
     required this.dynamicSteps,
     required this.apiIterations,
+    required this.maxFps,
     required this.gitRevision,
   });
 
@@ -69,6 +70,7 @@ class BenchConfig {
       ]),
       dynamicSteps: intList('dynamic_steps', const [500, 1000, 2000]),
       apiIterations: int.tryParse(params['api_iters'] ?? '') ?? 300,
+      maxFps: int.tryParse(params['max_fps'] ?? ''),
       gitRevision: params['rev'] ?? 'unknown',
     );
   }
@@ -108,6 +110,12 @@ class BenchConfig {
 
   /// Iterations per API-latency micro-benchmark.
   final int apiIterations;
+
+  /// Frame-rate cap applied once the style has loaded, or null to leave the
+  /// engine at its default pacing. A diagnostic knob rather than a benchmark
+  /// dimension: rendering less often than the display separates work that
+  /// costs what it costs from time spent waiting on the presentation queue.
+  final int? maxFps;
 
   final String gitRevision;
 

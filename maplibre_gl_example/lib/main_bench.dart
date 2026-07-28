@@ -125,6 +125,10 @@ class _BenchShellState extends State<BenchShell> {
   Future<void> _run() async {
     final controller = _controller;
     final viewportSize = MediaQuery.sizeOf(context);
+    final maxFps = widget.config.maxFps;
+    if (maxFps != null) {
+      await controller.setMaximumFps(maxFps);
+    }
     try {
       await controller.setFrameStatsEnabled(true);
     } on Exception {
