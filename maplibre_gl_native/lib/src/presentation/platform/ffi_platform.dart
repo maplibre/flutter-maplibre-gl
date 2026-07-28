@@ -903,7 +903,9 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     _send(
       SetBoundsCommand(
         _requireSession().id,
-        bounds: BoundsSpec(south: south, west: west, north: north, east: east),
+        bounds: BoundsConstraintSpec.bounded(
+          BoundsSpec(south: south, west: west, north: north, east: east),
+        ),
       ),
     );
   }

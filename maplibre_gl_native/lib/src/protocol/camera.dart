@@ -124,8 +124,8 @@ class SetGestureInProgressCommand extends SessionCommand {
   final bool inProgress;
 }
 
-/// Constrains the camera. Null fields are left unchanged; to clear a bounds
-/// constraint pass world bounds.
+/// Constrains the camera. Null fields are left unchanged; see
+/// [BoundsConstraintSpec] for how to remove a bounds constraint.
 class SetBoundsCommand extends SessionCommand {
   const SetBoundsCommand(
     super.sessionId, {
@@ -136,7 +136,7 @@ class SetBoundsCommand extends SessionCommand {
     this.maxPitch,
   });
 
-  final BoundsSpec? bounds;
+  final BoundsConstraintSpec? bounds;
   final double? minZoom;
   final double? maxZoom;
   final double? minPitch;

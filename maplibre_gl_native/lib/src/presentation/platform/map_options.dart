@@ -57,14 +57,20 @@ List<SessionCommand> cameraConstraintCommands(
     commands.add(
       SetBoundsCommand(
         sessionId,
-        // A null corner means unbounded on that side, and the world edge is
-        // how the reference backends express it.
-        bounds: BoundsSpec(
-          south: (southwest?[0] as num?)?.toDouble() ?? BoundsSpec.world.south,
-          west: (southwest?[1] as num?)?.toDouble() ?? BoundsSpec.world.west,
-          north: (northeast?[0] as num?)?.toDouble() ?? BoundsSpec.world.north,
-          east: (northeast?[1] as num?)?.toDouble() ?? BoundsSpec.world.east,
-        ),
+        // No bounds list at all is CameraTargetBounds.unbounded, which removes
+        // the constraint rather than widening it to the world: world bounds
+        // would still clamp longitude and stop the map crossing the
+        // antimeridian.
+        bounds: southwest == null || northeast == null
+            ? const BoundsConstraintSpec.unbounded()
+            : BoundsConstraintSpec.bounded(
+                BoundsSpec(
+                  south: (southwest[0] as num).toDouble(),
+                  west: (southwest[1] as num).toDouble(),
+                  north: (northeast[0] as num).toDouble(),
+                  east: (northeast[1] as num).toDouble(),
+                ),
+              ),
       ),
     );
   }

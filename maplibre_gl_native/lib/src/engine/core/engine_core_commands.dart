@@ -230,7 +230,12 @@ extension EngineCommandDispatch on EngineCore {
         // set by an earlier one.
         session.map.setBounds(
           mln.BoundOptions(
-            bounds: bounds == null ? null : _latLngBounds(bounds),
+            bounds: switch (bounds) {
+              null => null,
+              BoundsConstraintSpec(bounds: final box?) =>
+                mln.BoundsConstraint.bounded(_latLngBounds(box)),
+              BoundsConstraintSpec() => const mln.BoundsConstraint.unbounded(),
+            },
             minZoom: command.minZoom,
             maxZoom: command.maxZoom,
             minPitch: command.minPitch,

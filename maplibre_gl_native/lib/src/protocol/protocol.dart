@@ -102,10 +102,6 @@ class BoundsSpec {
     required this.east,
   });
 
-  /// The whole world, which is how the reference backends express an absent
-  /// constraint, and therefore how a previous one is cleared.
-  static const world = BoundsSpec(south: -90, west: -180, north: 90, east: 180);
-
   /// Latitude of the southern edge.
   final double south;
 
@@ -117,6 +113,24 @@ class BoundsSpec {
 
   /// Longitude of the eastern edge.
   final double east;
+}
+
+/// Where the camera center is allowed to go.
+///
+/// Three states, because the engine distinguishes them: absent means leave the
+/// current constraint alone, [BoundsConstraintSpec.bounded] replaces it, and
+/// [BoundsConstraintSpec.unbounded] removes it. Removing is not the same as
+/// constraining to the whole world: world bounds still clamp longitude to
+/// [-180, 180], which stops the map from panning across the antimeridian.
+class BoundsConstraintSpec {
+  /// Keeps the camera center inside [bounds].
+  const BoundsConstraintSpec.bounded(BoundsSpec this.bounds);
+
+  /// Lets the camera center go anywhere.
+  const BoundsConstraintSpec.unbounded() : bounds = null;
+
+  /// The box for a bounded constraint, null when unbounded.
+  final BoundsSpec? bounds;
 }
 
 /// A geographic coordinate travelling back from the engine.

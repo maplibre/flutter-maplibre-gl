@@ -111,10 +111,14 @@ class EngineCore {
     return _sessions.values.any((session) => session.renderPending);
   }
 
-  /// Runs one owner-thread task and dispatches queued runtime events to the
-  /// sessions they belong to.
+  /// Drains the runtime's owner-thread work and dispatches queued runtime
+  /// events to the sessions they belong to.
+  ///
+  /// The zero timeout returns as soon as the drain is done instead of parking:
+  /// this isolate takes its cadence from the display pulse, and it has to stay
+  /// free to service its own port. See [FrameDriver].
   void pump() {
-    _runtime.runOnce();
+    _runtime.pump();
     while (true) {
       final event = _runtime.pollEvent();
       if (event == null) break;
