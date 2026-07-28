@@ -98,6 +98,15 @@ class EngineCore {
   /// frame was actually rendered. Used by the self-driving isolate loop.
   bool frame() {
     pump();
+    return renderPending();
+  }
+
+  /// Renders every session with a frame pending, plus any queued snapshot, and
+  /// reports whether anything was drawn.
+  ///
+  /// The second half of [frame], separate so the frame driver can time the
+  /// drain and the draw as the distinct costs they are (see `FramePathProbe`).
+  bool renderPending() {
     var rendered = false;
     for (final session in _sessions.values) {
       rendered = session.renderIfNeeded() || rendered;

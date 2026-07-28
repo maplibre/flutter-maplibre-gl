@@ -5,6 +5,7 @@ import 'dart:ffi';
 import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'engine_core.dart';
+import 'frame_path_probe.dart';
 import 'vsync_pulse.dart';
 
 /// Self-scheduling frame loop of the engine isolate.
@@ -24,6 +25,7 @@ class FrameDriver {
           ? (1e6 / displayRefreshRate).round()
           : 11111 {
     _pulser = VsyncPulser(_onPulse);
+    _probe = FramePathProbe.createIfArmed(vsyncPeriodUs: _vsyncPeriodUs);
   }
 
   /// Timer pacing when neither the display refresh rate nor vsync pulses are
@@ -41,6 +43,9 @@ class FrameDriver {
   final Duration _fallbackInterval;
   final int _vsyncPeriodUs;
   late final VsyncPulser _pulser;
+
+  /// Latency instrumentation, null unless the build armed it.
+  late final FramePathProbe? _probe;
   final Stopwatch _clock = Stopwatch()..start();
   Timer? _frameTimer;
   Timer? _idlePump;
@@ -143,9 +148,16 @@ class FrameDriver {
   /// One display frame elapsed; render if it is our cadence to do so.
   void _onPulse(int frameTimeNanos) {
     _lastPulseUs = _clock.elapsedMicroseconds;
+    _probe?.pulse(frameTimeNanos);
     // Trailing pulse after park, or re-entrant during a long frame: drop.
-    if (_parked || _inFrame) return;
-    if (_lastPulseUs - _lastFrameStartUs < _minFrameIntervalUs) return;
+    if (_parked || _inFrame) {
+      _probe?.dropPulse(_parked ? PulseDrop.parked : PulseDrop.inFrame);
+      return;
+    }
+    if (_lastPulseUs - _lastFrameStartUs < _minFrameIntervalUs) {
+      _probe?.dropPulse(PulseDrop.floor);
+      return;
+    }
     _frameTimer?.cancel();
     _frameTimer = null;
     _frame();
@@ -166,9 +178,15 @@ class FrameDriver {
     _frameTimer = null;
     _inFrame = true;
     _lastFrameStartUs = _clock.elapsedMicroseconds;
+    final probe = _probe;
+    probe?.beginTurn();
     ensureThread();
     final renderClock = Stopwatch()..start();
-    final rendered = developer.Timeline.timeSync('mln.frame', _core.frame);
+    final rendered = developer.Timeline.timeSync(
+      'mln.frame',
+      probe == null ? _core.frame : _framePhases,
+    );
+    probe?.endTurn(rendered: rendered);
     _inFrame = false;
     _statsFrames += 1;
     if (rendered) {
@@ -187,6 +205,15 @@ class FrameDriver {
       return;
     }
     _park();
+  }
+
+  /// [EngineCore.frame] in its two phases, so the probe can stamp the boundary
+  /// between draining the runtime and drawing. Only used while it is armed;
+  /// the unmeasured path calls `frame()` directly.
+  bool _framePhases() {
+    _core.pump();
+    _probe!.pumped();
+    return _core.renderPending();
   }
 
   void _maybeLogStats() {

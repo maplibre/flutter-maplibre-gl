@@ -232,6 +232,7 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 #include <dlfcn.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "dart_api_dl.h"
 
@@ -376,4 +377,18 @@ MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
   g_vsync_running = false;
   g_vsync_port = 0;
   pthread_mutex_unlock(&g_vsync_mutex);
+}
+
+// Reads the clock the frame times above are stamped with, so Dart can tell how
+// old a pulse is by the time it handles it. AChoreographer uses
+// CLOCK_MONOTONIC and Dart's Stopwatch has an unrelated epoch, so subtracting
+// one from the other is only meaningful through a shared reader. Any thread;
+// returns 0 if the clock is unavailable, which the caller reads as "no
+// measurement".
+MLN_SHIM_EXPORT int64_t mln_shim_monotonic_nanos(void) {
+  struct timespec now;
+  if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+    return 0;
+  }
+  return (int64_t)now.tv_sec * 1000000000 + (int64_t)now.tv_nsec;
 }
