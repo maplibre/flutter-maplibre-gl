@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index d41ab929..a0363934 100644
+index 5d0479c4..03e76011 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -1420,6 +1420,28 @@ final class MapHandle {
+@@ -1601,6 +1601,28 @@ final class MapHandle {
      _clearCustomGeometryCallbacks();
    }
  
@@ -32,10 +32,10 @@ index d41ab929..a0363934 100644
    void requestRepaint() {
      _check(_c.raw.mln_map_request_repaint(_pointer));
 diff --git a/include/maplibre_native_c/map.h b/include/maplibre_native_c/map.h
-index a6951727..732fdcf2 100644
+index 482ea8c8..58cee194 100644
 --- a/include/maplibre_native_c/map.h
 +++ b/include/maplibre_native_c/map.h
-@@ -1159,6 +1159,28 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
+@@ -1227,6 +1227,28 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
  MLN_API mln_status
  mln_map_set_style_json(mln_map* map, const char* json) MLN_NOEXCEPT;
  
@@ -65,10 +65,10 @@ index a6951727..732fdcf2 100644
  }
  #endif
 diff --git a/src/c_api/map.cpp b/src/c_api/map.cpp
-index b7eed0b4..64b79dfa 100644
+index 0a25a79e..206b4924 100644
 --- a/src/c_api/map.cpp
 +++ b/src/c_api/map.cpp
-@@ -108,6 +108,16 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
+@@ -113,6 +113,16 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
    });
  }
  
@@ -86,10 +86,10 @@ index b7eed0b4..64b79dfa 100644
    const mln_style_id_list* list, size_t* out_count
  ) noexcept -> mln_status {
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 42ea3776..34aff01e 100644
+index b8390b8f..0c6a02f2 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -2901,6 +2901,37 @@ auto map_set_style_json(mln_map* map, const char* json) -> mln_status {
+@@ -3281,6 +3281,37 @@ auto map_set_style_json(mln_map* map, const char* json) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -128,10 +128,10 @@ index 42ea3776..34aff01e 100644
    -> mln_status {
    if (list == nullptr) {
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index 9a8ac45c..36a4911c 100644
+index 35c2c8da..cb3e4276 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -40,6 +40,9 @@ auto map_request_repaint(mln_map* map) -> mln_status;
+@@ -41,6 +41,9 @@ auto map_request_repaint(mln_map* map) -> mln_status;
  auto map_request_still_image(mln_map* map) -> mln_status;
  auto map_set_style_url(mln_map* map, const char* url) -> mln_status;
  auto map_set_style_json(mln_map* map, const char* json) -> mln_status;

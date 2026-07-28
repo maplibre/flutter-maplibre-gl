@@ -1,8 +1,8 @@
-diff --git a/src/c_api/dart_shim.cpp b/src/c_api/dart_shim.cpp
-index 7d7480c6..290d60fe 100644
---- a/src/c_api/dart_shim.cpp
-+++ b/src/c_api/dart_shim.cpp
-@@ -93,13 +93,28 @@ auto string_equals(const char* left, const char* right) -> bool {
+diff --git a/src/c_api/callback_adapter.cpp b/src/c_api/callback_adapter.cpp
+index 4bd3feea..b61ca455 100644
+--- a/src/c_api/callback_adapter.cpp
++++ b/src/c_api/callback_adapter.cpp
+@@ -87,13 +87,28 @@ auto string_equals(const char* left, const char* right) -> bool {
    return std::strcmp(left, right) == 0;
  }
  
@@ -22,7 +22,7 @@ index 7d7480c6..290d60fe 100644
 +}
 +
  auto request_matches_route(
-   std::span<const DartQueuedResourceProviderRoute> routes,
+   std::span<const AdapterQueuedResourceProviderRoute> routes,
    const mln_resource_request& request
  ) -> bool {
    return std::ranges::any_of(routes, [&request](const auto& route) -> bool {

@@ -1,8 +1,8 @@
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 34aff01e..a56f47c5 100644
+index 0c6a02f2..71ec1cb5 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -4350,16 +4350,19 @@ auto map_set_location_indicator_location(
+@@ -4766,16 +4766,19 @@ auto map_set_location_indicator_location(
      return MLN_STATUS_INVALID_ARGUMENT;
    }
  

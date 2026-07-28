@@ -1,9 +1,9 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index 89c43cf9..d41ab929 100644
+index 8d8d8172..5d0479c4 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -124,6 +124,15 @@ final class RuntimeHandle {
-     _check(_c.raw.mln_runtime_run_once(_pointer));
+@@ -154,6 +154,15 @@ final class RuntimeHandle {
+     });
    }
  
 +  /// Rebinds the runtime and every handle it owns to the calling OS thread.
@@ -19,12 +19,12 @@ index 89c43cf9..d41ab929 100644
    RuntimeEvent? pollEvent() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/runtime.h b/include/maplibre_native_c/runtime.h
-index f7a2bdd1..0bfed6ce 100644
+index ebd48865..fce736ce 100644
 --- a/include/maplibre_native_c/runtime.h
 +++ b/include/maplibre_native_c/runtime.h
-@@ -737,6 +737,30 @@ MLN_API mln_status mln_runtime_destroy(mln_runtime* runtime) MLN_NOEXCEPT;
+@@ -924,6 +924,30 @@ MLN_API mln_status mln_wake_source_signal(mln_wake_source* source) MLN_NOEXCEPT;
   */
- MLN_API mln_status mln_runtime_run_once(mln_runtime* runtime) MLN_NOEXCEPT;
+ MLN_API void mln_wake_source_destroy(mln_wake_source* source) MLN_NOEXCEPT;
  
 +/**
 + * Rebinds the runtime and every handle it owns (maps, projections, render
@@ -54,7 +54,7 @@ index f7a2bdd1..0bfed6ce 100644
   * Pops the next queued runtime event.
   *
 diff --git a/src/c_api/runtime.cpp b/src/c_api/runtime.cpp
-index 374f5230..b6bccc49 100644
+index 49983f8c..453a6006 100644
 --- a/src/c_api/runtime.cpp
 +++ b/src/c_api/runtime.cpp
 @@ -2,11 +2,14 @@
@@ -72,7 +72,7 @@ index 374f5230..b6bccc49 100644
  #include "resources/custom_resource_provider.hpp"
  
  auto mln_runtime_options_default(void) noexcept -> mln_runtime_options {
-@@ -321,6 +324,19 @@ auto mln_runtime_destroy(mln_runtime* runtime) noexcept -> mln_status {
+@@ -328,6 +331,19 @@ auto mln_runtime_destroy(mln_runtime* runtime) noexcept -> mln_status {
    });
  }
  
@@ -89,14 +89,14 @@ index 374f5230..b6bccc49 100644
 +  });
 +}
 +
- auto mln_runtime_run_once(mln_runtime* runtime) noexcept -> mln_status {
+ auto mln_runtime_pump(mln_runtime* runtime, int64_t timeout_ms) noexcept
+   -> mln_status {
    return mln::c_api::status_boundary([&]() -> mln_status {
-     return mln::core::run_runtime_once(runtime);
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index f742da13..42ea3776 100644
+index e96a67e2..b8390b8f 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -2779,6 +2779,24 @@ auto map_request_still_image(mln_map* map) -> mln_status {
+@@ -3155,6 +3155,24 @@ auto map_request_still_image(mln_map* map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -122,13 +122,13 @@ index f742da13..42ea3776 100644
    return map->owner_thread;
  }
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index 2144aa67..9a8ac45c 100644
+index fc0e17b3..35c2c8da 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -360,6 +360,12 @@ auto map_set_free_camera_options(
- ) -> mln_status;
+@@ -368,6 +368,12 @@ auto map_set_free_camera_options(
  auto validate_map(mln_map* map) -> mln_status;
  auto map_owner_thread(const mln_map* map) -> std::thread::id;
+ auto map_scale_factor(const mln_map* map) -> double;
 +
 +// Re-homes every map owned by runtime, and every projection (projections
 +// carry no owner link, so they follow the single-runtime assumption), to the
@@ -139,7 +139,7 @@ index 2144aa67..9a8ac45c 100644
  auto map_latest_update(mln_map* map) -> std::shared_ptr<mbgl::UpdateParameters>;
  auto map_renderer_observer(mln_map* map) -> mbgl::RendererObserver*;
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 02ed61d0..7c081312 100644
+index 67aa0479..12076c6b 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
 @@ -916,6 +916,13 @@ auto register_render_session(
@@ -173,11 +173,11 @@ index 8e5aa3d9..28eb531c 100644
    -> mln_status;
  auto erase_render_session(mln_render_session* session)
 diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
-index d3896ed0..0a2e627d 100644
+index 9ade5dfa..bc146bbe 100644
 --- a/src/runtime/runtime.cpp
 +++ b/src/runtime/runtime.cpp
-@@ -2382,6 +2382,47 @@ auto destroy_runtime(mln_runtime* runtime) -> mln_status {
-   return MLN_STATUS_OK;
+@@ -2516,6 +2516,47 @@ auto signal_wake(const std::shared_ptr<WakeState>& state) noexcept -> void {
+   state->condition.notify_all();
  }
  
 +// See mln_runtime_rebind_thread in runtime.h. This handles the runtime itself;
@@ -221,18 +221,18 @@ index d3896ed0..0a2e627d 100644
 +  return MLN_STATUS_OK;
 +}
 +
- auto run_runtime_once(mln_runtime* runtime) -> mln_status {
+ auto pump_runtime(mln_runtime* runtime, int64_t timeout_ms) -> mln_status {
    const auto status = validate_runtime(runtime);
    if (status != MLN_STATUS_OK) {
 diff --git a/src/runtime/runtime.hpp b/src/runtime/runtime.hpp
-index a6d3513f..010919ef 100644
+index b979af90..89cb025b 100644
 --- a/src/runtime/runtime.hpp
 +++ b/src/runtime/runtime.hpp
-@@ -86,6 +86,7 @@ auto create_runtime(
+@@ -162,6 +162,7 @@ auto create_runtime(
  ) -> mln_status;
  auto destroy_runtime(mln_runtime* runtime) -> mln_status;
- auto run_runtime_once(mln_runtime* runtime) -> mln_status;
+ auto pump_runtime(mln_runtime* runtime, int64_t timeout_ms) -> mln_status;
 +auto rebind_runtime_thread(mln_runtime* runtime) -> mln_status;
- auto poll_runtime_event(
-   mln_runtime* runtime, mln_runtime_event* out_event, bool* out_has_event
- ) -> mln_status;
+ auto acquire_wake_source(mln_runtime* runtime, mln_wake_source** out_source)
+   -> mln_status;
+ auto signal_wake_source(mln_wake_source* source) -> mln_status;

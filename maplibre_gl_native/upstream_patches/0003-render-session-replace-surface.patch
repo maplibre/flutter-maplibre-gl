@@ -1,5 +1,5 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index 70381fd8..0caacb9f 100644
+index a582ee4a..5f720594 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 @@ -149,6 +149,39 @@ final class RenderSessionHandle {
@@ -43,7 +43,7 @@ index 70381fd8..0caacb9f 100644
    bool renderUpdate() {
      _checkNoActiveTextureFrame('render update');
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index ad96e505..0ab5e61a 100644
+index d5aaf9c3..2bc02673 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
 @@ -58,6 +58,68 @@ MLN_API mln_status mln_render_session_resize(
@@ -216,7 +216,7 @@ index 756c3117..3c462872 100644
    OpenGLSurfaceBackend backend_;
  };
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 7c081312..83d746a8 100644
+index 12076c6b..9c2b4604 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
 @@ -1042,6 +1042,12 @@ auto render_session_resize(

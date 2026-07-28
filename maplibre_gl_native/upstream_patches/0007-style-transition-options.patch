@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index a0363934..20cf74ac 100644
+index 03e76011..079b492e 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -1420,6 +1420,29 @@ final class MapHandle {
+@@ -1601,6 +1601,29 @@ final class MapHandle {
      _clearCustomGeometryCallbacks();
    }
  
@@ -33,10 +33,10 @@ index a0363934..20cf74ac 100644
    String getStyleJson() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/map.h b/include/maplibre_native_c/map.h
-index 732fdcf2..9d14b54b 100644
+index 58cee194..519bd78b 100644
 --- a/include/maplibre_native_c/map.h
 +++ b/include/maplibre_native_c/map.h
-@@ -1159,6 +1159,32 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
+@@ -1227,6 +1227,32 @@ mln_map_set_style_url(mln_map* map, const char* url) MLN_NOEXCEPT;
  MLN_API mln_status
  mln_map_set_style_json(mln_map* map, const char* json) MLN_NOEXCEPT;
  
@@ -70,10 +70,10 @@ index 732fdcf2..9d14b54b 100644
   * Copies the current style as a full style-spec JSON document into
   * caller-owned memory.
 diff --git a/src/c_api/map.cpp b/src/c_api/map.cpp
-index 64b79dfa..40ed22fc 100644
+index 206b4924..72348594 100644
 --- a/src/c_api/map.cpp
 +++ b/src/c_api/map.cpp
-@@ -108,6 +108,17 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
+@@ -113,6 +113,17 @@ auto mln_map_set_style_json(mln_map* map, const char* json) noexcept
    });
  }
  
@@ -92,10 +92,10 @@ index 64b79dfa..40ed22fc 100644
    mln_map* map, char* out_json, size_t json_capacity, size_t* out_json_size
  ) noexcept -> mln_status {
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index a56f47c5..29c9d011 100644
+index 71ec1cb5..6de3521d 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -191,6 +191,27 @@ auto validate_zoom_option(double zoom, const char* name) -> mln_status {
+@@ -194,6 +194,27 @@ auto validate_zoom_option(double zoom, const char* name) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -123,7 +123,7 @@ index a56f47c5..29c9d011 100644
  auto validate_tile_source_option_header(
    const mln_style_tile_source_options& options
  ) -> mln_status {
-@@ -2872,6 +2893,39 @@ auto map_set_style_url(mln_map* map, const char* url) -> mln_status {
+@@ -3252,6 +3273,39 @@ auto map_set_style_url(mln_map* map, const char* url) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -164,10 +164,10 @@ index a56f47c5..29c9d011 100644
    const auto status = validate_map(map);
    if (status != MLN_STATUS_OK) {
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index 36a4911c..df3a3725 100644
+index cb3e4276..c07b3f9e 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -40,6 +40,10 @@ auto map_request_repaint(mln_map* map) -> mln_status;
+@@ -41,6 +41,10 @@ auto map_request_repaint(mln_map* map) -> mln_status;
  auto map_request_still_image(mln_map* map) -> mln_status;
  auto map_set_style_url(mln_map* map, const char* url) -> mln_status;
  auto map_set_style_json(mln_map* map, const char* json) -> mln_status;

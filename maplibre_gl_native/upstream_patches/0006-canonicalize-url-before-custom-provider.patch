@@ -1,31 +1,31 @@
 diff --git a/src/resources/resource_loader.cpp b/src/resources/resource_loader.cpp
-index ec4a3eb4..75bd9a05 100644
+index 058f84d5..c605f631 100644
 --- a/src/resources/resource_loader.cpp
 +++ b/src/resources/resource_loader.cpp
-@@ -18,6 +18,7 @@
+@@ -22,6 +22,7 @@
  #include <mbgl/util/client_options.hpp>
  #include <mbgl/util/event.hpp>
  #include <mbgl/util/logging.hpp>
 +#include <mbgl/util/mapbox.hpp>
  #include <mbgl/util/string.hpp>
+ #include <mbgl/util/tile_server_options.hpp>
  
- #include "resources/resource_loader.hpp"
-@@ -102,8 +103,13 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
-     const auto provider =
-       runtime_resource_provider(resource_options_.platformContext());
-     if (can_request_network(resource) && provider.has_value()) {
-+      // Canonicalize scheme-alias URLs (for example "maplibre://tiles")
-+      // before consulting the provider, as OnlineFileSource::request does
-+      // before fetching. Otherwise an alias URL never matches the provider's
-+      // http(s) routes and silently falls through to the built-in client.
-       auto request = request_custom_resource(
--        resource, provider->callback, provider->user_data, callback
-+        canonical_resource(resource), provider->callback, provider->user_data,
-+        callback
+@@ -198,8 +199,13 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
        );
-       if (request != nullptr) {
-         return request;
-@@ -163,6 +169,43 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
+       if (provider.has_value()) {
+         provider_declined = true;
++        // Canonicalize scheme-alias URLs (for example "maplibre://tiles")
++        // before consulting the provider, as OnlineFileSource::request does
++        // before fetching. Otherwise an alias URL never matches the provider's
++        // http(s) routes and silently falls through to the built-in client.
+         auto request = request_custom_resource(
+-          resource, provider->callback(), provider->user_data(), callback
++          canonical_resource(resource), provider->callback(),
++          provider->user_data(), callback
+         );
+         if (request != nullptr) {
+           return request;
+@@ -269,6 +275,43 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
    }
  
   private:
@@ -66,6 +66,6 @@ index ec4a3eb4..75bd9a05 100644
 +    return result;
 +  }
 +
-   static auto runtime_resource_provider(void* platform_context)
-     -> std::optional<ResourceProvider> {
-     const auto* runtime = find_runtime_for_platform_context(platform_context);
+   // Reports the scheme of a URL the online source is unable to serve. The
+   // resource loader routes file, asset, mbtiles, and pmtiles URLs to their own
+   // sources ahead of the network, so anything left here reaches an HTTP
