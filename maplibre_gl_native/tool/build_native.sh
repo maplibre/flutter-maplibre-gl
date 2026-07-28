@@ -12,7 +12,7 @@
 # Usage: tool/build_native.sh [--backend vulkan|egl] [--ffi-dir <path>]
 set -euo pipefail
 
-PIN=6ac6cd49e06305646ef23eba4b970fc56c92e17c
+PIN=fbc0da587d96de6baef6783069005c4d4758c135
 NDK_PINNED_VERSION=28.1.13356709
 REPO_URL=https://github.com/maplibre/maplibre-native-ffi.git
 
@@ -167,7 +167,18 @@ DEST_DIR="$PKG_DIR/android/src/main/jniLibs/arm64-v8a"
 mkdir -p "$DEST_DIR"
 "$LLVM_STRIP" --strip-unneeded -o "$DEST_DIR/libmaplibre-native-c.so" "$BUILT"
 
-echo "==> done: $DEST_DIR/libmaplibre-native-c.so ($(du -h "$DEST_DIR/libmaplibre-native-c.so" | cut -f1))"
+# The upstream Android presets build against the shared C++ runtime
+# (ANDROID_STL=c++_shared), so the library needs libc++_shared.so beside it at
+# load time and nothing else in a Flutter app ships one. Take it from the same
+# NDK that produced the library, so the two always match.
+CXX_SHARED="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_TAG/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
+[ -f "$CXX_SHARED" ] || die "libc++_shared.so not found at $CXX_SHARED"
+"$LLVM_STRIP" --strip-unneeded -o "$DEST_DIR/libc++_shared.so" "$CXX_SHARED"
+
+echo "==> done: $DEST_DIR"
+for lib in libmaplibre-native-c.so libc++_shared.so; do
+  echo "    $lib ($(du -h "$DEST_DIR/$lib" | cut -f1))"
+done
 
 # Only a run that got this far describes a tree worth reusing. Written after
 # ffigen because that step rewrites a tracked file, which the tree hash covers.
