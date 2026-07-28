@@ -158,26 +158,25 @@ for p in <this package>/upstream_patches/0*.patch; do git apply "$p"; done
 # Toolchain (installs pinned cmake/ninja/rust/... into mise's own dirs)
 export ANDROID_HOME="$HOME/Library/Android/sdk"   # Linux: $HOME/Android/Sdk
 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.1.13356709"
-export MISE_ENV=android-arm64-vulkan              # or android-arm64-egl
 mise trust --all
 mise install
 mise x -- rustup target add aarch64-linux-android
 
-# Build (arm64-v8a)
-mise run //:build
+# Build (arm64-v8a). The preset is an argument: without it the task builds for
+# the host, not for Android.
+mise run //:build android-arm64-vulkan   # or android-arm64-egl
 
-# Generate the ffigen bindings (maplibre_native_c.g.dart is gitignored
-# upstream and must be generated before the Dart package compiles; the
-# `mise run //bindings/dart:ffigen` task does the same when its rust
-# toolchain bootstrap cooperates)
-(cd bindings/dart && dart pub get && dart run ffigen --config ffigen.yaml)
+# Generate the ffigen bindings (maplibre_native_c.g.dart is gitignored upstream
+# and must be generated before the Dart package compiles; `mise run
+# //bindings/dart:ffigen` does the same when its toolchain bootstrap cooperates)
+(cd bindings/dart && dart pub get && dart run tool/ffigen.dart)
 
 # Strip and copy into this package
 HOST_TAG=darwin-x86_64                            # Linux: linux-x86_64
 NDK_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_TAG/bin"
 "$NDK_BIN/llvm-strip" --strip-unneeded \
   -o <this package>/android/src/main/jniLibs/arm64-v8a/libmaplibre-native-c.so \
-  build/$MISE_ENV/libmaplibre-native-c.so
+  build/android-arm64-vulkan/libmaplibre-native-c.so   # same preset as above
 ```
 
 </details>
