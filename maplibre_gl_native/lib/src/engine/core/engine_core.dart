@@ -35,7 +35,8 @@ class EngineCore {
   final mln.RuntimeHandle _runtime;
   final Map<int, _EngineSession> _sessions = <int, _EngineSession>{};
   final List<_SnapshotJob> _snapshots = <_SnapshotJob>[];
-  final Map<int, _PendingOfflineOp> _offlineOps = <int, _PendingOfflineOp>{};
+  final Map<mln.OfflineOperationHandle, _PendingOfflineOp> _offlineOps =
+      <mln.OfflineOperationHandle, _PendingOfflineOp>{};
   int _nextSessionId = 1;
 
   /// Sink for events pushed to the presentation side.

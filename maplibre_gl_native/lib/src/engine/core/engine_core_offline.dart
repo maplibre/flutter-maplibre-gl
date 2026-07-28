@@ -24,7 +24,7 @@ extension EngineOfflineOps on EngineCore {
       }
       return;
     }
-    _offlineOps[handle.id] = _PendingOfflineOp(requestId, handle, take);
+    _offlineOps[handle] = _PendingOfflineOp(requestId, handle, take);
   }
 
   /// Routes offline runtime events; returns whether the event was consumed.
@@ -33,7 +33,11 @@ extension EngineOfflineOps on EngineCore {
     switch (event.eventType) {
       case mln.RuntimeEventType.offlineOperationCompleted:
         if (payload is! mln.RuntimeEventOfflineOperationCompleted) return true;
-        final pending = _offlineOps.remove(payload.operationId);
+        // The event carries the handle itself; a null one means the runtime is
+        // no longer tracking that operation, so there is nothing to resolve.
+        final operation = payload.operation;
+        if (operation == null) return true;
+        final pending = _offlineOps.remove(operation);
         if (pending == null) return true;
         final take = pending.take;
         final requestId = pending.requestId;
@@ -110,6 +114,10 @@ Map<String, dynamic> _regionToMap(mln.OfflineRegionInfo info) {
       d.maxZoom,
       d.includeIdeographs,
     ),
+    // A definition type this binding version does not understand, which can
+    // only come from another consumer writing to the same cache database.
+    // The region is still listed, with the fields we cannot read left empty.
+    mln.UnknownOfflineRegionDefinition() => ('', null, 0.0, 0.0, false),
   };
   return <String, dynamic>{
     'id': info.id,

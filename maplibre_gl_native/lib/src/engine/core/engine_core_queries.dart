@@ -127,8 +127,8 @@ extension EngineQueryDispatch on EngineCore {
         ? mln.RenderedQueryPoint(mln.ScreenPoint(query.x!, query.y!))
         : mln.RenderedQueryBox(
             mln.ScreenBox(
-              mln.ScreenPoint(query.left!, query.top!),
-              mln.ScreenPoint(query.right!, query.bottom!),
+              min: mln.ScreenPoint(query.left!, query.top!),
+              max: mln.ScreenPoint(query.right!, query.bottom!),
             ),
           );
     final layerIds = query.layerIds;
@@ -165,11 +165,11 @@ extension EngineQueryDispatch on EngineCore {
     final geometry = query.tolerance > 0
         ? mln.RenderedQueryBox(
             mln.ScreenBox(
-              mln.ScreenPoint(
+              min: mln.ScreenPoint(
                 query.x - query.tolerance,
                 query.y - query.tolerance,
               ),
-              mln.ScreenPoint(
+              max: mln.ScreenPoint(
                 query.x + query.tolerance,
                 query.y + query.tolerance,
               ),

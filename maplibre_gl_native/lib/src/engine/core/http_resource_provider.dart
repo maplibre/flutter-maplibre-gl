@@ -47,8 +47,10 @@ class HttpResourceProvider {
   /// requested over http/https are then fetched by Dart.
   static void install(mln.RuntimeHandle runtime) {
     runtime.setResourceProvider(
-      const mln.ResourceProvider(
-        routes: [
+      // Not const: the binding copies the route list into an unmodifiable
+      // view, so the constructor cannot be const.
+      mln.ResourceProvider(
+        routes: const [
           mln.ResourceProviderRoute(url: 'http://*'),
           mln.ResourceProviderRoute(url: 'https://*'),
         ],
@@ -220,7 +222,7 @@ class HttpResourceProvider {
           mustRevalidate: mustRevalidate,
         );
       case HttpStatus.notFound || HttpStatus.gone:
-        return const mln.ResourceResponse(
+        return mln.ResourceResponse(
           status: mln.ResourceResponseStatus.error,
           errorReason: mln.ResourceErrorReason.notFound,
           errorMessage: 'not found',

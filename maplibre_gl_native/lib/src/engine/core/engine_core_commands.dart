@@ -553,8 +553,8 @@ extension EngineCommandDispatch on EngineCore {
   }
 
   static mln.LatLngBounds _latLngBounds(BoundsSpec bounds) => mln.LatLngBounds(
-    mln.LatLng(bounds.south, bounds.west),
-    mln.LatLng(bounds.north, bounds.east),
+    southwest: mln.LatLng(bounds.south, bounds.west),
+    northeast: mln.LatLng(bounds.north, bounds.east),
   );
 
   static mln.CameraOptions _cameraOptions(
