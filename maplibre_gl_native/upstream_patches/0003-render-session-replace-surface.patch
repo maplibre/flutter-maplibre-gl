@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index 70381fd8..2fa21662 100644
+index 70381fd8..0caacb9f 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-@@ -149,6 +149,36 @@ final class RenderSessionHandle {
+@@ -149,6 +149,39 @@ final class RenderSessionHandle {
      );
    }
  
@@ -18,6 +18,9 @@ index 70381fd8..2fa21662 100644
 +  /// Points the session at a new native surface of the same backend kind,
 +  /// preserving renderer state (uploaded tiles, glyph atlases) across native
 +  /// surface recreation.
++  ///
++  /// If the native replacement itself fails the session is left suspended, as
++  /// after [releaseSurface], and another surface can be offered.
 +  void replaceSurface(
 +    NativePointer surface,
 +    int width,
@@ -40,10 +43,10 @@ index 70381fd8..2fa21662 100644
    bool renderUpdate() {
      _checkNoActiveTextureFrame('render update');
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index ad96e505..a71e0b5d 100644
+index ad96e505..0ab5e61a 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
-@@ -58,6 +58,66 @@ MLN_API mln_status mln_render_session_resize(
+@@ -58,6 +58,68 @@ MLN_API mln_status mln_render_session_resize(
    double scale_factor
  ) MLN_NOEXCEPT;
  
@@ -74,9 +77,8 @@ index ad96e505..a71e0b5d 100644
 + *   owner thread.
 + * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
 + */
-+MLN_API mln_status mln_render_session_release_surface(
-+  mln_render_session* session
-+) MLN_NOEXCEPT;
++MLN_API mln_status
++mln_render_session_release_surface(mln_render_session* session) MLN_NOEXCEPT;
 +
 +/**
 + * Points an attached surface render session at a new native surface, keeping
@@ -101,6 +103,9 @@ index ad96e505..a71e0b5d 100644
 + * - MLN_STATUS_WRONG_THREAD when called from a thread other than the session
 + *   owner thread.
 + * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ *   The old surface is already gone by then, so the session is left suspended
++ *   as if mln_render_session_release_surface had been called; replacement may
++ *   be retried. Every other status leaves the session untouched.
 + */
 +MLN_API mln_status mln_render_session_replace_surface(
 +  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
@@ -140,10 +145,23 @@ index 37584beb..37f30fb7 100644
    mln_render_session* session, bool* out_rendered
  ) noexcept -> mln_status {
 diff --git a/src/render/opengl/opengl_surface_session.cpp b/src/render/opengl/opengl_surface_session.cpp
-index 756c3117..66aad0bf 100644
+index 756c3117..3c462872 100644
 --- a/src/render/opengl/opengl_surface_session.cpp
 +++ b/src/render/opengl/opengl_surface_session.cpp
-@@ -175,6 +175,14 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
+@@ -159,7 +159,11 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
+       resource.reset();
+       context.reset();
+     };
+-    if (has_native_context()) {
++    // A released surface must not be made current: the host is free to destroy
++    // the handle as soon as it hands it back, so activating it here would use
++    // it after free. Without the scope the GL objects are dropped without a
++    // current context and are reclaimed when the context itself goes away.
++    if (has_native_context() && descriptor_.surface != nullptr) {
+       auto guard = mbgl::gfx::BackendScope{*this};
+       cleanup();
+     } else {
+@@ -175,6 +179,19 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
  
    void resize(mbgl::Size size_) { size = size_; }
  
@@ -155,19 +173,36 @@ index 756c3117..66aad0bf 100644
 +    size = size_;
 +  }
 +
++  // Nothing is bound to the surface between calls, so there is nothing to tear
++  // down. Forgetting the handle is the point: the host may destroy it right
++  // after, and every path that would make it current checks for null.
++  void releaseSurface() { descriptor_.surface = nullptr; }
++
    void updateAssumedState() override {
      assumeFramebufferBinding(0);
      setViewport(0, 0, size);
-@@ -356,6 +364,21 @@ class OpenGLSurfaceSessionBackend final
+@@ -245,6 +262,14 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
+   }
+ 
+   void activate() override {
++    // Suspended between release_surface() and replace_surface(): the handle we
++    // were lent may already be destroyed, so fail here instead of asking the
++    // driver to make a dangling surface current.
++    if (descriptor_.surface == nullptr) {
++      throw std::runtime_error(
++        "OpenGL render surface was released; replace it before rendering"
++      );
++    }
+ #if defined(MLN_FFI_OPENGL_PROVIDER_WGL)
+     previous_device_context_ = wglGetCurrentDC();
+     previous_render_context_ = wglGetCurrentContext();
+@@ -356,6 +381,18 @@ class OpenGLSurfaceSessionBackend final
      backend_.resize(mbgl::Size{physical_width, physical_height});
    }
  
 +  auto supports_surface_replace() const -> bool override { return true; }
 +
-+  void release_surface() override {
-+    // Nothing is bound between calls; the suspended-session guard in the
-+    // common code keeps the stale handle from being used.
-+  }
++  void release_surface() override { backend_.releaseSurface(); }
 +
 +  void replace_surface(
 +    void* native_surface, uint32_t physical_width, uint32_t physical_height
@@ -181,7 +216,7 @@ index 756c3117..66aad0bf 100644
    OpenGLSurfaceBackend backend_;
  };
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 7c081312..fa5e385e 100644
+index 7c081312..83d746a8 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
 @@ -1042,6 +1042,12 @@ auto render_session_resize(
@@ -197,15 +232,14 @@ index 7c081312..fa5e385e 100644
    const auto physical_width = physical_dimension(width, scale_factor);
    const auto physical_height = physical_dimension(height, scale_factor);
    if (session->kind == RenderSessionKind::Surface) {
-@@ -1067,6 +1073,98 @@ auto render_session_resize(
+@@ -1067,6 +1073,102 @@ auto render_session_resize(
    return MLN_STATUS_OK;
  }
  
 +// Surface replacement keeps the renderer, and therefore every GPU-side
 +// resource, alive across native surface recreation. See render_session.h for
 +// the contract.
-+auto render_session_release_surface(mln_render_session* session)
-+  -> mln_status {
++auto render_session_release_surface(mln_render_session* session) -> mln_status {
 +  const auto status = validate_live_attached_render_session(session);
 +  if (status != MLN_STATUS_OK) {
 +    return status;
@@ -270,6 +304,11 @@ index 7c081312..fa5e385e 100644
 +      surface, physical_width, physical_height
 +    );
 +  } catch (const std::exception& exception) {
++    // The backend gives up the old surface before adopting the new one, so a
++    // failure here leaves nothing to present to. Suspend the session rather
++    // than let the next frame render against a half-built backend; the caller
++    // can retry with another surface.
++    session->surface_released = true;
 +    set_native_stage_error("replacing render surface", exception);
 +    return MLN_STATUS_NATIVE_ERROR;
 +  }
@@ -296,7 +335,7 @@ index 7c081312..fa5e385e 100644
  auto render_session_render_update(
    mln_render_session* session, bool* out_rendered
  ) -> mln_status {
-@@ -1079,6 +1177,12 @@ auto render_session_render_update(
+@@ -1079,6 +1181,12 @@ auto render_session_render_update(
      return MLN_STATUS_INVALID_ARGUMENT;
    }
    *out_rendered = false;

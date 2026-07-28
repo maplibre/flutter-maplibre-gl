@@ -1,5 +1,5 @@
 diff --git a/src/resources/resource_loader.cpp b/src/resources/resource_loader.cpp
-index ec4a3eb4..2005d96b 100644
+index ec4a3eb4..75bd9a05 100644
 --- a/src/resources/resource_loader.cpp
 +++ b/src/resources/resource_loader.cpp
 @@ -18,6 +18,7 @@
@@ -25,7 +25,7 @@ index ec4a3eb4..2005d96b 100644
        );
        if (request != nullptr) {
          return request;
-@@ -163,6 +169,46 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
+@@ -163,6 +169,43 @@ class AbiNetworkFileSource final : public mbgl::FileSource {
    }
  
   private:
@@ -46,20 +46,17 @@ index ec4a3eb4..2005d96b 100644
 +          mbgl::util::mapbox::normalizeStyleURL(options, resource.url, apiKey);
 +        break;
 +      case mbgl::Resource::Kind::Source:
-+        result.url = mbgl::util::mapbox::normalizeSourceURL(
-+          options, resource.url, apiKey
-+        );
++        result.url =
++          mbgl::util::mapbox::normalizeSourceURL(options, resource.url, apiKey);
 +        break;
 +      case mbgl::Resource::Kind::Glyphs:
-+        result.url = mbgl::util::mapbox::normalizeGlyphsURL(
-+          options, resource.url, apiKey
-+        );
++        result.url =
++          mbgl::util::mapbox::normalizeGlyphsURL(options, resource.url, apiKey);
 +        break;
 +      case mbgl::Resource::Kind::SpriteImage:
 +      case mbgl::Resource::Kind::SpriteJSON:
-+        result.url = mbgl::util::mapbox::normalizeSpriteURL(
-+          options, resource.url, apiKey
-+        );
++        result.url =
++          mbgl::util::mapbox::normalizeSpriteURL(options, resource.url, apiKey);
 +        break;
 +      case mbgl::Resource::Kind::Tile:
 +        result.url =

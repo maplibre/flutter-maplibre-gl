@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index 5a3f2f81..eb3b5645 100644
+index 20cf74ac..bada19f9 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -1790,6 +1790,12 @@ final class MapHandle {
+@@ -1792,6 +1792,12 @@ final class MapHandle {
      _check(_c.raw.mln_map_cancel_transitions(_pointer));
    }
  
@@ -41,16 +41,15 @@ index 801cb274..e6c1de7d 100644
   * Computes a camera that fits geographic bounds in the current viewport.
   *
 diff --git a/src/c_api/map.cpp b/src/c_api/map.cpp
-index 40ed22fc..ceca6cce 100644
+index 40ed22fc..b8a9fccb 100644
 --- a/src/c_api/map.cpp
 +++ b/src/c_api/map.cpp
-@@ -984,6 +984,14 @@ auto mln_map_cancel_transitions(mln_map* map) noexcept -> mln_status {
+@@ -984,6 +984,13 @@ auto mln_map_cancel_transitions(mln_map* map) noexcept -> mln_status {
    });
  }
  
-+auto mln_map_set_gesture_in_progress(
-+  mln_map* map, bool in_progress
-+) noexcept -> mln_status {
++auto mln_map_set_gesture_in_progress(mln_map* map, bool in_progress) noexcept
++  -> mln_status {
 +  return mln::c_api::status_boundary([&]() -> mln_status {
 +    return mln::core::map_set_gesture_in_progress(map, in_progress);
 +  });
@@ -60,15 +59,14 @@ index 40ed22fc..ceca6cce 100644
    mln_map* map, mln_lat_lng_bounds bounds,
    const mln_camera_fit_options* fit_options, mln_camera_options* out_camera
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index a302091f..c2ea35be 100644
+index 29c9d011..b7b848a9 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -5707,6 +5707,16 @@ auto map_cancel_transitions(mln_map* map) -> mln_status {
+@@ -5737,6 +5737,15 @@ auto map_cancel_transitions(mln_map* map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
-+auto map_set_gesture_in_progress(mln_map* map, bool in_progress)
-+  -> mln_status {
++auto map_set_gesture_in_progress(mln_map* map, bool in_progress) -> mln_status {
 +  const auto status = validate_map(map);
 +  if (status != MLN_STATUS_OK) {
 +    return status;
@@ -81,15 +79,14 @@ index a302091f..c2ea35be 100644
    if (out_camera == nullptr || out_camera->size < sizeof(mln_camera_options)) {
      set_thread_error("out_camera must not be null and must have a valid size");
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index df3a3725..a0daa6e2 100644
+index df3a3725..87e5c875 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -338,6 +338,8 @@ auto map_pitch_by_animated(
+@@ -338,6 +338,7 @@ auto map_pitch_by_animated(
    mln_map* map, double pitch, const mln_animation_options* animation
  ) -> mln_status;
  auto map_cancel_transitions(mln_map* map) -> mln_status;
-+auto map_set_gesture_in_progress(mln_map* map, bool in_progress)
-+  -> mln_status;
++auto map_set_gesture_in_progress(mln_map* map, bool in_progress) -> mln_status;
  auto map_camera_for_lat_lng_bounds(
    mln_map* map, mln_lat_lng_bounds bounds,
    const mln_camera_fit_options* fit_options, mln_camera_options* out_camera

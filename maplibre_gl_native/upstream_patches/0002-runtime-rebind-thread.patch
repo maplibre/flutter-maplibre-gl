@@ -19,10 +19,10 @@ index 89c43cf9..d41ab929 100644
    RuntimeEvent? pollEvent() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/runtime.h b/include/maplibre_native_c/runtime.h
-index f7a2bdd1..41056db7 100644
+index f7a2bdd1..0bfed6ce 100644
 --- a/include/maplibre_native_c/runtime.h
 +++ b/include/maplibre_native_c/runtime.h
-@@ -737,6 +737,31 @@ MLN_API mln_status mln_runtime_destroy(mln_runtime* runtime) MLN_NOEXCEPT;
+@@ -737,6 +737,30 @@ MLN_API mln_status mln_runtime_destroy(mln_runtime* runtime) MLN_NOEXCEPT;
   */
  MLN_API mln_status mln_runtime_run_once(mln_runtime* runtime) MLN_NOEXCEPT;
  
@@ -48,27 +48,30 @@ index f7a2bdd1..41056db7 100644
 + * - MLN_STATUS_INVALID_STATE when the calling thread owns another runtime.
 + * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
 + */
-+MLN_API mln_status mln_runtime_rebind_thread(mln_runtime* runtime)
-+  MLN_NOEXCEPT;
++MLN_API mln_status mln_runtime_rebind_thread(mln_runtime* runtime) MLN_NOEXCEPT;
 +
  /**
   * Pops the next queued runtime event.
   *
 diff --git a/src/c_api/runtime.cpp b/src/c_api/runtime.cpp
-index 374f5230..8dfcc042 100644
+index 374f5230..b6bccc49 100644
 --- a/src/c_api/runtime.cpp
 +++ b/src/c_api/runtime.cpp
-@@ -2,7 +2,10 @@
+@@ -2,11 +2,14 @@
  
  #include <cstddef>
  #include <cstdint>
 +#include <thread>
  
-+#include "map/map.hpp"
-+#include "render/render_session_common.hpp"
  #include "runtime/runtime.hpp"
  
  #include "c_api/boundary.hpp"
++#include "map/map.hpp"
+ #include "maplibre_native_c.h"
++#include "render/render_session_common.hpp"
+ #include "resources/custom_resource_provider.hpp"
+ 
+ auto mln_runtime_options_default(void) noexcept -> mln_runtime_options {
 @@ -321,6 +324,19 @@ auto mln_runtime_destroy(mln_runtime* runtime) noexcept -> mln_status {
    });
  }
