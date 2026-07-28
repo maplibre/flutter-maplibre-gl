@@ -1,7 +1,6 @@
-import 'dart:ffi';
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart' show debugPrint;
+
+import 'vsync_pulse.dart';
 
 /// Why a display pulse did not turn into a frame.
 enum PulseDrop {
@@ -9,13 +8,14 @@ enum PulseDrop {
   /// pending, so there was no frame to be late for.
   parked,
 
-  /// Arrived while the previous frame was still running. This is the honest
-  /// "missed frame" count: the loop did not keep up with the display.
+  /// Arrived while the previous frame was still running. Structurally
+  /// impossible while the isolate owns the render, because a port message
+  /// cannot be delivered while another handler runs on the same isolate; it
+  /// stops being impossible the day the render moves off the isolate.
   inFrame,
 
-  /// Dropped by the cadence floor, either an explicit fps cap or the
-  /// half-period floor that drains a burst of pulses queued behind one long
-  /// frame. Deliberate, not a failure.
+  /// Dropped by the cadence floor: an explicit fps cap, or the half-period
+  /// floor that keeps two frames from running back to back. Deliberate.
   floor,
 }
 
@@ -67,7 +67,7 @@ class FramePathProbe {
   /// Android shim, or a shim too old to carry the clock (a stale build).
   static FramePathProbe? createIfArmed({required int vsyncPeriodUs}) {
     if (!armed) return null;
-    final clock = _monotonicNanos();
+    final clock = VsyncPulser.monotonicNanos;
     if (clock == null) {
       debugPrint(
         '[maplibre_gl_native] frame path probe armed but the shim clock is '
@@ -274,23 +274,4 @@ class FramePathProbe {
 
   static String _median(List<int> samples) =>
       '${_medianOrNull(samples) ?? 'n/a'}';
-
-  /// Looks up the shim's monotonic clock, the only one in the same timebase as
-  /// the choreographer timestamps. Returns null when the symbol is missing,
-  /// which is what a stale shim build looks like from here.
-  static int Function()? _monotonicNanos() {
-    if (!Platform.isAndroid) return null;
-    try {
-      // Open by soname: the shim is already loaded, so dlopen returns the
-      // existing handle. See VsyncPulser for why not DynamicLibrary.process().
-      final lib = DynamicLibrary.open('libmaplibre_gl_native_shim.so');
-      if (!lib.providesSymbol('mln_shim_monotonic_nanos')) return null;
-      return lib.lookupFunction<Int64 Function(), int Function()>(
-        'mln_shim_monotonic_nanos',
-      );
-    } catch (error) {
-      debugPrint('[maplibre_gl_native] shim clock unavailable ($error)');
-      return null;
-    }
-  }
 }

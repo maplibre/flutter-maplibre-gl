@@ -137,6 +137,9 @@ class FrameDriver {
   /// Floor between frame starts: the [SetMaximumFpsCommand] cap when set,
   /// otherwise half a vsync period (drains the burst of pulses that queued
   /// behind a long frame without skipping a healthy cadence).
+  ///
+  /// Deliberately the only thing dropping pulses. Dropping them by the age of
+  /// their timestamp was tried and reverted: see [_onPulse].
   int get _minFrameIntervalUs {
     final fps = _core.maxFps;
     final half = _vsyncPeriodUs ~/ 2;
@@ -146,6 +149,14 @@ class FrameDriver {
   }
 
   /// One display frame elapsed; render if it is our cadence to do so.
+  ///
+  /// A pulse that queued in the port while the isolate was busy must still be
+  /// rendered, however old its timestamp: `render_update` takes no time
+  /// argument and always draws the map's CURRENT state, so a late pulse
+  /// produces a current picture, merely one boundary late. Skipping it throws
+  /// a real frame away. Measured on device, doing that turned every gesture
+  /// visibly jerky while flattering the probe's own wake number, which is why
+  /// the check is gone.
   void _onPulse(int frameTimeNanos) {
     _lastPulseUs = _clock.elapsedMicroseconds;
     _probe?.pulse(frameTimeNanos);

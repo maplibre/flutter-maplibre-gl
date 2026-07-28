@@ -23,6 +23,20 @@ class VsyncPulser {
 
   static final _VsyncBindings? _bindings = _VsyncBindings._tryLoad();
 
+  /// Reads the clock the pulse timestamps are stamped with, in nanoseconds.
+  ///
+  /// A pulse timestamp only means something next to a reading of the same
+  /// clock: it comes from `CLOCK_MONOTONIC` and Dart's [Stopwatch] has an
+  /// unrelated epoch, so the age of a pulse cannot be worked out without this.
+  /// The shim provides it, which makes the reader and the stamper the same
+  /// library by construction.
+  ///
+  /// Null where no such clock is reachable: not Android, or a shim built
+  /// before it existed. Callers must then do without an age. Resolved
+  /// independently of [_bindings], because reading the clock needs neither the
+  /// choreographer nor the Dart API DL handshake.
+  static final int Function()? monotonicNanos = _lookupClock();
+
   RawReceivePort? _port;
   bool _running = false;
 
@@ -53,6 +67,26 @@ class VsyncPulser {
 
   void _handleMessage(Object? message) {
     if (message is int && _running) onPulse(message);
+  }
+
+  static int Function()? _lookupClock() {
+    if (!Platform.isAndroid) return null;
+    try {
+      final lib = DynamicLibrary.open('libmaplibre_gl_native_shim.so');
+      if (!lib.providesSymbol('mln_shim_monotonic_nanos')) {
+        debugPrint(
+          '[maplibre_gl_native] shim has no monotonic clock (stale build?); '
+          'pulse ages unavailable',
+        );
+        return null;
+      }
+      return lib.lookupFunction<Int64 Function(), int Function()>(
+        'mln_shim_monotonic_nanos',
+      );
+    } catch (error) {
+      debugPrint('[maplibre_gl_native] shim clock unavailable ($error)');
+      return null;
+    }
   }
 }
 
