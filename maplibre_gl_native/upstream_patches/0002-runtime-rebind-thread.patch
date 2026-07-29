@@ -19,16 +19,15 @@ index bc8a892f..bbf1d302 100644
    RuntimeEvent? pollEvent() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/runtime.h b/include/maplibre_native_c/runtime.h
-index ebd48865..fce736ce 100644
+index ebd48865..b0edc7c7 100644
 --- a/include/maplibre_native_c/runtime.h
 +++ b/include/maplibre_native_c/runtime.h
-@@ -924,6 +924,30 @@ MLN_API mln_status mln_wake_source_signal(mln_wake_source* source) MLN_NOEXCEPT;
+@@ -924,6 +924,35 @@ MLN_API mln_status mln_wake_source_signal(mln_wake_source* source) MLN_NOEXCEPT;
   */
  MLN_API void mln_wake_source_destroy(mln_wake_source* source) MLN_NOEXCEPT;
  
 +/**
-+ * Rebinds the runtime and every handle it owns (maps, projections, render
-+ * sessions) to the calling thread.
++ * Rebinds the runtime, its maps and its projections to the calling thread.
 + *
 + * Owner-thread affinity assumes the embedder controls which OS thread its work
 + * runs on. Runtimes with managed concurrency do not: a Dart isolate, a Go
@@ -36,11 +35,17 @@ index ebd48865..fce736ce 100644
 + * calls, through no action of the caller. Calling this first re-homes the
 + * affinity to the thread the caller is actually on.
 + *
++ * Render sessions are deliberately NOT included. A session's owner is the
++ * thread that attached it, which may be a display-paced render thread that has
++ * nothing to do with the thread driving the map, so re-homing sessions here
++ * would take them from whoever is rendering. Use
++ * mln_render_session_rebind_thread for those, one session at a time.
++ *
 + * Contract:
 + * - No call on the runtime or any of its handles may be in flight.
 + * - The calling thread must not own another live runtime.
-+ * - Map projections and render sessions carry no owner link and are re-homed
-+ *   globally: the process is assumed to hold a single live runtime.
++ * - Map projections carry no owner link and are re-homed together with the
++ *   maps: the process is assumed to hold a single live runtime.
 + *
 + * Returns:
 + * - MLN_STATUS_OK on success (or when already bound to the calling thread).
@@ -54,10 +59,10 @@ index ebd48865..fce736ce 100644
   * Pops the next queued runtime event.
   *
 diff --git a/src/c_api/runtime.cpp b/src/c_api/runtime.cpp
-index 49983f8c..453a6006 100644
+index 49983f8c..aee3f44f 100644
 --- a/src/c_api/runtime.cpp
 +++ b/src/c_api/runtime.cpp
-@@ -2,11 +2,14 @@
+@@ -2,10 +2,12 @@
  
  #include <cstddef>
  #include <cstdint>
@@ -68,11 +73,9 @@ index 49983f8c..453a6006 100644
  #include "c_api/boundary.hpp"
 +#include "map/map.hpp"
  #include "maplibre_native_c.h"
-+#include "render/render_session_common.hpp"
  #include "resources/custom_resource_provider.hpp"
  
- auto mln_runtime_options_default(void) noexcept -> mln_runtime_options {
-@@ -328,6 +331,19 @@ auto mln_runtime_destroy(mln_runtime* runtime) noexcept -> mln_status {
+@@ -328,6 +330,17 @@ auto mln_runtime_destroy(mln_runtime* runtime) noexcept -> mln_status {
    });
  }
  
@@ -82,9 +85,7 @@ index 49983f8c..453a6006 100644
 +    if (status != MLN_STATUS_OK) {
 +      return status;
 +    }
-+    const auto thread = std::this_thread::get_id();
-+    mln::core::rebind_maps_to_thread(runtime, thread);
-+    mln::core::rebind_all_render_sessions_to_thread(thread);
++    mln::core::rebind_maps_to_thread(runtime, std::this_thread::get_id());
 +    return MLN_STATUS_OK;
 +  });
 +}
@@ -143,40 +144,6 @@ index fb26b248..5a54af58 100644
  // Map-thread only. Code reachable from a render session's owner thread uses the
  // posting helpers below instead.
  auto map_native(mln_map* map) -> mbgl::Map*;
-diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 11b43d3e..ad76c427 100644
---- a/src/render/render_session_common.cpp
-+++ b/src/render/render_session_common.cpp
-@@ -917,6 +917,13 @@ auto register_render_session(
-   render_sessions().emplace(handle, std::move(session));
- }
- 
-+auto rebind_all_render_sessions_to_thread(std::thread::id thread) -> void {
-+  const auto lock = std::scoped_lock{render_session_mutex()};
-+  for (auto& entry : render_sessions()) {
-+    entry.second->owner_thread = thread;
-+  }
-+}
-+
- void RenderSessionScheduler::schedule(std::function<void()>&& task) {
-   const auto lock = std::scoped_lock{mutex_};
-   queue_.push_back(std::move(task));
-diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index 0fc38c24..aac72841 100644
---- a/src/render/render_session_common.hpp
-+++ b/src/render/render_session_common.hpp
-@@ -255,6 +255,11 @@ auto register_render_session(
-   mln_render_session* handle, std::unique_ptr<mln_render_session> session
- ) -> void;
- auto validate_render_session(mln_render_session* session) -> mln_status;
-+
-+// Re-homes every live render session to the given thread (sessions carry no
-+// owner link, so this follows the single-runtime assumption). See
-+// mln_runtime_rebind_thread in runtime.h.
-+auto rebind_all_render_sessions_to_thread(std::thread::id thread) -> void;
- auto validate_live_attached_render_session(mln_render_session* session)
-   -> mln_status;
- auto erase_render_session(mln_render_session* session)
 diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
 index f5911217..1a0dd17e 100644
 --- a/src/runtime/runtime.cpp

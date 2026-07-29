@@ -110,7 +110,12 @@ elif [ "$KEEP_CLONE" = "1" ]; then
   HEAD="$(git -C "$FFI_DIR" rev-parse HEAD)"
   echo "==> MLN_KEEP_CLONE=1: leaving the clone at ${HEAD:0:7} untouched"
   [ "$HEAD" = "$PIN" ] \
-    || echo "warning: that is not the pin ${PIN:0:7}; the patches below may not apply" >&2
+    || echo "warning: that is not the pin ${PIN:0:7}" >&2
+  # Untouched means the patch stack is not applied either. It could not be
+  # checked anyway: patches build on each other, so "is this one already
+  # applied?" has no order-independent answer (see the reset branch below), and
+  # a hand-edited tree is exactly where that heuristic misfires.
+  NEEDS_PATCHES=0
   # A hand-edited clone must not be mistaken for our own output next time.
   rm -f "$STAMP"
 elif stamp_matches; then
