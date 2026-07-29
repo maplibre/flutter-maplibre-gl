@@ -66,6 +66,7 @@ extension EngineQueryDispatch on EngineCore {
       map: map,
       spec: query,
       emit: _emit,
+      renderThread: renderThread,
     );
     session.attachRenderTarget(query.surface);
     _sessions[sessionId] = session;
@@ -133,11 +134,13 @@ extension EngineQueryDispatch on EngineCore {
           );
     final layerIds = query.layerIds;
     final filter = query.filter;
-    final features = session.requireRenderSession().queryRenderedFeatures(
-      geometry,
-      options: mln.RenderedFeatureQueryOptions(
-        layerIds: layerIds == null || layerIds.isEmpty ? null : layerIds,
-        filter: filter == null ? null : jsonValueFromDart(filter),
+    final features = session.onRenderThread(
+      (render) => render.queryRenderedFeatures(
+        geometry,
+        options: mln.RenderedFeatureQueryOptions(
+          layerIds: layerIds == null || layerIds.isEmpty ? null : layerIds,
+          filter: filter == null ? null : jsonValueFromDart(filter),
+        ),
       ),
     );
     return [for (final queried in features) featureToDart(queried.feature)];
@@ -149,11 +152,13 @@ extension EngineQueryDispatch on EngineCore {
     final session = _session(query.sessionId);
     final sourceLayerId = query.sourceLayerId;
     final filter = query.filter;
-    final features = session.requireRenderSession().querySourceFeatures(
-      query.sourceId,
-      options: mln.SourceFeatureQueryOptions(
-        sourceLayerIds: sourceLayerId == null ? null : [sourceLayerId],
-        filter: filter == null ? null : jsonValueFromDart(filter),
+    final features = session.onRenderThread(
+      (render) => render.querySourceFeatures(
+        query.sourceId,
+        options: mln.SourceFeatureQueryOptions(
+          sourceLayerIds: sourceLayerId == null ? null : [sourceLayerId],
+          filter: filter == null ? null : jsonValueFromDart(filter),
+        ),
       ),
     );
     return [for (final queried in features) featureToDart(queried.feature)];
@@ -161,7 +166,6 @@ extension EngineQueryDispatch on EngineCore {
 
   FeatureHit? _queryTopFeature(QueryTopFeatureQuery query) {
     final session = _session(query.sessionId);
-    final renderSession = session.requireRenderSession();
     final geometry = query.tolerance > 0
         ? mln.RenderedQueryBox(
             mln.ScreenBox(
@@ -176,31 +180,36 @@ extension EngineQueryDispatch on EngineCore {
             ),
           )
         : mln.RenderedQueryPoint(mln.ScreenPoint(query.x, query.y));
-    for (final layerId in query.layerIds) {
-      final features = renderSession.queryRenderedFeatures(
-        geometry,
-        options: mln.RenderedFeatureQueryOptions(layerIds: [layerId]),
-      );
-      if (features.isNotEmpty) {
-        return (
-          layerId: layerId,
-          feature: featureToDart(features.first.feature),
+    // One borrow for the whole layer walk rather than one per layer: this runs
+    // on every tap and on every move of a feature drag, and each borrow waits
+    // for the frame in flight.
+    return session.onRenderThread((render) {
+      for (final layerId in query.layerIds) {
+        final features = render.queryRenderedFeatures(
+          geometry,
+          options: mln.RenderedFeatureQueryOptions(layerIds: [layerId]),
         );
+        if (features.isNotEmpty) {
+          return (
+            layerId: layerId,
+            feature: featureToDart(features.first.feature),
+          );
+        }
       }
-    }
-    return null;
+      return null;
+    });
   }
 
   Map<String, dynamic>? _featureState(GetFeatureStateQuery query) {
-    final state = _session(query.sessionId)
-        .requireRenderSession()
-        .getFeatureState(
-          mln.FeatureStateSelector(
-            sourceId: query.sourceId,
-            sourceLayerId: query.sourceLayerId,
-            featureId: query.featureId,
-          ),
-        );
+    final state = _session(query.sessionId).onRenderThread(
+      (render) => render.getFeatureState(
+        mln.FeatureStateSelector(
+          sourceId: query.sourceId,
+          sourceLayerId: query.sourceLayerId,
+          featureId: query.featureId,
+        ),
+      ),
+    );
     if (state == null) return null;
     final decoded = jsonValueToDart(state);
     return decoded is Map ? decoded.cast<String, dynamic>() : null;

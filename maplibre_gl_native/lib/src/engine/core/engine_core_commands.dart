@@ -486,23 +486,27 @@ extension EngineCommandDispatch on EngineCore {
         session.requestRender();
       case SetFeatureStateCommand():
         final session = _session(command.sessionId);
-        session.requireRenderSession().setFeatureState(
-          mln.FeatureStateSelector(
-            sourceId: command.sourceId,
-            sourceLayerId: command.sourceLayerId,
-            featureId: command.featureId,
+        session.onRenderThread(
+          (render) => render.setFeatureState(
+            mln.FeatureStateSelector(
+              sourceId: command.sourceId,
+              sourceLayerId: command.sourceLayerId,
+              featureId: command.featureId,
+            ),
+            jsonValueFromDart(command.state) as mln.JsonObject,
           ),
-          jsonValueFromDart(command.state) as mln.JsonObject,
         );
         session.requestRender();
       case RemoveFeatureStateCommand():
         final session = _session(command.sessionId);
-        session.requireRenderSession().removeFeatureState(
-          mln.FeatureStateSelector(
-            sourceId: command.sourceId,
-            sourceLayerId: command.sourceLayerId,
-            featureId: command.featureId,
-            stateKey: command.stateKey,
+        session.onRenderThread(
+          (render) => render.removeFeatureState(
+            mln.FeatureStateSelector(
+              sourceId: command.sourceId,
+              sourceLayerId: command.sourceLayerId,
+              featureId: command.featureId,
+              stateKey: command.stateKey,
+            ),
           ),
         );
         session.requestRender();

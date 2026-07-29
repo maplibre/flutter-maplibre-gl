@@ -67,6 +67,12 @@ class FrameDriver {
   int _statsRenderMicros = 0;
   int _statsMaxRenderMicros = 0;
 
+  /// Last frame count read from the display thread, to turn its monotonic
+  /// counter into a per-interval render count. Null until the first read: the
+  /// counter is process-wide, so after a hot restart it does not start at zero
+  /// and a zero baseline would report the whole history as one interval.
+  int? _lastDrawnCount;
+
   /// Switches to (or stays in) the frame-paced loop.
   ///
   /// Must never schedule extra frames while [_frame] is running: engine
@@ -102,6 +108,11 @@ class FrameDriver {
         _pulsesLogged = true;
         debugPrint('[maplibre_gl_native] vsync pulses active');
       }
+      // Pulses are confirmed live, so the thread that owns the choreographer is
+      // also drawing. Only tell it so now: if the choreographer had been
+      // unavailable, start() would have failed and nothing would ever render
+      // the session it was given.
+      _core.renderThread.enable();
       _pulseWatchdog ??= Timer.periodic(_pulseStaleAfter, (_) {
         if (_clock.elapsedMicroseconds - _lastPulseUs >
             _pulseStaleAfter.inMicroseconds) {
@@ -110,12 +121,16 @@ class FrameDriver {
           _park();
         }
       });
-    } else if (!_fallbackLogged) {
-      _fallbackLogged = true;
-      debugPrint(
-        '[maplibre_gl_native] vsync pulses unavailable; timer pacing at '
-        '${_fallbackInterval.inMicroseconds} us',
-      );
+    } else {
+      // No pulses means no display-paced thread to draw for us either.
+      _core.renderThread.disable();
+      if (!_fallbackLogged) {
+        _fallbackLogged = true;
+        debugPrint(
+          '[maplibre_gl_native] vsync pulses unavailable; timer pacing at '
+          '${_fallbackInterval.inMicroseconds} us',
+        );
+      }
     }
   }
 
@@ -200,7 +215,13 @@ class FrameDriver {
     probe?.endTurn(rendered: rendered);
     _inFrame = false;
     _statsFrames += 1;
-    if (rendered) {
+    // When the display thread draws, count what it actually drew rather than
+    // what we found pending, and do not report a render time we did not spend.
+    final drawn = _core.renderThread.frameCount;
+    if (drawn != null) {
+      _statsRenders += drawn - (_lastDrawnCount ?? drawn);
+      _lastDrawnCount = drawn;
+    } else if (rendered) {
       _statsRenders += 1;
       final micros = renderClock.elapsedMicroseconds;
       _statsRenderMicros += micros;
@@ -231,11 +252,16 @@ class FrameDriver {
     if (_statsClock.elapsedMilliseconds < 3000) return;
     if (_statsRenders > 0) {
       final seconds = _statsClock.elapsedMilliseconds / 1000;
+      // No render time when the display thread drew: we did not spend it, and
+      // reporting a zero would read as a suspiciously fast frame.
+      final timing = _statsRenderMicros == 0
+          ? ''
+          : 'frame avg ${(_statsRenderMicros / _statsRenders / 1000).toStringAsFixed(1)} ms, '
+                'max ${(_statsMaxRenderMicros / 1000).toStringAsFixed(1)} ms, ';
       debugPrint(
         '[maplibre_gl_native] engine stats: '
         '${(_statsRenders / seconds).toStringAsFixed(1)} fps, '
-        'frame avg ${(_statsRenderMicros / _statsRenders / 1000).toStringAsFixed(1)} ms, '
-        'max ${(_statsMaxRenderMicros / 1000).toStringAsFixed(1)} ms, '
+        '$timing'
         'loop turns ${(_statsFrames / seconds).toStringAsFixed(0)}/s',
       );
     }

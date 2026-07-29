@@ -212,25 +212,39 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
   }
 }
 
-// --- Display vsync pulse service ---------------------------------------------
+// --- Display-paced render service --------------------------------------------
 //
-// Drives the engine isolate's frame loop in phase with the display: a
-// dedicated pthread (created once, never exits; "stop" only pauses) owns an
-// ALooper plus an AChoreographer and posts each frame-callback timestamp to
-// the engine isolate's native port with Dart_PostInteger_DL. Posting to a
-// dead port is a documented no-op, which makes hot restart self-healing: the
-// old isolate's port dies, the post returns false, the service parks itself
-// until the new isolate calls mln_shim_vsync_start with its own port.
+// A dedicated pthread (created once, never exits; "stop" only pauses) owns an
+// ALooper plus an AChoreographer, and on each frame callback it renders the
+// bound MapLibre render session itself. Dart is not in the frame path: no port
+// message per frame, and no Dart work (GC, HTTP, style parse) can delay one.
 //
-// THIS THREAD MUST NEVER CALL INTO libmaplibre-native-c: MapLibre handles
-// are owner-thread affine to the engine isolate. The only cross-thread call
-// allowed here is Dart_PostInteger_DL (any-thread safe by contract).
+// THIS THREAD CALLS INTO libmaplibre-native-c, which the previous shape of this
+// file forbade. What changed is that a render session's owner thread is now the
+// thread that attached it rather than the map's, so a session can legitimately
+// live here while Dart keeps the runtime and the maps. Two symbols are reached,
+// both session-scoped: render_update and the per-session rebind.
+//
+// Ownership handover. Every session entry point is owner-thread checked, and
+// Dart still needs several of them (feature queries, feature state, resize,
+// surface replace, detach). So ownership ping-pongs under g_render_mutex: each
+// side rebinds the session to itself before calling and holds the mutex for the
+// duration. Renders are frequent and queries are rare, so in the common case
+// this thread simply keeps it. Dart borrows it through
+// mln_shim_render_acquire/mln_shim_render_release, which block this thread's
+// next render rather than racing it.
+//
+// Liveness. With no per-frame port post there is no longer a dead-port signal
+// to self-park on, so a failing render_update parks the service instead: on hot
+// restart the old isolate's surface dies, the render fails, and pulses park
+// until the new isolate binds its own session.
 
 #include <android/choreographer.h>
 #include <android/log.h>
 #include <android/looper.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -238,6 +252,68 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 
 #define MLN_SHIM_LOG_TAG "maplibre_gl_native"
 #define MLN_SHIM_EXPORT __attribute__((visibility("default")))
+
+// From maplibre_native_c/render_session.h. Declared locally for the same
+// reason as mln_android_init above: the shim needs no include path, mln_status
+// is int-sized, and mln_render_session* is an opaque pointer here.
+extern int mln_render_session_render_update(void* session, bool* out_rendered);
+extern int mln_render_session_rebind_thread(void* session);
+
+// Guards session ownership. Held across a render here, and across the whole
+// borrow when Dart takes the session. Separate from g_vsync_mutex, which only
+// protects the pulse bookkeeping: taking that one while blocked on a Dart
+// borrow would stall mln_shim_vsync_stop.
+static pthread_mutex_t g_render_mutex = PTHREAD_MUTEX_INITIALIZER;
+// The bound session, or NULL when Dart has not offered one (or withdrew it).
+static void* g_render_session = NULL;
+// Whether this thread currently holds the session's owner-thread affinity.
+static bool g_render_owned_here = false;
+// Consecutive failed renders, reset by any success or any bind. About two
+// seconds at 90 Hz, which no legitimate surface swap comes close to.
+#define MLN_SHIM_RENDER_FAILURE_LIMIT 180
+static int32_t g_render_failures = 0;
+// Frames actually drawn. Dart reads it to tell "the map is still moving" from
+// "nothing left to draw", which is what its idle-park decision used to get from
+// its own render call. Atomic because it is read without g_render_mutex.
+static _Atomic int64_t g_render_frames = 0;
+
+// Per-frame render samples for the benchmark harness, which used to get them by
+// timing its own render call. Recording here instead measures the draw on the
+// thread that performs it, which is what the numbers are supposed to describe.
+//
+// Capacity is ~45 s at 90 Hz. A full buffer stops recording and counts the
+// misses rather than wrapping, so a truncated run cannot read as a complete one.
+#define MLN_SHIM_STATS_CAPACITY 4096
+static pthread_mutex_t g_stats_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool g_stats_armed = false;
+static int64_t g_stats_start_us[MLN_SHIM_STATS_CAPACITY];
+static int64_t g_stats_duration_us[MLN_SHIM_STATS_CAPACITY];
+static int32_t g_stats_count = 0;
+static int64_t g_stats_dropped = 0;
+
+static int64_t monotonic_micros(void) {
+  struct timespec now;
+  if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+    return 0;
+  }
+  return (int64_t)now.tv_sec * 1000000 + (int64_t)now.tv_nsec / 1000;
+}
+
+static void stats_record(int64_t start_us, int64_t duration_us) {
+  pthread_mutex_lock(&g_stats_mutex);
+  if (!g_stats_armed) {
+    pthread_mutex_unlock(&g_stats_mutex);
+    return;
+  }
+  if (g_stats_count >= MLN_SHIM_STATS_CAPACITY) {
+    g_stats_dropped += 1;
+  } else {
+    g_stats_start_us[g_stats_count] = start_us;
+    g_stats_duration_us[g_stats_count] = duration_us;
+    g_stats_count += 1;
+  }
+  pthread_mutex_unlock(&g_stats_mutex);
+}
 
 static pthread_mutex_t g_vsync_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_vsync_cond = PTHREAD_COND_INITIALIZER;
@@ -280,13 +356,83 @@ static void vsync_post_locked(void) {
   }
 }
 
+// Renders the bound session, taking its owner-thread affinity first if Dart
+// borrowed it. Returns false when the service should park.
+//
+// A render is never skipped by the age of its pulse: render_update draws the
+// map's CURRENT state and takes no time argument, so a late pulse is a fresh
+// picture drawn late. Dropping them by age was tried on device and made every
+// gesture visibly jerky while flattering the numbers.
+static bool render_bound_session(void) {
+  pthread_mutex_lock(&g_render_mutex);
+  void* const session = g_render_session;
+  if (session == NULL) {
+    pthread_mutex_unlock(&g_render_mutex);
+    return true;  // Nothing offered yet; keep the pulses coming.
+  }
+  if (!g_render_owned_here) {
+    const int status = mln_render_session_rebind_thread(session);
+    if (status != 0) {
+      pthread_mutex_unlock(&g_render_mutex);
+      __android_log_print(ANDROID_LOG_WARN, MLN_SHIM_LOG_TAG,
+                          "render session rebind failed (%d); parking", status);
+      return false;
+    }
+    g_render_owned_here = true;
+  }
+  bool rendered = false;
+  const int64_t started_us = monotonic_micros();
+  const int status = mln_render_session_render_update(session, &rendered);
+  if (rendered) {
+    atomic_fetch_add_explicit(&g_render_frames, 1, memory_order_relaxed);
+    stats_record(started_us, monotonic_micros() - started_us);
+  }
+  if (status == 0) {
+    g_render_failures = 0;
+    pthread_mutex_unlock(&g_render_mutex);
+    return true;
+  }
+  g_render_failures += 1;
+  const int32_t failures = g_render_failures;
+  pthread_mutex_unlock(&g_render_mutex);
+
+  // A single failure is not a reason to stop: a surface being replaced fails a
+  // few frames legitimately, and Dart withdraws the session for the cases it
+  // knows about. A long run of them is the hot-restart signature (the old
+  // isolate's surface is gone and nobody will withdraw anything), and with no
+  // port post per frame this is the only liveness signal left.
+  if (failures < MLN_SHIM_RENDER_FAILURE_LIMIT) {
+    return true;
+  }
+  __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
+                      "render_update failed %d times in a row (%d); parking",
+                      failures, status);
+  return false;
+}
+
 static void vsync_on_frame64(int64_t frame_time_nanos, void* data) {
   (void)data;
   pthread_mutex_lock(&g_vsync_mutex);
   g_vsync_callback_pending = false;
-  if (g_vsync_running && g_vsync_port != 0) {
+  const bool running = g_vsync_running;
+  pthread_mutex_unlock(&g_vsync_mutex);
+
+  // Rendering outside g_vsync_mutex: it can block on a Dart borrow, and
+  // mln_shim_vsync_stop must stay able to park the service meanwhile.
+  const bool keep_going = running ? render_bound_session() : true;
+
+  pthread_mutex_lock(&g_vsync_mutex);
+  if (!keep_going) {
+    g_vsync_running = false;
+  } else if (g_vsync_running && g_vsync_port != 0) {
+    // The pulse still goes to Dart, but it no longer carries the frame: it is
+    // the metronome for the runtime pump, which is still Dart's and is still
+    // required (a resize reaches the map only when its owner thread pumps, and
+    // tile and style work all lands there). Rendering first and pumping after
+    // costs one frame of staleness against the old pump-then-render turn, and
+    // buys a frame path that no Dart work can delay. Posting after the render
+    // keeps that ordering explicit.
     if (!Dart_PostInteger_DL(g_vsync_port, frame_time_nanos)) {
-      // The engine isolate is gone (hot restart): self-park, no spam.
       __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
                           "vsync port closed; parking pulses");
       g_vsync_running = false;
@@ -377,6 +523,83 @@ MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
   g_vsync_running = false;
   g_vsync_port = 0;
   pthread_mutex_unlock(&g_vsync_mutex);
+}
+
+// Offers a render session for this thread to draw, or withdraws it with 0.
+//
+// Idempotent, and safe while the service is rendering: it waits for the frame
+// in flight. Withdrawing leaves the session's owner thread as it is, because
+// the caller is about to take it back through mln_shim_render_acquire anyway.
+MLN_SHIM_EXPORT void mln_shim_render_bind(int64_t session_address) {
+  pthread_mutex_lock(&g_render_mutex);
+  g_render_session = (void*)(uintptr_t)session_address;
+  g_render_owned_here = false;
+  g_render_failures = 0;
+  pthread_mutex_unlock(&g_render_mutex);
+}
+
+// Borrows the bound session for the calling thread, blocking until the frame in
+// flight finishes. The caller MUST rebind the session to itself (the C API
+// checks the owner thread on every entry point) and MUST call
+// mln_shim_render_release when done, or the display stops.
+//
+// Recursion is not supported: this is a plain mutex, so a nested acquire
+// deadlocks. The Dart side keeps the bracket to a single leaf call.
+MLN_SHIM_EXPORT void mln_shim_render_acquire(void) {
+  pthread_mutex_lock(&g_render_mutex);
+  // The borrower is about to take the affinity, so this thread has lost it.
+  g_render_owned_here = false;
+}
+
+// Returns a borrowed session. The next frame re-takes the affinity.
+MLN_SHIM_EXPORT void mln_shim_render_release(void) {
+  pthread_mutex_unlock(&g_render_mutex);
+}
+
+// Frames drawn since process start. Monotonic; any thread. Dart watches it move
+// to decide whether the map still has work, which is what it used to learn from
+// the return value of its own render call.
+MLN_SHIM_EXPORT int64_t mln_shim_render_frame_count(void) {
+  return atomic_load_explicit(&g_render_frames, memory_order_relaxed);
+}
+
+// Arms or disarms per-frame sample collection, discarding anything held.
+MLN_SHIM_EXPORT void mln_shim_render_stats_enable(int32_t enabled) {
+  pthread_mutex_lock(&g_stats_mutex);
+  g_stats_armed = enabled != 0;
+  g_stats_count = 0;
+  g_stats_dropped = 0;
+  pthread_mutex_unlock(&g_stats_mutex);
+}
+
+// Drains collected samples into caller-owned arrays of at least capacity
+// entries each, and reports how many were dropped for want of room since the
+// last drain. Returns the number written. Collection stays armed.
+//
+// Its own mutex rather than the render one: draining must not make a display
+// frame wait.
+MLN_SHIM_EXPORT int32_t mln_shim_render_stats_take(int64_t* out_start_us,
+                                                  int64_t* out_duration_us,
+                                                  int32_t capacity,
+                                                  int64_t* out_dropped) {
+  if (out_start_us == NULL || out_duration_us == NULL || capacity <= 0) {
+    return 0;
+  }
+  pthread_mutex_lock(&g_stats_mutex);
+  int32_t written = g_stats_count < capacity ? g_stats_count : capacity;
+  for (int32_t i = 0; i < written; i++) {
+    out_start_us[i] = g_stats_start_us[i];
+    out_duration_us[i] = g_stats_duration_us[i];
+  }
+  // Anything the caller had no room for is a drop from its point of view.
+  const int64_t unread = (int64_t)g_stats_count - (int64_t)written;
+  if (out_dropped != NULL) {
+    *out_dropped = g_stats_dropped + unread;
+  }
+  g_stats_count = 0;
+  g_stats_dropped = 0;
+  pthread_mutex_unlock(&g_stats_mutex);
+  return written;
 }
 
 // Reads the clock the frame times above are stamped with, so Dart can tell how

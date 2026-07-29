@@ -8,13 +8,19 @@ part of 'engine_core.dart';
 
 extension EngineSnapshots on EngineCore {
   /// Renders pending offscreen snapshot jobs; returns whether any rendered.
+  ///
+  /// A snapshot has its own map and its own owned-texture session, attached and
+  /// drawn here: it never goes to the display thread, which draws the one live
+  /// surface. It still has to be re-homed on every call like any other session,
+  /// because the runtime rebind that follows this isolate across OS threads
+  /// deliberately leaves sessions alone (see [RenderThread.borrow]).
   bool _renderSnapshots() {
     var rendered = false;
     for (final job in List.of(_snapshots)) {
       if (job.done || !job.renderPending) continue;
       job.renderPending = false;
       try {
-        job.session.renderUpdate();
+        renderThread.borrow(job.session, job.session.renderUpdate);
         rendered = true;
       } on mln.MaplibreException catch (error) {
         _finishSnapshot(job, error: '$error');
@@ -50,7 +56,10 @@ extension EngineSnapshots on EngineCore {
     _snapshots.remove(job);
     try {
       if (error == null) {
-        final image = job.session.readPremultipliedRgba8();
+        final image = renderThread.borrow(
+          job.session,
+          job.session.readPremultipliedRgba8,
+        );
         _emit(
           SnapshotResultEvent(
             job.sourceSessionId,
@@ -75,7 +84,7 @@ extension EngineSnapshots on EngineCore {
         ),
       );
     } finally {
-      job.session.close();
+      renderThread.borrow(job.session, job.session.close);
       job.map.close();
     }
   }

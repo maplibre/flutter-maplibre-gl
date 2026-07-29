@@ -26,14 +26,16 @@ flutter:
     - assets/maplibre_logo.png
 
 dependencies:
+  # Native allocation for the buffers the shim's render thread drains its
+  # per-frame samples into (dart:ffi has no allocator of its own).
+  ffi: ^2.1.0
   flutter:
     sdk: flutter
   # For the offline API models (OfflineRegion, DownloadRegionStatus), so
   # MapLibreGlNativeOffline is drop-in compatible with global.dart.
   maplibre_gl: ^0.26.2
   maplibre_gl_platform_interface: ^0.26.2
-  # Dart bindings from maplibre-native-ffi PR #187 (branch `dart`).
-  # Spike-only path dependency; see README for the pinned commit.
+  # Dart bindings from maplibre-native-ffi, pinned; see README for the commit.
   maplibre_native_ffi:
     path: ../../maplibre-native-ffi/bindings/dart
 

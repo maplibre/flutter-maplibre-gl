@@ -16,11 +16,13 @@ class _EngineSession {
     required this.map,
     required CreateSessionQuery spec,
     required void Function(EngineEvent) emit,
+    required RenderThread renderThread,
   }) : _spec = spec,
        logicalWidth = spec.logicalWidth,
        logicalHeight = spec.logicalHeight,
        scaleFactor = spec.scaleFactor,
-       _emit = emit;
+       _emit = emit,
+       _renderThread = renderThread;
 
   final int sessionId;
 
@@ -31,6 +33,11 @@ class _EngineSession {
   /// with; the surface handle inside is replaced on resize/recreate.
   final CreateSessionQuery _spec;
   final void Function(EngineEvent) _emit;
+
+  /// Whoever is drawing this session, and the handover for the calls that stay
+  /// here. Every call on [_renderSession] must go through [_onRenderThread],
+  /// because the session's owner thread may be the display pulse thread.
+  final RenderThread _renderThread;
 
   mln.RenderSessionHandle? _renderSession;
 
@@ -61,15 +68,39 @@ class _EngineSession {
   /// Whether rendering is currently possible.
   bool get canRender => !_closed && !_surfaceLost && _renderSession != null;
 
-  /// The live render session, required by feature queries and feature state.
-  /// These stay valid while the surface is released (the renderer survives);
-  /// only a disposed session has no render session at all.
-  mln.RenderSessionHandle requireRenderSession() {
+  /// The live render session. Private on purpose: handing it out bare invites a
+  /// call that skips [onRenderThread], and every session entry point is
+  /// owner-thread checked, so such a call fails the moment the display thread
+  /// holds the session or the VM has moved this isolate. Go through
+  /// [onRenderThread].
+  ///
+  /// Stays valid while the surface is released (the renderer survives); only a
+  /// disposed session has none at all.
+  mln.RenderSessionHandle _requireRenderSession() {
     final session = _renderSession;
     if (session == null) {
       throw StateError('The render session is not available');
     }
     return session;
+  }
+
+  /// Runs [body] with the render session owned by this isolate.
+  ///
+  /// Every session entry point is owner-thread checked and the owner may be the
+  /// display pulse thread, so feature queries, feature state, resize, surface
+  /// replace and detach all have to borrow it back for the length of one call.
+  /// Blocks until the frame in flight finishes, so keep [body] to a leaf call
+  /// and never nest these.
+  T onRenderThread<T>(T Function(mln.RenderSessionHandle session) body) {
+    final session = _requireRenderSession();
+    return _renderThread.borrow(session, () => body(session));
+  }
+
+  /// [onRenderThread] for a session that may not exist yet.
+  T? _withRenderSession<T>(T Function(mln.RenderSessionHandle session) body) {
+    final session = _renderSession;
+    if (session == null) return null;
+    return _renderThread.borrow(session, () => body(session));
   }
 
   CameraSnapshot cameraSnapshot() {
@@ -92,11 +123,13 @@ class _EngineSession {
     if (_closed) return;
     if (_renderSession != null) {
       try {
-        _renderSession!.replaceSurface(
-          mln.NativePointer(surface),
-          logicalWidth,
-          logicalHeight,
-          scaleFactor: scaleFactor,
+        _withRenderSession(
+          (session) => session.replaceSurface(
+            mln.NativePointer(surface),
+            logicalWidth,
+            logicalHeight,
+            scaleFactor: scaleFactor,
+          ),
         );
         _surfaceLost = false;
         map.requestRepaint();
@@ -138,6 +171,9 @@ class _EngineSession {
           ),
         );
     }
+    // Attaching bound the session to this isolate. Offer it to the display
+    // pulse thread, which takes the affinity on its next frame.
+    _renderThread.bindSession(_renderSession);
     _surfaceLost = false;
     map.requestRepaint();
     _renderPending = true;
@@ -228,7 +264,23 @@ class _EngineSession {
   }
 
   void _detachRenderTarget() {
-    _renderSession?.close();
+    final session = _renderSession;
+    if (session == null) return;
+    // Withdraw before destroying, not with a borrow: withdrawing waits for the
+    // frame in flight and then guarantees the render thread will not touch this
+    // session again, whereas taking the borrow and destroying inside it would
+    // need the withdrawal afterwards, and that takes the same non-recursive
+    // native mutex the borrow is holding.
+    _renderThread.bindSession(null);
+    try {
+      // The render thread held the affinity; destroy is owner-thread checked.
+      session.rebindThread();
+      session.close();
+    } on mln.MaplibreException catch (error) {
+      // A session we cannot destroy is a native leak, and saying so is all we
+      // can do: the handle is already out of Dart's reach after this.
+      debugPrint('[maplibre_gl_native] render session teardown failed: $error');
+    }
     _renderSession = null;
   }
 
@@ -247,10 +299,13 @@ class _EngineSession {
     // destroyed before the host destroys the VkSurfaceKHR). The renderer and
     // its GPU resources survive, so the next attach is a cheap swapchain
     // rebuild instead of a visible full re-render of the map.
-    final session = _renderSession;
-    if (session == null) return;
+    if (_renderSession == null) return;
+    // Withdraw first: with no surface every render fails, and the display thread
+    // must not be left grinding through failures it cannot interpret. The next
+    // attach offers the session back.
+    _renderThread.bindSession(null);
     try {
-      session.releaseSurface();
+      _withRenderSession((session) => session.releaseSurface());
     } on mln.MaplibreException catch (error) {
       debugPrint(
         '[maplibre_gl_native] surface release failed, detaching: $error',
@@ -320,16 +375,25 @@ class _EngineSession {
 
   /// Renders a frame if one is pending. Returns true when a frame was
   /// actually rendered.
+  ///
+  /// When the display pulse thread is drawing this session, the draw is not
+  /// ours: the pending flag is still cleared and reported, because the frame
+  /// loop uses the answer only to decide whether the map still has work, and
+  /// the pulse thread is about to draw exactly what is pending.
   bool renderIfNeeded() {
     if (!_renderPending || !canRender) return false;
     _renderPending = false;
+    if (_renderThread.isDrivingSession(_renderSession!)) return true;
     try {
+      // Drawing it ourselves (no display thread, a second map, or the debug
+      // knob). Still through the borrow: it is what re-homes the session after
+      // the VM moved this isolate, which the runtime rebind no longer does.
       final stats = _frameStats;
-      if (stats == null) {
-        _renderSession!.renderUpdate();
-      } else {
-        stats.measure(_renderSession!.renderUpdate);
-      }
+      _withRenderSession(
+        (session) => stats == null
+            ? session.renderUpdate()
+            : stats.measure(session.renderUpdate),
+      );
       return true;
     } on mln.MaplibreException catch (error) {
       debugPrint('[maplibre_gl_native] render failed: $error');
@@ -339,13 +403,25 @@ class _EngineSession {
   }
 
   /// Arms (or disarms) frame statistics collection; arming resets samples.
+  ///
+  /// Armed on both sides, because which one draws is decided at pacing time and
+  /// can change (pulses going stale hands drawing back to this isolate).
   void setFrameStatsEnabled(bool enabled) {
     _frameStats = enabled ? FrameStatsCollector() : null;
+    _renderThread.setStatsEnabled(enabled);
   }
 
-  /// Drains the collected samples without stopping the collection.
-  Map<String, dynamic> takeFrameStats() =>
-      _frameStats?.take() ?? FrameStatsCollector.emptyStats();
+  /// Drains the collected samples without stopping the collection, from
+  /// whichever side is drawing.
+  Map<String, dynamic> takeFrameStats() {
+    final session = _renderSession;
+    final fromDisplayThread = session == null
+        ? null
+        : _renderThread.takeStats(session);
+    return fromDisplayThread ??
+        _frameStats?.take() ??
+        FrameStatsCollector.emptyStats();
+  }
 
   /// Tears down the render session and the map. The external texture is the
   /// presentation side's to dispose.

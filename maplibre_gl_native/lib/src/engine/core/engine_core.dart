@@ -9,6 +9,7 @@ import 'frame_stats.dart';
 import 'geojson_convert.dart';
 import 'http_resource_provider.dart';
 import 'json_convert.dart';
+import 'render_thread.dart';
 
 part 'engine_core_commands.dart';
 part 'engine_core_offline.dart';
@@ -33,6 +34,11 @@ class EngineCore {
   static EngineCore? _instance;
 
   final mln.RuntimeHandle _runtime;
+
+  /// The display-paced thread that draws the live session, and the handover
+  /// used for the session calls that stay on this isolate.
+  final RenderThread renderThread = RenderThread();
+
   final Map<int, _EngineSession> _sessions = <int, _EngineSession>{};
   final List<_SnapshotJob> _snapshots = <_SnapshotJob>[];
   final Map<mln.OfflineOperationHandle, _PendingOfflineOp> _offlineOps =
@@ -106,6 +112,10 @@ class EngineCore {
   ///
   /// The second half of [frame], separate so the frame driver can time the
   /// drain and the draw as the distinct costs they are (see `FramePathProbe`).
+  ///
+  /// When [renderThread] is driving, the live sessions are drawn there and this
+  /// only reports whether they still have work; snapshots stay here, because a
+  /// snapshot has its own map and its own session and never leaves this isolate.
   bool renderPending() {
     var rendered = false;
     for (final session in _sessions.values) {
