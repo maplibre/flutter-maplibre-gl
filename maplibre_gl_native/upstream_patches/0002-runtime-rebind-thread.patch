@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index 8d8d8172..5d0479c4 100644
+index bc8a892f..bbf1d302 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -154,6 +154,15 @@ final class RuntimeHandle {
+@@ -162,6 +162,15 @@ final class RuntimeHandle {
      });
    }
  
@@ -93,10 +93,10 @@ index 49983f8c..453a6006 100644
    -> mln_status {
    return mln::c_api::status_boundary([&]() -> mln_status {
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index e96a67e2..b8390b8f 100644
+index 2c521532..ab378e12 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -3155,6 +3155,24 @@ auto map_request_still_image(mln_map* map) -> mln_status {
+@@ -3402,6 +3402,28 @@ auto map_request_still_image(mln_map* map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -118,16 +118,20 @@ index e96a67e2..b8390b8f 100644
 +  }
 +}
 +
- auto map_owner_thread(const mln_map* map) -> std::thread::id {
-   return map->owner_thread;
++auto map_owner_thread(const mln_map* map) -> std::thread::id {
++  return map->owner_thread;
++}
++
+ auto map_scale_factor(const mln_map* map) -> double {
+   return map->scale_factor;
  }
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index fc0e17b3..35c2c8da 100644
+index fb26b248..5a54af58 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -368,6 +368,12 @@ auto map_set_free_camera_options(
+@@ -372,6 +372,13 @@ auto map_set_free_camera_options(
+ auto validate_map_live(mln_map* map) -> mln_status;
  auto validate_map(mln_map* map) -> mln_status;
- auto map_owner_thread(const mln_map* map) -> std::thread::id;
  auto map_scale_factor(const mln_map* map) -> double;
 +
 +// Re-homes every map owned by runtime, and every projection (projections
@@ -135,14 +139,15 @@ index fc0e17b3..35c2c8da 100644
 +// given thread. See mln_runtime_rebind_thread in runtime.h.
 +auto rebind_maps_to_thread(const mln_runtime* runtime, std::thread::id thread)
 +  -> void;
++
+ // Map-thread only. Code reachable from a render session's owner thread uses the
+ // posting helpers below instead.
  auto map_native(mln_map* map) -> mbgl::Map*;
- auto map_latest_update(mln_map* map) -> std::shared_ptr<mbgl::UpdateParameters>;
- auto map_renderer_observer(mln_map* map) -> mbgl::RendererObserver*;
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 67aa0479..12076c6b 100644
+index 11b43d3e..ad76c427 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -916,6 +916,13 @@ auto register_render_session(
+@@ -917,6 +917,13 @@ auto register_render_session(
    render_sessions().emplace(handle, std::move(session));
  }
  
@@ -153,14 +158,14 @@ index 67aa0479..12076c6b 100644
 +  }
 +}
 +
- auto validate_render_session(mln_render_session* session) -> mln_status {
-   if (session == nullptr) {
-     set_thread_error("render session must not be null");
+ void RenderSessionScheduler::schedule(std::function<void()>&& task) {
+   const auto lock = std::scoped_lock{mutex_};
+   queue_.push_back(std::move(task));
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index 8e5aa3d9..28eb531c 100644
+index 0fc38c24..aac72841 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
-@@ -127,6 +127,11 @@ auto register_render_session(
+@@ -255,6 +255,11 @@ auto register_render_session(
    mln_render_session* handle, std::unique_ptr<mln_render_session> session
  ) -> void;
  auto validate_render_session(mln_render_session* session) -> mln_status;
@@ -173,7 +178,7 @@ index 8e5aa3d9..28eb531c 100644
    -> mln_status;
  auto erase_render_session(mln_render_session* session)
 diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
-index 9ade5dfa..bc146bbe 100644
+index f5911217..1a0dd17e 100644
 --- a/src/runtime/runtime.cpp
 +++ b/src/runtime/runtime.cpp
 @@ -2516,6 +2516,47 @@ auto signal_wake(const std::shared_ptr<WakeState>& state) noexcept -> void {
@@ -225,7 +230,7 @@ index 9ade5dfa..bc146bbe 100644
    const auto status = validate_runtime(runtime);
    if (status != MLN_STATUS_OK) {
 diff --git a/src/runtime/runtime.hpp b/src/runtime/runtime.hpp
-index b979af90..89cb025b 100644
+index 5e5b7ec5..0cd31822 100644
 --- a/src/runtime/runtime.hpp
 +++ b/src/runtime/runtime.hpp
 @@ -162,6 +162,7 @@ auto create_runtime(

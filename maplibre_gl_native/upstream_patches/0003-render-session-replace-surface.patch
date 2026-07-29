@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index a582ee4a..5f720594 100644
+index 44a185a8..9d3fb66d 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-@@ -149,6 +149,39 @@ final class RenderSessionHandle {
+@@ -148,6 +148,39 @@ final class RenderSessionHandle {
      );
    }
  
@@ -43,7 +43,7 @@ index a582ee4a..5f720594 100644
    bool renderUpdate() {
      _checkNoActiveTextureFrame('render update');
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index d5aaf9c3..2bc02673 100644
+index 532041ca..031be335 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
 @@ -58,6 +58,68 @@ MLN_API mln_status mln_render_session_resize(
@@ -145,7 +145,7 @@ index 37584beb..37f30fb7 100644
    mln_render_session* session, bool* out_rendered
  ) noexcept -> mln_status {
 diff --git a/src/render/opengl/opengl_surface_session.cpp b/src/render/opengl/opengl_surface_session.cpp
-index 756c3117..3c462872 100644
+index 558762d0..171a5d87 100644
 --- a/src/render/opengl/opengl_surface_session.cpp
 +++ b/src/render/opengl/opengl_surface_session.cpp
 @@ -159,7 +159,11 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
@@ -216,10 +216,10 @@ index 756c3117..3c462872 100644
    OpenGLSurfaceBackend backend_;
  };
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 12076c6b..9c2b4604 100644
+index ad76c427..9b988251 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -1042,6 +1042,12 @@ auto render_session_resize(
+@@ -1125,6 +1125,12 @@ auto render_session_resize(
      return physical_status;
    }
  
@@ -232,7 +232,7 @@ index 12076c6b..9c2b4604 100644
    const auto physical_width = physical_dimension(width, scale_factor);
    const auto physical_height = physical_dimension(height, scale_factor);
    if (session->kind == RenderSessionKind::Surface) {
-@@ -1067,6 +1073,102 @@ auto render_session_resize(
+@@ -1153,6 +1159,102 @@ auto render_session_resize(
    return MLN_STATUS_OK;
  }
  
@@ -335,7 +335,7 @@ index 12076c6b..9c2b4604 100644
  auto render_session_render_update(
    mln_render_session* session, bool* out_rendered
  ) -> mln_status {
-@@ -1079,6 +1181,12 @@ auto render_session_render_update(
+@@ -1165,6 +1267,12 @@ auto render_session_render_update(
      return MLN_STATUS_INVALID_ARGUMENT;
    }
    *out_rendered = false;
@@ -349,10 +349,10 @@ index 12076c6b..9c2b4604 100644
      session->kind == RenderSessionKind::Texture && session->texture.acquired
    ) {
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index 28eb531c..04d1a7e1 100644
+index aac72841..446251d0 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
-@@ -40,6 +40,19 @@ class SurfaceSessionBackend {
+@@ -44,6 +44,19 @@ class SurfaceSessionBackend {
  
    virtual auto renderer_backend() -> mbgl::gfx::RendererBackend& = 0;
    virtual void resize(uint32_t physical_width, uint32_t physical_height) = 0;
@@ -372,7 +372,7 @@ index 28eb531c..04d1a7e1 100644
  };
  
  class TextureSessionBackend {
-@@ -109,6 +122,9 @@ struct mln_render_session {
+@@ -234,6 +247,9 @@ struct mln_render_session {
    uint64_t generation = 1;
    uint64_t rendered_generation = 0;
    bool attached = true;
@@ -380,9 +380,9 @@ index 28eb531c..04d1a7e1 100644
 +  // render and resize are suspended until then.
 +  bool surface_released = false;
  
-   std::unique_ptr<mbgl::Renderer> renderer = nullptr;
-   mln::core::RenderSurfaceState surface;
-@@ -282,6 +298,13 @@ auto render_session_resize(
+   // Declared before `renderer` so reverse-order destruction tears the renderer
+   // down while the scheduler its mailboxes point at is still alive.
+@@ -410,6 +426,13 @@ auto render_session_resize(
    mln_render_session* session, uint32_t width, uint32_t height,
    double scale_factor
  ) -> mln_status;
@@ -397,7 +397,7 @@ index 28eb531c..04d1a7e1 100644
    mln_render_session* session, bool* out_rendered
  ) -> mln_status;
 diff --git a/src/render/vulkan/vulkan_surface_session.cpp b/src/render/vulkan/vulkan_surface_session.cpp
-index bd292160..19ec0f20 100644
+index b5601cb8..9850e0ac 100644
 --- a/src/render/vulkan/vulkan_surface_session.cpp
 +++ b/src/render/vulkan/vulkan_surface_session.cpp
 @@ -305,6 +305,39 @@ class VulkanSurfaceBackend final : public mbgl::vulkan::RendererBackend,

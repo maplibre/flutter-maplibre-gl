@@ -12,7 +12,7 @@
 # Usage: tool/build_native.sh [--backend vulkan|egl] [--ffi-dir <path>]
 set -euo pipefail
 
-PIN=fbc0da587d96de6baef6783069005c4d4758c135
+PIN=9d1508dc36d6a2808004c751731313d230da7e7f
 NDK_PINNED_VERSION=28.1.13356709
 REPO_URL=https://github.com/maplibre/maplibre-native-ffi.git
 

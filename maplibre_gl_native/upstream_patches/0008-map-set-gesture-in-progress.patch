@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index 079b492e..1931592b 100644
+index 531d7f94..01d3e9b8 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -1973,6 +1973,12 @@ final class MapHandle {
+@@ -1839,6 +1839,12 @@ final class MapHandle {
      _check(_c.raw.mln_map_cancel_transitions(_pointer));
    }
  
@@ -59,10 +59,10 @@ index 72348594..13f59799 100644
    mln_map* map, mln_lat_lng_bounds bounds,
    const mln_camera_fit_options* fit_options, mln_camera_options* out_camera
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 6de3521d..c222da2e 100644
+index 227c0ca6..28c064c6 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -6186,6 +6186,15 @@ auto map_cancel_transitions(mln_map* map) -> mln_status {
+@@ -6471,6 +6471,15 @@ auto map_cancel_transitions(mln_map* map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -79,7 +79,7 @@ index 6de3521d..c222da2e 100644
    if (out_camera == nullptr || out_camera->size < sizeof(mln_camera_options)) {
      set_thread_error("out_camera must not be null and must have a valid size");
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index c07b3f9e..c91fd4b1 100644
+index 4e62037b..73bf02c9 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
 @@ -345,6 +345,7 @@ auto map_pitch_by_animated(

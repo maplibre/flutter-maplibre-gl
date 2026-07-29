@@ -114,9 +114,15 @@ class _EngineSession {
       height: logicalHeight,
       scaleFactor: scaleFactor,
     );
+    // Attaching is the one map operation the library runs on the render
+    // session's owner rather than the map's, so it goes through a reference
+    // that carries only the map's address and can therefore cross an isolate.
+    // Both live on this isolate today, which makes the hop a formality; it is
+    // also the seam that would let the render leave this isolate later.
+    final attachRef = map.attachRef();
     switch (_spec) {
       case final OpenGlSessionQuery spec:
-        _renderSession = map.attachOpenGLSurface(
+        _renderSession = attachRef.attachOpenGLSurface(
           mln.OpenGLSurfaceDescriptor(
             extent: extent,
             context: _eglContext(spec),
@@ -124,7 +130,7 @@ class _EngineSession {
           ),
         );
       case final VulkanSessionQuery spec:
-        _renderSession = map.attachVulkanSurface(
+        _renderSession = attachRef.attachVulkanSurface(
           mln.VulkanSurfaceDescriptor(
             extent: extent,
             context: _vulkanContext(spec),
@@ -188,19 +194,22 @@ class _EngineSession {
         height: snapshotHeight,
         scaleFactor: scaleFactor,
       );
+      final snapshotAttachRef = snapshotMap.attachRef();
       snapshotSession = switch (_spec) {
-        final OpenGlSessionQuery spec => snapshotMap.attachOpenGLOwnedTexture(
-          mln.OpenGLOwnedTextureDescriptor(
-            extent: extent,
-            context: _eglContext(spec),
-          ),
-        ),
-        final VulkanSessionQuery spec => snapshotMap.attachVulkanOwnedTexture(
-          mln.VulkanOwnedTextureDescriptor(
-            extent: extent,
-            context: _vulkanContext(spec),
-          ),
-        ),
+        final OpenGlSessionQuery spec => snapshotAttachRef
+            .attachOpenGLOwnedTexture(
+              mln.OpenGLOwnedTextureDescriptor(
+                extent: extent,
+                context: _eglContext(spec),
+              ),
+            ),
+        final VulkanSessionQuery spec => snapshotAttachRef
+            .attachVulkanOwnedTexture(
+              mln.VulkanOwnedTextureDescriptor(
+                extent: extent,
+                context: _vulkanContext(spec),
+              ),
+            ),
       };
       snapshotMap.setStyleJson(map.getStyleJson());
       snapshotMap.jumpTo(map.camera());
