@@ -131,6 +131,9 @@ class _EngineSession {
             scaleFactor: scaleFactor,
           ),
         );
+        // Offer the session back: onSurfaceLost withdrew it from the display
+        // thread, and without this the fallback quietly draws here forever.
+        _renderThread.bindSession(_renderSession);
         _surfaceLost = false;
         map.requestRepaint();
         _renderPending = true;
@@ -411,16 +414,16 @@ class _EngineSession {
     _renderThread.setStatsEnabled(enabled);
   }
 
-  /// Drains the collected samples without stopping the collection, from
-  /// whichever side is drawing.
+  /// Drains the collected samples without stopping the collection, merging
+  /// both sides: which one draws is decided at pacing time and can flip
+  /// mid-scenario, so returning only one would silently lose the other's
+  /// frames. The `source` field says who actually drew.
   Map<String, dynamic> takeFrameStats() {
     final session = _renderSession;
     final fromDisplayThread = session == null
         ? null
         : _renderThread.takeStats(session);
-    return fromDisplayThread ??
-        _frameStats?.take() ??
-        FrameStatsCollector.emptyStats();
+    return FrameStatsCollector.mergeStats(fromDisplayThread, _frameStats?.take());
   }
 
   /// Tears down the render session and the map. The external texture is the

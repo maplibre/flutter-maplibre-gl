@@ -78,7 +78,19 @@ class RenderThread {
     _bindings?.bind(0);
   }
 
-  void _publish() => _bindings?.bind(_session?.nativeAddress ?? 0);
+  void _publish() {
+    final bindings = _bindings;
+    if (bindings == null) return;
+    if (bindings.bind(_session?.nativeAddress ?? 0) != 0) return;
+    // The shim gave up on its mutex (a borrow was never returned; hot restart
+    // mid-borrow is the known way). The display service is gone for the rest
+    // of this process: fall back to drawing on this isolate, loudly.
+    _driving = false;
+    debugPrint(
+      '[maplibre_gl_native] display render service unavailable '
+      '(render mutex unrecoverable); rendering on the engine isolate',
+    );
+  }
 
   /// Arms or disarms per-frame sample collection on the render thread.
   ///
@@ -92,14 +104,19 @@ class RenderThread {
 
   _StatsBuffers? _statsBuffers;
 
-  /// Drains the render thread's samples, or null when it is not drawing
-  /// [session] and therefore has nothing to say about it.
+  /// Drains the render thread's samples, or null when [session] is not the
+  /// bound one and the buffer therefore has nothing to say about it.
+  ///
+  /// Keyed on the bound session rather than on [isDrivingSession]: after a
+  /// pacing flip (driving turned off mid-scenario) the buffer still holds
+  /// frames it drew for this session, and a drain must not orphan them; the
+  /// core merges this with the isolate collector's samples.
   ///
   /// Shape matches `FrameStatsCollector.take`, so the benchmark harness reads
   /// the display thread's frames exactly as it read the isolate's.
   Map<String, dynamic>? takeStats(mln.RenderSessionHandle session) {
     final bindings = _bindings;
-    if (!isDrivingSession(session) || bindings == null) return null;
+    if (!identical(_session, session) || bindings == null) return null;
     final buffers = _statsBuffers ??= _StatsBuffers.allocate();
     final written = bindings.statsTake(
       buffers.startUs,
@@ -115,6 +132,7 @@ class RenderThread {
       );
     }
     return <String, dynamic>{
+      'source': 'displayThread',
       'clockUs': _monotonicMicros(),
       'timestampsUs': Int64List.fromList(buffers.startUs.asTypedList(written)),
       'durationsUs': Int64List.fromList(
@@ -146,7 +164,17 @@ class RenderThread {
       session.rebindThread();
       return body();
     }
-    bindings.acquire();
+    if (bindings.acquire() == 0) {
+      // The shim's mutex is unrecoverable, so its thread has stopped touching
+      // the session (it gives up the same way). Draw and call from here on.
+      _driving = false;
+      debugPrint(
+        '[maplibre_gl_native] session borrow failed '
+        '(render mutex unrecoverable); rendering on the engine isolate',
+      );
+      session.rebindThread();
+      return body();
+    }
     try {
       session.rebindThread();
       return body();
@@ -191,8 +219,10 @@ class _ShimBindings {
     this.statsTake,
   );
 
-  final void Function(int sessionAddress) bind;
-  final void Function() acquire;
+  /// Both report failure (0) when the shim's render mutex is unrecoverable;
+  /// see `render_mutex_lock_or_give_up` in `cpp/shim.c`.
+  final int Function(int sessionAddress) bind;
+  final int Function() acquire;
   final void Function() release;
   final int Function() frameCount;
   final void Function(int enabled) statsEnable;
@@ -230,10 +260,10 @@ class _ShimBindings {
         return null;
       }
       return _ShimBindings._(
-        lib.lookupFunction<Void Function(Int64), void Function(int)>(
+        lib.lookupFunction<Int32 Function(Int64), int Function(int)>(
           'mln_shim_render_bind',
         ),
-        lib.lookupFunction<Void Function(), void Function()>(
+        lib.lookupFunction<Int32 Function(), int Function()>(
           'mln_shim_render_acquire',
         ),
         lib.lookupFunction<Void Function(), void Function()>(

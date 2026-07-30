@@ -261,9 +261,20 @@ extension EngineCommandDispatch on EngineCore {
       case SetStyleCommand():
         final session = _session(command.sessionId);
         final trimmed = command.styleString.trim();
+        // Timed because this call can carry the style parse inline, which is
+        // the single longest thing a command can do on this isolate; knowing
+        // its real size is what the isolate-vs-root decision rests on.
+        final styleClock = Stopwatch()..start();
         trimmed.startsWith('{')
             ? session.map.setStyleJson(trimmed)
             : session.map.setStyleUrl(trimmed);
+        final styleMs = styleClock.elapsedMilliseconds;
+        if (styleMs >= 8) {
+          debugPrint(
+            '[maplibre_gl_native] setStyle call took $styleMs ms '
+            '(inline work on the engine isolate)',
+          );
+        }
         // A style load drops every source added on top of the old style.
         session.geojsonCache.clear();
         session.requestRender();

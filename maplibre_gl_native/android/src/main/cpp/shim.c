@@ -263,15 +263,59 @@ extern int mln_render_session_rebind_thread(void* session);
 // borrow when Dart takes the session. Separate from g_vsync_mutex, which only
 // protects the pulse bookkeeping: taking that one while blocked on a Dart
 // borrow would stall mln_shim_vsync_stop.
+//
+// Every lock of this mutex is bounded (see render_mutex_lock_or_give_up):
+// a hot restart can kill the borrowing isolate between acquire and release,
+// and the OS thread that owns the lock lives on in the VM's pool, so an
+// unbounded wait here would freeze the display, and the next bind with it,
+// until the process dies. Bounded waits turn that into a loud log plus a
+// fallback to isolate rendering.
 static pthread_mutex_t g_render_mutex = PTHREAD_MUTEX_INITIALIZER;
 // The bound session, or NULL when Dart has not offered one (or withdrew it).
 static void* g_render_session = NULL;
 // Whether this thread currently holds the session's owner-thread affinity.
 static bool g_render_owned_here = false;
-// Consecutive failed renders, reset by any success or any bind. About two
-// seconds at 90 Hz, which no legitimate surface swap comes close to.
+// Consecutive failed renders, reset by any success, any bind, and every pulse
+// resume. About two seconds at 90 Hz, which no legitimate surface swap comes
+// close to. Atomic so the resume path can reset it without taking (and
+// possibly blocking on) g_render_mutex.
 #define MLN_SHIM_RENDER_FAILURE_LIMIT 180
-static int32_t g_render_failures = 0;
+static _Atomic int32_t g_render_failures = 0;
+
+// Longer than any frame or borrowed call has business taking; short enough
+// that a wedged mutex is diagnosed, not waited out.
+#define MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS 2
+
+// Set once when the mutex times out; never cleared. The owning thread lives
+// on in the VM's pool with no one left to unlock, so the lock is gone for the
+// life of the process, and every later attempt must fail fast rather than
+// stall the pulse thread for the timeout again and again.
+static _Atomic bool g_render_mutex_dead = false;
+
+// Locks g_render_mutex with a bounded wait. False means the lock is
+// unrecoverable (a borrow was never returned; hot restart mid-borrow is the
+// known way) and the caller must give up rather than block.
+static bool render_mutex_lock_or_give_up(const char* who) {
+  if (atomic_load_explicit(&g_render_mutex_dead, memory_order_relaxed)) {
+    return false;
+  }
+  struct timespec deadline;
+  if (clock_gettime(CLOCK_REALTIME, &deadline) != 0) {
+    pthread_mutex_lock(&g_render_mutex);
+    return true;
+  }
+  deadline.tv_sec += MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS;
+  if (pthread_mutex_timedlock(&g_render_mutex, &deadline) == 0) {
+    return true;
+  }
+  atomic_store_explicit(&g_render_mutex_dead, true, memory_order_relaxed);
+  __android_log_print(ANDROID_LOG_ERROR, MLN_SHIM_LOG_TAG,
+                      "%s: render mutex held for over %d s (a borrow never "
+                      "returned; hot restart mid-borrow?); the display render "
+                      "service is disabled for the rest of the process",
+                      who, MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS);
+  return false;
+}
 // Frames actually drawn. Dart reads it to tell "the map is still moving" from
 // "nothing left to draw", which is what its idle-park decision used to get from
 // its own render call. Atomic because it is read without g_render_mutex.
@@ -364,7 +408,9 @@ static void vsync_post_locked(void) {
 // picture drawn late. Dropping them by age was tried on device and made every
 // gesture visibly jerky while flattering the numbers.
 static bool render_bound_session(void) {
-  pthread_mutex_lock(&g_render_mutex);
+  if (!render_mutex_lock_or_give_up("render")) {
+    return false;  // Park; Dart's next bind will fail loudly and fall back.
+  }
   void* const session = g_render_session;
   if (session == NULL) {
     pthread_mutex_unlock(&g_render_mutex);
@@ -388,12 +434,13 @@ static bool render_bound_session(void) {
     stats_record(started_us, monotonic_micros() - started_us);
   }
   if (status == 0) {
-    g_render_failures = 0;
+    atomic_store_explicit(&g_render_failures, 0, memory_order_relaxed);
     pthread_mutex_unlock(&g_render_mutex);
     return true;
   }
-  g_render_failures += 1;
-  const int32_t failures = g_render_failures;
+  const int32_t failures =
+      atomic_fetch_add_explicit(&g_render_failures, 1, memory_order_relaxed) +
+      1;
   pthread_mutex_unlock(&g_render_mutex);
 
   // A single failure is not a reason to stop: a surface being replaced fails a
@@ -509,6 +556,9 @@ MLN_SHIM_EXPORT int32_t mln_shim_vsync_start(int64_t dart_port) {
   g_vsync_running = true;
   ALooper* looper = g_vsync_looper;
   pthread_mutex_unlock(&g_vsync_mutex);
+  // A resume forgives past render failures: a service parked at the failure
+  // limit would otherwise re-park after a single failure on every wake.
+  atomic_store_explicit(&g_render_failures, 0, memory_order_relaxed);
   // Nudge the (possibly parked) pulse thread so it re-arms the one-shot
   // frame callback.
   ALooper_wake(looper);
@@ -530,12 +580,18 @@ MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
 // Idempotent, and safe while the service is rendering: it waits for the frame
 // in flight. Withdrawing leaves the session's owner thread as it is, because
 // the caller is about to take it back through mln_shim_render_acquire anyway.
-MLN_SHIM_EXPORT void mln_shim_render_bind(int64_t session_address) {
-  pthread_mutex_lock(&g_render_mutex);
+//
+// Returns 1 on success, 0 when the render mutex is unrecoverable (see
+// render_mutex_lock_or_give_up); on 0 the caller must draw on its own thread.
+MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_address) {
+  if (!render_mutex_lock_or_give_up("bind")) {
+    return 0;
+  }
   g_render_session = (void*)(uintptr_t)session_address;
   g_render_owned_here = false;
-  g_render_failures = 0;
+  atomic_store_explicit(&g_render_failures, 0, memory_order_relaxed);
   pthread_mutex_unlock(&g_render_mutex);
+  return 1;
 }
 
 // Borrows the bound session for the calling thread, blocking until the frame in
@@ -545,10 +601,16 @@ MLN_SHIM_EXPORT void mln_shim_render_bind(int64_t session_address) {
 //
 // Recursion is not supported: this is a plain mutex, so a nested acquire
 // deadlocks. The Dart side keeps the bracket to a single leaf call.
-MLN_SHIM_EXPORT void mln_shim_render_acquire(void) {
-  pthread_mutex_lock(&g_render_mutex);
+//
+// Returns 1 with the mutex held, or 0 when it is unrecoverable; on 0 the
+// caller must NOT call mln_shim_render_release.
+MLN_SHIM_EXPORT int32_t mln_shim_render_acquire(void) {
+  if (!render_mutex_lock_or_give_up("acquire")) {
+    return 0;
+  }
   // The borrower is about to take the affinity, so this thread has lost it.
   g_render_owned_here = false;
+  return 1;
 }
 
 // Returns a borrowed session. The next frame re-takes the affinity.
