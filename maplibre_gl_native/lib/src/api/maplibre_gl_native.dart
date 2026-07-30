@@ -8,20 +8,23 @@ import '../presentation/platform/ffi_platform.dart';
 class MapLibreGlNative {
   MapLibreGlNative._();
 
-  /// The transport of the live engine host: `'isolate'`, or `'none'` when no
-  /// host has been bootstrapped yet.
+  /// The COMMAND transport of the live engine host: `'isolate'`, or `'none'`
+  /// when no host has been bootstrapped yet.
   ///
-  /// The MapLibre runtime, maps, and rendering always run on a dedicated
-  /// engine isolate; benchmark harnesses assert on this instead of assuming.
+  /// This says nothing about which thread draws: rendering happens on a
+  /// display-paced native thread by default (the frame stats' `source` field
+  /// names the drawing side). Benchmark harnesses assert on this instead of
+  /// assuming.
   static String get activeEngineTransport =>
       EngineHost.instance == null ? 'none' : 'isolate';
 
   /// Routes every subsequently created `MapLibreMap` widget through the FFI
   /// backend instead of the method-channel platform views.
   ///
-  /// The MapLibre runtime, maps, and rendering run on a dedicated engine
-  /// isolate, keeping heavy tile-integration frames off the UI thread; the
-  /// first map creation throws a [StateError] if that isolate cannot be
+  /// The MapLibre runtime and maps run on a dedicated engine isolate, and
+  /// rendering runs on a display-paced native thread, so neither heavy tile
+  /// integration nor a display frame ever runs on the UI thread; the first
+  /// map creation throws a [StateError] if the engine isolate cannot be
   /// bootstrapped. EXPERIMENTAL.
   static void use() {
     MapLibrePlatform.createInstance = MapLibreFfiPlatform.new;

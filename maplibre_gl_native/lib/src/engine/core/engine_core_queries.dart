@@ -181,8 +181,8 @@ extension EngineQueryDispatch on EngineCore {
           )
         : mln.RenderedQueryPoint(mln.ScreenPoint(query.x, query.y));
     // One borrow for the whole layer walk rather than one per layer: this runs
-    // on every tap and on every move of a feature drag, and each borrow waits
-    // for the frame in flight.
+    // on every tap and on drag-start arbitration (not per drag move), and each
+    // borrow waits for the frame in flight.
     return session.onRenderThread((render) {
       for (final layerId in query.layerIds) {
         final features = render.queryRenderedFeatures(

@@ -26,7 +26,7 @@ The MapLibre runtime and maps live on a **dedicated engine isolate**: every comm
 
 - The only platform channel left is a small utility channel (`MapLibreGlNativePlugin`): `SurfaceProducer` texture lifecycle (create/resize/recreate/dispose), `mln_android_init`, the app cache directory for the persistent tile cache, opening attribution links, and the platform location stream. The JNI shim (`android/src/main/cpp/shim.c`) carries what only native code can do: the Vulkan instance/device/surface bootstrap, and the display-paced render service (AChoreographer) that draws the live session and paces the runtime pump.
 - Gestures are implemented once in Dart (`MapGestureHandler`): pan with fling inertia, pinch, rotate, two-finger tilt, double-tap and two-finger-tap zoom, scroll-wheel zoom, tap/long-press events, and long-press feature drag, following the Android SDK's thresholds and animation formulas; camera writes reach the engine isolate as protocol commands.
-- HTTP is Dart-owned: a resource provider (`HttpResourceProvider`) intercepts every http(s) request (styles, tiles, glyphs, sprites) and serves it with `dart:io`'s `HttpClient`, bypassing the library's built-in Rust HTTP/TLS stack (rustls-platform-verifier rejected valid certificates with "invalid peer certificate: Revoked" on some devices). This is also the seam where `setHttpHeaders` support will land.
+- HTTP is Dart-owned: a resource provider (`HttpResourceProvider`) intercepts every http(s) request (styles, tiles, glyphs, sprites) and serves it with `dart:io`'s `HttpClient`, bypassing the library's built-in Rust HTTP/TLS stack, whose certificate verification currently fails on Android for most public CAs on every device (rustls-platform-verifier [#221](https://github.com/rustls/rustls-platform-verifier/issues/221): CRL-only certificates, i.e. most of the web since CAs retired OCSP in 2025, are reported "Revoked"; upstream workaround in flight as maplibre-native-ffi [#435](https://github.com/maplibre/maplibre-native-ffi/pull/435)). The provider sits behind the core's SQLite cache (caching and offline downloads flow through it unchanged) and is also the seam that serves `setHttpHeaders`.
 - Render backend is auto-detected: the bundled `libmaplibre-native-c.so` is compiled for one backend (OpenGL/EGL or **Vulkan**), the Dart side queries it (`mln_supported_render_backend_mask`) and the platform bridge prepares the matching surface. For Vulkan (the default the MapLibre Android SDK itself moved to), the shim bootstraps instance/device/queue and wraps the SurfaceProducer window in a `VkSurfaceKHR`; no EGL is involved and the engine stops sharing the GLES driver path with Flutter's compositor. The EGL variant wraps the `SurfaceProducer` surface in Kotlin via `EGL14` instead.
 
 ## Building the native library
@@ -55,7 +55,7 @@ The pinned tree needs the local patches in `upstream_patches/`, applied **in ord
 3. `0003-render-session-replace-surface.patch`: `mln_render_session_release_surface` and `mln_render_session_replace_surface`, which swap the native surface of a live render session while keeping the renderer and its GPU resources. Without it every surface recreation (Android rotation/resize) tears the session down and visibly re-renders the map from scratch.
 4. `0004-map-copy-style-json.patch`: `mln_map_copy_style_json`, which copies the current style as a full style-spec JSON document (the C API only had the setter). Needed by the `getStyle()` platform method.
 5. `0005-location-indicator-lat-lng-order.patch`: bug fix. `mln_map_set_location_indicator_location` built the `location` property in GeoJSON order `[lng, lat, altitude]`, but the location-indicator style-spec property is `[latitude, longitude, altitude]`; the puck rendered at swapped coordinates (invisible unless at Null Island).
-6. `0006-canonicalize-url-before-custom-provider.patch`: bug fix. Scheme-alias URLs (`maplibre://tiles` in the demotiles style) were matched against custom-provider routes BEFORE canonicalization, so they never matched the provider's `http(s)://*` routes and silently fell through to the built-in Rust HTTP client (which fails TLS verification on some devices). The patch applies the same per-kind URL normalization that `OnlineFileSource::request` performs, before provider dispatch.
+6. `0006-canonicalize-url-before-custom-provider.patch`: bug fix. Scheme-alias URLs (`maplibre://tiles` in the demotiles style) were matched against custom-provider routes BEFORE canonicalization, so they never matched the provider's `http(s)://*` routes and silently fell through to the built-in Rust HTTP client (whose Android TLS verification is currently broken, see the HTTP bullet above). The patch applies the same per-kind URL normalization that `OnlineFileSource::request` performs, before provider dispatch.
 7. `0007-style-transition-options.patch`: `mln_map_set_style_transition_options` (+ Dart wrapper), exposing `mbgl::style::TransitionOptions` incl. `enablePlacementTransitions`, which the Android SDK exposes as `Style.setTransition`. The backend disables placement cross-fade for the duration of a feature drag so per-move symbol updates apply instantly instead of trailing by the ~300ms fade.
 8. `0008-map-set-gesture-in-progress.patch`: `mln_map_set_gesture_in_progress` (+ Dart wrapper), exposing `mbgl::Map::setGestureInProgress`. The platform SDKs bracket every touch gesture with it; the gesture handler mirrors that (set on the first pointer down, cleared on the last pointer up).
 9. `0009-lifecycle-rebind-owner-thread.patch`: **throwaway scaffolding, delete it rather than maintain it.** Upstream #399 added a Dart-side guard that throws when a handle's native thread token no longer matches, and `rebindThread()` (patch 0002) reads its pointer through that guard, so the rebind is gated by the very check it exists to clear and the engine isolate dies seconds after the map opens. This makes the guard's thread-token branch heal instead of throwing. It disables a guard upstream added on purpose and is not upstreamable. Removing the engine isolate, or taking the awaits off it, retires this patch and probably 0002 with it.
@@ -113,6 +113,17 @@ void main() {
 ```
 
 Then use the regular `MapLibreMap` widget from `maplibre_gl`.
+
+## Debug knobs
+
+`--dart-define` switches for A/B measurement and diagnosis. All default to off; none is a supported mode.
+
+| Define | Effect |
+| --- | --- |
+| `MLN_RENDER_ON_ISOLATE=true` | Draw on the engine isolate instead of the display pulse thread (the pre-display-thread architecture; the A/B arm that justified the thread). |
+| `MLN_FORCE_TIMER_PACING=true` | Skip the choreographer pulses and pace frames with a refresh-rate-matched timer (the vsync A/B arm). |
+| `MLN_NATIVE_HTTP=true` | Skip the Dart HTTP provider so the built-in Rust client serves all requests (TLS repro; `setHttpHeaders` is inactive). |
+| `MLN_FRAME_PATH_PROBE=true` | Arm the frame-path latency probe; per-window tables land in the app log. |
 
 ## API coverage
 

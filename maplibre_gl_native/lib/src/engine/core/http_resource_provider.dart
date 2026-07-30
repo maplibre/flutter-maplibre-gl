@@ -8,12 +8,15 @@ import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 /// Serves every http(s) resource request of the native engine through Dart's
 /// own HTTP stack (`dart:io` [HttpClient]).
 ///
-/// The C library ships a Rust HTTP client whose TLS verification
-/// (rustls-platform-verifier) rejected valid certificates on some Android
-/// devices during the spike ("invalid peer certificate: Revoked"). Fetching
-/// from Dart sidesteps that stack entirely, reuses the platform trust store
-/// the rest of the app already relies on, and is the natural seam for custom
-/// HTTP headers (`setHttpHeaders`) later.
+/// The C library ships a Rust HTTP client whose TLS verification currently
+/// fails on Android for most public CAs, on every device: certificates
+/// without an OCSP URL (Google Trust Services and Let's Encrypt among them,
+/// since CAs retired OCSP in 2025) are reported "invalid peer certificate:
+/// Revoked" (rustls-platform-verifier#221; upstream workaround in flight as
+/// maplibre-native-ffi#435). Fetching from Dart sidesteps that stack
+/// entirely, reuses the platform trust store the rest of the app already
+/// relies on, and is the seam that serves custom HTTP headers
+/// (`setHttpHeaders`), which the C API has no counterpart for.
 ///
 /// Requires the prefix-wildcard route patch in the pinned maplibre-native-ffi
 /// build (route URLs ending in `*` match by prefix); see the package README.

@@ -76,8 +76,20 @@ class EngineCore {
       ),
     );
     // Fetch styles/tiles/glyphs/sprites through Dart instead of the built-in
-    // Rust HTTP client (whose TLS verification failed on some devices).
-    HttpResourceProvider.install(runtime);
+    // Rust HTTP client, whose TLS verification currently fails on Android for
+    // most public CAs (rustls-platform-verifier#221: CRL-only certificates
+    // are reported "Revoked"; fix in flight as maplibre-native-ffi#435).
+    //
+    // MLN_NATIVE_HTTP=true skips the provider so the native client can be
+    // exercised (TLS repro, A/B once #435 lands). Debug knob, not a mode.
+    if (!const bool.fromEnvironment('MLN_NATIVE_HTTP')) {
+      HttpResourceProvider.install(runtime);
+    } else {
+      debugPrint(
+        '[maplibre_gl_native] MLN_NATIVE_HTTP set; the built-in Rust HTTP '
+        'client serves all requests (setHttpHeaders is inactive)',
+      );
+    }
     final core = EngineCore._(runtime);
     _instance = core;
     return core;

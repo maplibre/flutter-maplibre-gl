@@ -32,9 +32,12 @@ What it does:
 The hook is per-isolate rather than per-handle because `MapProjectionHandle` and
 `RenderSessionHandle` have no runtime to be given one: after #399 a session is
 built by `MapAttachRef`, which by design carries nothing but the map's address.
-One hook per isolate covers them, because `mln_runtime_rebind_thread` re-homes
-the runtime, its maps, its projections and every render session at once, under
-the single-live-runtime assumption patch 0002 already documents.
+One hook per isolate covers the runtime, its maps, and its projections, which is
+what `mln_runtime_rebind_thread` re-homes (patch 0010 narrowed it: sessions are
+deliberately excluded, or the rebind would steal one from the thread drawing
+it). For a `RenderSessionHandle` the heal therefore refreshes only the Dart
+token; the native re-home happens explicitly in `RenderThread.borrow` via
+`mln_render_session_rebind_thread`, which the token refresh is what unlocks.
 
 How it goes away: Action 2 moves `render_update` onto the Choreographer thread,
 after which either the engine isolate disappears entirely (nothing left to
@@ -64,9 +67,9 @@ index 0fa369e..dde42ec 100644
 +///
 +/// TEMPORARY SCAFFOLDING, see upstream_patches/0009 in flutter-maplibre-gl.
 +/// Called by `RuntimeHandle`, the only handle that can reach
-+/// `mln_runtime_rebind_thread`; that call re-homes the runtime, its maps, its
-+/// projections and every render session at once, so one hook per isolate
-+/// serves handles that carry no runtime of their own.
++/// `mln_runtime_rebind_thread`; that call re-homes the runtime, its maps, and
++/// its projections (NOT render sessions, which may be owned by a display
++/// thread and re-home explicitly through their own rebind instead).
 +void installThreadRebind(void Function()? rebind) {
 +  _threadRebind = rebind;
 +}

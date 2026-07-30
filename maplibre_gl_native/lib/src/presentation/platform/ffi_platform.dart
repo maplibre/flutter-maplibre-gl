@@ -32,8 +32,9 @@ import '../../utils/projection.dart';
 /// [EngineHost] commands/queries and engine events back into the platform
 /// callback sinks. It never touches a native handle directly.
 ///
-/// Spike scope: camera, style loading, projection, GeoJSON sources, style
-/// layers by JSON, and runtime events. Everything else throws through
+/// Covers nearly the whole `MapLibrePlatform` contract (see the package
+/// README's "API coverage" section for the current list and the few known
+/// gaps); the remaining unimplemented methods throw through
 /// [MapLibreFfiPlatformBase].
 class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
   /// The live map session, set by [attach] once the widget has created it.
