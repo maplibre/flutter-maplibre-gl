@@ -17,7 +17,7 @@ extension EngineQueryDispatch on EngineCore {
       final PixelForLatLngQuery q => _pixelForLatLng(q),
       final PixelsForLatLngsQuery q => _pixelsForLatLngs(q),
       final LatLngForPixelQuery q => _latLngForPixel(q),
-      final GetStyleJsonQuery q => _session(q.sessionId).map.getStyleJson(),
+      final GetStyleJsonQuery q => _session(q.sessionId).map.getLoadedStyleJson(),
       final GetLayerIdsQuery q => _session(q.sessionId).map.listStyleLayerIds(),
       final GetSourceIdsQuery q => _session(
         q.sessionId,

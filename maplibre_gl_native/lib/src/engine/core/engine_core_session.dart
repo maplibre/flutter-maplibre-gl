@@ -250,7 +250,7 @@ class _EngineSession {
               ),
             ),
       };
-      snapshotMap.setStyleJson(map.getStyleJson());
+      snapshotMap.setStyleJson(map.getLoadedStyleJson());
       snapshotMap.jumpTo(map.camera());
       snapshotMap.requestStillImage();
       return _SnapshotJob(

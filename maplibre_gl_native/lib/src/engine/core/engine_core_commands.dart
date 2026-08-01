@@ -11,6 +11,13 @@ extension EngineCommandDispatch on EngineCore {
   void handleCommand(EngineCommand command) {
     switch (command) {
       case SetHttpHeadersCommand():
+        // The provider is not installed by default (native HTTP serves
+        // everything); headers are the one feature that still needs the Dart
+        // fetch path, so install it on first use. Clearing headers does not
+        // uninstall: requests keep flowing through Dart with no extras added.
+        if (command.headers.isNotEmpty) {
+          HttpResourceProvider.install(_runtime);
+        }
         HttpResourceProvider.setHeaders(
           command.headers,
           urlFilters: command.urlFilters,
@@ -316,8 +323,12 @@ extension EngineCommandDispatch on EngineCore {
         session.geojsonCache.remove(command.sourceId);
         session.requestRender();
       case SetPlacementTransitionsCommand():
+        // Replaces the whole style-wide transition override; duration and
+        // delay stay absent so the style's own values keep applying.
         _session(command.sessionId).map.setStyleTransitionOptions(
-          enablePlacementTransitions: command.enabled,
+          mln.StyleTransitionOptions(
+            enablePlacementTransitions: command.enabled,
+          ),
         );
       case SetGeoJsonFeatureCommand():
         final session = _session(command.sessionId);

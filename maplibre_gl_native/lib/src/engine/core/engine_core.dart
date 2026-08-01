@@ -75,20 +75,23 @@ class EngineCore {
             : '$cachePath/maplibre_ffi_cache.db',
       ),
     );
-    // Fetch styles/tiles/glyphs/sprites through Dart instead of the built-in
-    // Rust HTTP client, whose TLS verification currently fails on Android for
-    // most public CAs (rustls-platform-verifier#221: CRL-only certificates
-    // are reported "Revoked"; fix in flight as maplibre-native-ffi#435).
+    // The built-in Rust HTTP client serves all requests by default: upstream
+    // maplibre-native-ffi#461 fixed its Android TLS verification
+    // (rustls-platform-verifier#221 reported CRL-only certificates as
+    // "Revoked") by patching the verifier to follow the system trust
+    // manager's policy, like OkHttp does.
     //
-    // MLN_NATIVE_HTTP=true skips the provider so the native client can be
-    // exercised (TLS repro, A/B once #435 lands). Debug knob, not a mode.
-    if (!const bool.fromEnvironment('MLN_NATIVE_HTTP')) {
-      HttpResourceProvider.install(runtime);
-    } else {
+    // The Dart provider remains the seam for custom HTTP headers and is
+    // installed lazily on the first setHttpHeaders call (see
+    // EngineCommandDispatch). MLN_DART_HTTP=true installs it up front so
+    // every request goes through Dart (A/B arm, provider regression testing).
+    // Debug knob, not a mode.
+    if (const bool.fromEnvironment('MLN_DART_HTTP')) {
       debugPrint(
-        '[maplibre_gl_native] MLN_NATIVE_HTTP set; the built-in Rust HTTP '
-        'client serves all requests (setHttpHeaders is inactive)',
+        '[maplibre_gl_native] MLN_DART_HTTP set; the Dart resource provider '
+        'serves all http(s) requests',
       );
+      HttpResourceProvider.install(runtime);
     }
     final core = EngineCore._(runtime);
     _instance = core;

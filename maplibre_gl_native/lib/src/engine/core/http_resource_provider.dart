@@ -5,21 +5,20 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 
-/// Serves every http(s) resource request of the native engine through Dart's
-/// own HTTP stack (`dart:io` [HttpClient]).
+/// Serves http(s) resource requests of the native engine through Dart's own
+/// HTTP stack (`dart:io` [HttpClient]).
 ///
-/// The C library ships a Rust HTTP client whose TLS verification currently
-/// fails on Android for most public CAs, on every device: certificates
-/// without an OCSP URL (Google Trust Services and Let's Encrypt among them,
-/// since CAs retired OCSP in 2025) are reported "invalid peer certificate:
-/// Revoked" (rustls-platform-verifier#221; upstream workaround in flight as
-/// maplibre-native-ffi#435). Fetching from Dart sidesteps that stack
-/// entirely, reuses the platform trust store the rest of the app already
-/// relies on, and is the seam that serves custom HTTP headers
-/// (`setHttpHeaders`), which the C API has no counterpart for.
+/// NOT installed by default. The built-in Rust HTTP client serves all
+/// requests since upstream maplibre-native-ffi#461 fixed its Android TLS
+/// verification (rustls-platform-verifier#221 reported CRL-only certificates,
+/// most public CAs since they retired OCSP in 2025, as "invalid peer
+/// certificate: Revoked"; the vendored fix follows the system trust manager's
+/// policy, like OkHttp).
 ///
-/// Requires the prefix-wildcard route patch in the pinned maplibre-native-ffi
-/// build (route URLs ending in `*` match by prefix); see the package README.
+/// This provider remains for one job: custom HTTP headers (`setHttpHeaders`),
+/// which the C API has no counterpart for yet. It is installed lazily on the
+/// first setHttpHeaders call with a non-empty map, or up front with
+/// MLN_DART_HTTP=true (the A/B arm; see the README's debug knobs).
 class HttpResourceProvider {
   HttpResourceProvider._();
 
@@ -46,16 +45,23 @@ class HttpResourceProvider {
     _headerFilters = [for (final pattern in urlFilters) RegExp(pattern)];
   }
 
+  static bool _installed = false;
+
   /// Installs the provider on [runtime]: styles, tiles, glyphs, and sprites
-  /// requested over http/https are then fetched by Dart.
+  /// requested over http/https are then fetched by Dart. Idempotent. There is
+  /// no uninstall; headers cleared later just stop being applied.
   static void install(mln.RuntimeHandle runtime) {
+    if (_installed) {
+      return;
+    }
+    _installed = true;
     runtime.setResourceProvider(
       // Not const: the binding copies the route list into an unmodifiable
       // view, so the constructor cannot be const.
       mln.ResourceProvider(
         routes: const [
-          mln.ResourceProviderRoute(url: 'http://*'),
-          mln.ResourceProviderRoute(url: 'https://*'),
+          mln.ResourceProviderRoute(url: 'http://', matchPrefix: true),
+          mln.ResourceProviderRoute(url: 'https://', matchPrefix: true),
         ],
         callback: _onRequest,
       ),
@@ -77,10 +83,10 @@ class HttpResourceProvider {
     mln.ResourceRequestHandle handle,
   ) async {
     try {
-      final httpRequest = await _client.getUrl(Uri.parse(request.url));
+      final httpRequest = await _client.getUrl(Uri.parse(request.resolvedUrl));
       if (_headers.isNotEmpty &&
           (_headerFilters.isEmpty ||
-              _headerFilters.any((f) => f.hasMatch(request.url)))) {
+              _headerFilters.any((f) => f.hasMatch(request.resolvedUrl)))) {
         _headers.forEach(httpRequest.headers.set);
       }
       final priorEtag = request.priorEtag;
@@ -107,7 +113,6 @@ class HttpResourceProvider {
       }
       final response = await httpRequest.close();
       final bytes = await _readBytes(response);
-      if (handle.isReleased) return;
       if (handle.isCancelled) {
         handle.close();
         return;
@@ -116,16 +121,15 @@ class HttpResourceProvider {
         // Tile-level failures produce no visible map event, so surface them.
         debugPrint(
           '[maplibre_gl_native] HTTP ${response.statusCode} '
-          'for ${request.url}',
+          'for ${request.resolvedUrl}',
         );
       }
       _complete(handle, _toResourceResponse(response, bytes));
     } catch (error) {
       debugPrint(
         '[maplibre_gl_native] HTTP fetch failed: '
-        '${request.url}: $error',
+        '${request.resolvedUrl}: $error',
       );
-      if (handle.isReleased) return;
       if (handle.isCancelled) {
         handle.close();
         return;

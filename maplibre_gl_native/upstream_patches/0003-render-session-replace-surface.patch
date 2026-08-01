@@ -1,5 +1,5 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index 44a185a8..9d3fb66d 100644
+index 02144810..c38b5566 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 @@ -148,6 +148,39 @@ final class RenderSessionHandle {
@@ -12,7 +12,7 @@ index 44a185a8..9d3fb66d 100644
 +  /// destroy the surface handle it lent.
 +  void releaseSurface() {
 +    _checkNoActiveTextureFrame('release render surface');
-+    _check(_c.raw.mln_render_session_release_surface(_pointer));
++    _check(_c.raw.mln_render_session_release_surface(_handle.raw));
 +  }
 +
 +  /// Points the session at a new native surface of the same backend kind,
@@ -30,7 +30,7 @@ index 44a185a8..9d3fb66d 100644
 +    _checkNoActiveTextureFrame('replace render surface');
 +    _check(
 +      _c.raw.mln_render_session_replace_surface(
-+        _pointer,
++        _handle.raw,
 +        Pointer<Void>.fromAddress(surface.address),
 +        width,
 +        height,
@@ -43,7 +43,7 @@ index 44a185a8..9d3fb66d 100644
    bool renderUpdate() {
      _checkNoActiveTextureFrame('render update');
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index 532041ca..031be335 100644
+index 468da29e..246a6d82 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
 @@ -58,6 +58,68 @@ MLN_API mln_status mln_render_session_resize(
@@ -78,7 +78,7 @@ index 532041ca..031be335 100644
 + * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
 + */
 +MLN_API mln_status
-+mln_render_session_release_surface(mln_render_session* session) MLN_NOEXCEPT;
++mln_render_session_release_surface(mln_render_session session) MLN_NOEXCEPT;
 +
 +/**
 + * Points an attached surface render session at a new native surface, keeping
@@ -108,7 +108,7 @@ index 532041ca..031be335 100644
 + *   be retried. Every other status leaves the session untouched.
 + */
 +MLN_API mln_status mln_render_session_replace_surface(
-+  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  mln_render_session session, void* surface, uint32_t width, uint32_t height,
 +  double scale_factor
 +) MLN_NOEXCEPT;
 +
@@ -116,14 +116,14 @@ index 532041ca..031be335 100644
   * Processes the latest map render update for an attached render session.
   *
 diff --git a/src/c_api/render_session.cpp b/src/c_api/render_session.cpp
-index 37584beb..37f30fb7 100644
+index ba51b821..11a2efd3 100644
 --- a/src/c_api/render_session.cpp
 +++ b/src/c_api/render_session.cpp
 @@ -69,6 +69,24 @@ auto mln_render_session_resize(
    });
  }
  
-+auto mln_render_session_release_surface(mln_render_session* session) noexcept
++auto mln_render_session_release_surface(mln_render_session session) noexcept
 +  -> mln_status {
 +  return mln::c_api::status_boundary([&]() -> mln_status {
 +    return mln::core::render_session_release_surface(session);
@@ -131,7 +131,7 @@ index 37584beb..37f30fb7 100644
 +}
 +
 +auto mln_render_session_replace_surface(
-+  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  mln_render_session session, void* surface, uint32_t width, uint32_t height,
 +  double scale_factor
 +) noexcept -> mln_status {
 +  return mln::c_api::status_boundary([&]() -> mln_status {
@@ -142,10 +142,10 @@ index 37584beb..37f30fb7 100644
 +}
 +
  auto mln_render_session_render_update(
-   mln_render_session* session, bool* out_rendered
+   mln_render_session session, bool* out_rendered
  ) noexcept -> mln_status {
 diff --git a/src/render/opengl/opengl_surface_session.cpp b/src/render/opengl/opengl_surface_session.cpp
-index 558762d0..171a5d87 100644
+index 0e7106e1..30bf4c19 100644
 --- a/src/render/opengl/opengl_surface_session.cpp
 +++ b/src/render/opengl/opengl_surface_session.cpp
 @@ -159,7 +159,11 @@ class OpenGLSurfaceBackend final : public mbgl::gl::RendererBackend,
@@ -216,14 +216,14 @@ index 558762d0..171a5d87 100644
    OpenGLSurfaceBackend backend_;
  };
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index ad76c427..9b988251 100644
+index c50e3bb6..c2754cbd 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -1125,6 +1125,12 @@ auto render_session_resize(
+@@ -1058,6 +1058,12 @@ auto render_session_resize(
      return physical_status;
    }
  
-+  if (session->surface_released) {
++  if (live->surface_released) {
 +    set_thread_error(
 +      "render surface was released; call mln_render_session_replace_surface"
 +    );
@@ -231,50 +231,52 @@ index ad76c427..9b988251 100644
 +  }
    const auto physical_width = physical_dimension(width, scale_factor);
    const auto physical_height = physical_dimension(height, scale_factor);
-   if (session->kind == RenderSessionKind::Surface) {
-@@ -1153,6 +1159,102 @@ auto render_session_resize(
+   if (live->kind == RenderSessionKind::Surface) {
+@@ -1086,6 +1092,105 @@ auto render_session_resize(
    return MLN_STATUS_OK;
  }
  
 +// Surface replacement keeps the renderer, and therefore every GPU-side
 +// resource, alive across native surface recreation. See render_session.h for
 +// the contract.
-+auto render_session_release_surface(mln_render_session* session) -> mln_status {
-+  const auto status = validate_live_attached_render_session(session);
++auto render_session_release_surface(mln_render_session session) -> mln_status {
++  mln_render_session_object* live = nullptr;
++  const auto status = validate_live_attached_render_session(session, live);
 +  if (status != MLN_STATUS_OK) {
 +    return status;
 +  }
 +  if (
-+    session->kind != RenderSessionKind::Surface ||
-+    !session->surface.backend->supports_surface_replace()
++    live->kind != RenderSessionKind::Surface ||
++    !live->surface.backend->supports_surface_replace()
 +  ) {
 +    set_thread_error("surface replacement is not supported by this session");
 +    return MLN_STATUS_UNSUPPORTED;
 +  }
-+  if (session->surface_released) {
++  if (live->surface_released) {
 +    return MLN_STATUS_OK;
 +  }
 +  try {
-+    session->surface.backend->release_surface();
++    live->surface.backend->release_surface();
 +  } catch (const std::exception& exception) {
 +    set_native_stage_error("releasing render surface", exception);
 +    return MLN_STATUS_NATIVE_ERROR;
 +  }
-+  session->surface_released = true;
++  live->surface_released = true;
 +  return MLN_STATUS_OK;
 +}
 +
 +auto render_session_replace_surface(
-+  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  mln_render_session session, void* surface, uint32_t width, uint32_t height,
 +  double scale_factor
 +) -> mln_status {
-+  const auto status = validate_live_attached_render_session(session);
++  mln_render_session_object* live = nullptr;
++  const auto status = validate_live_attached_render_session(session, live);
 +  if (status != MLN_STATUS_OK) {
 +    return status;
 +  }
 +  if (
-+    session->kind != RenderSessionKind::Surface ||
-+    !session->surface.backend->supports_surface_replace()
++    live->kind != RenderSessionKind::Surface ||
++    !live->surface.backend->supports_surface_replace()
 +  ) {
 +    set_thread_error("surface replacement is not supported by this session");
 +    return MLN_STATUS_UNSUPPORTED;
@@ -300,7 +302,7 @@ index ad76c427..9b988251 100644
 +  const auto physical_width = physical_dimension(width, scale_factor);
 +  const auto physical_height = physical_dimension(height, scale_factor);
 +  try {
-+    session->surface.backend->replace_surface(
++    live->surface.backend->replace_surface(
 +      surface, physical_width, physical_height
 +    );
 +  } catch (const std::exception& exception) {
@@ -308,48 +310,49 @@ index ad76c427..9b988251 100644
 +    // failure here leaves nothing to present to. Suspend the session rather
 +    // than let the next frame render against a half-built backend; the caller
 +    // can retry with another surface.
-+    session->surface_released = true;
++    live->surface_released = true;
 +    set_native_stage_error("replacing render surface", exception);
 +    return MLN_STATUS_NATIVE_ERROR;
 +  }
-+  if (auto* native_map = map_native(session->map); native_map != nullptr) {
-+    native_map->setSize(mbgl::Size{width, height});
++  const auto size_status = map_post_set_size(live->map, width, height);
++  if (size_status != MLN_STATUS_OK) {
++    return size_status;
 +  }
 +  // The renderer bakes the pixel ratio in at construction; only a scale
 +  // change forces a rebuild. Keeping it alive preserves uploaded tile
 +  // textures, glyph atlases, and symbol placement across the swap.
-+  if (session->scale_factor != scale_factor) {
-+    session->renderer.reset();
++  if (live->scale_factor != scale_factor) {
++    live->renderer.reset();
 +  }
-+  session->width = width;
-+  session->height = height;
-+  session->physical_width = physical_width;
-+  session->physical_height = physical_height;
-+  session->scale_factor = scale_factor;
-+  session->surface_released = false;
-+  session->rendered_generation = 0;
-+  ++session->generation;
++  live->width = width;
++  live->height = height;
++  live->physical_width = physical_width;
++  live->physical_height = physical_height;
++  live->scale_factor = scale_factor;
++  live->surface_released = false;
++  live->rendered_generation = 0;
++  ++live->generation;
 +  return MLN_STATUS_OK;
 +}
 +
  auto render_session_render_update(
-   mln_render_session* session, bool* out_rendered
+   mln_render_session session, bool* out_rendered
  ) -> mln_status {
-@@ -1165,6 +1267,12 @@ auto render_session_render_update(
+@@ -1099,6 +1204,12 @@ auto render_session_render_update(
      return MLN_STATUS_INVALID_ARGUMENT;
    }
    *out_rendered = false;
-+  if (session->surface_released) {
++  if (live->surface_released) {
 +    set_thread_error(
 +      "render surface was released; call mln_render_session_replace_surface"
 +    );
 +    return MLN_STATUS_INVALID_STATE;
 +  }
-   if (
-     session->kind == RenderSessionKind::Texture && session->texture.acquired
-   ) {
+   if (live->kind == RenderSessionKind::Texture && live->texture.acquired) {
+     set_thread_error("cannot render while a texture frame is acquired");
+     return MLN_STATUS_INVALID_STATE;
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index aac72841..446251d0 100644
+index 4ee6b167..d47a7a8c 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
 @@ -44,6 +44,19 @@ class SurfaceSessionBackend {
@@ -372,7 +375,7 @@ index aac72841..446251d0 100644
  };
  
  class TextureSessionBackend {
-@@ -234,6 +247,9 @@ struct mln_render_session {
+@@ -237,6 +250,9 @@ struct mln_render_session_object {
    uint64_t generation = 1;
    uint64_t rendered_generation = 0;
    bool attached = true;
@@ -382,22 +385,22 @@ index aac72841..446251d0 100644
  
    // Declared before `renderer` so reverse-order destruction tears the renderer
    // down while the scheduler its mailboxes point at is still alive.
-@@ -410,6 +426,13 @@ auto render_session_resize(
-   mln_render_session* session, uint32_t width, uint32_t height,
+@@ -411,6 +427,13 @@ auto render_session_resize(
+   mln_render_session session, uint32_t width, uint32_t height,
    double scale_factor
  ) -> mln_status;
 +// See mln_render_session_release_surface / mln_render_session_replace_surface
 +// in render_session.h.
-+auto render_session_release_surface(mln_render_session* session) -> mln_status;
++auto render_session_release_surface(mln_render_session session) -> mln_status;
 +auto render_session_replace_surface(
-+  mln_render_session* session, void* surface, uint32_t width, uint32_t height,
++  mln_render_session session, void* surface, uint32_t width, uint32_t height,
 +  double scale_factor
 +) -> mln_status;
  auto render_session_render_update(
-   mln_render_session* session, bool* out_rendered
+   mln_render_session session, bool* out_rendered
  ) -> mln_status;
 diff --git a/src/render/vulkan/vulkan_surface_session.cpp b/src/render/vulkan/vulkan_surface_session.cpp
-index b5601cb8..9850e0ac 100644
+index 4e5dba7d..c1722ac1 100644
 --- a/src/render/vulkan/vulkan_surface_session.cpp
 +++ b/src/render/vulkan/vulkan_surface_session.cpp
 @@ -305,6 +305,39 @@ class VulkanSurfaceBackend final : public mbgl::vulkan::RendererBackend,

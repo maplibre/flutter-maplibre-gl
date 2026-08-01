@@ -14,11 +14,12 @@ buildscript {
     }
 }
 
-// rustls-platform-verifier is not published to Maven Central; the Android
-// component (a tiny AAR bundled with the Rust crate) is vendored under
-// local_maven/. Required by mln_android_init for TLS certificate verification
-// of MapLibre Native HTTP requests. Capture the path here: inside
-// allprojects{} `projectDir` would point at each project instead.
+// The rustls-platform-verifier JNI helper is not published to Maven Central;
+// tool/build_native.sh builds it from the pinned maplibre-native-ffi tree
+// (which repackages it under a MapLibre FFI-private Java package, #461) and
+// installs it under local_maven/. Required by mln_android_init for TLS
+// certificate verification of MapLibre Native HTTP requests. Capture the path
+// here: inside allprojects{} `projectDir` would point at each project instead.
 def maplibreGlNativeLocalMaven = new File(projectDir, 'local_maven')
 
 rootProject.allprojects {
@@ -100,5 +101,7 @@ android {
 }
 
 dependencies {
-    implementation 'rustls:rustls-platform-verifier:0.1.1'
+    // See the local_maven comment above. AGP forbids direct local .aar file
+    // dependencies inside a library module, hence the tiny local Maven repo.
+    implementation 'org.maplibre.nativeffi:rustls-platform-verifier-android:local'
 }

@@ -255,9 +255,10 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 
 // From maplibre_native_c/render_session.h. Declared locally for the same
 // reason as mln_android_init above: the shim needs no include path, mln_status
-// is int-sized, and mln_render_session* is an opaque pointer here.
-extern int mln_render_session_render_update(void* session, bool* out_rendered);
-extern int mln_render_session_rebind_thread(void* session);
+// is int-sized, and mln_render_session is a 64-bit generational handle id.
+extern int mln_render_session_render_update(uint64_t session,
+                                            bool* out_rendered);
+extern int mln_render_session_rebind_thread(uint64_t session);
 
 // Guards session ownership. Held across a render here, and across the whole
 // borrow when Dart takes the session. Separate from g_vsync_mutex, which only
@@ -271,8 +272,9 @@ extern int mln_render_session_rebind_thread(void* session);
 // until the process dies. Bounded waits turn that into a loud log plus a
 // fallback to isolate rendering.
 static pthread_mutex_t g_render_mutex = PTHREAD_MUTEX_INITIALIZER;
-// The bound session, or NULL when Dart has not offered one (or withdrew it).
-static void* g_render_session = NULL;
+// The bound session handle id, or 0 (the null handle) when Dart has not
+// offered one (or withdrew it).
+static uint64_t g_render_session = 0;
 // Whether this thread currently holds the session's owner-thread affinity.
 static bool g_render_owned_here = false;
 // Consecutive failed renders, reset by any success, any bind, and every pulse
@@ -411,8 +413,8 @@ static bool render_bound_session(void) {
   if (!render_mutex_lock_or_give_up("render")) {
     return false;  // Park; Dart's next bind will fail loudly and fall back.
   }
-  void* const session = g_render_session;
-  if (session == NULL) {
+  const uint64_t session = g_render_session;
+  if (session == 0) {
     pthread_mutex_unlock(&g_render_mutex);
     return true;  // Nothing offered yet; keep the pulses coming.
   }
@@ -583,11 +585,11 @@ MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
 //
 // Returns 1 on success, 0 when the render mutex is unrecoverable (see
 // render_mutex_lock_or_give_up); on 0 the caller must draw on its own thread.
-MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_address) {
+MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_handle) {
   if (!render_mutex_lock_or_give_up("bind")) {
     return 0;
   }
-  g_render_session = (void*)(uintptr_t)session_address;
+  g_render_session = (uint64_t)session_handle;
   g_render_owned_here = false;
   atomic_store_explicit(&g_render_failures, 0, memory_order_relaxed);
   pthread_mutex_unlock(&g_render_mutex);

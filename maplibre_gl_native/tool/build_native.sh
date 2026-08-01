@@ -12,7 +12,7 @@
 # Usage: tool/build_native.sh [--backend vulkan|egl] [--ffi-dir <path>]
 set -euo pipefail
 
-PIN=9d1508dc36d6a2808004c751731313d230da7e7f
+PIN=5eebd921a2633087dc08e02b3f5d9f492ed22fb7
 NDK_PINNED_VERSION=28.1.13356709
 REPO_URL=https://github.com/maplibre/maplibre-native-ffi.git
 
@@ -165,6 +165,30 @@ echo "==> toolchain (mise) + build"
 echo "==> generating ffigen bindings"
 (cd "$FFI_DIR/bindings/dart" && dart pub get && dart run tool/ffigen.dart)
 
+# The rustls-platform-verifier JNI helper AAR (upstream #461): verifier source
+# pinned, acquired, and patched by mise, repackaged under a MapLibre
+# FFI-private Java package. mln_android_init needs its classes at runtime for
+# TLS verification. AGP forbids direct local .aar dependencies inside a
+# library module, so android/build.gradle consumes it from the tiny Maven
+# repository laid out here.
+echo "==> building the rustls-platform-verifier helper AAR"
+(cd "$FFI_DIR" && mise run //bindings/rustls-platform-verifier-android:build)
+HELPER_AAR="$FFI_DIR/bindings/rustls-platform-verifier-android/build/outputs/aar/rustls-platform-verifier-android-release.aar"
+[ -f "$HELPER_AAR" ] || die "helper AAR not found: $HELPER_AAR"
+HELPER_DIR="$PKG_DIR/android/local_maven/org/maplibre/nativeffi/rustls-platform-verifier-android/local"
+mkdir -p "$HELPER_DIR"
+cp "$HELPER_AAR" "$HELPER_DIR/rustls-platform-verifier-android-local.aar"
+cat >"$HELPER_DIR/rustls-platform-verifier-android-local.pom" <<'POM'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.maplibre.nativeffi</groupId>
+  <artifactId>rustls-platform-verifier-android</artifactId>
+  <version>local</version>
+  <packaging>aar</packaging>
+</project>
+POM
+
 echo "==> stripping and installing into jniLibs"
 BUILT="$FFI_DIR/build/$PRESET/libmaplibre-native-c.so"
 [ -f "$BUILT" ] || die "build output not found: $BUILT"
@@ -172,18 +196,14 @@ DEST_DIR="$PKG_DIR/android/src/main/jniLibs/arm64-v8a"
 mkdir -p "$DEST_DIR"
 "$LLVM_STRIP" --strip-unneeded -o "$DEST_DIR/libmaplibre-native-c.so" "$BUILT"
 
-# The upstream Android presets build against the shared C++ runtime
-# (ANDROID_STL=c++_shared), so the library needs libc++_shared.so beside it at
-# load time and nothing else in a Flutter app ships one. Take it from the same
-# NDK that produced the library, so the two always match.
-CXX_SHARED="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_TAG/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
-[ -f "$CXX_SHARED" ] || die "libc++_shared.so not found at $CXX_SHARED"
-"$LLVM_STRIP" --strip-unneeded -o "$DEST_DIR/libc++_shared.so" "$CXX_SHARED"
+# The upstream Android presets link libc++ statically since maplibre-native-ffi
+# #481, so the library is self-contained; drop any libc++_shared.so a previous
+# pin installed.
+rm -f "$DEST_DIR/libc++_shared.so"
 
 echo "==> done: $DEST_DIR"
-for lib in libmaplibre-native-c.so libc++_shared.so; do
-  echo "    $lib ($(du -h "$DEST_DIR/$lib" | cut -f1))"
-done
+echo "    libmaplibre-native-c.so ($(du -h "$DEST_DIR/libmaplibre-native-c.so" | cut -f1))"
+
 
 # Only a run that got this far describes a tree worth reusing. Written after
 # ffigen because that step rewrites a tracked file, which the tree hash covers.

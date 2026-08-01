@@ -1,14 +1,14 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index 9d3fb66d..cb698732 100644
+index c38b5566..3bdae4ac 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 @@ -140,6 +140,20 @@ final class RenderSessionHandle {
    /// refusing to destroy one that still has a session attached.
-   Pointer<raw.mln_render_session> get _pointer => _state.pointer;
+   NativeRenderSession get _handle => _state.handle;
  
-+  /// This session's native address, for a host that must name it to a render
++  /// This session's handle id, for a host that must name it to a render
 +  /// thread of its own. Carries no ownership and keeps nothing alive.
-+  int get nativeAddress => _state.pointerAddress ?? 0;
++  int get nativeAddress => _state.handleId;
 +
 +  /// Rebinds this session's owner thread to the calling OS thread.
 +  ///
@@ -17,18 +17,18 @@ index 9d3fb66d..cb698732 100644
 +  /// must be serialized by the caller: no call on this session may be in flight
 +  /// anywhere when this runs.
 +  void rebindThread() {
-+    _check(_c.raw.mln_render_session_rebind_thread(_pointer));
++    _check(_c.raw.mln_render_session_rebind_thread(_state.handleId));
 +  }
 +
    /// Resizes an attached render session.
    void resize(int width, int height, {double scaleFactor = 1}) {
      _checkNoActiveTextureFrame('resize render session');
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index 031be335..17a3fe81 100644
+index 246a6d82..d28ffe98 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
 @@ -160,6 +160,35 @@ MLN_API mln_status mln_render_session_render_update(
-   mln_render_session* session, bool* out_rendered
+   mln_render_session session, bool* out_rendered
  ) MLN_NOEXCEPT;
  
 +/**
@@ -58,13 +58,13 @@ index 031be335..17a3fe81 100644
 + * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
 + */
 +MLN_API mln_status
-+mln_render_session_rebind_thread(mln_render_session* session) MLN_NOEXCEPT;
++mln_render_session_rebind_thread(mln_render_session session) MLN_NOEXCEPT;
 +
  /**
   * Detaches backend-bound render resources from the map while keeping the
   * session handle live for destruction.
 diff --git a/src/c_api/render_session.cpp b/src/c_api/render_session.cpp
-index 37f30fb7..5fa8c038 100644
+index 11a2efd3..9ac3d046 100644
 --- a/src/c_api/render_session.cpp
 +++ b/src/c_api/render_session.cpp
 @@ -2,6 +2,7 @@
@@ -79,7 +79,7 @@ index 37f30fb7..5fa8c038 100644
    });
  }
  
-+auto mln_render_session_rebind_thread(mln_render_session* session) noexcept
++auto mln_render_session_rebind_thread(mln_render_session session) noexcept
 +  -> mln_status {
 +  return mln::c_api::status_boundary([&]() -> mln_status {
 +    return mln::core::rebind_render_session_to_thread(
@@ -88,31 +88,27 @@ index 37f30fb7..5fa8c038 100644
 +  });
 +}
 +
- auto mln_render_session_detach(mln_render_session* session) noexcept
+ auto mln_render_session_detach(mln_render_session session) noexcept
    -> mln_status {
    return mln::c_api::status_boundary([&]() -> mln_status {
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index 709eac0a..6ff4d184 100644
+index c2754cbd..4435f40e 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -917,6 +917,23 @@ auto register_render_session(
-   render_sessions().emplace(handle, std::move(session));
+@@ -865,6 +865,19 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+   return handle_table<mln_render_session_object>().insert(std::move(session));
  }
  
 +auto rebind_render_session_to_thread(
-+  mln_render_session* session, std::thread::id thread
++  mln_render_session session, std::thread::id thread
 +) -> mln_status {
-+  if (session == nullptr) {
-+    set_thread_error("render session must not be null");
++  auto& table = handle_table<mln_render_session_object>();
++  const std::scoped_lock lock(table.mutex());
++  auto* live = table.resolve_locked(session);
++  if (live == nullptr) {
 +    return MLN_STATUS_INVALID_ARGUMENT;
 +  }
-+  const auto lock = std::scoped_lock{render_session_mutex()};
-+  const auto found = render_sessions().find(session);
-+  if (found == render_sessions().end()) {
-+    set_thread_error("render session is not a live handle");
-+    return MLN_STATUS_INVALID_ARGUMENT;
-+  }
-+  found->second->owner_thread = thread;
++  live->owner_thread = thread;
 +  return MLN_STATUS_OK;
 +}
 +
@@ -120,19 +116,19 @@ index 709eac0a..6ff4d184 100644
    const auto lock = std::scoped_lock{mutex_};
    queue_.push_back(std::move(task));
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index b5fc01e9..10df3472 100644
+index d47a7a8c..d2b21432 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
-@@ -271,6 +271,12 @@ auto register_render_session(
-   mln_render_session* handle, std::unique_ptr<mln_render_session> session
- ) -> void;
- auto validate_render_session(mln_render_session* session) -> mln_status;
+@@ -275,6 +275,12 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+ auto validate_render_session(
+   mln_render_session session, mln_render_session_object*& out_session
+ ) -> mln_status;
 +
 +// Re-homes one live render session to the given thread. See
 +// mln_render_session_rebind_thread in render_session.h.
 +auto rebind_render_session_to_thread(
-+  mln_render_session* session, std::thread::id thread
++  mln_render_session session, std::thread::id thread
 +) -> mln_status;
- auto validate_live_attached_render_session(mln_render_session* session)
-   -> mln_status;
- auto erase_render_session(mln_render_session* session)
+ auto validate_live_attached_render_session(
+   mln_render_session session, mln_render_session_object*& out_session
+ ) -> mln_status;
