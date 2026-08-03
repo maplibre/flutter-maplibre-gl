@@ -45,6 +45,18 @@ static VkDevice g_device = VK_NULL_HANDLE;
 static VkQueue g_queue = VK_NULL_HANDLE;
 static uint32_t g_queue_family = 0;
 
+// Unwinds a partially built context so a retry starts clean: the idempotence
+// guard above is on g_device, so anything created short of that must not
+// survive a failure, or every failed retry would leak a VkInstance.
+static int vulkan_fail(int step) {
+  if (g_instance != VK_NULL_HANDLE) {
+    vkDestroyInstance(g_instance, NULL);
+    g_instance = VK_NULL_HANDLE;
+  }
+  g_physical_device = VK_NULL_HANDLE;
+  return step;
+}
+
 // Returns 0 on success, a negative step marker on failure (for logs).
 static int vulkan_ensure_context(void) {
   if (g_device != VK_NULL_HANDLE) {
@@ -67,6 +79,8 @@ static int vulkan_ensure_context(void) {
       .ppEnabledExtensionNames = instance_extensions,
   };
   if (vkCreateInstance(&instance_info, NULL, &g_instance) != VK_SUCCESS) {
+    // The output handle is undefined on failure; there is nothing to destroy.
+    g_instance = VK_NULL_HANDLE;
     return -1;
   }
 
@@ -74,13 +88,13 @@ static int vulkan_ensure_context(void) {
   if (vkEnumeratePhysicalDevices(g_instance, &device_count, NULL) !=
           VK_SUCCESS ||
       device_count == 0) {
-    return -2;
+    return vulkan_fail(-2);
   }
   VkPhysicalDevice devices[4];
   if (device_count > 4) device_count = 4;
   if (vkEnumeratePhysicalDevices(g_instance, &device_count, devices) !=
       VK_SUCCESS) {
-    return -2;
+    return vulkan_fail(-2);
   }
   g_physical_device = devices[0];
 
@@ -99,7 +113,7 @@ static int vulkan_ensure_context(void) {
     }
   }
   if (family == family_count) {
-    return -3;
+    return vulkan_fail(-3);
   }
   g_queue_family = family;
 
@@ -126,7 +140,7 @@ static int vulkan_ensure_context(void) {
   };
   if (vkCreateDevice(g_physical_device, &device_info, NULL, &g_device) !=
       VK_SUCCESS) {
-    return -4;
+    return vulkan_fail(-4);
   }
   vkGetDeviceQueue(g_device, family, 0, &g_queue);
   return 0;
@@ -189,7 +203,19 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanCreateSurf
   }
   const jlong values[2] = {(jlong)surface, (jlong)(uintptr_t)window};
   jlongArray result = (*env)->NewLongArray(env, 2);
-  if (result == NULL) return NULL;
+  if (result == NULL) {
+    // Allocation failure (OOM pending on the JVM side): give the surface and
+    // the retained window back like every other error path does, or a retry
+    // would leak both.
+    PFN_vkDestroySurfaceKHR destroy_surface =
+        (PFN_vkDestroySurfaceKHR)vkGetInstanceProcAddr(g_instance,
+                                                       "vkDestroySurfaceKHR");
+    if (destroy_surface != NULL) {
+      destroy_surface(g_instance, surface, NULL);
+    }
+    ANativeWindow_release(window);
+    return NULL;
+  }
   (*env)->SetLongArrayRegion(env, result, 0, 2, values);
   return result;
 }
@@ -243,6 +269,7 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 #include <android/log.h>
 #include <android/looper.h>
 #include <dlfcn.h>
+#include <inttypes.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -269,8 +296,13 @@ extern int mln_render_session_rebind_thread(uint64_t session);
 // a hot restart can kill the borrowing isolate between acquire and release,
 // and the OS thread that owns the lock lives on in the VM's pool, so an
 // unbounded wait here would freeze the display, and the next bind with it,
-// until the process dies. Bounded waits turn that into a loud log plus a
-// fallback to isolate rendering.
+// until the process dies. Bounded waits turn that into a loud log plus
+// skipped frames until the lock comes back (or, if it never does, a park).
+//
+// LOCK ORDER: g_render_mutex may be held while g_stats_mutex is taken
+// (render_bound_session -> stats_record); never take g_render_mutex while
+// holding g_stats_mutex. g_vsync_mutex is never held across either (the
+// frame callback deliberately renders outside it).
 static pthread_mutex_t g_render_mutex = PTHREAD_MUTEX_INITIALIZER;
 // The bound session handle id, or 0 (the null handle) when Dart has not
 // offered one (or withdrew it).
@@ -288,34 +320,76 @@ static _Atomic int32_t g_render_failures = 0;
 // that a wedged mutex is diagnosed, not waited out.
 #define MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS 2
 
-// Set once when the mutex times out; never cleared. The owning thread lives
-// on in the VM's pool with no one left to unlock, so the lock is gone for the
-// life of the process, and every later attempt must fail fast rather than
-// stall the pulse thread for the timeout again and again.
-static _Atomic bool g_render_mutex_dead = false;
+// While the mutex is wedged, later attempts wait this long instead: long
+// enough to catch a borrower releasing between two pulses, short enough that
+// a pulse skipping its render is not itself late.
+#define MLN_SHIM_RENDER_LOCK_RETRY_MILLIS 10
 
-// Locks g_render_mutex with a bounded wait. False means the lock is
-// unrecoverable (a borrow was never returned; hot restart mid-borrow is the
-// known way) and the caller must give up rather than block.
+// Set when a lock attempt times out, cleared by the next attempt that
+// succeeds. A wedged mutex usually means a borrow was never returned (hot
+// restart mid-borrow is the known way), but from here that is
+// indistinguishable from a borrower that is merely very slow, so the flag
+// only shortens later waits; it never writes the lock off for good. If the
+// borrower does release, the next attempt takes the lock, clears the flag,
+// and the display renders resume.
+static _Atomic bool g_render_mutex_wedged = false;
+
+// pthread_mutex_clocklock waits on a caller-chosen clock, so the timeout can
+// use CLOCK_MONOTONIC and an NTP step cannot expire it early (or late).
+// bionic only exports it from API 30 and minSdk is 24, so it is resolved once
+// at runtime; without it the fallback is pthread_mutex_timedlock, whose
+// CLOCK_REALTIME deadline a clock jump can distort, which at worst costs the
+// frames of one spurious timeout-and-recover cycle.
+static int (*g_mutex_clocklock)(pthread_mutex_t*, clockid_t,
+                                const struct timespec*) = NULL;
+static pthread_once_t g_mutex_clocklock_once = PTHREAD_ONCE_INIT;
+static void mutex_clocklock_resolve(void) {
+  *(void**)&g_mutex_clocklock = dlsym(RTLD_DEFAULT, "pthread_mutex_clocklock");
+}
+
+// Locks g_render_mutex with a bounded wait. False means the lock could not
+// be taken in time and the caller must skip its work rather than block: a
+// skipped frame (or a refused bind) is recoverable, a display thread parked
+// on a mutex whose owner may never return is not.
 static bool render_mutex_lock_or_give_up(const char* who) {
-  if (atomic_load_explicit(&g_render_mutex_dead, memory_order_relaxed)) {
+  pthread_once(&g_mutex_clocklock_once, mutex_clocklock_resolve);
+  const clockid_t clock =
+      g_mutex_clocklock != NULL ? CLOCK_MONOTONIC : CLOCK_REALTIME;
+  struct timespec deadline;
+  if (clock_gettime(clock, &deadline) != 0) {
+    // No clock, no bounded wait; give up rather than block unboundedly.
     return false;
   }
-  struct timespec deadline;
-  if (clock_gettime(CLOCK_REALTIME, &deadline) != 0) {
-    pthread_mutex_lock(&g_render_mutex);
+  if (atomic_load_explicit(&g_render_mutex_wedged, memory_order_relaxed)) {
+    deadline.tv_nsec += MLN_SHIM_RENDER_LOCK_RETRY_MILLIS * 1000000L;
+    if (deadline.tv_nsec >= 1000000000L) {
+      deadline.tv_sec += 1;
+      deadline.tv_nsec -= 1000000000L;
+    }
+  } else {
+    deadline.tv_sec += MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS;
+  }
+  const int rc = g_mutex_clocklock != NULL
+                     ? g_mutex_clocklock(&g_render_mutex, clock, &deadline)
+                     : pthread_mutex_timedlock(&g_render_mutex, &deadline);
+  if (rc == 0) {
+    if (atomic_exchange_explicit(&g_render_mutex_wedged, false,
+                                 memory_order_relaxed)) {
+      __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
+                          "%s: render mutex recovered; display renders resume",
+                          who);
+    }
     return true;
   }
-  deadline.tv_sec += MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS;
-  if (pthread_mutex_timedlock(&g_render_mutex, &deadline) == 0) {
-    return true;
+  // Log the transition only, not every fast retry at display rate.
+  if (!atomic_exchange_explicit(&g_render_mutex_wedged, true,
+                                memory_order_relaxed)) {
+    __android_log_print(ANDROID_LOG_ERROR, MLN_SHIM_LOG_TAG,
+                        "%s: render mutex held for over %d s (a borrow not "
+                        "yet returned; hot restart mid-borrow?); skipping "
+                        "display renders until it comes back",
+                        who, MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS);
   }
-  atomic_store_explicit(&g_render_mutex_dead, true, memory_order_relaxed);
-  __android_log_print(ANDROID_LOG_ERROR, MLN_SHIM_LOG_TAG,
-                      "%s: render mutex held for over %d s (a borrow never "
-                      "returned; hot restart mid-borrow?); the display render "
-                      "service is disabled for the rest of the process",
-                      who, MLN_SHIM_RENDER_LOCK_TIMEOUT_SECONDS);
   return false;
 }
 // Frames actually drawn. Dart reads it to tell "the map is still moving" from
@@ -411,7 +485,22 @@ static void vsync_post_locked(void) {
 // gesture visibly jerky while flattering the numbers.
 static bool render_bound_session(void) {
   if (!render_mutex_lock_or_give_up("render")) {
-    return false;  // Park; Dart's next bind will fail loudly and fall back.
+    // The lock did not come in time, so this frame is skipped, not the
+    // service: the borrower may still return, and the next pulse retries
+    // (fast, see MLN_SHIM_RENDER_LOCK_RETRY_MILLIS). Skips share the render
+    // failure counter, so a lock that truly never comes back still hits the
+    // limit below and parks instead of burning a retry per frame forever.
+    const int32_t failures =
+        atomic_fetch_add_explicit(&g_render_failures, 1,
+                                  memory_order_relaxed) +
+        1;
+    if (failures < MLN_SHIM_RENDER_FAILURE_LIMIT) {
+      return true;
+    }
+    __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
+                        "render lock unavailable %d frames in a row; parking",
+                        failures);
+    return false;
   }
   const uint64_t session = g_render_session;
   if (session == 0) {
@@ -471,22 +560,25 @@ static void vsync_on_frame64(int64_t frame_time_nanos, void* data) {
   const bool keep_going = running ? render_bound_session() : true;
 
   pthread_mutex_lock(&g_vsync_mutex);
-  if (!keep_going) {
-    g_vsync_running = false;
-  } else if (g_vsync_running && g_vsync_port != 0) {
+  if (g_vsync_running && g_vsync_port != 0) {
     // The pulse still goes to Dart, but it no longer carries the frame: it is
     // the metronome for the runtime pump, which is still Dart's and is still
     // required (a resize reaches the map only when its owner thread pumps, and
-    // tile and style work all lands there). Rendering first and pumping after
-    // costs one frame of staleness against the old pump-then-render turn, and
-    // buys a frame path that no Dart work can delay. Posting after the render
-    // keeps that ordering explicit.
+    // tile and style work all lands there). That is why it is posted even on a
+    // frame whose render failed or never took the lock: a missed draw must
+    // not also stop the pump. Rendering first and pumping after costs one
+    // frame of staleness against the old pump-then-render turn, and buys a
+    // frame path that no Dart work can delay. Posting after the render keeps
+    // that ordering explicit.
     if (!Dart_PostInteger_DL(g_vsync_port, frame_time_nanos)) {
       __android_log_print(ANDROID_LOG_INFO, MLN_SHIM_LOG_TAG,
                           "vsync port closed; parking pulses");
       g_vsync_running = false;
       g_vsync_port = 0;
     }
+  }
+  if (!keep_going) {
+    g_vsync_running = false;
   }
   vsync_post_locked();
   pthread_mutex_unlock(&g_vsync_mutex);
@@ -498,6 +590,9 @@ static void vsync_on_frame32(long frame_time_nanos, void* data) {
 
 static void* vsync_thread_main(void* arg) {
   (void)arg;
+  // Named from inside: naming by handle from the spawner would race the
+  // (admittedly unlikely) case of this thread exiting first.
+  pthread_setname_np(pthread_self(), "mln-vsync");
   ALooper* looper = ALooper_prepare(0);
   AChoreographer* choreographer =
       looper != NULL ? AChoreographer_getInstance() : NULL;
@@ -543,7 +638,9 @@ MLN_SHIM_EXPORT int32_t mln_shim_vsync_start(int64_t dart_port) {
       return 0;
     }
     g_vsync_thread_started = true;
-    pthread_setname_np(g_vsync_thread, "mln-vsync");
+    // Never joined (it lives for the process; "stop" only parks it), so
+    // detach up front rather than leaking a joinable thread's bookkeeping.
+    pthread_detach(g_vsync_thread);
   }
   while (!g_vsync_thread_ready) {
     pthread_cond_wait(&g_vsync_cond, &g_vsync_mutex);
@@ -583,8 +680,13 @@ MLN_SHIM_EXPORT void mln_shim_vsync_stop(void) {
 // in flight. Withdrawing leaves the session's owner thread as it is, because
 // the caller is about to take it back through mln_shim_render_acquire anyway.
 //
-// Returns 1 on success, 0 when the render mutex is unrecoverable (see
-// render_mutex_lock_or_give_up); on 0 the caller must draw on its own thread.
+// bind(0) withdraws UNCONDITIONALLY, whatever is bound; that is for shutdown.
+// A caller that means "withdraw MY session" must use mln_shim_render_unbind,
+// or with two maps alive it would silently pull the other map's session.
+//
+// Returns 1 on success, 0 when the render mutex could not be taken in time
+// (see render_mutex_lock_or_give_up); on 0 the caller must draw on its own
+// thread.
 MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_handle) {
   if (!render_mutex_lock_or_give_up("bind")) {
     return 0;
@@ -592,6 +694,33 @@ MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_handle) {
   g_render_session = (uint64_t)session_handle;
   g_render_owned_here = false;
   atomic_store_explicit(&g_render_failures, 0, memory_order_relaxed);
+  pthread_mutex_unlock(&g_render_mutex);
+  return 1;
+}
+
+// Withdraws the bound session only if it is the given one. This is the native
+// check behind the invariant that a map never withdraws another map's
+// session: the Dart side aims for it, but one thread serves many maps, so the
+// last word has to be here where the binding actually lives.
+//
+// Returns 1 when the session matched and was withdrawn; 0 (with a log, and
+// nothing changed) on mismatch, or when the render mutex could not be taken
+// in time.
+MLN_SHIM_EXPORT int32_t mln_shim_render_unbind(int64_t session_handle) {
+  if (!render_mutex_lock_or_give_up("unbind")) {
+    return 0;
+  }
+  if (g_render_session != (uint64_t)session_handle) {
+    const uint64_t bound = g_render_session;
+    pthread_mutex_unlock(&g_render_mutex);
+    __android_log_print(ANDROID_LOG_WARN, MLN_SHIM_LOG_TAG,
+                        "render unbind ignored: session %" PRIu64
+                        " is not the bound one (%" PRIu64 ")",
+                        (uint64_t)session_handle, bound);
+    return 0;
+  }
+  g_render_session = 0;
+  g_render_owned_here = false;
   pthread_mutex_unlock(&g_render_mutex);
   return 1;
 }
@@ -604,8 +733,8 @@ MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_handle) {
 // Recursion is not supported: this is a plain mutex, so a nested acquire
 // deadlocks. The Dart side keeps the bracket to a single leaf call.
 //
-// Returns 1 with the mutex held, or 0 when it is unrecoverable; on 0 the
-// caller must NOT call mln_shim_render_release.
+// Returns 1 with the mutex held, or 0 when it could not be taken in time; on
+// 0 the caller must NOT call mln_shim_render_release.
 MLN_SHIM_EXPORT int32_t mln_shim_render_acquire(void) {
   if (!render_mutex_lock_or_give_up("acquire")) {
     return 0;

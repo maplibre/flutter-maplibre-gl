@@ -75,7 +75,17 @@ class RenderThread {
   void disable() {
     if (!_driving) return;
     _driving = false;
-    _bindings?.bind(0);
+    final bindings = _bindings;
+    if (bindings == null) return;
+    final session = _session;
+    final unbind = bindings.unbind;
+    if (session != null && unbind != null) {
+      // Conditional withdrawal: a no-op if another map's session has since
+      // been bound, so tearing this map down cannot blank that one.
+      unbind(session.nativeAddress);
+    } else {
+      bindings.bind(0);
+    }
   }
 
   void _publish() {
@@ -212,6 +222,7 @@ class _StatsBuffers {
 class _ShimBindings {
   _ShimBindings._(
     this.bind,
+    this.unbind,
     this.acquire,
     this.release,
     this.frameCount,
@@ -219,9 +230,15 @@ class _ShimBindings {
     this.statsTake,
   );
 
-  /// Both report failure (0) when the shim's render mutex is unrecoverable;
-  /// see `render_mutex_lock_or_give_up` in `cpp/shim.c`.
+  /// Both report failure (0) when the shim's render mutex could not be taken
+  /// in time; see `render_mutex_lock_or_give_up` in `cpp/shim.c`.
   final int Function(int sessionAddress) bind;
+
+  /// Withdraws the session only if it is still the bound one (returns 1),
+  /// leaving another map's binding alone (returns 0). Null when the shim
+  /// predates it; callers then fall back to the unconditional `bind(0)`.
+  final int Function(int sessionAddress)? unbind;
+
   final int Function() acquire;
   final void Function() release;
   final int Function() frameCount;
@@ -263,6 +280,11 @@ class _ShimBindings {
         lib.lookupFunction<Int32 Function(Int64), int Function(int)>(
           'mln_shim_render_bind',
         ),
+        lib.providesSymbol('mln_shim_render_unbind')
+            ? lib.lookupFunction<Int32 Function(Int64), int Function(int)>(
+                'mln_shim_render_unbind',
+              )
+            : null,
         lib.lookupFunction<Int32 Function(), int Function()>(
           'mln_shim_render_acquire',
         ),
