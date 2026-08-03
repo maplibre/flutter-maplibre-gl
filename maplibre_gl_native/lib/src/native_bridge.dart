@@ -124,13 +124,36 @@ class NativeBridge {
 
   static bool _initialized = false;
 
-  /// Callback invoked when the producer surface of [textureId] was destroyed
-  /// (e.g. the app went to background) and rendering must stop.
-  static void Function(int textureId)? onSurfaceDestroyed;
+  /// Surface lifecycle handlers, one pair per live texture, registered by the
+  /// MapView that owns the texture and removed in its dispose.
+  ///
+  /// Keyed by texture id because several maps can be live at once: a single
+  /// static slot would let the newest map steal the events of every other one
+  /// (a backgrounded first map would come back black), and the stale closure
+  /// would pin its disposed session forever.
+  static final Map<int, ({void Function() onDestroyed, void Function() onAvailable})>
+  _surfaceHandlers = {};
 
-  /// Callback invoked when the producer surface of [textureId] is available
-  /// again and the render target can be recreated.
-  static void Function(int textureId)? onSurfaceAvailable;
+  /// Registers the handlers called when the producer surface of [textureId]
+  /// is destroyed (e.g. the app went to background, rendering must stop) or
+  /// available again (the render target can be recreated). Replaces any
+  /// previous registration for the same texture.
+  static void registerSurfaceHandlers(
+    int textureId, {
+    required void Function() onDestroyed,
+    required void Function() onAvailable,
+  }) {
+    _surfaceHandlers[textureId] = (
+      onDestroyed: onDestroyed,
+      onAvailable: onAvailable,
+    );
+  }
+
+  /// Removes the surface handlers of [textureId]. Safe to call when none are
+  /// registered.
+  static void unregisterSurfaceHandlers(int textureId) {
+    _surfaceHandlers.remove(textureId);
+  }
 
   /// Callback invoked with raw platform location fixes while
   /// [startLocationUpdates] is active. Keys: latitude, longitude, altitude?,
@@ -147,9 +170,11 @@ class NativeBridge {
         case 'onSurfaceDestroyed' || 'onSurfaceAvailable':
           final textureId = args?['textureId'] as int?;
           if (textureId == null) return;
+          final handlers = _surfaceHandlers[textureId];
+          if (handlers == null) return;
           call.method == 'onSurfaceDestroyed'
-              ? onSurfaceDestroyed?.call(textureId)
-              : onSurfaceAvailable?.call(textureId);
+              ? handlers.onDestroyed()
+              : handlers.onAvailable();
       }
     });
   }

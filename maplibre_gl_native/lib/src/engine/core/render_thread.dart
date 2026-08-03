@@ -50,13 +50,45 @@ class RenderThread {
   /// moving" from "nothing left to draw" for the idle-park decision.
   int? get frameCount => _driving ? _bindings?.frameCount() : null;
 
-  /// Offers [session] to the render thread, replacing any previous one.
+  /// Offers [session] to the render thread, replacing any previous offer.
   ///
-  /// Takes effect only once [enable] has confirmed the display is pacing us;
-  /// until then the session is remembered but Dart keeps drawing.
-  void bindSession(mln.RenderSessionHandle? session) {
+  /// One thread draws one session: with several maps live, the last surface
+  /// attach wins and the others keep drawing on the engine isolate (see
+  /// [isDrivingSession]). Takes effect only once [enable] has confirmed the
+  /// display is pacing us; until then the session is remembered but Dart
+  /// keeps drawing.
+  void bindSession(mln.RenderSessionHandle session) {
     _session = session;
     if (_driving) _publish();
+  }
+
+  /// Withdraws [session] if it is the offered one, leaving another map's
+  /// offer alone, and returns whether it was (so the caller can offer a
+  /// surviving session in its place; see EngineCore.retireRenderSession).
+  ///
+  /// Always ends by re-asserting whatever offer survives: the platform side
+  /// retires the NATIVE binding unconditionally before it lets any producer
+  /// surface die (nativeRetireRenderSession in shim.c), which can pull a
+  /// session this class still rightly offers, and without the re-publish that
+  /// session would sit "driving" in Dart while the shim draws nothing. The
+  /// bind is idempotent, so it costs nothing when the binding is already
+  /// right.
+  bool retire(mln.RenderSessionHandle session) {
+    final wasOffered = identical(_session, session);
+    if (wasOffered) _session = null;
+    final bindings = _bindings;
+    if (bindings != null) {
+      final unbind = bindings.unbind;
+      if (unbind != null) {
+        unbind(session.nativeAddress);
+      } else if (wasOffered) {
+        // Old shim without the conditional entry point: the unconditional
+        // withdrawal is only correct when this session is the offered one.
+        bindings.bind(0);
+      }
+    }
+    if (_driving && _session != null) _publish();
+    return wasOffered;
   }
 
   /// Lets the render thread draw, because display pulses are confirmed live.
@@ -92,13 +124,15 @@ class RenderThread {
     final bindings = _bindings;
     if (bindings == null) return;
     if (bindings.bind(_session?.nativeAddress ?? 0) != 0) return;
-    // The shim gave up on its mutex (a borrow was never returned; hot restart
-    // mid-borrow is the known way). The display service is gone for the rest
-    // of this process: fall back to drawing on this isolate, loudly.
-    _driving = false;
+    // The shim's render mutex did not come in time. It is recoverable (the
+    // shim keeps retrying its lock and resumes when the holder releases), so
+    // this only means THIS offer did not land: drop it, so the session draws
+    // on the engine isolate instead of nobody drawing it, and let the next
+    // offer — the next surface attach, or the driver re-enabling — try again.
+    _session = null;
     debugPrint(
-      '[maplibre_gl_native] display render service unavailable '
-      '(render mutex unrecoverable); rendering on the engine isolate',
+      '[maplibre_gl_native] render thread bind timed out; the session draws '
+      'on the engine isolate until the next surface attach re-offers it',
     );
   }
 
@@ -121,6 +155,11 @@ class RenderThread {
   /// pacing flip (driving turned off mid-scenario) the buffer still holds
   /// frames it drew for this session, and a drain must not orphan them; the
   /// core merges this with the isolate collector's samples.
+  ///
+  /// The shim's collector is GLOBAL (one thread, one buffer), so with several
+  /// maps its samples describe whichever session was bound while armed; the
+  /// benchmark harness runs one map, and per-session consolidation is out of
+  /// scope until it does not.
   ///
   /// Shape matches `FrameStatsCollector.take`, so the benchmark harness reads
   /// the display thread's frames exactly as it read the isolate's.
@@ -169,22 +208,41 @@ class RenderThread {
   /// plain mutex.
   T borrow<T>(mln.RenderSessionHandle session, T Function() body) {
     final bindings = _bindings;
-    if (!isDrivingSession(session) || bindings == null) {
-      // Nobody else can be calling this session, so no handover is needed.
+    if (bindings == null) {
+      // No display render service in this process, so nobody else can be
+      // calling sessions and no handover is needed.
       session.rebindThread();
       return body();
     }
+    // Serialize through the shim's mutex even for a session the display
+    // thread is not drawing (a second map, a snapshot): the lock is
+    // uncontended then and costs nanoseconds, and it closes the window where
+    // the shim still holds a binding this class already dropped (a timed-out
+    // bind or acquire below, a platform-side retire) and both threads could
+    // otherwise touch the same session at once.
     if (bindings.acquire() == 0) {
-      // The shim's mutex is unrecoverable, so its thread has stopped touching
-      // the session (it gives up the same way). Draw and call from here on.
-      _driving = false;
-      debugPrint(
-        '[maplibre_gl_native] session borrow failed '
-        '(render mutex unrecoverable); rendering on the engine isolate',
-      );
+      // The mutex did not come in time (a borrow not yet returned; hot
+      // restart mid-borrow is the known way). It is recoverable, so the
+      // display service is not written off: only this session's offer is
+      // dropped, because a session the shim may still render must not be
+      // touched without the lock, and the offer cannot be withdrawn without
+      // it either. The next surface attach re-offers it. The call itself
+      // still runs: its holder is not rendering this session right now (the
+      // render thread is blocked on the same mutex), and failing every query
+      // over a lock that may come back in a frame would be worse.
+      if (identical(_session, session)) _session = null;
+      if (!_borrowTimeoutLogged) {
+        _borrowTimeoutLogged = true;
+        debugPrint(
+          '[maplibre_gl_native] session borrow timed out (render mutex '
+          'busy); calling unguarded, and re-offering the session only at '
+          'the next surface attach (repeats muted until it recovers)',
+        );
+      }
       session.rebindThread();
       return body();
     }
+    _borrowTimeoutLogged = false;
     try {
       session.rebindThread();
       return body();
@@ -192,6 +250,10 @@ class RenderThread {
       bindings.release();
     }
   }
+
+  /// Latch so a wedged mutex logs the transition, not every borrow at frame
+  /// rate; cleared by the first acquire that succeeds again.
+  bool _borrowTimeoutLogged = false;
 }
 
 /// Native scratch the render thread drains its samples into, allocated once and

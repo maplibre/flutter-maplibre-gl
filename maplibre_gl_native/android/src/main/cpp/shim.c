@@ -703,12 +703,18 @@ MLN_SHIM_EXPORT int32_t mln_shim_render_bind(int64_t session_handle) {
 // session: the Dart side aims for it, but one thread serves many maps, so the
 // last word has to be here where the binding actually lives.
 //
-// Returns 1 when the session matched and was withdrawn; 0 (with a log, and
-// nothing changed) on mismatch, or when the render mutex could not be taken
-// in time.
+// Returns 1 when the given session is no longer bound on return: withdrawn
+// here, or already unbound (the platform's surface-cleanup barrier routinely
+// gets there first, so that is the goal state, not an error). Returns 0 (with
+// a log, and nothing changed) when a DIFFERENT session is bound, or when the
+// render mutex could not be taken in time.
 MLN_SHIM_EXPORT int32_t mln_shim_render_unbind(int64_t session_handle) {
   if (!render_mutex_lock_or_give_up("unbind")) {
     return 0;
+  }
+  if (g_render_session == 0) {
+    pthread_mutex_unlock(&g_render_mutex);
+    return 1;
   }
   if (g_render_session != (uint64_t)session_handle) {
     const uint64_t bound = g_render_session;
@@ -723,6 +729,35 @@ MLN_SHIM_EXPORT int32_t mln_shim_render_unbind(int64_t session_handle) {
   g_render_owned_here = false;
   pthread_mutex_unlock(&g_render_mutex);
   return 1;
+}
+
+// Platform-side barrier before a surface dies: withdraws whatever session is
+// bound, waiting out the frame in flight, so the JVM's platform thread can
+// destroy backend surfaces (eglDestroySurface, vkDestroySurfaceKHR plus the
+// ANativeWindow release) with nothing drawing into them. g_render_mutex
+// serializes the pulse thread against Dart borrows, NOT against the platform
+// thread, which is why the plugin must come through here first.
+//
+// Unconditional like mln_shim_render_bind(0): the plugin knows textures, not
+// sessions, so it cannot name one. With two maps this also pulls the other
+// map's binding; that is accepted because the Dart side re-offers a live
+// session when it processes the surface loss (EngineCore.retireRenderSession).
+JNIEXPORT void JNICALL
+Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeRetireRenderSession(
+    JNIEnv* env, jobject thiz) {
+  (void)env;
+  (void)thiz;
+  if (!render_mutex_lock_or_give_up("platform retire")) {
+    // The lock did not come in time: the holder is either a leaked borrow
+    // (nothing in flight, so the surfaces are safe anyway) or a
+    // pathologically long frame. Blocking the platform thread any longer
+    // courts an ANR, so proceed without the withdrawal; the timeout above
+    // already logged what happened.
+    return;
+  }
+  g_render_session = 0;
+  g_render_owned_here = false;
+  pthread_mutex_unlock(&g_render_mutex);
 }
 
 // Borrows the bound session for the calling thread, blocking until the frame in

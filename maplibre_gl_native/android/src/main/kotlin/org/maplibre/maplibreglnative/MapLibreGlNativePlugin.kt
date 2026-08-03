@@ -57,6 +57,12 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     stopLocationUpdates()
+    // The shim's render thread may be inside render_update on one of these
+    // surfaces: its mutex serializes it against Dart borrows, not against
+    // this (platform) thread. Retiring the bound session waits out the frame
+    // in flight, so nothing is drawing when the entries destroy their
+    // surfaces below.
+    if (nativeInitialized) nativeRetireRenderSession()
     entries.values.forEach { it.close() }
     entries.clear()
     textureRegistry = null
@@ -104,6 +110,7 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         "createTexture" -> {
           val width = requireNotNull(call.argument<Int>("physicalWidth"))
           val height = requireNotNull(call.argument<Int>("physicalHeight"))
+          requireSaneTextureSize(width, height)
           val backend = call.argument<String>("backend") ?: "opengl"
           val entry = createTexture(width, height, backend)
           entries[entry.textureId] = entry
@@ -113,6 +120,7 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
           val entry = entryFor(call)
           val width = requireNotNull(call.argument<Int>("physicalWidth"))
           val height = requireNotNull(call.argument<Int>("physicalHeight"))
+          requireSaneTextureSize(width, height)
           entry.resize(width, height)
           result.success(mapOf("surface" to entry.surfaceHandle))
         }
@@ -140,6 +148,24 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   private fun entryFor(call: MethodCall): MapTextureEntry {
     val textureId = requireNotNull(call.argument<Number>("textureId")).toLong()
     return requireNotNull(entries[textureId]) { "unknown texture $textureId" }
+  }
+
+  /**
+   * Rejects sizes the producer would accept but the GPU never could: a zero
+   * or negative dimension crashes deep inside the swapchain, and anything
+   * past the ceiling (conservatively GL_MAX_TEXTURE_SIZE / Vulkan
+   * maxImageDimension2D on current devices) signals a corrupted layout, not
+   * a real map. The throw becomes a result.error through the catch in
+   * [onMethodCall].
+   */
+  private fun requireSaneTextureSize(width: Int, height: Int) {
+    require(width in 1..MAX_TEXTURE_DIMENSION && height in 1..MAX_TEXTURE_DIMENSION) {
+      "invalid texture size ${width}x${height}"
+    }
+  }
+
+  private companion object {
+    private const val MAX_TEXTURE_DIMENSION = 16384
   }
 
   private var locationManager: LocationManager? = null
@@ -266,6 +292,14 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
 
         override fun onSurfaceCleanup() {
+          // Flutter destroys the producer surface as soon as this callback
+          // returns, and the shim's render thread may be mid-frame on it:
+          // retire the bound session first, which waits out the frame in
+          // flight. The retirement is unconditional (this side knows
+          // textures, not sessions), so with two maps it also pulls the
+          // other map's binding; acceptable, because Dart re-offers a live
+          // session while processing the surface loss below.
+          if (nativeInitialized) nativeRetireRenderSession()
           // Dart detaches the render session before touching the surface
           // again; the backend surface is recreated on demand.
           channel.invokeMethod("onSurfaceDestroyed", mapOf("textureId" to producer.id()))
@@ -282,6 +316,14 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   private external fun nativeVulkanCreateSurface(surface: Surface): LongArray?
 
   private external fun nativeVulkanDestroySurface(vkSurface: Long, window: Long)
+
+  /**
+   * Withdraws whatever render session the shim's display thread is bound to,
+   * waiting out the frame in flight (see shim.c). The barrier this class must
+   * cross before destroying any backend surface: the shim's render mutex
+   * serializes its thread against Dart, not against the platform thread.
+   */
+  private external fun nativeRetireRenderSession()
 }
 
 /** One external texture and the backend surface wrapped over its producer. */
@@ -299,10 +341,12 @@ private interface MapTextureEntry : AutoCloseable {
 
   /**
    * Destroys the surface retired by the last resize()/recreateSurface(), once
-   * the engine has swapped the render session onto the new one. Vulkan
-   * requires every swapchain destroyed before its surface, and the session
-   * keeps the old swapchain until the swap, so destruction must wait for it.
-   * No-op for backends that carry nothing to defer.
+   * the engine has swapped the render session onto the new one. The session
+   * presents to the outgoing surface until that swap (and Vulkan additionally
+   * requires every swapchain destroyed before its surface), so destruction
+   * must wait for it: both backends park the outgoing surface in resize()/
+   * recreateSurface() and destroy it here. The default is a no-op only for
+   * a hypothetical backend that carries nothing to defer.
    */
   fun releaseRetiredSurface() {}
 }
@@ -407,6 +451,7 @@ private class EglTextureEntry(val producer: TextureRegistry.SurfaceProducer) : M
   private val config: EGLConfig
   private val context: EGLContext
   private var windowSurface: EGLSurface = EGL14.EGL_NO_SURFACE
+  private var retiredSurface: EGLSurface = EGL14.EGL_NO_SURFACE
 
   init {
     display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
@@ -438,14 +483,37 @@ private class EglTextureEntry(val producer: TextureRegistry.SurfaceProducer) : M
     )
 
   override fun resize(width: Int, height: Int) {
-    destroyWindowSurface()
+    retire()
     producer.setSize(width, height)
     createWindowSurface(producer.surface)
   }
 
   override fun recreateSurface() {
-    destroyWindowSurface()
+    retire()
     createWindowSurface(producer.surface)
+  }
+
+  override fun releaseRetiredSurface() {
+    if (retiredSurface != EGL14.EGL_NO_SURFACE) {
+      EGL14.eglDestroySurface(display, retiredSurface)
+      retiredSurface = EGL14.EGL_NO_SURFACE
+    }
+  }
+
+  /**
+   * Parks the current surface for releaseRetiredSurface() instead of
+   * destroying it, mirroring [VulkanTextureEntry.retire]: the Dart side calls
+   * releaseRetiredSurface only after the engine has swapped the render
+   * session onto the new surface, and until that swap the session still
+   * presents to the outgoing one, so destroying it here would pull it out
+   * from under a frame in flight. A surface already parked (two swaps with
+   * no release between them) is destroyed first; by then the session has
+   * long since stopped presenting to it.
+   */
+  private fun retire() {
+    releaseRetiredSurface()
+    retiredSurface = windowSurface
+    windowSurface = EGL14.EGL_NO_SURFACE
   }
 
   private fun createWindowSurface(surface: Surface) {
@@ -462,6 +530,7 @@ private class EglTextureEntry(val producer: TextureRegistry.SurfaceProducer) : M
   }
 
   override fun close() {
+    releaseRetiredSurface()
     destroyWindowSurface()
     if (context != EGL14.EGL_NO_CONTEXT) {
       EGL14.eglDestroyContext(display, context)

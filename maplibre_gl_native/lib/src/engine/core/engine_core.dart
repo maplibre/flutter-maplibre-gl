@@ -115,6 +115,26 @@ class EngineCore {
     return session;
   }
 
+  /// Withdraws [session] from the display thread and, when it was the one
+  /// driving, offers a surviving session that still has a render target.
+  ///
+  /// This is the multi-map half of the handover: one map's surface loss or
+  /// teardown must not leave another map silently drawing on the engine
+  /// isolate for the rest of its life, and only the core knows the other
+  /// sessions to offer. The retired session itself is skipped because one
+  /// caller (the surface-replace fallback in attachRenderTarget) retires a
+  /// session it is about to destroy while it still looks alive.
+  void retireRenderSession(mln.RenderSessionHandle session) {
+    if (!renderThread.retire(session)) return;
+    for (final other in _sessions.values) {
+      if (identical(other._renderSession, session) || !other.canRender) {
+        continue;
+      }
+      renderThread.bindSession(other._renderSession!);
+      return;
+    }
+  }
+
   // Frame driving.
 
   /// Pumps the runtime and renders every dirty session. Returns whether any

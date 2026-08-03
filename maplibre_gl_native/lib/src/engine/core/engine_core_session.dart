@@ -17,12 +17,14 @@ class _EngineSession {
     required CreateSessionQuery spec,
     required void Function(EngineEvent) emit,
     required RenderThread renderThread,
+    required void Function(mln.RenderSessionHandle) retireRenderSession,
   }) : _spec = spec,
        logicalWidth = spec.logicalWidth,
        logicalHeight = spec.logicalHeight,
        scaleFactor = spec.scaleFactor,
        _emit = emit,
-       _renderThread = renderThread;
+       _renderThread = renderThread,
+       _retireRenderSession = retireRenderSession;
 
   final int sessionId;
 
@@ -38,6 +40,12 @@ class _EngineSession {
   /// here. Every call on [_renderSession] must go through [_onRenderThread],
   /// because the session's owner thread may be the display pulse thread.
   final RenderThread _renderThread;
+
+  /// [EngineCore.retireRenderSession]: withdraws a session from the display
+  /// thread AND re-offers a surviving one. Sessions must go through it (not
+  /// [RenderThread.retire] directly), because only the core knows the other
+  /// sessions to offer when the driving one bows out.
+  final void Function(mln.RenderSessionHandle) _retireRenderSession;
 
   mln.RenderSessionHandle? _renderSession;
 
@@ -154,7 +162,10 @@ class _EngineSession {
         );
         // Offer the session back: onSurfaceLost withdrew it from the display
         // thread, and without this the fallback quietly draws here forever.
-        _renderThread.bindSession(_renderSession);
+        // With several maps live this steals the display thread from the
+        // previously offered one, by design: one thread draws one session,
+        // and the last attach wins.
+        _renderThread.bindSession(_renderSession!);
         _surfaceLost = false;
         map.requestRepaint();
         _renderPending = true;
@@ -196,8 +207,9 @@ class _EngineSession {
         );
     }
     // Attaching bound the session to this isolate. Offer it to the display
-    // pulse thread, which takes the affinity on its next frame.
-    _renderThread.bindSession(_renderSession);
+    // pulse thread, which takes the affinity on its next frame (with several
+    // maps live, the last attach wins; the others draw on this isolate).
+    _renderThread.bindSession(_renderSession!);
     _surfaceLost = false;
     map.requestRepaint();
     _renderPending = true;
@@ -294,8 +306,10 @@ class _EngineSession {
     // frame in flight and then guarantees the render thread will not touch this
     // session again, whereas taking the borrow and destroying inside it would
     // need the withdrawal afterwards, and that takes the same non-recursive
-    // native mutex the borrow is holding.
-    _renderThread.bindSession(null);
+    // native mutex the borrow is holding. The withdrawal is conditional on
+    // THIS session being the bound one, so tearing this map down cannot blank
+    // another map, and the core re-offers a survivor when it was.
+    _retireRenderSession(session);
     try {
       // The render thread held the affinity; destroy is owner-thread checked.
       session.rebindThread();
@@ -326,11 +340,14 @@ class _EngineSession {
     // processed. The renderer and its GPU resources survive, so the next
     // attach is a cheap swapchain rebuild instead of a visible full re-render
     // of the map.
-    if (_renderSession == null) return;
+    final session = _renderSession;
+    if (session == null) return;
     // Withdraw from the display thread: with the window gone every render
     // fails, and the service must not be left grinding through failures it
-    // cannot interpret. The next attach offers the session back.
-    _renderThread.bindSession(null);
+    // cannot interpret. Conditional on this session being the bound one
+    // (another map's surface loss must not pull ours), with the core
+    // re-offering a survivor; the next attach offers this one back.
+    _retireRenderSession(session);
   }
 
   /// Resizes the render target; the producer surface was replaced, so the

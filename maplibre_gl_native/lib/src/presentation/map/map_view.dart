@@ -56,6 +56,12 @@ class _MapViewState extends State<MapView> {
   Size? _appliedLogicalSize;
   double _devicePixelRatio = 1;
 
+  /// The latest layout seen while a resize was already in flight. Discarding
+  /// it would leave the map stretched at the in-flight size until some later
+  /// layout pass happens to run, so it is replayed when the in-flight resize
+  /// completes.
+  (Size, double)? _pendingResize;
+
   /// All gesture recognition and arbitration lives in the handler; the view
   /// only wires the widget callbacks to it in [build].
   ///
@@ -120,6 +126,9 @@ class _MapViewState extends State<MapView> {
       session.send(DisposeSessionCommand(session.id));
     }
     if (textureId != null) {
+      // Without this the closures above keep receiving this texture's
+      // surface events (and pin the disposed session) for the process life.
+      NativeBridge.unregisterSurfaceHandlers(textureId);
       // The engine must have detached from the EGL surface (FIFO barrier)
       // before the platform releases the texture that backs it.
       final barrier =
@@ -191,16 +200,12 @@ class _MapViewState extends State<MapView> {
       host.addEventListener(_onEngineEvent);
       widget.platform.attach(session);
 
-      NativeBridge.onSurfaceDestroyed = (textureId) {
-        if (textureId == handles.textureId) {
-          session.send(SurfaceLostCommand(session.id));
-        }
-      };
-      NativeBridge.onSurfaceAvailable = (textureId) {
-        if (textureId == handles.textureId) {
-          unawaited(_recreateSurface(session, textureId));
-        }
-      };
+      NativeBridge.registerSurfaceHandlers(
+        handles.textureId,
+        onDestroyed: () => session.send(SurfaceLostCommand(session.id)),
+        onAvailable: () =>
+            unawaited(_recreateSurface(session, handles.textureId)),
+      );
 
       setState(() {});
       // The channel backends report the id of the platform view they created;
@@ -270,20 +275,32 @@ class _MapViewState extends State<MapView> {
   }
 
   Future<void> _recreateSurface(MapSession session, int textureId) async {
-    // The FIFO barrier orders the SurfaceLostCommand before the new surface
-    // exists, so the engine has stopped rendering into the dying window.
-    await session.query(const BarrierQuery());
-    // The old backend surface is NOT destroyed here: the session keeps a
-    // swapchain built from it until the engine swaps targets, and Vulkan
-    // destroys every swapchain before its surface. recreateSurface retires
-    // the old pair; releaseRetiredSurface destroys it after the swap.
-    final eglSurface = await NativeBridge.recreateSurface(
-      textureId: textureId,
-    );
-    if (!mounted || _session?.id != session.id) return;
-    session.send(AttachSurfaceCommand(session.id, eglSurface: eglSurface));
-    await session.query(const BarrierQuery());
-    await NativeBridge.releaseRetiredSurface(textureId: textureId);
+    try {
+      // The FIFO barrier orders the SurfaceLostCommand before the new surface
+      // exists, so the engine has stopped rendering into the dying window.
+      await session.query(const BarrierQuery());
+      // The old backend surface is NOT destroyed here: the session keeps a
+      // swapchain built from it until the engine swaps targets, and Vulkan
+      // destroys every swapchain before its surface. recreateSurface retires
+      // the old pair; releaseRetiredSurface destroys it after the swap.
+      final eglSurface = await NativeBridge.recreateSurface(
+        textureId: textureId,
+      );
+      if (!mounted || _session?.id != session.id) return;
+      session.send(AttachSurfaceCommand(session.id, eglSurface: eglSurface));
+      await session.query(const BarrierQuery());
+      await NativeBridge.releaseRetiredSurface(textureId: textureId);
+    } catch (error) {
+      // The session stays surface-lost, which is a black map; do not also
+      // lose the ways back. Nothing here latches (no flag like _resizing),
+      // so the next onSurfaceAvailable retries this whole path, and clearing
+      // the applied size makes the next layout pass rebuild the surface
+      // through the resize path even if no surface event ever comes.
+      debugPrint(
+        '[maplibre_gl_native] recreating the map surface failed: $error',
+      );
+      _appliedLogicalSize = null;
+    }
   }
 
   void _onEngineEvent(EngineEvent event) {
@@ -322,7 +339,17 @@ class _MapViewState extends State<MapView> {
   void _maybeResize(Size logicalSize, double devicePixelRatio) {
     final session = _session;
     final textureId = _textureId;
-    if (session == null || textureId == null || _resizing) return;
+    if (session == null || textureId == null) return;
+    // Zero-width layouts happen mid-transition and a texture cannot be
+    // resized to nothing; wait for a real size (the init path at the bottom
+    // of build has the same guard).
+    if (logicalSize.width < 1 || logicalSize.height < 1) return;
+    if (_resizing) {
+      // Remember it instead of dropping it: _appliedLogicalSize tracks the
+      // resize in flight, so a drop here would never be retried.
+      _pendingResize = (logicalSize, devicePixelRatio);
+      return;
+    }
     final applied = _appliedLogicalSize;
     if (applied != null &&
         (applied.width - logicalSize.width).abs() < 1 &&
@@ -371,8 +398,25 @@ class _MapViewState extends State<MapView> {
       );
       await session.query(const BarrierQuery());
       await NativeBridge.releaseRetiredSurface(textureId: textureId);
+    } catch (error) {
+      // The SurfaceLostCommand already went out, so a failure here (a
+      // PlatformException from the texture shim, an engine query timeout)
+      // would otherwise leave the session paused forever: a black map with
+      // no path back. Forget the size we failed to apply so the next layout
+      // pass retries, and try to put the current producer surface back under
+      // the session right away.
+      debugPrint('[maplibre_gl_native] resizing the map surface failed: $error');
+      _appliedLogicalSize = null;
+      if (mounted && _session?.id == session.id) {
+        await _recreateSurface(session, textureId);
+      }
     } finally {
       _resizing = false;
+      // Replay the layout that arrived while this resize was in flight; the
+      // applied-size check in _maybeResize makes it a no-op when it matches.
+      final pending = _pendingResize;
+      _pendingResize = null;
+      if (pending != null && mounted) _maybeResize(pending.$1, pending.$2);
     }
   }
 

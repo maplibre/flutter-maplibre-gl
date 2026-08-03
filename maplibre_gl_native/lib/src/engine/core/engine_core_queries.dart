@@ -67,6 +67,7 @@ extension EngineQueryDispatch on EngineCore {
       spec: query,
       emit: _emit,
       renderThread: renderThread,
+      retireRenderSession: retireRenderSession,
     );
     session.attachRenderTarget(query.surface);
     _sessions[sessionId] = session;
