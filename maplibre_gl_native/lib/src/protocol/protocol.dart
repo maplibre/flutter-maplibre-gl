@@ -64,12 +64,36 @@ class QueryReply {
 }
 
 /// Failed reply to the [QueryRequest] with the same [id]; [error] is the
-/// stringified engine-side exception.
+/// stringified engine-side exception and [errorType] its runtime type name,
+/// the most of the original type that can cross the port (the exception
+/// object itself may hold native handles).
 class QueryFailure {
-  const QueryFailure(this.id, this.error);
+  const QueryFailure(this.id, this.error, {this.errorType = ''});
 
   final int id;
   final String error;
+  final String errorType;
+}
+
+/// What a failed [EngineQuery] completes with on the presentation side.
+///
+/// The engine-side exception cannot cross the port, so it is rebuilt from
+/// its message plus [engineErrorType], preserving the one distinction that
+/// matters to a caller: `MaplibreException` is the native map refusing the
+/// operation, anything else is a programming error in the engine.
+class EngineQueryException implements Exception {
+  const EngineQueryException(this.message, {this.engineErrorType = ''});
+
+  final String message;
+
+  /// Runtime type name of the original engine-side exception; empty when
+  /// unknown.
+  final String engineErrorType;
+
+  @override
+  String toString() => engineErrorType.isEmpty
+      ? 'EngineQueryException: $message'
+      : 'EngineQueryException($engineErrorType): $message';
 }
 
 /// Partial camera state; null fields are left unchanged by the engine.

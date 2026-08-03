@@ -34,40 +34,98 @@ class EngineHost {
   /// The live host, once [ensure] has completed.
   static EngineHost? get instance => _instance;
 
+  /// The spawn in flight. [ensure] memoizes it because it is async and two
+  /// maps mounted in the same frame would otherwise race it into two engine
+  /// isolates: two SQLite writers on the same tile cache database, with the
+  /// losing isolate leaking a whole runtime nobody talks to. Cleared when
+  /// the spawn fails so a later call can retry.
+  static Future<EngineHost>? _starting;
+
   /// Process-global HTTP headers for engine resource requests
   /// (`MapLibreGlNative.setGlobalHttpHeaders`): applied at bootstrap, kept
   /// in sync by the setter afterwards.
   static Map<String, String> globalHttpHeaders = const {};
 
+  /// Every engine query answers in milliseconds, so this deadline is
+  /// deliberate overkill: a hit means the engine is truly gone or wedged,
+  /// never that the deadline was too tight.
+  static const Duration _defaultQueryTimeout = Duration(seconds: 15);
+
   SendPort? _commands;
+  RawReceivePort? _fromEngine;
+  RawReceivePort? _errors;
+  RawReceivePort? _exit;
+  Completer<SendPort>? _ready;
+
+  /// Why the engine isolate died; null while it is alive. Death is terminal
+  /// by design (no automatic respawn), so the reason doubles as the dead
+  /// flag: every later [send] and [query] throws it instead of writing to a
+  /// port nobody reads.
+  String? _deathReason;
+
   final List<void Function(EngineEvent)> _listeners =
       <void Function(EngineEvent)>[];
   final Map<int, Completer<Object?>> _pending = <int, Completer<Object?>>{};
   int _nextRequestId = 1;
 
   /// Initializes the Android services, spawns the engine isolate, and waits
-  /// for its command port.
+  /// for its command port. Concurrent callers share the one spawn in flight.
   ///
   /// Throws a [StateError] when the engine isolate cannot be bootstrapped:
   /// the FFI backend has no other engine to fall back to, and failing loudly
   /// beats rendering nothing.
-  static Future<EngineHost> ensure() async {
+  static Future<EngineHost> ensure() {
     final existing = _instance;
-    if (existing != null) return existing;
-    // mln_android_init must run before the engine isolate creates the
-    // runtime; the method channel lives on the root isolate.
-    await NativeBridge.init();
-    final cacheDir = await _resolveCacheDir();
-    final host = EngineHost._();
-    final fromEngine = RawReceivePort();
-    final ready = Completer<SendPort>();
+    if (existing != null) return Future.value(existing);
+    return _starting ??= _start();
+  }
+
+  static Future<EngineHost> _start() async {
+    try {
+      // mln_android_init must run before the engine isolate creates the
+      // runtime; the method channel lives on the root isolate.
+      await NativeBridge.init();
+      final cacheDir = await _resolveCacheDir();
+      final host = EngineHost._();
+      await host._spawn(cacheDir);
+      _instance = host;
+      if (globalHttpHeaders.isNotEmpty) {
+        host.send(SetHttpHeadersCommand(globalHttpHeaders));
+      }
+      return host;
+    } catch (_) {
+      // Nothing started: forget the memoized future so a later ensure() can
+      // retry from a clean slate (unlike a death after startup, which is
+      // terminal; see _onEngineDeath).
+      _starting = null;
+      rethrow;
+    }
+  }
+
+  Future<void> _spawn(String? cacheDir) async {
+    final fromEngine = _fromEngine = RawReceivePort();
+    final ready = _ready = Completer<SendPort>();
     fromEngine.handler = (message) {
       if (message is SendPort && !ready.isCompleted) {
         ready.complete(message);
         return;
       }
-      host._onEngineMessage(message);
+      _onEngineMessage(message);
     };
+    // Without these two ports an uncaught engine error kills the isolate in
+    // silence: sends land in a dead port without an exception and every
+    // pending query hangs forever. The error port fires first, with an
+    // [error, stackTrace] string pair (the only form an arbitrary error can
+    // cross in); the exit port also covers an exit without an error.
+    final errors = _errors = RawReceivePort();
+    errors.handler = (message) {
+      final description = message is List && message.length >= 2
+          ? '${message[0]}\n${message[1]}'
+          : '$message';
+      _onEngineDeath('uncaught error: $description');
+    };
+    final exit = _exit = RawReceivePort();
+    exit.handler = (_) => _onEngineDeath('the isolate exited');
     try {
       await Isolate.spawn(
         engineIsolateMain,
@@ -76,29 +134,72 @@ class EngineHost {
           cachePath: cacheDir,
           displayRefreshRate: _displayRefreshRate(),
         ),
+        onError: errors.sendPort,
+        onExit: exit.sendPort,
         debugName: 'maplibre-engine',
       );
-      host._commands = await ready.future.timeout(const Duration(seconds: 10));
+      _commands = await ready.future.timeout(const Duration(seconds: 10));
     } catch (error, stackTrace) {
-      fromEngine.close();
+      _closePorts();
       Error.throwWithStackTrace(
         StateError('The MapLibre FFI engine isolate failed to start: $error'),
         stackTrace,
       );
     }
-    _instance = host;
-    if (globalHttpHeaders.isNotEmpty) {
-      host.send(SetHttpHeadersCommand(globalHttpHeaders));
+  }
+
+  /// The engine isolate is gone. Terminal by design (respawning would need
+  /// every session, surface, and style to be rebuilt, which is the app's
+  /// call, not this layer's): make the death loud and immediate everywhere
+  /// instead of letting the app discover it as a collection of hangs.
+  void _onEngineDeath(String reason) {
+    // The exit port always fires after the error port: keep the real reason.
+    if (_deathReason != null) return;
+    _deathReason = reason;
+    _commands = null;
+    debugPrint('[maplibre_gl_native] the engine isolate DIED: $reason');
+    _closePorts();
+    // A spawn still waiting on the command port fails now, not at its
+    // 10-second timeout.
+    final ready = _ready;
+    if (ready != null && !ready.isCompleted) {
+      ready.completeError(
+        StateError('The engine isolate died during startup: $reason'),
+      );
     }
-    return host;
+    // Every in-flight query completes with the reason instead of hanging
+    // until its timeout.
+    final pending = List.of(_pending.values);
+    _pending.clear();
+    for (final completer in pending) {
+      completer.completeError(
+        StateError('The MapLibre FFI engine isolate died: $reason'),
+      );
+    }
+    for (final listener in List.of(_listeners)) {
+      listener(EngineDiedEvent(reason));
+    }
+  }
+
+  void _closePorts() {
+    _fromEngine?.close();
+    _fromEngine = null;
+    _errors?.close();
+    _errors = null;
+    _exit?.close();
+    _exit = null;
   }
 
   void _onEngineMessage(Object? message) {
     switch (message) {
       case QueryReply(:final id, :final result):
         _pending.remove(id)?.complete(result);
-      case QueryFailure(:final id, :final error):
-        _pending.remove(id)?.completeError(StateError(error));
+      case QueryFailure(:final id, :final error, :final errorType):
+        _pending
+            .remove(id)
+            ?.completeError(
+              EngineQueryException(error, engineErrorType: errorType),
+            );
       case final EngineEvent event:
         for (final listener in List.of(_listeners)) {
           listener(event);
@@ -119,25 +220,53 @@ class EngineHost {
   }
 
   /// Sends a fire-and-forget mutation.
+  ///
+  /// Throws a [StateError] when the engine isolate is not running or has
+  /// died: a send into a dead port would disappear without a trace.
   void send(EngineCommand command) {
     final commands = _commands;
     if (commands == null) {
-      throw StateError('The engine isolate is not running');
+      throw StateError(_notRunningMessage());
     }
     commands.send(command);
   }
 
   /// Executes a read and completes with its reply.
-  Future<R> query<R>(EngineQuery<R> query) {
+  ///
+  /// [timeout] bounds the wait: an engine that never answers (wedged in
+  /// native code, killed mid-query) must surface as a [TimeoutException]
+  /// naming the query, not as a Future that never completes.
+  Future<R> query<R>(
+    EngineQuery<R> query, {
+    Duration timeout = _defaultQueryTimeout,
+  }) {
     final commands = _commands;
     if (commands == null) {
-      throw StateError('The engine isolate is not running');
+      throw StateError(_notRunningMessage());
     }
     final id = _nextRequestId++;
     final completer = Completer<Object?>();
     _pending[id] = completer;
     commands.send(QueryRequest(id, query));
-    return completer.future.then((value) => value as R);
+    return completer.future
+        .timeout(
+          timeout,
+          onTimeout: () {
+            _pending.remove(id);
+            throw TimeoutException(
+              'engine query ${query.runtimeType} got no reply',
+              timeout,
+            );
+          },
+        )
+        .then((value) => value as R);
+  }
+
+  String _notRunningMessage() {
+    final reason = _deathReason;
+    return reason == null
+        ? 'The engine isolate is not running'
+        : 'The MapLibre FFI engine isolate died: $reason';
   }
 }
 

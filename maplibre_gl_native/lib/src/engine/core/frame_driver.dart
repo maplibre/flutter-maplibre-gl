@@ -4,6 +4,7 @@ import 'dart:ffi';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import '../../protocol/protocol.dart';
 import 'engine_core.dart';
 import 'frame_path_probe.dart';
 import 'vsync_pulse.dart';
@@ -145,7 +146,15 @@ class FrameDriver {
     // low frequency and resume frame pacing as soon as work shows up.
     _idlePump ??= Timer.periodic(_idlePumpInterval, (_) {
       ensureThread();
-      if (_core.pumpAndCheckAnyRenderPending()) wake();
+      try {
+        if (_core.pumpAndCheckAnyRenderPending()) wake();
+      } catch (error, stackTrace) {
+        // Same last-resort net as _frame: a throw escaping this timer
+        // callback is an uncaught isolate error, i.e. a dead engine over one
+        // bad pump. The periodic timer keeps ticking, so the pump retries on
+        // its own cadence.
+        _reportError('idle pump', error, stackTrace);
+      }
     });
   }
 
@@ -204,30 +213,44 @@ class FrameDriver {
     _frameTimer = null;
     _inFrame = true;
     _lastFrameStartUs = _clock.elapsedMicroseconds;
-    final probe = _probe;
-    probe?.beginTurn();
-    ensureThread();
-    final renderClock = Stopwatch()..start();
-    final rendered = developer.Timeline.timeSync(
-      'mln.frame',
-      probe == null ? _core.frame : _framePhases,
-    );
-    probe?.endTurn(rendered: rendered);
-    _inFrame = false;
-    _statsFrames += 1;
-    // When the display thread draws, count what it actually drew rather than
-    // what we found pending, and do not report a render time we did not spend.
-    final drawn = _core.renderThread.frameCount;
-    if (drawn != null) {
-      _statsRenders += drawn - (_lastDrawnCount ?? drawn);
-      _lastDrawnCount = drawn;
-    } else if (rendered) {
-      _statsRenders += 1;
-      final micros = renderClock.elapsedMicroseconds;
-      _statsRenderMicros += micros;
-      if (micros > _statsMaxRenderMicros) _statsMaxRenderMicros = micros;
+    var rendered = false;
+    // Last-resort net: a MaplibreException that slips past the targeted
+    // catches (cameraSnapshot in a camera flush, pollEvent in the pump)
+    // would escape this timer/port callback, and an uncaught error kills
+    // the whole engine isolate over one bad frame. Catch, report, and keep
+    // pacing; an errored frame counts as idle below, so a persistently
+    // failing loop parks itself after _idleFrameLimit frames instead of
+    // burning the display rate on errors.
+    try {
+      final probe = _probe;
+      probe?.beginTurn();
+      ensureThread();
+      final renderClock = Stopwatch()..start();
+      rendered = developer.Timeline.timeSync(
+        'mln.frame',
+        probe == null ? _core.frame : _framePhases,
+      );
+      probe?.endTurn(rendered: rendered);
+      _statsFrames += 1;
+      // When the display thread draws, count what it actually drew rather
+      // than what we found pending, and do not report a render time we did
+      // not spend.
+      final drawn = _core.renderThread.frameCount;
+      if (drawn != null) {
+        _statsRenders += drawn - (_lastDrawnCount ?? drawn);
+        _lastDrawnCount = drawn;
+      } else if (rendered) {
+        _statsRenders += 1;
+        final micros = renderClock.elapsedMicroseconds;
+        _statsRenderMicros += micros;
+        if (micros > _statsMaxRenderMicros) _statsMaxRenderMicros = micros;
+      }
+      _maybeLogStats();
+    } catch (error, stackTrace) {
+      _reportError('frame loop', error, stackTrace);
+    } finally {
+      _inFrame = false;
     }
-    _maybeLogStats();
     _idleFrames = rendered ? 0 : _idleFrames + 1;
     if (_idleFrames <= _idleFrameLimit) {
       // Pulse mode: the next vsync pulse paces us. Fallback: self-schedule.
@@ -270,6 +293,26 @@ class FrameDriver {
     _statsRenders = 0;
     _statsRenderMicros = 0;
     _statsMaxRenderMicros = 0;
+  }
+
+  /// Contexts that already logged and reported an error, keyed by
+  /// context + error type. The loops retry at display rate (or 10 Hz when
+  /// parked), so a persistent failure repeating identically would flood the
+  /// log and the root's event port; the first occurrence carries all the
+  /// information, a different error type is news again.
+  final Set<String> _reportedErrors = <String>{};
+
+  /// Logs an error the loop survived and pushes it to the root as an
+  /// [EngineErrorEvent], once per context + error type. Deliberately not
+  /// swallowed: the presentation side must be able to tell "the map is
+  /// still" from "the engine is failing every frame".
+  void _reportError(String context, Object error, StackTrace stackTrace) {
+    if (!_reportedErrors.add('$context|${error.runtimeType}')) return;
+    debugPrint(
+      '[maplibre_gl_native] engine $context failed (identical repeats '
+      'muted): $error\n$stackTrace',
+    );
+    _core.onEvent?.call(EngineErrorEvent(context, '$error'));
   }
 
   /// MapLibre Native handles are OS-thread affine and the VM does migrate

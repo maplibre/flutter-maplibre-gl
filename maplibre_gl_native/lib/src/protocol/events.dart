@@ -64,6 +64,40 @@ class RenderPendingEvent extends SessionEvent {
   const RenderPendingEvent(super.sessionId);
 }
 
+/// The engine hit an error it survived: a command handler, a frame-loop
+/// turn, or the idle pump threw outside any query's reply path, so no Future
+/// on the presentation side would ever have carried it. Without this event a
+/// failed AttachSurfaceCommand is a black map with the reason buried in the
+/// engine isolate's log.
+///
+/// Not fatal by definition: the engine keeps running (the command loop and
+/// the frame loop both survive the throw). A dead engine is [EngineDiedEvent].
+class EngineErrorEvent extends EngineScopedEvent {
+  const EngineErrorEvent(this.context, this.message);
+
+  /// What failed: the runtime type name of the command, or the loop that
+  /// threw (`frame loop`, `idle pump`).
+  final String context;
+
+  /// Stringified engine-side exception; the exception itself may hold native
+  /// handles and cannot cross the port.
+  final String message;
+}
+
+/// The engine isolate died. Terminal: nothing respawns it, every pending
+/// query has already been completed with an error, and later sends and
+/// queries throw. Listeners get it so a live map can tell the app why it
+/// just froze.
+///
+/// The one event never constructed on the engine side: the host synthesizes
+/// it on the root isolate when the isolate's error/exit port fires, because
+/// a dead isolate can no longer announce anything itself.
+class EngineDiedEvent extends EngineScopedEvent {
+  const EngineDiedEvent(this.reason);
+
+  final String reason;
+}
+
 /// Reply to an offline region command, correlated by [requestId].
 class OfflineResultEvent extends EngineScopedEvent {
   const OfflineResultEvent(
