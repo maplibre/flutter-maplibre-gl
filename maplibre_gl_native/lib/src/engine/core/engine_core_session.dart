@@ -464,6 +464,10 @@ class _EngineSession {
   void close() {
     if (_closed) return;
     _closed = true;
+    // Disarm frame stats if a benchmark left them armed: the render thread
+    // outlives this session (it lives as long as the engine), so its native
+    // sample buffers would otherwise never be freed.
+    if (_frameStats != null) setFrameStatsEnabled(false);
     _detachRenderTarget();
     map.close();
   }

@@ -146,6 +146,11 @@ class _MapViewState extends State<MapView> {
     _initStarted = true;
     _devicePixelRatio = devicePixelRatio;
     _appliedLogicalSize = logicalSize;
+    // Tracked outside the try so the catch can release what did get created:
+    // _textureId/_session are only set once everything has succeeded.
+    int? textureId;
+    MapSession? session;
+    var surfaceHandlersRegistered = false;
     try {
       final host = await EngineHost.ensure();
       // The bundled native library is compiled for exactly one render
@@ -158,6 +163,7 @@ class _MapViewState extends State<MapView> {
         physicalHeight: (logicalSize.height * devicePixelRatio).round(),
         backend: backend,
       );
+      textureId = handles.textureId;
       if (!mounted) {
         await NativeBridge.disposeTexture(
           textureId: handles.textureId,
@@ -192,20 +198,23 @@ class _MapViewState extends State<MapView> {
           scaleFactor: devicePixelRatio,
         ),
       });
-      final session = MapSession(host, sessionId);
-      _session = session;
+      session = MapSession(host, sessionId);
+      final createdSession = session;
+      _session = createdSession;
       _textureId = handles.textureId;
 
-      _applyCreationParams(session);
+      _applyCreationParams(createdSession);
       host.addEventListener(_onEngineEvent);
-      widget.platform.attach(session);
+      widget.platform.attach(createdSession);
 
       NativeBridge.registerSurfaceHandlers(
         handles.textureId,
-        onDestroyed: () => session.send(SurfaceLostCommand(session.id)),
+        onDestroyed: () =>
+            createdSession.send(SurfaceLostCommand(createdSession.id)),
         onAvailable: () =>
-            unawaited(_recreateSurface(session, handles.textureId)),
+            unawaited(_recreateSurface(createdSession, handles.textureId)),
       );
+      surfaceHandlersRegistered = true;
 
       setState(() {});
       // The channel backends report the id of the platform view they created;
@@ -225,6 +234,30 @@ class _MapViewState extends State<MapView> {
           context: ErrorDescription('while initializing the FFI map view'),
         ),
       );
+      // Failing halfway must not strand what already exists: without this the
+      // Flutter texture and its native surface (and a session, if it got that
+      // far) would outlive the widget for the rest of the process. Same
+      // teardown as dispose(): the barrier orders the engine's detach before
+      // the texture that backs its surface is released.
+      _session = null;
+      _textureId = null;
+      if (session != null) {
+        session.host.removeEventListener(_onEngineEvent);
+        session.send(DisposeSessionCommand(session.id));
+      }
+      if (textureId != null) {
+        final createdTextureId = textureId;
+        if (surfaceHandlersRegistered) {
+          NativeBridge.unregisterSurfaceHandlers(createdTextureId);
+        }
+        final barrier =
+            session?.query(const BarrierQuery()) ?? Future.value(true);
+        unawaited(
+          barrier.whenComplete(
+            () => NativeBridge.disposeTexture(textureId: createdTextureId),
+          ),
+        );
+      }
       if (mounted) setState(() => _initError = error);
     }
   }

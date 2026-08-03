@@ -142,7 +142,12 @@ class RenderThread {
   /// collector for the frames it draws itself.
   void setStatsEnabled(bool enabled) {
     _bindings?.statsEnable(enabled ? 1 : 0);
-    if (!enabled) _statsBuffers?.free();
+    // On re-arm the existing buffers are kept: they are plain native scratch
+    // overwritten by every drain, and nulling them here would orphan ~64 KB of
+    // calloc per arm. Disarming frees them; the session disarms on close, so
+    // this is also where a benchmark's buffers are returned at end of session.
+    if (enabled) return;
+    _statsBuffers?.free();
     _statsBuffers = null;
   }
 

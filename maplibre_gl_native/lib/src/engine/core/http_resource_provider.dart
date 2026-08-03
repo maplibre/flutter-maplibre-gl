@@ -28,9 +28,20 @@ class HttpResourceProvider {
   // (OkHttp allows 5 per host): an uncapped burst at style load (tilejson +
   // tiles + glyphs at once) trips aggressive rate limiters, e.g. the 429s of
   // demotiles.maplibre.org.
+  //
+  // The timeouts exist because every in-flight request pins its native
+  // ResourceRequestHandle: dart:io has no default connection or response
+  // deadline, so one hung connection would hold that handle for the rest of
+  // the process. The connection timeout matches OkHttp's default (10 s); the
+  // whole-exchange cap in [_fetch] is generous enough for a slow tile on a
+  // bad link.
   static final HttpClient _client = HttpClient()
     ..userAgent = 'flutter-maplibre-gl/maplibre_gl_native (spike)'
-    ..maxConnectionsPerHost = 8;
+    ..maxConnectionsPerHost = 8
+    ..connectionTimeout = const Duration(seconds: 10);
+
+  /// Deadline for one whole request/response exchange, headers to last byte.
+  static const Duration _requestTimeout = Duration(seconds: 30);
 
   static Map<String, String> _headers = const {};
   static List<RegExp> _headerFilters = const [];
@@ -90,36 +101,42 @@ class HttpResourceProvider {
     mln.ResourceRequestHandle handle,
   ) async {
     try {
-      final httpRequest = await _client.getUrl(Uri.parse(request.resolvedUrl));
-      if (_headers.isNotEmpty &&
-          (_headerFilters.isEmpty ||
-              _headerFilters.any((f) => f.hasMatch(request.resolvedUrl)))) {
-        _headers.forEach(httpRequest.headers.set);
-      }
-      final priorEtag = request.priorEtag;
-      final priorModifiedUnixMs = request.priorModifiedUnixMs;
-      if (priorEtag != null) {
-        httpRequest.headers.set(HttpHeaders.ifNoneMatchHeader, priorEtag);
-      } else if (priorModifiedUnixMs != null) {
-        httpRequest.headers.set(
-          HttpHeaders.ifModifiedSinceHeader,
-          HttpDate.format(
-            DateTime.fromMillisecondsSinceEpoch(
-              priorModifiedUnixMs,
-              isUtc: true,
+      // The timeout covers the whole exchange: a stalled response body pins
+      // the native handle just as surely as a connection that never opens.
+      final (response, bytes) = await () async {
+        final httpRequest = await _client.getUrl(
+          Uri.parse(request.resolvedUrl),
+        );
+        if (_headers.isNotEmpty &&
+            (_headerFilters.isEmpty ||
+                _headerFilters.any((f) => f.hasMatch(request.resolvedUrl)))) {
+          _headers.forEach(httpRequest.headers.set);
+        }
+        final priorEtag = request.priorEtag;
+        final priorModifiedUnixMs = request.priorModifiedUnixMs;
+        if (priorEtag != null) {
+          httpRequest.headers.set(HttpHeaders.ifNoneMatchHeader, priorEtag);
+        } else if (priorModifiedUnixMs != null) {
+          httpRequest.headers.set(
+            HttpHeaders.ifModifiedSinceHeader,
+            HttpDate.format(
+              DateTime.fromMillisecondsSinceEpoch(
+                priorModifiedUnixMs,
+                isUtc: true,
+              ),
             ),
-          ),
-        );
-      }
-      final range = request.range;
-      if (range != null) {
-        httpRequest.headers.set(
-          HttpHeaders.rangeHeader,
-          'bytes=${range.start}-${range.end}',
-        );
-      }
-      final response = await httpRequest.close();
-      final bytes = await _readBytes(response);
+          );
+        }
+        final range = request.range;
+        if (range != null) {
+          httpRequest.headers.set(
+            HttpHeaders.rangeHeader,
+            'bytes=${range.start}-${range.end}',
+          );
+        }
+        final response = await httpRequest.close();
+        return (response, await _readBytes(response));
+      }().timeout(_requestTimeout);
       if (handle.isCancelled) {
         handle.close();
         return;
@@ -145,7 +162,8 @@ class HttpResourceProvider {
           error is SocketException ||
               error is HandshakeException ||
               error is TlsException ||
-              error is HttpException
+              error is HttpException ||
+              error is TimeoutException
           ? mln.ResourceErrorReason.connection
           : mln.ResourceErrorReason.other;
       _complete(

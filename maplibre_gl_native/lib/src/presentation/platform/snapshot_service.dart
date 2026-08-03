@@ -45,6 +45,19 @@ class SnapshotService {
     );
   }
 
+  /// Fails every request still waiting; called from the platform adapter's
+  /// dispose. The engine reply can no longer arrive once the adapter stops
+  /// listening, so without this each caller would sit out the full timeout.
+  void dispose() {
+    final pending = List.of(_pending.values);
+    _pending.clear();
+    for (final completer in pending) {
+      completer.completeError(
+        StateError('the map was disposed before the snapshot completed'),
+      );
+    }
+  }
+
   /// Completes the request [event] answers.
   void resolve(SnapshotResultEvent event) {
     final completer = _pending.remove(event.requestId);

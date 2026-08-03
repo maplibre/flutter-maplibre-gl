@@ -145,6 +145,14 @@ class MapLibreGlNativeOffline {
 
   /// Creates a region and starts downloading it; [onEvent] receives progress
   /// updates like the global API's `downloadOfflineRegion`.
+  ///
+  /// [onEvent] is retained until the download completes, errors, or the
+  /// region is deleted. There is deliberately no release on pause: a paused
+  /// download is resumable and must keep reporting progress afterwards, and
+  /// no "abandoned for good" signal exists in the API. A download the app
+  /// pauses and never touches again therefore keeps its callback until
+  /// [deleteOfflineRegion]; one closure per region, bounded by the region
+  /// count in the cache database.
   static Future<gl.OfflineRegion> downloadOfflineRegion(
     gl.OfflineRegionDefinition definition, {
     Map<String, dynamic> metadata = const {},
@@ -228,7 +236,9 @@ class MapLibreGlNativeOffline {
     await _request((requestId) => DeleteOfflineRegionCommand(requestId, id));
   }
 
-  /// Pauses one region download.
+  /// Pauses one region download. The progress callback registered by
+  /// [downloadOfflineRegion] stays in place so a later resume keeps
+  /// reporting; delete the region to release it for good.
   static Future<void> pauseOfflineRegionDownload(int id) async {
     final host = await _ensureHost();
     host.send(

@@ -85,6 +85,17 @@ class LocationComponent {
     if (_enabled) unawaited(_start());
   }
 
+  /// Stops the component for good; called from the platform adapter's own
+  /// dispose. Without this a closed map would leave the platform location
+  /// stream running for the rest of the process, with the static
+  /// [NativeBridge.onLocationUpdate] pinning this component (and through it
+  /// the whole adapter) as a bonus.
+  void dispose() {
+    if (!_enabled) return;
+    _enabled = false;
+    unawaited(_stop());
+  }
+
   /// A style load drops runtime images and layers: re-register the puck
   /// before the app re-adds its own content.
   void onStyleLoaded() {

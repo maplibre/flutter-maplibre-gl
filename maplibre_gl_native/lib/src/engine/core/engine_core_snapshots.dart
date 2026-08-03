@@ -84,8 +84,22 @@ extension EngineSnapshots on EngineCore {
         ),
       );
     } finally {
-      renderThread.borrow(job.session, job.session.close);
-      job.map.close();
+      // Independent closes: a session close that throws must not skip the map
+      // close (that would leak the MapHandle and its owned texture), and
+      // neither failure may escape into the frame pump. Saying so is all we
+      // can do; the handles are out of Dart's reach after this.
+      try {
+        renderThread.borrow(job.session, job.session.close);
+      } catch (error) {
+        debugPrint(
+          '[maplibre_gl_native] snapshot session teardown failed: $error',
+        );
+      }
+      try {
+        job.map.close();
+      } catch (error) {
+        debugPrint('[maplibre_gl_native] snapshot map teardown failed: $error');
+      }
     }
   }
 }

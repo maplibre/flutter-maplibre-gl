@@ -262,51 +262,63 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
   private fun createTexture(width: Int, height: Int, backend: String): MapTextureEntry {
     val producer = requireNotNull(textureRegistry).createSurfaceProducer()
-    producer.setSize(width, height)
-    val entry =
-      when (backend) {
-        "vulkan" -> {
-          val context =
-            vulkanContext
-              ?: requireNotNull(nativeVulkanInit()) { "Vulkan bootstrap failed" }
-                .also { vulkanContext = it }
-          VulkanTextureEntry(
-            producer = producer,
-            context = context,
-            createSurface = { surface ->
-              requireNotNull(nativeVulkanCreateSurface(surface)) {
-                "creating VkSurfaceKHR failed"
-              }
-            },
-            destroySurface = { vkSurface, window ->
-              nativeVulkanDestroySurface(vkSurface, window)
-            },
-          )
+    // Everything past this point can fail (Vulkan bootstrap, the EGL checks).
+    // A failed entry never reaches `entries`, so nothing would ever release
+    // the producer: without the catch the orphaned registration would sit in
+    // the TextureRegistry for the rest of the engine's life.
+    var entry: MapTextureEntry? = null
+    try {
+      producer.setSize(width, height)
+      entry =
+        when (backend) {
+          "vulkan" -> {
+            val context =
+              vulkanContext
+                ?: requireNotNull(nativeVulkanInit()) { "Vulkan bootstrap failed" }
+                  .also { vulkanContext = it }
+            VulkanTextureEntry(
+              producer = producer,
+              context = context,
+              createSurface = { surface ->
+                requireNotNull(nativeVulkanCreateSurface(surface)) {
+                  "creating VkSurfaceKHR failed"
+                }
+              },
+              destroySurface = { vkSurface, window ->
+                nativeVulkanDestroySurface(vkSurface, window)
+              },
+            )
+          }
+          else -> EglTextureEntry(producer)
         }
-        else -> EglTextureEntry(producer)
-      }
-    producer.setCallback(
-      object : TextureRegistry.SurfaceProducer.Callback {
-        override fun onSurfaceAvailable() {
-          channel.invokeMethod("onSurfaceAvailable", mapOf("textureId" to producer.id()))
-        }
+      producer.setCallback(
+        object : TextureRegistry.SurfaceProducer.Callback {
+          override fun onSurfaceAvailable() {
+            channel.invokeMethod("onSurfaceAvailable", mapOf("textureId" to producer.id()))
+          }
 
-        override fun onSurfaceCleanup() {
-          // Flutter destroys the producer surface as soon as this callback
-          // returns, and the shim's render thread may be mid-frame on it:
-          // retire the bound session first, which waits out the frame in
-          // flight. The retirement is unconditional (this side knows
-          // textures, not sessions), so with two maps it also pulls the
-          // other map's binding; acceptable, because Dart re-offers a live
-          // session while processing the surface loss below.
-          if (nativeInitialized) nativeRetireRenderSession()
-          // Dart detaches the render session before touching the surface
-          // again; the backend surface is recreated on demand.
-          channel.invokeMethod("onSurfaceDestroyed", mapOf("textureId" to producer.id()))
+          override fun onSurfaceCleanup() {
+            // Flutter destroys the producer surface as soon as this callback
+            // returns, and the shim's render thread may be mid-frame on it:
+            // retire the bound session first, which waits out the frame in
+            // flight. The retirement is unconditional (this side knows
+            // textures, not sessions), so with two maps it also pulls the
+            // other map's binding; acceptable, because Dart re-offers a live
+            // session while processing the surface loss below.
+            if (nativeInitialized) nativeRetireRenderSession()
+            // Dart detaches the render session before touching the surface
+            // again; the backend surface is recreated on demand.
+            channel.invokeMethod("onSurfaceDestroyed", mapOf("textureId" to producer.id()))
+          }
         }
-      }
-    )
-    return entry
+      )
+      return entry
+    } catch (error: Throwable) {
+      // close() tears down the entry's own EGL/Vulkan handles and releases
+      // the producer; before the entry exists the producer is all there is.
+      entry?.close() ?: producer.release()
+      throw error
+    }
   }
 
   private external fun nativeAndroidInit(context: Context): Int
@@ -463,7 +475,16 @@ private class EglTextureEntry(val producer: TextureRegistry.SurfaceProducer) : M
     val contextAttributes = intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE)
     context = EGL14.eglCreateContext(display, config, EGL14.EGL_NO_CONTEXT, contextAttributes, 0)
     check(context != EGL14.EGL_NO_CONTEXT) { "creating EGL share context failed" }
-    createWindowSurface(producer.surface)
+    try {
+      createWindowSurface(producer.surface)
+    } catch (error: Throwable) {
+      // A failed construction means close() never runs, so the context must
+      // be destroyed here or it leaks. The display is the process-shared
+      // default (eglInitialize is refcounted) and the config is not a
+      // resource, so the context is the only handle this init owns so far.
+      EGL14.eglDestroyContext(display, context)
+      throw error
+    }
   }
 
   override val textureId: Long

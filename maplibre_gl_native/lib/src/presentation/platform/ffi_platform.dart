@@ -131,7 +131,12 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
 
   @override
   void dispose() {
-    // The widget owns the session and the texture; just drop the references.
+    // The widget owns the session and the texture; what is ours to stop is
+    // the location component (or the GPS stream survives the map, pinned by
+    // the static bridge callback) and the snapshots still waiting for a
+    // reply that can no longer arrive.
+    _location.dispose();
+    _snapshots.dispose();
     _session?.host.removeEventListener(_onEngineEvent);
     _session = null;
     super.dispose();

@@ -27,16 +27,65 @@ extension EngineOfflineOps on EngineCore {
     _offlineOps[handle] = _PendingOfflineOp(requestId, handle, take);
   }
 
+  /// A completion event arrived that cannot be matched to its entry (a
+  /// degenerate payload; see the callers). Without this the entry would sit in
+  /// [_offlineOps] forever and the caller would only learn from its timeout.
+  ///
+  /// With exactly one operation in flight the completion can only be its, so
+  /// that one is failed and released. With several the match is ambiguous:
+  /// resolving any of them could fail an operation that is still running, so
+  /// the event is only logged (the other entries still resolve normally when
+  /// their own events arrive).
+  void _resolveUnmatchedOfflineCompletion(String reason) {
+    if (_offlineOps.isEmpty) return;
+    if (_offlineOps.length > 1) {
+      debugPrint(
+        '[maplibre_gl_native] unmatched offline completion ($reason) with '
+        '${_offlineOps.length} operations in flight; none resolved',
+      );
+      return;
+    }
+    debugPrint(
+      '[maplibre_gl_native] unmatched offline completion ($reason); failing '
+      'the single operation in flight',
+    );
+    final pending = _offlineOps.values.single;
+    _offlineOps.clear();
+    try {
+      pending.handle.discard();
+    } on mln.MaplibreException {
+      // Expected when the runtime already dropped the operation; discarding
+      // was only a courtesy for the case where it still holds the result.
+    }
+    final requestId = pending.requestId;
+    if (requestId != null) {
+      _emit(
+        OfflineResultEvent(requestId, error: 'offline operation lost: $reason'),
+      );
+    }
+  }
+
   /// Routes offline runtime events; returns whether the event was consumed.
   bool _handleOfflineEvent(mln.RuntimeEvent event) {
     final payload = event.payload;
     switch (event.eventType) {
       case mln.RuntimeEventType.offlineOperationCompleted:
-        if (payload is! mln.RuntimeEventOfflineOperationCompleted) return true;
-        // The event carries the handle itself; a null one means the runtime is
-        // no longer tracking that operation, so there is nothing to resolve.
+        if (payload is! mln.RuntimeEventOfflineOperationCompleted) {
+          // Version-skew payload we cannot decode. Any completion on this
+          // runtime belongs to an operation this core started, so one of
+          // _offlineOps just finished and cannot be matched.
+          _resolveUnmatchedOfflineCompletion('undecodable completion payload');
+          return true;
+        }
         final operation = payload.operation;
-        if (operation == null) return true;
+        if (operation == null) {
+          // The event names no live handle (the runtime no longer tracks the
+          // operation), so the completion cannot be matched to its entry.
+          _resolveUnmatchedOfflineCompletion(
+            'completion for an operation the runtime no longer tracks',
+          );
+          return true;
+        }
         final pending = _offlineOps.remove(operation);
         if (pending == null) return true;
         final take = pending.take;

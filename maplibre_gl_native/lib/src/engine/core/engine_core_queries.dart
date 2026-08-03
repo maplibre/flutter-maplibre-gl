@@ -69,7 +69,16 @@ extension EngineQueryDispatch on EngineCore {
       renderThread: renderThread,
       retireRenderSession: retireRenderSession,
     );
-    session.attachRenderTarget(query.surface);
+    try {
+      session.attachRenderTarget(query.surface);
+    } catch (error) {
+      // The session is not registered yet, so a failed attach would leave the
+      // map (and any half-created render session) unreachable with no
+      // finalizer: a permanent native leak. Undo like createSnapshotJob does;
+      // close() detaches whatever render session exists and closes the map.
+      session.close();
+      rethrow;
+    }
     _sessions[sessionId] = session;
     return sessionId;
   }
