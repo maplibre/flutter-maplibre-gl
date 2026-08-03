@@ -74,12 +74,34 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
       when (call.method) {
         "init" -> {
           if (!nativeInitialized) {
-            // Loading the shim also loads libmaplibre-native-c.so, so the
-            // subsequent DynamicLibrary.open on the Dart side binds the
-            // already-loaded library.
-            System.loadLibrary("maplibre_gl_native_shim")
-            val status = nativeAndroidInit(requireNotNull(applicationContext))
-            check(status == 0) { "mln_android_init failed with status $status" }
+            // A missing .so throws UnsatisfiedLinkError, which is an Error,
+            // not a RuntimeException: without this catch it would sail past
+            // the handler below and crash the app on the platform thread
+            // instead of surfacing as a diagnosable result.error on the Dart
+            // side. LinkageError also covers the symbol-level variant, where
+            // the library loads but a Java_..._native* symbol fails to bind
+            // at the nativeAndroidInit call (e.g. R8 renamed the plugin
+            // class; see consumer-proguard-rules.pro).
+            try {
+              // Loading the shim also loads libmaplibre-native-c.so, so the
+              // subsequent DynamicLibrary.open on the Dart side binds the
+              // already-loaded library.
+              System.loadLibrary("maplibre_gl_native_shim")
+              val status = nativeAndroidInit(requireNotNull(applicationContext))
+              check(status == 0) { "mln_android_init failed with status $status" }
+            } catch (error: LinkageError) {
+              result.error(
+                "maplibre_gl_native",
+                "failed to load the native libraries " +
+                  "(libmaplibre_gl_native_shim.so / libmaplibre-native-c.so): " +
+                  "${error.message}. They are built for arm64-v8a only; check " +
+                  "that the APK or App Bundle split installed on this device " +
+                  "contains that ABI, and that R8 kept the plugin class name " +
+                  "(consumer-proguard-rules.pro).",
+                null,
+              )
+              return
+            }
             nativeInitialized = true
           }
           result.success(null)

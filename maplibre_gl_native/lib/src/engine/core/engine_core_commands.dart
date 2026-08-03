@@ -11,41 +11,17 @@ extension EngineCommandDispatch on EngineCore {
   void handleCommand(EngineCommand command) {
     switch (command) {
       case SetHttpHeadersCommand():
-        // Plain headers ride the native client's header transforms (upstream
-        // #509): one rule per scheme, replaced wholesale on every call, so an
-        // empty map clears. Two shapes still need the Dart fetch path, which
-        // sees every request and can therefore decide per URL: regex
-        // urlFilters (transform rules match literal prefixes only), and a
-        // provider already installed (its requests bypass the native client,
-        // so transforms would never fire for them).
-        if (HttpResourceProvider.isInstalled || command.urlFilters.isNotEmpty) {
-          if (command.headers.isNotEmpty) {
-            HttpResourceProvider.install(_runtime);
-          }
-          HttpResourceProvider.setHeaders(
-            command.headers,
-            urlFilters: command.urlFilters,
-          );
-        } else if (command.headers.isEmpty) {
-          _runtime.clearHttpHeaderTransform();
-        } else {
-          final headers = [
-            for (final entry in command.headers.entries)
-              mln.HttpHeader(name: entry.key, value: entry.value),
-          ];
-          _runtime.setHttpHeaderTransformRules([
-            mln.HttpHeaderTransformRule(
-              url: 'http://',
-              matchPrefix: true,
-              headers: headers,
-            ),
-            mln.HttpHeaderTransformRule(
-              url: 'https://',
-              matchPrefix: true,
-              headers: headers,
-            ),
-          ]);
+        // Each command replaces only its own slot (see the fields' comment
+        // in EngineCore): the global setter and the per-map setter must not
+        // wipe each other's headers.
+        switch (command.scope) {
+          case HttpHeadersScope.global:
+            _globalHttpHeaders = command.headers;
+          case HttpHeadersScope.perMap:
+            _customHttpHeaders = command.headers;
+            _customHttpUrlFilters = command.urlFilters;
         }
+        _applyHttpHeaders();
       case SetNetworkStatusCommand():
         mln.Maplibre.setNetworkStatus(
           command.online ? mln.NetworkStatus.online : mln.NetworkStatus.offline,
@@ -574,6 +550,56 @@ extension EngineCommandDispatch on EngineCore {
         session.requestRender();
       case SetFrameStatsEnabledCommand():
         _session(command.sessionId).setFrameStatsEnabled(command.enabled);
+    }
+  }
+
+  /// Pushes the merged header state (global slot overlaid by the per-map
+  /// slot, so a per-map header wins on a name collision) to whichever HTTP
+  /// path serves requests.
+  ///
+  /// Plain headers ride the native client's header transforms (upstream
+  /// #509): one rule per scheme, replaced wholesale on every apply, so an
+  /// empty merge clears. Two shapes still need the Dart fetch path, which
+  /// sees every request and can therefore decide per URL: regex urlFilters
+  /// (transform rules match literal prefixes only), and a provider already
+  /// installed (its requests bypass the native client, so transforms would
+  /// never fire for them).
+  void _applyHttpHeaders() {
+    if (HttpResourceProvider.isInstalled ||
+        (_customHttpUrlFilters.isNotEmpty && _customHttpHeaders.isNotEmpty)) {
+      if (_globalHttpHeaders.isNotEmpty || _customHttpHeaders.isNotEmpty) {
+        HttpResourceProvider.install(_runtime);
+      }
+      HttpResourceProvider.setHeaders(
+        global: _globalHttpHeaders,
+        custom: _customHttpHeaders,
+        customUrlFilters: _customHttpUrlFilters,
+      );
+      return;
+    }
+    // The filters only gate the custom slot, so the merge is unconditional
+    // here: this branch is only reached when the custom slot has no filters
+    // (or no headers to filter).
+    final merged = {..._globalHttpHeaders, ..._customHttpHeaders};
+    if (merged.isEmpty) {
+      _runtime.clearHttpHeaderTransform();
+    } else {
+      final headers = [
+        for (final entry in merged.entries)
+          mln.HttpHeader(name: entry.key, value: entry.value),
+      ];
+      _runtime.setHttpHeaderTransformRules([
+        mln.HttpHeaderTransformRule(
+          url: 'http://',
+          matchPrefix: true,
+          headers: headers,
+        ),
+        mln.HttpHeaderTransformRule(
+          url: 'https://',
+          matchPrefix: true,
+          headers: headers,
+        ),
+      ]);
     }
   }
 

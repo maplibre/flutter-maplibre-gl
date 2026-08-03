@@ -52,6 +52,16 @@ class EngineCore {
   /// pacing. Read by the engine-isolate frame driver.
   int? maxFps;
 
+  // App-configured HTTP headers, kept as two slots because both public
+  // setters (`MapLibreGlNative.setGlobalHttpHeaders` and the per-map
+  // `setCustomHeaders`) arrive as a SetHttpHeadersCommand replacing "the
+  // headers": with one shared slot the last writer silently wiped the other.
+  // Merged on every apply, per-map winning on a name collision; see
+  // _applyHttpHeaders in engine_core_commands.dart.
+  Map<String, String> _globalHttpHeaders = const {};
+  Map<String, String> _customHttpHeaders = const {};
+  List<String> _customHttpUrlFilters = const [];
+
   /// Lazily creates the shared runtime. The Android services
   /// (`mln_android_init` via the texture bridge) must be initialized by the
   /// caller BEFORE the first call.

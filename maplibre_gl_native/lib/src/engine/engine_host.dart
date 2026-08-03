@@ -90,7 +90,12 @@ class EngineHost {
       await host._spawn(cacheDir);
       _instance = host;
       if (globalHttpHeaders.isNotEmpty) {
-        host.send(SetHttpHeadersCommand(globalHttpHeaders));
+        host.send(
+          SetHttpHeadersCommand(
+            globalHttpHeaders,
+            scope: HttpHeadersScope.global,
+          ),
+        );
       }
       return host;
     } catch (_) {

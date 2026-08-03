@@ -979,6 +979,10 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
 
   Map<String, String> _customHeaders = const {};
 
+  /// Sets the per-map custom headers. Merged by the engine with any
+  /// process-global `MapLibreGlNative.setGlobalHttpHeaders`: on a name
+  /// collision these headers win, and clearing them (empty [headers]) never
+  /// clears the globals.
   @override
   Future<void> setCustomHeaders(
     Map<String, String> headers,
@@ -989,9 +993,17 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     // The engine runtime (and its Dart HTTP provider) is shared per process,
     // so per-map headers apply engine-wide, like the reference backends'
     // per-view header maps applied to the shared HTTP stack.
-    session.send(SetHttpHeadersCommand(headers, urlFilters: filter));
+    session.send(
+      SetHttpHeadersCommand(
+        headers,
+        scope: HttpHeadersScope.perMap,
+        urlFilters: filter,
+      ),
+    );
   }
 
+  /// What this map set via [setCustomHeaders] (not the merged view with the
+  /// global headers, which is engine-internal).
   @override
   Future<Map<String, String>> getCustomHeaders() async =>
       Map.of(_customHeaders);

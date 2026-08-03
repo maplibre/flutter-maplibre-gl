@@ -73,6 +73,10 @@ android {
         // libmaplibre-native-c.so is built with ANDROID_PLATFORM=android-24.
         minSdkVersion 24
 
+        // Keep rules the consuming app's R8 must honor: the JNI symbol names
+        // encode the plugin class's fully qualified name (see the .pro file).
+        consumerProguardFiles 'consumer-proguard-rules.pro'
+
         // Spike scope: the native library is only built for arm64-v8a.
         ndk {
             abiFilters 'arm64-v8a'

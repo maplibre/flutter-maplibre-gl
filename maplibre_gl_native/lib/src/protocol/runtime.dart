@@ -4,14 +4,25 @@
 /// Part of the protocol library; see protocol.dart for the sendability rule.
 part of 'protocol.dart';
 
-/// Sets the custom HTTP headers applied by the Dart resource provider to
-/// engine resource requests. [urlFilters] are regex patterns; when non-empty
-/// a request URL must match one of them for the headers to apply. An empty
-/// [headers] map clears.
+/// Which slot of the engine's HTTP header state a [SetHttpHeadersCommand]
+/// replaces. The engine keeps the two slots separate and merges them on
+/// apply (per-map wins on a name collision), so the global and per-map
+/// setters cannot silently wipe each other.
+enum HttpHeadersScope { global, perMap }
+
+/// Replaces one [scope] slot of the custom HTTP headers applied to engine
+/// resource requests. [urlFilters] are regex patterns gating the perMap
+/// slot; when non-empty a request URL must match one of them for those
+/// headers to apply. An empty [headers] map clears the slot.
 class SetHttpHeadersCommand extends EngineCommand {
-  const SetHttpHeadersCommand(this.headers, {this.urlFilters = const []});
+  const SetHttpHeadersCommand(
+    this.headers, {
+    required this.scope,
+    this.urlFilters = const [],
+  });
 
   final Map<String, String> headers;
+  final HttpHeadersScope scope;
   final List<String> urlFilters;
 }
 

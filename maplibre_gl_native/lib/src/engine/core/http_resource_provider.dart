@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 
+import 'http_redirect_policy.dart';
+
 /// Serves http(s) resource requests of the native engine through Dart's own
 /// HTTP stack (`dart:io` [HttpClient]).
 ///
@@ -43,19 +45,59 @@ class HttpResourceProvider {
   /// Deadline for one whole request/response exchange, headers to last byte.
   static const Duration _requestTimeout = Duration(seconds: 30);
 
-  static Map<String, String> _headers = const {};
-  static List<RegExp> _headerFilters = const [];
+  /// Redirect hop cap, matching dart:io's own default (`maxRedirects`).
+  static const int _maxRedirects = 5;
 
-  /// Sets the custom headers applied to outgoing requests (setHttpHeaders /
-  /// setCustomHeaders). [urlFilters] are regex patterns; when non-empty a
-  /// request URL must match one of them for the headers to apply. An empty
-  /// [headers] map clears.
-  static void setHeaders(
-    Map<String, String> headers, {
-    List<String> urlFilters = const [],
+  static Map<String, String> _globalHeaders = const {};
+  static Map<String, String> _customHeaders = const {};
+  static List<RegExp> _customFilters = const [];
+  static bool _customFiltered = false;
+
+  /// Replaces the app-configured headers applied to outgoing requests.
+  ///
+  /// [global] comes from `MapLibreGlNative.setGlobalHttpHeaders`, [custom]
+  /// from the per-map `setCustomHeaders` together with its regex
+  /// [customUrlFilters] (when non-empty, a request URL must match one of them
+  /// for the custom headers to apply). The two arrive as separate slots so
+  /// one setter can never wipe the other; on a name collision the custom
+  /// header wins, the precedence documented on both public APIs. An empty
+  /// map clears its own slot only.
+  static void setHeaders({
+    required Map<String, String> global,
+    required Map<String, String> custom,
+    required List<String> customUrlFilters,
   }) {
-    _headers = Map.unmodifiable(headers);
-    _headerFilters = [for (final pattern in urlFilters) RegExp(pattern)];
+    _globalHeaders = Map.unmodifiable(global);
+    _customHeaders = Map.unmodifiable(custom);
+    // The patterns are arbitrary app input: one invalid regex must neither
+    // escape into the command handler (headers silently stop applying with
+    // nothing but a dead engine command to show for it) nor disable the
+    // valid patterns next to it. _customFiltered records that filtering was
+    // requested even when every pattern failed to compile, because falling
+    // back to an empty filter list would WIDEN the headers to every URL —
+    // the opposite of what the app asked for.
+    _customFiltered = customUrlFilters.isNotEmpty;
+    final filters = <RegExp>[];
+    for (final pattern in customUrlFilters) {
+      try {
+        filters.add(RegExp(pattern));
+      } on FormatException catch (error) {
+        debugPrint(
+          '[maplibre_gl_native] ignoring invalid custom-header url filter '
+          '"$pattern": $error',
+        );
+      }
+    }
+    _customFilters = List.unmodifiable(filters);
+  }
+
+  /// The app-configured headers applicable to one request URL: the globals,
+  /// overlaid by the custom headers when the URL passes their filters.
+  static Map<String, String> _appHeadersFor(String url) {
+    final customApplies =
+        _customHeaders.isNotEmpty &&
+        (!_customFiltered || _customFilters.any((f) => f.hasMatch(url)));
+    return {..._globalHeaders, if (customApplies) ..._customHeaders};
   }
 
   static bool _installed = false;
@@ -101,41 +143,75 @@ class HttpResourceProvider {
     mln.ResourceRequestHandle handle,
   ) async {
     try {
-      // The timeout covers the whole exchange: a stalled response body pins
-      // the native handle just as surely as a connection that never opens.
+      // The timeout covers the whole exchange, redirect hops included: a
+      // stalled response body pins the native handle just as surely as a
+      // connection that never opens.
       final (response, bytes) = await () async {
-        final httpRequest = await _client.getUrl(
-          Uri.parse(request.resolvedUrl),
-        );
-        if (_headers.isNotEmpty &&
-            (_headerFilters.isEmpty ||
-                _headerFilters.any((f) => f.hasMatch(request.resolvedUrl)))) {
-          _headers.forEach(httpRequest.headers.set);
-        }
-        final priorEtag = request.priorEtag;
-        final priorModifiedUnixMs = request.priorModifiedUnixMs;
-        if (priorEtag != null) {
-          httpRequest.headers.set(HttpHeaders.ifNoneMatchHeader, priorEtag);
-        } else if (priorModifiedUnixMs != null) {
-          httpRequest.headers.set(
-            HttpHeaders.ifModifiedSinceHeader,
-            HttpDate.format(
-              DateTime.fromMillisecondsSinceEpoch(
-                priorModifiedUnixMs,
-                isUtc: true,
+        final originalUrl = Uri.parse(request.resolvedUrl);
+        var url = originalUrl;
+        var sendCustomHeaders = true;
+        var redirects = 0;
+        while (true) {
+          final httpRequest = await _client.getUrl(url);
+          // dart:io's automatic redirect handling copies every request
+          // header onto the redirected request, even toward another host,
+          // which would leak Authorization/API-key custom headers
+          // cross-origin. Redirects are followed manually instead
+          // ([nextRedirectHop]) so the app-configured headers are withheld
+          // as soon as the chain leaves the original origin, and insecure
+          // https-to-http downgrades are refused outright.
+          httpRequest.followRedirects = false;
+          if (sendCustomHeaders) {
+            _appHeadersFor(url.toString()).forEach(httpRequest.headers.set);
+          }
+          // The cache validators and the Range header are the provider's
+          // own, not app secrets: they ride every hop so the final host can
+          // still answer 304 / 206 (servers issuing the redirects in between
+          // simply ignore them).
+          final priorEtag = request.priorEtag;
+          final priorModifiedUnixMs = request.priorModifiedUnixMs;
+          if (priorEtag != null) {
+            httpRequest.headers.set(HttpHeaders.ifNoneMatchHeader, priorEtag);
+          } else if (priorModifiedUnixMs != null) {
+            httpRequest.headers.set(
+              HttpHeaders.ifModifiedSinceHeader,
+              HttpDate.format(
+                DateTime.fromMillisecondsSinceEpoch(
+                  priorModifiedUnixMs,
+                  isUtc: true,
+                ),
               ),
-            ),
+            );
+          }
+          final range = request.range;
+          if (range != null) {
+            httpRequest.headers.set(
+              HttpHeaders.rangeHeader,
+              'bytes=${range.start}-${range.end}',
+            );
+          }
+          final response = await httpRequest.close();
+          final hop = nextRedirectHop(
+            statusCode: response.statusCode,
+            location: response.headers.value(HttpHeaders.locationHeader),
+            requestUrl: url,
+            originalUrl: originalUrl,
           );
+          if (hop == null) {
+            return (response, await _readBytes(response));
+          }
+          if (++redirects > _maxRedirects) {
+            throw RedirectRefusedException(
+              'more than $_maxRedirects redirects for $originalUrl',
+            );
+          }
+          // The redirect body is unused; drain it so the connection returns
+          // to the pool instead of counting against maxConnectionsPerHost
+          // until garbage collection.
+          await response.drain<void>();
+          url = hop.target;
+          sendCustomHeaders = hop.sendCustomHeaders;
         }
-        final range = request.range;
-        if (range != null) {
-          httpRequest.headers.set(
-            HttpHeaders.rangeHeader,
-            'bytes=${range.start}-${range.end}',
-          );
-        }
-        final response = await httpRequest.close();
-        return (response, await _readBytes(response));
       }().timeout(_requestTimeout);
       if (handle.isCancelled) {
         handle.close();

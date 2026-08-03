@@ -36,8 +36,14 @@ class MapLibreGlNative {
   /// Stand-in for maplibre_gl's global `setHttpHeaders`, which talks to the
   /// method-channel backends over a global platform channel that a Dart
   /// backend cannot intercept. Safe to call before the first map is created.
+  ///
+  /// Independent of the per-map `controller.setCustomHeaders`: the engine
+  /// merges the two sets (a per-map header wins on a name collision), and
+  /// clearing one never clears the other.
   static void setGlobalHttpHeaders(Map<String, String> headers) {
     EngineHost.globalHttpHeaders = Map.unmodifiable(headers);
-    EngineHost.instance?.send(SetHttpHeadersCommand(headers));
+    EngineHost.instance?.send(
+      SetHttpHeadersCommand(headers, scope: HttpHeadersScope.global),
+    );
   }
 }
