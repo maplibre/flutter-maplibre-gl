@@ -81,11 +81,13 @@ class EngineCore {
     // "Revoked") by patching the verifier to follow the system trust
     // manager's policy, like OkHttp does.
     //
-    // The Dart provider remains the seam for custom HTTP headers and is
-    // installed lazily on the first setHttpHeaders call (see
-    // EngineCommandDispatch). MLN_DART_HTTP=true installs it up front so
-    // every request goes through Dart (A/B arm, provider regression testing).
-    // Debug knob, not a mode.
+    // Plain custom headers ride the native client's header transforms since
+    // upstream #509 (see EngineCommandDispatch). The Dart provider remains
+    // only for regex-filtered headers (setCustomHeaders urlFilters, which
+    // prefix rules cannot express) and is installed lazily when such a call
+    // arrives. MLN_DART_HTTP=true installs it up front so every request goes
+    // through Dart (A/B arm, provider regression testing). Debug knob, not a
+    // mode.
     if (const bool.fromEnvironment('MLN_DART_HTTP')) {
       debugPrint(
         '[maplibre_gl_native] MLN_DART_HTTP set; the Dart resource provider '

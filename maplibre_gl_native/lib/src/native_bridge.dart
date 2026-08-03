@@ -249,6 +249,19 @@ class NativeBridge {
     return result!['surface']! as int;
   }
 
+  /// Destroys the previous backend surface retired by [resizeTexture] or
+  /// [recreateSurface].
+  ///
+  /// Kept alive until now because the render session holds a swapchain built
+  /// from it up to the setTarget swap, and Vulkan destroys every swapchain
+  /// before its surface. Call only after the engine has processed the attach
+  /// or resize command (order it with a barrier query).
+  static Future<void> releaseRetiredSurface({required int textureId}) {
+    return _channel.invokeMethod<void>('releaseRetiredSurface', <String, Object>{
+      'textureId': textureId,
+    });
+  }
+
   /// Destroys the backend surface and unregisters the external texture.
   static Future<void> disposeTexture({required int textureId}) {
     return _channel.invokeMethod<void>('disposeTexture', <String, Object>{

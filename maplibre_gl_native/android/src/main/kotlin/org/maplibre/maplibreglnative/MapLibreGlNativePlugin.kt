@@ -121,6 +121,10 @@ class MapLibreGlNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
           entry.recreateSurface()
           result.success(mapOf("surface" to entry.surfaceHandle))
         }
+        "releaseRetiredSurface" -> {
+          entryFor(call).releaseRetiredSurface()
+          result.success(null)
+        }
         "disposeTexture" -> {
           val textureId = requireNotNull(call.argument<Number>("textureId")).toLong()
           entries.remove(textureId)?.close()
@@ -292,6 +296,15 @@ private interface MapTextureEntry : AutoCloseable {
   fun resize(width: Int, height: Int)
 
   fun recreateSurface()
+
+  /**
+   * Destroys the surface retired by the last resize()/recreateSurface(), once
+   * the engine has swapped the render session onto the new one. Vulkan
+   * requires every swapchain destroyed before its surface, and the session
+   * keeps the old swapchain until the swap, so destruction must wait for it.
+   * No-op for backends that carry nothing to defer.
+   */
+  fun releaseRetiredSurface() {}
 }
 
 /**
@@ -306,6 +319,8 @@ private class VulkanTextureEntry(
 ) : MapTextureEntry {
   private var vkSurface: Long = 0
   private var window: Long = 0
+  private var retiredVkSurface: Long = 0
+  private var retiredWindow: Long = 0
 
   init {
     create(producer.surface)
@@ -332,14 +347,22 @@ private class VulkanTextureEntry(
     )
 
   override fun resize(width: Int, height: Int) {
-    destroy()
+    retire()
     producer.setSize(width, height)
     create(producer.surface)
   }
 
   override fun recreateSurface() {
-    destroy()
+    retire()
     create(producer.surface)
+  }
+
+  override fun releaseRetiredSurface() {
+    if (retiredVkSurface != 0L || retiredWindow != 0L) {
+      destroySurface(retiredVkSurface, retiredWindow)
+      retiredVkSurface = 0
+      retiredWindow = 0
+    }
   }
 
   private fun create(surface: Surface) {
@@ -348,16 +371,28 @@ private class VulkanTextureEntry(
     window = handles[1]
   }
 
-  private fun destroy() {
+  /**
+   * Parks the current pair for releaseRetiredSurface() instead of destroying
+   * it: the render session still holds a swapchain built from this
+   * VkSurfaceKHR until the engine swaps targets. A pair already parked (two
+   * swaps with no release between them) is destroyed first; by then the
+   * session has long since stopped presenting to it.
+   */
+  private fun retire() {
+    releaseRetiredSurface()
+    retiredVkSurface = vkSurface
+    retiredWindow = window
+    vkSurface = 0
+    window = 0
+  }
+
+  override fun close() {
+    releaseRetiredSurface()
     if (vkSurface != 0L || window != 0L) {
       destroySurface(vkSurface, window)
       vkSurface = 0
       window = 0
     }
-  }
-
-  override fun close() {
-    destroy()
     producer.release()
   }
 }

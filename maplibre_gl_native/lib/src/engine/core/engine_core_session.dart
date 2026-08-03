@@ -115,21 +115,42 @@ class _EngineSession {
   }
 
   /// Attaches the map to a native render target. When a live session already
-  /// exists (its surface was released on surface loss), the new surface is
-  /// swapped in place via the patched replace API, keeping the renderer and
-  /// every GPU-side resource (uploaded tiles, glyph atlases); a brand new
-  /// render session is only created on first attach or as a fallback.
+  /// exists, the new surface is swapped in place with the upstream setTarget
+  /// API, keeping the renderer and every GPU-side resource (uploaded tiles,
+  /// glyph atlases); a brand new render session is only created on first
+  /// attach or as a fallback.
+  ///
+  /// The outgoing VkSurfaceKHR must still be valid here: the session holds a
+  /// swapchain built from it until the swap, and Vulkan destroys every
+  /// swapchain before its surface. The platform side defers that destruction
+  /// until this command has been processed (see MapView and
+  /// releaseRetiredSurface).
   void attachRenderTarget(int surface) {
     if (_closed) return;
     if (_renderSession != null) {
+      final extent = mln.RenderTargetExtent(
+        width: logicalWidth,
+        height: logicalHeight,
+        scaleFactor: scaleFactor,
+      );
       try {
         _withRenderSession(
-          (session) => session.replaceSurface(
-            mln.NativePointer(surface),
-            logicalWidth,
-            logicalHeight,
-            scaleFactor: scaleFactor,
-          ),
+          (session) => switch (_spec) {
+            final OpenGlSessionQuery spec => session.setOpenGLSurfaceTarget(
+              mln.OpenGLSurfaceDescriptor(
+                extent: extent,
+                context: _eglContext(spec),
+                surface: mln.NativePointer(surface),
+              ),
+            ),
+            final VulkanSessionQuery spec => session.setVulkanSurfaceTarget(
+              mln.VulkanSurfaceDescriptor(
+                extent: extent,
+                context: _vulkanContext(spec),
+                surface: mln.NativePointer(surface),
+              ),
+            ),
+          },
         );
         // Offer the session back: onSurfaceLost withdrew it from the display
         // thread, and without this the fallback quietly draws here forever.
@@ -297,24 +318,19 @@ class _EngineSession {
 
   void onSurfaceLost() {
     _surfaceLost = true;
-    // Keep the render session alive: only the presentation objects bound to
-    // the dying surface are dropped (for Vulkan the swapchain, which must be
-    // destroyed before the host destroys the VkSurfaceKHR). The renderer and
-    // its GPU resources survive, so the next attach is a cheap swapchain
-    // rebuild instead of a visible full re-render of the map.
+    // Keep the render session alive and untouched: since upstream #485 the
+    // swap happens wholly inside setTarget, which tears the old swapchain
+    // down right before adopting the new surface. Until then the session
+    // keeps its swapchain over the dying surface, which is why the platform
+    // side must not destroy the old VkSurfaceKHR before the swap has been
+    // processed. The renderer and its GPU resources survive, so the next
+    // attach is a cheap swapchain rebuild instead of a visible full re-render
+    // of the map.
     if (_renderSession == null) return;
-    // Withdraw first: with no surface every render fails, and the display thread
-    // must not be left grinding through failures it cannot interpret. The next
-    // attach offers the session back.
+    // Withdraw from the display thread: with the window gone every render
+    // fails, and the service must not be left grinding through failures it
+    // cannot interpret. The next attach offers the session back.
     _renderThread.bindSession(null);
-    try {
-      _withRenderSession((session) => session.releaseSurface());
-    } on mln.MaplibreException catch (error) {
-      debugPrint(
-        '[maplibre_gl_native] surface release failed, detaching: $error',
-      );
-      _detachRenderTarget();
-    }
   }
 
   /// Resizes the render target; the producer surface was replaced, so the

@@ -1,8 +1,8 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
-index f2a9a40e..ae88e36a 100644
+index 2fe57e61..3d36f12b 100644
 --- a/bindings/dart/lib/src/runtime/runtime.dart
 +++ b/bindings/dart/lib/src/runtime/runtime.dart
-@@ -159,6 +159,15 @@ final class RuntimeHandle {
+@@ -164,6 +164,15 @@ final class RuntimeHandle {
      });
    }
  
@@ -12,17 +12,17 @@ index f2a9a40e..ae88e36a 100644
 +  /// driving the engine from a background isolate must call this whenever the
 +  /// isolate resumed on a different thread, before any other call.
 +  void rebindThread() {
-+    _check(_c.raw.mln_runtime_rebind_thread(_handle.raw));
++    _check(raw.mln_runtime_rebind_thread(_handle.raw));
 +  }
 +
    /// Polls one queued runtime event and copies borrowed fields into Dart values.
    RuntimeEvent? pollEvent() {
      return withNativeArena((arena) {
 diff --git a/include/maplibre_native_c/runtime.h b/include/maplibre_native_c/runtime.h
-index 9c6f54f4..8595d274 100644
+index d4ec592d..8d0451da 100644
 --- a/include/maplibre_native_c/runtime.h
 +++ b/include/maplibre_native_c/runtime.h
-@@ -986,6 +986,35 @@ MLN_API mln_status mln_wake_source_signal(mln_wake_source source) MLN_NOEXCEPT;
+@@ -1085,6 +1085,35 @@ MLN_API mln_status mln_wake_source_signal(mln_wake_source source) MLN_NOEXCEPT;
   */
  MLN_API void mln_wake_source_destroy(mln_wake_source source) MLN_NOEXCEPT;
  
@@ -59,7 +59,7 @@ index 9c6f54f4..8595d274 100644
   * Pops the next queued runtime event.
   *
 diff --git a/src/c_api/runtime.cpp b/src/c_api/runtime.cpp
-index 9f09eb78..d3724842 100644
+index f93044c8..deaecfbf 100644
 --- a/src/c_api/runtime.cpp
 +++ b/src/c_api/runtime.cpp
 @@ -2,10 +2,12 @@
@@ -75,7 +75,7 @@ index 9f09eb78..d3724842 100644
  #include "maplibre_native_c.h"
  #include "resources/custom_resource_provider.hpp"
  
-@@ -343,6 +345,17 @@ auto mln_runtime_destroy(mln_runtime runtime) noexcept -> mln_status {
+@@ -369,6 +371,17 @@ auto mln_runtime_destroy(mln_runtime runtime) noexcept -> mln_status {
    });
  }
  
@@ -116,10 +116,10 @@ index 5fd752e4..95e4a16c 100644
    // only for kinds whose teardown tolerates running on a foreign thread, so a
    // lease can never move an owner-thread object's destructor off its owner.
 diff --git a/src/map/map.cpp b/src/map/map.cpp
-index 4a2d1ecd..2df5e9d5 100644
+index 9230d3ff..a9bf6616 100644
 --- a/src/map/map.cpp
 +++ b/src/map/map.cpp
-@@ -3626,6 +3626,26 @@ auto map_request_still_image(mln_map map) -> mln_status {
+@@ -3660,6 +3660,26 @@ auto map_request_still_image(mln_map map) -> mln_status {
    return MLN_STATUS_OK;
  }
  
@@ -147,10 +147,10 @@ index 4a2d1ecd..2df5e9d5 100644
  // lives on its own. The map cannot be retired underneath them, because
  // destroy_map() refuses a map that still has a session attached and these are
 diff --git a/src/map/map.hpp b/src/map/map.hpp
-index 73f0dc37..c6bc1f68 100644
+index ba15ce7c..f19f06e5 100644
 --- a/src/map/map.hpp
 +++ b/src/map/map.hpp
-@@ -420,6 +420,13 @@ auto map_set_free_camera_options(
+@@ -426,6 +426,13 @@ auto map_set_free_camera_options(
  auto validate_map_live(mln_map map, MapObject*& out_map) -> mln_status;
  auto validate_map(mln_map map, MapObject*& out_map) -> mln_status;
  auto map_scale_factor(mln_map map) -> double;
@@ -165,10 +165,10 @@ index 73f0dc37..c6bc1f68 100644
  // posting helpers below instead.
  auto map_native(MapObject* map) -> mbgl::Map*;
 diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
-index 35458db7..5fb7d6f7 100644
+index 18b5051d..546e7e72 100644
 --- a/src/runtime/runtime.cpp
 +++ b/src/runtime/runtime.cpp
-@@ -2550,6 +2550,36 @@ auto signal_wake(const std::shared_ptr<WakeState>& state) noexcept -> void {
+@@ -2912,6 +2912,36 @@ auto signal_wake(const std::shared_ptr<WakeState>& state) noexcept -> void {
    state->condition.notify_all();
  }
  
@@ -206,10 +206,10 @@ index 35458db7..5fb7d6f7 100644
    mln::core::RuntimeObject* live = nullptr;
    const auto status = validate_runtime(runtime, live);
 diff --git a/src/runtime/runtime.hpp b/src/runtime/runtime.hpp
-index a0ef9cd6..82bf4b81 100644
+index 1f4cb9e1..05f61ec9 100644
 --- a/src/runtime/runtime.hpp
 +++ b/src/runtime/runtime.hpp
-@@ -172,6 +172,7 @@ auto create_runtime(
+@@ -185,6 +185,7 @@ auto create_runtime(
  ) -> mln_status;
  auto destroy_runtime(mln_runtime runtime) -> mln_status;
  auto pump_runtime(mln_runtime runtime, int64_t timeout_ms) -> mln_status;

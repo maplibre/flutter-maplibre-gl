@@ -11,17 +11,41 @@ extension EngineCommandDispatch on EngineCore {
   void handleCommand(EngineCommand command) {
     switch (command) {
       case SetHttpHeadersCommand():
-        // The provider is not installed by default (native HTTP serves
-        // everything); headers are the one feature that still needs the Dart
-        // fetch path, so install it on first use. Clearing headers does not
-        // uninstall: requests keep flowing through Dart with no extras added.
-        if (command.headers.isNotEmpty) {
-          HttpResourceProvider.install(_runtime);
+        // Plain headers ride the native client's header transforms (upstream
+        // #509): one rule per scheme, replaced wholesale on every call, so an
+        // empty map clears. Two shapes still need the Dart fetch path, which
+        // sees every request and can therefore decide per URL: regex
+        // urlFilters (transform rules match literal prefixes only), and a
+        // provider already installed (its requests bypass the native client,
+        // so transforms would never fire for them).
+        if (HttpResourceProvider.isInstalled || command.urlFilters.isNotEmpty) {
+          if (command.headers.isNotEmpty) {
+            HttpResourceProvider.install(_runtime);
+          }
+          HttpResourceProvider.setHeaders(
+            command.headers,
+            urlFilters: command.urlFilters,
+          );
+        } else if (command.headers.isEmpty) {
+          _runtime.clearHttpHeaderTransform();
+        } else {
+          final headers = [
+            for (final entry in command.headers.entries)
+              mln.HttpHeader(name: entry.key, value: entry.value),
+          ];
+          _runtime.setHttpHeaderTransformRules([
+            mln.HttpHeaderTransformRule(
+              url: 'http://',
+              matchPrefix: true,
+              headers: headers,
+            ),
+            mln.HttpHeaderTransformRule(
+              url: 'https://',
+              matchPrefix: true,
+              headers: headers,
+            ),
+          ]);
         }
-        HttpResourceProvider.setHeaders(
-          command.headers,
-          urlFilters: command.urlFilters,
-        );
       case SetNetworkStatusCommand():
         mln.Maplibre.setNetworkStatus(
           command.online ? mln.NetworkStatus.online : mln.NetworkStatus.offline,

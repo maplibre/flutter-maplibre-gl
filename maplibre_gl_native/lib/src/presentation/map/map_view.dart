@@ -270,16 +270,20 @@ class _MapViewState extends State<MapView> {
   }
 
   Future<void> _recreateSurface(MapSession session, int textureId) async {
-    // The engine released the swapchain when SurfaceLostCommand was
-    // processed; the FIFO barrier guarantees that happened before the
-    // platform destroys the old VkSurfaceKHR inside recreateSurface
-    // (Vulkan mandates that destruction order).
+    // The FIFO barrier orders the SurfaceLostCommand before the new surface
+    // exists, so the engine has stopped rendering into the dying window.
     await session.query(const BarrierQuery());
+    // The old backend surface is NOT destroyed here: the session keeps a
+    // swapchain built from it until the engine swaps targets, and Vulkan
+    // destroys every swapchain before its surface. recreateSurface retires
+    // the old pair; releaseRetiredSurface destroys it after the swap.
     final eglSurface = await NativeBridge.recreateSurface(
       textureId: textureId,
     );
     if (!mounted || _session?.id != session.id) return;
     session.send(AttachSurfaceCommand(session.id, eglSurface: eglSurface));
+    await session.query(const BarrierQuery());
+    await NativeBridge.releaseRetiredSurface(textureId: textureId);
   }
 
   void _onEngineEvent(EngineEvent event) {
@@ -341,12 +345,15 @@ class _MapViewState extends State<MapView> {
     double devicePixelRatio,
   ) async {
     try {
-      // The producer surface is replaced on resize. Have the engine release
-      // the native surface first (dropping the Vulkan swapchain while the
-      // renderer stays alive; the FIFO barrier orders this across isolates)
-      // so the platform never destroys a surface that is still presented to.
+      // The producer surface is replaced on resize. Pause the engine first
+      // (the FIFO barrier orders it across isolates) so nothing renders into
+      // the window while the producer swaps it out.
       session.send(SurfaceLostCommand(session.id));
       await session.query(const BarrierQuery());
+      // resizeTexture retires the old backend surface instead of destroying
+      // it: the session keeps a swapchain built from it until the engine
+      // swaps targets, and Vulkan destroys every swapchain before its
+      // surface. releaseRetiredSurface destroys it after the swap.
       final eglSurface = await NativeBridge.resizeTexture(
         textureId: textureId,
         physicalWidth: (logicalSize.width * devicePixelRatio).round(),
@@ -362,6 +369,8 @@ class _MapViewState extends State<MapView> {
           eglSurface: eglSurface,
         ),
       );
+      await session.query(const BarrierQuery());
+      await NativeBridge.releaseRetiredSurface(textureId: textureId);
     } finally {
       _resizing = false;
     }

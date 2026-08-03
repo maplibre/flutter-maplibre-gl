@@ -1,5 +1,5 @@
 diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
-index c38b5566..3bdae4ac 100644
+index 760d25db..43234146 100644
 --- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 +++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
 @@ -140,6 +140,20 @@ final class RenderSessionHandle {
@@ -17,17 +17,17 @@ index c38b5566..3bdae4ac 100644
 +  /// must be serialized by the caller: no call on this session may be in flight
 +  /// anywhere when this runs.
 +  void rebindThread() {
-+    _check(_c.raw.mln_render_session_rebind_thread(_state.handleId));
++    _check(raw.mln_render_session_rebind_thread(_state.handleId));
 +  }
 +
    /// Resizes an attached render session.
-   void resize(int width, int height, {double scaleFactor = 1}) {
-     _checkNoActiveTextureFrame('resize render session');
+   ///
+   /// Surface and session-owned texture targets resize in place. A caller-owned
 diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
-index 246a6d82..d28ffe98 100644
+index af854991..51662212 100644
 --- a/include/maplibre_native_c/render_session.h
 +++ b/include/maplibre_native_c/render_session.h
-@@ -160,6 +160,35 @@ MLN_API mln_status mln_render_session_render_update(
+@@ -91,6 +91,35 @@ MLN_API mln_status mln_render_session_render_update(
    mln_render_session session, bool* out_rendered
  ) MLN_NOEXCEPT;
  
@@ -64,7 +64,7 @@ index 246a6d82..d28ffe98 100644
   * Detaches backend-bound render resources from the map while keeping the
   * session handle live for destruction.
 diff --git a/src/c_api/render_session.cpp b/src/c_api/render_session.cpp
-index 11a2efd3..9ac3d046 100644
+index ba51b821..7ea60a79 100644
 --- a/src/c_api/render_session.cpp
 +++ b/src/c_api/render_session.cpp
 @@ -2,6 +2,7 @@
@@ -75,7 +75,7 @@ index 11a2efd3..9ac3d046 100644
  
  #include "c_api/boundary.hpp"
  #include "geojson/geojson.hpp"
-@@ -95,6 +96,15 @@ auto mln_render_session_render_update(
+@@ -77,6 +78,15 @@ auto mln_render_session_render_update(
    });
  }
  
@@ -92,10 +92,10 @@ index 11a2efd3..9ac3d046 100644
    -> mln_status {
    return mln::c_api::status_boundary([&]() -> mln_status {
 diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
-index c2754cbd..4435f40e 100644
+index f7f81462..8ea667ad 100644
 --- a/src/render/render_session_common.cpp
 +++ b/src/render/render_session_common.cpp
-@@ -865,6 +865,19 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+@@ -936,6 +936,19 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
    return handle_table<mln_render_session_object>().insert(std::move(session));
  }
  
@@ -116,10 +116,10 @@ index c2754cbd..4435f40e 100644
    const auto lock = std::scoped_lock{mutex_};
    queue_.push_back(std::move(task));
 diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
-index d47a7a8c..d2b21432 100644
+index 6bdfa726..d0322711 100644
 --- a/src/render/render_session_common.hpp
 +++ b/src/render/render_session_common.hpp
-@@ -275,6 +275,12 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+@@ -380,6 +380,12 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
  auto validate_render_session(
    mln_render_session session, mln_render_session_object*& out_session
  ) -> mln_status;

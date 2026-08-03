@@ -12,7 +12,7 @@
 # Usage: tool/build_native.sh [--backend vulkan|egl] [--ffi-dir <path>]
 set -euo pipefail
 
-PIN=5eebd921a2633087dc08e02b3f5d9f492ed22fb7
+PIN=14dca12967f2fdfee56073d4046fb70d5b775a08
 NDK_PINNED_VERSION=28.1.13356709
 REPO_URL=https://github.com/maplibre/maplibre-native-ffi.git
 
@@ -156,6 +156,11 @@ fi
 echo "==> toolchain (mise) + build"
 (
   cd "$FFI_DIR"
+  # Cross-target SDKs this build never reaches: the OpenHarmony SDK does not
+  # even install on every host (and upstream excludes all three from its own
+  # task auto-install for the same reason); emsdk is the multi-gigabyte wasm
+  # toolchain. Without this, plain `mise install` pulls in everything.
+  export MISE_DISABLE_TOOLS="ohos-sdk,http:oniro-emulator,emsdk"
   mise trust --all
   mise install
   mise x -- rustup target add aarch64-linux-android
@@ -164,6 +169,18 @@ echo "==> toolchain (mise) + build"
 
 echo "==> generating ffigen bindings"
 (cd "$FFI_DIR/bindings/dart" && dart pub get && dart run tool/ffigen.dart)
+
+# The Dart binding delivers the C library as a native code asset since
+# upstream #488: its hook/build.dart runs inside `flutter build` and would
+# DOWNLOAD the published (unpatched!) snapshot unless this pointer names a
+# local install prefix. Point it at the patched build above; the prefix's own
+# descriptor supplies the backend. Note the app must build arm64-only
+# (--target-platform android-arm64): the hook fails for ABIs this prefix was
+# not built for.
+echo "==> pointing the Dart native-asset hook at the patched build"
+mkdir -p "$FFI_DIR/bindings/dart/.dart_tool"
+printf '%s' "$FFI_DIR/build/$PRESET/install" \
+  >"$FFI_DIR/bindings/dart/.dart_tool/maplibre_native_install_dir"
 
 # The rustls-platform-verifier JNI helper AAR (upstream #461): verifier source
 # pinned, acquired, and patched by mise, repackaged under a MapLibre

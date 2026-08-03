@@ -15,9 +15,11 @@ import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 /// certificate: Revoked"; the vendored fix follows the system trust manager's
 /// policy, like OkHttp).
 ///
-/// This provider remains for one job: custom HTTP headers (`setHttpHeaders`),
-/// which the C API has no counterpart for yet. It is installed lazily on the
-/// first setHttpHeaders call with a non-empty map, or up front with
+/// This provider remains for one job: regex-filtered custom headers
+/// (`setCustomHeaders` with urlFilters). Plain headers ride the native
+/// client's header transforms (upstream #509, prefix rules per scheme), but
+/// a regex filter needs a decision per URL, which only this fetch path can
+/// make. It is installed lazily when such a call arrives, or up front with
 /// MLN_DART_HTTP=true (the A/B arm; see the README's debug knobs).
 class HttpResourceProvider {
   HttpResourceProvider._();
@@ -46,6 +48,11 @@ class HttpResourceProvider {
   }
 
   static bool _installed = false;
+
+  /// Whether the provider currently serves http(s) requests. Once true, every
+  /// header set must flow through [setHeaders]: requests routed here never
+  /// reach the native client's header transforms.
+  static bool get isInstalled => _installed;
 
   /// Installs the provider on [runtime]: styles, tiles, glyphs, and sprites
   /// requested over http/https are then fetched by Dart. Idempotent. There is
