@@ -224,7 +224,11 @@ extension EngineCommandDispatch on EngineCore {
             : session.map.easeTo(camera, animation: animation);
         session.requestRender();
       case CancelTransitionsCommand():
-        _session(command.sessionId).map.cancelTransitions();
+        final session = _session(command.sessionId);
+        session.map.cancelTransitions();
+        // Cancelling freezes the camera wherever the transition was: that
+        // final pose still needs a frame to become visible.
+        session.requestRender();
       case SetGestureInProgressCommand():
         _session(
           command.sessionId,
@@ -325,11 +329,13 @@ extension EngineCommandDispatch on EngineCore {
       case SetPlacementTransitionsCommand():
         // Replaces the whole style-wide transition override; duration and
         // delay stay absent so the style's own values keep applying.
-        _session(command.sessionId).map.setStyleTransitionOptions(
+        final session = _session(command.sessionId);
+        session.map.setStyleTransitionOptions(
           mln.StyleTransitionOptions(
             enablePlacementTransitions: command.enabled,
           ),
         );
+        session.requestRender();
       case SetGeoJsonFeatureCommand():
         final session = _session(command.sessionId);
         final document = session.geojsonCache[command.sourceId];
@@ -367,19 +373,29 @@ extension EngineCommandDispatch on EngineCore {
       case SetMapLanguageCommand():
         final session = _session(command.sessionId);
         final map = session.map;
+        // Rewrite only text fields that actually read a localized name
+        // property (["get", "name:xx"] anywhere in the expression, however
+        // nested in coalesce/format/case), mirroring the Android backend's
+        // MapLibreMapUtils.setMapLanguage, which requires a `name:[a-z]+`
+        // reference before touching a layer. A bare ["get", "name"], plain
+        // strings, and unrelated properties like `name_en` are left intact.
+        // Like the reference implementation, a matched field is replaced
+        // wholesale (original formatting is not preserved) with the same
+        // three-way fallback chain.
+        final localizedNameGet = RegExp(r'\["get","name:[a-z]+"\]');
         for (final layerId in map.listStyleLayerIds()) {
           final value = map.getLayerProperty(layerId, 'text-field');
           if (value == null) continue;
-          // Adapt only text fields that reference the "name" data property
-          // (OSM-style localized names), like the reference backends.
+          // jsonEncode emits no whitespace, so the pattern match is exact.
           final encoded = jsonEncode(jsonValueToDart(value));
-          if (!encoded.contains('"name')) continue;
+          if (!localizedNameGet.hasMatch(encoded)) continue;
           map.setLayerProperty(
             layerId,
             'text-field',
             jsonValueFromDart([
               'coalesce',
               ['get', 'name:${command.language}'],
+              ['get', 'name:latin'],
               ['get', 'name'],
             ]),
           );

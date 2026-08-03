@@ -94,6 +94,11 @@ abstract class MapLibrePlatform {
 
   final onMapIdlePlatform = ArgumentCallbacks<void>();
 
+  /// The map failed to load the style or one of its resources; the argument
+  /// is a human-readable error message. Backends that cannot observe load
+  /// failures never invoke it.
+  final onMapLoadingErrorPlatform = ArgumentCallbacks<String>();
+
   final onUserLocationUpdatedPlatform = ArgumentCallbacks<UserLocation>();
 
   Future<void> initPlatform(int id);

@@ -344,19 +344,24 @@ class MapGestureHandler {
       if (_twoFingerMode == _TwoFingerMode.undecided) {
         _twoFingerMode = _resolveTwoFingerMode(details);
       }
-      if (_twoFingerMode == _TwoFingerMode.tilt) {
-        // Shove excludes pan/zoom/rotate for the whole gesture, like the
-        // SDK's mutually exclusive gesture sets (move disabled during shove).
-        if (_config.tiltEnabled && details.focalPointDelta.dy != 0) {
-          session.send(
-            PitchByCommand(
-              session.id,
-              -details.focalPointDelta.dy * _shoveDegreesPerPixel,
-            ),
-          );
-        }
-        return;
+    }
+    if (_twoFingerMode == _TwoFingerMode.tilt) {
+      // Shove excludes pan/zoom/rotate for the whole gesture, like the
+      // SDK's mutually exclusive gesture sets (move disabled during shove).
+      // The lock outlives the second finger on purpose: lifting one finger
+      // mid-shove must not degenerate into a pan, so the remaining samples
+      // are ignored until the gesture ends.
+      if (details.pointerCount >= 2 &&
+          _config.tiltEnabled &&
+          details.focalPointDelta.dy != 0) {
+        session.send(
+          PitchByCommand(
+            session.id,
+            -details.focalPointDelta.dy * _shoveDegreesPerPixel,
+          ),
+        );
       }
+      return;
     }
 
     // One-finger drag or pinch focal movement: focalPointDelta is already in
@@ -454,13 +459,21 @@ class MapGestureHandler {
   }
 
   _TwoFingerMode _resolveTwoFingerMode(ScaleUpdateDetails details) {
+    // Only enabled gestures may claim the sequence (like the activation
+    // gating in _updatePinchActivation): with zoom and rotate disabled, an
+    // incidental spread must not lock the gesture into pinch mode and make
+    // an enabled tilt unreachable, and with tilt disabled a vertical drag
+    // must stay a pan instead of locking into a shove that does nothing.
+    final zoomIntent =
+        _config.zoomEnabled && (details.scale - 1).abs() > _zoomActivationScale;
+    final rotateIntent =
+        _config.rotateEnabled &&
+        details.rotation.abs() * 180 / pi >= _rotateActivationDegrees;
     // Zoom/rotate intent wins as soon as the fingers spread or turn.
-    if ((details.scale - 1).abs() > _zoomActivationScale ||
-        details.rotation.abs() * 180 / pi >= _rotateActivationDegrees) {
-      return _TwoFingerMode.pinch;
-    }
+    if (zoomIntent || rotateIntent) return _TwoFingerMode.pinch;
     // Mostly-vertical parallel movement locks the tilt (shove) gesture.
-    if (_twoFingerTravel.dy.abs() > _tiltLockTravel &&
+    if (_config.tiltEnabled &&
+        _twoFingerTravel.dy.abs() > _tiltLockTravel &&
         _twoFingerTravel.dy.abs() > 2 * _twoFingerTravel.dx.abs()) {
       return _TwoFingerMode.tilt;
     }
@@ -539,15 +552,22 @@ class MapGestureHandler {
       // A tap stops an ongoing fling or animation, like the SDK's
       // onSingleTapUp.
       session.send(CancelTransitionsCommand(session.id));
-      final latLng = await session.query(
-        LatLngForPixelQuery(session.id, position.dx, position.dy),
-      );
-      // Hit-tests the interactive layers and emits the feature tap and/or the
-      // map click.
-      await _features.handleTap(
-        Point<double>(position.dx, position.dy),
-        LatLng(latLng.latitude, latLng.longitude),
-      );
+      try {
+        final latLng = await session.query(
+          LatLngForPixelQuery(session.id, position.dx, position.dy),
+        );
+        // Hit-tests the interactive layers and emits the feature tap and/or
+        // the map click.
+        await _features.handleTap(
+          Point<double>(position.dx, position.dy),
+          LatLng(latLng.latitude, latLng.longitude),
+        );
+      } catch (error) {
+        // The map can be torn down (or the query fail) between the unproject
+        // and the hit-test; without this net the unawaited chain surfaces an
+        // unhandled async error, unlike the drag paths, which all catch.
+        debugPrint('[maplibre_gl_native] tap handling failed: $error');
+      }
     }());
   }
 
@@ -557,13 +577,19 @@ class MapGestureHandler {
   ) async {
     final session = _session();
     if (session == null) return;
-    final latLng = await session.query(
-      LatLngForPixelQuery(session.id, position.dx, position.dy),
-    );
-    sink(<String, dynamic>{
-      'point': Point<double>(position.dx, position.dy),
-      'latLng': LatLng(latLng.latitude, latLng.longitude),
-    });
+    try {
+      final latLng = await session.query(
+        LatLngForPixelQuery(session.id, position.dx, position.dy),
+      );
+      sink(<String, dynamic>{
+        'point': Point<double>(position.dx, position.dy),
+        'latLng': LatLng(latLng.latitude, latLng.longitude),
+      });
+    } catch (error) {
+      // Same net as the drag paths: the session can die mid-query and the
+      // caller does not await this future.
+      debugPrint('[maplibre_gl_native] tap event failed: $error');
+    }
   }
 
   // Long press and feature drag.

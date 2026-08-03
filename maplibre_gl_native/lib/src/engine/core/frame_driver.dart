@@ -162,13 +162,21 @@ class FrameDriver {
   /// otherwise half a vsync period (drains the burst of pulses that queued
   /// behind a long frame without skipping a healthy cadence).
   ///
+  /// The cap is the exact requested interval (1e6/fps µs) minus one eighth
+  /// of a vsync period of jitter allowance: pulses land only on vsync
+  /// multiples, so one arriving a hair before the nominal cap must still be
+  /// accepted or the frame slips a whole extra vsync (a 30 fps cap on 60 Hz
+  /// would render at 20 fps). The allowance must stay well under one vsync
+  /// period: subtracting half a period was tried here and overshot the cap
+  /// instead (setMaximumFps(30) at 60 Hz rendered up to ~40 fps).
+  ///
   /// Deliberately the only thing dropping pulses. Dropping them by the age of
   /// their timestamp was tried and reverted: see [_onPulse].
   int get _minFrameIntervalUs {
     final fps = _core.maxFps;
     final half = _vsyncPeriodUs ~/ 2;
     if (fps == null || fps <= 0) return half;
-    final capUs = (1e6 / fps).round() - half;
+    final capUs = (1e6 / fps).round() - _vsyncPeriodUs ~/ 8;
     return capUs > half ? capUs : half;
   }
 

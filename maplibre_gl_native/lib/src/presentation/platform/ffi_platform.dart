@@ -59,6 +59,17 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
 
   MapSession _requireSession() => requireSession(_session);
 
+  /// Whether the camera moved since the last camera-idle emission.
+  ///
+  /// The engine's [MapIdleEvent] means "tiles loaded AND no transitions
+  /// running", while the method-channel backends' `camera#onIdle` fires at
+  /// the end of a camera movement: feeding every map idle into
+  /// [onCameraIdlePlatform] would repeat it on tile-only settles. Gating on
+  /// this flag restores the parity semantics (camera idle = the first map
+  /// idle after a camera change); the residual difference is that it still
+  /// waits for the tiles of the final viewport to load.
+  bool _cameraIdlePending = false;
+
   void _send(EngineCommand command) => _requireSession().send(command);
 
   /// Called by the widget once the texture, map, and render session exist.
@@ -75,18 +86,27 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     if (event is! SessionEvent || event.sessionId != _session?.id) return;
     switch (event) {
       case CameraWillChangeEvent():
+        _cameraIdlePending = true;
         onCameraMoveStartedPlatform(null);
       case CameraIsChangingEvent():
+        _cameraIdlePending = true;
         onCameraMovePlatform(_toCameraPosition(event.camera));
       case MapIdleEvent():
-        onCameraIdlePlatform(_toCameraPosition(event.camera));
+        if (_cameraIdlePending) {
+          _cameraIdlePending = false;
+          onCameraIdlePlatform(_toCameraPosition(event.camera));
+        }
         onMapIdlePlatform(null);
       case StyleLoadedEvent():
         _location.onStyleLoaded();
         onMapStyleLoadedPlatform(null);
       case SnapshotResultEvent():
         _snapshots.resolve(event);
-      case MapLoadingFailedEvent() || RenderPendingEvent():
+      case MapLoadingFailedEvent():
+        // A style that fails to load must not be invisible to the app; the
+        // engine core also logs the failure with its details.
+        onMapLoadingErrorPlatform(event.message);
+      case RenderPendingEvent():
         break;
     }
   }
@@ -296,6 +316,12 @@ class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
     // Asset and file styles must be read here on the root isolate; the
     // engine only accepts raw JSON or http(s) URLs.
     final resolved = await resolveStyleString(styleString);
+    // A style load drops every layer added on top of the old style, so the
+    // interactive layer ids registered for feature hit-testing are stale:
+    // forget them here, exactly like the engine core drops its GeoJSON
+    // cache. The controller re-registers the layers it re-adds after the
+    // style loads.
+    features.resetLayers();
     session.send(SetStyleCommand(session.id, resolved));
   }
 

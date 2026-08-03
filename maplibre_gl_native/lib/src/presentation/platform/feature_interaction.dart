@@ -47,6 +47,11 @@ class FeatureInteraction {
 
   void unregisterLayer(String layerId) => _layerIds.remove(layerId);
 
+  /// Forgets every registered interactive layer. Called on a style change:
+  /// the new style starts without the app's layers, and stale ids must not
+  /// keep participating in tap and drag hit-tests.
+  void resetLayers() => _layerIds.clear();
+
   /// Interactive layer ids ordered topmost first, for hit-testing.
   List<String> get _hitTestOrder => _layerIds.reversed.toList(growable: false);
 
