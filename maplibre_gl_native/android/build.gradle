@@ -1,0 +1,111 @@
+group 'org.maplibre.maplibreglnative'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '2.4.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// The rustls-platform-verifier JNI helper is not published to Maven Central;
+// tool/build_native.sh builds it from the pinned maplibre-native-ffi tree
+// (which repackages it under a MapLibre FFI-private Java package, #461) and
+// installs it under local_maven/. Required by mln_android_init for TLS
+// certificate verification of MapLibre Native HTTP requests. Capture the path
+// here: inside allprojects{} `projectDir` would point at each project instead.
+def maplibreGlNativeLocalMaven = new File(projectDir, 'local_maven')
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url uri(maplibreGlNativeLocalMaven)
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+// The shim compiles the Dart API dynamic-linking stubs (dart_api_dl.c)
+// straight from the Dart SDK bundled with the Flutter SDK performing this
+// build, instead of vendoring a copy: the stubs are then always the exact
+// version of the Dart VM shipped in the same app. Flutter tooling writes
+// flutter.sdk into local.properties on every build.
+def maplibreGlNativeLocalProperties = new Properties()
+def maplibreGlNativeLocalPropertiesFile = rootProject.file('local.properties')
+if (maplibreGlNativeLocalPropertiesFile.exists()) {
+    maplibreGlNativeLocalPropertiesFile.withReader('UTF-8') { reader ->
+        maplibreGlNativeLocalProperties.load(reader)
+    }
+}
+def maplibreGlNativeFlutterSdk = maplibreGlNativeLocalProperties.getProperty('flutter.sdk')
+if (maplibreGlNativeFlutterSdk == null) {
+    throw new GradleException(
+        'flutter.sdk not set in local.properties; maplibre_gl_native needs it ' +
+        'to compile the Dart API DL stubs from the Flutter SDK')
+}
+def maplibreGlNativeDartInclude =
+    new File(maplibreGlNativeFlutterSdk, 'bin/cache/dart-sdk/include')
+if (!new File(maplibreGlNativeDartInclude, 'dart_api_dl.c').exists()) {
+    throw new GradleException(
+        "Dart SDK include dir not found at $maplibreGlNativeDartInclude " +
+        '(expected inside the Flutter SDK from local.properties)')
+}
+
+android {
+    if (project.android.hasProperty("namespace")) {
+        namespace 'org.maplibre.maplibreglnative'
+    }
+    compileSdkVersion 36
+
+    ndkVersion "28.1.13356709"
+
+    defaultConfig {
+        // libmaplibre-native-c.so is built with ANDROID_PLATFORM=android-24.
+        minSdkVersion 24
+
+        // Keep rules the consuming app's R8 must honor: the JNI symbol names
+        // encode the plugin class's fully qualified name (see the .pro file).
+        consumerProguardFiles 'consumer-proguard-rules.pro'
+
+        // Spike scope: the native library is only built for arm64-v8a.
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DDART_SDK_INCLUDE_DIR=${maplibreGlNativeDartInclude.absolutePath}"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_21.toString()
+    }
+}
+
+dependencies {
+    // See the local_maven comment above. AGP forbids direct local .aar file
+    // dependencies inside a library module, hence the tiny local Maven repo.
+    implementation 'org.maplibre.nativeffi:rustls-platform-verifier-android:local'
+}

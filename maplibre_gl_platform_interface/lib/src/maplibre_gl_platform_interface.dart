@@ -94,6 +94,11 @@ abstract class MapLibrePlatform {
 
   final onMapIdlePlatform = ArgumentCallbacks<void>();
 
+  /// The map failed to load the style or one of its resources; the argument
+  /// is a human-readable error message. Backends that cannot observe load
+  /// failures never invoke it.
+  final onMapLoadingErrorPlatform = ArgumentCallbacks<String>();
+
   final onUserLocationUpdatedPlatform = ArgumentCallbacks<UserLocation>();
 
   Future<void> initPlatform(int id);
@@ -123,6 +128,16 @@ abstract class MapLibrePlatform {
   /// Performance Controls
   /// Sets the maximum frames per second for the map rendering.
   Future<void> setMaximumFps(int fps);
+
+  /// Toggles per-frame render statistics collection (benchmark
+  /// instrumentation). Enabling resets any previously collected samples.
+  /// No-op on backends without instrumentation support.
+  Future<void> setFrameStatsEnabled(bool enabled) async {}
+
+  /// Drains the frame statistics collected since [setFrameStatsEnabled] (or
+  /// since the previous drain): `timestampsUs` (frame start times) plus
+  /// per-frame duration arrays, backend-dependent. Null when unsupported.
+  Future<Map<String, dynamic>?> takeFrameStats() async => null;
 
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();

@@ -1,0 +1,134 @@
+diff --git a/bindings/dart/lib/src/runtime/runtime_render_handles.dart b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
+index 760d25db..43234146 100644
+--- a/bindings/dart/lib/src/runtime/runtime_render_handles.dart
++++ b/bindings/dart/lib/src/runtime/runtime_render_handles.dart
+@@ -140,6 +140,20 @@ final class RenderSessionHandle {
+   /// refusing to destroy one that still has a session attached.
+   NativeRenderSession get _handle => _state.handle;
+ 
++  /// This session's handle id, for a host that must name it to a render
++  /// thread of its own. Carries no ownership and keeps nothing alive.
++  int get nativeAddress => _state.handleId;
++
++  /// Rebinds this session's owner thread to the calling OS thread.
++  ///
++  /// Needed by a host that renders on a thread it does not drive the map from,
++  /// and by one whose isolate the VM may move between OS threads. The handover
++  /// must be serialized by the caller: no call on this session may be in flight
++  /// anywhere when this runs.
++  void rebindThread() {
++    _check(raw.mln_render_session_rebind_thread(_state.handleId));
++  }
++
+   /// Resizes an attached render session.
+   ///
+   /// Surface and session-owned texture targets resize in place. A caller-owned
+diff --git a/include/maplibre_native_c/render_session.h b/include/maplibre_native_c/render_session.h
+index af854991..51662212 100644
+--- a/include/maplibre_native_c/render_session.h
++++ b/include/maplibre_native_c/render_session.h
+@@ -91,6 +91,35 @@ MLN_API mln_status mln_render_session_render_update(
+   mln_render_session session, bool* out_rendered
+ ) MLN_NOEXCEPT;
+ 
++/**
++ * Rebinds this render session's owner thread to the calling thread.
++ *
++ * A session's owner is the thread that attached it, which suits an embedder
++ * that controls its own threads. Two shapes do not fit that. A host with
++ * managed concurrency (a Dart isolate, a Go goroutine, a .NET task) can resume
++ * on a different pool thread between two calls, through no action of the
++ * caller. And a host that renders on a display-paced callback thread while
++ * driving the map from elsewhere has to hand the session between the two,
++ * because every session entry point is owner-thread checked.
++ *
++ * Both are the same operation: re-home the affinity to the thread that is
++ * actually about to call. This does nothing else, so the map, the runtime and
++ * any other session keep the owners they had.
++ *
++ * Contract:
++ * - No call on this session may be in flight, on any thread. Callers that
++ *   hand a session back and forth must serialize the handover themselves.
++ * - Backend-bound state is made current per call, inside the graphics backend
++ *   scope each entry point opens, so no GPU context travels with the session.
++ *
++ * Returns:
++ * - MLN_STATUS_OK on success, including when already bound to the caller.
++ * - MLN_STATUS_INVALID_ARGUMENT when session is null or not a live handle.
++ * - MLN_STATUS_NATIVE_ERROR when an internal exception is converted to status.
++ */
++MLN_API mln_status
++mln_render_session_rebind_thread(mln_render_session session) MLN_NOEXCEPT;
++
+ /**
+  * Detaches backend-bound render resources from the map while keeping the
+  * session handle live for destruction.
+diff --git a/src/c_api/render_session.cpp b/src/c_api/render_session.cpp
+index ba51b821..7ea60a79 100644
+--- a/src/c_api/render_session.cpp
++++ b/src/c_api/render_session.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include <cstddef>
+ #include <cstdint>
++#include <thread>
+ 
+ #include "c_api/boundary.hpp"
+ #include "geojson/geojson.hpp"
+@@ -77,6 +78,15 @@ auto mln_render_session_render_update(
+   });
+ }
+ 
++auto mln_render_session_rebind_thread(mln_render_session session) noexcept
++  -> mln_status {
++  return mln::c_api::status_boundary([&]() -> mln_status {
++    return mln::core::rebind_render_session_to_thread(
++      session, std::this_thread::get_id()
++    );
++  });
++}
++
+ auto mln_render_session_detach(mln_render_session session) noexcept
+   -> mln_status {
+   return mln::c_api::status_boundary([&]() -> mln_status {
+diff --git a/src/render/render_session_common.cpp b/src/render/render_session_common.cpp
+index f7f81462..8ea667ad 100644
+--- a/src/render/render_session_common.cpp
++++ b/src/render/render_session_common.cpp
+@@ -936,6 +936,19 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+   return handle_table<mln_render_session_object>().insert(std::move(session));
+ }
+ 
++auto rebind_render_session_to_thread(
++  mln_render_session session, std::thread::id thread
++) -> mln_status {
++  auto& table = handle_table<mln_render_session_object>();
++  const std::scoped_lock lock(table.mutex());
++  auto* live = table.resolve_locked(session);
++  if (live == nullptr) {
++    return MLN_STATUS_INVALID_ARGUMENT;
++  }
++  live->owner_thread = thread;
++  return MLN_STATUS_OK;
++}
++
+ void RenderSessionScheduler::schedule(std::function<void()>&& task) {
+   const auto lock = std::scoped_lock{mutex_};
+   queue_.push_back(std::move(task));
+diff --git a/src/render/render_session_common.hpp b/src/render/render_session_common.hpp
+index 6bdfa726..d0322711 100644
+--- a/src/render/render_session_common.hpp
++++ b/src/render/render_session_common.hpp
+@@ -380,6 +380,12 @@ auto register_render_session(std::shared_ptr<mln_render_session_object> session)
+ auto validate_render_session(
+   mln_render_session session, mln_render_session_object*& out_session
+ ) -> mln_status;
++
++// Re-homes one live render session to the given thread. See
++// mln_render_session_rebind_thread in render_session.h.
++auto rebind_render_session_to_thread(
++  mln_render_session session, std::thread::id thread
++) -> mln_status;
+ auto validate_live_attached_render_session(
+   mln_render_session session, mln_render_session_object*& out_session
+ ) -> mln_status;

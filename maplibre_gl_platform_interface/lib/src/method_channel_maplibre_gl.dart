@@ -281,6 +281,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setFrameStatsEnabled(bool enabled) async {
+    await _channel.invokeMethod('map#setFrameStatsEnabled', <String, dynamic>{
+      'enabled': enabled,
+    });
+  }
+
+  @override
+  Future<Map<String, dynamic>?> takeFrameStats() async {
+    final reply = await _channel.invokeMethod('map#takeFrameStats');
+    return (reply as Map?)?.cast<String, dynamic>();
+  }
+
+  @override
   Future<void> forceOnlineMode() async {
     await _channel.invokeMethod('map#forceOnlineMode');
   }

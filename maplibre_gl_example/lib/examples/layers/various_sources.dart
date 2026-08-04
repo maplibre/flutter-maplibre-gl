@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
+import '../../shared/shared.dart';
 
 class StyleInfo {
   final String name;
@@ -116,9 +117,11 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
       "earthquakes",
       "earthquakes-count",
-      const SymbolLayerProperties(
-        textField: [Expressions.get, 'point_count_abbreviated'],
-        textFont: ['Open Sans Semibold'],
+      SymbolLayerProperties(
+        textField: const [Expressions.get, 'point_count_abbreviated'],
+        // A font stack the active demo style actually serves; a glyph 404
+        // would hide the labels entirely.
+        textFont: ExampleConstants.demoBoldFontStack,
         textSize: 12,
       ),
       filter: [

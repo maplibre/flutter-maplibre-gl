@@ -129,6 +129,7 @@ final class MapLibreMapController
   private float density;
   private final Context context;
   private final String styleStringInitial;
+  private final FrameStatsRecorder frameStats = new FrameStatsRecorder();
   /**
    * This container is returned as the final platform view instead of returning `mapView`.
    * See {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
@@ -1081,6 +1082,18 @@ final class MapLibreMapController
             mapView.setMaximumFps(fps);
           }
           result.success(null);
+          break;
+        }
+      case "map#setFrameStatsEnabled":
+        {
+          final boolean enabled = call.argument("enabled");
+          frameStats.setEnabled(mapView, enabled);
+          result.success(null);
+          break;
+        }
+      case "map#takeFrameStats":
+        {
+          result.success(frameStats.take());
           break;
         }
       case "map#forceOnlineMode":
@@ -2182,6 +2195,7 @@ final class MapLibreMapController
       activeSnapshotter.cancel();
       activeSnapshotter = null;
     }
+    frameStats.dispose(mapView);
     methodChannel.setMethodCallHandler(null);
     // Properly cleanup MapView lifecycle before destroying
     if (mapView != null && mapViewStarted) {

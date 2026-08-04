@@ -1,0 +1,45 @@
+name: maplibre_gl_native
+description: >-
+  EXPERIMENTAL spike: maplibre_gl backend built directly on the MapLibre
+  Native C API via dart:ffi (maplibre-native-ffi), rendering into a Flutter
+  Texture instead of a platform view. Not published; see README.
+version: 0.0.1
+repository: https://github.com/maplibre/flutter-maplibre-gl
+issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: '>=3.38.0'
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: org.maplibre.maplibreglnative
+        pluginClass: MapLibreGlNativePlugin
+  assets:
+    # Official MapLibre on-map logo (rasterized from the maplibre-native
+    # Android `maplibre_logo_icon` vector drawable), shown by the logo
+    # ornament. Density variants live in the 2.0x/3.0x/4.0x subdirectories.
+    - assets/maplibre_logo.png
+
+dependencies:
+  # Native allocation for the buffers the shim's render thread drains its
+  # per-frame samples into (dart:ffi has no allocator of its own).
+  ffi: ^2.1.0
+  flutter:
+    sdk: flutter
+  # For the offline API models (OfflineRegion, DownloadRegionStatus), so
+  # MapLibreGlNativeOffline is drop-in compatible with global.dart.
+  maplibre_gl: ^0.26.2
+  maplibre_gl_platform_interface: ^0.26.2
+  # Dart bindings from maplibre-native-ffi, pinned; see README for the commit.
+  maplibre_native_ffi:
+    path: ../../maplibre-native-ffi/bindings/dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^10.2.0

@@ -1,0 +1,160 @@
+THROWAWAY SCAFFOLDING. Delete this patch, do not maintain it.
+
+Let the Dart lifecycle guard heal a thread-token mismatch instead of throwing.
+
+Upstream #399 added `NativeHandleState._checkOwnerIsolate`, which compares the
+native thread token and throws `wrongThread`. That is a deliberate change and a
+good one: it turns silent corruption into a loud error and names its issue,
+maplibre/maplibre-native-ffi#412. This patch disables it, and is therefore not
+upstreamable and must never be offered as one.
+
+Why we carry it anyway: our engine drives the map from a spawned Dart isolate,
+and the VM moves that isolate between OS threads (7 distinct threads observed in
+a single 60-second session on a Xiaomi 2109119DG). Patch 0002 handles that with
+`mln_runtime_rebind_thread`, but `RuntimeHandle.rebindThread()` reads `_pointer`,
+which goes through the new guard, so the rebind is gated by the very check it
+exists to clear. Without this patch the engine isolate throws and dies a few
+seconds after the map opens.
+
+What it does:
+
+  * `NativeHandleState._ownerThreadToken` becomes mutable.
+  * On a thread-token mismatch, `_checkOwnerIsolate` calls an installed rebind
+    and refreshes its own token instead of throwing. The rebind is process-wide
+    and idempotent, so handles heal independently on their next use, in any
+    order, and no registry of handles is needed.
+  * `RuntimeHandle` installs that rebind, because it is the only handle that can
+    reach `mln_runtime_rebind_thread`. It reads its address without owner
+    validation, since going through `_pointer` would re-enter the guard.
+  * The isolate-hash branch is untouched and still throws. A genuinely different
+    isolate is a real error and stays loud; only the thread-token branch heals.
+
+The hook is per-isolate rather than per-handle because `MapProjectionHandle` and
+`RenderSessionHandle` have no runtime to be given one: after #399 a session is
+built by `MapAttachRef`, which by design carries nothing but the map's address.
+One hook per isolate covers the runtime, its maps, and its projections, which is
+what `mln_runtime_rebind_thread` re-homes (patch 0010 narrowed it: sessions are
+deliberately excluded, or the rebind would steal one from the thread drawing
+it). For a `RenderSessionHandle` the heal therefore refreshes only the Dart
+token; the native re-home happens explicitly in `RenderThread.borrow` via
+`mln_render_session_rebind_thread`, which the token refresh is what unlocks.
+
+How it goes away: Action 2 moves `render_update` onto the Choreographer thread,
+after which either the engine isolate disappears entirely (nothing left to
+migrate) or the four `HttpResourceProvider` awaits move off it (nothing left to
+trigger migration). Either one retires this patch, and probably 0002 with it.
+
+diff --git a/bindings/dart/lib/src/internal/lifecycle/lifecycle.dart b/bindings/dart/lib/src/internal/lifecycle/lifecycle.dart
+index 39e5bbb4..5e941727 100644
+--- a/bindings/dart/lib/src/internal/lifecycle/lifecycle.dart
++++ b/bindings/dart/lib/src/internal/lifecycle/lifecycle.dart
+@@ -16,6 +16,28 @@ const _createLeakToken = raw.mln_adapter_handle_leak_token_create;
+ /// Opaque token for the calling native thread, stable for its life.
+ const _threadToken = raw.mln_thread_token;
+ 
++/// Re-homes native owner-thread affinity for this isolate onto the calling
++/// thread, or null when nothing installed one.
++///
++/// A top-level variable is per-isolate, which is the right scope: only the
++/// isolate that owns a runtime can heal its handles, and no other isolate is
++/// affected.
++void Function()? _threadRebind;
++
++/// Guards against re-entering the rebind from a handle the hook itself touches.
++bool _rebinding = false;
++
++/// Installs (or with null clears) this isolate's owner-thread rebind.
++///
++/// TEMPORARY SCAFFOLDING, see upstream_patches/0009 in flutter-maplibre-gl.
++/// Called by `RuntimeHandle`, the only handle that can reach
++/// `mln_runtime_rebind_thread`; that call re-homes the runtime, its maps, and
++/// its projections (NOT render sessions, which may be owned by a display
++/// thread and re-home explicitly through their own rebind instead).
++void installThreadRebind(void Function()? rebind) {
++  _threadRebind = rebind;
++}
++
+ const _destroyLeakToken = raw.mln_adapter_handle_leak_token_destroy;
+ 
+ /// Attaches the binding's non-owning native-handle leak diagnostic to [owner].
+@@ -76,7 +98,10 @@ final class NativeHandleState<H extends NativeHandle> implements Finalizable {
+   /// The native thread this handle was created on. The C API keys its
+   /// owner-thread checks on that thread, not on the isolate, and the Dart VM
+   /// moves an isolate between threads when it resumes from awaited I/O.
+-  final int _ownerThreadToken;
++  ///
++  /// Mutable so a handle can follow its isolate onto a new thread when a rebind
++  /// is installed; see [installThreadRebind].
++  int _ownerThreadToken;
+   final Object _finalizerDetachToken = Object();
+   Pointer<Void>? _leakToken;
+ 
+@@ -115,10 +140,30 @@ final class NativeHandleState<H extends NativeHandle> implements Finalizable {
+     if (Isolate.current.hashCode != _ownerIsolateHash) {
+       throwWrongThread('$typeName belongs to a different Dart isolate');
+     }
+-    if (_threadToken() != _ownerThreadToken) {
++    final token = _threadToken();
++    if (token != _ownerThreadToken) {
+       // Same isolate, different native thread. Every native call on this handle
+-      // would now fail, including close, which would leak it permanently. Say
+-      // why here rather than let the C API report a bare wrong-thread status.
++      // would now fail, including close, which would leak it permanently.
++      //
++      // TEMPORARY SCAFFOLDING, see upstream_patches/0009 in flutter-maplibre-gl.
++      // With a rebind installed, re-home native affinity onto this thread and
++      // carry on rather than failing. The rebind is process-wide and idempotent,
++      // so each handle heals on its own next use, in any order. A rebind that
++      // itself fails propagates its native cause and leaves the token stale, so
++      // the failure stays loud and the next call retries.
++      final rebind = _threadRebind;
++      if (rebind != null && !_rebinding) {
++        _rebinding = true;
++        try {
++          rebind();
++        } finally {
++          _rebinding = false;
++        }
++        _ownerThreadToken = token;
++        return;
++      }
++      // Say why here rather than let the C API report a bare wrong-thread
++      // status.
+       throwWrongThread(
+         '$typeName is owned by a native thread its isolate has since left. '
+         'The Dart VM moves an isolate between native threads when it resumes '
+diff --git a/bindings/dart/lib/src/runtime/runtime.dart b/bindings/dart/lib/src/runtime/runtime.dart
+index 3d36f12b..e21b6004 100644
+--- a/bindings/dart/lib/src/runtime/runtime.dart
++++ b/bindings/dart/lib/src/runtime/runtime.dart
+@@ -88,7 +88,20 @@ final class RuntimeOptions {
+ /// Owner-thread runtime handle for MapLibre Native work and event polling.
+ final class RuntimeHandle {
+   RuntimeHandle._(NativeRuntime handle)
+-    : _state = NativeHandleState(handle, 'RuntimeHandle');
++    : _state = NativeHandleState(handle, 'RuntimeHandle') {
++    // TEMPORARY SCAFFOLDING, see upstream_patches/0009 in flutter-maplibre-gl.
++    // Lets every handle on this isolate follow the isolate onto a new native
++    // thread. Reads the handle id without owner validation, because going
++    // through [_handle] would re-enter the check this exists to clear. A closed
++    // runtime has nothing to rebind, so the caller is left to report the
++    // mismatch.
++    installThreadRebind(() {
++      if (_state.isClosed) {
++        return;
++      }
++      _check(raw.mln_runtime_rebind_thread(_state.handleId));
++    });
++  }
+ 
+   final NativeHandleState<NativeRuntime> _state;
+   final _maps = <int, WeakReference<MapHandle>>{};
+@@ -630,6 +643,8 @@ final class RuntimeHandle {
+     _resourceProviderRulesState = null;
+     _resourceProviderCallbackState?.retire();
+     _resourceProviderCallbackState = null;
++    // TEMPORARY SCAFFOLDING, see upstream_patches/0009 in flutter-maplibre-gl.
++    installThreadRebind(null);
+   }
+ }
+ 

@@ -1,0 +1,3 @@
+# Prebuilt native library: built locally from maplibre-native-ffi, never
+# committed. See README.md for the build recipe.
+android/src/main/jniLibs/

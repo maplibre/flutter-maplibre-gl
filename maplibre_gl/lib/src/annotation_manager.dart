@@ -370,13 +370,16 @@ class SymbolManager extends AnnotationManager<Symbol> {
       iconHaloColor: [Expressions.get, 'iconHaloColor'],
       iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
       iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
-      textFont:
-          kIsWeb
-              ? null
-              : [
-                'Open Sans Regular',
-                'Arial Unicode MS Regular',
-              ],
+      // MapLibre Native requests a symbol layer's text-font as one
+      // comma-joined token ("A,B"), so a multi-font stack only renders if the
+      // glyph server serves that exact combination. The former default
+      // ('Open Sans Regular,Arial Unicode MS Regular') is served only by
+      // demotiles; on any other style (e.g. the OpenFreeMap fallback) it 404s
+      // and the whole symbol vanishes, icon included, because a symbol layer
+      // whose glyphs fail never completes layout. 'Noto Sans Regular' is a
+      // single font served by demotiles, OpenFreeMap, and the common public
+      // glyph endpoints alike. On web the font is left to the active style.
+      textFont: kIsWeb ? null : ['Noto Sans Regular'],
       textField: [Expressions.get, 'textField'],
       textSize: [Expressions.get, 'textSize'],
       textMaxWidth: [Expressions.get, 'textMaxWidth'],

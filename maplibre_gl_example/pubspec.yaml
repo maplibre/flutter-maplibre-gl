@@ -19,10 +19,14 @@ dependencies:
   http: ^1.6.0
   maplibre_gl:
     path: ../maplibre_gl
+  maplibre_gl_native:
+    path: ../maplibre_gl_native
   path_provider: ^2.1.5
   permission_handler: ^12.0.0
 
 dev_dependencies:
+  flutter_driver:
+    sdk: flutter
   flutter_launcher_icons: ^0.14.3
   flutter_test:
     sdk: flutter

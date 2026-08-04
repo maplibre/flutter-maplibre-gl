@@ -105,7 +105,12 @@ class _EditStyleLayerDraggableBodyState
         position.longitude,
         position.latitude,
       ];
-      await _updateCircleSource();
+      // Single-feature update: cheaper than resending the whole collection
+      // on every drag move.
+      await _controller!.setGeoJsonFeature(
+        _circleSourceId,
+        _circleFeatures[circleIndex],
+      );
       return;
     }
 
@@ -118,7 +123,10 @@ class _EditStyleLayerDraggableBodyState
         position.longitude,
         position.latitude,
       ];
-      await _updateSymbolSource();
+      await _controller!.setGeoJsonFeature(
+        _symbolSourceId,
+        _symbolFeatures[symbolIndex],
+      );
       return;
     }
   }
@@ -175,11 +183,14 @@ class _EditStyleLayerDraggableBodyState
       await _controller!.addSymbolLayer(
         _symbolSourceId,
         _symbolLayerId,
-        const SymbolLayerProperties(
+        SymbolLayerProperties(
           iconImage: 'custom-marker',
           iconSize: 1.2,
           iconAllowOverlap: true,
           textField: '{name}',
+          // A font stack the active demo style actually serves; a glyph 404
+          // would hide the whole symbol, icon included.
+          textFont: ExampleConstants.demoFontStack,
           textSize: 12,
           textOffset: [0, -2.5],
           textColor: '#2C3E50',

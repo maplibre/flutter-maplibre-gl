@@ -1,0 +1,469 @@
+<title>FFI engine benchmarks · flutter-maplibre-gl</title>
+<style>
+  .bench-root {
+    color-scheme: light;
+    --page:        #f9f9f7;
+    --surface:     #fcfcfb;
+    --ink:         #0b0b0b;
+    --ink-2:       #52514e;
+    --muted:       #898781;
+    --grid:        #e1e0d9;
+    --baseline:    #c3c2b7;
+    --border:      rgba(11,11,11,0.10);
+    --good:        #006300;
+    --s-stable:    #2a78d6;
+    --s-ffi:       #eb6834;
+    --s-iso:       #1baf7a;
+    --s-iso-prev:  #a5a396;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    line-height: 1.55;
+    margin: 0;
+    padding: 40px 20px 64px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .bench-root {
+      color-scheme: dark;
+      --page:     #0d0d0d;
+      --surface:  #1a1a19;
+      --ink:      #ffffff;
+      --ink-2:    #c3c2b7;
+      --muted:    #898781;
+      --grid:     #2c2c2a;
+      --baseline: #383835;
+      --border:   rgba(255,255,255,0.10);
+      --good:     #0ca30c;
+      --s-stable: #3987e5;
+      --s-ffi:    #d95926;
+      --s-iso:    #199e70;
+      --s-iso-prev: #6b6a63;
+    }
+  }
+  :root[data-theme="dark"] .bench-root {
+    color-scheme: dark;
+    --page:     #0d0d0d;
+    --surface:  #1a1a19;
+    --ink:      #ffffff;
+    --ink-2:    #c3c2b7;
+    --muted:    #898781;
+    --grid:     #2c2c2a;
+    --baseline: #383835;
+    --border:   rgba(255,255,255,0.10);
+    --good:     #0ca30c;
+    --s-stable: #3987e5;
+    --s-ffi:    #d95926;
+    --s-iso:    #199e70;
+    --s-iso-prev: #6b6a63;
+  }
+  :root[data-theme="light"] .bench-root {
+    color-scheme: light;
+    --page:     #f9f9f7;
+    --surface:  #fcfcfb;
+    --ink:      #0b0b0b;
+    --ink-2:    #52514e;
+    --muted:    #898781;
+    --grid:     #e1e0d9;
+    --baseline: #c3c2b7;
+    --border:   rgba(11,11,11,0.10);
+    --good:     #006300;
+    --s-stable: #2a78d6;
+    --s-ffi:    #eb6834;
+    --s-iso:    #1baf7a;
+    --s-iso-prev: #a5a396;
+  }
+
+  .bench-root .wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  .bench-root .eyebrow {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .bench-root h1 { font-size: 30px; line-height: 1.15; margin: 6px 0 0; text-wrap: balance; font-weight: 700; }
+  .bench-root h2 { font-size: 19px; margin: 0 0 2px; font-weight: 650; text-wrap: balance; }
+  .bench-root p  { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: 15px; }
+  .bench-root p.lead { color: var(--ink); font-size: 16px; }
+  .bench-root a { color: inherit; text-decoration-color: var(--baseline); text-underline-offset: 2px; }
+  .bench-root a:focus-visible, .bench-root summary:focus-visible { outline: 2px solid var(--s-stable); outline-offset: 2px; border-radius: 2px; }
+
+  .bench-root .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .bench-root .tiles { grid-template-columns: repeat(2, 1fr); } }
+  .bench-root .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 2px;
+  }
+  .bench-root .tile .v { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+  .bench-root .tile .v .u { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+  .bench-root .tile .k { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+  .bench-root .tile .d { font-size: 11.5px; color: var(--muted); }
+  .bench-root .tile .v.up { color: var(--good); }
+
+  .bench-root .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .bench-root .card .sub { font-size: 13px; color: var(--ink-2); max-width: 70ch; }
+  .bench-root .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+  .bench-root .legend .it { display: inline-flex; align-items: center; gap: 6px; }
+  .bench-root .legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+  .bench-root svg { display: block; width: 100%; height: auto; }
+  .bench-root svg text { font-family: inherit; }
+  .bench-root .tt {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--ink); color: var(--page);
+    font-size: 12px; padding: 5px 9px; border-radius: 6px; white-space: nowrap;
+  }
+
+  .bench-root .hgroup { display: flex; flex-direction: column; gap: 6px; }
+  .bench-root .hgroup + .hgroup { margin-top: 10px; }
+  .bench-root .hgroup .ht { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .bench-root .hrow { display: grid; grid-template-columns: 132px 1fr 76px; align-items: center; gap: 10px; }
+  .bench-root .hrow .hname { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px; }
+  .bench-root .hrow .hname .sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .bench-root .htrack { height: 14px; }
+  .bench-root .hbar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bench-root .hval { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
+
+  .bench-root details { border-top: 1px solid var(--grid); padding-top: 8px; }
+  .bench-root summary { font-size: 12.5px; color: var(--muted); cursor: pointer; }
+  .bench-root table { border-collapse: collapse; font-size: 12.5px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .bench-root th, .bench-root td { text-align: right; padding: 4px 12px 4px 0; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
+  .bench-root th:first-child, .bench-root td:first-child { text-align: left; }
+  .bench-root th { color: var(--muted); font-weight: 600; }
+
+  .bench-root .note {
+    border: 1px solid var(--border); border-left: 3px solid var(--baseline);
+    border-radius: 8px; padding: 14px 16px; background: var(--surface);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .bench-root .note p { font-size: 13.5px; }
+  .bench-root code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  .bench-root .links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; }
+  .bench-root .meta { font-size: 12px; color: var(--muted); border-top: 1px solid var(--grid); padding-top: 14px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bench-root .hbar { transition: width .5s ease; }
+  }
+</style>
+
+<div class="bench-root">
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">flutter-maplibre-gl · experimental engine</div>
+    <h1>FFI engine benchmarks</h1>
+  </header>
+
+  <p class="lead">
+    We benchmarked the experimental <strong>dart:ffi engine</strong> against the current
+    platform-view implementation ("stable") on the same Android device: 63 measured runs
+    across 7 scenarios, offline on warmed tile caches, three iterations each.
+    The short version: <strong>with its engine isolate enabled, the FFI engine matches the
+    stable engine's smoothness and is dramatically faster everywhere your app talks to the
+    map</strong> — live data, queries, startup — at about half the CPU cost.
+    A follow-up optimization round (frame loop aligned to the display's vsync, tuned gesture
+    pipeline) then closed the one remaining gap: gesture render throughput is now on par with
+    stable too.
+  </p>
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="v up">≈10×</span>
+      <span class="k">faster GeoJSON data replacement</span>
+      <span class="d">20k points: 1.46 s → 0.15 s</span>
+    </div>
+    <div class="tile">
+      <span class="v up">≈2×</span>
+      <span class="k">faster to a styled map on screen</span>
+      <span class="d">style loaded: 330 → 157 ms</span>
+    </div>
+    <div class="tile">
+      <span class="v up">≈½</span>
+      <span class="k">process CPU during interaction</span>
+      <span class="d">6 of 7 scenarios</span>
+    </div>
+    <div class="tile">
+      <span class="v up">100→12<span class="u">%</span></span>
+      <span class="k">janky frames, 2000 live points</span>
+      <span class="d">vs 90 Hz frame budget</span>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Live data: updates per second</h2>
+    <p class="sub">
+      Every feature's position rewritten continuously, targeting 30 updates per second.
+      The stable engine falls behind past 500 points; both FFI variants hold the target at 2000.
+    </p>
+    <div class="legend" data-legend></div>
+    <div data-chart="updates"></div>
+    <details>
+      <summary>View data as table</summary>
+      <div data-table="updates"></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Replacing a GeoJSON source</h2>
+    <p class="sub">
+      Time for one <code>setGeoJsonSource</code> call to complete, by feature count.
+      This is the API your app calls to push new data onto the map.
+    </p>
+    <div data-hbars="setdata"></div>
+    <details>
+      <summary>View data as table</summary>
+      <div data-table="setdata"></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Why the engine isolate is the default</h2>
+    <p class="sub">
+      Share of frames over the 90 Hz budget while the map is busy — lower is smoother.
+      Running the engine on the UI isolate (orange) makes the whole app stutter under load;
+      the dedicated engine isolate (green) stays at stable-like smoothness.
+    </p>
+    <div class="legend" data-legend></div>
+    <div data-chart="jank"></div>
+    <details>
+      <summary>View data as table</summary>
+      <div data-table="jank"></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>API round-trips</h2>
+    <p class="sub">
+      Median time for common queries (milliseconds). Method channels pay a serialization
+      hop; the FFI engine answers in-process, or across an isolate port.
+    </p>
+    <div data-table-inline="api"></div>
+  </section>
+
+  <section class="card">
+    <h2>The gesture gap, before and after vsync alignment</h2>
+    <p class="sub">
+      Map render throughput during touch gestures (frames per second, 90 Hz panel).
+      The first round left the stable engine an 8–16 % edge here (grey bars). Aligning the
+      FFI frame loop to the display's vsync (Android Choreographer) and tuning the gesture
+      pipeline closed it: the re-run full suite puts FFI within ~2 % of stable everywhere
+      except pinch (−9 %). A control run confirmed the mechanism — pacing frames with a plain
+      timer at the same rate but out of phase with the display costs 30–36 % throughput.
+    </p>
+    <div class="legend" data-legend></div>
+    <div data-chart="fps"></div>
+    <details>
+      <summary>View data as table</summary>
+      <div data-table="fps"></div>
+    </details>
+  </section>
+
+  <div class="note">
+    <h2>Method, in one paragraph</h2>
+    <p>
+      Modeled on MapLibre Native's own world-tour benchmark: one discarded warm-up pass fills
+      the tile caches, then three recorded iterations run fully offline with the engine order
+      rotated per iteration, a thermal gate plus cooldown between runs, and every run started
+      cold. Metrics are frame-time distributions (not averages), engine render stats, API
+      latencies, CPU, and memory. One device so far: Xiaomi 11 Lite 5G NE (90 Hz, Android 14),
+      profile build.
+    </p>
+    <p>
+      <strong>Caveats:</strong> stable-vs-FFI deltas mix transport and renderer effects
+      (Vulkan vs OpenGL ES); the FFI-with-isolate vs FFI-without comparison is confound-free.
+      Results are from a single mid-range device; absolute numbers will vary, directions
+      should hold.
+    </p>
+    <div class="links">
+      <a href="#">Methodology in full</a>
+      <a href="#">Complete result tables (all 7 scenarios)</a>
+      <a href="#">Reproduce: <code>dart run tool/bench/run_bench.dart</code></a>
+    </div>
+  </div>
+
+  <div class="meta">
+    Measured 2026-07-23 · first round revision 5facad4 (63 runs, 3 engines) · optimized
+    round revision 2ff8c6b (41 runs, 2 engines) · values are means of 3 iterations ·
+    "FFI" = engine on the UI isolate, "FFI + isolate" = dedicated engine isolate
+    (the only mode since consolidation)
+  </div>
+
+</div>
+<div class="tt" data-tt></div>
+</div>
+
+<script>
+(function () {
+  const root = document.querySelector('.bench-root');
+  const css = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+  const SERIES = [
+    { key: 'stable', name: 'Stable (platform view)', varName: '--s-stable' },
+    { key: 'ffi',    name: 'FFI',                    varName: '--s-ffi' },
+    { key: 'iso',    name: 'FFI + engine isolate',   varName: '--s-iso' },
+  ];
+
+  const DATA = {
+    updates: {
+      unit: 'updates/s', max: 33, target: { v: 30, label: '30 Hz target' },
+      cats: ['500 points', '1000 points', '2000 points'],
+      values: { stable: [27.4, 19.9, 9.2], ffi: [29.8, 29.4, 29.2], iso: [28.8, 29.5, 29.6] },
+      fmt: (v) => v.toFixed(1),
+    },
+    jank: {
+      unit: '% of frames over budget', max: 100,
+      cats: ['Pan gesture', 'GPS tracking', 'Orbit, 10k points', 'Live data, 2000 pts'],
+      values: { stable: [6.9, 8.1, 2.4, 100], ffi: [69.4, 90.7, 93.1, 75.5], iso: [5.3, 16.3, 4.9, 11.6] },
+      fmt: (v) => v >= 99.5 ? '100' : v.toFixed(1),
+    },
+    fps: {
+      unit: 'map frames/s', max: 92,
+      cats: ['Pan', 'Pinch', 'Rotate', 'Fling', 'Tracking'],
+      series: [
+        { key: 'stable',  name: 'Stable (platform view)',      varName: '--s-stable' },
+        { key: 'isoPrev', name: 'FFI + isolate, first round',  varName: '--s-iso-prev' },
+        { key: 'iso',     name: 'FFI + isolate, optimized',    varName: '--s-iso' },
+      ],
+      values: {
+        stable:  [75.3, 87.8, 90.2, 44.1, 80.4],
+        isoPrev: [65.5, 70.0, 78.5, 36.1, 63.8],
+        iso:     [75.1, 80.0, 88.3, 43.4, 79.7],
+      },
+      fmt: (v) => v.toFixed(0),
+    },
+  };
+
+  const SETDATA = {
+    groups: [
+      { title: '1,000 points',  values: [200, 13.5, 4.1] },
+      { title: '5,000 points',  values: [589, 25.9, 33.3] },
+      { title: '20,000 points', values: [1455, 109, 148] },
+    ],
+    fmt: (v) => v >= 1000 ? (v / 1000).toFixed(2) + ' s' : Math.round(v) + ' ms',
+  };
+
+  const API = {
+    head: ['Query (median)', 'Stable', 'FFI', 'FFI + isolate'],
+    rows: [
+      ['toScreenLocation',        '0.33 ms', '0.01 ms', '0.19 ms'],
+      ['toLatLng',                '0.31 ms', '0.01 ms', '0.10 ms'],
+      ['100-point batch project', '0.89 ms', '0.07 ms', '0.15 ms'],
+      ['queryRenderedFeatures',   '0.41 ms', '0.01 ms', '0.12 ms'],
+    ],
+  };
+
+  // Legend rows: charts may override the global series set (e.g. the
+  // before/after gesture chart), so resolve per card.
+  document.querySelectorAll('[data-legend]').forEach((el) => {
+    const chartEl = el.closest('.card')?.querySelector('[data-chart]');
+    const d = chartEl ? DATA[chartEl.dataset.chart] : null;
+    const series = (d && d.series) || SERIES;
+    el.innerHTML = series.map((s) =>
+      `<span class="it"><span class="sw" style="background:var(${s.varName})"></span>${s.name}</span>`
+    ).join('');
+  });
+
+  // Tooltip
+  const tt = document.querySelector('[data-tt]');
+  function showTT(evt, html) {
+    tt.innerHTML = html;
+    tt.style.display = 'block';
+    const pad = 12;
+    let x = evt.clientX + pad, y = evt.clientY - 30;
+    const r = tt.getBoundingClientRect();
+    if (x + r.width > innerWidth - 8) x = evt.clientX - r.width - pad;
+    if (y < 8) y = evt.clientY + pad;
+    tt.style.left = x + 'px';
+    tt.style.top = y + 'px';
+  }
+  function hideTT() { tt.style.display = 'none'; }
+
+  function roundedTop(x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, h / 2, w / 2));
+    return `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z`;
+  }
+
+  function groupedBars(el, d) {
+    const series = d.series || SERIES;
+    const W = 780, H = 290, m = { l: 40, r: 10, t: 16, b: 26 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const yMax = d.max;
+    const y = (v) => m.t + ih - (v / yMax) * ih;
+    const nCat = d.cats.length, nS = series.length;
+    const groupW = iw / nCat;
+    const barW = Math.min(30, (groupW * 0.62 - 2 * (nS - 1)) / nS);
+    const ticks = yMax === 100 ? [0, 25, 50, 75, 100] : yMax >= 90 ? [0, 30, 60, 90] : [0, 10, 20, 30];
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${d.unit} by scenario and engine">`;
+    ticks.forEach((tv) => {
+      svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(tv)}" y2="${y(tv)}" stroke="${tv === 0 ? css('--baseline') : css('--grid')}" stroke-width="1"/>`;
+      svg += `<text x="${m.l - 7}" y="${y(tv) + 3.5}" text-anchor="end" font-size="11" fill="${css('--muted')}" style="font-variant-numeric:tabular-nums">${tv}</text>`;
+    });
+    if (d.target) {
+      svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(d.target.v)}" y2="${y(d.target.v)}" stroke="${css('--ink-2')}" stroke-width="1" stroke-dasharray="4 4"/>`;
+      svg += `<text x="${W - m.r}" y="${y(d.target.v) - 5}" text-anchor="end" font-size="11" fill="${css('--ink-2')}">${d.target.label}</text>`;
+    }
+    d.cats.forEach((cat, ci) => {
+      const gx = m.l + ci * groupW;
+      const total = nS * barW + (nS - 1) * 2;
+      const x0 = gx + (groupW - total) / 2;
+      series.forEach((s, si) => {
+        const v = d.values[s.key][ci];
+        const bx = x0 + si * (barW + 2);
+        const by = y(v), bh = m.t + ih - by;
+        svg += `<path d="${roundedTop(bx, by, barW, bh, 4)}" fill="var(${s.varName})" data-tip="${s.name} · ${cat}: ${d.fmt(v)} ${d.unit}"/>`;
+        svg += `<text x="${bx + barW / 2}" y="${by - 4}" text-anchor="middle" font-size="10.5" fill="${css('--muted')}" style="font-variant-numeric:tabular-nums">${d.fmt(v)}</text>`;
+      });
+      svg += `<text x="${gx + groupW / 2}" y="${H - 8}" text-anchor="middle" font-size="12" fill="${css('--ink-2')}">${cat}</text>`;
+    });
+    svg += '</svg>';
+    el.innerHTML = svg;
+    el.querySelectorAll('[data-tip]').forEach((p) => {
+      p.addEventListener('mousemove', (e) => showTT(e, p.dataset.tip));
+      p.addEventListener('mouseleave', hideTT);
+    });
+  }
+
+  Object.entries(DATA).forEach(([key, d]) => {
+    groupedBars(document.querySelector(`[data-chart="${key}"]`), d);
+  });
+
+  // Horizontal small multiples (per-size scale, so every bar stays readable)
+  (function () {
+    const el = document.querySelector('[data-hbars="setdata"]');
+    el.innerHTML = SETDATA.groups.map((g) => {
+      const max = Math.max(...g.values);
+      return `<div class="hgroup"><span class="ht">${g.title}</span>` +
+        SERIES.map((s, i) => `
+          <div class="hrow">
+            <span class="hname"><span class="sw" style="background:var(${s.varName})"></span>${s.name.replace(' (platform view)', '')}</span>
+            <div class="htrack"><div class="hbar" style="width:${(g.values[i] / max * 100).toFixed(1)}%;background:var(${s.varName})" role="img" aria-label="${s.name}: ${SETDATA.fmt(g.values[i])}"></div></div>
+            <span class="hval">${SETDATA.fmt(g.values[i])}</span>
+          </div>`).join('') + '</div>';
+    }).join('');
+  })();
+
+  // Data tables
+  function table(head, rows) {
+    return '<table><thead><tr>' + head.map((h) => `<th>${h}</th>`).join('') +
+      '</tr></thead><tbody>' +
+      rows.map((r) => '<tr>' + r.map((c) => `<td>${c}</td>`).join('') + '</tr>').join('') +
+      '</tbody></table>';
+  }
+  Object.entries(DATA).forEach(([key, d]) => {
+    const el = document.querySelector(`[data-table="${key}"]`);
+    if (!el) return;
+    const series = d.series || SERIES;
+    el.innerHTML = table(
+      ['', ...series.map((s) => s.name)],
+      d.cats.map((cat, ci) => [cat, ...series.map((s) => d.fmt(d.values[s.key][ci]))]),
+    );
+  });
+  document.querySelector('[data-table="setdata"]').innerHTML = table(
+    ['', ...SERIES.map((s) => s.name)],
+    SETDATA.groups.map((g) => [g.title, ...g.values.map(SETDATA.fmt)]),
+  );
+  document.querySelector('[data-table-inline="api"]').innerHTML = table(API.head, API.rows);
+})();
+</script>
