@@ -20,6 +20,38 @@ final _anchorPattern = RegExp(
   dotAll: true,
 );
 final _tagPattern = RegExp('<[^>]*>');
+final _numericEntityPattern = RegExp('&#(x?)([0-9a-fA-F]+);');
+
+/// The named entities that actually occur in attribution strings. Each pass
+/// runs once and never rescans its own output, so "&amp;copy;" decodes to
+/// the literal "&copy;" instead of "©", matching HTML semantics.
+const _namedEntities = {
+  'copy': '©',
+  'nbsp': ' ',
+  'lt': '<',
+  'gt': '>',
+  'quot': '"',
+  'apos': "'",
+  'amp': '&',
+};
+
+/// Decodes the HTML entities attribution strings use; unknown entities are
+/// left as-is rather than dropped, so a new one shows up literal instead of
+/// silently disappearing.
+String _decodeHtmlEntities(String text) {
+  return text
+      .replaceAllMapped(_numericEntityPattern, (match) {
+        final code = int.tryParse(
+          match.group(2)!,
+          radix: match.group(1)!.isEmpty ? 10 : 16,
+        );
+        final valid = code != null && code > 0 && code <= 0x10FFFF;
+        return valid ? String.fromCharCode(code) : match.group(0)!;
+      })
+      .replaceAllMapped(RegExp('&([a-zA-Z]+);'), (match) {
+        return _namedEntities[match.group(1)!.toLowerCase()] ?? match.group(0)!;
+      });
+}
 
 /// The MapLibre credit, prepended when the style's own attributions do not
 /// already mention it.
@@ -37,20 +69,22 @@ List<String> attributionFragments(List<String> styleAttributions) {
 /// Flattens one attribution HTML fragment into text and link runs.
 ///
 /// Attribution strings come from the style, so they are a tiny, well-known
-/// subset of HTML: anchors plus the odd `<span>`. Anything that is not an
-/// anchor is stripped to its text.
+/// subset of HTML: anchors plus the odd `<span>`, with entities like
+/// `&copy;`. Anything that is not an anchor is stripped to its decoded text.
 List<AttributionRun> parseAttributionHtml(String html) {
   final runs = <AttributionRun>[];
   var cursor = 0;
 
   void addText(String raw) {
-    final text = raw.replaceAll(_tagPattern, '');
+    final text = _decodeHtmlEntities(raw.replaceAll(_tagPattern, ''));
     if (text.trim().isNotEmpty) runs.add(AttributionRun(text));
   }
 
   for (final match in _anchorPattern.allMatches(html)) {
     if (match.start > cursor) addText(html.substring(cursor, match.start));
-    final label = match.group(2)!.replaceAll(_tagPattern, '').trim();
+    final label = _decodeHtmlEntities(
+      match.group(2)!.replaceAll(_tagPattern, ''),
+    ).trim();
     if (label.isNotEmpty) {
       runs.add(AttributionRun(label, href: match.group(1)));
     }
