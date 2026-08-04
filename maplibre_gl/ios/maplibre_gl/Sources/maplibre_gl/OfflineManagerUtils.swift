@@ -339,15 +339,43 @@ class OfflineManagerUtils {
         }
     }
 
+    /// The ID the Dart side sees for `pack`: the one carried in its Flutter context
+    /// when present, otherwise the geometry-derived fallback used for packs imported
+    /// from an external database.
+    static func dartVisibleId(for pack: MLNOfflinePack) -> Int? {
+        if let region = OfflineRegion.fromOfflinePack(pack) { return region.id }
+        return deterministicPackId(for: pack)
+    }
+
     /// Returns a stable integer ID derived from a pack's geographic properties.
     /// Used for packs imported from external databases that lack a Flutter-assigned
     /// context ID. Uses djb2 so the result is deterministic across app sessions,
     /// unlike Swift's randomised `hashValue`.
+    ///
+    /// Coordinates are quantized to the precision the duplicate check in
+    /// `OfflinePackDownloadManager` tolerates (1e-9). Without that the two would
+    /// disagree on what "the same region" means: the dedup would treat two packs as
+    /// one while this hash gave them different IDs. Values sitting astride a bucket
+    /// boundary can still land apart, so this aligns the two rather than proving
+    /// them equivalent.
     private static func deterministicPackId(for pack: MLNOfflinePack) -> Int? {
         guard let region = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
-        let key = "\(region.styleURL.absoluteString)|\(region.bounds.sw.latitude)|\(region.bounds.sw.longitude)|\(region.bounds.ne.latitude)|\(region.bounds.ne.longitude)|\(region.minimumZoomLevel)|\(region.maximumZoomLevel)"
-        // djb2 hash — deterministic across sessions unlike Swift's hashValue
-        return key.utf8.reduce(5381) { (31 &* $0) &+ Int($1) }
+        // Explicitly unlocalised: a locale that writes decimals with a comma would
+        // otherwise produce a different ID for the same region.
+        func quantize(_ value: Double) -> String {
+            String(format: "%.9f", locale: nil, value)
+        }
+        let key = [
+            region.styleURL.absoluteString,
+            quantize(region.bounds.sw.latitude),
+            quantize(region.bounds.sw.longitude),
+            quantize(region.bounds.ne.latitude),
+            quantize(region.bounds.ne.longitude),
+            quantize(region.minimumZoomLevel),
+            quantize(region.maximumZoomLevel),
+        ].joined(separator: "|")
+        // djb2: hash * 33 + byte, deterministic across sessions unlike hashValue.
+        return key.utf8.reduce(5381) { (33 &* $0) &+ Int($1) }
     }
 }
 

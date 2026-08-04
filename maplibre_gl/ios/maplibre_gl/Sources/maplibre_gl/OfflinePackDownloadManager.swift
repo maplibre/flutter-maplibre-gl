@@ -62,10 +62,6 @@ class OfflinePackDownloader {
 
     func download() -> Int {
         let storage = MLNOfflineStorage.shared
-        // While the Android SDK generates a region ID in createOfflineRegion, the iOS
-        // SDK does not have this feature. Therefore, we generate a region ID here.
-        let id = UUID().hashValue
-        let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
         let tilePyramidRegion = regionDefinition.toMLNTilePyramidOfflineRegion()
 
         // Downloading the same area twice would otherwise create a second, duplicate
@@ -75,11 +71,24 @@ class OfflinePackDownloader {
         // Note: existingPack reads MLNOfflineStorage.shared.packs, which may be nil
         // or stale until reloadPacks completes (e.g. right after launch). If the
         // duplicate isn't loaded yet the dedup simply no-ops and a fresh pack is
-        // created — the same behavior as before this feature, never a crash.
-        if let duplicate = existingPack(matching: tilePyramidRegion, in: storage) {
-            // The old pack has its own (different) id. Tear down any tracking and
-            // in-flight download tied to it so we don't leak state or leave a Dart
-            // subscription hanging when we replace it.
+        // created, the same behavior as before this feature, never a crash.
+        let duplicate = existingPack(matching: tilePyramidRegion, in: storage)
+
+        // A replacement keeps the ID the Dart side already knows. Apps pair their own
+        // data to a region ID (the offline database itself cannot carry custom
+        // metadata when built by the native CLI tooling), so handing back a fresh ID
+        // for the same area would silently orphan those pairings. While the Android
+        // SDK generates a region ID in createOfflineRegion, the iOS SDK does not, so
+        // a genuinely new region still gets one here.
+        let id = duplicate.flatMap { OfflineManagerUtils.dartVisibleId(for: $0) }
+            ?? UUID().hashValue
+        let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
+
+        if let duplicate = duplicate {
+            // Tear down any tracking and in-flight download tied to the old pack so
+            // we don't leak state or leave a Dart subscription hanging when we
+            // replace it. Its progress events go to its own channel, which is named
+            // per download call, so reusing the ID does not cross the two streams.
             releaseDuplicate(duplicate)
             duplicate.suspend()
             storage.removePack(duplicate) { [weak self] error in
