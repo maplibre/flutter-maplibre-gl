@@ -36,7 +36,7 @@ flowchart TD
     class APP root
 ```
 
-MapLibre handles the `pmtiles://` protocol internally. No Flutter-side code is needed beyond pointing the style at the right URL.
+MapLibre handles the `pmtiles://` protocol internally. Beyond pointing the style at the right URL, the only extra step is the one-time protocol registration on web (see [Platform support](#platform-support)).
 
 ## Step 1: Get a `.pmtiles` file
 
@@ -131,7 +131,7 @@ MapLibreMap(
 )
 ```
 
-That's it. No additional Flutter code is needed. MapLibre handles the `pmtiles://` protocol.
+That's it on Android and iOS, where MapLibre handles the `pmtiles://` protocol natively. Web additionally needs the one-time registration described under [Platform support](#platform-support).
 
 ## Step 5: Add style layers programmatically (optional)
 
@@ -170,7 +170,7 @@ Future<void> _onStyleLoaded() async {
 
 ## Platform support
 
-PMTiles works on **all platforms**: Android, iOS, and Web. The `pmtiles://` protocol is handled by the MapLibre engine on each platform.
+PMTiles works on **all platforms**: Android, iOS, and Web. On Android and iOS the `pmtiles://` protocol is handled by MapLibre Native itself, with no extra code. On web it has to be registered once at startup; see [PMTiles on web](../getting-started.md#pmtiles-on-web).
 
 !!! tip "Offline + PMTiles"
     PMTiles and offline regions are separate features. PMTiles reduces server dependency but still requires network access for HTTP range requests. For truly offline use, bundle the `.pmtiles` file as a Flutter asset and reference it with a local path.

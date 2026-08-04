@@ -87,6 +87,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> initPlatform(int id) async {
+    // Every @JS binding in this package resolves its name at call time, so
+    // nothing below works until maplibre-gl-js is on the page.
+    await MapLibreJsLoader.ensureLoaded();
+
     final camera =
         _creationParams['initialCameraPosition'] as Map<String, dynamic>?;
     final styleString = await _sanitizeStyleObject(

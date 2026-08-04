@@ -66,48 +66,65 @@ Add a location usage description to your `Info.plist`:
 
 ## Web
 
-On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/). Add its script and stylesheet to the `<head>` of `web/index.html`, before the Flutter bootstrap script:
+On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/), and it loads that library itself: nothing needs to be added to `web/index.html`. The plugin injects the exact MapLibre GL JS build it is tested against, script and stylesheet included, before the first map is built.
 
-```html title="web/index.html" hl_lines="5 6"
-<!DOCTYPE html>
-<html>
-  <head>
-    <!-- ...existing head tags (base href, meta, icons)... -->
-    <script src='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js'></script>
-    <link href='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css' rel='stylesheet'/>
+!!! warning "Upgrading from an older version"
+    If your `index.html` still has the `maplibre-gl.js` script and `maplibre-gl.css` link tags from an earlier setup, remove them. An existing `maplibregl` global is reused as it is, so a manually pinned copy silently overrides the version the plugin is tested against.
 
-    <title>My App</title>
-  </head>
-  <body>
-    <script src="flutter_bootstrap.js" async></script>
-  </body>
-</html>
+### Self-hosting MapLibre GL JS
+
+If a Content-Security-Policy rules out the CDN, or you prefer serving the library yourself (for example as web assets), point the plugin at your copy before the first map is built:
+
+```dart
+void main() {
+  MapLibreMap.webLibrarySource = const MapLibreJsSource.urls(
+    scriptUrl: 'https://your.host/maplibre-gl.js',
+    styleUrl: 'https://your.host/maplibre-gl.css',
+  );
+  runApp(const MyApp());
+}
 ```
 
-`^5.24.0` pins to a recent MapLibre GL JS v5 without jumping to a future breaking version.
+If the page loads MapLibre GL JS itself, for example from a `<script type="module">` bundle, set `MapLibreMap.webLibrarySource = const MapLibreJsSource.preloaded()` instead: the plugin then injects nothing and waits for the `maplibregl` global to appear.
+
+### Calling MapLibre GL JS yourself
+
+Because the library is loaded by the plugin, the `maplibregl` global no longer exists at page parse time. An app that calls into MapLibre GL JS with its own JS interop, for example to register a custom protocol with `addProtocol`, must await `ensureWebLibraryLoaded()` first:
+
+```dart
+Future<void> main() async {
+  if (kIsWeb) {
+    await ensureWebLibraryLoaded();
+    // maplibregl is now usable from JS interop.
+  }
+  runApp(const MyApp());
+}
+```
+
+On Android and iOS `ensureWebLibraryLoaded()` completes immediately, so it is safe to await unconditionally.
 
 ### PMTiles on web
 
-To read [PMTiles](advanced/pmtiles.md) sources on web, also load the `pmtiles` script and register the protocol. The registration must run **synchronously, after the `pmtiles` script and before `flutter_bootstrap.js`**, so the protocol exists by the time the map initializes:
+To read [PMTiles](advanced/pmtiles.md) sources on web, load the `pmtiles` script in `index.html` and register the protocol from Dart. The registration used to be an inline script in `index.html`, but it needs the `maplibregl` global, which no longer exists at page parse time, so it moved into `main()` behind `ensureWebLibraryLoaded()`:
 
-```html title="web/index.html" hl_lines="3 6 7 8 9 10 11 12"
+```html title="web/index.html" hl_lines="3"
 <head>
-    <!-- ...maplibre-gl script and stylesheet from above... -->
+    <!-- ...existing head tags... -->
     <script src="https://unpkg.com/pmtiles@4.4.0/dist/pmtiles.js"></script>
-
-    <!-- Register the pmtiles:// protocol before Flutter boots -->
-    <script>
-      const protocol = new pmtiles.Protocol();
-      maplibregl.addProtocol("pmtiles", protocol.tile);
-      const PMTILES_URL = "https://demo-bucket.protomaps.com/v4.pmtiles";
-      const source = new pmtiles.FetchSource(PMTILES_URL);
-      protocol.add(new pmtiles.PMTiles(source));
-    </script>
 </head>
 ```
 
-!!! note "Why the inline script, not a deferred one"
-    `flutter_bootstrap.js` is `async`, so an inline script placed *after* it could run before the protocol is registered. Keeping the registration synchronous and above the bootstrap guarantees `pmtiles://` is ready when the map loads.
+```dart title="lib/main.dart"
+Future<void> main() async {
+  if (kIsWeb) {
+    await ensureWebLibraryLoaded();
+    registerPmTilesProtocol('https://your.host/archive.pmtiles');
+  }
+  runApp(const MyApp());
+}
+```
+
+`registerPmTilesProtocol` is a small piece of JS interop around `maplibregl.addProtocol` and the `pmtiles` global. See [`pmtiles_protocol_web.dart`](https://github.com/maplibre/flutter-maplibre-gl/blob/main/maplibre_gl_example/lib/pmtiles_protocol_web.dart) in the example app for a complete implementation, including the conditional import that keeps the app compiling for Android and iOS.
 
 ## Basic Usage
 

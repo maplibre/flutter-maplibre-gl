@@ -47,7 +47,8 @@ class PlatformLocationSource extends LocationSource {
 /// drive the SDK's native user-location component. On web there is no such
 /// component to feed, so the plugin draws the puck itself (a native-styled dot
 /// + accuracy circle + bearing arrow) using map markers (this reuses
-/// MapLibre GL JS' user-location styles, so `maplibre-gl.css` must be loaded).
+/// MapLibre GL JS' user-location styles from `maplibre-gl.css`, which the
+/// plugin loads together with the library).
 class ManualLocationSource extends LocationSource {
   /// Creates a marker selecting the app-provided location source.
   const ManualLocationSource();

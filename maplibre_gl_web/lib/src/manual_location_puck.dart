@@ -15,7 +15,7 @@ import 'package:web/web.dart' as web;
 /// `ManualLocationSource` this draws its own puck from HTML [Marker]s:
 ///  * the location dot and accuracy circle reuse maplibre-gl-js' built-in
 ///    `maplibregl-user-location-*` CSS classes so they match the native look
-///    (host apps already include `maplibre-gl.css`);
+///    (from `maplibre-gl.css`, which the plugin loads with the library);
 ///  * the bearing arrow is a small custom element (maplibre ships no arrow).
 ///
 /// The controller owns the source/enabled flags and creates one instance
@@ -252,7 +252,7 @@ class ManualLocationPuck {
   }
 
   /// Injects the bearing-arrow CSS once. The dot and accuracy circle rely on
-  /// maplibre-gl-js' own stylesheet (host apps already include it); only the
+  /// maplibre-gl-js' own stylesheet (loaded with the library); only the
   /// custom arrow needs a rule.
   void _injectStyle() {
     if (_styleInjected) return;

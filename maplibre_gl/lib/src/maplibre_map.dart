@@ -375,6 +375,21 @@ class MapLibreMap extends StatefulWidget {
   static set useHybridComposition(bool useHybridComposition) =>
       MapLibreMethodChannel.useHybridComposition = useHybridComposition;
 
+  /// Where the web implementation loads MapLibre GL JS from.
+  ///
+  /// Leave it unset and the plugin injects the build it is tested against, so
+  /// `web/index.html` needs no `<script>` or `<link>` tag. Assign a
+  /// [MapLibreJsSource] to point the plugin at a self-hosted copy
+  /// ([MapLibreJsSource.urls]), or to tell it the page loads the library
+  /// itself ([MapLibreJsSource.preloaded]).
+  ///
+  /// Assign it before the first [MapLibreMap] is built; once the library is on
+  /// the page, changing it has no effect. Ignored on Android and iOS.
+  static MapLibreJsSource? get webLibrarySource => MapLibreJsSource.configured;
+
+  static set webLibrarySource(MapLibreJsSource? value) =>
+      MapLibreJsSource.configured = value;
+
   @override
   State createState() => _MapLibreMapState();
 }

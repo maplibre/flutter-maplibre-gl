@@ -333,6 +333,17 @@ void main() {
     });
   });
 
+  group('ensureWebLibraryLoaded', () {
+    // On Android and iOS there is nothing to load, so this must stay an
+    // immediate no-op that never throws: app code awaits it unconditionally
+    // on every platform before doing web-only JS interop.
+    test('completes immediately on the method-channel default', () async {
+      await expectLater(ensureWebLibraryLoaded(), completes);
+
+      expect(methodCalls, isEmpty);
+    });
+  });
+
   if (!kIsWeb) {
     group('preWarm', () {
       test('sends correct method', () async {

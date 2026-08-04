@@ -5,6 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+// PMTiles protocol registration is JS interop, so it only exists on web; the
+// native stub keeps the example compiling for Android and iOS.
+import 'pmtiles_protocol_native.dart'
+    if (dart.library.js_interop) 'pmtiles_protocol_web.dart'
+    as pmtiles_protocol;
+
 // Page system
 import 'page.dart';
 
@@ -69,12 +75,23 @@ String? _initialExampleSlug() {
   return Uri.base.queryParameters['example'];
 }
 
-void main() {
-  // Pre-warm the MapLibre engine to overlap native initialization with
-  // Flutter's startup.
+Future<void> main() async {
+  // Pre-warm the MapLibre engine to overlap its initialization with Flutter's
+  // startup. Deliberately not awaited: overlapping is the whole point, and on
+  // web it also starts the download of maplibre-gl-js right away.
   unawaited(preWarm());
 
   if (kIsWeb) {
+    // The plugin loads maplibre-gl-js itself, so unlike the old <script> tag
+    // setup the maplibregl global does not exist at page parse time, and the
+    // PMTiles protocol can no longer be registered by an inline script in
+    // index.html. Wait for the library, then register the protocol from Dart
+    // before any map is built.
+    await ensureWebLibraryLoaded();
+    pmtiles_protocol.registerPmTilesProtocol(
+      'https://demo-bucket.protomaps.com/v4.pmtiles',
+    );
+
     print(
       'Running with WASM: $kIsWasm, in ${kReleaseMode
           ? "release"

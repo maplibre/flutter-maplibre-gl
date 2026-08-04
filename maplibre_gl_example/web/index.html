@@ -29,22 +29,11 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <!-- MapLibre -->
-  <script src='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js'></script>
-  <link href='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css' rel='stylesheet'/>
+  <!-- The maplibre-gl script and stylesheet are injected by the maplibre_gl
+       plugin itself; only the pmtiles library still ships as a tag here. The
+       pmtiles:// protocol registration lives in Dart (see main.dart): it needs
+       the maplibregl global, which no longer exists at page parse time. -->
   <script src="https://unpkg.com/pmtiles@4.4.0/dist/pmtiles.js"></script>
-
-  <!-- PMTiles protocol must be registered before Flutter boots, so it is placed
-       here (synchronous, after the pmtiles script above) rather than after the
-       async flutter_bootstrap.js which could execute before an inline script
-       that follows it. -->
-  <script>
-    const protocol = new pmtiles.Protocol();
-    maplibregl.addProtocol("pmtiles", protocol.tile);
-    const PMTILES_URL = "https://demo-bucket.protomaps.com/v4.pmtiles";
-    const source = new pmtiles.FetchSource(PMTILES_URL);
-    protocol.add(new pmtiles.PMTiles(source));
-  </script>
 
   <title>MapLibre Example</title>
   <link rel="manifest" href="manifest.json">

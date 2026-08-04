@@ -6,16 +6,20 @@ part of '../maplibre_gl.dart';
 
 const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
 
-/// Pre-warms the MapLibre native engine to speed up the first map render.
+/// Pre-warms the MapLibre engine to speed up the first map render.
 ///
-/// Call this as early as possible — typically in `main()` before `runApp()` —
-/// to overlap the native SDK initialization with your app's startup.
+/// Call this as early as possible, typically in `main()` before `runApp()`,
+/// to overlap the engine initialization with your app's startup.
 ///
 /// Safe to call multiple times; subsequent calls are no-ops because the
 /// underlying initialization is idempotent after the first invocation.
 ///
 /// On Android, the speedup comes from issuing the channel call early: the
 /// plugin's global method handler already initializes MapLibre on every call.
+///
+/// On web, the expensive part is fetching MapLibre GL JS itself, which the
+/// plugin loads at runtime, so this earns its name there by starting the
+/// download during app start-up rather than at the first map build.
 ///
 /// Example:
 /// ```dart
@@ -24,17 +28,39 @@ const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
 ///   runApp(const MyApp());
 /// }
 /// ```
-Future<void> preWarm() async {
-  if (kIsWeb) {
-    prewarm.webPrewarm();
-    return;
-  }
-  try {
-    await _globalChannel.invokeMethod('preWarm');
-  } on MissingPluginException {
-    // Platform doesn't implement preWarm; no-op.
-  }
-}
+Future<void> preWarm() => MapLibreGlobalPlatform.instance.preWarm();
+
+/// Completes once the web build of the map engine, MapLibre GL JS, is on the
+/// page and the `maplibregl` global is usable. On Android and iOS it
+/// completes immediately.
+///
+/// The plugin loads MapLibre GL JS itself, so the global does not exist at
+/// page parse time and is not guaranteed to exist at the start of `main()`
+/// either. Apps that call into MapLibre GL JS with their own JS interop, for
+/// example to register a custom protocol with `addProtocol` or to set the
+/// RTL text plugin, must await this first:
+///
+/// ```dart
+/// Future<void> main() async {
+///   if (kIsWeb) {
+///     await ensureWebLibraryLoaded();
+///     registerMyProtocol(); // maplibregl is now usable from JS interop
+///   }
+///   runApp(const MyApp());
+/// }
+/// ```
+///
+/// Most apps never need to call this. Every [MapLibreMap] awaits the same
+/// future before it builds its map, so the library being loaded is already
+/// guaranteed by the time your own map callbacks run. Awaiting it before
+/// `runApp()`, as above, holds back the first frame until the library has
+/// arrived, which is the right trade only when something has to be registered
+/// globally before any map exists.
+///
+/// Where the library is loaded from is configured with
+/// [MapLibreMap.webLibrarySource].
+Future<void> ensureWebLibraryLoaded() =>
+    MapLibreGlobalPlatform.instance.ensureLibraryLoaded();
 
 /// Retains active offline-download event-channel subscriptions so that Dart's
 /// GC cannot tear them down during idle periods (e.g. while a download is
