@@ -316,6 +316,42 @@ void main() {
         throwsA(isA<Exception>()),
       );
     });
+
+    test(
+      'empty annotationOrder creates no managers and throws on add',
+      () async {
+        // Regression guard for #910: with an empty annotationOrder the style
+        // loads normally but no annotation manager is created, so every add
+        // call must fail with a message pointing at annotationOrder.
+        final freshPlatform = FakeMapLibrePlatform();
+        final freshController = MapLibreMapController(
+          maplibrePlatform: freshPlatform,
+          initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+          annotationOrder: const [],
+          annotationConsumeTapEvents: AnnotationType.values,
+        );
+
+        freshPlatform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+
+        expect(freshController.symbolManager, isNull);
+        expect(
+          () => freshController.addSymbol(
+            const SymbolOptions(geometry: LatLng(0, 0)),
+          ),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              allOf(
+                contains('AnnotationType.symbol'),
+                contains('annotationOrder'),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('AnnotationManager drag callback lifecycle', () {

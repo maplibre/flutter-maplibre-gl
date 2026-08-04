@@ -15,6 +15,33 @@ Five European landmark markers. Tap any to see its name.
 
 Use annotations when you have **fewer than ~50 features** and need individual interactivity (tap callbacks, draggable). For large datasets use [Style Layers](../concepts/annotations-vs-layers.md).
 
+## Before you add anything
+
+Two conditions must hold or `addSymbol()` throws
+*"The annotation manager for AnnotationType.symbol has not been initialized"*:
+
+1. **The style must be loaded.** Add annotations from `onStyleLoadedCallback`,
+   not from `onMapCreated`. The annotation managers are created as part of style
+   loading, and `onStyleLoadedCallback` runs once they are ready.
+2. **The annotation type must be enabled** in the `annotationOrder` parameter of
+   the `MapLibreMap` widget. The default enables all four types, so you only hit
+   this if you pass the parameter yourself. An **empty** list disables
+   annotations entirely.
+
+```dart
+MapLibreMap(
+  styleString: 'https://demotiles.maplibre.org/style.json',
+  // Default: all four types enabled. Narrow it only if you know you need to.
+  annotationOrder: const [AnnotationType.symbol],
+  onStyleLoadedCallback: () async {
+    await controller.addSymbol(/* ... */);
+  },
+)
+```
+
+See [Constraints](../concepts/annotations-vs-layers.md#constraints-and-gotchas)
+for the full list of things that apply to annotations and to style layers.
+
 ## Add a symbol (icon + text)
 
 `iconImage` references an image **from the active style's sprite**, or one you

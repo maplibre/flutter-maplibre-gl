@@ -176,6 +176,62 @@ await controller.addSymbolLayer('pts', 'pts-layer',
   loading="lazy"
 ></iframe>
 
+## Constraints and gotchas
+
+Both APIs have rules that are easy to miss. Most support questions come from
+this list.
+
+### Both APIs
+
+- **Wait for the style.** Nothing can be added before the style has finished
+  loading. Do your setup in `onStyleLoadedCallback`, not in `onMapCreated`.
+- **A style change wipes everything.** When the style is replaced (via
+  `setStyle()` or a new `styleString`), all annotations, sources, layers and
+  images registered with `addImage()` are gone. `onStyleLoadedCallback` fires
+  again after the new style is ready: re-add everything there.
+- **Every call is asynchronous** and crosses the platform channel. Await them,
+  and prefer the batch variants (`addSymbols()`, `setGeoJsonSource()`) over
+  loops of single calls.
+
+### Annotations
+
+- **The type must be enabled.** `MapLibreMap.annotationOrder` decides which
+  annotation managers are created. The default enables all four types; an
+  **empty list disables annotations completely** and any `addSymbol()` /
+  `addCircle()` / `addLine()` / `addFill()` call throws. The value is read once
+  when the map is created, so changing it later has no effect.
+- **`annotationOrder` is also the z-order**, from bottom to top. Each type may
+  appear at most once, so 0 to 4 entries.
+- **Taps need `annotationConsumeTapEvents`.** Only the types listed there report
+  `onSymbolTapped` and friends. It defaults to all four types.
+- **No data-driven styling.** Every option (`iconColor`, `circleRadius`, …) is a
+  literal value applied to that one annotation. Expressions, filters, clustering
+  and heatmaps are style-layer features only.
+- **Adding or removing rewrites the whole source** for that annotation type.
+  Adding 200 symbols one by one means 200 full rewrites; use `addSymbols()`.
+  Updating an existing annotation is cheap by comparison, it patches a single
+  feature.
+- **`iconImage` must resolve to an image the map has**, either from the style's
+  sprite or registered at runtime with `addImage()`. An unknown name renders
+  nothing and only logs a warning. See
+  [Markers](../annotations/markers.md#where-icons-come-from).
+
+### Style layers
+
+- **Ids must be unique** across the whole style, and the source must exist
+  before the layer that renders it.
+- **Annotation managers own hidden layers too.** They add their own sources and
+  layers with generated ids, so do not assume your layer sits on top when you
+  mix both APIs. Use `belowLayerId` to place your layer explicitly.
+- **No built-in tap callbacks.** Add the layer with `enableInteraction: true`
+  and listen to `onFeatureTapped`, or query the map yourself with
+  `queryRenderedFeatures()`.
+- **Expressions fail quietly.** A malformed expression usually renders nothing
+  rather than throwing. Check the native logs when a layer stays invisible.
+- **You own the data.** There are no per-feature handles: to change one feature
+  you update the source, either with `setGeoJsonFeature()` for a single feature
+  or `setGeoJsonSource()` for the whole collection.
+
 ## Decision guide
 
 <div class="decision-grid" markdown>
