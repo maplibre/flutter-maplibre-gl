@@ -193,6 +193,12 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future clearAmbientCache() async {}
 
   @override
+  Future resetDatabase() async {}
+
+  @override
+  Future packDatabase() async {}
+
+  @override
   Future<LatLng?> requestMyLocationLatLng() async => const LatLng(0, 0);
 
   @override

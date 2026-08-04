@@ -491,6 +491,26 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future resetDatabase() async {
+    try {
+      await _channel.invokeMethod('map#resetDatabase');
+      return null;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
+  Future packDatabase() async {
+    try {
+      await _channel.invokeMethod('map#packDatabase');
+      return null;
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
   Future<LatLng?> requestMyLocationLatLng() async {
     try {
       final reply = await _channel.invokeMethod(

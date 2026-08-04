@@ -33,6 +33,10 @@ extension EngineCommandDispatch on EngineCore {
           AmbientCacheOperationKind.invalidate =>
             mln.AmbientCacheOperation.invalidate,
           AmbientCacheOperationKind.clear => mln.AmbientCacheOperation.clear,
+          AmbientCacheOperationKind.resetDatabase =>
+            mln.AmbientCacheOperation.resetDatabase,
+          AmbientCacheOperationKind.packDatabase =>
+            mln.AmbientCacheOperation.packDatabase,
         }).discard();
       case SetMaximumFpsCommand():
         maxFps = command.fps <= 0 ? null : command.fps;

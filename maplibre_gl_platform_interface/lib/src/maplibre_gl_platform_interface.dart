@@ -222,6 +222,12 @@ abstract class MapLibrePlatform {
   );
   Future invalidateAmbientCache();
   Future clearAmbientCache();
+
+  /// Erases the whole tile cache database, offline regions included.
+  Future resetDatabase();
+
+  /// Compacts the tile cache database file without removing any data.
+  Future packDatabase();
   Future<LatLng?> requestMyLocationLatLng();
 
   Future<LatLngBounds> getVisibleRegion();
