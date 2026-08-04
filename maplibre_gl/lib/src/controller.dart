@@ -1653,24 +1653,6 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.clearAmbientCache();
   }
 
-  /// Erases the whole tile cache database, offline regions included.
-  ///
-  /// Method-channel backends require the platform plugin to handle
-  /// `map#resetDatabase`; without it the returned future completes with an
-  /// error.
-  Future resetDatabase() async {
-    return _maplibrePlatform.resetDatabase();
-  }
-
-  /// Compacts the tile cache database file without removing any data.
-  ///
-  /// Method-channel backends require the platform plugin to handle
-  /// `map#packDatabase`; without it the returned future completes with an
-  /// error.
-  Future packDatabase() async {
-    return _maplibrePlatform.packDatabase();
-  }
-
   /// Get last my location
   ///
   /// Return last latlng, nullable

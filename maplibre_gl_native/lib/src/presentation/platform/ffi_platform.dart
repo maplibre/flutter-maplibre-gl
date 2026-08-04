@@ -1056,26 +1056,6 @@ class MapLibreFfiPlatform extends MapLibrePlatform {
     );
   }
 
-  @override
-  Future resetDatabase() async {
-    final session = _requireSession();
-    session.send(
-      const RunAmbientCacheOperationCommand(
-        AmbientCacheOperationKind.resetDatabase,
-      ),
-    );
-  }
-
-  @override
-  Future packDatabase() async {
-    final session = _requireSession();
-    session.send(
-      const RunAmbientCacheOperationCommand(
-        AmbientCacheOperationKind.packDatabase,
-      ),
-    );
-  }
-
   // No-ops that keep the shared widget/controller flow working.
 
   @override

@@ -33,16 +33,8 @@ class SetNetworkStatusCommand extends EngineCommand {
   final bool online;
 }
 
-/// Tile cache maintenance operations. `invalidate` and `clear` touch only
-/// the ambient (non-offline-region) portion; `resetDatabase` erases the
-/// whole cache database, offline regions included, and `packDatabase`
-/// compacts the file without removing anything.
-enum AmbientCacheOperationKind {
-  invalidate,
-  clear,
-  resetDatabase,
-  packDatabase,
-}
+/// Ambient (non-offline-region) tile cache maintenance operations.
+enum AmbientCacheOperationKind { invalidate, clear }
 
 /// Starts an ambient cache maintenance operation (fire-and-forget).
 class RunAmbientCacheOperationCommand extends EngineCommand {
