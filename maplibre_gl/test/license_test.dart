@@ -1,3 +1,8 @@
+// Reads the LICENSE file from disk, so it cannot run in a browser, where
+// `melos run test:web` also executes this package's tests.
+@TestOn('vm')
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -18,7 +23,7 @@ void main() {
   const flutterLicenseSeparator =
       '--------------------------------------------------------------------------------';
 
-  test('LICENSE does not contain Flutter\'s license separator', () {
+  test("LICENSE does not contain Flutter's license separator", () {
     final license = File('LICENSE');
     expect(
       license.existsSync(),
