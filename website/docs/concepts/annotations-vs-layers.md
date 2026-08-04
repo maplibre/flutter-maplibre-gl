@@ -202,8 +202,10 @@ this list.
   when the map is created, so changing it later has no effect.
 - **`annotationOrder` is also the z-order**, from bottom to top. Each type may
   appear at most once, so 0 to 4 entries.
-- **Taps need `annotationConsumeTapEvents`.** Only the types listed there report
-  `onSymbolTapped` and friends. It defaults to all four types.
+- **Taps and drags need `annotationConsumeTapEvents`.** Only the layers of the
+  types listed there are hit-tested, so a type left out of it never reports
+  `onSymbolTapped` and friends, and cannot be dragged even with
+  `draggable: true`. It defaults to all four types.
 - **No data-driven styling.** Every option (`iconColor`, `circleRadius`, …) is a
   literal value applied to that one annotation. Expressions, filters, clustering
   and heatmaps are style-layer features only.

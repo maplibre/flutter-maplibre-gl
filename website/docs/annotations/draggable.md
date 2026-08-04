@@ -9,7 +9,21 @@ Allow users to drag annotations to new positions on the map.
   loading="lazy"
 ></iframe>
 
+!!! note "Prerequisites"
+    Annotations only work once the style has loaded and if their type is part of
+    the widget's `annotationOrder`. See
+    [Prerequisites](markers.md#prerequisites).
+
 ## Enable dragging
+
+Dragging needs three things, and all of them are on by default except the last:
+
+- `MapLibreMap.dragEnabled` must be `true` (the default). It is the global
+  switch for the drag gesture listeners.
+- The annotation type must be listed in `MapLibreMap.annotationConsumeTapEvents`
+  (all four types by default). Only the layers of those types are hit-tested, so
+  a type left out of it can never be dragged, even with `draggable: true`.
+- The annotation itself must be created with `draggable: true`.
 
 Set `draggable: true` in `SymbolOptions`:
 

@@ -14,7 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
 * **Annotations vs Style Layers** now has a "Constraints and gotchas" section listing the rules of both APIs in one place: waiting for the style, what a style change destroys, `annotationOrder` and `annotationConsumeTapEvents`, batching, unique layer ids, hidden annotation layers and tap handling on style layers (#910).
-* **Markers** now documents up front the two conditions required for `addSymbol` to work (style loaded, type enabled in `annotationOrder`), which were previously only mentioned in the API reference of the parameter.
+* **Annotations** pages now state their prerequisites up front. **Markers** documents the two conditions required for any annotation to work (style loaded, type enabled in `annotationOrder`), which were previously only mentioned in the API reference of the parameter, and **Animated**, **Draggable** and the section overview link to it. **Draggable** also spells out the three switches that dragging depends on, including `annotationConsumeTapEvents`, which silently prevents dragging when a type is left out of it.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
