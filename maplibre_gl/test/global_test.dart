@@ -335,41 +335,41 @@ void main() {
 
   if (!kIsWeb) {
     group('preWarm', () {
-    test('sends correct method', () async {
-      await preWarm();
+      test('sends correct method', () async {
+        await preWarm();
 
-      expect(methodCalls.length, 1);
-      expect(methodCalls[0].method, 'preWarm');
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'preWarm');
+      });
+
+      test('does not throw when mock returns null', () async {
+        // The default mock handler already returns null for unknown methods.
+        await expectLater(preWarm(), completes);
+      });
+
+      test('handles MissingPluginException gracefully', () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/maplibre_gl'),
+              (methodCall) async {
+                throw MissingPluginException('not implemented');
+              },
+            );
+
+        await expectLater(preWarm(), completes);
+      });
+
+      test('safe to call multiple times', () async {
+        await preWarm();
+        await preWarm();
+        await preWarm();
+
+        expect(methodCalls.length, 3);
+        for (final call in methodCalls) {
+          expect(call.method, 'preWarm');
+        }
+      });
     });
-
-    test('does not throw when mock returns null', () async {
-      // The default mock handler already returns null for unknown methods.
-      await expectLater(preWarm(), completes);
-    });
-
-    test('handles MissingPluginException gracefully', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/maplibre_gl'),
-            (methodCall) async {
-              throw MissingPluginException('not implemented');
-            },
-          );
-
-      await expectLater(preWarm(), completes);
-    });
-
-    test('safe to call multiple times', () async {
-      await preWarm();
-      await preWarm();
-      await preWarm();
-
-      expect(methodCalls.length, 3);
-      for (final call in methodCalls) {
-        expect(call.method, 'preWarm');
-      }
-    });
-  });
   }
 }
 
