@@ -18,7 +18,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Changed
 * **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
 * **Example app (iOS)**: Now builds entirely with SPM (no Podfile); the CocoaPods-only `location` dependency was replaced with `permission_handler`.
-* **Android**: MapLibre Android SDK upgraded from 13.3.0 to 13.3.1, which includes texture resource-management and surface-snapshot fixes.
 
 ### Docs
 * Added a documentation website with live, interactive examples at [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
