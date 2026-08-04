@@ -2,7 +2,9 @@
 
 ## Upgrading to 0.27.0
 
-No breaking changes. Update your `pubspec.yaml`:
+No breaking API changes, so nothing stops compiling. Android apps do need one change, described under [Android: style content](#android-style-content) below.
+
+Update your `pubspec.yaml`:
 
 ```yaml
 dependencies:
@@ -10,6 +12,31 @@ dependencies:
 ```
 
 Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for the full list of changes.
+
+### Android: style content
+
+A map on Android now survives its host activity being destroyed and recreated, whether by the "Don't keep activities" developer option, by a configuration change such as rotation, or under memory pressure. The `MapView` is rebuilt and the camera position is restored for you.
+
+What is not restored automatically is style content: sources, layers, images and runtime style switches. Apply those inside `onStyleLoadedCallback`, which fires again after each recreation, so the content comes back with the new map:
+
+```dart
+MapLibreMapController? _controller;
+
+MapLibreMap(
+  onMapCreated: (controller) => _controller = controller,
+  onStyleLoadedCallback: () async {
+    // Runs on the first style load and again after every activity recreation.
+    await _controller?.addGeoJsonSource('route', routeGeoJson);
+    await _controller?.addLineLayer(
+      'route',
+      'route-line',
+      const LineLayerProperties(lineColor: '#ff0000'),
+    );
+  },
+)
+```
+
+If your app adds that content in `onMapCreated` or `initState` instead, move it into `onStyleLoadedCallback`. Without the move, the map comes back after a recreation with the base style only, and your own layers missing.
 
 ### Minimum SDK versions
 
