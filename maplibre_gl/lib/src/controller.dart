@@ -188,14 +188,22 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
-      _cameraPosition = cameraPosition;
-      onCameraMove?.call(cameraPosition);
+      // A camera carrying NaN or infinity is dropped rather than cached or
+      // forwarded, so one bad event cannot outlive itself. See
+      // [isFiniteCameraPosition].
+      if (isFiniteCameraPosition(cameraPosition)) {
+        _cameraPosition = cameraPosition;
+        onCameraMove?.call(cameraPosition);
+      }
       if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraIdlePlatform.add((cameraPosition) {
+      // The moving flag and the callback are not conditional: an unusable
+      // camera still means the movement ended, and leaving isCameraMoving true
+      // would be worse than a stale position.
       _isCameraMoving = false;
-      if (cameraPosition != null) {
+      if (isFiniteCameraPosition(cameraPosition)) {
         _cameraPosition = cameraPosition;
       }
       onCameraIdle?.call();
@@ -369,8 +377,30 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Returns the most recent camera position reported by the platform side.
   /// Will be null, if [MapLibreMap.trackCameraPosition] is false.
+  ///
+  /// Only readings whose components are all finite are kept here, so this never
+  /// returns a camera containing NaN or infinity. If you need a guaranteed
+  /// fresh reading rather than the last reported one, use
+  /// [queryCameraPosition], which round-trips to the platform.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
+
+  /// Whether every component of [position] is a finite number.
+  ///
+  /// iOS derives the zoom from the map view's size, so a camera event arriving
+  /// before the view has been laid out can carry a non-finite zoom. Such a
+  /// reading is dropped instead of cached: keeping it would leave
+  /// [cameraPosition] poisoned until the next camera event, and on a map the
+  /// user never touches that event never comes.
+  @visibleForTesting
+  static bool isFiniteCameraPosition(CameraPosition? position) {
+    if (position == null) return false;
+    return position.zoom.isFinite &&
+        position.bearing.isFinite &&
+        position.tilt.isFinite &&
+        position.target.latitude.isFinite &&
+        position.target.longitude.isFinite;
+  }
 
   final MapLibrePlatform _maplibrePlatform;
 
