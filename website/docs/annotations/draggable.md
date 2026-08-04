@@ -11,8 +11,7 @@ Allow users to drag annotations to new positions on the map.
 
 !!! note "Prerequisites"
     Annotations only work once the style has loaded and if their type is part of
-    the widget's `annotationOrder`. See
-    [Prerequisites](markers.md#prerequisites).
+    the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
 
 ## Enable dragging
 

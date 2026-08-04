@@ -15,41 +15,9 @@ Five European landmark markers. Tap any to see its name.
 
 Use annotations when you have **fewer than ~50 features** and need individual interactivity (tap callbacks, draggable). For large datasets use [Style Layers](../concepts/annotations-vs-layers.md).
 
-## Prerequisites
-
-These two conditions apply to **every** annotation type, not just symbols. If
-either is missing, `addSymbol()`, `addCircle()`, `addLine()` and `addFill()`
-throw an exception reporting that the annotation manager for that type has not
-been initialized.
-
-1. **The style must be loaded.** Add annotations from `onStyleLoadedCallback`,
-   not from `onMapCreated`. The annotation managers are created as part of style
-   loading, and `onStyleLoadedCallback` runs once they are ready. It also fires
-   again after every style change, and annotations do not survive one, so this
-   is where you re-add them.
-2. **The annotation type must be enabled** in the `annotationOrder` parameter of
-   the `MapLibreMap` widget. The default enables all four types, so you only hit
-   this if you pass the parameter yourself. An **empty** list disables
-   annotations entirely.
-
-```dart
-MapLibreMap(
-  styleString: 'https://demotiles.maplibre.org/style.json',
-  // Default: all four types enabled. Narrow it only if you know you need to.
-  annotationOrder: const [AnnotationType.symbol],
-  onStyleLoadedCallback: () async {
-    await controller.addSymbol(/* ... */);
-  },
-)
-```
-
-`annotationOrder` also sets the stacking order, from bottom to top, and it is
-read once when the map is created: changing it later has no effect. Tap and drag
-callbacks additionally require the type to be listed in
-`annotationConsumeTapEvents` (all four by default).
-
-See [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas)
-for the full list, including what applies to style layers.
+!!! note "Prerequisites"
+    Annotations only work once the style has loaded and if their type is part of
+    the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
 
 ## Add a symbol (icon + text)
 

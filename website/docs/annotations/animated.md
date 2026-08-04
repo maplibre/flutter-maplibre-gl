@@ -11,8 +11,7 @@ Smoothly animate annotation position changes using Flutter's animation system.
 
 !!! note "Prerequisites"
     Annotations only work once the style has loaded and if their type is part of
-    the widget's `annotationOrder`. See
-    [Prerequisites](markers.md#prerequisites).
+    the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
 
 ## How it works
 
