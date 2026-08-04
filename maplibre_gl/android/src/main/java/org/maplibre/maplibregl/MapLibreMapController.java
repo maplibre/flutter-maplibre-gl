@@ -751,6 +751,58 @@ final class MapLibreMapController
     return reply;
   }
 
+  // Resolves the source a feature-state call addresses, or replies with a
+  // descriptive error and returns null so the caller can just bail out.
+  //
+  // The Android SDK exposes feature state on the source objects themselves
+  // (there is no MapLibreMap-level entry point), and only GeoJsonSource and
+  // VectorSource carry the API. On a vector source every call is additionally
+  // scoped to a source layer, so a missing sourceLayer would leave the call
+  // with nothing to address; that is rejected here once instead of in each
+  // method-channel case.
+  private Source getFeatureStateCapableSource(
+      String sourceId, String sourceLayer, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return null;
+    }
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      result.error(
+          "SOURCE_NOT_FOUND",
+          "Source '" + sourceId + "' does not exist in the current style.",
+          null);
+      return null;
+    }
+    if (source instanceof VectorSource) {
+      if (sourceLayer == null) {
+        result.error(
+            "SOURCE_LAYER_REQUIRED",
+            "Source '"
+                + sourceId
+                + "' is a vector source, so feature state calls on it require a 'sourceLayer'.",
+            null);
+        return null;
+      }
+      return source;
+    }
+    if (source instanceof GeoJsonSource) {
+      return source;
+    }
+    result.error(
+        "UNSUPPORTED_SOURCE_TYPE",
+        "Source '"
+            + sourceId
+            + "' is a "
+            + source.getClass().getSimpleName()
+            + ". Feature state only applies to GeoJSON and vector sources.",
+        null);
+    return null;
+  }
+
   private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
     JsonElement jsonElement = JsonParser.parseString(geojson);
     String type = jsonElement.getAsJsonObject().get("type").getAsString();
@@ -1688,6 +1740,113 @@ final class MapLibreMapController
           final String geojsonFeature = call.argument("geojsonFeature");
           setGeoJsonFeature(sourceId, geojsonFeature);
           result.success(null);
+          break;
+        }
+      case "source#setFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final Map<String, Object> state = call.argument("state");
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          final JsonObject stateJson = new Gson().toJsonTree(state).getAsJsonObject();
+          final boolean applied =
+              source instanceof VectorSource
+                  ? ((VectorSource) source).setFeatureState(sourceLayer, featureId, stateJson)
+                  : ((GeoJsonSource) source).setFeatureState(featureId, stateJson);
+          if (applied) {
+            result.success(null);
+          } else {
+            // The SDK setters return false instead of throwing; surfacing that
+            // as an error keeps a rejected call from looking like a success.
+            result.error(
+                "FEATURE_STATE_NOT_APPLIED",
+                "setFeatureState for feature '"
+                    + featureId
+                    + "' on source '"
+                    + sourceId
+                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+                null);
+          }
+          break;
+        }
+      case "source#removeFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final String stateKey = call.argument("stateKey");
+          // A stateKey lives inside one feature's state, so without a featureId
+          // there is nothing the SDK could remove it from.
+          if (featureId == null && stateKey != null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "removeFeatureState with a 'stateKey' also requires the 'featureId' that owns the key.",
+                null);
+            break;
+          }
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          // Which arguments are present picks the operation, matching web:
+          // both drop one key, featureId alone drops that feature's whole
+          // state, neither resets the whole source (or source layer).
+          final boolean applied;
+          if (source instanceof VectorSource) {
+            final VectorSource vectorSource = (VectorSource) source;
+            if (featureId == null) {
+              applied = vectorSource.resetFeatureStates(sourceLayer);
+            } else if (stateKey == null) {
+              applied = vectorSource.removeFeatureState(sourceLayer, featureId);
+            } else {
+              applied = vectorSource.removeFeatureState(sourceLayer, featureId, stateKey);
+            }
+          } else {
+            final GeoJsonSource geoJsonSource = (GeoJsonSource) source;
+            if (featureId == null) {
+              applied = geoJsonSource.resetFeatureStates();
+            } else if (stateKey == null) {
+              applied = geoJsonSource.removeFeatureState(featureId);
+            } else {
+              applied = geoJsonSource.removeFeatureState(featureId, stateKey);
+            }
+          }
+          if (applied) {
+            result.success(null);
+          } else {
+            result.error(
+                "FEATURE_STATE_NOT_APPLIED",
+                "removeFeatureState on source '"
+                    + sourceId
+                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+                null);
+          }
+          break;
+        }
+      case "source#getFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          final JsonObject stateJson =
+              source instanceof VectorSource
+                  ? ((VectorSource) source).getFeatureState(sourceLayer, featureId)
+                  : ((GeoJsonSource) source).getFeatureState(featureId);
+          // Serialized as a JSON string so nested values survive the channel
+          // intact, like style#getLayerProperties. A null state must stay null
+          // rather than become an empty map: the Dart return type is nullable
+          // and callers distinguish "no state" from an empty state.
+          final Map<String, Object> reply = new HashMap<>();
+          reply.put("state", stateJson == null ? null : stateJson.toString());
+          result.success(reply);
           break;
         }
       case "symbolLayer#add":

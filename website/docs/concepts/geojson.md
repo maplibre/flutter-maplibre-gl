@@ -170,7 +170,9 @@ await controller.addGeoJsonSource(
 );
 ```
 
-This parameter is ignored on Android and iOS (native MapLibre handles feature IDs natively).
+This parameter is only supported on web: the MapLibre Android SDK does not expose `promoteId`, and on iOS it is ignored as well. For feature state on Android, every feature must carry a top-level `id` member in the GeoJSON itself.
+
+Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recolouring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
 
 ## Live demo
 

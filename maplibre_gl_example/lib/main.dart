@@ -153,7 +153,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
-  if (kIsWeb) const HoverEffectExample(),
+  // Feature state is available on web and Android, not on iOS yet.
+  if (HoverEffectExample.isSupported) const HoverEffectExample(),
 
   // Annotations
   const AnnotationsExample(),
