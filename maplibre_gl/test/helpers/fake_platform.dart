@@ -105,7 +105,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   void forceResizeWebMap() {}
 
   @override
-  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {}
+  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
+    calls.add(
+      PlatformCall('updateContentInsets', [insets], {'animated': animated}),
+    );
+  }
 
   @override
   Future<void> setMapLanguage(String language) async {}
@@ -261,6 +265,14 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
 
   @override
   Future<List> getSourceIds() async => [];
+
+  @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async =>
+      null;
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async =>
+      null;
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {}

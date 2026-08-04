@@ -104,6 +104,7 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('movestart', _onCameraMoveStarted));
     _mapSubscriptions.add(_map.on('move', _onCameraMove));
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
+    _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
     _mapSubscriptions.add(_map.on('styleimagemissing', _loadFromAssets));
     if (_dragEnabled) {
@@ -747,6 +748,10 @@ class MapLibreMapController extends MapLibrePlatform
       zoom: _map.getZoom() as double,
     );
     onCameraIdlePlatform(camera);
+  }
+
+  void _onMapIdle(_) {
+    onMapIdlePlatform(null);
   }
 
   void _onCameraTrackingChanged(bool isTracking) {
@@ -1677,9 +1682,18 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<void> updateContentInsets(EdgeInsets insets, bool animated) {
-    // TODO: implement updateContentInsets
-    throw UnimplementedError();
+  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
+    // MapLibre GL JS expresses content insets as camera `padding`. easeTo with
+    // a zero duration applies it immediately (the non-animated case).
+    _map.easeTo({
+      'padding': {
+        'top': insets.top,
+        'bottom': insets.bottom,
+        'left': insets.left,
+        'right': insets.right,
+      },
+      'duration': animated ? 300 : 0,
+    });
   }
 
   @override
@@ -1785,6 +1799,37 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List> getSourceIds() async {
     final sourceIds = _map.getSourceIds();
     return sourceIds;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
+    // The serialized style already holds each layer in MapLibre style-spec
+    // form (id/type/source/paint/layout/...), which is exactly the contract,
+    // so we read it from there rather than reassembling it from getters.
+    final layers = _styleMap()?['layers'];
+    if (layers is! List) return null;
+    for (final layer in layers) {
+      if (layer is Map && layer['id'] == layerId) {
+        return Map<String, dynamic>.from(layer);
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
+    final sources = _styleMap()?['sources'];
+    if (sources is! Map) return null;
+    final source = sources[sourceId];
+    if (source is! Map) return null;
+    return Map<String, dynamic>.from(source);
+  }
+
+  /// The current style as a Dart map (style-spec shaped), or null if unset.
+  Map<String, dynamic>? _styleMap() {
+    final styleJs = _map.getStyle();
+    if (styleJs == null) return null;
+    return dartify(styleJs) as Map<String, dynamic>?;
   }
 
   @override
