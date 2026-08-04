@@ -140,6 +140,7 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
     num? rotation,
     String? rotationAlignment,
     String? pitchAlignment,
+    bool? subpixelPositioning,
   }) {
     final jsImpl = MarkerOptionsJsImpl();
     if (element != null) jsImpl.element = element;
@@ -150,6 +151,9 @@ class MarkerOptions extends JsObjectWrapper<MarkerOptionsJsImpl> {
     if (rotation != null) jsImpl.rotation = rotation;
     if (rotationAlignment != null) jsImpl.rotationAlignment = rotationAlignment;
     if (pitchAlignment != null) jsImpl.pitchAlignment = pitchAlignment;
+    if (subpixelPositioning != null) {
+      jsImpl.subpixelPositioning = subpixelPositioning;
+    }
     return MarkerOptions.fromJsObject(jsImpl);
   }
 

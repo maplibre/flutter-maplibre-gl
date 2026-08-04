@@ -22,6 +22,7 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
 * `pauseMap()` and `resumeMap()` on `MapLibreMapController` stop and restart rendering for a map that is alive but not on screen, for example on an inactive `TabBarView` page. On Android this stops the MapView render loop, on iOS it drops the preferred frame rate to zero, and on web it does nothing. A paused map stays paused while the host activity is in the background (#805).
 * `attributionButtonColor` on `MapLibreMap` tints the attribution (i) button on Android and iOS, for styles the SDK's own tint does not read well against. Leave it unset to keep the MapLibre default. It has no effect on web, where that control is styled with CSS (#805).
+* **Android, iOS, Web**: an app can drive the user-location puck from its own updates instead of the device GPS, and no location permission is required in that mode. Build the map with `locationSource: ManualLocationSource()` and `myLocationEnabled: true`, then push each fix with `controller.updateManualLocation(ManualLocationUpdate(target: ..., bearing: ..., speed: ..., horizontalAccuracy: ...))`. Useful for a paired GPS device, a replayed track, or a simulation. The accuracy ring, the tracking modes and `onUserLocationUpdated` keep working, and the default stays `PlatformLocationSource()`. On web the plugin draws the puck itself, so the app has to load `maplibre-gl.css`, which the other web controls already need (#840).
 
 ### Fixed
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, no longer blocks the UI for the whole encode. Those payloads are encoded on a background isolate, which cuts the time spent on the main isolate by two to three times, while smaller ones keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame (#366).
@@ -48,6 +49,7 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Example app (iOS)**: now builds entirely with SPM (no Podfile); the CocoaPods-only `location` dependency was replaced with `permission_handler` (#891).
 * The PMTiles example and the web demo now read from the stable Protomaps demo archive. The previous dated planet build was pruned after a few days and served without CORS headers, which made the web demo load empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
+* **Example app**: a new Manual Location Source page drives the puck from a simulated moving track, with start and stop, single pushes, tracking-mode switching and a live accuracy ring (#840).
 
 ### Internal
 * **Example app**: dropped the obsolete `android.enableJetifier` flag. Every dependency has been AndroidX for years, and the transform was running out of Java heap space on the Flutter engine jar (#912).

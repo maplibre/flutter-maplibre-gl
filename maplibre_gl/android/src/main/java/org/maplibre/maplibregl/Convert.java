@@ -227,6 +227,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
       final List<?> locationEnginePropertiesList = toList(locationEngineProperties);
         sink.setLocationEngineProperties(toLocationEngineRequest(locationEnginePropertiesList));
     }
+    final Object locationSource = data.get("locationSource");
+    if (locationSource != null) {
+      sink.setLocationSource(toString(locationSource));
+    }
     final Object cameraTargetBounds = data.get("cameraTargetBounds");
     if (cameraTargetBounds != null) {
       final List<?> targetData = toList(cameraTargetBounds);
