@@ -51,42 +51,72 @@ List<SessionCommand> cameraConstraintCommands(
   // is [[swLat, swLng], [neLat, neLng]]; a null entry means unbounded.
   final targetBounds = options['cameraTargetBounds'];
   if (targetBounds is List) {
-    final bounds = targetBounds.isEmpty ? null : targetBounds[0] as List?;
-    final southwest = bounds?[0] as List?;
-    final northeast = bounds?[1] as List?;
-    commands.add(
-      SetBoundsCommand(
-        sessionId,
-        // No bounds list at all is CameraTargetBounds.unbounded, which removes
-        // the constraint rather than widening it to the world: world bounds
-        // would still clamp longitude and stop the map crossing the
-        // antimeridian.
-        bounds: southwest == null || northeast == null
-            ? const BoundsConstraintSpec.unbounded()
-            : BoundsConstraintSpec.bounded(
-                BoundsSpec(
-                  south: (southwest[0] as num).toDouble(),
-                  west: (southwest[1] as num).toDouble(),
-                  north: (northeast[0] as num).toDouble(),
-                  east: (northeast[1] as num).toDouble(),
-                ),
-              ),
-      ),
-    );
+    final entry = targetBounds.isEmpty ? null : targetBounds[0];
+    if (entry == null) {
+      // No bounds list at all is CameraTargetBounds.unbounded, which removes
+      // the constraint rather than widening it to the world: world bounds
+      // would still clamp longitude and stop the map crossing the
+      // antimeridian.
+      commands.add(
+        SetBoundsCommand(
+          sessionId,
+          bounds: const BoundsConstraintSpec.unbounded(),
+        ),
+      );
+    } else {
+      // A malformed bounds list constrains nothing: skipping the command
+      // leaves the previous constraint in place, instead of crashing the
+      // whole options batch or silently unbounding the camera.
+      final bounds = _boundsSpec(entry);
+      if (bounds != null) {
+        commands.add(
+          SetBoundsCommand(
+            sessionId,
+            bounds: BoundsConstraintSpec.bounded(bounds),
+          ),
+        );
+      }
+    }
   }
 
   // MinMaxZoomPreference.toJson() is [minZoom, maxZoom] with null meaning
   // unbounded on that side.
   final minMaxZoom = options['minMaxZoomPreference'];
   if (minMaxZoom is List && minMaxZoom.length >= 2) {
+    final minZoom = minMaxZoom[0];
+    final maxZoom = minMaxZoom[1];
     commands.add(
       SetBoundsCommand(
         sessionId,
-        // The projection limits clear a previous preference.
-        minZoom: (minMaxZoom[0] as num?)?.toDouble() ?? MapLimits.minZoom,
-        maxZoom: (minMaxZoom[1] as num?)?.toDouble() ?? MapLimits.maxZoom,
+        // The projection limits clear a previous preference; a non-numeric
+        // value clears that side too rather than crashing the batch.
+        minZoom: minZoom is num ? minZoom.toDouble() : MapLimits.minZoom,
+        maxZoom: maxZoom is num ? maxZoom.toDouble() : MapLimits.maxZoom,
       ),
     );
   }
   return commands;
+}
+
+/// The `[[swLat, swLng], [neLat, neLng]]` shape as a [BoundsSpec], or null
+/// when [entry] does not have that shape.
+BoundsSpec? _boundsSpec(Object entry) {
+  if (entry is! List || entry.length < 2) return null;
+  final southwest = entry[0];
+  final northeast = entry[1];
+  if (southwest is! List || southwest.length < 2) return null;
+  if (northeast is! List || northeast.length < 2) return null;
+  final south = southwest[0];
+  final west = southwest[1];
+  final north = northeast[0];
+  final east = northeast[1];
+  if (south is! num || west is! num || north is! num || east is! num) {
+    return null;
+  }
+  return BoundsSpec(
+    south: south.toDouble(),
+    west: west.toDouble(),
+    north: north.toDouble(),
+    east: east.toDouble(),
+  );
 }
