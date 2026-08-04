@@ -54,10 +54,13 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * The PMTiles example and the web demo now read from the stable Protomaps demo archive. The previous dated planet build was pruned after a few days and served without CORS headers, which made the web demo load empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
 * **Example app**: a new Manual Location Source page drives the puck from a simulated moving track, with start and stop, single pushes, tracking-mode switching and a live accuracy ring (#840).
+* **Android**: `MapLibreMap.useHybridComposition` documented its default as `true`, while the real default has been `false` since 0.16.0. Its API docs now state the actual default, describe which Android `View` each value selects and how Flutter embeds the map from there, and point out that the flag does not select Flutter's "Hybrid Composition" mode. `translucentTextureSurface` gained a note that it moves the map to a `TextureView` too, so the two options overlap. The "hybrid composition is currently broken" warning is gone: the `textureMode` fix in 0.26.1 made the opt-in work again (#816).
+* **Android**: the architecture page now covers Flutter's experimental Hybrid Composition++, which composites the map's `SurfaceView` natively on Android 14 and later with Vulkan. An app enables it in its own manifest and no change is needed in the plugin.
 
 ### Internal
 * **Example app**: dropped the obsolete `android.enableJetifier` flag. Every dependency has been AndroidX for years, and the transform was running out of Java heap space on the Flutter engine jar (#912).
 * **Example app**: `permission_handler` is held at 12.x. Version 14 of its Android implementation requires Flutter 3.44 and Android SDK 37 to build while declaring `flutter: >=3.24.0` (#913).
+* **Example app (Android)**: no longer overrides `MapLibreMap.useHybridComposition` by SDK version, so it now runs the plugin default like any other app. That was the only use of `device_info_plus`, which is dropped along with the pin that held it at 12.x for `win32` compatibility.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
