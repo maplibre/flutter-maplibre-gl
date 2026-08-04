@@ -12,7 +12,6 @@ import android.content.res.AssetFileDescriptor;
 import android.os.Bundle;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
@@ -228,9 +227,9 @@ final class MapLibreMapController
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
-  // Tint of the attribution (i) button. Defaults to black rather than the
-  // SDK's maplibre_blue, which is hard to read over the map background.
-  private int attributionButtonColor = Color.BLACK;
+  // Tint of the attribution (i) button, or null to leave the MapLibre SDK
+  // default in place. Only set through the attributionButtonColor map option.
+  private Integer attributionButtonColor = null;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch. Jetpack's
    * {@code Lifecycle.addObserver} replays missed events synchronously, which would
@@ -529,10 +528,12 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
 
-    // Re-apply the attribution tint: UiSettings belongs to the MapView, so a
-    // recreated view (activity rebind) would otherwise fall back to the SDK
-    // default maplibre_blue.
-    mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
+    // Re-apply an app-provided attribution tint: UiSettings belongs to the
+    // MapView, so a recreated view (activity rebind) would otherwise fall back
+    // to the SDK default. Without the option we leave that default alone.
+    if (attributionButtonColor != null) {
+      mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
+    }
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
