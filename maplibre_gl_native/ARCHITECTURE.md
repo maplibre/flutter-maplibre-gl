@@ -43,8 +43,8 @@ flowchart TD
 Everything that crosses between the two worlds is a plain, sendable message defined in `src/protocol/`, one file per domain. Three kinds:
 
 - **Command**: a fire-and-forget mutation ("move the camera", "set this GeoJSON"). No reply.
-- **Query**: a read with a reply ("where does this coordinate land on screen?"). Round trip ~0.1 ms.
-- **Event**: the engine pushing back ("style loaded", "camera changed", "map idle").
+- **Query**: a read with a reply ("where does this coordinate land on screen?"). Round trip ~0.1 ms, with a 15-second deadline so a wedged engine fails the caller instead of hanging it forever.
+- **Event**: the engine pushing back ("style loaded", "camera changed", "map idle"). Failures ride the same channel, so nothing dies in silence: a command that fails inside the engine surfaces as an `EngineErrorEvent`, and if the engine isolate itself dies the host fails every pending query, emits a terminal `EngineDiedEvent`, and makes later calls throw.
 
 ## One call, end to end
 
@@ -107,6 +107,7 @@ MapLibre Native's objects are **thread-affine**: each one belongs to the thread 
 - `src/engine/` is the only layer that imports `mln.*`. Everything else can only send messages, so it cannot break the rule even by accident.
 - The Dart VM may move an isolate onto a different OS thread between two callbacks, which would silently break that ownership. A check before every native call notices the thread changed and tells the native runtime to adopt the new one (`mln_runtime_rebind_thread`, one of our upstream patches). That rebind covers the runtime, its maps, and its projections, deliberately NOT render sessions, or it would steal one from the thread drawing it. A "runtime rebound" line in the log is that check doing its job, not a warning.
 - The display pulse thread owns the live render session and calls `render_update` itself (upstream #399 made a session's owner the thread that attached it, so this is legal). The session calls Dart still needs (feature queries, feature state, resize, surface replace, detach) borrow it back for the length of one call under a mutex (`RenderThread.borrow`, which also re-homes the session after an isolate migration, since the runtime rebind no longer does). Renders happen 60-90 times a second and borrows are rare, so the display thread simply keeps it.
+- One thread draws one session: with two maps live, the most recent surface attach holds the display thread and the other map draws on the engine isolate. Retiring the display thread is therefore conditional on the session handle — tearing one map down withdraws only its own session, and the survivor is re-offered — and before Flutter destroys a surface, the platform side retires whatever session is bound under the same mutex, so the display thread can never touch a dying surface. If that mutex ever fails to come in time (a borrow that was never returned; hot restart is the known way), the shim treats it as wedged but recoverable: it keeps retrying and resumes display rendering on the first successful lock, instead of writing the thread off for the life of the process.
 
 ## Directory map
 
