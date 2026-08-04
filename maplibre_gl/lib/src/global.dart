@@ -114,6 +114,40 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   return regions.map(OfflineRegion.fromMap).toList();
 }
 
+/// Returns the absolute path of the offline database file backing the offline
+/// packs and ambient cache, or `null` if it cannot be resolved.
+///
+/// This is the same file that [mergeOfflineRegions] imports from: copying it
+/// elsewhere and passing that copy back to [mergeOfflineRegions] round-trips
+/// every region it contains. The file holds the *whole* store (all regions
+/// plus the ambient cache), so it is not a per-region export.
+///
+/// Android and iOS only; the offline feature is unavailable on web.
+Future<String?> getOfflineDatabasePath() async {
+  return _globalChannel.invokeMethod<String>('getOfflineDatabasePath');
+}
+
+/// Writes a copy of the offline database to a path of your choosing.
+///
+/// [destinationPath] is the full path to write the copy to, including the file
+/// name — for example `'${(await getTemporaryDirectory()).path}/regions.db'`.
+/// Its parent directory must already exist.
+///
+/// Returns that same path once the file has been written, or `null` if there is
+/// no offline database yet (nothing has been downloaded). Use the returned path
+/// to share or move the file; import it elsewhere with [mergeOfflineRegions].
+///
+/// The copy is the whole store (the file behind [getOfflineDatabasePath]) —
+/// every region plus the ambient cache, not a single region — and includes the
+/// SQLite `-wal`/`-shm` sidecars so it is consistent.
+///
+/// Android and iOS only; throws [UnsupportedError] on web.
+Future<String?> exportOfflineDatabase(String destinationPath) async {
+  final dbPath = await getOfflineDatabasePath();
+  if (dbPath == null) return null;
+  return copyOfflineDatabase(dbPath, destinationPath);
+}
+
 Future<List<OfflineRegion>> getListOfRegions() async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',

@@ -80,6 +80,9 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
       case "mergeOfflineRegions":
         OfflineManagerUtils.mergeRegions(result, context, methodCall.argument("path"));
         break;
+      case "getOfflineDatabasePath":
+        result.success(new File(context.getFilesDir(), DATABASE_NAME).getAbsolutePath());
+        break;
       case "setOfflineTileCountLimit":
         OfflineManagerUtils.setOfflineTileCountLimit(
             result, context, methodCall.<Number>argument("limit").longValue());
