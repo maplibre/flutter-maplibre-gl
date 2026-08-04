@@ -1,5 +1,16 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
+
+### Added
+* `queryCameraPosition()` is now implemented; it previously threw `UnimplementedError` (#892).
+* `updateContentInsets()`, and the new `setPadding()`, are implemented through the camera `padding` option; both previously threw `UnimplementedError` (#258).
+* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)` read an existing layer's or source's properties from the live style, in the same shape as Android and iOS (#513).
+* The manual location puck is drawn by the plugin, since maplibre-gl-js has no injectable location component. It reuses maplibre-gl-js' own `maplibregl-user-location-dot` and `maplibregl-user-location-accuracy-circle` classes for a native look, plus a bearing arrow, so the app has to load `maplibre-gl.css` (#840).
+
+### Fixed
+* `onMapIdle` now fires, matching Android and iOS. Code waiting on it never ran on web (#857).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 No web-specific changes; version aligned with the `maplibre_gl` 0.26.2 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.

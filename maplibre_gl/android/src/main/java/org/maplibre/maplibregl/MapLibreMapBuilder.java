@@ -29,6 +29,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private String locationSourceToken = "platform";
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
+  private Integer attributionButtonColor = null;
 
   MapLibreMapController build(
       int id,
@@ -60,6 +61,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     if(null != locationEngineRequest ){
       controller.setLocationEngineProperties(locationEngineRequest);
+    }
+
+    if (null != attributionButtonColor) {
+      controller.setAttributionButtonColor(attributionButtonColor);
     }
 
     return controller;
@@ -248,6 +253,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
         options.attributionMargins(new int[] {0, 0, (int) x, (int) y});
         break;
     }
+  }
+
+  @Override
+  public void setAttributionButtonColor(int color) {
+    // The tint is applied through UiSettings, which only exists once the map
+    // is ready — stash it and forward to the controller in build().
+    this.attributionButtonColor = color;
   }
 
   public void setDragEnabled(boolean enabled) {

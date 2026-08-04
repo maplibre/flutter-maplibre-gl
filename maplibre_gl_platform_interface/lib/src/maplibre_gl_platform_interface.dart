@@ -135,6 +135,12 @@ abstract class MapLibrePlatform {
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
 
+  /// Pauses map rendering. Call [resumeMap] to resume.
+  Future<void> pauseMap();
+
+  /// Resumes map rendering after [pauseMap].
+  Future<void> resumeMap();
+
   /// Animates the camera to a new position with a specified duration and interpolation.
   ///
   /// The [cameraUpdate] specifies the target camera position.
@@ -253,6 +259,10 @@ abstract class MapLibrePlatform {
   Future<List> getLayerIds();
 
   Future<List> getSourceIds();
+
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId);
+
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId);
 
   Future<void> setFilter(String layerId, dynamic filter);
 

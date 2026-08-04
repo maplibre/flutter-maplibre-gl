@@ -47,6 +47,14 @@ import 'package:collection/collection.dart';
 
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
+// Offline database file copy needs dart:io on mobile; the web stub throws.
+import 'src/offline_export_stub.dart'
+    if (dart.library.io) 'src/offline_export_io.dart';
+
+import 'src/prewarm_native.dart'
+    if (dart.library.js_interop) 'src/prewarm_web.dart'
+    as prewarm;
+
 export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show
         Annotation,

@@ -70,6 +70,11 @@ Future<void> downloadRegion() async {
 
 `downloadOfflineRegion` returns an `OfflineRegion` object with the assigned `id`. Store this ID if you need to delete the region later.
 
+!!! note "Re-downloading the same area"
+    Downloading a region whose area (bounds, zoom range and style) matches an
+    already-downloaded one replaces the existing region instead of creating a
+    duplicate. The returned `id` refers to the freshly created region.
+
 ## Step 3: Track progress in UI
 
 ```dart
@@ -127,6 +132,74 @@ await deleteOfflineRegion(region.id);
 
 Frees the storage on device. If the user goes offline after deletion, those tiles are no longer available.
 
+## Move regions between devices
+
+Offline regions live in a single SQLite database on the device. You can copy that
+database to another device and merge its regions into the local store, so a region
+downloaded once can be reused elsewhere without downloading again.
+
+```mermaid
+flowchart LR
+    A["Device A<br/>download regions"] --> EXP["exportOfflineDatabase(path)<br/>share the .db"]
+    EXP --> FILE[(".db file")]
+    FILE --> MRG["Device B<br/>mergeOfflineRegions(path)"]
+    MRG --> B["Device B<br/>regions available offline"]
+
+    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class A,B root
+```
+
+### Export the database
+
+`exportOfflineDatabase(destinationPath)` writes a copy of the offline database
+to a location **you** choose. You pass the full destination file path (folder +
+file name); the function writes the copy there and returns that same path — or
+`null` if nothing has been downloaded yet. It also copies the SQLite
+`-wal`/`-shm` sidecars, so the exported file is consistent.
+
+```dart
+import 'package:path_provider/path_provider.dart';
+
+Future<String?> exportForSharing() async {
+  if (kIsWeb) return null; // offline not supported on web
+
+  final tmp = await getTemporaryDirectory();
+  // You decide where the copy goes — here, a temp file called offline_export.db.
+  final savedPath = await exportOfflineDatabase('${tmp.path}/offline_export.db');
+  // savedPath == '${tmp.path}/offline_export.db', or null if nothing downloaded.
+  return savedPath;
+}
+```
+
+Then hand `savedPath` to a share sheet, upload it, or copy it elsewhere.
+
+If you only need the live database's location (for example to copy it yourself),
+use `getOfflineDatabasePath()`, which returns its absolute path or `null`.
+
+!!! warning "Whole-database export"
+    The native SDKs expose no per-region export, so the file contains **every**
+    region plus the ambient cache — not a single selected region. For the same
+    reason, copy the file while no download is in progress to avoid capturing a
+    half-written database.
+
+### Merge a database
+
+`mergeOfflineRegions(path)` imports every region contained in an external database
+into the local store and returns the merged regions.
+
+```dart
+Future<void> importOfflineDatabase(String path) async {
+  if (kIsWeb) return; // offline not supported on web
+
+  final List<OfflineRegion> merged = await mergeOfflineRegions(path);
+  print('Merged ${merged.length} region(s)');
+}
+```
+
+Databases produced by external tools (for example maplibre-native's `offline.cpp`)
+can also be merged; regions without Flutter-assigned metadata are imported with an
+empty metadata map and a stable, derived ID.
+
 ## Complete example pattern
 
 ```dart
@@ -161,6 +234,20 @@ class OfflineDownloadManager {
       _region = null;
     }
   }
+
+  /// Export the whole offline store to the given path, e.g. to share it.
+  /// Returns the written path, or null if nothing is downloaded.
+  Future<String?> exportDatabase(String destinationPath) async {
+    if (kIsWeb) return null;
+    return exportOfflineDatabase(destinationPath);
+  }
+
+  /// Import regions from a database file exported on another device.
+  Future<void> importDatabase(String path) async {
+    if (kIsWeb) return;
+    final imported = await mergeOfflineRegions(path);
+    debugPrint('Imported ${imported.length} region(s)');
+  }
 }
 ```
 
@@ -183,3 +270,6 @@ class OfflineDownloadManager {
 | `getListOfRegions()` | List all downloaded regions |
 | `getOfflineRegionStatus(id)` | Check status of a specific region |
 | `deleteOfflineRegion(id)` | Delete a downloaded region |
+| `mergeOfflineRegions(path)` | Import regions from an external database file |
+| `exportOfflineDatabase(destPath)` | Copy the whole offline database to a shareable file |
+| `getOfflineDatabasePath()` | Absolute path of the live offline database file |

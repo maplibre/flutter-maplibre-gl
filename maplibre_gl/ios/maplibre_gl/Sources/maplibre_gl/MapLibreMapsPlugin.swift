@@ -110,6 +110,22 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
             case "getListOfRegions":
                 // Note: this does not download anything from internet, it only fetches data drom database
                 OfflineManagerUtils.regionsList(result: result)
+            case "mergeOfflineRegions":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let path = args["path"] as? String
+                else {
+                    result(FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Expected a 'path' string argument",
+                        details: nil
+                    ))
+                    return
+                }
+                OfflineManagerUtils.mergeRegions(result: result, path: path)
+            case "getOfflineDatabasePath":
+                // The shared store backing offline packs and the ambient cache.
+                // This is the same file mergeOfflineRegions imports from.
+                result(MLNOfflineStorage.shared.databaseURL.path)
             case "deleteOfflineRegion":
                 guard let args = methodCall.arguments as? [String: Any],
                       let id = args["id"] as? Int
@@ -153,6 +169,9 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     result: result,
                     maxRequestsPerHost: maxRequestsPerHost
                 )
+            case "preWarm":
+                _ = MLNOfflineStorage.shared
+                result(nil)
             default:
                 result(FlutterMethodNotImplemented)
             }

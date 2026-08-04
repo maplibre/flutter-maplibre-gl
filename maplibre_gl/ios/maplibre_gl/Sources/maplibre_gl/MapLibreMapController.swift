@@ -30,6 +30,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    // GPS pulse: start/stop location updates on a timer to save battery.
+    private var locationPulseTimer: Timer?
+    private var locationPulseWindowTimer: Timer?
+    private var locationUpdateIntervalMs: Int = 0
+    private var locationPulseWindowMs: Int = MapLibreMapController.defaultPulseWindowMs
+    static let defaultPulseWindowMs: Int = 5000
+
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
     private var userFps: MLNMapViewPreferredFramesPerSecond = .default
@@ -122,6 +129,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             .setMethodCallHandler { [weak self] in self?.onMethodCall(methodCall: $0, result: $1) }
 
         mapView.delegate = self
+
+        // Default the attribution (i) button tint to black. The SDK default
+        // is the system blue, which is hard to read over the map background.
+        // Overridden via the attributionButtonColor map option.
+        mapView.attributionButton.tintColor = .black
 
         let singleTap = UITapGestureRecognizer(
             target: self,
@@ -514,11 +526,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 completion()
             }
         case "map#queryCameraPosition":
-            if let camera = getCamera() {
-                result(camera.toDict(mapView: mapView))
-            } else {
-                result(nil)
-            }
+            // On-demand query: read the live camera directly. Unlike the
+            // streaming paths, which go through getCamera() and honor
+            // trackCameraPosition, a one-off query always returns a value.
+            result(mapView.camera.toDict(mapView: mapView))
         case "map#editGeoJsonSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let srcId = arguments["id"] as? String else { return }
@@ -1278,6 +1289,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["sources"] = sourceIds as NSObject
             result(reply)
 
+        case "style#getLayerProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            // Read the serialized style and pluck the layer entry, rather than
+            // enumerating every NSExpression property. This guarantees the
+            // result matches the MapLibre style spec, like Android and web.
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let layers = styleObject?["layers"] as? [[String: Any]],
+               let layer = layers.first(where: { ($0["id"] as? String) == layerId }),
+               let json = jsonString(from: layer)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
+        case "style#getSourceProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let sources = styleObject?["sources"] as? [String: Any],
+               let source = sources[sourceId] as? [String: Any],
+               let json = jsonString(from: source)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
         case "style#getFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
@@ -1415,15 +1455,26 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
-        // In manual mode, install the app-provided location manager before
-        // `showsUserLocation` is first enabled (per SDK ordering rule). Updates
-        // arrive via locationComponent#setManualLocation -> manualLocationManager.push.
-        if myLocationEnabled, manualLocationSource,
-           !(mapView.locationManager is ManualLocationManager)
-        {
-            mapView.locationManager = manualLocationManager
+        if myLocationEnabled {
+            restartLocationPulseIfNeeded()
+        } else {
+            locationPulseTimer?.invalidate()
+            locationPulseTimer = nil
+            locationPulseWindowTimer?.invalidate()
+            locationPulseWindowTimer = nil
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
         }
-        mapView.showsUserLocation = myLocationEnabled
+    }
+
+    /// Start or stop Core Location updates without toggling the user-location annotation.
+    private func setLocationUpdatesActive(_ active: Bool) {
+        guard let locationManager = mapView.locationManager else { return }
+        if active {
+            locationManager.startUpdatingLocation()
+        } else {
+            locationManager.stopUpdatingLocation()
+        }
     }
 
     private func getCamera() -> MLNMapCamera? {
@@ -1432,6 +1483,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private func setMapLanguage(language: String) {
         self.mapView.setMapLanguage(language)
+    }
+
+    // The current map style parsed as a JSON dictionary (style-spec shaped),
+    // or nil if it cannot be read/parsed. Used to read layer/source properties
+    // by id without enumerating every typed property.
+    private func currentStyleObject() -> [String: Any]? {
+        guard let data = mapView.styleJSON.data(using: .utf8) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
+    // Serializes a style sub-object (a layer or source entry) back to a JSON
+    // string for the Dart side, which decodes it into a Map.
+    private func jsonString(from object: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: object) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
     }
 
     /*
@@ -2325,7 +2393,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
-    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double) {
+    func setLocationEngineProperties(
+        enableHighAccuracy: Bool,
+        distanceFilter: Double,
+        intervalMs: Int,
+        pulseWindowMs: Int
+    ) {
         guard let locationManager = mapView.locationManager else { return }
         let accuracy = enableHighAccuracy
             ? kCLLocationAccuracyBest
@@ -2335,6 +2408,78 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             : kCLDistanceFilterNone
         locationManager.setDesiredAccuracy?(accuracy)
         locationManager.setDistanceFilter?(filter)
+
+        let resolvedPulseWindowMs = pulseWindowMs > 0
+            ? pulseWindowMs
+            : Self.defaultPulseWindowMs
+        if locationUpdateIntervalMs != intervalMs
+            || locationPulseWindowMs != resolvedPulseWindowMs
+        {
+            locationUpdateIntervalMs = intervalMs
+            locationPulseWindowMs = resolvedPulseWindowMs
+            restartLocationPulseIfNeeded()
+        }
+    }
+
+    private func restartLocationPulseIfNeeded() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+
+        guard myLocationEnabled else {
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
+            return
+        }
+
+        // A manual source has to own `mapView.locationManager` before
+        // `showsUserLocation` is first enabled: turning it on while the default
+        // manager is still in place asks for location permission, which is what
+        // manual mode exists to avoid. Updates then arrive via
+        // locationComponent#setManualLocation -> manualLocationManager.push.
+        if manualLocationSource, !(mapView.locationManager is ManualLocationManager) {
+            mapView.locationManager = manualLocationManager
+        }
+
+        // Keep the blue dot at the last known position between GPS pulses.
+        mapView.showsUserLocation = true
+
+        // App-provided locations have no Core Location duty cycle to pulse, and
+        // ManualLocationManager implements start/stopUpdatingLocation as no-ops,
+        // so the pulse timers would only burn cycles.
+        guard !manualLocationSource else { return }
+
+        guard locationUpdateIntervalMs > 0 else {
+            setLocationUpdatesActive(true)
+            return
+        }
+
+        fireLocationPulse()
+
+        let interval = TimeInterval(locationUpdateIntervalMs) / 1000.0
+        locationPulseTimer = Timer.scheduledTimer(
+            withTimeInterval: interval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.fireLocationPulse()
+        }
+    }
+
+    private func fireLocationPulse() {
+        setLocationUpdatesActive(true)
+
+        let windowSec = TimeInterval(locationPulseWindowMs) / 1000.0
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = Timer.scheduledTimer(
+            withTimeInterval: windowSec,
+            repeats: false
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if self.locationUpdateIntervalMs > 0 {
+                self.setLocationUpdatesActive(false)
+            }
+        }
     }
 
     func setLocationSource(token: String) {
@@ -2382,6 +2527,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setAttributionButtonColor(color: Int) {
+        mapView.attributionButton.tintColor = UIColor(
+            red: CGFloat((color >> 16) & 0xFF) / 255.0,
+            green: CGFloat((color >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(color & 0xFF) / 255.0,
+            alpha: CGFloat((color >> 24) & 0xFF) / 255.0
+        )
     }
 
     func setFeatureTapsTriggersMapClick(triggers: Bool) {
