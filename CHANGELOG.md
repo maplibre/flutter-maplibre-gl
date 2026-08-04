@@ -7,12 +7,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
-* **Android, iOS**: offline regions can now be moved between devices. `exportOfflineDatabase()` saves a shareable copy of your downloaded regions, `mergeOfflineRegions()` imports one back (now also on iOS), and `getOfflineDatabasePath()` returns the database location. See the [offline regions guide](https://maplibre.github.io/flutter-maplibre-gl/advanced/offline-regions/) (#886).
-* **Example**: the Offline Regions demo has been redesigned with an in-app guide and export/import buttons showing the full round-trip (#886).
 
 ### Fixed
-* **Android, iOS**: re-downloading an already-downloaded area now replaces the existing region instead of creating a duplicate (#886).
-* **iOS**: `mergeOfflineRegions()` now returns only the regions it imported, not every region already stored (#886).
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
 * **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).
 * **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
