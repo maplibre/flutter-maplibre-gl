@@ -169,6 +169,9 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                     result: result,
                     maxRequestsPerHost: maxRequestsPerHost
                 )
+            case "preWarm":
+                _ = MLNOfflineStorage.shared
+                result(nil)
             default:
                 result(FlutterMethodNotImplemented)
             }
