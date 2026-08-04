@@ -57,7 +57,6 @@ None of these need a code change, but they are the places where code that worked
 * **Web**: `queryCameraPosition()`, `updateContentInsets()` and the new `setPadding()` no longer throw `UnimplementedError`, so any guard you put around them for web is no longer needed.
 * **iOS**: `mergeOfflineRegions()` returns only the regions it imported, instead of every region already stored. If you used its return value as the full list, call `getListOfRegions()` for that.
 * **Android, iOS**: downloading an area that is already downloaded replaces the existing region rather than adding a duplicate, and the replacement keeps the same region id.
-* **Android, iOS**: the attribution (i) button is tinted black by default instead of the SDK's blue, which was hard to read over most map backgrounds. Pass `attributionButtonColor` to `MapLibreMap` to choose your own tint, for example a light one over a dark style.
 
 ### Android apps on AGP 9
 
