@@ -39,6 +39,8 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 
 * **iOS**: `controller.cameraPosition` no longer gets stuck holding a non-finite zoom. Camera events that arrive before the map view has been laid out carried a `NaN` zoom, which was cached and handed to every later reader until the next camera event, so on a map the user had not touched yet, content anchored to the camera was placed wrongly. The zoom now falls back to the map view's own, and the Dart side refuses to cache a camera with non-finite components (#903).
 
+* The bundled LICENSE no longer breaks Flutter's license collector. Every app depending on this package showed an untitled first entry on its `showLicensePage()` screen, holding a third-party notice that had been cut off from its heading (#895).
+
 ### Changed
 * **iOS**: the plugin supports Flutter's Swift Package Manager integration. It still ships its CocoaPods podspec, so apps on CocoaPods keep working with no migration (#891).
 * **Android**: the plugin no longer applies the Kotlin Gradle Plugin when the app builds with AGP 9 or later, where doing so breaks the build. On AGP 8 nothing changes, so the minimum Flutter version stays at 3.29 (#905).

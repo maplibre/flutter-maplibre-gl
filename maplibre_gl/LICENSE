@@ -11,11 +11,11 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+flutter-mapbox-gl
+
 This project was forked from (and therefore contains a lot of modified and unmodified code from) https://github.com/tobrun/flutter-mapbox-gl which at the time of the fork (March 6th, 2021) contained the following LICENSE file:
 (Additionally more changes / code was later cherry-picked / ported from that repository (https://github.com/tobrun/flutter-mapbox-gl), while the license continued to be the same as at the time of the fork, which is:)
-------------------------------------------------------------------------------------------------------
 
 flutter-mapbox-gl copyright (c) 2018, Mapbox.
 
@@ -24,10 +24,10 @@ Redistribution and use in source and binary forms, with or without modification,
 Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+maplibre-gl-native
+
 This project uses the MapLibre GL native libraries for Android and iOS from https://github.com/maplibre/maplibre-gl-native, which contain the following LICENSE:
-------------------------------------------------------------------------------------------------------
 BSD 2-Clause License
 
 Copyright (c) 2021 MapLibre contributors
@@ -59,10 +59,10 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+maplibre-gl-js
+
 This project uses MapLibre GL JS library from https://github.com/maplibre/maplibre-gl-js, which contains the following LICENSE:
-------------------------------------------------------------------------------------------------------
 Copyright (c) 2020, MapLibre contributors
 
 All rights reserved.
@@ -92,7 +92,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+mapbox-gl-js
 
 Contains code from mapbox-gl-js v1.13 and earlier
 
@@ -124,7 +125,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+glfx.js
 
 Contains code from glfx.js
 
@@ -149,6 +151,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 --------------------------------------------------------------------------------
+d3-color
 
 Contains a portion of d3-color https://github.com/d3/d3-color
 
