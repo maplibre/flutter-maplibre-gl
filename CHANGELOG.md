@@ -7,7 +7,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
-* `setPadding({left, top, right, bottom, animated})` on `MapLibreMapController` sets the map's viewport padding, shifting the map center / vanishing point (useful for keeping content centered behind a bottom sheet or side panel). It is a convenience wrapper over the existing `updateContentInsets` (#258).
 
 ### Fixed
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
@@ -15,7 +14,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
 * **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
-* **Web**: `updateContentInsets` (and the new `setPadding`) is now implemented on web via the camera `padding` option. Previously it threw `UnimplementedError`, so viewport padding only worked on Android and iOS.
 
 ### Changed
 * **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
