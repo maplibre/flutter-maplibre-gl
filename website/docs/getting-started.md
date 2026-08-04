@@ -16,7 +16,7 @@
 
     ```yaml title="pubspec.yaml"
     dependencies:
-      maplibre_gl: ^0.26.2
+      maplibre_gl: ^0.27.0
     ```
 
     Then run `flutter pub get` to install the package.

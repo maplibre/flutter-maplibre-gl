@@ -1,3 +1,14 @@
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Added
+* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning an existing layer's or source's full properties as a MapLibre style-spec map, or `null` when the id is unknown (#513).
+* `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs`, forwarded to the iOS location engine so GPS can be pulsed instead of tracked continuously (#901).
+
+### Fixed
+* Adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode: those payloads are encoded on a background isolate, while smaller ones keep the faster synchronous path. Writes to the same source id stay in the order they were issued (#366).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 No platform-interface changes; version aligned with the `maplibre_gl` 0.26.2 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
