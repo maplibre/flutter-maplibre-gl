@@ -1202,9 +1202,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes once listeners have been notified.\
-  /// An [Exception] is thrown if the SymbolManager is not initialized: either the
-  /// style has not finished loading yet, or [AnnotationType.symbol] is missing
-  /// from the `annotationOrder` of the [MapLibreMap] widget.
+  /// Unlike [addSymbol], this is a no-op when the SymbolManager does not exist
+  /// (style not loaded yet, or [AnnotationType.symbol] missing from the
+  /// `annotationOrder` of the [MapLibreMap] widget).
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
     await symbolManager?.set(
       symbol..options = symbol.options.copyWith(changes),
