@@ -7,10 +7,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
-* New `preWarm()` top-level function that initializes the MapLibre engine before the first map widget is created. Call it from `main()` to overlap native initialization with your app's startup (#867):
-  * **Android**: calls `MapLibre.getInstance()` — loads `libmaplibre-gl.so`, opens the SQLite cache database and registers the connectivity receiver (~170–480 ms saved).
-  * **iOS**: initializes `MLNOfflineStorage.shared` — creates the C++ RunLoop and file sources, and opens the SQLite cache database (~45–165 ms saved).
-  * **Web**: calls `maplibregl.prewarm()` — pre-creates the Web Worker pool (~10–50 ms saved).
 
 ### Fixed
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).

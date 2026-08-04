@@ -2,10 +2,6 @@
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
-* New `preWarm()` top-level function that initializes the MapLibre engine before the first map widget is created. Call it from `main()` to overlap native initialization with your app's startup (#867):
-  * **Android**: calls `MapLibre.getInstance()` — loads `libmaplibre-gl.so`, opens the SQLite cache database and registers the connectivity receiver (~170–480 ms saved).
-  * **iOS**: initializes `MLNOfflineStorage.shared` — creates the C++ RunLoop and file sources, and opens the SQLite cache database (~45–165 ms saved).
-  * **Web**: calls `maplibregl.prewarm()` — pre-creates the Web Worker pool (~10–50 ms saved).
 
 ### Fixed
 * **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).
