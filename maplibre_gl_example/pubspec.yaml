@@ -17,10 +17,10 @@ dependencies:
     sdk: flutter
   flutter_hooks: ^0.21.3+1
   http: ^1.6.0
-  location: ^8.0.1
   maplibre_gl:
     path: ../maplibre_gl
   path_provider: ^2.1.5
+  permission_handler: ^12.0.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3
@@ -46,6 +46,11 @@ flutter_launcher_icons:
     background_color: "#111725"
 
 flutter:
+  # Build iOS/macOS via Swift Package Manager (with a CocoaPods fallback for
+  # plugins that don't yet ship a Package.swift). Pinned here so CI and other
+  # contributors get the same behavior without a global `flutter config` flag.
+  config:
+    enable-swift-package-manager: true
   uses-material-design: true
   assets:
     - assets/pattern/cat_silhouette_pattern.png

@@ -395,10 +395,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<CameraPosition?> queryCameraPosition() async {
-    // Web implementation: MapLibre GL JS doesn't have direct camera position query
-    print('queryCameraPosition called in web');
-    // For future implementation, we could query the map's camera state
-    throw UnimplementedError();
+    return _readCameraPosition();
   }
 
   @override
@@ -646,17 +643,21 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  /// Camera position for the streaming paths (e.g. reporting the position after
+  /// an option update), which only report it while [_trackCameraPosition] is on.
   CameraPosition? _getCameraPosition() {
-    if (_trackCameraPosition) {
-      final center = _map.getCenter();
-      return CameraPosition(
-        bearing: _map.getBearing() as double,
-        target: LatLng(center.lat as double, center.lng as double),
-        tilt: _map.getPitch() as double,
-        zoom: _map.getZoom() as double,
-      );
-    }
-    return null;
+    return _trackCameraPosition ? _readCameraPosition() : null;
+  }
+
+  /// Reads the current camera position from the map.
+  CameraPosition _readCameraPosition() {
+    final center = _map.getCenter();
+    return CameraPosition(
+      bearing: _map.getBearing() as double,
+      target: LatLng(center.lat as double, center.lng as double),
+      tilt: _map.getPitch() as double,
+      zoom: _map.getZoom() as double,
+    );
   }
 
   void _onStyleLoaded(data) {

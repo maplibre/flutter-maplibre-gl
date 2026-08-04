@@ -3,17 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
+* **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
 * `pauseMap()` and `resumeMap()` on `MapLibreMapController` to explicitly pause and resume map rendering. Useful for maps that are not visible (e.g. on an inactive `TabBarView` page) to save GPU/CPU. The paused state survives host-activity backgrounding (#805).
   * **Android**: stops the underlying MapView render loop.
   * **iOS**: drops the preferred frame rate to 0 while paused, restoring it on resume.
   * **Web**: no-op.
 
 ### Fixed
+* **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
+* **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).
+* **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
+* **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
 * **Android**: Maps no longer go permanently blank after the host activity is destroyed and recreated by Android's "Don't keep activities" developer option or by aggressive memory pressure. The MapView is now rebuilt against the fresh activity and camera state is restored automatically (#805).
 * **Android**: Maps survive configuration changes such as device rotation, restoring camera state across the activity recreation (#805).
+
+### Changed
+* **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
+* **Example app (iOS)**: Now builds entirely with SPM (no Podfile); the CocoaPods-only `location` dependency was replaced with `permission_handler`.
+
+### Docs
+* Added a documentation website with live, interactive examples at [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
+* The PMTiles example and web demo now use the stable Protomaps demo archive instead of a dated planet build that was pruned and lacked CORS headers.
 
 ### Note for app developers
 On Android the `MapView` is rebuilt across activity recreation. Camera is restored automatically. Runtime-added sources/layers/images and style switches must be applied inside `onStyleLoadedCallback` (the recommended pattern, also documented on `MapLibreMap.onMapCreated`): the callback fires again on each recreation, so apps that already follow it see their style content re-applied automatically.
