@@ -8,6 +8,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Fixed
 * Adding or updating a GeoJSON source with very large geometry (e.g. a line with tens of thousands of points) no longer freezes the UI. The JSON encoding for large payloads now runs on a background isolate instead of blocking the main thread; small payloads keep the previous synchronous fast path (#366).
 
+### Changed
+* **iOS**: Added support for Flutter's Swift Package Manager (SPM) integration. On Flutter versions where SPM is enabled, MapLibre iOS is pulled in through SPM; the plugin still ships its CocoaPods podspec, so apps using CocoaPods continue to work unchanged. No migration is required in existing apps.
+* **Example app (iOS)**: The example now builds entirely with Swift Package Manager (no CocoaPods/Podfile). Its `location` dependency, which was CocoaPods-only, was replaced with `permission_handler` (which supports SPM); the map's own location dot and coordinates are unchanged.
+
+### Docs
+* The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
