@@ -8,10 +8,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Changed
 * **iOS**: Added support for Flutter's Swift Package Manager (SPM) integration. On Flutter versions where SPM is enabled, MapLibre iOS is pulled in through SPM; the plugin still ships its CocoaPods podspec, so apps using CocoaPods continue to work unchanged. No migration is required in existing apps.
 * **Example app (iOS)**: The example now builds entirely with Swift Package Manager (no CocoaPods/Podfile). Its `location` dependency, which was CocoaPods-only, was replaced with `permission_handler` (which supports SPM); the map's own location dot and coordinates are unchanged.
+* The exception thrown by `addSymbol`, `addCircle`, `addLine` and `addFill` when the annotation manager is missing now names the annotation type and both possible causes: the style has not finished loading, or that type is not part of the widget's `annotationOrder` (an empty `annotationOrder` disables annotations entirely). The previous message only mentioned style loading, which sent users debugging the wrong thing (#910).
 
 ### Docs
 * The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
+* **Annotations vs Style Layers** now has a "Constraints and gotchas" section listing the rules of both APIs in one place: waiting for the style, what a style change destroys, `annotationOrder` and `annotationConsumeTapEvents`, batching, unique layer ids, hidden annotation layers and tap handling on style layers (#910).
+* The **Annotations** overview now documents the two conditions required for any annotation to work (style loaded, type enabled in `annotationOrder`), which were previously only mentioned in the API reference of the parameter, and Markers, Animated and Draggable link to it. **Draggable** also spells out the three switches that dragging depends on, including `annotationConsumeTapEvents`, which silently prevents dragging when a type is left out of it.
+* The section overview pages (Camera, Annotations, Layers & Sources, Advanced) are now reachable from the navigation. They already existed and the theme was already configured for section indexes, but they were not listed in the nav, so the only way to open them was to guess the URL.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
