@@ -32,6 +32,8 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Android**: a map no longer goes permanently blank after the host activity is destroyed and recreated, whether by the "Don't keep activities" developer option or under memory pressure. The MapView is rebuilt against the new activity and the camera position is restored (#805).
 * **Android**: a map survives configuration changes such as rotation, restoring the camera position across the activity recreation (#805).
 
+* The bundled LICENSE no longer breaks Flutter's license collector. Every app depending on this package showed an untitled first entry on its `showLicensePage()` screen, holding a third-party notice that had been cut off from its heading (#895).
+
 ### Changed
 * **iOS**: the plugin supports Flutter's Swift Package Manager integration. It still ships its CocoaPods podspec, so apps on CocoaPods keep working with no migration (#891).
 * **Android**: the plugin no longer applies the Kotlin Gradle Plugin when the app builds with AGP 9 or later, where doing so breaks the build. On AGP 8 nothing changes, so the minimum Flutter version stays at 3.29 (#905).
