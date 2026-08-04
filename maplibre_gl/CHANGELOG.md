@@ -1,10 +1,25 @@
-## [Unreleased]
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
-* New `preWarm()` top-level function that initializes the MapLibre engine before the first map widget is created. Call it from `main()` to overlap native initialization with your app's startup:
-  * **Android**: Calls `MapLibre.getInstance()` — loads `libmaplibre-gl.so`, opens the SQLite cache database, registers the connectivity receiver (~170–480 ms saved).
-  * **iOS**: Initializes `MLNOfflineStorage.shared` — creates the C++ RunLoop, file sources, and opens the SQLite cache database (~45–165 ms saved).
-  * **Web**: Calls `maplibregl.prewarm()` — pre-creates the Web Worker pool (~10–50 ms saved).
+* **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
+* New `preWarm()` top-level function that initializes the MapLibre engine before the first map widget is created. Call it from `main()` to overlap native initialization with your app's startup (#867):
+  * **Android**: calls `MapLibre.getInstance()` — loads `libmaplibre-gl.so`, opens the SQLite cache database and registers the connectivity receiver (~170–480 ms saved).
+  * **iOS**: initializes `MLNOfflineStorage.shared` — creates the C++ RunLoop and file sources, and opens the SQLite cache database (~45–165 ms saved).
+  * **Web**: calls `maplibregl.prewarm()` — pre-creates the Web Worker pool (~10–50 ms saved).
+
+### Fixed
+* **Android**: Icons added with `addImage` are shown again. Since 0.26.0 they could be silently dropped when draggable annotations were used (the default), due to an upstream texture atlas bug (#866).
+* **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
+* **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
+
+### Changed
+* **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
+* **Example app (iOS)**: Now builds entirely with SPM (no Podfile); the CocoaPods-only `location` dependency was replaced with `permission_handler`.
+
+### Docs
+* Added a documentation website with live, interactive examples at [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
+* The PMTiles example and web demo now use the stable Protomaps demo archive instead of a dated planet build that was pruned and lacked CORS headers.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
