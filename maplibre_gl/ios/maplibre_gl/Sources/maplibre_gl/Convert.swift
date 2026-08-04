@@ -29,6 +29,11 @@ class Convert {
         if let styleString = options["styleString"] as? String {
             delegate.setStyleString(styleString: styleString)
         }
+        // Parse before myLocationEnabled so the manual location manager is wired
+        // in before `showsUserLocation` is first enabled (SDK ordering rule).
+        if let locationSource = options["locationSource"] as? String {
+            delegate.setLocationSource(token: locationSource)
+        }
         if let rotateGesturesEnabled = options["rotateGesturesEnabled"] as? Bool {
             delegate.setRotateGesturesEnabled(rotateGesturesEnabled: rotateGesturesEnabled)
         }

@@ -237,6 +237,14 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setManualLocation(ManualLocationUpdate update) async {
+    await _channel.invokeMethod(
+      'locationComponent#setManualLocation',
+      update.toMap(),
+    );
+  }
+
+  @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
     await _channel.invokeMethod('map#matchMapLanguageWithDeviceDefault');
   }

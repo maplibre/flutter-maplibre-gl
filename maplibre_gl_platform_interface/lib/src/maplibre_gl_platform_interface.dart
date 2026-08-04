@@ -109,6 +109,14 @@ abstract class MapLibrePlatform {
     MyLocationTrackingMode myLocationTrackingMode,
   );
 
+  /// Pushes an app-provided location into the map's user-location component.
+  ///
+  /// Requires the map to be created with
+  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  ///
+  /// Supported on Android, iOS and web.
+  Future<void> setManualLocation(ManualLocationUpdate update);
+
   Future<void> matchMapLanguageWithDeviceDefault();
 
   void resizeWebMap();

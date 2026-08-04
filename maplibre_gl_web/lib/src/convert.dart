@@ -118,6 +118,9 @@ class Convert {
         options['featureTapsTriggersMapClick'],
       );
     }
+    if (options.containsKey('locationSource')) {
+      sink.setLocationSource(options['locationSource'] as String);
+    }
     if (options.containsKey('locationEngineProperties')) {
       final props = options['locationEngineProperties'] as List?;
       // Web serializes as [enableHighAccuracy (0/1), maximumAge, timeout]

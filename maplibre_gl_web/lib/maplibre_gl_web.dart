@@ -26,6 +26,7 @@ import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
 import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/control/geolocate_control_interop.dart';
 import 'package:maplibre_gl_web/src/layer_tools.dart';
+import 'package:maplibre_gl_web/src/manual_location_puck.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
 import 'package:maplibre_gl_web/src/ui/camera.dart';
 import 'package:maplibre_gl_web/src/ui/control/attribution_control.dart';
