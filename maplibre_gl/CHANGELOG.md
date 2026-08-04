@@ -43,6 +43,7 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **iOS**: MapLibre iOS upgraded from 6.27.0 to 6.28.0 ([upstream release notes](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.28.0)). Among the fixes it brings: the map view is no longer blurry in landscape on iPad, and `MLNNetworkConfiguration` now forwards `didReceiveResponse` to its delegate (#929).
 * **Android, iOS**: panning a pitched map no longer moves the camera past the horizon, and a layer whose `source-layer` or `source-id` changes now notifies its observer, both from the SDK upgrades above (#929).
 * **Android**: OkHttp upgraded to 5.4.0 and Play Services Location to 21.4.0.
+* **Android**: the `android-plugin-annotation-v9` and `android-plugin-offline-v9` dependencies are gone, so apps pull two fewer artifacts. Neither was ever used: annotations here are drawn as style layers against the core SDK, and the offline plugin's only trace in this repository was a manifest rule that removed the activity it contributes. They came in with the folder restructure in #453 (#929).
 
 ### Docs
 * New documentation website with live, interactive examples: [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
