@@ -962,6 +962,26 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.updateContentInsets(insets, animated);
   }
 
+  /// Sets the map's viewport padding, in logical pixels, optionally animating
+  /// the change. Padding shifts the map's center / vanishing point, which is
+  /// useful for keeping content centered behind overlays such as a bottom
+  /// sheet or a side panel.
+  ///
+  /// This is a convenience wrapper around [updateContentInsets]; the named
+  /// edges map directly to an [EdgeInsets].
+  Future<void> setPadding({
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+    bool animated = false,
+  }) {
+    return updateContentInsets(
+      EdgeInsets.only(left: left, top: top, right: right, bottom: bottom),
+      animated,
+    );
+  }
+
   /// Updates the language of the map labels to match the specified language.
   /// This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
   /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]),
@@ -1995,6 +2015,28 @@ class MapLibreMapController extends ChangeNotifier {
     return (await _maplibrePlatform.getSourceIds())
         .whereType<String>()
         .toList();
+  }
+
+  /// Returns the properties of the layer with the given [layerId] as a
+  /// MapLibre style-spec map, or null if no such layer exists.
+  ///
+  /// The returned map mirrors a layer entry in a MapLibre style JSON: it
+  /// contains `id`, `type`, `source` (and `source-layer` when set), `minzoom`,
+  /// `maxzoom`, `filter`, and the `paint` and `layout` property objects keyed
+  /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
+  /// values are returned as JSON literals or expressions.
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
+    return _maplibrePlatform.getLayerProperties(layerId);
+  }
+
+  /// Returns the properties of the source with the given [sourceId] as a
+  /// MapLibre style-spec map, or null if no such source exists.
+  ///
+  /// The returned map mirrors a source entry in a MapLibre style JSON: it
+  /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
+  /// `data`, `attribution`, `minzoom`, `maxzoom`).
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) {
+    return _maplibrePlatform.getSourceProperties(sourceId);
   }
 
   /// Returns the visibility of a layer.

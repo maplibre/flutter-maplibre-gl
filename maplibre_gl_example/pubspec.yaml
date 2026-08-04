@@ -1,7 +1,7 @@
 name: maplibre_gl_example
 description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
-version: 0.26.2
+version: 0.27.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 resolution: workspace
@@ -12,7 +12,12 @@ environment:
 
 dependencies:
   collection: ^1.19.1
+  # Held at 12.x: 13.x pulls win32 ^6, which no stable file_picker or share_plus
+  # accepts yet (both need win32 ^5.9). Windows is not a platform of this example,
+  # so the newer win32 buys nothing here. Lift all three together once a stable
+  # file_picker accepts win32 ^6.
   device_info_plus: 12.3.0
+  file_picker: ^11.0.2
   flutter:
     sdk: flutter
   flutter_hooks: ^0.21.3+1
@@ -20,7 +25,13 @@ dependencies:
   maplibre_gl:
     path: ../maplibre_gl
   path_provider: ^2.1.5
+  # Held at 12.x: permission_handler_android 14 migrated to Flutter's built-in
+  # Kotlin unconditionally and compiles against SDK 37, so it needs Flutter 3.44
+  # and an installed Android SDK 37 to build, while its pubspec still declares
+  # flutter >=3.24.0. On anything older the Gradle build fails on an unresolved
+  # `compilerOptions`. Lift this once the example itself targets that baseline.
   permission_handler: ^12.0.0
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3

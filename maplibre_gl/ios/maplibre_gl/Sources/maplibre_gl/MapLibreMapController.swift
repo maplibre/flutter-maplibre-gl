@@ -28,6 +28,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
 
+    // GPS pulse: start/stop location updates on a timer to save battery.
+    private var locationPulseTimer: Timer?
+    private var locationPulseWindowTimer: Timer?
+    private var locationUpdateIntervalMs: Int = 0
+    private var locationPulseWindowMs: Int = MapLibreMapController.defaultPulseWindowMs
+    static let defaultPulseWindowMs: Int = 5000
+
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
     private var userFps: MLNMapViewPreferredFramesPerSecond = .default
@@ -1236,6 +1243,35 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["sources"] = sourceIds as NSObject
             result(reply)
 
+        case "style#getLayerProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            // Read the serialized style and pluck the layer entry, rather than
+            // enumerating every NSExpression property. This guarantees the
+            // result matches the MapLibre style spec, like Android and web.
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let layers = styleObject?["layers"] as? [[String: Any]],
+               let layer = layers.first(where: { ($0["id"] as? String) == layerId }),
+               let json = jsonString(from: layer)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
+        case "style#getSourceProperties":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let sourceId = arguments["sourceId"] as? String else { return }
+            let styleObject = currentStyleObject()
+            var reply = [String: NSObject]()
+            if let sources = styleObject?["sources"] as? [String: Any],
+               let source = sources[sourceId] as? [String: Any],
+               let json = jsonString(from: source)
+            {
+                reply["properties"] = json as NSObject
+            }
+            result(reply)
+
         case "style#getFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
@@ -1373,7 +1409,26 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private func updateMyLocationEnabled() {
-        mapView.showsUserLocation = myLocationEnabled
+        if myLocationEnabled {
+            restartLocationPulseIfNeeded()
+        } else {
+            locationPulseTimer?.invalidate()
+            locationPulseTimer = nil
+            locationPulseWindowTimer?.invalidate()
+            locationPulseWindowTimer = nil
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
+        }
+    }
+
+    /// Start or stop Core Location updates without toggling the user-location annotation.
+    private func setLocationUpdatesActive(_ active: Bool) {
+        guard let locationManager = mapView.locationManager else { return }
+        if active {
+            locationManager.startUpdatingLocation()
+        } else {
+            locationManager.stopUpdatingLocation()
+        }
     }
 
     private func getCamera() -> MLNMapCamera? {
@@ -1382,6 +1437,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private func setMapLanguage(language: String) {
         self.mapView.setMapLanguage(language)
+    }
+
+    // The current map style parsed as a JSON dictionary (style-spec shaped),
+    // or nil if it cannot be read/parsed. Used to read layer/source properties
+    // by id without enumerating every typed property.
+    private func currentStyleObject() -> [String: Any]? {
+        guard let data = mapView.styleJSON.data(using: .utf8) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
+    // Serializes a style sub-object (a layer or source entry) back to a JSON
+    // string for the Dart side, which decodes it into a Map.
+    private func jsonString(from object: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: object) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
     }
 
     /*
@@ -2275,7 +2347,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
-    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double) {
+    func setLocationEngineProperties(
+        enableHighAccuracy: Bool,
+        distanceFilter: Double,
+        intervalMs: Int,
+        pulseWindowMs: Int
+    ) {
         guard let locationManager = mapView.locationManager else { return }
         let accuracy = enableHighAccuracy
             ? kCLLocationAccuracyBest
@@ -2285,6 +2362,64 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             : kCLDistanceFilterNone
         locationManager.setDesiredAccuracy?(accuracy)
         locationManager.setDistanceFilter?(filter)
+
+        let resolvedPulseWindowMs = pulseWindowMs > 0
+            ? pulseWindowMs
+            : Self.defaultPulseWindowMs
+        if locationUpdateIntervalMs != intervalMs
+            || locationPulseWindowMs != resolvedPulseWindowMs
+        {
+            locationUpdateIntervalMs = intervalMs
+            locationPulseWindowMs = resolvedPulseWindowMs
+            restartLocationPulseIfNeeded()
+        }
+    }
+
+    private func restartLocationPulseIfNeeded() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+
+        guard myLocationEnabled else {
+            setLocationUpdatesActive(false)
+            mapView.showsUserLocation = false
+            return
+        }
+
+        // Keep the blue dot at the last known position between GPS pulses.
+        mapView.showsUserLocation = true
+
+        guard locationUpdateIntervalMs > 0 else {
+            setLocationUpdatesActive(true)
+            return
+        }
+
+        fireLocationPulse()
+
+        let interval = TimeInterval(locationUpdateIntervalMs) / 1000.0
+        locationPulseTimer = Timer.scheduledTimer(
+            withTimeInterval: interval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.fireLocationPulse()
+        }
+    }
+
+    private func fireLocationPulse() {
+        setLocationUpdatesActive(true)
+
+        let windowSec = TimeInterval(locationPulseWindowMs) / 1000.0
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = Timer.scheduledTimer(
+            withTimeInterval: windowSec,
+            repeats: false
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if self.locationUpdateIntervalMs > 0 {
+                self.setLocationUpdatesActive(false)
+            }
+        }
     }
 
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {

@@ -6,6 +6,36 @@ part of '../maplibre_gl.dart';
 
 const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
 
+/// Pre-warms the MapLibre native engine to speed up the first map render.
+///
+/// Call this as early as possible — typically in `main()` before `runApp()` —
+/// to overlap the native SDK initialization with your app's startup.
+///
+/// Safe to call multiple times; subsequent calls are no-ops because the
+/// underlying initialization is idempotent after the first invocation.
+///
+/// On Android, the speedup comes from issuing the channel call early: the
+/// plugin's global method handler already initializes MapLibre on every call.
+///
+/// Example:
+/// ```dart
+/// void main() {
+///   preWarm(); // fire-and-forget
+///   runApp(const MyApp());
+/// }
+/// ```
+Future<void> preWarm() async {
+  if (kIsWeb) {
+    prewarm.webPrewarm();
+    return;
+  }
+  try {
+    await _globalChannel.invokeMethod('preWarm');
+  } on MissingPluginException {
+    // Platform doesn't implement preWarm; no-op.
+  }
+}
+
 /// Retains active offline-download event-channel subscriptions so that Dart's
 /// GC cannot tear them down during idle periods (e.g. while a download is
 /// paused). If the subscription is collected, the native `EventSink` is
@@ -82,6 +112,40 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   );
   final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
   return regions.map(OfflineRegion.fromMap).toList();
+}
+
+/// Returns the absolute path of the offline database file backing the offline
+/// packs and ambient cache, or `null` if it cannot be resolved.
+///
+/// This is the same file that [mergeOfflineRegions] imports from: copying it
+/// elsewhere and passing that copy back to [mergeOfflineRegions] round-trips
+/// every region it contains. The file holds the *whole* store (all regions
+/// plus the ambient cache), so it is not a per-region export.
+///
+/// Android and iOS only; the offline feature is unavailable on web.
+Future<String?> getOfflineDatabasePath() async {
+  return _globalChannel.invokeMethod<String>('getOfflineDatabasePath');
+}
+
+/// Writes a copy of the offline database to a path of your choosing.
+///
+/// [destinationPath] is the full path to write the copy to, including the file
+/// name — for example `'${(await getTemporaryDirectory()).path}/regions.db'`.
+/// Its parent directory must already exist.
+///
+/// Returns that same path once the file has been written, or `null` if there is
+/// no offline database yet (nothing has been downloaded). Use the returned path
+/// to share or move the file; import it elsewhere with [mergeOfflineRegions].
+///
+/// The copy is the whole store (the file behind [getOfflineDatabasePath]) —
+/// every region plus the ambient cache, not a single region — and includes the
+/// SQLite `-wal`/`-shm` sidecars so it is consistent.
+///
+/// Android and iOS only; throws [UnsupportedError] on web.
+Future<String?> exportOfflineDatabase(String destinationPath) async {
+  final dbPath = await getOfflineDatabasePath();
+  if (dbPath == null) return null;
+  return copyOfflineDatabase(dbPath, destinationPath);
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
