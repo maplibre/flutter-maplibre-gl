@@ -27,9 +27,16 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
   MapLibreMapController? _controller;
   String _displayData = '';
   bool _isLoading = false;
+  int _idleCount = 0;
 
   void _onMapCreated(MapLibreMapController controller) {
     setState(() => _controller = controller);
+  }
+
+  void _onMapIdle() {
+    // Fires whenever the map settles (no pending tiles, animations, or
+    // gestures). Now wired on web too, matching Android and iOS (#857).
+    if (mounted) setState(() => _idleCount++);
   }
 
   Future<void> _displaySources() async {
@@ -77,6 +84,7 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     return MapExampleScaffold(
       map: MapLibreMap(
         onMapCreated: _onMapCreated,
+        onMapIdle: _onMapIdle,
         styleString: ExampleConstants.demoMapStyle,
         initialCameraPosition: ExampleConstants.defaultCameraPosition,
       ),
@@ -106,6 +114,15 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                 style: ExampleButtonStyle.filled,
               ),
             ],
+          ),
+          InfoCard(
+            title:
+                'onMapIdle fired: $_idleCount time'
+                '${_idleCount == 1 ? '' : 's'}',
+            subtitle:
+                'Pan or zoom the map; the counter increments each time '
+                'the map settles (works on web too).',
+            icon: Icons.motion_photos_paused,
           ),
           if (_isLoading)
             const Card(

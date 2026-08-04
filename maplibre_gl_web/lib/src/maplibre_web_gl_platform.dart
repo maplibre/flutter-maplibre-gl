@@ -104,6 +104,7 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('movestart', _onCameraMoveStarted));
     _mapSubscriptions.add(_map.on('move', _onCameraMove));
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
+    _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
     _mapSubscriptions.add(_map.on('styleimagemissing', _loadFromAssets));
     if (_dragEnabled) {
@@ -747,6 +748,10 @@ class MapLibreMapController extends MapLibrePlatform
       zoom: _map.getZoom() as double,
     );
     onCameraIdlePlatform(camera);
+  }
+
+  void _onMapIdle(_) {
+    onMapIdlePlatform(null);
   }
 
   void _onCameraTrackingChanged(bool isTracking) {
