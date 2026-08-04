@@ -233,7 +233,10 @@ class OfflineManagerUtils {
     // MARK: Concurrency Control
 
     static func setMaxConcurrentRequests(result: @escaping FlutterResult, maxRequestsPerHost: Int?) {
-        let sessionConfig = MLNNetworkConfiguration.sharedManager.sessionConfiguration ?? URLSessionConfiguration.default
+        // Read the existing config so protocolClasses (e.g. MapLibreHeadersProtocol)
+        // registered at startup are preserved when we write back.
+        let sessionConfig = MLNNetworkConfiguration.sharedManager.sessionConfiguration
+            ?? URLSessionConfiguration.default
         if let maxPerHost = maxRequestsPerHost {
             sessionConfig.httpMaximumConnectionsPerHost = maxPerHost
         }

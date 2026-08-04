@@ -14,16 +14,13 @@ let package = Package(
     dependencies: [
         // When updating the dependency version,
         // make sure to also update the version in maplibre_gl.podspec.
-        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.25.1"),
+        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.27.0"),
     ],
     targets: [
         .target(
             name: "maplibre_gl",
             dependencies: [
                 .product(name: "MapLibre", package: "maplibre-gl-native-distribution")
-            ],
-            cSettings: [
-                .headerSearchPath("include/maplibre_gl")
             ]
         )
     ]

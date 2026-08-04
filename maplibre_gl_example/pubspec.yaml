@@ -1,7 +1,7 @@
 name: maplibre_gl_example
 description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
-version: 0.26.1
+version: 0.26.2
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 resolution: workspace
@@ -17,17 +17,40 @@ dependencies:
     sdk: flutter
   flutter_hooks: ^0.21.3+1
   http: ^1.6.0
-  location: ^8.0.1
   maplibre_gl:
     path: ../maplibre_gl
   path_provider: ^2.1.5
+  permission_handler: ^12.0.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
   flutter_test:
     sdk: flutter
   very_good_analysis: ^10.2.0
 
+flutter_launcher_icons:
+  image_path: "assets/maplibre_icon.png"
+  # Android adaptive icon: logo on dark brand background
+  android: "launcher_icon"
+  adaptive_icon_background: "#111725"
+  adaptive_icon_foreground: "assets/maplibre_icon.png"
+  # iOS: fill transparent areas with dark brand background
+  ios: true
+  image_path_ios: "assets/maplibre_icon.png"
+  background_color_ios: "#111725"
+  remove_alpha_ios: true
+  # Web PWA icons
+  web:
+    generate: true
+    image_path: "assets/maplibre_icon.png"
+    background_color: "#111725"
+
 flutter:
+  # Build iOS/macOS via Swift Package Manager (with a CocoaPods fallback for
+  # plugins that don't yet ship a Package.swift). Pinned here so CI and other
+  # contributors get the same behavior without a global `flutter config` flag.
+  config:
+    enable-swift-package-manager: true
   uses-material-design: true
   assets:
     - assets/pattern/cat_silhouette_pattern.png

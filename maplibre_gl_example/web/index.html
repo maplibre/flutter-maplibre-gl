@@ -34,21 +34,22 @@
   <link href='https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css' rel='stylesheet'/>
   <script src="https://unpkg.com/pmtiles@4.4.0/dist/pmtiles.js"></script>
 
-  <title>MapLibre Example</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <script src="flutter_bootstrap.js" async></script>
-
+  <!-- PMTiles protocol must be registered before Flutter boots, so it is placed
+       here (synchronous, after the pmtiles script above) rather than after the
+       async flutter_bootstrap.js which could execute before an inline script
+       that follows it. -->
   <script>
-    // This is just a rough sketch of how to set up a maplibre-gl JS map with pmtiles.
-    // The URL used is the same as in assets/pmtiles_style.json.
-    // In development this only works when passing `--web-browser-flag "--disable-web-security"` to flutter run.
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol("pmtiles", protocol.tile);
     const PMTILES_URL = "https://demo-bucket.protomaps.com/v4.pmtiles";
     const source = new pmtiles.FetchSource(PMTILES_URL);
     protocol.add(new pmtiles.PMTiles(source));
   </script>
+
+  <title>MapLibre Example</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

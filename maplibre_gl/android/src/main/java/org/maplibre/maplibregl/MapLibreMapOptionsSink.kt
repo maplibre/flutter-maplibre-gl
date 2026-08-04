@@ -28,6 +28,8 @@ internal interface MapLibreMapOptionsSink {
 
     fun setZoomGesturesEnabled(zoomGesturesEnabled: Boolean)
 
+    fun setDoubleClickZoomEnabled(doubleClickZoomEnabled: Boolean)
+
     fun setMyLocationEnabled(myLocationEnabled: Boolean)
 
     fun setMyLocationTrackingMode(myLocationTrackingMode: Int)

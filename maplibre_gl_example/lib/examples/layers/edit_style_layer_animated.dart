@@ -73,6 +73,7 @@ class _EditStyleLayerAnimatedBodyState
   void dispose() {
     _animationTimer?.cancel();
     _colorAnimationController.dispose();
+    _controller = null;
     super.dispose();
   }
 
@@ -239,8 +240,9 @@ class _EditStyleLayerAnimatedBodyState
     if (_controller == null) return;
 
     for (var i = 0; i < 30; i++) {
+      if (_controller == null) return;
       final radius = 20 + 30 * sin(i * 0.2);
-      if (radius < 0) continue; // Skip negative radius values
+      if (radius < 0) continue;
 
       await _controller!.setLayerProperties(
         _circleLayerId,
@@ -254,8 +256,9 @@ class _EditStyleLayerAnimatedBodyState
     if (_controller == null) return;
 
     for (var i = 0; i < 30; i++) {
+      if (_controller == null) return;
       final width = 4 + 6 * sin(i * 0.2);
-      if (width < 0) continue; // Skip negative width values
+      if (width < 0) continue;
 
       await _controller!.setLayerProperties(
         _lineLayerId,
@@ -269,6 +272,7 @@ class _EditStyleLayerAnimatedBodyState
     if (_controller == null) return;
 
     for (var i = 0; i < 30; i++) {
+      if (_controller == null) return;
       final opacity = 0.3 + 0.7 * sin(i * 0.2).abs();
 
       await _controller!.setLayerProperties(
@@ -296,6 +300,7 @@ class _EditStyleLayerAnimatedBodyState
     const center = ExampleConstants.sydneyCenter;
 
     for (var i = 0; i < 30; i++) {
+      if (_controller == null) return;
       final angle = i * 0.2;
 
       // Animate circle position

@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Changed
+* **iOS**: Added support for Flutter's Swift Package Manager (SPM) integration. On Flutter versions where SPM is enabled, MapLibre iOS is pulled in through SPM; the plugin still ships its CocoaPods podspec, so apps using CocoaPods continue to work unchanged. No migration is required in existing apps.
+* **Example app (iOS)**: The example now builds entirely with Swift Package Manager (no CocoaPods/Podfile). Its `location` dependency, which was CocoaPods-only, was replaced with `permission_handler` (which supports SPM); the map's own location dot and coordinates are unchanged.
+
+### Docs
+* The PMTiles example and the live web demo now read from the stable Protomaps demo archive (`demo-bucket.protomaps.com/v4.pmtiles`) instead of a dated planet build. The dated builds are pruned after a few days and are not served with CORS headers, which made the web demo load empty.
+* **Web**: the expressions example no longer throws "layer already exists" when the style reloads, by adding its source and layers only once.
+
+## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
+
+> **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
+
+### Fixed
+* Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
+* **Android, iOS**: `doubleClickZoomEnabled: false` now works correctly. Previously this option was only respected on web, so single taps on Android and iOS always had a ~300 ms delay while the platform waited to rule out a double-tap (#829).
+* **iOS**: `setCustomHeaders` and `setHttpHeaders` now correctly apply to all map network requests (tiles, styles, sprites, glyphs). Both APIs were previously silently ignored on iOS (#831).
+* **iOS**: `setMapLanguage` now correctly changes map labels on non-Mapbox styles (e.g. OpenFreeMap Liberty). Previously, calling `setMapLanguage` on iOS had no effect and place names were displayed using the style's default language (#830). A new **Map Language** example in the example app demonstrates this across several languages.
+* **iOS**: Layer color properties now accept any valid CSS color string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, named colors). Previously only hex colors were supported and anything else rendered as transparent (#832).
+* **iOS**: Fixed a crash that could occur when the app was sent to the background while using PMTiles sources (#833).
+* **iOS**: Fixed a crash on cold launch when the map was first displayed at zero size (e.g. inside a hidden widget or during app startup) (#841).
+* **iOS**: Fixed a memory leak where map resources were not fully released when the map widget was disposed (#837).
+* **Android**: Fixed a crash when style API methods were called while the map style was still loading.
+
+### Changed
+* **Android**: MapLibre Android SDK upgraded from 13.1.0 to 13.3.0.
+* **iOS**: MapLibre iOS upgraded from 6.26.0 to 6.27.0.
+
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
 > **Note:** Several users reported crashes on a range of Android devices after upgrading to 0.26.0, particularly on older / less recent hardware. These issues are addressed in 0.26.1 (see the Android fixes below).
