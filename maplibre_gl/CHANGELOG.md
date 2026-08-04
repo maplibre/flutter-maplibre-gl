@@ -16,7 +16,7 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **iOS**: `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs` to pulse GPS instead of tracking continuously. GPS runs for `pulseWindowMs` (5 s by default) every `intervalMs`, and the location dot holds its last position in between, which is noticeably easier on the battery for maps that stay open a long time. `intervalMs: 0` keeps the previous continuous behaviour and remains the default (#901).
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
 * `pauseMap()` and `resumeMap()` on `MapLibreMapController` stop and restart rendering for a map that is alive but not on screen, for example on an inactive `TabBarView` page. On Android this stops the MapView render loop, on iOS it drops the preferred frame rate to zero, and on web it does nothing. A paused map stays paused while the host activity is in the background (#805).
-* `attributionButtonColor` on `MapLibreMap` tints the attribution (i) button on Android and iOS, so it stays readable over a dark style. It has no effect on web, where that control is styled with CSS (#805).
+* `attributionButtonColor` on `MapLibreMap` tints the attribution (i) button on Android and iOS, for styles the SDK's own tint does not read well against. Leave it unset to keep the MapLibre default. It has no effect on web, where that control is styled with CSS (#805).
 * **Android, iOS, Web**: an app can drive the user-location puck from its own updates instead of the device GPS, and no location permission is required in that mode. Build the map with `locationSource: ManualLocationSource()` and `myLocationEnabled: true`, then push each fix with `controller.updateManualLocation(ManualLocationUpdate(target: ..., bearing: ..., speed: ..., horizontalAccuracy: ...))`. Useful for a paired GPS device, a replayed track, or a simulation. The accuracy ring, the tracking modes and `onUserLocationUpdated` keep working, and the default stays `PlatformLocationSource()`. On web the plugin draws the puck itself, so the app has to load `maplibre-gl.css`, which the other web controls already need (#840).
 
 ### Fixed
@@ -32,6 +32,8 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Android**: a map no longer goes permanently blank after the host activity is destroyed and recreated, whether by the "Don't keep activities" developer option or under memory pressure. The MapView is rebuilt against the new activity and the camera position is restored (#805).
 * **Android**: a map survives configuration changes such as rotation, restoring the camera position across the activity recreation (#805).
 
+* **iOS**: `controller.cameraPosition` no longer gets stuck holding a non-finite zoom. Camera events that arrive before the map view has been laid out carried a `NaN` zoom, which was cached and handed to every later reader until the next camera event, so on a map the user had not touched yet, content anchored to the camera was placed wrongly. The zoom now falls back to the map view's own, and the Dart side refuses to cache a camera with non-finite components (#903).
+
 * The bundled LICENSE no longer breaks Flutter's license collector. Every app depending on this package showed an untitled first entry on its `showLicensePage()` screen, holding a third-party notice that had been cut off from its heading (#895).
 
 ### Changed
@@ -39,7 +41,6 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Android**: the plugin no longer applies the Kotlin Gradle Plugin when the app builds with AGP 9 or later, where doing so breaks the build. On AGP 8 nothing changes, so the minimum Flutter version stays at 3.29 (#905).
 * **Android**: MapLibre Android SDK upgraded from 13.3.0 to 13.3.1 ([upstream release notes](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.3.1)) (#877).
 * **Android**: OkHttp upgraded to 5.4.0 and Play Services Location to 21.4.0.
-* **Android, iOS**: the attribution (i) button is tinted black by default instead of the SDK's blue, which was hard to read over most map backgrounds. Pass `attributionButtonColor` to choose a different tint (#805).
 
 ### Docs
 * New documentation website with live, interactive examples: [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
