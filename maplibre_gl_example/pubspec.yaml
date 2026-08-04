@@ -25,7 +25,12 @@ dependencies:
   maplibre_gl:
     path: ../maplibre_gl
   path_provider: ^2.1.5
-  permission_handler: ^13.0.0
+  # Held at 12.x: permission_handler_android 14 migrated to Flutter's built-in
+  # Kotlin unconditionally and compiles against SDK 37, so it needs Flutter 3.44
+  # and an installed Android SDK 37 to build, while its pubspec still declares
+  # flutter >=3.24.0. On anything older the Gradle build fails on an unresolved
+  # `compilerOptions`. Lift this once the example itself targets that baseline.
+  permission_handler: ^12.0.0
   share_plus: ^12.0.1
 
 dev_dependencies:
