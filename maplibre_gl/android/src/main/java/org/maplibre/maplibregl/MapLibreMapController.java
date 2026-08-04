@@ -122,9 +122,11 @@ final class MapLibreMapController
         OnMapReadyCallback,
         OnCameraTrackingChangedListener,
         PlatformView {
+  public static final List<MapLibreMapController> activeControllers = new java.util.concurrent.CopyOnWriteArrayList<>();
   private static final String TAG = "MapLibreMapController";
   private final int id;
   private final MethodChannel methodChannel;
+  private final boolean transformRequestEnabled;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
   private float density;
   private final Context context;
@@ -193,7 +195,8 @@ final class MapLibreMapController
       MapLibreMapOptions options,
       String styleStringInitial,
       boolean dragEnabled,
-      boolean featureTapsTriggersMapClick
+      boolean featureTapsTriggersMapClick,
+      boolean transformRequestEnabled
   ) {
     MapLibreUtils.getMapLibre(context);
     this.id = id;
@@ -201,6 +204,7 @@ final class MapLibreMapController
     this.dragEnabled = dragEnabled;
     this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
+    this.transformRequestEnabled = transformRequestEnabled;
     this.mapViewContainer = new FrameLayout(context);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
@@ -214,6 +218,15 @@ final class MapLibreMapController
     mapViewContainer.addView(mapView);
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/maplibre_gl_" + id);
     methodChannel.setMethodCallHandler(this);
+    activeControllers.add(this);
+  }
+
+  public boolean isTransformRequestEnabled() {
+    return transformRequestEnabled;
+  }
+
+  public MethodChannel getMethodChannel() {
+    return methodChannel;
   }
 
   @Override
@@ -2174,6 +2187,7 @@ final class MapLibreMapController
 
   @Override
   public void dispose() {
+    activeControllers.remove(this);
     if (disposed) {
       return;
     }

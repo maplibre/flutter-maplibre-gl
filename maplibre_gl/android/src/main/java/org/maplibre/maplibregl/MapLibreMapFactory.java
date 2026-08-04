@@ -38,9 +38,13 @@ public class MapLibreMapFactory extends PlatformViewFactory {
       boolean dragEnabled = Convert.toBoolean(params.get("dragEnabled"));
       builder.setDragEnabled(dragEnabled);
     }
-    if(params.containsKey("styleString")) {
+    if (params.containsKey("styleString")) {
       String styleString = Convert.toString(params.get("styleString"));
       builder.setStyleString(styleString);
+    }
+    if (params.containsKey("transformRequestEnabled")) {
+      boolean transformRequestEnabled = Convert.toBoolean(params.get("transformRequestEnabled"));
+      builder.setTransformRequestEnabled(transformRequestEnabled);
     }
 
     return builder.build(id, context, messenger, lifecycleProvider);
