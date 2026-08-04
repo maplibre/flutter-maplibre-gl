@@ -14,7 +14,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
 * **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
-* Adding or updating a GeoJSON source with very large geometry (e.g. a line with tens of thousands of points) no longer freezes the UI. The JSON encoding for large payloads now runs on a background isolate instead of blocking the main thread; small payloads keep the previous synchronous fast path (#366).
 
 ### Changed
 * **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.

@@ -176,5 +176,212 @@ void main() {
         expect(args['geojson'], jsonEncode(geojson));
       },
     );
+
+    // Writes to one source must reach the platform in call order even when an
+    // earlier, larger payload takes longer to encode than a later, small one.
+    test('GeoJSON writes to the same source keep their order', () async {
+      final big = featureCollection(
+        geometry('LineString', ring(40000)),
+      );
+      final small = featureCollection(
+        geometry('Point', [0.0, 0.0]),
+      );
+
+      final first = platform.setGeoJsonSource('same-source', big);
+      final second = platform.setGeoJsonSource('same-source', small);
+      await Future.wait([first, second]);
+
+      expect(methodCalls.length, 2);
+      expect(
+        (methodCalls[0].arguments as Map)['geojson'],
+        jsonEncode(big),
+        reason: 'the large payload was queued first and must be sent first',
+      );
+      expect((methodCalls[1].arguments as Map)['geojson'], jsonEncode(small));
+    });
+
+    test(
+      'a failed write does not block the next write to the same source',
+      () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+              (methodCall) async {
+                methodCalls.add(methodCall);
+                if (methodCalls.length == 1) {
+                  throw PlatformException(code: 'boom');
+                }
+                return null;
+              },
+            );
+
+        final small = featureCollection(geometry('Point', [0.0, 0.0]));
+        await expectLater(
+          platform.setGeoJsonSource('same-source', small),
+          throwsA(isA<PlatformException>()),
+        );
+        await platform.setGeoJsonSource('same-source', small);
+
+        expect(methodCalls.length, 2);
+      },
+    );
+  });
+
+  // The heuristic deciding whether to offload is where correctness lives: an
+  // area with a huge single ring must be treated as large even though its
+  // top-level `coordinates` array holds one entry (#366).
+  group('MapLibreMethodChannel.isLargeGeoJson', () {
+    test('a long LineString is large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection(geometry('LineString', ring(2000))),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a short LineString is not large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection(geometry('LineString', ring(10))),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a Polygon with one huge ring is large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection(geometry('Polygon', [ring(50000)])),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a MultiPolygon with one huge ring is large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection(
+            geometry('MultiPolygon', [
+              [ring(50000)],
+            ]),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a MultiLineString whose lines add up is large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection(
+            geometry('MultiLineString', [
+              for (var i = 0; i < 20; i++) ring(200),
+            ]),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a GeometryCollection is measured through its geometries', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          featureCollection({
+            'type': 'GeometryCollection',
+            'geometries': [
+              geometry('Polygon', [ring(50000)]),
+            ],
+          }),
+        ),
+        isTrue,
+      );
+    });
+
+    test('many small features add up to large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson({
+          'type': 'FeatureCollection',
+          'features': [
+            for (var i = 0; i < 30; i++)
+              {
+                'type': 'Feature',
+                'properties': <String, dynamic>{},
+                'geometry': geometry('LineString', ring(100)),
+              },
+          ],
+        }),
+        isTrue,
+      );
+    });
+
+    test('a small collection is not large', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson({
+          'type': 'FeatureCollection',
+          'features': [
+            for (var i = 0; i < 5; i++)
+              {
+                'type': 'Feature',
+                'properties': <String, dynamic>{},
+                'geometry': geometry('Point', [i * 1.0, i * 1.0]),
+              },
+          ],
+        }),
+        isFalse,
+      );
+    });
+
+    test('a bare geometry is measured on its own', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(
+          geometry('Polygon', [ring(50000)]),
+        ),
+        isTrue,
+      );
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(geometry('Point', [0.0, 0.0])),
+        isFalse,
+      );
+    });
+
+    test('malformed payloads are treated as small instead of throwing', () {
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson(<String, dynamic>{}),
+        isFalse,
+      );
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson({
+          'type': 'FeatureCollection',
+          'features': [null, 'nonsense', <String, dynamic>{}],
+        }),
+        isFalse,
+      );
+      expect(
+        MapLibreMethodChannel.isLargeGeoJson({
+          'type': 'Polygon',
+          'coordinates': 'not a list',
+        }),
+        isFalse,
+      );
+    });
   });
 }
+
+/// A list of [count] distinct positions.
+List<List<double>> ring(int count) =>
+    List.generate(count, (i) => [i * 0.001, i * 0.002]);
+
+/// A GeoJSON geometry of [type] wrapping [coordinates].
+Map<String, dynamic> geometry(String type, Object coordinates) => {
+  'type': type,
+  'coordinates': coordinates,
+};
+
+/// A single-feature FeatureCollection around [geom].
+Map<String, dynamic> featureCollection(Map<String, dynamic> geom) => {
+  'type': 'FeatureCollection',
+  'features': [
+    {'type': 'Feature', 'properties': <String, dynamic>{}, 'geometry': geom},
+  ],
+};
