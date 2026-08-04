@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'offline_region_map.dart';
 import '../../page.dart';
@@ -148,49 +152,223 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
     if (_items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: ExampleButton(
-                  label: 'Clear Ambient Cache',
-                  icon: Icons.cleaning_services_outlined,
-                  onPressed: _handleClearAmbientCache,
-                  style: ExampleButtonStyle.outlined,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ExampleButton(
-                  label: 'Reset Database',
-                  icon: Icons.delete_forever_outlined,
-                  onPressed: _handleResetDatabase,
-                  style: ExampleButtonStyle.destructive,
-                ),
-              ),
+        _buildIntroBanner(context),
+        const SizedBox(height: 12),
+        ControlGroup(
+          title: 'Regions',
+          vertical: true,
+          children: [
+            for (var index = 0; index < _items.length; index++) ...[
+              if (index > 0) const SizedBox(height: 12),
+              _buildCard(_items[index], index),
             ],
-          ),
+          ],
         ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              return _buildCard(item, index);
-            },
-          ),
+        const SizedBox(height: 12),
+        ControlGroup(
+          title: 'Transfer between databases',
+          children: [
+            ExampleButton(
+              label: 'Merge regions from file',
+              icon: Icons.merge_outlined,
+              onPressed: _handleMergeRegions,
+              style: ExampleButtonStyle.tonal,
+            ),
+            ExampleButton(
+              label: 'Share database',
+              icon: Icons.ios_share_outlined,
+              onPressed: _handleExportDatabase,
+              style: ExampleButtonStyle.outlined,
+            ),
+            ExampleButton(
+              label: 'Save database to file',
+              icon: Icons.save_alt_outlined,
+              onPressed: _handleSaveDatabase,
+              style: ExampleButtonStyle.outlined,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ControlGroup(
+          title: 'Maintenance',
+          children: [
+            ExampleButton(
+              label: 'Clear ambient cache',
+              icon: Icons.cleaning_services_outlined,
+              onPressed: _handleClearAmbientCache,
+              style: ExampleButtonStyle.outlined,
+            ),
+            ExampleButton(
+              label: 'Reset database',
+              icon: Icons.delete_forever_outlined,
+              onPressed: _handleResetDatabase,
+              style: ExampleButtonStyle.destructive,
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildCard(OfflineRegionListItem item, int index) {
+  /// Header that summarises the screen and opens the step-by-step guide.
+  Widget _buildIntroBanner(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      color: theme.colorScheme.secondaryContainer,
+      child: InkWell(
+        onTap: _showGuide,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Download areas for offline use',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    Text(
+                      'Tap for a step-by-step guide.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer
+                            .withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Explains the full offline workflow, including the export/merge round-trip
+  /// that lets a database be moved between devices.
+  Future<void> _showGuide() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        Widget step(IconData icon, String title, String body) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: theme.colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(body, style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Offline regions guide',
+                  style: theme.textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Android and iOS only — the web has no offline API.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                step(
+                  Icons.download,
+                  '1. Download a region',
+                  'Pick one of the sample areas below and tap Download. '
+                      'Tiles are fetched in the background; the card shows '
+                      'live progress and lets you pause or resume.',
+                ),
+                step(
+                  Icons.map_outlined,
+                  '2. View it offline',
+                  'Tap View Map to open the downloaded area. Once cached, the '
+                      'map keeps working without a network connection.',
+                ),
+                step(
+                  Icons.ios_share_outlined,
+                  '3. Export the database',
+                  'Share database opens the share sheet, or Save database to '
+                      'file saves it somewhere you pick (e.g. Downloads). Either '
+                      'way you get the whole store: every region plus the '
+                      'ambient cache, not a single region.',
+                ),
+                step(
+                  Icons.merge_outlined,
+                  '4. Merge on another device',
+                  'On a second device, tap Merge regions from file and pick '
+                      'the exported .db. Its regions are imported into the '
+                      'local store and appear in the list.',
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Got it'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCard(OfflineRegionListItem item, int index) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           ListTile(
@@ -204,61 +382,53 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
               decoration: BoxDecoration(
                 color:
                     item.isDownloaded
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
+                        ? theme.colorScheme.primaryContainer
+                        : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 item.isDownloaded ? Icons.cloud_done : Icons.cloud_download,
                 color:
                     item.isDownloaded
-                        ? Theme.of(
-                          context,
-                        ).colorScheme.onPrimaryContainer
-                        : Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant,
+                        ? theme.colorScheme.onPrimaryContainer
+                        : theme.colorScheme.onSurfaceVariant,
               ),
             ),
             title: Text(
               item.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             subtitle: Text(
               item.isDownloading
-                  ? 'Progress: ${item.downloadProgress.toStringAsFixed(1)}%'
-                  : 'Estimated tiles: ${item.estimatedTiles}',
-              style: Theme.of(context).textTheme.bodyMedium,
+                  ? 'Downloading… ${item.downloadProgress.toStringAsFixed(1)}%'
+                  : item.isDownloaded
+                  ? 'Downloaded · ~${item.estimatedTiles} tiles'
+                  : '~${item.estimatedTiles} tiles',
+              style: theme.textTheme.bodyMedium,
             ),
             trailing:
                 item.isDownloading
-                    ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            item.isPaused ? Icons.play_arrow : Icons.pause,
-                          ),
-                          onPressed:
-                              item.downloadedId != null
-                                  ? () => _togglePause(item, index)
-                                  : null,
-                        ),
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        ),
-                      ],
+                    ? IconButton(
+                      tooltip: item.isPaused ? 'Resume' : 'Pause',
+                      icon: Icon(
+                        item.isPaused ? Icons.play_arrow : Icons.pause,
+                      ),
+                      onPressed:
+                          item.downloadedId != null
+                              ? () => _togglePause(item, index)
+                              : null,
                     )
                     : null,
           ),
+          if (item.isDownloading)
+            LinearProgressIndicator(
+              value:
+                  item.downloadProgress > 0
+                      ? item.downloadProgress / 100.0
+                      : null,
+            ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -379,6 +549,139 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Reset database failed: $e')),
+      );
+    }
+  }
+
+  // Exports a copy of the offline database so it can be shared off-device and
+  // fed back into "Merge regions from file". exportOfflineDatabase copies the
+  // whole store (all regions plus the ambient cache, including SQLite sidecars)
+  // — the native SDKs expose no per-region export. Android/iOS only; this page
+  // is gated behind !kIsWeb.
+  Future<void> _handleExportDatabase() async {
+    try {
+      // Export into the temp dir under a friendly name; the returned path is
+      // null when nothing has been downloaded yet.
+      final tmpDir = await getTemporaryDirectory();
+      final exportPath = '${tmpDir.path}/offline_regions_export.db';
+      final exported = await exportOfflineDatabase(exportPath);
+      if (exported == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No offline database to export')),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(exported)],
+            subject: 'Offline regions database',
+          ),
+        );
+      } finally {
+        // The DB copy is tens of MB; delete it and its sidecars once the share
+        // sheet is done so they don't accumulate in temporary storage.
+        for (final path in [exported, '$exported-wal', '$exported-shm']) {
+          final f = File(path);
+          if (f.existsSync()) await f.delete();
+        }
+      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export failed: $e')),
+      );
+    }
+  }
+
+  // Saves the exported database to a location the user picks via the system
+  // "save as" dialog (e.g. the Downloads folder on Android). Unlike sharing,
+  // this leaves the file in a spot the user can browse to and later re-select
+  // with "Merge regions from file". Android/iOS only.
+  Future<void> _handleSaveDatabase() async {
+    try {
+      final tmpDir = await getTemporaryDirectory();
+      final exportPath = '${tmpDir.path}/offline_regions_export.db';
+      final exported = await exportOfflineDatabase(exportPath);
+      if (exported == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No offline database to save')),
+        );
+        return;
+      }
+
+      try {
+        // saveFile writes a single file from the given bytes, so only the main
+        // database file is saved (not the -wal/-shm sidecars). That is fine for
+        // a store that has been checkpointed; if you need a guaranteed-complete
+        // copy including un-checkpointed writes, use "Share database" instead,
+        // which carries the sidecars too. The DB is tens of MB, so this loads it
+        // into memory once — fine for an example.
+        final bytes = await File(exported).readAsBytes();
+        final savedPath = await FilePicker.saveFile(
+          dialogTitle: 'Save offline database',
+          fileName: 'offline_regions_export.db',
+          bytes: bytes,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              savedPath == null ? 'Save cancelled' : 'Saved to $savedPath',
+            ),
+          ),
+        );
+      } finally {
+        // Clean up the temp copy and its sidecars.
+        for (final path in [exported, '$exported-wal', '$exported-shm']) {
+          final f = File(path);
+          if (f.existsSync()) await f.delete();
+        }
+      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Save failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _handleMergeRegions() async {
+    // mergeOfflineRegions imports every region contained in an external offline
+    // database into the app's own store. There is no way to *produce* such a
+    // file from the plugin (the native SDKs expose no per-region export), so we
+    // let the user pick a `.db` they already have. This is Android/iOS only;
+    // web has no offline storage, and this whole page is gated behind !kIsWeb.
+    final picked = await FilePicker.pickFiles(
+      dialogTitle: 'Select an offline database to merge',
+      // Some platforms/file providers report .db with no MIME type, so fall
+      // back to `any` rather than risk hiding valid files behind a filter.
+      type: FileType.any,
+    );
+    final path = picked?.files.singleOrNull?.path;
+    if (path == null) return; // user cancelled
+
+    try {
+      final merged = await mergeOfflineRegions(path);
+      if (!mounted) return;
+      // Reflect any merged region whose metadata name matches a known card.
+      await _updateListOfRegions();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Merged ${merged.length} region(s) from database',
+          ),
+        ),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Merge failed: $e')),
       );
     }
   }

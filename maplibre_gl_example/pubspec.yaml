@@ -12,7 +12,12 @@ environment:
 
 dependencies:
   collection: ^1.19.1
-  device_info_plus: 13.2.0
+  # Held at 12.x: 13.x pulls win32 ^6, which no stable file_picker or share_plus
+  # accepts yet (both need win32 ^5.9). Windows is not a platform of this example,
+  # so the newer win32 buys nothing here. Lift all three together once a stable
+  # file_picker accepts win32 ^6.
+  device_info_plus: 12.3.0
+  file_picker: ^11.0.2
   flutter:
     sdk: flutter
   flutter_hooks: ^0.21.3+1
@@ -21,6 +26,7 @@ dependencies:
     path: ../maplibre_gl
   path_provider: ^2.1.5
   permission_handler: ^13.0.0
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.3
