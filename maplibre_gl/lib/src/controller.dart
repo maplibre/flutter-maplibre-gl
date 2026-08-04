@@ -962,6 +962,26 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.updateContentInsets(insets, animated);
   }
 
+  /// Sets the map's viewport padding, in logical pixels, optionally animating
+  /// the change. Padding shifts the map's center / vanishing point, which is
+  /// useful for keeping content centered behind overlays such as a bottom
+  /// sheet or a side panel.
+  ///
+  /// This is a convenience wrapper around [updateContentInsets]; the named
+  /// edges map directly to an [EdgeInsets].
+  Future<void> setPadding({
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+    bool animated = false,
+  }) {
+    return updateContentInsets(
+      EdgeInsets.only(left: left, top: top, right: right, bottom: bottom),
+      animated,
+    );
+  }
+
   /// Updates the language of the map labels to match the specified language.
   /// This will use labels with "name:$language" if available, otherwise "name:latin" or "name".
   /// This naming schema is used by OpenStreetMap (see [https://wiki.openstreetmap.org/wiki/Multilingual_names]),

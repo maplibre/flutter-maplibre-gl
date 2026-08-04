@@ -105,7 +105,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   void forceResizeWebMap() {}
 
   @override
-  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {}
+  Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
+    calls.add(
+      PlatformCall('updateContentInsets', [insets], {'animated': animated}),
+    );
+  }
 
   @override
   Future<void> setMapLanguage(String language) async {}
