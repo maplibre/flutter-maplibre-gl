@@ -1,6 +1,5 @@
 import 'dart:async' show unawaited;
 
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -191,28 +190,6 @@ class MapsDemo extends StatefulWidget {
 }
 
 class _MapsDemoState extends State<MapsDemo> {
-  @override
-  void initState() {
-    super.initState();
-    unawaited(initHybridComposition());
-  }
-
-  /// Determine the android version of the phone and turn off HybridComposition
-  /// on older sdk versions to improve performance for these
-  ///
-  /// !!! Hybrid composition is currently broken do no use !!!
-  Future<void> initHybridComposition() async {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      final sdkVersion = androidInfo.version.sdkInt;
-      if (sdkVersion >= 29) {
-        MapLibreMap.useHybridComposition = true;
-      } else {
-        MapLibreMap.useHybridComposition = false;
-      }
-    }
-  }
-
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb && page.needsLocationPermission) {
       final status = await Permission.locationWhenInUse.status;

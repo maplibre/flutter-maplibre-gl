@@ -107,6 +107,12 @@ class MapLibreMap extends StatefulWidget {
   /// Enable translucent texture surface for the map.
   /// This allows the map to have a transparent background, useful for overlay scenarios.
   ///
+  /// This moves the map into a `TextureView` (MapLibre's `textureMode`) and
+  /// makes that view non-opaque, so it brings the same texture layer
+  /// composition as [MapLibreMap.useHybridComposition] and adds per-pixel
+  /// blending. Set `useHybridComposition` instead when you want the texture
+  /// layer with an opaque surface.
+  ///
   /// **Available only on Android. Has no effect on iOS or Web.**
   final bool translucentTextureSurface;
 
@@ -332,9 +338,37 @@ class MapLibreMap extends StatefulWidget {
   /// * All fade/transition animations have completed
   final OnMapIdleCallback? onMapIdle;
 
-  /// Set `MapLibreMap.useHybridComposition` to `false` in order use Virtual-Display
-  /// (better for Android 9 and below but may result in errors on Android 12)
-  /// or leave it `true` (default) to use Hybrid composition (Slower on Android 9 and below).
+  /// Which Android `View` the map renders into, which is what decides how
+  /// Flutter embeds it. Ignored on iOS and web.
+  ///
+  /// Defaults to `false`, and has done since 0.16.0: the map renders into a
+  /// `GLSurfaceView`. Flutter cannot redirect a `SurfaceView`'s drawing into a
+  /// texture, so it embeds the map through Virtual Display. The map's own
+  /// rendering is as direct as Android allows, at the price of Virtual
+  /// Display's known limitations around text input, accessibility and z-order.
+  ///
+  /// Set it to `true` to render into a `TextureView` instead, which is
+  /// MapLibre's `textureMode`. Flutter then composites the map as a texture
+  /// layer, so the map behaves like a regular widget: Flutter content can paint
+  /// over it, and the map itself can be transformed, clipped or animated.
+  /// Rendering into a `TextureView` costs more than a `SurfaceView` on every
+  /// Android version.
+  ///
+  /// Despite the name, this does not select Flutter's "Hybrid Composition"
+  /// mode. Both values go through `PlatformViewsService.initAndroidView`; what
+  /// changes is the native view, and Flutter picks Texture Layer Hybrid
+  /// Composition or Virtual Display from there. Apps on Android 14 or newer
+  /// with Vulkan can instead opt into Flutter's Hybrid Composition++, which
+  /// composites the `SurfaceView` natively and needs no change here. See
+  /// https://docs.flutter.dev/platform-integration/android/platform-views
+  ///
+  /// [MapLibreMap.translucentTextureSurface] also moves the map to a
+  /// `TextureView`, and on top of that makes the view non-opaque. Use this flag
+  /// when you want the texture layer without the transparency.
+  ///
+  /// Assign it before the first [MapLibreMap] is built, ideally before
+  /// `runApp()`. The mode is fixed once a platform view exists, so changing it
+  /// afterwards leaves maps already on screen untouched.
   static bool get useHybridComposition =>
       MapLibreMethodChannel.useHybridComposition;
 

@@ -2,6 +2,12 @@ part of '../maplibre_gl_platform_interface.dart';
 
 class MapLibreMethodChannel extends MapLibrePlatform {
   late MethodChannel _channel;
+
+  /// Backing field of `MapLibreMap.useHybridComposition`, which is the
+  /// documented way to set this and carries the full explanation. Android only:
+  /// `false` leaves the map on a `SurfaceView`, which Flutter embeds through
+  /// Virtual Display; `true` turns on MapLibre's `textureMode` so the map
+  /// renders into a `TextureView` that Flutter composites as a texture layer.
   static bool useHybridComposition = false;
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
