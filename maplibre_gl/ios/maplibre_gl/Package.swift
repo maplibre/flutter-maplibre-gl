@@ -21,9 +21,6 @@ let package = Package(
             name: "maplibre_gl",
             dependencies: [
                 .product(name: "MapLibre", package: "maplibre-gl-native-distribution")
-            ],
-            cSettings: [
-                .headerSearchPath("include/maplibre_gl")
             ]
         )
     ]
