@@ -253,9 +253,9 @@ class MapLibreMap extends StatefulWidget {
   /// different defaults.
   final Point? attributionButtonMargins;
 
-  /// Tint color for the MapLibre attribution (i) button. When set to null,
-  /// the button is tinted black (a readable default over light map styles;
-  /// pass a light color when displaying a dark map style).
+  /// Tint color for the MapLibre attribution (i) button. Leave it null to keep
+  /// the MapLibre SDK's own tint, and set it when that tint does not read well
+  /// against your style, for example a light color over a dark style.
   ///
   /// Has no effect on Web, where the attribution control is HTML styled via
   /// CSS.

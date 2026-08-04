@@ -21,7 +21,7 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **iOS**: `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs` to pulse GPS instead of tracking continuously. GPS runs for `pulseWindowMs` (5 s by default) every `intervalMs`, and the location dot holds its last position in between, which is noticeably easier on the battery for maps that stay open a long time. `intervalMs: 0` keeps the previous continuous behaviour and remains the default (#901).
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
 * `pauseMap()` and `resumeMap()` on `MapLibreMapController` stop and restart rendering for a map that is alive but not on screen, for example on an inactive `TabBarView` page. On Android this stops the MapView render loop, on iOS it drops the preferred frame rate to zero, and on web it does nothing. A paused map stays paused while the host activity is in the background (#805).
-* `attributionButtonColor` on `MapLibreMap` tints the attribution (i) button on Android and iOS, so it stays readable over a dark style. It has no effect on web, where that control is styled with CSS (#805).
+* `attributionButtonColor` on `MapLibreMap` tints the attribution (i) button on Android and iOS, for styles the SDK's own tint does not read well against. Leave it unset to keep the MapLibre default. It has no effect on web, where that control is styled with CSS (#805).
 
 ### Fixed
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, no longer blocks the UI for the whole encode. Those payloads are encoded on a background isolate, which cuts the time spent on the main isolate by two to three times, while smaller ones keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame (#366).
@@ -41,7 +41,6 @@ If your app adds style content in `onMapCreated` or `initState`, move that code 
 * **Android**: the plugin no longer applies the Kotlin Gradle Plugin when the app builds with AGP 9 or later, where doing so breaks the build. On AGP 8 nothing changes, so the minimum Flutter version stays at 3.29 (#905).
 * **Android**: MapLibre Android SDK upgraded from 13.3.0 to 13.3.1 ([upstream release notes](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.3.1)) (#877).
 * **Android**: OkHttp upgraded to 5.4.0 and Play Services Location to 21.4.0.
-* **Android, iOS**: the attribution (i) button is tinted black by default instead of the SDK's blue, which was hard to read over most map backgrounds. Pass `attributionButtonColor` to choose a different tint (#805).
 
 ### Docs
 * New documentation website with live, interactive examples: [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
