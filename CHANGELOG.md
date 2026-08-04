@@ -7,7 +7,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Added
 * **Web**: `queryCameraPosition()` is now implemented; previously it threw `UnimplementedError` (#892).
-* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)` on `MapLibreMapController` return a layer's or source's full properties as a MapLibre style-spec map (`id`, `type`, `source`, `paint`/`layout`, etc.), or `null` when the id is unknown. Previously only `getLayerIds()` / `getSourceIds()` were available. Implemented consistently on Android, iOS, and Web by reading the serialized style, so the returned shape matches across platforms (#513).
 
 ### Fixed
 * **Android**: `mergeOfflineRegions` no longer throws `type 'Null' is not a subtype of type 'Map<String, dynamic>'` when merging an offline database that has no region metadata (e.g. one produced by maplibre-native's `offline.cpp`). Missing metadata now falls back to an empty map (#865).
