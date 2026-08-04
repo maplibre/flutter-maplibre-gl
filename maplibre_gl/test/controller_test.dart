@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -447,5 +448,43 @@ void main() {
 
       expect(controller.isDisposed, isTrue);
     });
+  });
+
+  group('Padding', () {
+    test(
+      'setPadding maps named edges to EdgeInsets via updateContentInsets',
+      () async {
+        await controller.setPadding(
+          left: 10,
+          top: 20,
+          right: 30,
+          bottom: 40,
+          animated: true,
+        );
+
+        final calls = platform.callsFor('updateContentInsets');
+        expect(calls.length, 1);
+        expect(
+          calls.first.positionalArgs.first,
+          const EdgeInsets.only(left: 10, top: 20, right: 30, bottom: 40),
+        );
+        expect(calls.first.namedArgs['animated'], isTrue);
+      },
+    );
+
+    test(
+      'setPadding defaults missing edges to zero and not animated',
+      () async {
+        await controller.setPadding(bottom: 50);
+
+        final calls = platform.callsFor('updateContentInsets');
+        expect(calls.length, 1);
+        expect(
+          calls.first.positionalArgs.first,
+          const EdgeInsets.only(bottom: 50),
+        );
+        expect(calls.first.namedArgs['animated'], isFalse);
+      },
+    );
   });
 }

@@ -93,15 +93,23 @@ class Convert {
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
-        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter]
+        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter, intervalMs, pulseWindowMs]
         if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
            locationEngineProperties.count >= 2
         {
             let enableHighAccuracy = locationEngineProperties[0] == 1
             let distanceFilter = Double(locationEngineProperties[1])
+            let intervalMs = locationEngineProperties.count >= 3
+                ? locationEngineProperties[2]
+                : 0
+            let pulseWindowMs = locationEngineProperties.count >= 4
+                ? locationEngineProperties[3]
+                : MapLibreMapController.defaultPulseWindowMs
             delegate.setLocationEngineProperties(
                 enableHighAccuracy: enableHighAccuracy,
-                distanceFilter: distanceFilter
+                distanceFilter: distanceFilter,
+                intervalMs: intervalMs,
+                pulseWindowMs: pulseWindowMs
             )
         }
     }
