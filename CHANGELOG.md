@@ -14,7 +14,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `addImage` now renders icons at the correct size on high-density screens, and image APIs return a clean error instead of crashing on undecodable bytes (#866, #868).
 * **iOS**: `queryCameraPosition()` now returns the camera position even when `trackCameraPosition` is `false`, matching Android. Previously it returned `null` (#892).
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
-* **Web**: The `onMapIdle` callback now fires on web, matching Android and iOS. Previously it was only wired on the native platforms, so web apps relying on it (e.g. to hide a loading indicator or run work once the map settles) never received the event (#857).
 
 ### Changed
 * **iOS**: Added Swift Package Manager (SPM) support. The plugin still ships its CocoaPods podspec, so CocoaPods apps keep working with no migration.
