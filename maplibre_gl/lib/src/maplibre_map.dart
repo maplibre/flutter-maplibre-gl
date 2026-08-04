@@ -40,6 +40,7 @@ class MapLibreMap extends StatefulWidget {
     this.compassViewMargins,
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
+    this.attributionButtonColor,
     this.scaleControlEnabled = false,
     this.scaleControlPosition = ScaleControlPosition.bottomLeft,
     this.scaleControlUnit = ScaleControlUnit.metric,
@@ -252,6 +253,14 @@ class MapLibreMap extends StatefulWidget {
   /// different defaults.
   final Point? attributionButtonMargins;
 
+  /// Tint color for the MapLibre attribution (i) button. When set to null,
+  /// the button is tinted black (a readable default over light map styles;
+  /// pass a light color when displaying a dark map style).
+  ///
+  /// Has no effect on Web, where the attribution control is HTML styled via
+  /// CSS.
+  final Color? attributionButtonColor;
+
   /// True if the scale control should be shown on the map.
   /// Defaults to false.
   /// **Web only** - has no effect on other platforms.
@@ -448,6 +457,7 @@ class MapLibreMapOptions {
     this.compassViewMargins,
     this.attributionButtonPosition,
     this.attributionButtonMargins,
+    this.attributionButtonColor,
     this.scaleControlEnabled,
     this.scaleControlPosition,
     this.scaleControlUnit,
@@ -481,6 +491,7 @@ class MapLibreMapOptions {
         compassViewMargins: map.compassViewMargins,
         attributionButtonPosition: map.attributionButtonPosition,
         attributionButtonMargins: map.attributionButtonMargins,
+        attributionButtonColor: map.attributionButtonColor,
         scaleControlEnabled: map.scaleControlEnabled,
         scaleControlPosition: map.scaleControlPosition,
         scaleControlUnit: map.scaleControlUnit,
@@ -528,6 +539,8 @@ class MapLibreMapOptions {
   final AttributionButtonPosition? attributionButtonPosition;
 
   final Point? attributionButtonMargins;
+
+  final Color? attributionButtonColor;
 
   final bool? scaleControlEnabled;
 
@@ -593,6 +606,7 @@ class MapLibreMapOptions {
       'attributionButtonMargins',
       pointToArray(attributionButtonMargins),
     );
+    addIfNonNull('attributionButtonColor', attributionButtonColor?.toARGB32());
     addIfNonNull('scaleControlEnabled', scaleControlEnabled);
     addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
     addIfNonNull('scaleControlUnit', scaleControlUnit?.index);

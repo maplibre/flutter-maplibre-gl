@@ -90,6 +90,9 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
+        if let attributionButtonColor = options["attributionButtonColor"] as? Int {
+            delegate.setAttributionButtonColor(color: attributionButtonColor)
+        }
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }

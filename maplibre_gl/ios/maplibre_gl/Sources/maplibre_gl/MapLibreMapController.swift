@@ -128,6 +128,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         mapView.delegate = self
 
+        // Default the attribution (i) button tint to black. The SDK default
+        // is the system blue, which is hard to read over the map background.
+        // Overridden via the attributionButtonColor map option.
+        mapView.attributionButton.tintColor = .black
+
         let singleTap = UITapGestureRecognizer(
             target: self,
             action: #selector(handleMapTap(sender:))
@@ -2454,6 +2459,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setAttributionButtonPosition(position: MLNOrnamentPosition) {
         mapView.attributionButtonPosition = position
+    }
+
+    func setAttributionButtonColor(color: Int) {
+        mapView.attributionButton.tintColor = UIColor(
+            red: CGFloat((color >> 16) & 0xFF) / 255.0,
+            green: CGFloat((color >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(color & 0xFF) / 255.0,
+            alpha: CGFloat((color >> 24) & 0xFF) / 255.0
+        )
     }
 
     func setFeatureTapsTriggersMapClick(triggers: Bool) {
