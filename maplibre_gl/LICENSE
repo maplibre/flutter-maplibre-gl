@@ -148,9 +148,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
---------------------------------------------------------------------------------
-
-Contains a portion of d3-color https://github.com/d3/d3-color
+------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
+This project contains a portion of d3-color from https://github.com/d3/d3-color, which contains the following LICENSE:
+------------------------------------------------------------------------------------------------------
 
 Copyright 2010-2016 Mike Bostock
 All rights reserved.
