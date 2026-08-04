@@ -1,8 +1,9 @@
 import 'dart:ffi';
-import 'dart:io' show Platform;
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart' show debugPrint;
+
+import 'shim_library.dart';
 
 /// Display-vsync pulses for the engine isolate's frame loop.
 ///
@@ -12,8 +13,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 /// mechanism is what makes hot restart safe: posting to a dead port is a
 /// no-op and the native side parks itself.
 ///
-/// When the shim (or the Dart API DL handshake) is unavailable, [available]
-/// is false and the caller must pace frames with a timer instead.
+/// When the shim (or the Dart API DL handshake) is unavailable, [start]
+/// returns false and the caller must pace frames with a timer instead.
 class VsyncPulser {
   VsyncPulser(this.onPulse);
 
@@ -39,10 +40,6 @@ class VsyncPulser {
 
   RawReceivePort? _port;
   bool _running = false;
-
-  /// Whether native pulses can be delivered at all; resolved once per
-  /// isolate at first use.
-  static bool get available => _bindings != null;
 
   bool get running => _running;
 
@@ -70,23 +67,19 @@ class VsyncPulser {
   }
 
   static int Function()? _lookupClock() {
-    if (!Platform.isAndroid) return null;
-    try {
-      final lib = DynamicLibrary.open('libmaplibre_gl_native_shim.so');
-      if (!lib.providesSymbol('mln_shim_monotonic_nanos')) {
-        debugPrint(
-          '[maplibre_gl_native] shim has no monotonic clock (stale build?); '
-          'pulse ages unavailable',
-        );
-        return null;
-      }
-      return lib.lookupFunction<Int64 Function(), int Function()>(
-        'mln_shim_monotonic_nanos',
+    // shimLibrary logs once when the shim itself cannot be opened.
+    final lib = shimLibrary;
+    if (lib == null) return null;
+    if (!lib.providesSymbol('mln_shim_monotonic_nanos')) {
+      debugPrint(
+        '[maplibre_gl_native] shim has no monotonic clock (stale build?); '
+        'pulse ages unavailable',
       );
-    } catch (error) {
-      debugPrint('[maplibre_gl_native] shim clock unavailable ($error)');
       return null;
     }
+    return lib.lookupFunction<Int64 Function(), int Function()>(
+      'mln_shim_monotonic_nanos',
+    );
   }
 }
 
@@ -104,7 +97,6 @@ class _VsyncBindings {
   );
 
   static _VsyncBindings? _tryLoad() {
-    if (!Platform.isAndroid) return null;
     if (_forceTimerPacing) {
       debugPrint(
         '[maplibre_gl_native] MLN_FORCE_TIMER_PACING set; '
@@ -112,11 +104,11 @@ class _VsyncBindings {
       );
       return null;
     }
+    // shimLibrary logs once when the shim itself cannot be opened; the
+    // driver logs the timer fallback when start() then fails.
+    final lib = shimLibrary;
+    if (lib == null) return null;
     try {
-      // Open by soname: System.loadLibrary already loaded the shim and
-      // dlopen returns the existing handle (DynamicLibrary.process() is not
-      // guaranteed to see RTLD_LOCAL symbols on Android).
-      final lib = DynamicLibrary.open('libmaplibre_gl_native_shim.so');
       if (!lib.providesSymbol('mln_shim_vsync_start')) {
         debugPrint(
           '[maplibre_gl_native] shim has no vsync symbols (stale build?); '

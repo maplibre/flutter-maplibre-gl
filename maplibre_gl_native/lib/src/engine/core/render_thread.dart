@@ -1,11 +1,11 @@
 import 'dart:ffi';
-import 'dart:io' show Platform;
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart' show calloc;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:maplibre_native_ffi/maplibre_native_ffi.dart' as mln;
 
+import 'shim_library.dart';
 import 'vsync_pulse.dart';
 
 /// The shim's display-paced render thread, seen from the engine isolate.
@@ -324,7 +324,6 @@ class _ShimBindings {
   static const _renderOnIsolate = bool.fromEnvironment('MLN_RENDER_ON_ISOLATE');
 
   static _ShimBindings? _tryLoad() {
-    if (!Platform.isAndroid) return null;
     if (_renderOnIsolate) {
       debugPrint(
         '[maplibre_gl_native] MLN_RENDER_ON_ISOLATE set; '
@@ -332,10 +331,11 @@ class _ShimBindings {
       );
       return null;
     }
+    // shimLibrary logs once when the shim itself cannot be opened; without
+    // it there is no render service and Dart draws, exactly as before.
+    final lib = shimLibrary;
+    if (lib == null) return null;
     try {
-      // Open by soname for the same reason as the pulse bindings: the shim is
-      // already loaded and dlopen returns that handle.
-      final lib = DynamicLibrary.open('libmaplibre_gl_native_shim.so');
       if (!lib.providesSymbol('mln_shim_render_bind')) {
         debugPrint(
           '[maplibre_gl_native] shim has no render service (stale build?); '

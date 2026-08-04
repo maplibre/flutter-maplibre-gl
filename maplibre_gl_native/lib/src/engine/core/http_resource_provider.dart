@@ -38,7 +38,7 @@ class HttpResourceProvider {
   // whole-exchange cap in [_fetch] is generous enough for a slow tile on a
   // bad link.
   static final HttpClient _client = HttpClient()
-    ..userAgent = 'flutter-maplibre-gl/maplibre_gl_native (spike)'
+    ..userAgent = 'flutter-maplibre-gl/maplibre_gl_native'
     ..maxConnectionsPerHost = 8
     ..connectionTimeout = const Duration(seconds: 10);
 
@@ -133,8 +133,8 @@ class HttpResourceProvider {
     mln.ResourceRequestHandle handle,
   ) {
     // The callback must not block: fetch asynchronously and complete the
-    // handle later. Everything stays on the main isolate (the handle is
-    // isolate-affine).
+    // handle later. Everything stays on the engine isolate that installed
+    // the provider (the handle is isolate-affine).
     unawaited(_fetch(request, handle));
   }
 

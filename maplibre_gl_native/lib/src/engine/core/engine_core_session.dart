@@ -32,7 +32,9 @@ class _EngineSession {
   final mln.MapHandle map;
 
   /// Backend and borrowed native context handles the session was created
-  /// with; the surface handle inside is replaced on resize/recreate.
+  /// with, reused to build the surface descriptor on every re-attach. The
+  /// surface handle it carries is only the first one: resize/recreate pass
+  /// the fresh surface straight to [attachRenderTarget], never back in here.
   final CreateSessionQuery _spec;
   final void Function(EngineEvent) _emit;
 
@@ -268,20 +270,20 @@ class _EngineSession {
       );
       final snapshotAttachRef = snapshotMap.attachRef();
       snapshotSession = switch (_spec) {
-        final OpenGlSessionQuery spec => snapshotAttachRef
-            .attachOpenGLOwnedTexture(
-              mln.OpenGLOwnedTextureDescriptor(
-                extent: extent,
-                context: _eglContext(spec),
-              ),
+        final OpenGlSessionQuery spec =>
+          snapshotAttachRef.attachOpenGLOwnedTexture(
+            mln.OpenGLOwnedTextureDescriptor(
+              extent: extent,
+              context: _eglContext(spec),
             ),
-        final VulkanSessionQuery spec => snapshotAttachRef
-            .attachVulkanOwnedTexture(
-              mln.VulkanOwnedTextureDescriptor(
-                extent: extent,
-                context: _vulkanContext(spec),
-              ),
+          ),
+        final VulkanSessionQuery spec =>
+          snapshotAttachRef.attachVulkanOwnedTexture(
+            mln.VulkanOwnedTextureDescriptor(
+              extent: extent,
+              context: _vulkanContext(spec),
             ),
+          ),
       };
       snapshotMap.setStyleJson(map.getLoadedStyleJson());
       snapshotMap.jumpTo(map.camera());
@@ -456,7 +458,10 @@ class _EngineSession {
     final fromDisplayThread = session == null
         ? null
         : _renderThread.takeStats(session);
-    return FrameStatsCollector.mergeStats(fromDisplayThread, _frameStats?.take());
+    return FrameStatsCollector.mergeStats(
+      fromDisplayThread,
+      _frameStats?.take(),
+    );
   }
 
   /// Tears down the render session and the map. The external texture is the

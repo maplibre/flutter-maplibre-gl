@@ -17,16 +17,15 @@ extension EngineQueryDispatch on EngineCore {
       final PixelForLatLngQuery q => _pixelForLatLng(q),
       final PixelsForLatLngsQuery q => _pixelsForLatLngs(q),
       final LatLngForPixelQuery q => _latLngForPixel(q),
-      final GetStyleJsonQuery q => _session(q.sessionId).map.getLoadedStyleJson(),
+      final GetStyleJsonQuery q => _session(
+        q.sessionId,
+      ).map.getLoadedStyleJson(),
       final GetLayerIdsQuery q => _session(q.sessionId).map.listStyleLayerIds(),
       final GetSourceIdsQuery q => _session(
         q.sessionId,
       ).map.listStyleSourceIds(),
       final GetFilterQuery q => _encodeJsonValue(
         _session(q.sessionId).map.getLayerFilter(q.layerId),
-      ),
-      final GetLayerPropertyQuery q => _encodeJsonValue(
-        _session(q.sessionId).map.getLayerProperty(q.layerId, q.propertyName),
       ),
       final GetLayerVisibilityQuery q => _layerVisibility(q),
       final QueryRenderedFeaturesQuery q => _queryRenderedFeatures(q),

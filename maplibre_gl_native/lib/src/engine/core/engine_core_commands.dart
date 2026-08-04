@@ -30,10 +30,6 @@ extension EngineCommandDispatch on EngineCore {
         // Fire-and-forget: completion is reported via a runtime event and
         // ambient cache operations carry no result payload.
         _runtime.runAmbientCacheOperation(switch (command.operation) {
-          AmbientCacheOperationKind.resetDatabase =>
-            mln.AmbientCacheOperation.resetDatabase,
-          AmbientCacheOperationKind.packDatabase =>
-            mln.AmbientCacheOperation.packDatabase,
           AmbientCacheOperationKind.invalidate =>
             mln.AmbientCacheOperation.invalidate,
           AmbientCacheOperationKind.clear => mln.AmbientCacheOperation.clear,
@@ -438,14 +434,6 @@ extension EngineCommandDispatch on EngineCore {
             _locationIndicatorLayerId,
             mln.LocationIndicatorImageKind.bearing,
             bearingImage,
-          );
-        }
-        final shadowImage = command.shadowImage;
-        if (shadowImage != null) {
-          map.setLocationIndicatorImageName(
-            _locationIndicatorLayerId,
-            mln.LocationIndicatorImageKind.shadow,
-            shadowImage,
           );
         }
         // Soft blue accuracy circle, matching the SDKs' default puck styling.

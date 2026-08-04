@@ -1,8 +1,8 @@
 /// EXPERIMENTAL: maplibre_gl backend built on the MapLibre Native C API via
 /// dart:ffi, rendering into a Flutter `Texture` instead of a platform view.
 ///
-/// This package is the Android spike of the "same API, new engine" plan.
-/// Activate it before `runApp`:
+/// This package is the Android implementation of the "same API, new engine"
+/// plan. Activate it before `runApp`:
 ///
 /// ```dart
 /// import 'package:maplibre_gl_native/maplibre_gl_native.dart';

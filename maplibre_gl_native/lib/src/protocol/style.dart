@@ -197,12 +197,10 @@ class ShowLocationIndicatorCommand extends SessionCommand {
     super.sessionId, {
     required this.topImage,
     this.bearingImage,
-    this.shadowImage,
   });
 
   final String topImage;
   final String? bearingImage;
-  final String? shadowImage;
 }
 
 /// Moves the location indicator (and optionally its bearing and accuracy

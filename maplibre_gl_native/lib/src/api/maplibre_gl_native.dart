@@ -2,6 +2,7 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 
 import '../engine/engine_host.dart';
 import '../protocol/protocol.dart';
+import '../presentation/ornaments/ornament_config.dart';
 import '../presentation/platform/ffi_platform.dart';
 
 /// Entry point to opt a Flutter app into the FFI backend.
@@ -46,4 +47,15 @@ class MapLibreGlNative {
       SetHttpHeadersCommand(headers, scope: HttpHeadersScope.global),
     );
   }
+
+  /// Shows the metric scale bar ornament on every `MapLibreMap` created after
+  /// this is set to true (top-left corner, next to the compass's default).
+  ///
+  /// The scale bar has no maplibre_gl option key (the Android SDK has no
+  /// scale bar ornament), so unlike the compass it cannot be toggled through
+  /// the widget's options; this process-global switch is the only lever, and
+  /// it is off by default. It does not affect maps already on screen.
+  static bool get scaleBarEnabled => OrnamentConfig.scaleBarEnabledDefault;
+  static set scaleBarEnabled(bool enabled) =>
+      OrnamentConfig.scaleBarEnabledDefault = enabled;
 }

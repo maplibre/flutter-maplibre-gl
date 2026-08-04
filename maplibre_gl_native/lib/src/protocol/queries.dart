@@ -74,15 +74,6 @@ class GetFilterQuery extends SessionQuery<String?> {
   final String layerId;
 }
 
-/// One style-spec property of a layer, JSON-encoded, or null when unset or
-/// when the layer does not exist.
-class GetLayerPropertyQuery extends SessionQuery<String?> {
-  const GetLayerPropertyQuery(super.sessionId, this.layerId, this.propertyName);
-
-  final String layerId;
-  final String propertyName;
-}
-
 /// Whether a layer is visible; null when the layer does not exist.
 class GetLayerVisibilityQuery extends SessionQuery<bool?> {
   const GetLayerVisibilityQuery(super.sessionId, this.layerId);
@@ -211,9 +202,13 @@ class GetAttributionsQuery extends SessionQuery<List<String>> {
 
 /// Drains the frame statistics collected since [SetFrameStatsEnabledCommand]
 /// (or since the previous drain). The reply is a plain map:
-/// `clockUs` (int, elapsed collection time), `timestampsUs` (Int64List,
-/// frame start times relative to enable) and `durationsUs` (Int64List,
-/// per-frame `renderUpdate` wall time, CPU encode + submit).
+/// `source` (String: who drew the sampled frames — `displayThread`,
+/// `isolate`, `mixed` when pacing flipped mid-collection, `none` when never
+/// armed), `clockUs` (int, a reading of the sample clock taken at drain
+/// time — the shim's CLOCK_MONOTONIC in microseconds when available — so a
+/// sample's age is `clockUs - timestamp`), `timestampsUs` (Int64List, frame
+/// start times on that same clock) and `durationsUs` (Int64List, per-frame
+/// `renderUpdate` wall time, CPU encode + submit).
 class TakeFrameStatsQuery extends SessionQuery<Map<String, dynamic>> {
   const TakeFrameStatsQuery(super.sessionId);
 }

@@ -6,16 +6,17 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../../protocol/protocol.dart';
 import 'engine_core.dart';
-import 'frame_path_probe.dart';
 import 'vsync_pulse.dart';
 
 /// Self-scheduling frame loop of the engine isolate.
 ///
-/// Mirrors the widget-ticker policy of the local host: frame-paced while
-/// work is pending, parked on a low-frequency event pump when idle, woken by
-/// commands and runtime events. There is no vsync on a background isolate;
-/// the frame timer approximates it and `eglSwapBuffers` provides natural
-/// backpressure against the texture's buffer queue.
+/// Frame-paced while work is pending, parked on a low-frequency event pump
+/// when idle, woken by commands and runtime events. The pace comes from the
+/// display itself: the native shim's choreographer thread draws the live
+/// sessions and forwards each vsync timestamp here as a pulse, which this
+/// loop rides to pump the runtime once per refresh. When pulses are
+/// unavailable (no shim, screen off, `MLN_FORCE_TIMER_PACING`) a timer
+/// matched to the refresh rate takes over and the isolate renders itself.
 class FrameDriver {
   FrameDriver(this._core, {double displayRefreshRate = 0})
     : _tid = _currentTid(),
@@ -26,7 +27,6 @@ class FrameDriver {
           ? (1e6 / displayRefreshRate).round()
           : 11111 {
     _pulser = VsyncPulser(_onPulse);
-    _probe = FramePathProbe.createIfArmed(vsyncPeriodUs: _vsyncPeriodUs);
   }
 
   /// Timer pacing when neither the display refresh rate nor vsync pulses are
@@ -44,9 +44,6 @@ class FrameDriver {
   final Duration _fallbackInterval;
   final int _vsyncPeriodUs;
   late final VsyncPulser _pulser;
-
-  /// Latency instrumentation, null unless the build armed it.
-  late final FramePathProbe? _probe;
   final Stopwatch _clock = Stopwatch()..start();
   Timer? _frameTimer;
   Timer? _idlePump;
@@ -187,20 +184,14 @@ class FrameDriver {
   /// argument and always draws the map's CURRENT state, so a late pulse
   /// produces a current picture, merely one boundary late. Skipping it throws
   /// a real frame away. Measured on device, doing that turned every gesture
-  /// visibly jerky while flattering the probe's own wake number, which is why
-  /// the check is gone.
+  /// visibly jerky, which is why the check is gone.
   void _onPulse(int frameTimeNanos) {
     _lastPulseUs = _clock.elapsedMicroseconds;
-    _probe?.pulse(frameTimeNanos);
     // Trailing pulse after park, or re-entrant during a long frame: drop.
-    if (_parked || _inFrame) {
-      _probe?.dropPulse(_parked ? PulseDrop.parked : PulseDrop.inFrame);
-      return;
-    }
-    if (_lastPulseUs - _lastFrameStartUs < _minFrameIntervalUs) {
-      _probe?.dropPulse(PulseDrop.floor);
-      return;
-    }
+    if (_parked || _inFrame) return;
+    // Cadence floor: an explicit fps cap, or the half-period floor that keeps
+    // two frames from running back to back.
+    if (_lastPulseUs - _lastFrameStartUs < _minFrameIntervalUs) return;
     _frameTimer?.cancel();
     _frameTimer = null;
     _frame();
@@ -230,15 +221,9 @@ class FrameDriver {
     // failing loop parks itself after _idleFrameLimit frames instead of
     // burning the display rate on errors.
     try {
-      final probe = _probe;
-      probe?.beginTurn();
       ensureThread();
       final renderClock = Stopwatch()..start();
-      rendered = developer.Timeline.timeSync(
-        'mln.frame',
-        probe == null ? _core.frame : _framePhases,
-      );
-      probe?.endTurn(rendered: rendered);
+      rendered = developer.Timeline.timeSync('mln.frame', _core.frame);
       _statsFrames += 1;
       // When the display thread draws, count what it actually drew rather
       // than what we found pending, and do not report a render time we did
@@ -268,15 +253,6 @@ class FrameDriver {
       return;
     }
     _park();
-  }
-
-  /// [EngineCore.frame] in its two phases, so the probe can stamp the boundary
-  /// between draining the runtime and drawing. Only used while it is armed;
-  /// the unmeasured path calls `frame()` directly.
-  bool _framePhases() {
-    _core.pump();
-    _probe!.pumped();
-    return _core.renderPending();
   }
 
   void _maybeLogStats() {

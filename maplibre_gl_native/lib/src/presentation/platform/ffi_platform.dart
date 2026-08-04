@@ -15,7 +15,6 @@ import '../../protocol/protocol.dart';
 import '../map/map_view.dart';
 import 'camera_update_codec.dart';
 import 'feature_interaction.dart';
-import 'ffi_platform_base.dart';
 import 'image_codec.dart';
 import 'location_component.dart';
 import 'map_options.dart';
@@ -34,9 +33,8 @@ import '../../utils/projection.dart';
 ///
 /// Covers nearly the whole `MapLibrePlatform` contract (see the package
 /// README's "API coverage" section for the current list and the few known
-/// gaps); the remaining unimplemented methods throw through
-/// [MapLibreFfiPlatformBase].
-class MapLibreFfiPlatform extends MapLibreFfiPlatformBase {
+/// gaps).
+class MapLibreFfiPlatform extends MapLibrePlatform {
   /// The live map session, set by [attach] once the widget has created it.
   MapSession? _session;
   final _ready = Completer<void>();

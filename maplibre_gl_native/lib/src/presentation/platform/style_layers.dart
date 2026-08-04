@@ -25,8 +25,8 @@ enum StyleLayerType {
 /// existing maplibre_gl API into the paint/layout objects that raw style
 /// layer JSON requires. Everything not listed here is a paint property.
 ///
-/// NOTE(spike): the long-term implementation should generate this table from
-/// the style spec in `scripts/` instead of hand-maintaining it.
+/// Hand-maintained against the style spec; generating it from the spec in
+/// `scripts/` would remove the maintenance burden if it ever grows stale.
 const Set<String> _layoutPropertyKeys = {
   'visibility',
   // symbol

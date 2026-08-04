@@ -157,9 +157,6 @@ class EngineCore {
   /// Renders every session with a frame pending, plus any queued snapshot, and
   /// reports whether anything was drawn.
   ///
-  /// The second half of [frame], separate so the frame driver can time the
-  /// drain and the draw as the distinct costs they are (see `FramePathProbe`).
-  ///
   /// When [renderThread] is driving, the live sessions are drawn there and this
   /// only reports whether they still have work; snapshots stay here, because a
   /// snapshot has its own map and its own session and never leaves this isolate.

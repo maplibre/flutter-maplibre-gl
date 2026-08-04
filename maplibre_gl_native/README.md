@@ -116,7 +116,6 @@ Then use the regular `MapLibreMap` widget from `maplibre_gl`.
 | `MLN_RENDER_ON_ISOLATE=true` | Draw on the engine isolate instead of the display pulse thread (the pre-display-thread architecture; the A/B arm that justified the thread). |
 | `MLN_FORCE_TIMER_PACING=true` | Skip the choreographer pulses and pace frames with a refresh-rate-matched timer (the vsync A/B arm). |
 | `MLN_DART_HTTP=true` | Install the Dart HTTP provider up front so it serves ALL http(s) requests (the pre-#461 default; A/B arm and provider regression testing). Without it the provider only activates for regex-filtered custom headers. |
-| `MLN_FRAME_PATH_PROBE=true` | Arm the frame-path latency probe; per-window tables land in the app log. |
 
 ## API coverage
 

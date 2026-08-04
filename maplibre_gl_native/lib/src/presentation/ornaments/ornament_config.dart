@@ -63,9 +63,15 @@ class OrnamentConfig extends ChangeNotifier {
     [8, 8],
   );
 
+  /// Process-wide default for [scaleBarEnabled], applied to every
+  /// subsequently created config. Set through the public
+  /// `MapLibreGlNative.scaleBarEnabled`.
+  static bool scaleBarEnabledDefault = false;
+
   /// The scale bar has no maplibre_gl option key (the Android SDK has no
-  /// scale bar ornament), so it is opt-in and off by default.
-  bool scaleBarEnabled = false;
+  /// scale bar ornament), so it is opt-in via
+  /// `MapLibreGlNative.scaleBarEnabled` and off by default.
+  bool scaleBarEnabled = scaleBarEnabledDefault;
   OrnamentPlacement scaleBar = const OrnamentPlacement(
     OrnamentPosition.topLeft,
     [8, 8],

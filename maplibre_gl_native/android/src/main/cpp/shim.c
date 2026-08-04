@@ -1,4 +1,4 @@
-// Minimal JNI shim for the maplibre_gl_native spike.
+// Minimal JNI shim for maplibre_gl_native.
 //
 // Two responsibilities, both impossible from Kotlin or Dart alone:
 //
@@ -244,12 +244,10 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 // ALooper plus an AChoreographer, and on each frame callback it renders the
 // bound MapLibre render session itself. Dart is not in the frame path: no port
 // message per frame, and no Dart work (GC, HTTP, style parse) can delay one.
-//
-// THIS THREAD CALLS INTO libmaplibre-native-c, which the previous shape of this
-// file forbade. What changed is that a render session's owner thread is now the
-// thread that attached it rather than the map's, so a session can legitimately
-// live here while Dart keeps the runtime and the maps. Two symbols are reached,
-// both session-scoped: render_update and the per-session rebind.
+// This is legal because a render session's owner thread is the thread that
+// attached it, so the session can live here while Dart keeps the runtime and
+// the maps; only two session-scoped symbols are reached, render_update and the
+// per-session rebind.
 //
 // Ownership handover. Every session entry point is owner-thread checked, and
 // Dart still needs several of them (feature queries, feature state, resize,
@@ -260,10 +258,9 @@ Java_org_maplibre_maplibreglnative_MapLibreGlNativePlugin_nativeVulkanDestroySur
 // mln_shim_render_acquire/mln_shim_render_release, which block this thread's
 // next render rather than racing it.
 //
-// Liveness. With no per-frame port post there is no longer a dead-port signal
-// to self-park on, so a failing render_update parks the service instead: on hot
-// restart the old isolate's surface dies, the render fails, and pulses park
-// until the new isolate binds its own session.
+// Liveness. A failing render_update parks the service: on hot restart the old
+// isolate's surface dies, the render fails, and pulses park until the new
+// isolate binds its own session.
 
 #include <android/choreographer.h>
 #include <android/log.h>
