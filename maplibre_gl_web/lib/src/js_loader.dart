@@ -145,7 +145,23 @@ abstract final class MapLibreJsLoader {
         'self-hosted copy instead.',
       );
     }
-    globalContext['maplibregl'] = module;
+
+    // Only publish a namespace that actually carries the library. An older,
+    // non-module bundle imported this way runs fine, exports nothing, and
+    // defines the global itself as a side effect, which is what an app still
+    // pointing MapLibreJsSource.urls at a maplibre-gl 5 `.js` file gets.
+    // Publishing that empty namespace would replace a working library with an
+    // empty object and break every later call, with no error to go on.
+    if (module.has('Map')) {
+      globalContext['maplibregl'] = module;
+      return;
+    }
+    if (globalContext.has('maplibregl')) return;
+    throw MapLibreJsLoaderException(
+      'loaded $url, but it provided no maplibre-gl-js: neither the module it '
+      'returned nor globalThis.maplibregl has a Map constructor. If that URL '
+      'is a self-hosted copy, check it is the ESM build (maplibre-gl.mjs).',
+    );
   }
 
   /// Polls for the `maplibregl` global on a page that loads the library

@@ -75,14 +75,14 @@ On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-g
 
 ### Content-Security-Policy
 
-Skip this if your app has no CSP. If it does, MapLibre GL JS runs its tile work in a Web Worker, and when the library is loaded cross-origin (the default, from a CDN) that worker is constructed from a `blob:` URL:
+Skip this if your app has no CSP. If it does: MapLibre GL JS runs its tile work in a Web Worker, and when the library is loaded cross-origin, which is the default from a CDN, that worker is constructed from a `blob:` URL.
 
 ```
 worker-src 'self' blob: ;
 img-src data: blob: 'self' ;
 ```
 
-Self-hosting the library instead makes the worker same-origin, and `blob:` is no longer needed in `worker-src`.
+[Self-hosting](#self-hosting-maplibre-gl-js) the library makes the worker same-origin, and then `blob:` is not needed in `worker-src`.
 
 ### Self-hosting MapLibre GL JS
 

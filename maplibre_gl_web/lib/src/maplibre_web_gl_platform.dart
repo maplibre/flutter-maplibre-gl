@@ -122,9 +122,21 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
     _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
-    // Not a `styleimagemissing` listener: since maplibre-gl-js 6 a listener can
-    // observe the request but calling addImage from it no longer satisfies it.
-    _map.setMissingStyleImageResolver(_loadFromAssets);
+    // Since maplibre-gl-js 6 a missing style image is supplied through a
+    // resolver: a `styleimagemissing` listener can still observe the request,
+    // but calling addImage from it no longer satisfies it. Version 5 has no
+    // resolver, and the library on the page is not always the one the plugin
+    // loads, so keep the old path for it rather than throwing on map creation.
+    if (_map.hasMissingStyleImageResolver) {
+      _map.setMissingStyleImageResolver(_loadFromAssets);
+    } else {
+      _mapSubscriptions.add(
+        _map.on(
+          'styleimagemissing',
+          (Event event) => _loadFromAssets(event.id),
+        ),
+      );
+    }
     if (_dragEnabled) {
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));

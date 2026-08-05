@@ -12,7 +12,8 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ### Changed
 * MapLibre GL JS 5 replaced by 6. Version 6 ships as an ES module only, with no UMD bundle and no global of its own, so the loader imports it with `importModule` and publishes the namespace as `globalThis.maplibregl`, which is what every `@JS` binding here addresses. `MapLibreJsSource.urls` now points at the `.mjs` build, and a page using `MapLibreJsSource.preloaded` has to publish the global itself (#943).
-* Missing style images are supplied through `Map.setMissingStyleImageResolver` instead of a `styleimagemissing` listener: since version 6 the listener can observe the request but calling `addImage` from it no longer resolves it, which would have silently stopped asset images from loading (#943).
+* The loader only publishes an imported namespace that carries the library. An older, non-module bundle imported as a module runs, exports nothing, and defines the global itself, so publishing that empty namespace would have replaced a working library with an empty object (#943).
+* Missing style images are supplied through `Map.setMissingStyleImageResolver` instead of a `styleimagemissing` listener: since version 6 the listener can observe the request but calling `addImage` from it no longer resolves it, which would have silently stopped asset images from loading. The listener is kept as a fallback when the library on the page has no resolver, so a page still providing version 5 keeps working (#943).
 
 ### Fixed
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).

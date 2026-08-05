@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -703,13 +704,23 @@ class MapLibreMap extends Camera {
   ///  var catIconExists = map.hasImage('cat');
   bool hasImage(String id) => jsObject.hasImage(id);
 
+  ///  Whether this build of maplibre-gl-js has
+  ///  [setMissingStyleImageResolver], which arrived in version 6.
+  ///
+  ///  Worth checking rather than assuming: the library on the page is not
+  ///  always the one the plugin loads. A leftover `<script>` tag in
+  ///  `index.html`, or `MapLibreJsSource.preloaded`, can put version 5 there,
+  ///  and calling a method it does not have would throw on map creation.
+  bool get hasMissingStyleImageResolver =>
+      (jsObject as JSObject).has('setMissingStyleImageResolver');
+
   ///  Registers [resolve] as the supplier of images the style asks for but does
   ///  not have. It is called with the image id and should register the image by
   ///  calling `addImage`; the map waits for the returned future.
   ///
   ///  Since maplibre-gl-js 6 this replaces listening for `styleimagemissing`
   ///  and calling `addImage` from the listener, which no longer resolves the
-  ///  request.
+  ///  request. Guard the call with [hasMissingStyleImageResolver].
   void setMissingStyleImageResolver(Future<void> Function(String id) resolve) {
     jsObject.setMissingStyleImageResolver(
       ((JSString id) => resolve(id.toDart).toJS).toJS,
