@@ -13,6 +13,7 @@ import 'pmtiles_protocol_native.dart'
 
 // Page system
 import 'page.dart';
+import 'shared/constants.dart';
 
 // Basics examples
 import 'examples/basics/full_map_example.dart';
@@ -99,6 +100,11 @@ Future<void> main() async {
           ? "profile"
           : "debug"} mode',
     );
+  } else {
+    // demotiles.maplibre.org rate-limits aggressively (HTTP 429); pick a
+    // reachable default style before the gallery builds any map.
+    WidgetsFlutterBinding.ensureInitialized();
+    await ExampleConstants.resolveDemoMapStyle();
   }
 
   runApp(const MapLibreExampleApp());
@@ -209,6 +215,14 @@ class MapsDemo extends StatefulWidget {
 
 class _MapsDemoState extends State<MapsDemo> {
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
+    if (!kIsWeb) {
+      // Re-check right before the map loads: demotiles' limiter answers per
+      // request, so the startup probe can pass and the page's style request
+      // still get a 429 minutes later. A recent success skips the probe.
+      await ExampleConstants.resolveDemoMapStyle(
+        maxAge: const Duration(seconds: 30),
+      );
+    }
     if (!kIsWeb && page.needsLocationPermission) {
       final status = await Permission.locationWhenInUse.status;
       if (!status.isGranted) {

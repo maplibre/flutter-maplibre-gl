@@ -112,8 +112,8 @@ class _ClusterPropertiesBodyState extends State<_ClusterPropertiesBody> {
     await controller.addLayer(
       _sourceId,
       'earthquakes-cluster-labels',
-      const SymbolLayerProperties(
-        textField: [
+      SymbolLayerProperties(
+        textField: const [
           Expressions.concat,
           [Expressions.get, 'point_count_abbreviated'],
           '\nmax ',
@@ -142,7 +142,9 @@ class _ClusterPropertiesBodyState extends State<_ClusterPropertiesBody> {
             ],
           ],
         ],
-        textFont: ['Open Sans Semibold'],
+        // A font stack the active demo style actually serves; a glyph 404
+        // would hide the labels entirely.
+        textFont: ExampleConstants.demoBoldFontStack,
         textSize: 11,
       ),
       filter: ['has', 'point_count'],
