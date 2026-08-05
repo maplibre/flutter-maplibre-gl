@@ -12,6 +12,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 
 * **Android**: a map now survives its activity being destroyed and recreated, but your style content does not come back with it. Add sources, layers and images inside `onStyleLoadedCallback`, which fires again after every recreation, rather than in `onMapCreated` or `initState`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-style-content) (#805).
 * **Web**: the plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script tag and the `maplibre-gl.css` link tag from `web/index.html`: if they stay, your pinned copy silently overrides the version the plugin is tested against. Self-hosting and Content-Security-Policy setups are covered in the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-remove-the-script-and-stylesheet-tags) (#928).
+* **Web**: the engine moves to MapLibre GL JS 6. Nothing to do unless your app has a Content-Security-Policy, self-hosts the library, or loads it itself: the three cases are in the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-the-engine-moves-to-maplibre-gl-js-6). `queryRenderedFeatures` can also return a different set of features (#943).
 
 ### Added
 * `MapLibreMap.preWarm()` starts the map engine during app start-up, for apps whose first screen is a map. Saves roughly 170 to 480 ms on Android, 45 to 165 ms on iOS and 10 to 50 ms on web at the first map (#867).
@@ -45,6 +46,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **iOS**: the plugin supports Flutter's Swift Package Manager integration. The CocoaPods podspec still ships, so CocoaPods apps need no migration (#891).
 * **Android**: the Kotlin Gradle Plugin is applied only below AGP 9, so builds on AGP 9 or later no longer break. Nothing changes on AGP 8 (#905).
 * **Android**: MapLibre Native upgraded from 13.3.0 to 13.4.1 ([13.4.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.0), [13.4.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.1)), plus OkHttp 5.4.0, Play Services Location 21.4.0 and androidx.core-ktx 1.18.0 (#877, #919, #929).
+* **Web**: MapLibre GL JS upgraded from 5 to 6, which ships as an ES module only: the plugin imports it and publishes the `maplibregl` namespace the interop expects. Missing style images are now supplied through `setMissingStyleImageResolver`, since a `styleimagemissing` listener can no longer satisfy the request (#943).
 * **iOS**: MapLibre Native upgraded from 6.27.0 to 6.28.0 ([release notes](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.28.0)): the map view is no longer blurry in landscape on iPad (#929).
 * **Android, iOS**: from those upgrades, panning a pitched map no longer moves the camera past the horizon, and a layer whose `source-layer` or `source-id` changes now notifies its observer (#929).
 * **Android**: the unused `android-plugin-annotation-v9` and `android-plugin-offline-v9` dependencies are dropped, so apps pull two fewer artifacts (#929).

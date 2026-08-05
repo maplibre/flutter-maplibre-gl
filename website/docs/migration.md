@@ -49,6 +49,16 @@ Two setups need more than deleting the tags:
 * A Content-Security-Policy that blocks the CDN, or a self-hosted copy of the library: point the plugin at your copy with `MapLibreMap.webLibrarySource`. See [Self-hosting MapLibre GL JS](getting-started.md#self-hosting-maplibre-gl-js).
 * Your own JS interop into MapLibre GL JS, for example registering a protocol with `addProtocol`: the `maplibregl` global no longer exists at page parse time, so await `MapLibreMap.ensureWebLibraryLoaded()` first. See [Calling MapLibre GL JS yourself](getting-started.md#calling-maplibre-gl-js-yourself).
 
+### Web: the engine moves to MapLibre GL JS 6
+
+The web build now runs on MapLibre GL JS 6, which ships as an ES module. The plugin imports it for you, so most apps need nothing. Three setups do:
+
+* **You have a Content-Security-Policy.** The library runs its tile work in a Web Worker, and loaded cross-origin from the CDN that worker comes from a `blob:` URL, so `worker-src` needs `blob:`. See [Content-Security-Policy](getting-started.md#content-security-policy). Without it the map stays blank.
+* **You self-host the library.** Point `MapLibreJsSource.urls` at the `.mjs` build rather than `.js`, and serve the whole `dist` directory: the library resolves its worker relative to its own URL.
+* **The page loads the library itself** (`MapLibreJsSource.preloaded`). An ES module defines no global, so the page has to publish `globalThis.maplibregl` explicitly.
+
+`queryRenderedFeatures` can also return a different set of features. Version 6 slices vector tiles instead of overscaling them, which upstream turned on by default because it fixes label placement, and that changes both rendering and query results. The plugin follows that default; there is no per-app switch for it. If it costs you something concrete, please open an issue.
+
 ### Minimum SDK versions
 
 Unchanged from 0.26.x.

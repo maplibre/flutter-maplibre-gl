@@ -68,10 +68,21 @@ The plugin ships both a Swift package and a CocoaPods podspec, so it works with 
 
 ## Web
 
-On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/), and it loads that library itself: nothing needs to be added to `web/index.html`. The plugin injects the exact MapLibre GL JS build it is tested against, script and stylesheet included, before the first map is built.
+On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/), and it loads that library itself: nothing needs to be added to `web/index.html`. The plugin imports the exact build it is tested against, stylesheet included, before the first map is built.
 
 !!! warning "Upgrading from an older version"
     If your `index.html` still has the `maplibre-gl.js` script and `maplibre-gl.css` link tags from an earlier setup, remove them. An existing `maplibregl` global is reused as it is, so a manually pinned copy silently overrides the version the plugin is tested against.
+
+### Content-Security-Policy
+
+Skip this if your app has no CSP. If it does, MapLibre GL JS runs its tile work in a Web Worker, and when the library is loaded cross-origin (the default, from a CDN) that worker is constructed from a `blob:` URL:
+
+```
+worker-src 'self' blob: ;
+img-src data: blob: 'self' ;
+```
+
+Self-hosting the library instead makes the worker same-origin, and `blob:` is no longer needed in `worker-src`.
 
 ### Self-hosting MapLibre GL JS
 
@@ -80,14 +91,22 @@ If a Content-Security-Policy rules out the CDN, or you prefer serving the librar
 ```dart
 void main() {
   MapLibreMap.webLibrarySource = const MapLibreJsSource.urls(
-    scriptUrl: 'https://your.host/maplibre-gl.js',
+    scriptUrl: 'https://your.host/maplibre-gl.mjs',
     styleUrl: 'https://your.host/maplibre-gl.css',
   );
   runApp(const MyApp());
 }
 ```
 
-If the page loads MapLibre GL JS itself, for example from a `<script type="module">` bundle, set `MapLibreMap.webLibrarySource = const MapLibreJsSource.preloaded()` instead: the plugin then injects nothing and waits for the `maplibregl` global to appear.
+MapLibre GL JS 6 is an ES module, so `scriptUrl` points at the `.mjs` build. Serve the whole `dist` directory, not just that one file: the library resolves its worker relative to its own URL, so the worker build has to sit next to it.
+
+If the page loads MapLibre GL JS itself, set `MapLibreMap.webLibrarySource = const MapLibreJsSource.preloaded()`: the plugin then imports nothing and waits for the `maplibregl` global. An ES module defines no global on its own, so the page has to publish one:
+
+```html
+<script type="module">
+  globalThis.maplibregl = await import('/your/path/maplibre-gl.mjs');
+</script>
+```
 
 ### Calling MapLibre GL JS yourself
 

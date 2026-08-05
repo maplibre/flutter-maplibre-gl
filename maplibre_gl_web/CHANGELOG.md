@@ -7,8 +7,12 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `updateContentInsets()` and the new `setPadding()` are implemented through the camera `padding` option; both used to throw `UnimplementedError` (#258).
 * `getLayerProperties()` and `getSourceProperties()` read a layer's or source's properties from the live style, in the same shape as Android and iOS (#513).
 * The manual location puck is drawn by the plugin, since maplibre-gl-js has no injectable location component. It reuses maplibre-gl-js' own user-location classes plus a bearing arrow, so it needs `maplibre-gl.css`, which the plugin loads with the library (#840).
-* The plugin loads maplibre-gl-js itself before the first map is built, so apps should remove the script and stylesheet tags from `web/index.html`. It injects the exact build its interop is written against, or whatever `MapLibreMap.webLibrarySource` configures, and reuses an existing `maplibregl` global as it is. A failed stylesheet only logs, since it affects how the controls and the puck look and not the map; a failed script clears the memoized attempt so the next map build retries (#928).
+* The plugin loads maplibre-gl-js itself before the first map is built, so apps should remove the script and stylesheet tags from `web/index.html`. It loads the exact build its interop is written against, or whatever `MapLibreMap.webLibrarySource` configures, and reuses an existing `maplibregl` global as it is. A failed stylesheet only logs, since it affects how the controls and the puck look and not the map; a failed import clears the memoized attempt so the next map build retries (#928).
 * `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
+
+### Changed
+* MapLibre GL JS 5 replaced by 6. Version 6 ships as an ES module only, with no UMD bundle and no global of its own, so the loader imports it with `importModule` and publishes the namespace as `globalThis.maplibregl`, which is what every `@JS` binding here addresses. `MapLibreJsSource.urls` now points at the `.mjs` build, and a page using `MapLibreJsSource.preloaded` has to publish the global itself (#943).
+* Missing style images are supplied through `Map.setMissingStyleImageResolver` instead of a `styleimagemissing` listener: since version 6 the listener can observe the request but calling `addImage` from it no longer resolves it, which would have silently stopped asset images from loading (#943).
 
 ### Fixed
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).

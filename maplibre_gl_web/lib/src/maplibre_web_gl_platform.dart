@@ -122,7 +122,9 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
     _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
-    _mapSubscriptions.add(_map.on('styleimagemissing', _loadFromAssets));
+    // Not a `styleimagemissing` listener: since maplibre-gl-js 6 a listener can
+    // observe the request but calling addImage from it no longer satisfies it.
+    _map.setMissingStyleImageResolver(_loadFromAssets);
     if (_dragEnabled) {
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
@@ -166,9 +168,7 @@ class MapLibreMapController extends MapLibrePlatform
     return _assetManifest!;
   }
 
-  Future<void> _loadFromAssets(Event event) async {
-    final imagePath = event.id;
-
+  Future<void> _loadFromAssets(String imagePath) async {
     // Check if the image is already added
     if (_map.hasImage(imagePath)) return;
 

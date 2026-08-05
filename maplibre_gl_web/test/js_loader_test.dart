@@ -93,6 +93,20 @@ void main() {
       expect(seen!.timeout, const Duration(seconds: 20));
     });
 
+    test(
+      'the pinned default is an ES module, which is what it is imported as',
+      () {
+        // maplibre-gl-js 6 ships only ESM, and the loader imports the URL as a
+        // module. A bump that pointed this back at a classic bundle would fail at
+        // runtime, in a browser, on the first map.
+        expect(MapLibreJsLoader.defaultScriptUrl, endsWith('.mjs'));
+        expect(MapLibreJsLoader.defaultScriptUrl, contains(kMapLibreJsVersion));
+        expect(MapLibreJsLoader.defaultStyleUrl, endsWith('.css'));
+        expect(MapLibreJsLoader.defaultStyleUrl, contains(kMapLibreJsVersion));
+        expect(kMapLibreJsVersion, startsWith('6.'));
+      },
+    );
+
     test('passes the configured source through unchanged', () async {
       const configured = MapLibreJsSource.urls(
         scriptUrl: 'assets/maplibre-gl.js',

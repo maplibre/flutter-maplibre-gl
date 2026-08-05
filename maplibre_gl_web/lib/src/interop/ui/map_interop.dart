@@ -582,6 +582,15 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
   external void addImage(String id, JSAny image, [JSAny? options]);
 
+  ///  Sets the function that supplies an image the style asks for but does not
+  ///  have. The resolver is called with the image id and may return a promise;
+  ///  it registers the image by calling [addImage].
+  ///
+  ///  Since maplibre-gl-js 6 this is the only way to satisfy such a request: a
+  ///  `styleimagemissing` listener can still observe it, but calling
+  ///  [addImage] from there no longer resolves it.
+  external void setMissingStyleImageResolver(JSFunction resolver);
+
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
   ///  [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),

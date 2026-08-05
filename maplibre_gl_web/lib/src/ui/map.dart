@@ -703,6 +703,19 @@ class MapLibreMap extends Camera {
   ///  var catIconExists = map.hasImage('cat');
   bool hasImage(String id) => jsObject.hasImage(id);
 
+  ///  Registers [resolve] as the supplier of images the style asks for but does
+  ///  not have. It is called with the image id and should register the image by
+  ///  calling `addImage`; the map waits for the returned future.
+  ///
+  ///  Since maplibre-gl-js 6 this replaces listening for `styleimagemissing`
+  ///  and calling `addImage` from the listener, which no longer resolves the
+  ///  request.
+  void setMissingStyleImageResolver(Future<void> Function(String id) resolve) {
+    jsObject.setMissingStyleImageResolver(
+      ((JSString id) => resolve(id.toDart).toJS).toJS,
+    );
+  }
+
   ///  Remove an image from a style. This can be an image from the style's original
   ///  [sprite]  or any images
   ///  that have been added at runtime using {@link addImage}.
