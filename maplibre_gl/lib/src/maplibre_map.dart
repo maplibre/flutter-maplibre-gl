@@ -410,7 +410,18 @@ class MapLibreMap extends StatefulWidget {
   ///   runApp(const MyApp());
   /// }
   /// ```
-  static Future<void> preWarm() => MapLibreGlobalPlatform.instance.preWarm();
+  static Future<void> preWarm() {
+    // Being called before runApp() is the entire point of this method, and on
+    // Android and iOS it reaches native over a method channel, which resolves
+    // its messenger through ServicesBinding.instance. Without a binding that
+    // getter throws "Binding has not yet been initialized", so following the
+    // documented usage above would fail. runApp() is normally what creates the
+    // binding, and it has not run yet, so create it here. ensureInitialized is
+    // idempotent, so an app that already called it, or that calls runApp()
+    // straight after, is unaffected.
+    WidgetsFlutterBinding.ensureInitialized();
+    return MapLibreGlobalPlatform.instance.preWarm();
+  }
 
   /// Completes once the web build of the map engine, MapLibre GL JS, is on the
   /// page and the `maplibregl` global is usable. On Android and iOS it
