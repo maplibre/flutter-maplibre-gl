@@ -117,9 +117,10 @@ void main() {
 
       await MapLibreJsLoader.ensureLoaded();
 
-      expect(globalContext.has('maplibregl'), isTrue);
+      final published = globalContext['maplibregl'] as JSObject?;
+      expect(published, isNotNull);
       expect(
-        (globalContext['maplibregl'] as JSObject).has('Map'),
+        published!.has('Map'),
         isTrue,
         reason: 'the published namespace must carry the library',
       );
