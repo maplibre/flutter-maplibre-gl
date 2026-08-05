@@ -50,9 +50,12 @@ MapLibreMap(
 Continuous GPS is expensive on a map that stays open for a long time. On iOS the engine can run in pulses instead: GPS is active for `pulseWindowMs`, then off until the next `intervalMs`, and the puck holds its last position in between.
 
 ```dart
-const LocationEnginePlatforms.iOS(
-  intervalMs: 30000,    // one pulse every 30 s
-  pulseWindowMs: 5000,  // GPS on for 5 s per pulse
+MapLibreMap(
+  myLocationEnabled: true,
+  locationEnginePlatforms: const LocationEnginePlatforms.iOS(
+    intervalMs: 30000,    // one pulse every 30 s
+    pulseWindowMs: 5000,  // GPS on for 5 s per pulse
+  ),
 )
 ```
 
@@ -98,7 +101,7 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 |-----|---------|
 | `myLocationEnabled` | show or hide the puck |
 | `myLocationTrackingMode` | how the camera follows the user |
-| `myLocationRenderMode` | how heading is drawn (normal, compass, GPS) |
+| `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (not on iOS) |
 | `locationSource` | `PlatformLocationSource` (default) or `ManualLocationSource` |
 | `locationEnginePlatforms` | per-platform engine options, including iOS pulsing |
 | `controller.updateManualLocation` | push a fix in manual mode |
