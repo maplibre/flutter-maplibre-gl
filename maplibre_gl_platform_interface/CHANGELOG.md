@@ -3,15 +3,15 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ### Added
-* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning an existing layer's or source's full properties as a MapLibre style-spec map, or `null` when the id is unknown (#513).
+* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning a layer's or source's properties as a style-spec map, or `null` for an unknown id (#513).
 * `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs`, forwarded to the iOS location engine so GPS can be pulsed instead of tracked continuously (#901).
-* An app-provided location source: `LocationSource` with `ManualLocationSource` and `PlatformLocationSource`, the `ManualLocationUpdate` model, and the `setLocationSource` and `updateManualLocation` platform calls. `ManualLocationUpdate.toMap()` follows the existing wire conventions, with `position` as `[lat, lng]`, the timestamp in epoch milliseconds and null fields omitted (#840).
-* `MapLibreJsSource`, describing where the web implementation loads MapLibre GL JS from: the build the plugin is tested against (the default), self-hosted URLs, or a copy the page loads itself. It lives here so apps configure it through `maplibre_gl` without importing the web package; Android and iOS ignore it (#928).
-* `MapLibreGlobalPlatform`, the platform interface for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the method-channel default. The web package replaces the instance at registration, giving `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` a route to the web implementation without JS interop in the main package (#928).
-* `MapLibreMethodChannel` forwards `setFeatureState`, `removeFeatureState` and `getFeatureState` instead of throwing `UnimplementedError`, so feature state works on Android. On iOS the calls throw an `UnsupportedError` naming the platform, since the MapLibre iOS SDK does not expose the API yet (#889).
+* An app-provided location source: `LocationSource` with `ManualLocationSource` and `PlatformLocationSource`, the `ManualLocationUpdate` model, and the `setLocationSource` and `updateManualLocation` calls (#840).
+* `MapLibreJsSource`, describing where the web implementation loads MapLibre GL JS from. It lives here so apps can configure it through `maplibre_gl` without importing the web package; Android and iOS ignore it (#928).
+* `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, which is what routes `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
+* `setFeatureState`, `removeFeatureState` and `getFeatureState` are forwarded over the channel instead of throwing `UnimplementedError`, so feature state works on Android. iOS throws an `UnsupportedError` naming the platform (#889).
 
 ### Fixed
-* Adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode: those payloads are encoded on a background isolate, while smaller ones keep the faster synchronous path. Writes to the same source id stay in the order they were issued (#366).
+* A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode; smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 

@@ -3,16 +3,15 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
-* `queryCameraPosition()` is now implemented; it previously threw `UnimplementedError` (#892).
-* `updateContentInsets()`, and the new `setPadding()`, are implemented through the camera `padding` option; both previously threw `UnimplementedError` (#258).
-* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)` read an existing layer's or source's properties from the live style, in the same shape as Android and iOS (#513).
-* The manual location puck is drawn by the plugin, since maplibre-gl-js has no injectable location component. It reuses the `maplibregl-user-location-dot` and `maplibregl-user-location-accuracy-circle` classes plus a bearing arrow, relying on `maplibre-gl.css`, which the plugin loads with the library (#840).
-* The plugin loads maplibre-gl-js itself before the first map is built; apps should remove the script and stylesheet tags from `web/index.html`. It injects the exact build its interop is written against (`kMapLibreJsVersion`), or whatever `MapLibreMap.webLibrarySource` configures; an existing `maplibregl` global is reused as it is (#928).
-* Loader failures are contained: a failed stylesheet only logs, since it affects only how the controls and the puck look, and a failed script load clears the memoized attempt so the next map build retries (#928).
-* `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` and is installed at plugin registration, giving `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` their web behavior; the `maplibregl.prewarm` interop moved here from `maplibre_gl`, which no longer carries JS interop (#928).
+* `queryCameraPosition()` is implemented; it used to throw `UnimplementedError` (#892).
+* `updateContentInsets()` and the new `setPadding()` are implemented through the camera `padding` option; both used to throw `UnimplementedError` (#258).
+* `getLayerProperties()` and `getSourceProperties()` read a layer's or source's properties from the live style, in the same shape as Android and iOS (#513).
+* The manual location puck is drawn by the plugin, since maplibre-gl-js has no injectable location component. It reuses maplibre-gl-js' own user-location classes plus a bearing arrow, so it needs `maplibre-gl.css`, which the plugin loads with the library (#840).
+* The plugin loads maplibre-gl-js itself before the first map is built, so apps should remove the script and stylesheet tags from `web/index.html`. It injects the exact build its interop is written against, or whatever `MapLibreMap.webLibrarySource` configures, and reuses an existing `maplibregl` global as it is. A failed stylesheet only logs, since it affects how the controls and the puck look and not the map; a failed script clears the memoized attempt so the next map build retries (#928).
+* `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
 
 ### Fixed
-* `onMapIdle` now fires, matching Android and iOS. Code waiting on it never ran on web (#857).
+* `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
