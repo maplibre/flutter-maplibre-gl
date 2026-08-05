@@ -41,6 +41,7 @@ import 'examples/annotations/edit_annotation_draggable.dart';
 // Layers examples
 import 'examples/layers/circle_layer_example.dart';
 import 'examples/layers/cluster_properties_example.dart';
+import 'examples/layers/feature_state_example.dart';
 import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
@@ -157,8 +158,9 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
-  // Feature state is available on web and Android, not on iOS yet.
-  if (HoverEffectExample.isSupported) const HoverEffectExample(),
+  // Hover Effect follows the mouse, which only exists on web. The
+  // cross-platform side of feature state is the Feature State page below.
+  if (kIsWeb) const HoverEffectExample(),
 
   // Annotations
   const AnnotationsExample(),
@@ -174,6 +176,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const ClusterPropertiesExample(),
   const FillLayerExample(),
   const LineLayerExample(),
+  // Feature state is available on web and Android, not on iOS yet.
+  if (FeatureStateExample.isSupported) const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),
   const EditStyleLayerDraggableExample(),
 

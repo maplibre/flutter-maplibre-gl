@@ -469,7 +469,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [promoteId] can be used on web to promote an id from properties to be the
   /// id of the feature. This is useful because by default maplibre-gl-js does not
-  /// support string ids
+  /// support string ids. On Android and iOS the parameter is ignored: there
+  /// features must carry a top-level `id` member in the GeoJSON itself.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
