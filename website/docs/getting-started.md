@@ -64,6 +64,8 @@ Add a location usage description to your `Info.plist`:
 <string>Show your location on the map</string>
 ```
 
+The plugin ships both a Swift package and a CocoaPods podspec, so it works with Flutter's [Swift Package Manager integration](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers) and with CocoaPods. Nothing to configure either way: apps already on CocoaPods need no migration, and apps with SPM enabled need no `Podfile` on account of this plugin.
+
 ## Web
 
 On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/), and it loads that library itself: nothing needs to be added to `web/index.html`. The plugin injects the exact MapLibre GL JS build it is tested against, script and stylesheet included, before the first map is built.

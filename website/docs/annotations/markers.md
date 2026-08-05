@@ -49,6 +49,16 @@ final symbol = await controller.addSymbol(
     marker sprite, so register your own image rather than assuming a built-in
     name exists.
 
+!!! note "The text font is fixed for the whole layer"
+    Symbol annotations render with **Noto Sans Regular** on Android and iOS,
+    which the common public glyph endpoints all serve. MapLibre Native asks the
+    glyph server for a layer's font stack as a single token, and a font it does
+    not host comes back 404, which hides the whole symbol, icon included. The
+    font belongs to the annotation layer rather than to each symbol, so there is
+    no per-symbol override: if you need a different one, add a symbol style
+    layer with `addSymbolLayer` and set `textFont` there. On web the active
+    style decides.
+
 ## Tap callback
 
 ```dart

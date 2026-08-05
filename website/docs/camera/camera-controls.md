@@ -91,6 +91,23 @@ await controller.easeCamera(
 );
 ```
 
+## Padding: keep content centred behind an overlay
+
+A bottom sheet or a side panel covers part of the map, so the geometric centre of the widget is no longer the centre the user sees. `setPadding` shifts the map's centre by insetting the viewport, and every later camera call respects it, so you do not have to pass padding to each one:
+
+```dart
+// A 240 dp bottom sheet just opened.
+await controller.setPadding(bottom: 240, animated: true);
+
+// Centres in the visible part of the map, not behind the sheet.
+await controller.animateCamera(CameraUpdate.newLatLng(marker));
+
+// Sheet dismissed.
+await controller.setPadding(animated: true);
+```
+
+Values are in logical pixels and default to zero, so a call with no arguments clears the padding. `setPadding` is a convenience wrapper around `updateContentInsets`, which takes an `EdgeInsets`; use whichever reads better. Both work on Android, iOS and web.
+
 ## React to camera movement
 
 ```dart

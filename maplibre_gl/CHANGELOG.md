@@ -61,6 +61,8 @@ The plugin now loads MapLibre GL JS itself, pinned to the build it is tested aga
 * **Example app**: no longer calls `MapLibreMap.preWarm()`. It opens on a list of examples, so pre-warming there buys nothing and reads as a recommendation for every app, which it is not (#867).
 * **Android**: `MapLibreMap.useHybridComposition` docs corrected: the default has been `false` since 0.16.0, not `true` as documented, and its API docs now explain what each value actually selects. See the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android) (#816).
 * **Android**: the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#hybrid-composition) now covers Flutter's experimental Hybrid Composition++, enabled in the app's own manifest with no change in the plugin.
+* Two new guides: [User Location](https://maplibre.github.io/flutter-maplibre-gl/advanced/user-location/), covering the puck, the tracking modes, iOS GPS pulsing and the app-provided location source, and [Startup & Performance](https://maplibre.github.io/flutter-maplibre-gl/advanced/performance/), covering `preWarm()`, `pauseMap()` and large data updates.
+* `setPadding` is documented on the camera page, `getLayerProperties`, `getSourceProperties` and `attributionButtonColor` on the styles page, the annotation text font on the markers page, and Swift Package Manager under iOS setup.
 
 ### Internal
 * **Web**: the global calls (`MapLibreMap.preWarm()`, `MapLibreMap.ensureWebLibraryLoaded()`) reach the web implementation through the new `MapLibreGlobalPlatform` interface, removing the conditional imports that put JS interop in the main package (#928).

@@ -129,6 +129,32 @@ final styleJson = await controller.getStyle();
 // Returns the full resolved style JSON as a Map<String, dynamic>
 ```
 
+To inspect one piece of the style instead of all of it, read a single layer or source by id. Both return the object's properties as a style-spec map, in the same shape on every platform, or `null` when the id does not exist:
+
+```dart
+final ids = await controller.getLayerIds();              // what is in the style
+final layer = await controller.getLayerProperties('roads');
+final source = await controller.getSourceProperties('osm');
+
+if (layer != null) {
+  debugPrint('roads is a ${layer['type']} layer');
+}
+```
+
+This is useful for reading a value the active style chose before overriding it, and for asserting in tests that your runtime styling landed. `null` is the answer for an unknown id rather than an error, so it doubles as an existence check.
+
+## Attribution
+
+Styles carry attribution for their data, and the map shows it in an (i) button whose position and margins you can set with `attributionButtonPosition` and `attributionButtonMargins`. When the SDK's own tint does not read well against a particular style, for example a dark basemap, override just the colour:
+
+```dart
+MapLibreMap(
+  attributionButtonColor: Colors.white,
+)
+```
+
+Leave it unset to keep the MapLibre default. Android and iOS only: on web that control is HTML and is styled with CSS.
+
 ## PMTiles styles
 
 PMTiles is a self-hosted tile format that bundles all tiles into a single `.pmtiles` file, with no tile server needed. See [PMTiles guide](../advanced/pmtiles.md) for a full walkthrough.
