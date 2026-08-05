@@ -394,7 +394,12 @@ class MapLibreMap extends StatefulWidget {
   /// initialization overlaps your app's startup instead of delaying the first
   /// map.
   ///
-  /// Call it as early as possible, typically in `main()` before `runApp()`.
+  /// Worth calling when your **first screen is a map**, from `main()` before
+  /// `runApp()`, so the engine starts up while Flutter does. It is not a
+  /// blanket recommendation: an app whose map lives a few screens in pays for
+  /// start-up work its first screen never uses, and may never use at all. The
+  /// example app deliberately does not call it, because it opens on a list.
+  ///
   /// Safe to call any number of times: after the first call the underlying
   /// initialization is idempotent.
   ///
