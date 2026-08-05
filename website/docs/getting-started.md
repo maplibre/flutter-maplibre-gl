@@ -164,7 +164,7 @@ class MapPage extends StatelessWidget {
           target: LatLng(51.5, -0.09),
           zoom: 11,
         ),
-        styleString: MapLibreStyles.defaultStyle,
+        styleString: MapLibreStyles.demo,
       ),
     );
   }
