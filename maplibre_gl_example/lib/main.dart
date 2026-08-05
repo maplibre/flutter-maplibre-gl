@@ -1,5 +1,3 @@
-import 'dart:async' show unawaited;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -77,11 +75,11 @@ String? _initialExampleSlug() {
 }
 
 Future<void> main() async {
-  // Pre-warm the MapLibre engine to overlap its initialization with Flutter's
-  // startup. Deliberately not awaited: overlapping is the whole point, and on
-  // web it also starts the download of maplibre-gl-js right away.
-  unawaited(MapLibreMap.preWarm());
-
+  // Deliberately no MapLibreMap.preWarm() here. This app opens on a list of
+  // examples, not on a map, so pre-warming would pay for engine start-up that
+  // the first screen does not use, and demonstrating it in that position would
+  // suggest it belongs in every app. It is worth it when your first screen is
+  // a map; see its dartdoc.
   if (kIsWeb) {
     // The plugin loads maplibre-gl-js itself, so unlike the old <script> tag
     // setup the maplibregl global does not exist at page parse time, and the
