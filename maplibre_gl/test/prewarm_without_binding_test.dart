@@ -1,3 +1,11 @@
+// The crash under test is the Android and iOS path, where preWarm() reaches
+// native over a method channel. Under `flutter test --platform chrome` there is
+// no platform to answer that channel and no registered web implementation, so
+// the call never completes and the test times out instead of asserting
+// anything. `melos run test:web` runs this package under Chrome, hence vm only.
+@TestOn('vm')
+library;
+
 // This file must stay alone and must never initialize the binding: the absence
 // of one is the condition under test. `flutter_test` only creates a binding
 // when something asks for it, so a single `testWidgets`, a `TestDefaultBinary
