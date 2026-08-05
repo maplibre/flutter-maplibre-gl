@@ -107,6 +107,9 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
           iconIgnorePlacement: _iconIgnorePlacement,
           // Text properties
           textField: '{name}',
+          // A font stack the active demo style actually serves; a glyph 404
+          // would hide the whole symbol, icon included.
+          textFont: ExampleConstants.demoFontStack,
           textSize: _textSize,
           textColor: '#${_textColor.toARGB32().toRadixString(16).substring(2)}',
           textOpacity: _textOpacity,
@@ -188,6 +191,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
           iconIgnorePlacement: _iconIgnorePlacement,
           // Text properties
           textField: '{name}',
+          textFont: ExampleConstants.demoFontStack,
           textSize: _textSize,
           textColor: '#${_textColor.toARGB32().toRadixString(16).substring(2)}',
           textOpacity: _textOpacity,
