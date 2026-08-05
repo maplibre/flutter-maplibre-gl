@@ -410,6 +410,17 @@ class MapLibreMap extends StatefulWidget {
   ///   runApp(const MyApp());
   /// }
   /// ```
+  ///
+  /// If no Flutter binding exists yet, this call creates the default one,
+  /// [WidgetsFlutterBinding], because the method channel it uses cannot work
+  /// without a binding. In Flutter the first binding created wins, so a test
+  /// or app that needs a different binding, such as
+  /// `IntegrationTestWidgetsFlutterBinding`, `TestWidgetsFlutterBinding` or a
+  /// custom [WidgetsFlutterBinding] subclass, must initialize its own binding
+  /// before calling this method; initializing it afterwards fails with
+  /// "Binding is already initialized". For the same reason, an app that
+  /// creates its binding inside a custom [Zone], for example within
+  /// `runZonedGuarded`, should call this method inside that zone too.
   static Future<void> preWarm() {
     // Being called before runApp() is the entire point of this method, and on
     // Android and iOS it reaches native over a method channel, which resolves
@@ -419,7 +430,17 @@ class MapLibreMap extends StatefulWidget {
     // binding, and it has not run yet, so create it here. ensureInitialized is
     // idempotent, so an app that already called it, or that calls runApp()
     // straight after, is unaffected.
-    WidgetsFlutterBinding.ensureInitialized();
+    //
+    // Skipped on background isolates (no root isolate token): constructing a
+    // binding there throws "UI actions are only available on root isolate"
+    // and leaves that isolate's binding statics half-initialized. On those
+    // isolates MethodChannel routes through BackgroundIsolateBinaryMessenger
+    // instead of the binding, so there is nothing to initialize here. The
+    // condition mirrors _findBinaryMessenger in the framework's
+    // platform_channel.dart.
+    if (kIsWeb || ServicesBinding.rootIsolateToken != null) {
+      WidgetsFlutterBinding.ensureInitialized();
+    }
     return MapLibreGlobalPlatform.instance.preWarm();
   }
 
