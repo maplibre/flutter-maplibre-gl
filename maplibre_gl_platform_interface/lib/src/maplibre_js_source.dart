@@ -2,17 +2,15 @@ part of '../maplibre_gl_platform_interface.dart';
 
 /// Where the web implementation loads MapLibre GL JS from.
 ///
-/// On web the plugin drives MapLibre GL JS through JS interop, so the library
-/// has to be on the page before the first map is built. By default the plugin
-/// injects the exact build it is tested against, which means `web/index.html`
-/// needs no `<script>` or `<link>` tag. Apps with other constraints describe
-/// theirs with one of the named constructors and assign it to
-/// `MapLibreMap.webLibrarySource` before the first map is built.
+/// The library has to be on the page before the first map is built. By default
+/// the plugin injects the exact build it is tested against, so `web/index.html`
+/// needs no `<script>` or `<link>` tag. Apps with other constraints pick a
+/// named constructor and assign it to `MapLibreMap.webLibrarySource` before the
+/// first map is built.
 ///
-/// This class only describes the choice; the web implementation interprets
-/// it. It lives in the platform interface so app-facing code can configure it
-/// without importing the web package, and it is ignored on Android and iOS,
-/// where the map engine is linked into the app binary.
+/// Lives in the platform interface so apps can configure it without importing
+/// the web package. Ignored on Android and iOS, where the engine is linked into
+/// the app binary.
 @immutable
 class MapLibreJsSource {
   /// The build this plugin is tested against, fetched from the unpkg CDN.
@@ -39,10 +37,9 @@ class MapLibreJsSource {
   /// The page loads MapLibre GL JS itself; the plugin injects nothing and
   /// only waits for the `maplibregl` global to appear.
   ///
-  /// This is required rather than a shortcut for such pages: a
-  /// `<script type="module">` is deferred, so the global is not present yet
-  /// when the first map is built, and the plugin has to wait for it instead
-  /// of assuming it is there.
+  /// Needed rather than optional for such pages: a `<script type="module">` is
+  /// deferred, so the global may still be missing when the first map is built
+  /// and the plugin has to wait for it.
   const MapLibreJsSource.preloaded({this.timeout = _defaultTimeout})
     : scriptUrl = null,
       styleUrl = null,

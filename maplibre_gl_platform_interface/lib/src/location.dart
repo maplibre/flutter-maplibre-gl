@@ -237,10 +237,9 @@ class UserLocation {
 /// Requires the map to be created with
 /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
 ///
-/// All fields except [target] are optional; omitted fields are simply not sent
-/// to the native side. There is no separate `heading` field: the compass-render
-/// heading is device-sensor driven on both Android and iOS. Use [bearing] for
-/// the GPS direction of travel (the chevron/arrow direction).
+/// Every field except [target] is optional, and omitted ones are not sent on.
+/// There is no `heading` field: on both Android and iOS the compass heading
+/// comes from the device sensors. Use [bearing] for the direction of travel.
 @immutable
 class ManualLocationUpdate {
   /// Creates an app-provided location update.

@@ -81,21 +81,15 @@ class MapLibreMap extends StatefulWidget {
   /// Only has an impact if [myLocationEnabled] is set to true.
   final LocationEnginePlatforms locationEnginePlatforms;
 
-  /// Selects which source feeds the map's user-location component (the puck).
+  /// What feeds the map's user-location component (the puck).
   ///
-  /// Defaults to [PlatformLocationSource] (the native location engine). Use
-  /// [ManualLocationSource] to feed app-provided locations via
-  /// [MapLibreMapController.updateManualLocation] instead of the device's
-  /// location engine.
+  /// Defaults to [PlatformLocationSource], the device's location engine. Use
+  /// [ManualLocationSource] to drive the puck from your own fixes, pushed with
+  /// [MapLibreMapController.updateManualLocation]; that mode needs no location
+  /// permission and works on Android, iOS and web.
   ///
-  /// Only has an effect when [myLocationEnabled] is set to true. In manual mode
-  /// no location permission is required. Applied at component activation;
-  /// changing it after the map is created does not re-activate the component.
-  ///
-  /// Supported on Android, iOS and web. On Android and iOS the updates pushed
-  /// via [MapLibreMapController.updateManualLocation] drive the SDK's native
-  /// user-location component; on web the plugin draws the puck itself (dot +
-  /// accuracy circle + bearing arrow) using map markers.
+  /// Only has an effect when [myLocationEnabled] is true, and is read when the
+  /// component is activated: changing it later does not re-activate it.
   final LocationSource locationSource;
 
   /// The color used for the map loading foreground.
@@ -107,11 +101,9 @@ class MapLibreMap extends StatefulWidget {
   /// Enable translucent texture surface for the map.
   /// This allows the map to have a transparent background, useful for overlay scenarios.
   ///
-  /// This moves the map into a `TextureView` (MapLibre's `textureMode`) and
-  /// makes that view non-opaque, so it brings the same texture layer
-  /// composition as [MapLibreMap.useHybridComposition] and adds per-pixel
-  /// blending. Set `useHybridComposition` instead when you want the texture
-  /// layer with an opaque surface.
+  /// This moves the map into a `TextureView`, like [useHybridComposition], and
+  /// additionally makes that view non-opaque. Use `useHybridComposition` when
+  /// you want the `TextureView` without the transparency.
   ///
   /// **Available only on Android. Has no effect on iOS or Web.**
   final bool translucentTextureSurface;
@@ -338,37 +330,26 @@ class MapLibreMap extends StatefulWidget {
   /// * All fade/transition animations have completed
   final OnMapIdleCallback? onMapIdle;
 
-  /// Which Android `View` the map renders into, which is what decides how
-  /// Flutter embeds it. Ignored on iOS and web.
+  /// Which Android `View` the map renders into. Ignored on iOS and web.
   ///
-  /// Defaults to `false`, and has done since 0.16.0: the map renders into a
-  /// `GLSurfaceView`. Flutter cannot redirect a `SurfaceView`'s drawing into a
-  /// texture, so it embeds the map through Virtual Display. The map's own
-  /// rendering is as direct as Android allows, at the price of Virtual
-  /// Display's known limitations around text input, accessibility and z-order.
+  /// `false`, the default since 0.16.0, uses a `GLSurfaceView`. Flutter cannot
+  /// sample a `SurfaceView` into a texture, so it embeds the map through
+  /// Virtual Display: the most direct rendering path, with Virtual Display's
+  /// known limits around text input, accessibility and z-order.
   ///
-  /// Set it to `true` to render into a `TextureView` instead, which is
-  /// MapLibre's `textureMode`. Flutter then composites the map as a texture
-  /// layer, so the map behaves like a regular widget: Flutter content can paint
-  /// over it, and the map itself can be transformed, clipped or animated.
-  /// Rendering into a `TextureView` costs more than a `SurfaceView` on every
-  /// Android version.
+  /// `true` uses a `TextureView`, which Flutter composites as a texture layer.
+  /// The map then behaves like any other widget, so Flutter content can paint
+  /// over it and the map can be transformed, clipped or animated, at a higher
+  /// rendering cost. [translucentTextureSurface] selects the same view and
+  /// additionally makes it transparent.
   ///
-  /// Despite the name, this does not select Flutter's "Hybrid Composition"
-  /// mode. Both values go through `PlatformViewsService.initAndroidView`; what
-  /// changes is the native view, and Flutter picks Texture Layer Hybrid
-  /// Composition or Virtual Display from there. Apps on Android 14 or newer
-  /// with Vulkan can instead opt into Flutter's Hybrid Composition++, which
-  /// composites the `SurfaceView` natively and needs no change here. See
-  /// https://docs.flutter.dev/platform-integration/android/platform-views
-  ///
-  /// [MapLibreMap.translucentTextureSurface] also moves the map to a
-  /// `TextureView`, and on top of that makes the view non-opaque. Use this flag
-  /// when you want the texture layer without the transparency.
+  /// Despite the name, this does not select Flutter's "Hybrid Composition":
+  /// both values go through `initAndroidView`, and Flutter picks its own mode
+  /// from the native view. See the
+  /// [architecture guide](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android).
   ///
   /// Assign it before the first [MapLibreMap] is built, ideally before
-  /// `runApp()`. The mode is fixed once a platform view exists, so changing it
-  /// afterwards leaves maps already on screen untouched.
+  /// `runApp()`; maps already on screen keep the mode they were created with.
   static bool get useHybridComposition =>
       MapLibreMethodChannel.useHybridComposition;
 
@@ -390,24 +371,13 @@ class MapLibreMap extends StatefulWidget {
   static set webLibrarySource(MapLibreJsSource? value) =>
       MapLibreJsSource.configured = value;
 
-  /// Starts up the map engine before the first [MapLibreMap] is built, so its
-  /// initialization overlaps your app's startup instead of delaying the first
-  /// map.
+  /// Starts up the map engine early, so its initialization overlaps app
+  /// start-up instead of delaying the first map.
   ///
-  /// Worth calling when your **first screen is a map**, from `main()` before
-  /// `runApp()`, so the engine starts up while Flutter does. It is not a
-  /// blanket recommendation: an app whose map lives a few screens in pays for
-  /// start-up work its first screen never uses, and may never use at all. The
-  /// example app deliberately does not call it, because it opens on a list.
-  ///
-  /// Safe to call any number of times: after the first call the underlying
-  /// initialization is idempotent.
-  ///
-  /// On Android the gain comes from issuing the channel call early, since the
-  /// plugin's global method handler initializes MapLibre on every call. On web
-  /// the expensive part is fetching MapLibre GL JS itself, which the plugin
-  /// loads at runtime, so this starts that download during start-up rather
-  /// than at the first map build.
+  /// Call it from `main()`, before `runApp()`, when your **first screen is a
+  /// map**. It is not a blanket recommendation: an app whose map lives a few
+  /// screens in pays for start-up work its first screen never uses. Calling it
+  /// more than once is harmless.
   ///
   /// ```dart
   /// void main() {
@@ -416,48 +386,40 @@ class MapLibreMap extends StatefulWidget {
   /// }
   /// ```
   ///
-  /// If no Flutter binding exists yet, this call creates the default one,
-  /// [WidgetsFlutterBinding], because the method channel it uses cannot work
-  /// without a binding. In Flutter the first binding created wins, so a test
-  /// or app that needs a different binding, such as
-  /// `IntegrationTestWidgetsFlutterBinding`, `TestWidgetsFlutterBinding` or a
-  /// custom [WidgetsFlutterBinding] subclass, must initialize its own binding
-  /// before calling this method; initializing it afterwards fails with
-  /// "Binding is already initialized". For the same reason, an app that
-  /// creates its binding inside a custom [Zone], for example within
-  /// `runZonedGuarded`, should call this method inside that zone too.
+  /// This initializes the Flutter binding if the app has not done so yet, since
+  /// the call needs one before `runApp()` creates it. The first binding created
+  /// wins, so an app or test that needs a different one, such as
+  /// `IntegrationTestWidgetsFlutterBinding`, must initialize it before calling
+  /// this. Likewise, an app that creates its binding inside a custom [Zone],
+  /// for example under `runZonedGuarded`, should call this inside that zone.
   static Future<void> preWarm() {
-    // Being called before runApp() is the entire point of this method, and on
-    // Android and iOS it reaches native over a method channel, which resolves
-    // its messenger through ServicesBinding.instance. Without a binding that
-    // getter throws "Binding has not yet been initialized", so following the
-    // documented usage above would fail. runApp() is normally what creates the
-    // binding, and it has not run yet, so create it here. ensureInitialized is
-    // idempotent, so an app that already called it, or that calls runApp()
-    // straight after, is unaffected.
+    // On Android and iOS this reaches native over a method channel, whose
+    // messenger comes from ServicesBinding.instance, and being called before
+    // runApp() is the whole point of the method, so the binding runApp() would
+    // have created does not exist yet. ensureInitialized is idempotent, so
+    // doing it here costs an app that already did it nothing.
     //
-    // Skipped on background isolates (no root isolate token): constructing a
-    // binding there throws "UI actions are only available on root isolate"
-    // and leaves that isolate's binding statics half-initialized. On those
-    // isolates MethodChannel routes through BackgroundIsolateBinaryMessenger
-    // instead of the binding, so there is nothing to initialize here. The
-    // condition mirrors _findBinaryMessenger in the framework's
-    // platform_channel.dart.
+    // Background isolates are skipped: there MethodChannel routes through
+    // BackgroundIsolateBinaryMessenger rather than the binding, and building a
+    // binding would throw "UI actions are only available on root isolate" and
+    // leave that isolate's binding statics half-initialized. The condition
+    // mirrors _findBinaryMessenger in the framework's platform_channel.dart.
     if (kIsWeb || ServicesBinding.rootIsolateToken != null) {
       WidgetsFlutterBinding.ensureInitialized();
     }
     return MapLibreGlobalPlatform.instance.preWarm();
   }
 
-  /// Completes once the web build of the map engine, MapLibre GL JS, is on the
-  /// page and the `maplibregl` global is usable. On Android and iOS it
-  /// completes immediately.
+  /// Completes once MapLibre GL JS is on the page and the `maplibregl` global
+  /// is usable. Completes immediately on Android and iOS.
   ///
-  /// The plugin loads MapLibre GL JS itself, so the global does not exist at
-  /// page parse time and is not guaranteed to exist at the start of `main()`
-  /// either. Apps that call into MapLibre GL JS with their own JS interop, for
-  /// example to register a custom protocol with `addProtocol` or to set the
-  /// RTL text plugin, must await this first:
+  /// Most apps never need this: every [MapLibreMap] awaits the same future
+  /// before building its map, so the library is already there by the time your
+  /// map callbacks run. Await it when your own JS interop has to reach
+  /// `maplibregl` before any map exists, for example to register a protocol
+  /// with `addProtocol` or to set the RTL text plugin. Awaiting it before
+  /// `runApp()`, as below, holds back the first frame until the library has
+  /// arrived.
   ///
   /// ```dart
   /// Future<void> main() async {
@@ -469,14 +431,7 @@ class MapLibreMap extends StatefulWidget {
   /// }
   /// ```
   ///
-  /// Most apps never need to call this. Every [MapLibreMap] awaits the same
-  /// future before it builds its map, so the library being loaded is already
-  /// guaranteed by the time your own map callbacks run. Awaiting it before
-  /// `runApp()`, as above, holds back the first frame until the library has
-  /// arrived, which is the right trade only when something has to be
-  /// registered globally before any map exists.
-  ///
-  /// Where the library is loaded from is configured with [webLibrarySource].
+  /// Where the library comes from is configured with [webLibrarySource].
   static Future<void> ensureWebLibraryLoaded() =>
       MapLibreGlobalPlatform.instance.ensureLibraryLoaded();
 

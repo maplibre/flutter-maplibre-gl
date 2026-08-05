@@ -4,10 +4,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   late MethodChannel _channel;
 
   /// Backing field of `MapLibreMap.useHybridComposition`, which is the
-  /// documented way to set this and carries the full explanation. Android only:
-  /// `false` leaves the map on a `SurfaceView`, which Flutter embeds through
-  /// Virtual Display; `true` turns on MapLibre's `textureMode` so the map
-  /// renders into a `TextureView` that Flutter composites as a texture layer.
+  /// documented way to set this and explains what each value selects. Android
+  /// only: `false` keeps the map on a `SurfaceView`, `true` moves it to a
+  /// `TextureView` via MapLibre's `textureMode`.
   static bool useHybridComposition = false;
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
@@ -796,30 +795,22 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   /// the number of features in a collection, and the number of coordinate
   /// positions anywhere in the payload.
   ///
-  /// The native side (Android `FeatureCollection.fromJson`, iOS `MLNShape`)
-  /// only accepts a JSON string, so the string has to be produced either way.
-  /// `jsonEncode` is synchronous and used to run on the main isolate, freezing
-  /// the UI for large geometries such as a line with tens of thousands of
-  /// points (#366). Large payloads now go through [compute]; small ones stay on
-  /// the synchronous path, because spawning an isolate costs milliseconds and
-  /// would make the common case both slower and asynchronous.
+  /// Native only accepts a JSON string, so the encode happens either way, and
+  /// `jsonEncode` on the main isolate froze the UI on large geometries (#366).
+  /// Above these thresholds the encode goes through [compute]; below them it
+  /// stays synchronous, since spawning an isolate would make the common case
+  /// slower and asynchronous for nothing.
   ///
-  /// Offloading trades total duration for a responsive UI, it is not a speed
-  /// up: the encode still happens, and handing the payload to the isolate
-  /// copies it on the calling side. Measured on a desktop machine by watching
-  /// for gaps in the main event loop, a 100k-point line blocks the main isolate
-  /// for about 46 ms inline against about 30 ms offloaded, while total duration
-  /// grows from about 45 ms to about 72 ms. Removing the remaining 30 ms would
-  /// need an API that accepts already encoded GeoJSON, since that is the copy.
+  /// This buys a responsive UI, not speed: handing the payload over copies it on
+  /// the calling side. Measured on a desktop machine, a 100k-point line blocks
+  /// the main isolate for about 46 ms inline against about 30 ms offloaded,
+  /// while total duration grows from about 45 ms to about 72 ms. Dropping that
+  /// last 30 ms needs an API taking already encoded GeoJSON, since that copy is
+  /// the cost. A long-lived worker isolate was measured and rejected: the spawn
+  /// is only about 0.1 ms, and a shared worker queues a small write behind a
+  /// large one (58 ms) instead of letting it take the synchronous path.
   ///
-  /// Keeping a worker isolate alive instead of spawning one per call was
-  /// measured and rejected: the spawn is only about 0.1 ms, and a shared worker
-  /// makes a small write queue behind a large one (58 ms in the measurement)
-  /// instead of taking the synchronous fast path.
-  ///
-  /// Web never reaches this code: `maplibre_gl_web` replaces the platform
-  /// instance and hands the decoded map straight to maplibre-gl-js, so there is
-  /// no JSON string to produce.
+  /// Web never gets here: it hands the decoded map straight to maplibre-gl-js.
   static const _geoJsonOffloadFeatureCount = 100;
   static const _geoJsonOffloadPositionCount = 2000;
 

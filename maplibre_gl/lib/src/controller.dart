@@ -188,9 +188,8 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
-      // A camera carrying NaN or infinity is dropped rather than cached or
-      // forwarded, so one bad event cannot outlive itself. See
-      // [isFiniteCameraPosition].
+      // A non-finite camera is neither cached nor forwarded, so one bad event
+      // cannot outlive itself. See isFiniteCameraPosition.
       if (isFiniteCameraPosition(cameraPosition)) {
         _cameraPosition = cameraPosition;
         onCameraMove?.call(cameraPosition);
@@ -199,9 +198,9 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onCameraIdlePlatform.add((cameraPosition) {
-      // The moving flag and the callback are not conditional: an unusable
-      // camera still means the movement ended, and leaving isCameraMoving true
-      // would be worse than a stale position.
+      // The flag and the callback are unconditional: an unusable camera still
+      // means the movement ended, and a stuck isCameraMoving would be worse
+      // than a stale position.
       _isCameraMoving = false;
       if (isFiniteCameraPosition(cameraPosition)) {
         _cameraPosition = cameraPosition;
@@ -378,20 +377,18 @@ class MapLibreMapController extends ChangeNotifier {
   /// Returns the most recent camera position reported by the platform side.
   /// Will be null, if [MapLibreMap.trackCameraPosition] is false.
   ///
-  /// Only readings whose components are all finite are kept here, so this never
-  /// returns a camera containing NaN or infinity. If you need a guaranteed
-  /// fresh reading rather than the last reported one, use
-  /// [queryCameraPosition], which round-trips to the platform.
+  /// Never holds a camera with NaN or infinite components; those readings are
+  /// dropped. For a guaranteed fresh reading rather than the last reported one,
+  /// use [queryCameraPosition], which round-trips to the platform.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
   /// Whether every component of [position] is a finite number.
   ///
   /// iOS derives the zoom from the map view's size, so a camera event arriving
-  /// before the view has been laid out can carry a non-finite zoom. Such a
-  /// reading is dropped instead of cached: keeping it would leave
-  /// [cameraPosition] poisoned until the next camera event, and on a map the
-  /// user never touches that event never comes.
+  /// before the first layout can carry a non-finite zoom. Caching one would
+  /// leave [cameraPosition] poisoned until the next event, which on an
+  /// untouched map never comes, so such readings are dropped.
   @visibleForTesting
   static bool isFiniteCameraPosition(CameraPosition? position) {
     if (position == null) return false;
@@ -527,28 +524,24 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Sets the state of a feature.
   ///
-  /// A feature's state is a set of user-defined key-value pairs that can be
-  /// dynamically updated and used for styling with data-driven properties,
-  /// via the `["feature-state", ...]` expression. Restyling many features
-  /// this way is much cheaper than re-feeding the whole GeoJSON source,
-  /// because the source data is left untouched.
+  /// Feature state is a set of key-value pairs attached to one feature and read
+  /// back from the style with the `["feature-state", ...]` expression, so many
+  /// features can be restyled without re-feeding the source data.
   ///
-  /// **Platform support**: web and Android. On iOS this method throws an
-  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
-  /// feature state API yet.
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature. Must be an integer or a string
   ///   that can be cast to an integer.
   /// [state] A set of key-value pairs representing the state. Values should be
   ///   valid JSON types.
-  /// [sourceLayer] For vector sources the source layer name is required, on
-  ///   every platform. GeoJSON sources ignore it.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
-  /// Note: This method requires features to have an ID. For GeoJSON sources
-  /// on web, the `promoteId` option can promote a property to be the
-  /// feature's ID. The Android SDK does not expose `promoteId`, so on Android
-  /// GeoJSON features must carry a top-level `id` member themselves.
+  /// Features must carry an id. On web, [addGeoJsonSource]'s `promoteId` can
+  /// promote a property into one; Android has no `promoteId`, so there the
+  /// GeoJSON itself must contain a top-level `id`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -572,19 +565,17 @@ class MapLibreMapController extends ChangeNotifier {
   /// that source. If [featureId] is also specified, removes all state keys for
   /// that feature. If [stateKey] is also specified, removes only that key from
   /// the feature's state. A [stateKey] without a [featureId] is rejected on
-  /// Android: the SDK there can either drop one key from one feature or reset
-  /// the whole source, so the plugin reports the unsupported combination
-  /// instead of silently resetting everything.
+  /// Android, whose SDK can only drop one key from one feature or reset the
+  /// whole source; the plugin reports that rather than resetting everything.
   ///
-  /// **Platform support**: web and Android. On iOS this method throws an
-  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
-  /// feature state API yet.
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] (Optional) The unique ID of the feature.
   /// [stateKey] (Optional) The key in the feature state to remove.
-  /// [sourceLayer] For vector sources the source layer name is required, on
-  ///   every platform. GeoJSON sources ignore it.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -604,14 +595,13 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Gets the state of a feature.
   ///
-  /// **Platform support**: web and Android. On iOS this method throws an
-  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
-  /// feature state API yet.
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature.
-  /// [sourceLayer] For vector sources the source layer name is required, on
-  ///   every platform. GeoJSON sources ignore it.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
   /// Returns a map containing the feature's state, or null if the feature
   /// doesn't exist or has no state.
@@ -1732,13 +1722,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Requires the map to be created with
   /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
-  /// The accuracy ring, tracking modes, and [MapLibreMap.onUserLocationUpdated]
-  /// keep working. In manual mode no location permission is required.
-  ///
-  /// Supported on Android, iOS and web. On Android and iOS the update drives the
-  /// SDK's native user-location component; on web the plugin draws the puck
-  /// itself (dot + accuracy circle + bearing arrow) using map markers, since
-  /// there is no native component to feed.
+  /// The accuracy ring, the tracking modes and
+  /// [MapLibreMap.onUserLocationUpdated] keep working, and no location
+  /// permission is needed. Works on Android, iOS and web.
   Future<void> updateManualLocation(ManualLocationUpdate update) {
     return _maplibrePlatform.setManualLocation(update);
   }
