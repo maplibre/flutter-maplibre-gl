@@ -1,6 +1,6 @@
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
-**No breaking API change**s: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
+**No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
 The plugin also has a **documentation site** now, at [**maplibre.org/flutter-maplibre-gl**](https://maplibre.org/flutter-maplibre-gl/): guides for every part of the API, each with a live example you can pan and click, running the real plugin compiled for web.
 
 ### Actions needed
