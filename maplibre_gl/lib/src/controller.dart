@@ -1224,12 +1224,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the SymbolManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.symbol] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<Symbol> addSymbol(
     SymbolOptions options, [
     Map<String, dynamic>? data,
   ]) async {
-    _ensureManagerInitialized(symbolManager);
+    _ensureManagerInitialized(symbolManager, AnnotationType.symbol);
 
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
@@ -1246,12 +1248,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the SymbolManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.symbol] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<List<Symbol>> addSymbols(
     List<SymbolOptions> options, [
     List<Map<String, dynamic>>? data,
   ]) async {
-    _ensureManagerInitialized(symbolManager);
+    _ensureManagerInitialized(symbolManager, AnnotationType.symbol);
 
     final symbols = [
       for (var i = 0; i < options.length; i++)
@@ -1273,7 +1277,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// The returned [Future] completes once listeners have been notified.\
-  /// An [Exception] is thrown if the SymbolManager is not initialized (style not loaded yet).
+  /// Unlike [addSymbol], this is a no-op when the SymbolManager does not exist
+  /// (style not loaded yet, or [AnnotationType.symbol] missing from the
+  /// `annotationOrder` of the [MapLibreMap] widget).
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
     await symbolManager?.set(
       symbol..options = symbol.options.copyWith(changes),
@@ -1337,12 +1343,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added line once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the LineManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.line] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<Line> addLine(
     LineOptions options, [
     Map<String, dynamic>? data,
   ]) async {
-    _ensureManagerInitialized(lineManager);
+    _ensureManagerInitialized(lineManager, AnnotationType.line);
 
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
@@ -1358,12 +1366,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added line once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the LineManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the LineManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.line] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<List<Line>> addLines(
     List<LineOptions> options, [
     List<Map<String, dynamic>>? data,
   ]) async {
-    _ensureManagerInitialized(lineManager);
+    _ensureManagerInitialized(lineManager, AnnotationType.line);
 
     final lines = [
       for (var i = 0; i < options.length; i++)
@@ -1447,12 +1457,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the CircleManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.circle] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<Circle> addCircle(
     CircleOptions options, [
     Map<String, dynamic>? data,
   ]) async {
-    _ensureManagerInitialized(circleManager);
+    _ensureManagerInitialized(circleManager, AnnotationType.circle);
 
     final effectiveOptions = CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
@@ -1469,12 +1481,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added circle once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the CircleManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the CircleManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.circle] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<List<Circle>> addCircles(
     List<CircleOptions> options, [
     List<Map<String, dynamic>>? data,
   ]) async {
-    _ensureManagerInitialized(circleManager);
+    _ensureManagerInitialized(circleManager, AnnotationType.circle);
 
     final circles = [
       for (var i = 0; i < options.length; i++)
@@ -1558,12 +1572,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added fill once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the FillManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.fill] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<Fill> addFill(
     FillOptions options, [
     Map<String, dynamic>? data,
   ]) async {
-    _ensureManagerInitialized(fillManager);
+    _ensureManagerInitialized(fillManager, AnnotationType.fill);
 
     final effectiveOptions = FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
@@ -1580,12 +1596,14 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with the added fills once listeners have
   /// been notified.\
-  /// An [Exception] is thrown if the FillManager is not initialized (style not loaded yet).
+  /// An [Exception] is thrown if the FillManager is not initialized: either the
+  /// style has not finished loading yet, or [AnnotationType.fill] is missing
+  /// from the `annotationOrder` of the [MapLibreMap] widget.
   Future<List<Fill>> addFills(
     List<FillOptions> options, [
     List<Map<String, dynamic>>? data,
   ]) async {
-    _ensureManagerInitialized(fillManager);
+    _ensureManagerInitialized(fillManager, AnnotationType.fill);
 
     final fills = [
       for (var i = 0; i < options.length; i++)
@@ -2139,12 +2157,19 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.dispose();
   }
 
-  /// Ensures that the given manager is initialized.
-  /// If not, throws an [Exception].
-  void _ensureManagerInitialized(AnnotationManager? manager) {
+  /// Ensures that the manager handling [type] is initialized.
+  /// If not, throws an [Exception] explaining both possible causes.
+  void _ensureManagerInitialized(
+    AnnotationManager? manager,
+    AnnotationType type,
+  ) {
     if (manager == null || !manager.isInitialized) {
       throw Exception(
-        "This Annotation Manager has not been initialized. Make sure that the map style has been loaded.",
+        "The annotation manager for AnnotationType.${type.name} has not been "
+        "initialized. Either the map style has not finished loading yet (add "
+        "annotations from onStyleLoadedCallback), or AnnotationType.${type.name} "
+        "is missing from the annotationOrder parameter of the MapLibreMap "
+        "widget (note that an empty annotationOrder disables all annotations).",
       );
     }
   }

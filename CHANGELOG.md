@@ -54,6 +54,7 @@ The plugin now loads MapLibre GL JS itself, pinned to the build it is tested aga
 * **Android, iOS**: from the SDK upgrades above, panning a pitched map no longer moves the camera past the horizon, and a layer whose `source-layer` or `source-id` changes now notifies its observer (#929).
 * **Android**: OkHttp upgraded to 5.4.0 and Play Services Location to 21.4.0.
 * **Android**: the unused `android-plugin-annotation-v9` and `android-plugin-offline-v9` dependencies are dropped, so apps pull two fewer artifacts; neither was ever exercised by this plugin (#929).
+* The exception from `addSymbol`, `addCircle`, `addLine` and `addFill` when the annotation manager is missing now names the type and both causes: the style has not finished loading, or that type is not in the widget's `annotationOrder`, which an empty list disables entirely. The old message only mentioned style loading, which sent people to debug the wrong thing (#910).
 
 ### Docs
 * New documentation website with live, interactive examples: [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
@@ -68,6 +69,9 @@ The plugin now loads MapLibre GL JS itself, pinned to the build it is tested aga
 * **Android**: the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#hybrid-composition) now covers Flutter's experimental Hybrid Composition++, enabled in the app's own manifest with no change in the plugin.
 * Two new guides: [User Location](https://maplibre.github.io/flutter-maplibre-gl/advanced/user-location/), covering the puck, the tracking modes, iOS GPS pulsing and the app-provided location source, and [Startup & Performance](https://maplibre.github.io/flutter-maplibre-gl/advanced/performance/), covering `preWarm()`, `pauseMap()` and large data updates.
 * `setPadding` is documented on the camera page, `getLayerProperties`, `getSourceProperties` and `attributionButtonColor` on the styles page, the annotation text font on the markers page, and Swift Package Manager under iOS setup.
+* **Annotations**: the overview page now documents the two conditions every annotation depends on, the style being loaded and the type being enabled in `annotationOrder`, and Markers, Animated and Draggable link to it. Draggable also spells out the three switches dragging needs, including `annotationConsumeTapEvents`, which silently blocks it when a type is left out (#910).
+* **Annotations vs Style Layers** gained a "Constraints and gotchas" section collecting the rules of both APIs in one place: waiting for the style, what a style change destroys, `annotationOrder` and `annotationConsumeTapEvents`, batching, unique layer ids and tap handling (#910).
+* The four section overview pages (Camera, Annotations, Layers & Sources, Advanced) are reachable from the navigation, which also scrolls now when it is taller than the window instead of running over the footer (#910).
 
 ### Internal
 * **Web**: the global calls (`MapLibreMap.preWarm()`, `MapLibreMap.ensureWebLibraryLoaded()`) reach the web implementation through the new `MapLibreGlobalPlatform` interface, removing the conditional imports that put JS interop in the main package (#928).

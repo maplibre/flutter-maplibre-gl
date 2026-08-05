@@ -15,6 +15,10 @@ Five European landmark markers. Tap any to see its name.
 
 Use annotations when you have **fewer than ~50 features** and need individual interactivity (tap callbacks, draggable). For large datasets use [Style Layers](../concepts/annotations-vs-layers.md).
 
+!!! note "Prerequisites"
+    Annotations only work once the style has loaded and if their type is part of
+    the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
+
 ## Add a symbol (icon + text)
 
 `iconImage` references an image **from the active style's sprite**, or one you
