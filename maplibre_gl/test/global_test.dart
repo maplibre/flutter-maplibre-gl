@@ -338,7 +338,7 @@ void main() {
     // immediate no-op that never throws: app code awaits it unconditionally
     // on every platform before doing web-only JS interop.
     test('completes immediately on the method-channel default', () async {
-      await expectLater(ensureWebLibraryLoaded(), completes);
+      await expectLater(MapLibreMap.ensureWebLibraryLoaded(), completes);
 
       expect(methodCalls, isEmpty);
     });
@@ -347,7 +347,7 @@ void main() {
   if (!kIsWeb) {
     group('preWarm', () {
       test('sends correct method', () async {
-        await preWarm();
+        await MapLibreMap.preWarm();
 
         expect(methodCalls.length, 1);
         expect(methodCalls[0].method, 'preWarm');
@@ -355,7 +355,7 @@ void main() {
 
       test('does not throw when mock returns null', () async {
         // The default mock handler already returns null for unknown methods.
-        await expectLater(preWarm(), completes);
+        await expectLater(MapLibreMap.preWarm(), completes);
       });
 
       test('handles MissingPluginException gracefully', () async {
@@ -367,13 +367,13 @@ void main() {
               },
             );
 
-        await expectLater(preWarm(), completes);
+        await expectLater(MapLibreMap.preWarm(), completes);
       });
 
       test('safe to call multiple times', () async {
-        await preWarm();
-        await preWarm();
-        await preWarm();
+        await MapLibreMap.preWarm();
+        await MapLibreMap.preWarm();
+        await MapLibreMap.preWarm();
 
         expect(methodCalls.length, 3);
         for (final call in methodCalls) {

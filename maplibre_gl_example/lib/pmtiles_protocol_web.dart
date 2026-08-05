@@ -3,7 +3,7 @@
 /// The maplibre_gl plugin loads MapLibre GL JS itself, so the `maplibregl`
 /// global does not exist while index.html is parsed and this registration can
 /// no longer live in an inline script there. It runs from `main()` instead,
-/// after `ensureWebLibraryLoaded()` has completed.
+/// after `MapLibreMap.ensureWebLibraryLoaded()` has completed.
 ///
 /// The pmtiles library itself still ships as a plain `<script>` tag in
 /// index.html: it is self-contained, and nothing here runs before `main()`,

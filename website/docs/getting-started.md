@@ -89,23 +89,23 @@ If the page loads MapLibre GL JS itself, for example from a `<script type="modul
 
 ### Calling MapLibre GL JS yourself
 
-Because the library is loaded by the plugin, the `maplibregl` global no longer exists at page parse time. An app that calls into MapLibre GL JS with its own JS interop, for example to register a custom protocol with `addProtocol`, must await `ensureWebLibraryLoaded()` first:
+Because the library is loaded by the plugin, the `maplibregl` global no longer exists at page parse time. An app that calls into MapLibre GL JS with its own JS interop, for example to register a custom protocol with `addProtocol`, must await `MapLibreMap.ensureWebLibraryLoaded()` first:
 
 ```dart
 Future<void> main() async {
   if (kIsWeb) {
-    await ensureWebLibraryLoaded();
+    await MapLibreMap.ensureWebLibraryLoaded();
     // maplibregl is now usable from JS interop.
   }
   runApp(const MyApp());
 }
 ```
 
-On Android and iOS `ensureWebLibraryLoaded()` completes immediately, so it is safe to await unconditionally.
+On Android and iOS `MapLibreMap.ensureWebLibraryLoaded()` completes immediately, so it is safe to await unconditionally.
 
 ### PMTiles on web
 
-To read [PMTiles](advanced/pmtiles.md) sources on web, load the `pmtiles` script in `index.html` and register the protocol from Dart. The registration used to be an inline script in `index.html`, but it needs the `maplibregl` global, which no longer exists at page parse time, so it moved into `main()` behind `ensureWebLibraryLoaded()`:
+To read [PMTiles](advanced/pmtiles.md) sources on web, load the `pmtiles` script in `index.html` and register the protocol from Dart. The registration used to be an inline script in `index.html`, but it needs the `maplibregl` global, which no longer exists at page parse time, so it moved into `main()` behind `MapLibreMap.ensureWebLibraryLoaded()`:
 
 ```html title="web/index.html" hl_lines="3"
 <head>
@@ -117,7 +117,7 @@ To read [PMTiles](advanced/pmtiles.md) sources on web, load the `pmtiles` script
 ```dart title="lib/main.dart"
 Future<void> main() async {
   if (kIsWeb) {
-    await ensureWebLibraryLoaded();
+    await MapLibreMap.ensureWebLibraryLoaded();
     registerPmTilesProtocol('https://your.host/archive.pmtiles');
   }
   runApp(const MyApp());

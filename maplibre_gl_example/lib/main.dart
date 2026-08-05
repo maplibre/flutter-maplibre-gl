@@ -79,7 +79,7 @@ Future<void> main() async {
   // Pre-warm the MapLibre engine to overlap its initialization with Flutter's
   // startup. Deliberately not awaited: overlapping is the whole point, and on
   // web it also starts the download of maplibre-gl-js right away.
-  unawaited(preWarm());
+  unawaited(MapLibreMap.preWarm());
 
   if (kIsWeb) {
     // The plugin loads maplibre-gl-js itself, so unlike the old <script> tag
@@ -87,7 +87,7 @@ Future<void> main() async {
     // PMTiles protocol can no longer be registered by an inline script in
     // index.html. Wait for the library, then register the protocol from Dart
     // before any map is built.
-    await ensureWebLibraryLoaded();
+    await MapLibreMap.ensureWebLibraryLoaded();
     pmtiles_protocol.registerPmTilesProtocol(
       'https://demo-bucket.protomaps.com/v4.pmtiles',
     );
