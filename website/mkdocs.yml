@@ -86,6 +86,7 @@ nav:
     - Getting Started: getting-started.md
     - Migration Guide: migration.md
     - Concepts:
+      - concepts/index.md
       - Architecture: concepts/architecture.md
       - Annotations vs Style Layers: concepts/annotations-vs-layers.md
       - Working with GeoJSON: concepts/geojson.md
@@ -120,6 +121,7 @@ nav:
       - User Location: advanced/user-location.md
       - Startup & Performance: advanced/performance.md
   - Compare:
+    - compare/index.md
     - Why MapLibre GL: compare/why-maplibre.md
     - Feature Matrix: compare/feature-matrix.md
   - API Reference: api.md
