@@ -5,15 +5,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
-No breaking API changes: nothing stops compiling. Android and web apps each need one small change, described first. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.
+No breaking API changes: nothing stops compiling. Android and web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.
 
-### Action needed: Android apps
+The plugin also has a documentation site now, at [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/): guides for every part of the API, each with a live example you can pan and click, running the real plugin compiled for web (#870).
 
-A map now survives its activity being destroyed and recreated, but your style content does not come back with it. Add sources, layers and images inside `onStyleLoadedCallback`, which fires again after every recreation, rather than in `onMapCreated` or `initState`. Details in the [migration guide](https://maplibre.github.io/flutter-maplibre-gl/migration/#android-style-content) (#805).
+### Actions needed
 
-### Action needed: web apps
-
-The plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script tag and the `maplibre-gl.css` link tag from `web/index.html`: if they stay, your pinned copy silently overrides the version the plugin is tested against. Self-hosting and Content-Security-Policy setups are covered in the [migration guide](https://maplibre.github.io/flutter-maplibre-gl/migration/#web-remove-the-script-and-stylesheet-tags) (#928).
+* **Android**: a map now survives its activity being destroyed and recreated, but your style content does not come back with it. Add sources, layers and images inside `onStyleLoadedCallback`, which fires again after every recreation, rather than in `onMapCreated` or `initState`. See the [migration guide](https://maplibre.github.io/flutter-maplibre-gl/migration/#android-style-content) (#805).
+* **Web**: the plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script tag and the `maplibre-gl.css` link tag from `web/index.html`: if they stay, your pinned copy silently overrides the version the plugin is tested against. Self-hosting and Content-Security-Policy setups are covered in the [migration guide](https://maplibre.github.io/flutter-maplibre-gl/migration/#web-remove-the-script-and-stylesheet-tags) (#928).
 
 ### Added
 * `MapLibreMap.preWarm()` starts the map engine during app start-up, for apps whose first screen is a map. Saves roughly 170 to 480 ms on Android, 45 to 165 ms on iOS and 10 to 50 ms on web at the first map (#867).
@@ -53,7 +52,6 @@ The plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script t
 * The error from `addSymbol`, `addCircle`, `addLine` and `addFill` when the annotation manager is missing now names the type and both causes: the style has not finished loading, or that type is not in the widget's `annotationOrder`, which an empty list disables entirely (#910).
 
 ### Docs
-* New documentation website with live, interactive examples: [maplibre.github.io/flutter-maplibre-gl](https://maplibre.github.io/flutter-maplibre-gl/) (#870).
 * New guides for [user location](https://maplibre.github.io/flutter-maplibre-gl/advanced/user-location/), [startup and performance](https://maplibre.github.io/flutter-maplibre-gl/advanced/performance/) and [feature state](https://maplibre.github.io/flutter-maplibre-gl/advanced/feature-state/); this release's smaller additions are documented on the camera, styles and markers pages (#840, #867, #889).
 * **Annotations**: the section overview now states the two conditions every annotation depends on, the style being loaded and the type being enabled in `annotationOrder`, and Annotations vs Style Layers collects the constraints of both APIs in one place (#910).
 * **Android**: `MapLibreMap.useHybridComposition` was documented with the wrong default; it has been `false` since 0.16.0. Its docs now describe what each value selects, as does the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android), which also covers Flutter's experimental Hybrid Composition++ (#816).
