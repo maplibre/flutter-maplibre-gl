@@ -112,6 +112,7 @@ nav:
       - Map Language: advanced/map-language.md
       - Snapshot: advanced/snapshot.md
       - Data-Driven Expressions: advanced/expressions.md
+      - Feature State: advanced/feature-state.md
   - Compare:
     - Why MapLibre GL: compare/why-maplibre.md
     - Feature Matrix: compare/feature-matrix.md

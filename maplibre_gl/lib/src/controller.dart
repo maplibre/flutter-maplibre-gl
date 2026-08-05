@@ -469,7 +469,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [promoteId] can be used on web to promote an id from properties to be the
   /// id of the feature. This is useful because by default maplibre-gl-js does not
-  /// support string ids
+  /// support string ids. On Android and iOS the parameter is ignored: there
+  /// features must carry a top-level `id` member in the GeoJSON itself.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -526,25 +527,28 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Sets the state of a feature.
   ///
-  /// Features are identified by their `id` attribute, which can be set using
-  /// the `promoteId` option at the time of creation of the source.
-  ///
   /// A feature's state is a set of user-defined key-value pairs that can be
-  /// dynamically updated and used for styling with data-driven properties.
+  /// dynamically updated and used for styling with data-driven properties,
+  /// via the `["feature-state", ...]` expression. Restyling many features
+  /// this way is much cheaper than re-feeding the whole GeoJSON source,
+  /// because the source data is left untouched.
   ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. On iOS this method throws an
+  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
+  /// feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature. Must be an integer or a string
   ///   that can be cast to an integer.
   /// [state] A set of key-value pairs representing the state. Values should be
   ///   valid JSON types.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] For vector sources the source layer name is required, on
+  ///   every platform. GeoJSON sources ignore it.
   ///
-  /// Note: This method requires features to have an ID. For GeoJSON sources,
-  /// use the `promoteId` option when adding the source to promote a property
-  /// to be the feature's ID.
+  /// Note: This method requires features to have an ID. For GeoJSON sources
+  /// on web, the `promoteId` option can promote a property to be the
+  /// feature's ID. The Android SDK does not expose `promoteId`, so on Android
+  /// GeoJSON features must carry a top-level `id` member themselves.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -567,15 +571,20 @@ class MapLibreMapController extends ChangeNotifier {
   /// If only [sourceId] is specified, removes all states for all features in
   /// that source. If [featureId] is also specified, removes all state keys for
   /// that feature. If [stateKey] is also specified, removes only that key from
-  /// the feature's state.
+  /// the feature's state. A [stateKey] without a [featureId] is rejected on
+  /// Android: the SDK there can either drop one key from one feature or reset
+  /// the whole source, so the plugin reports the unsupported combination
+  /// instead of silently resetting everything.
   ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. On iOS this method throws an
+  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
+  /// feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] (Optional) The unique ID of the feature.
   /// [stateKey] (Optional) The key in the feature state to remove.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] For vector sources the source layer name is required, on
+  ///   every platform. GeoJSON sources ignore it.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -595,12 +604,14 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Gets the state of a feature.
   ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. On iOS this method throws an
+  /// [UnsupportedError], because the MapLibre iOS SDK does not expose the
+  /// feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] For vector sources the source layer name is required, on
+  ///   every platform. GeoJSON sources ignore it.
   ///
   /// Returns a map containing the feature's state, or null if the feature
   /// doesn't exist or has no state.

@@ -27,8 +27,11 @@ The plugin now loads MapLibre GL JS itself, pinned to the build it is tested aga
 * **Android, iOS, Web**: the user-location puck can be driven from app-provided updates instead of the device GPS, with no location permission needed: set `locationSource: ManualLocationSource()` and push fixes with `controller.updateManualLocation()`. Useful for a paired GPS device, a replayed track, or a simulation; the default stays `PlatformLocationSource()` (#840).
 * **Web**: the plugin loads MapLibre GL JS itself; remove its tags from `web/index.html` (see above). `MapLibreMap.webLibrarySource` picks where the library comes from: the build the plugin is tested against (the default), a self-hosted copy, or one the page loads itself (#928).
 * **Web**: `MapLibreMap.ensureWebLibraryLoaded()` completes once the `maplibregl` global is usable; await it before your own JS interop into MapLibre GL JS, such as `addProtocol`. `MapLibreMap.preWarm()` starts the library download early (#928).
+* **Android**: feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) now works on Android as well as web, restyling individual features without re-feeding the source data. iOS reports that its SDK does not expose the API yet. `promoteId` stays web-only, so on Android features need a top-level `id` in the GeoJSON. See the [feature state guide](https://maplibre.github.io/flutter-maplibre-gl/advanced/feature-state/) (#889).
 
 ### Fixed
+* **Android, iOS**: symbols added with `addSymbol` are visible again on styles whose glyph server does not host `Open Sans Regular`, the old default text font; a missing font hid the whole symbol, icon included. The default is now `Noto Sans Regular`; for another font, use `addSymbolLayer` with `textFont` (#940).
+* **Android, iOS**: `MapLibreMap.preWarm()` no longer throws "Binding has not yet been initialized" when called as the first statement of `main()`, where its own documentation puts it: it now initializes the Flutter binding itself. Apps that need a different binding, such as `IntegrationTestWidgetsFlutterBinding`, must initialize it before the call (#867).
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode: large payloads are encoded on a background isolate, cutting main-isolate time by two to three times (#366).
 * **Android, iOS**: downloading an already-downloaded area replaces the existing region instead of adding a duplicate, and the replacement keeps the same region id (#886).
 * **Android**: merging an offline database whose regions have no metadata, for example one produced by maplibre-native, no longer fails with `type 'Null' is not a subtype of type 'Map<String, dynamic>'` (#865).
@@ -59,6 +62,8 @@ The plugin now loads MapLibre GL JS itself, pinned to the build it is tested aga
 * The PMTiles example and the web demo read from the stable Protomaps demo archive; the previous dated build was pruned after a few days, leaving the web demo empty.
 * **Web**: the expressions example no longer throws "layer already exists" when the style reloads.
 * **Example app**: a new Manual Location Source page drives the puck from a simulated moving track (#840).
+* **Example app**: a new Feature State page demonstrates multi-selection on tap, on Android and web. Hover Effect stays web only, since it follows the mouse pointer (#889).
+* **Example app**: no longer calls `MapLibreMap.preWarm()`. It opens on a list of examples, so pre-warming there buys nothing and reads as a recommendation for every app, which it is not (#867).
 * **Android**: `MapLibreMap.useHybridComposition` docs corrected: the default has been `false` since 0.16.0, not `true` as documented, and its API docs now explain what each value actually selects. See the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android) (#816).
 * **Android**: the [architecture page](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#hybrid-composition) now covers Flutter's experimental Hybrid Composition++, enabled in the app's own manifest with no change in the plugin.
 

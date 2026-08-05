@@ -1170,6 +1170,21 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     });
   }
 
+  /// Guard shared by the feature state methods. This class serves both
+  /// Android and iOS, but only the MapLibre Android SDK exposes the feature
+  /// state API, so on iOS the call has no native counterpart to reach.
+  /// Failing here keeps the error clear instead of surfacing as a
+  /// [MissingPluginException] from an unhandled channel call.
+  void _ensureFeatureStateAvailable(String methodName) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      throw UnsupportedError(
+        '$methodName is not available on iOS because the MapLibre iOS SDK '
+        'does not expose the feature state API yet. '
+        'Feature state is supported on Android and web.',
+      );
+    }
+  }
+
   @override
   Future<void> setFeatureState(
     String sourceId,
@@ -1177,11 +1192,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'setFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
-    );
+    _ensureFeatureStateAvailable('setFeatureState');
+    await _channel.invokeMethod('source#setFeatureState', <String, dynamic>{
+      'sourceId': sourceId,
+      'featureId': featureId,
+      'state': state,
+      'sourceLayer': sourceLayer,
+    });
   }
 
   @override
@@ -1191,11 +1208,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String? stateKey,
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'removeFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
-    );
+    _ensureFeatureStateAvailable('removeFeatureState');
+    await _channel.invokeMethod('source#removeFeatureState', <String, dynamic>{
+      'sourceId': sourceId,
+      'featureId': featureId,
+      'stateKey': stateKey,
+      'sourceLayer': sourceLayer,
+    });
   }
 
   @override
@@ -1204,11 +1223,21 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String featureId, {
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'getFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
+    _ensureFeatureStateAvailable('getFeatureState');
+    final reply = await _channel.invokeMethod(
+      'source#getFeatureState',
+      <String, dynamic>{
+        'sourceId': sourceId,
+        'featureId': featureId,
+        'sourceLayer': sourceLayer,
+      },
     );
+    // The native side sends the state as a JSON string (so nested values
+    // survive the channel intact) and sends null, not an empty map, when the
+    // feature has no state, because callers distinguish the two.
+    final state = reply?['state'];
+    if (state == null) return null;
+    return (jsonDecode(state as String) as Map).cast<String, dynamic>();
   }
 
   @override

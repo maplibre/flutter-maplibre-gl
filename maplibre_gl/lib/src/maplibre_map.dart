@@ -394,7 +394,12 @@ class MapLibreMap extends StatefulWidget {
   /// initialization overlaps your app's startup instead of delaying the first
   /// map.
   ///
-  /// Call it as early as possible, typically in `main()` before `runApp()`.
+  /// Worth calling when your **first screen is a map**, from `main()` before
+  /// `runApp()`, so the engine starts up while Flutter does. It is not a
+  /// blanket recommendation: an app whose map lives a few screens in pays for
+  /// start-up work its first screen never uses, and may never use at all. The
+  /// example app deliberately does not call it, because it opens on a list.
+  ///
   /// Safe to call any number of times: after the first call the underlying
   /// initialization is idempotent.
   ///
@@ -410,7 +415,39 @@ class MapLibreMap extends StatefulWidget {
   ///   runApp(const MyApp());
   /// }
   /// ```
-  static Future<void> preWarm() => MapLibreGlobalPlatform.instance.preWarm();
+  ///
+  /// If no Flutter binding exists yet, this call creates the default one,
+  /// [WidgetsFlutterBinding], because the method channel it uses cannot work
+  /// without a binding. In Flutter the first binding created wins, so a test
+  /// or app that needs a different binding, such as
+  /// `IntegrationTestWidgetsFlutterBinding`, `TestWidgetsFlutterBinding` or a
+  /// custom [WidgetsFlutterBinding] subclass, must initialize its own binding
+  /// before calling this method; initializing it afterwards fails with
+  /// "Binding is already initialized". For the same reason, an app that
+  /// creates its binding inside a custom [Zone], for example within
+  /// `runZonedGuarded`, should call this method inside that zone too.
+  static Future<void> preWarm() {
+    // Being called before runApp() is the entire point of this method, and on
+    // Android and iOS it reaches native over a method channel, which resolves
+    // its messenger through ServicesBinding.instance. Without a binding that
+    // getter throws "Binding has not yet been initialized", so following the
+    // documented usage above would fail. runApp() is normally what creates the
+    // binding, and it has not run yet, so create it here. ensureInitialized is
+    // idempotent, so an app that already called it, or that calls runApp()
+    // straight after, is unaffected.
+    //
+    // Skipped on background isolates (no root isolate token): constructing a
+    // binding there throws "UI actions are only available on root isolate"
+    // and leaves that isolate's binding statics half-initialized. On those
+    // isolates MethodChannel routes through BackgroundIsolateBinaryMessenger
+    // instead of the binding, so there is nothing to initialize here. The
+    // condition mirrors _findBinaryMessenger in the framework's
+    // platform_channel.dart.
+    if (kIsWeb || ServicesBinding.rootIsolateToken != null) {
+      WidgetsFlutterBinding.ensureInitialized();
+    }
+    return MapLibreGlobalPlatform.instance.preWarm();
+  }
 
   /// Completes once the web build of the map engine, MapLibre GL JS, is on the
   /// page and the `maplibregl` global is usable. On Android and iOS it

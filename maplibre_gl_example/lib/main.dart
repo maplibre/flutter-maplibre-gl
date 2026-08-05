@@ -1,5 +1,3 @@
-import 'dart:async' show unawaited;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -13,6 +11,7 @@ import 'pmtiles_protocol_native.dart'
 
 // Page system
 import 'page.dart';
+import 'shared/constants.dart';
 
 // Basics examples
 import 'examples/basics/full_map_example.dart';
@@ -42,6 +41,7 @@ import 'examples/annotations/edit_annotation_draggable.dart';
 // Layers examples
 import 'examples/layers/circle_layer_example.dart';
 import 'examples/layers/cluster_properties_example.dart';
+import 'examples/layers/feature_state_example.dart';
 import 'examples/layers/fill_layer_example.dart';
 import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
@@ -76,11 +76,11 @@ String? _initialExampleSlug() {
 }
 
 Future<void> main() async {
-  // Pre-warm the MapLibre engine to overlap its initialization with Flutter's
-  // startup. Deliberately not awaited: overlapping is the whole point, and on
-  // web it also starts the download of maplibre-gl-js right away.
-  unawaited(MapLibreMap.preWarm());
-
+  // Deliberately no MapLibreMap.preWarm() here. This app opens on a list of
+  // examples, not on a map, so pre-warming would pay for engine start-up that
+  // the first screen does not use, and demonstrating it in that position would
+  // suggest it belongs in every app. It is worth it when your first screen is
+  // a map; see its dartdoc.
   if (kIsWeb) {
     // The plugin loads maplibre-gl-js itself, so unlike the old <script> tag
     // setup the maplibregl global does not exist at page parse time, and the
@@ -99,6 +99,11 @@ Future<void> main() async {
           ? "profile"
           : "debug"} mode',
     );
+  } else {
+    // demotiles.maplibre.org rate-limits aggressively (HTTP 429); pick a
+    // reachable default style before the gallery builds any map.
+    WidgetsFlutterBinding.ensureInitialized();
+    await ExampleConstants.resolveDemoMapStyle();
   }
 
   runApp(const MapLibreExampleApp());
@@ -153,6 +158,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Interaction
   const MapControlsExample(),
   const MapGesturesExample(),
+  // Hover Effect follows the mouse, which only exists on web. The
+  // cross-platform side of feature state is the Feature State page below.
   if (kIsWeb) const HoverEffectExample(),
 
   // Annotations
@@ -169,6 +176,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const ClusterPropertiesExample(),
   const FillLayerExample(),
   const LineLayerExample(),
+  // Feature state is available on web and Android, not on iOS yet.
+  if (FeatureStateExample.isSupported) const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),
   const EditStyleLayerDraggableExample(),
 
@@ -208,6 +217,14 @@ class MapsDemo extends StatefulWidget {
 
 class _MapsDemoState extends State<MapsDemo> {
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
+    if (!kIsWeb) {
+      // Re-check right before the map loads: demotiles' limiter answers per
+      // request, so the startup probe can pass and the page's style request
+      // still get a 429 minutes later. A recent success skips the probe.
+      await ExampleConstants.resolveDemoMapStyle(
+        maxAge: const Duration(seconds: 30),
+      );
+    }
     if (!kIsWeb && page.needsLocationPermission) {
       final status = await Permission.locationWhenInUse.status;
       if (!status.isGranted) {
