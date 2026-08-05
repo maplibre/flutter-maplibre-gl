@@ -36,7 +36,7 @@ MapLibreMap(
 );
 ```
 
-Then head to the [getting started guide](https://maplibre.github.io/flutter-maplibre-gl/getting-started/) for platform setup (iOS/Android permissions, the web `<script>` tag) and to learn how to add markers, layers, offline tiles and more.
+Then head to the [getting started guide](https://maplibre.github.io/flutter-maplibre-gl/getting-started/) for platform setup (location permissions on iOS/Android; web needs no `index.html` changes) and to learn how to add markers, layers, offline tiles and more.
 
 > Migrating from [flutter-mapbox-gl](https://github.com/tobrun/flutter-mapbox-gl)? See the [migration guide](https://maplibre.github.io/flutter-maplibre-gl/migration/).
 

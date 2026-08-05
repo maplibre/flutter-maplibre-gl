@@ -16,6 +16,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   // The CDN tag form. pmtiles@x.y.z is a different library and stays allowed.
   final cdnPin = RegExp('maplibre-gl@');
+  // An unversioned CDN load, e.g. `unpkg.com/maplibre-gl/dist/maplibre-gl.js`,
+  // which the CDN resolves to the latest release. It floats to whatever is
+  // newest, so it evades [cdnPin] while being worse than a pin.
+  final cdnUnpinned = RegExp('maplibre-gl/dist/');
   // Prose naming a full maplibre-gl-js version, e.g. "MapLibre GL JS 5.24.0".
   final proseVersion = RegExp(r'\d+\.\d+\.\d+');
   final glJsMention = RegExp('maplibre[- ]gl[- ]js', caseSensitive: false);
@@ -49,6 +53,7 @@ void main() {
       for (var i = 0; i < lines.length; i++) {
         final line = lines[i];
         if (cdnPin.hasMatch(line) ||
+            cdnUnpinned.hasMatch(line) ||
             (glJsMention.hasMatch(line) && proseVersion.hasMatch(line))) {
           offenders.add('${file.path}:${i + 1}: ${line.trim()}');
         }

@@ -158,6 +158,10 @@ await controller.setGeoJsonFeature('my-source', {
 
 For this to work, features must have an `id` field. On web you may also need `promoteId` (see below).
 
+### Large payloads
+
+On Android and iOS, adding or updating a source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, is encoded on a background isolate, so the UI is not blocked for the whole encode. Smaller payloads keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame.
+
 ## `promoteId`: web-only caveat
 
 MapLibre GL JS requires features to have an integer ID for feature-state to work correctly. If your GeoJSON uses string IDs or property-based IDs, pass `promoteId`:
