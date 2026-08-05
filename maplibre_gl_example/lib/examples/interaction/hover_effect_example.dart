@@ -1,28 +1,26 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
 
-/// Example demonstrating highlighting features using feature state.
+/// Example demonstrating a hover effect using feature state (web only).
 ///
-/// This example shows how to combine map events and queryRenderedFeatures
-/// to detect which feature the user is pointing at, then use setFeatureState
-/// to update styling dynamically without touching the source data. On web the
-/// highlight follows the mouse (onMapMouseMove); on Android, which has no
-/// mouse events, tapping a state highlights it instead.
+/// This example combines onMapMouseMove and queryRenderedFeatures to detect
+/// which feature the mouse is over, then uses setFeatureState to update the
+/// styling dynamically without touching the source data.
+///
+/// The page is web only because mouse events do not exist on the other
+/// platforms. Feature state itself also runs on Android; its cross-platform,
+/// tap-driven side is demonstrated by the Feature State page under
+/// Layers & Sources.
 ///
 /// Important notes:
-/// - Feature state runs on web and Android. It is not available on iOS,
-///   because the MapLibre iOS SDK does not expose the API yet.
-/// - promoteId is only supported by MapLibre GL JS, so it is passed on web
-///   only. On Android, features are keyed by their top-level `id` member,
-///   which this dataset provides.
+/// - Uses onMapMouseMove + manual feature querying for vector tile layers
 /// - onFeatureHover works with annotation objects (addFill, addCircle, etc.)
-///   and could be used instead of manual querying on web.
+///   and could be used instead of manual querying
 ///
 /// Based on: https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/
 class HoverEffectExample extends ExamplePage {
@@ -34,41 +32,8 @@ class HoverEffectExample extends ExamplePage {
         needsLocationPermission: false,
       );
 
-  /// Feature state needs support in the underlying MapLibre SDK, which web
-  /// and Android have. The iOS SDK does not expose the API yet.
-  static bool get isSupported =>
-      kIsWeb || defaultTargetPlatform == TargetPlatform.android;
-
   @override
-  Widget build(BuildContext context) {
-    if (!isSupported) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.touch_app, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Hover Effect Example',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'This example is available on web and Android. It is not '
-                'available on iOS yet, because the MapLibre iOS SDK does not '
-                'expose the feature state API.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return const _HoverEffectBody();
-  }
+  Widget build(BuildContext context) => const _HoverEffectBody();
 }
 
 class _HoverEffectBody extends StatefulWidget {
@@ -99,16 +64,15 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
   Future<void> _addStatesLayer() async {
     if (_controller == null) return;
 
-    // promoteId promotes STATE_ID to be the feature id, but only MapLibre GL
-    // JS supports it: the Android SDK does not expose promoteId, so on
-    // Android features are keyed by the top-level `id` member each feature in
-    // this dataset already carries.
+    // promoteId promotes STATE_ID to be the feature id. It is an option only
+    // MapLibre GL JS supports, which is fine here since this page only runs
+    // on web.
     await _controller!.addSource(
       _sourceName,
       const GeojsonSourceProperties(
         data:
             'https://maplibre.org/maplibre-gl-js/docs/assets/us_states.geojson',
-        promoteId: kIsWeb ? 'STATE_ID' : null,
+        promoteId: 'STATE_ID',
       ),
     );
 
@@ -129,10 +93,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
           0.5,
         ],
       ),
-      // On web this drives the pointer cursor over the states. On Android the
-      // layer stays non-interactive so taps reach onMapClick instead of being
-      // swallowed by the plugin's own feature-tap handling.
-      enableInteraction: kIsWeb,
+      enableInteraction: true,
     );
 
     // Add border layer
@@ -149,9 +110,6 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
 
   void _setupHoverListeners() {
     if (_controller == null) return;
-    // Mouse events only exist on web; Android uses onMapClick on the map
-    // widget instead, funneling into the same feature lookup.
-    if (!kIsWeb) return;
 
     // Listen to mouse move events and query features manually
     // NOTE: You could also use onFeatureHover listener for annotation layers
@@ -159,16 +117,12 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
       point,
       coordinates,
     ) {
-      unawaited(_updateHighlightedFeature(point));
+      unawaited(_handleMouseMove(point));
     });
   }
 
-  void _onMapClick(math.Point<double> point, LatLng coordinates) {
-    unawaited(_updateHighlightedFeature(point));
-  }
-
-  Future<void> _updateHighlightedFeature(math.Point<double> point) async {
-    // Query rendered features at the pointer position
+  Future<void> _handleMouseMove(math.Point<double> point) async {
+    // Query rendered features at the mouse position
     final features = await _controller?.queryRenderedFeatures(
       point,
       [_fillLayerId], // Only query our states layer
@@ -205,7 +159,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
         }
       }
     } else {
-      // The pointer is not over any state feature
+      // The mouse is not over any state feature
       if (_hoveredStateId != null) {
         await _controller?.removeFeatureState(
           _sourceName,
@@ -230,7 +184,6 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
         styleString: ExampleConstants.demoMapStyle,
         onMapCreated: _onMapCreated,
         onStyleLoadedCallback: _onStyleLoaded,
-        onMapClick: kIsWeb ? null : _onMapClick,
         initialCameraPosition: const CameraPosition(
           target: LatLng(37.830348, -100.486052),
           zoom: 2,
@@ -240,10 +193,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
       controls: [
         const InfoCard(
           title: 'Hover Effect',
-          subtitle:
-              kIsWeb
-                  ? 'Move your mouse over US states to see the hover effect'
-                  : 'Tap a US state to highlight it',
+          subtitle: 'Move your mouse over US states to see the hover effect',
           icon: Icons.touch_app,
         ),
         if (_hoveredStateName != null)
@@ -263,7 +213,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          kIsWeb ? 'Hovering:' : 'Selected:',
+                          'Hovering:',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context)
@@ -304,9 +254,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      kIsWeb
-                          ? 'Hover over a state to see it highlighted'
-                          : 'Tap a state to see it highlighted',
+                      'Hover over a state to see it highlighted',
                       style: TextStyle(fontSize: 14),
                     ),
                   ),
@@ -338,23 +286,11 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  kIsWeb
-                      ? '• Uses onMapMouseMove for position tracking\n'
-                          '• Calls queryRenderedFeatures at mouse position\n'
-                          '• Uses feature-state to track hover status\n'
-                          '• Fill opacity changes based on hovered feature state'
-                      : '• Uses onMapClick for position tracking\n'
-                          '• Calls queryRenderedFeatures at the tap position\n'
-                          '• Uses feature-state to track the selection\n'
-                          '• Fill opacity changes based on selected feature state',
+                  '• Uses onMapMouseMove for position tracking\n'
+                  '• Calls queryRenderedFeatures at mouse position\n'
+                  '• Uses feature-state to track hover status\n'
+                  '• Fill opacity changes based on hovered feature state',
                   style: TextStyle(fontSize: 14, height: 1.5),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Feature state runs on web and Android. iOS is not '
-                  'supported yet, because the MapLibre iOS SDK does not '
-                  'expose the API.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
