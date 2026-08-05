@@ -346,7 +346,7 @@ class MapLibreMap extends StatefulWidget {
   /// Despite the name, this does not select Flutter's "Hybrid Composition":
   /// both values go through `initAndroidView`, and Flutter picks its own mode
   /// from the native view. See the
-  /// [architecture guide](https://maplibre.github.io/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android).
+  /// [architecture guide](https://maplibre.org/flutter-maplibre-gl/concepts/architecture/#platform-view-mode-android).
   ///
   /// Assign it before the first [MapLibreMap] is built, ideally before
   /// `runApp()`; maps already on screen keep the mode they were created with.
