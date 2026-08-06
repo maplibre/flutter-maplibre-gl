@@ -1872,11 +1872,22 @@ class MapLibreMapController extends MapLibrePlatform
     String? stateKey,
     String? sourceLayer,
   }) async {
-    final feature = FeatureIdentifierJsImpl(
-      source: sourceId,
-      id: featureId.jsify(),
-      sourceLayer: sourceLayer,
-    );
+    // `id` has to be left out, not passed as null, when the whole source is
+    // being reset: maplibre-gl-js reads a missing id as "every feature of this
+    // source" but treats a null one as an id to look up, which matches nothing
+    // and clears nothing, silently. An object literal constructor only sets
+    // the arguments it is given, so the two calls differ in exactly that.
+    final feature =
+        featureId == null
+            ? FeatureIdentifierJsImpl(
+              source: sourceId,
+              sourceLayer: sourceLayer,
+            )
+            : FeatureIdentifierJsImpl(
+              source: sourceId,
+              id: featureId.jsify(),
+              sourceLayer: sourceLayer,
+            );
 
     _map.removeFeatureState(feature, stateKey);
   }
