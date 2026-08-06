@@ -18,6 +18,8 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * A map that comes up without a renderer now reports why through `FlutterError.reportError`, once per distinct cause. Version 6 requires WebGL2 and dropped the WebGL1 fallback, and rather than throwing like version 5 it fires an `error` from inside the constructor, too early to subscribe to, so the map would otherwise just be blank. The message tells a WebGL1 only browser apart from one with no WebGL at all, and names the version 5 build as the way out of the first (#943).
 
 ### Fixed
+* `getFeatureState()` returns the state instead of throwing, and reports no state as null rather than as an empty map, matching Android. It converted the JS object with `dartify()` and cast the result to `Map<String, dynamic>`, which that conversion never produces, so every call that found a state threw (#889).
+* `removeFeatureState(sourceId)` with no feature id resets the whole source. It built the target with `id: null`, and maplibre-gl-js only treats a missing id as "every feature of this source", so the call matched nothing and cleared nothing, without an error. A `stateKey` with no `featureId` now raises the same `INVALID_ARGUMENT` as Android instead of being ignored (#889).
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)

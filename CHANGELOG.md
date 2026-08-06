@@ -5,7 +5,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
-**No breaking API change**s: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
+**No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
 The plugin also has a **documentation site** now, at [**maplibre.org/flutter-maplibre-gl**](https://maplibre.org/flutter-maplibre-gl/): guides for every part of the API, each with a live example you can pan and click, running the real plugin compiled for web.
 
 ### Actions needed
@@ -29,6 +29,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 
 ### Fixed
 * A map that fails to be created reports the failure to the app instead of leaving it waiting: code awaiting the controller, `onMapCreated` included, used to wait forever for a map that never arrived, with only an unhandled error in the console (#943).
+* **Web**: `getFeatureState()` returns the state instead of throwing, and `removeFeatureState(sourceId)` with no feature id resets the whole source instead of doing nothing. Both have been broken since 0.26.0, and nothing exercised them until this release's Feature State example. `getFeatureState()` also reports no state as null rather than an empty map, and a `stateKey` with no `featureId` is rejected, both matching Android (#889).
 * **Android, iOS**: symbols added with `addSymbol` are visible again on styles whose glyph server does not host the old default font, which hid the whole symbol, icon included. The default is now `Noto Sans Regular`; for another font use `addSymbolLayer` with `textFont` (#940).
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode. Large payloads are encoded on a background isolate, cutting main-isolate time by two to three times (#366).
 * **Android, iOS**: downloading an area that is already downloaded replaces its region instead of adding a duplicate, and keeps the same region id (#886).

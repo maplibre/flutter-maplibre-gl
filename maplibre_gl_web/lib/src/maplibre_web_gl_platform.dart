@@ -1946,7 +1946,7 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    final feature = FeatureIdentifierJsImpl(
+    final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
       sourceLayer: sourceLayer,
@@ -1962,7 +1962,20 @@ class MapLibreMapController extends MapLibrePlatform
     String? stateKey,
     String? sourceLayer,
   }) async {
-    final feature = FeatureIdentifierJsImpl(
+    // A stateKey lives inside one feature's state, so without a featureId
+    // there is nothing to remove it from. maplibre-gl-js only fires an error
+    // event here and leaves the state alone, which the caller never sees, so
+    // raise what Android raises for the same call instead.
+    if (featureId == null && stateKey != null) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            "removeFeatureState with a 'stateKey' also requires the "
+            "'featureId' that owns the key.",
+      );
+    }
+
+    final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
       sourceLayer: sourceLayer,
@@ -1977,17 +1990,23 @@ class MapLibreMapController extends MapLibrePlatform
     String featureId, {
     String? sourceLayer,
   }) async {
-    final feature = FeatureIdentifierJsImpl(
+    final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
       sourceLayer: sourceLayer,
     );
 
-    final state = _map.getFeatureState(feature);
-    if (state == null) return null;
+    // Not `dartify()`: for a JS object that returns a Map<Object?, Object?>,
+    // so casting it to Map<String, dynamic> threw on every call that found a
+    // state. dartifyMap builds the typed map this signature promises.
+    final state = dartifyMap(_map.getFeatureState(feature));
 
-    // Convert JSObject to Dart Map
-    return (state as JSObject).dartify() as Map<String, dynamic>?;
+    // maplibre-gl-js answers {} for a feature that has no state at all, while
+    // Android replies null and the return type is nullable so callers can tell
+    // the two apart. Report the absence the same way here. A state explicitly
+    // set to {} is indistinguishable from no state on this platform, and reads
+    // as absent.
+    return state.isEmpty ? null : state;
   }
 
   @override
