@@ -20,7 +20,7 @@ import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dar
 void main() {
   group('FeatureIdentifierJsImpl', () {
     test('leaves out the arguments it is not given', () {
-      final target = FeatureIdentifierJsImpl(source: 'states');
+      final target = FeatureIdentifierJsImpl.of(source: 'states');
 
       expect(target.has('source'), isTrue);
       expect(
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('sets the arguments it is given', () {
-      final target = FeatureIdentifierJsImpl(
+      final target = FeatureIdentifierJsImpl.of(
         source: 'states',
         id: '46'.toJS,
         sourceLayer: 'admin',
@@ -43,18 +43,18 @@ void main() {
       expect(target.sourceLayer, 'admin');
     });
 
-    test('an explicitly null id is still a property, which is the trap', () {
-      // Passing null explicitly is the case under test: the analyzer is right
-      // that it matches the default, and wrong that it changes nothing.
+    test('a null id is left out, which is what the whole fix rests on', () {
+      // Passing null explicitly is the case under test, so the analyzer is
+      // right that it matches the default and wrong that it changes nothing.
       // ignore: avoid_redundant_argument_values
-      final target = FeatureIdentifierJsImpl(source: 'states', id: null);
+      final target = FeatureIdentifierJsImpl.of(source: 'states', id: null);
 
       expect(
         target.has('id'),
-        isTrue,
+        isFalse,
         reason:
-            'if this ever stops holding, passing null became equivalent to '
-            'omitting and removeFeatureState no longer needs its two branches',
+            'null means "not set" to every caller here, and the JS object has '
+            'to say the same, or a source-wide remove silently does nothing',
       );
     });
   });
