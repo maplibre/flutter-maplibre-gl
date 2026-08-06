@@ -28,6 +28,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Web**: `queryCameraPosition()` is implemented; it used to throw `UnimplementedError` (#892).
 
 ### Fixed
+* A map that fails to be created reports the failure to the app instead of leaving it waiting: code awaiting the controller, `onMapCreated` included, used to wait forever for a map that never arrived, with only an unhandled error in the console (#943).
 * **Android, iOS**: symbols added with `addSymbol` are visible again on styles whose glyph server does not host the old default font, which hid the whole symbol, icon included. The default is now `Noto Sans Regular`; for another font use `addSymbolLayer` with `textFont` (#940).
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode. Large payloads are encoded on a background isolate, cutting main-isolate time by two to three times (#366).
 * **Android, iOS**: downloading an area that is already downloaded replaces its region instead of adding a duplicate, and keeps the same region id (#886).

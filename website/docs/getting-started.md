@@ -75,9 +75,12 @@ On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-g
 
 ### Requirements
 
-The browser has to provide **WebGL2**. MapLibre GL JS 6 draws with it and no longer falls back to WebGL1, so a browser without it shows no map at all: that is Safari and iOS before 15, Chrome and Firefox from before 2017, and any setup where the browser puts WebGL2 on its blocklist for the GPU driver. Flutter itself renders on WebGL1, so the app around the map keeps working, which is what makes this easy to miss. The plugin logs the reason and the way out when it happens.
+The browser has to provide **WebGL2**. MapLibre GL JS 6 draws with it and no longer falls back to WebGL1, so a browser without it shows no map at all. Two cases end differently:
 
-Browsers like that need a MapLibre GL JS 5 build, the last major with the WebGL1 fallback. Point the plugin at one with `MapLibreMap.webLibrarySource`, the same way as for [self-hosting](#self-hosting-maplibre-gl-js) but at a version 5 copy: the plugin keeps working against it, which is what the leftover script tag above also relies on, though you then stay off the version it is tested against.
+* **The browser has no WebGL2 at all**, as on Safari and iOS before 15, and on Chrome and Firefox from before 2017. Flutter's own renderer asks for WebGL1 on such a browser, so the app around the map keeps working and only the map goes missing, which is what makes this easy to miss. The plugin logs the cause when this happens.
+* **WebGL2 exists but no context can be created**, because the browser blocklists it for the GPU driver, or hardware acceleration is switched off. Flutter's renderer asks for WebGL2 there, and does not fall back either, so the whole app stays blank and the library version makes no difference.
+
+Only the first case has a way out: a MapLibre GL JS 5 build, the last major with the WebGL1 fallback. Point the plugin at one with `MapLibreMap.webLibrarySource`, the same way as for [self-hosting](#self-hosting-maplibre-gl-js) but at a version 5 copy: the plugin keeps working against it, which is what the leftover script tag above also relies on, though you then stay off the version it is tested against.
 
 ### Content-Security-Policy
 

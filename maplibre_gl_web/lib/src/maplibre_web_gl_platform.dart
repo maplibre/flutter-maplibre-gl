@@ -100,21 +100,42 @@ class MapLibreMapController extends MapLibrePlatform
     );
     _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-    _map = MapLibreMap(
-      MapOptions(
-        container: _mapElement,
-        center:
-            (camera != null)
-                ? LngLat(camera['target'][1], camera['target'][0])
-                : null,
-        zoom: camera?['zoom'],
-        bearing: camera?['bearing'],
-        pitch: camera?['tilt'],
-        style: styleString,
-        preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
-        attributionControl: false, //avoid duplicate control
-      ),
-    );
+    // Reported here rather than left to the caller: this future is not awaited
+    // anywhere, so an error out of it would only ever be an unhandled one, and
+    // the map's own construction can throw. maplibre-gl-js 5 does exactly that
+    // when it cannot get any WebGL context, and it is the build the docs send a
+    // WebGL1 only browser to.
+    try {
+      _map = MapLibreMap(
+        MapOptions(
+          container: _mapElement,
+          center:
+              (camera != null)
+                  ? LngLat(camera['target'][1], camera['target'][0])
+                  : null,
+          zoom: camera?['zoom'],
+          bearing: camera?['bearing'],
+          pitch: camera?['tilt'],
+          style: styleString,
+          preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
+          attributionControl: false, //avoid duplicate control
+        ),
+      );
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'maplibre_gl_web',
+          context: ErrorDescription(
+            'while creating the map. A browser that provides no WebGL context '
+            'at all fails here, and so does a library build that cannot read '
+            'the style. The map stays empty',
+          ),
+        ),
+      );
+      rethrow;
+    }
     _reportMissingRenderer();
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
     _mapSubscriptions.add(_map.on('click', _onMapClick));
@@ -154,20 +175,38 @@ class MapLibreMapController extends MapLibrePlatform
   /// with one line in the console from the library and nothing pointing at the
   /// way out.
   ///
-  /// Logged once per session: several maps on one screen would repeat it, and
-  /// the cause is the browser rather than any one map.
+  /// Each distinct cause is reported once per session: several maps on one
+  /// screen share a browser, so they would repeat one message, while a second
+  /// map failing for another reason still gets its own.
+  ///
+  /// Reported through [FlutterError.reportError] rather than [debugPrint],
+  /// which apps are free to silence, because this one says the map will not
+  /// work at all. Nothing here may throw: the future this runs in is not
+  /// awaited, so an error would turn a blank map into one that never finishes
+  /// being created.
   void _reportMissingRenderer() {
-    if (_missingRendererReported) return;
-    final diagnostic = webGlDiagnostic(
-      hasRenderer: _map.painter != null,
-      probe: canCreateWebGlContext,
-    );
-    if (diagnostic == null) return;
-    _missingRendererReported = true;
-    debugPrint(diagnostic);
+    try {
+      final diagnostic = mapRendererDiagnostic(_map);
+      if (diagnostic == null) return;
+      if (!_reportedRendererDiagnostics.add(diagnostic)) return;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: diagnostic,
+          library: 'maplibre_gl_web',
+          context: ErrorDescription('while creating the map'),
+        ),
+      );
+    } catch (_) {
+      // A diagnostic that cannot be produced is not worth a broken map.
+    }
   }
 
-  static bool _missingRendererReported = false;
+  static final _reportedRendererDiagnostics = <String>{};
+
+  /// Forgets what has been reported, so one test cannot silence the next.
+  @visibleForTesting
+  static void debugResetRendererDiagnostics() =>
+      _reportedRendererDiagnostics.clear();
 
   void _initResizeObserver() {
     final resizeObserver = web.ResizeObserver(

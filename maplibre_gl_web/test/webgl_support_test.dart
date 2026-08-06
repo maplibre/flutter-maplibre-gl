@@ -4,7 +4,12 @@
 @TestOn('browser')
 library;
 
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
+import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/webgl_support.dart';
 
 void main() {
@@ -74,6 +79,37 @@ void main() {
         isNot(contains('MapLibreMap.webLibrarySource')),
         reason: 'no build of the library helps here, so do not suggest one',
       );
+    });
+  });
+
+  group('mapRendererDiagnostic', () {
+    /// A stand-in for the library's map, with or without the `painter` the
+    /// library assigns once it has a context.
+    MapLibreMap fakeMap({required bool withRenderer}) {
+      final map = JSObject();
+      if (withRenderer) map.setProperty('painter'.toJS, JSObject());
+      return MapLibreMap.fromJsObject(map as MapLibreMapJsImpl);
+    }
+
+    test('reads the renderer back, and probes nothing when there is one', () {
+      final asked = <bool>[];
+
+      final diagnostic = mapRendererDiagnostic(
+        fakeMap(withRenderer: true),
+        probe: fakeProbe(webGl2: false, webGl1: false, asked: asked),
+      );
+
+      expect(diagnostic, isNull);
+      expect(asked, isEmpty);
+    });
+
+    test('reports a map that built no renderer', () {
+      final diagnostic = mapRendererDiagnostic(
+        fakeMap(withRenderer: false),
+        probe: fakeProbe(webGl2: false, webGl1: true),
+      );
+
+      expect(diagnostic, contains('WebGL1 but not WebGL2'));
     });
   });
 }
