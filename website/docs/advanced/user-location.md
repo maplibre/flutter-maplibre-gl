@@ -8,7 +8,7 @@ Set `myLocationEnabled: true` and make sure the platform permissions from [Insta
 
 ```dart
 MapLibreMap(
-  styleString: MapLibreStyles.defaultStyle,
+  styleString: MapLibreStyles.demo,
   initialCameraPosition: const CameraPosition(target: LatLng(51.5, -0.09), zoom: 12),
   myLocationEnabled: true,
   myLocationTrackingMode: MyLocationTrackingMode.tracking,

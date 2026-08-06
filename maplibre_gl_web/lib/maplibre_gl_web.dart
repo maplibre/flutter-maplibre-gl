@@ -38,6 +38,7 @@ import 'package:maplibre_gl_web/src/ui/control/scale_control.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
+import 'package:maplibre_gl_web/src/webgl_support.dart';
 import 'package:maplibre_gl_web/src/camera_easing_math.dart';
 
 part 'src/convert.dart';

@@ -532,7 +532,17 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
-    await _maplibrePlatform.initPlatform(id);
+    // Nobody awaits this method: the platform view factory calls it and drops
+    // the future. So a failure here has to reach the completer, or everything
+    // waiting on the controller, including onStyleLoadedCallback above, waits
+    // for a map that will never arrive. On web the engine throws from here when
+    // the browser provides no WebGL context at all.
+    try {
+      await _maplibrePlatform.initPlatform(id);
+    } catch (error, stack) {
+      _controller.completeError(error, stack);
+      return;
+    }
     _mapController = controller;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);

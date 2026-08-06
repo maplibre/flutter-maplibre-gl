@@ -93,6 +93,82 @@ void main() {
       expect(seen!.timeout, const Duration(seconds: 20));
     });
 
+    test(
+      'the pinned default is an ES module, which is what it is imported as',
+      () {
+        // maplibre-gl-js 6 ships only ESM, and the loader imports the URL as a
+        // module. A bump that pointed this back at a classic bundle would fail at
+        // runtime, in a browser, on the first map.
+        expect(MapLibreJsLoader.defaultScriptUrl, endsWith('.mjs'));
+        expect(MapLibreJsLoader.defaultScriptUrl, contains(kMapLibreJsVersion));
+        expect(MapLibreJsLoader.defaultStyleUrl, endsWith('.css'));
+        expect(MapLibreJsLoader.defaultStyleUrl, contains(kMapLibreJsVersion));
+        expect(kMapLibreJsVersion, startsWith('6.'));
+      },
+    );
+
+    test('publishes the imported namespace as the maplibregl global', () async {
+      // A data: URL is a real ES module, so this exercises the import path
+      // without reaching the network.
+      MapLibreJsSource.configured = const MapLibreJsSource.urls(
+        scriptUrl: 'data:text/javascript,export const Map = class {};',
+        timeout: Duration(seconds: 5),
+      );
+
+      await MapLibreJsLoader.ensureLoaded();
+
+      final published = globalContext['maplibregl'] as JSObject?;
+      expect(published, isNotNull);
+      expect(
+        published!.has('Map'),
+        isTrue,
+        reason: 'the published namespace must carry the library',
+      );
+    });
+
+    test(
+      'leaves a working global alone when the import exports nothing',
+      () async {
+        // What an app pointing at an older, non-module bundle gets: the import
+        // succeeds, exports nothing, and the bundle defines the global itself.
+        // Publishing that empty namespace would break every later call.
+        final existing = JSObject()..setProperty('Map'.toJS, JSObject());
+        globalContext.setProperty('maplibregl'.toJS, existing);
+        MapLibreJsSource.configured = const MapLibreJsSource.urls(
+          scriptUrl: 'data:text/javascript,globalThis.__sideEffect = true;',
+          timeout: Duration(seconds: 5),
+        );
+
+        // The fast path in ensureLoaded would skip the import entirely, so drive
+        // the real loadResources directly.
+        await MapLibreJsLoader.loadResources(MapLibreJsSource.configured!);
+
+        expect(
+          globalContext['maplibregl'],
+          same(existing),
+          reason: 'the working global must survive an empty module namespace',
+        );
+      },
+    );
+
+    test('reports a URL that provides no library at all', () async {
+      MapLibreJsSource.configured = const MapLibreJsSource.urls(
+        scriptUrl: 'data:text/javascript,export const nothing = 1;',
+        timeout: Duration(seconds: 5),
+      );
+
+      await expectLater(
+        MapLibreJsLoader.ensureLoaded(),
+        throwsA(
+          isA<MapLibreJsLoaderException>().having(
+            (e) => e.message,
+            'message',
+            contains('no maplibre-gl-js'),
+          ),
+        ),
+      );
+    });
+
     test('passes the configured source through unchanged', () async {
       const configured = MapLibreJsSource.urls(
         scriptUrl: 'assets/maplibre-gl.js',

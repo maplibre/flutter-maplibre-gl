@@ -14,6 +14,7 @@ class MapLibreMapController extends MapLibrePlatform
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
   Set<String>? _assetManifest;
+  Future<Set<String>>? _assetManifestRead;
 
   final _interactiveFeatureLayerIds = <String>{};
   final _mapSubscriptions = <Subscription>[];
@@ -64,6 +65,7 @@ class MapLibreMapController extends MapLibrePlatform
       sub.unsubscribe();
     }
     _mapSubscriptions.clear();
+    _map.clearMissingStyleImageHandler();
     _map.remove();
     super.dispose();
   }
@@ -98,21 +100,43 @@ class MapLibreMapController extends MapLibrePlatform
     );
     _dragEnabled = _creationParams['dragEnabled'] ?? true;
 
-    _map = MapLibreMap(
-      MapOptions(
-        container: _mapElement,
-        center:
-            (camera != null)
-                ? LngLat(camera['target'][1], camera['target'][0])
-                : null,
-        zoom: camera?['zoom'],
-        bearing: camera?['bearing'],
-        pitch: camera?['tilt'],
-        style: styleString,
-        preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
-        attributionControl: false, //avoid duplicate control
-      ),
-    );
+    // Reported here rather than left to the caller: this future is not awaited
+    // anywhere, so an error out of it would only ever be an unhandled one, and
+    // the map's own construction can throw. maplibre-gl-js 5 does exactly that
+    // when it cannot get any WebGL context, and it is the build the docs send a
+    // WebGL1 only browser to.
+    try {
+      _map = MapLibreMap(
+        MapOptions(
+          container: _mapElement,
+          center:
+              (camera != null)
+                  ? LngLat(camera['target'][1], camera['target'][0])
+                  : null,
+          zoom: camera?['zoom'],
+          bearing: camera?['bearing'],
+          pitch: camera?['tilt'],
+          style: styleString,
+          preserveDrawingBuffer: _creationParams['webPreserveDrawingBuffer'],
+          attributionControl: false, //avoid duplicate control
+        ),
+      );
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'maplibre_gl_web',
+          context: ErrorDescription(
+            'while creating the map. A browser that provides no WebGL context '
+            'at all fails here, and so does a library build that cannot read '
+            'the style. The map stays empty',
+          ),
+        ),
+      );
+      rethrow;
+    }
+    _reportMissingRenderer();
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
     _mapSubscriptions.add(_map.on('click', _onMapClick));
     // long click not available in web, so it is mapped to double click
@@ -122,7 +146,13 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
     _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
-    _mapSubscriptions.add(_map.on('styleimagemissing', _loadFromAssets));
+    // Null on a library that takes a resolver, which goes away with
+    // clearMissingStyleImageHandler in dispose; a subscription on version 5,
+    // where the listener is the only path.
+    final missingStyleImages = _map.setMissingStyleImageHandler(
+      _loadFromAssets,
+    );
+    if (missingStyleImages != null) _mapSubscriptions.add(missingStyleImages);
     if (_dragEnabled) {
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
@@ -135,6 +165,48 @@ class MapLibreMapController extends MapLibrePlatform
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
   }
+
+  /// Says why the map will stay blank when it came up without a renderer.
+  ///
+  /// Since maplibre-gl-js 6 that is what a browser without WebGL2 gets: version
+  /// 5 fell back to WebGL1 and threw when even that was missing, 6 requires
+  /// WebGL2 and only fires an `error` from inside the constructor, which is too
+  /// early for [MapLibreMap.on] to catch. Without this the map is simply empty,
+  /// with one line in the console from the library and nothing pointing at the
+  /// way out.
+  ///
+  /// Each distinct cause is reported once per session: several maps on one
+  /// screen share a browser, so they would repeat one message, while a second
+  /// map failing for another reason still gets its own.
+  ///
+  /// Reported through [FlutterError.reportError] rather than [debugPrint],
+  /// which apps are free to silence, because this one says the map will not
+  /// work at all. Nothing here may throw: the future this runs in is not
+  /// awaited, so an error would turn a blank map into one that never finishes
+  /// being created.
+  void _reportMissingRenderer() {
+    try {
+      final diagnostic = mapRendererDiagnostic(_map);
+      if (diagnostic == null) return;
+      if (!_reportedRendererDiagnostics.add(diagnostic)) return;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: diagnostic,
+          library: 'maplibre_gl_web',
+          context: ErrorDescription('while creating the map'),
+        ),
+      );
+    } catch (_) {
+      // A diagnostic that cannot be produced is not worth a broken map.
+    }
+  }
+
+  static final _reportedRendererDiagnostics = <String>{};
+
+  /// Forgets what has been reported, so one test cannot silence the next.
+  @visibleForTesting
+  static void debugResetRendererDiagnostics() =>
+      _reportedRendererDiagnostics.clear();
 
   void _initResizeObserver() {
     final resizeObserver = web.ResizeObserver(
@@ -151,9 +223,19 @@ class MapLibreMapController extends MapLibrePlatform
     resizeObserver.observe(_mapElement);
   }
 
-  Future<Set<String>> _loadAssetManifest() async {
-    if (_assetManifest != null) return _assetManifest!;
+  /// The declared assets, read once.
+  ///
+  /// The in-flight read is kept, not just the result: maplibre-gl-js 6 asks for
+  /// every image a tile is missing at once, so the first batch would otherwise
+  /// read and parse the manifest once per image, with the renderer waiting on
+  /// all of them.
+  Future<Set<String>> _loadAssetManifest() {
+    final loaded = _assetManifest;
+    if (loaded != null) return Future.value(loaded);
+    return _assetManifestRead ??= _readAssetManifest();
+  }
 
+  Future<Set<String>> _readAssetManifest() async {
     try {
       final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
       final assets = assetManifest.listAssets();
@@ -163,27 +245,35 @@ class MapLibreMapController extends MapLibrePlatform
       _assetManifest = <String>{};
     }
 
+    _assetManifestRead = null;
     return _assetManifest!;
   }
 
-  Future<void> _loadFromAssets(Event event) async {
-    final imagePath = event.id;
-
-    // Check if the image is already added
-    if (_map.hasImage(imagePath)) return;
-
-    // Check if the image is declared in the assets loaded
-    final manifest = await _loadAssetManifest();
-    if (!manifest.contains(imagePath) &&
-        !manifest.contains('assets/$imagePath')) {
-      return;
-    }
-
+  /// Supplies an image the style asks for but does not have.
+  ///
+  /// Nothing may escape: since maplibre-gl-js 6 awaits this future inside one
+  /// `Promise.all` for the whole batch of images a tile asks for, and catches
+  /// nothing itself, a single error here would leave every image in that batch
+  /// unresolved and the tile's symbols undrawn. Where the old
+  /// `styleimagemissing` listener could drop an error harmlessly, this one has
+  /// to swallow it on purpose, so the style keeps its missing image and the rest
+  /// of the batch still arrives.
+  Future<void> _loadFromAssets(String imagePath) async {
     try {
+      // Check if the image is already added
+      if (_map.hasImage(imagePath)) return;
+
+      // Check if the image is declared in the assets loaded
+      final manifest = await _loadAssetManifest();
+      if (!manifest.contains(imagePath) &&
+          !manifest.contains('assets/$imagePath')) {
+        return;
+      }
+
       final bytes = await rootBundle.load(imagePath);
       await addImage(imagePath, bytes.buffer.asUint8List());
     } catch (_) {
-      // If it still fails, ignore so MapLibre can continue without the image.
+      // Ignore, so MapLibre can continue without the image.
     }
   }
 
@@ -1386,7 +1476,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
-    source.setData(data);
+    await source.setData(data);
   }
 
   @override
@@ -1844,7 +1934,7 @@ class MapLibreMapController extends MapLibrePlatform
         final newData = FeatureCollection(features: features);
         _addedFeaturesByLayer[sourceId] = newData;
 
-        source.setData(newData);
+        await source.setData(newData);
       }
     }
   }
