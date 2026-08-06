@@ -14,6 +14,7 @@ class MapLibreMapController extends MapLibrePlatform
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
   Set<String>? _assetManifest;
+  Future<Set<String>>? _assetManifestRead;
 
   final _interactiveFeatureLayerIds = <String>{};
   final _mapSubscriptions = <Subscription>[];
@@ -64,6 +65,7 @@ class MapLibreMapController extends MapLibrePlatform
       sub.unsubscribe();
     }
     _mapSubscriptions.clear();
+    _map.clearMissingStyleImageHandler();
     _map.remove();
     super.dispose();
   }
@@ -123,21 +125,13 @@ class MapLibreMapController extends MapLibrePlatform
     _mapSubscriptions.add(_map.on('moveend', _onCameraIdle));
     _mapSubscriptions.add(_map.on('idle', _onMapIdle));
     _mapSubscriptions.add(_map.on('resize', (_) => _onMapResize()));
-    // Since maplibre-gl-js 6 a missing style image is supplied through a
-    // resolver: a `styleimagemissing` listener can still observe the request,
-    // but calling addImage from it no longer satisfies it. Version 5 has no
-    // resolver, and the library on the page is not always the one the plugin
-    // loads, so keep the old path for it rather than throwing on map creation.
-    if (_map.hasMissingStyleImageResolver) {
-      _map.setMissingStyleImageResolver(_loadFromAssets);
-    } else {
-      _mapSubscriptions.add(
-        _map.on(
-          'styleimagemissing',
-          (Event event) => _loadFromAssets(event.id),
-        ),
-      );
-    }
+    // Null on a library that takes a resolver, which goes away with
+    // clearMissingStyleImageHandler in dispose; a subscription on version 5,
+    // where the listener is the only path.
+    final missingStyleImages = _map.setMissingStyleImageHandler(
+      _loadFromAssets,
+    );
+    if (missingStyleImages != null) _mapSubscriptions.add(missingStyleImages);
     if (_dragEnabled) {
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
@@ -190,9 +184,19 @@ class MapLibreMapController extends MapLibrePlatform
     resizeObserver.observe(_mapElement);
   }
 
-  Future<Set<String>> _loadAssetManifest() async {
-    if (_assetManifest != null) return _assetManifest!;
+  /// The declared assets, read once.
+  ///
+  /// The in-flight read is kept, not just the result: maplibre-gl-js 6 asks for
+  /// every image a tile is missing at once, so the first batch would otherwise
+  /// read and parse the manifest once per image, with the renderer waiting on
+  /// all of them.
+  Future<Set<String>> _loadAssetManifest() {
+    final loaded = _assetManifest;
+    if (loaded != null) return Future.value(loaded);
+    return _assetManifestRead ??= _readAssetManifest();
+  }
 
+  Future<Set<String>> _readAssetManifest() async {
     try {
       final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
       final assets = assetManifest.listAssets();
@@ -202,25 +206,35 @@ class MapLibreMapController extends MapLibrePlatform
       _assetManifest = <String>{};
     }
 
+    _assetManifestRead = null;
     return _assetManifest!;
   }
 
+  /// Supplies an image the style asks for but does not have.
+  ///
+  /// Nothing may escape: since maplibre-gl-js 6 awaits this future inside one
+  /// `Promise.all` for the whole batch of images a tile asks for, and catches
+  /// nothing itself, a single error here would leave every image in that batch
+  /// unresolved and the tile's symbols undrawn. Where the old
+  /// `styleimagemissing` listener could drop an error harmlessly, this one has
+  /// to swallow it on purpose, so the style keeps its missing image and the rest
+  /// of the batch still arrives.
   Future<void> _loadFromAssets(String imagePath) async {
-    // Check if the image is already added
-    if (_map.hasImage(imagePath)) return;
-
-    // Check if the image is declared in the assets loaded
-    final manifest = await _loadAssetManifest();
-    if (!manifest.contains(imagePath) &&
-        !manifest.contains('assets/$imagePath')) {
-      return;
-    }
-
     try {
+      // Check if the image is already added
+      if (_map.hasImage(imagePath)) return;
+
+      // Check if the image is declared in the assets loaded
+      final manifest = await _loadAssetManifest();
+      if (!manifest.contains(imagePath) &&
+          !manifest.contains('assets/$imagePath')) {
+        return;
+      }
+
       final bytes = await rootBundle.load(imagePath);
       await addImage(imagePath, bytes.buffer.asUint8List());
     } catch (_) {
-      // If it still fails, ignore so MapLibre can continue without the image.
+      // Ignore, so MapLibre can continue without the image.
     }
   }
 
@@ -1423,7 +1437,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
-    source.setData(data);
+    await source.setData(data);
   }
 
   @override
@@ -1881,7 +1895,7 @@ class MapLibreMapController extends MapLibrePlatform
         final newData = FeatureCollection(features: features);
         _addedFeaturesByLayer[sourceId] = newData;
 
-        source.setData(newData);
+        await source.setData(newData);
       }
     }
   }

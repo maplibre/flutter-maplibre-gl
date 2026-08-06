@@ -81,14 +81,16 @@ Browsers like that need a MapLibre GL JS 5 build, the last major with the WebGL1
 
 ### Content-Security-Policy
 
-Skip this if your app has no CSP. If it does: MapLibre GL JS runs its tile work in a Web Worker, and when the library is loaded cross-origin, which is the default from a CDN, that worker is constructed from a `blob:` URL.
+Skip this if your app has no CSP. If it does: the plugin imports the library, which a CSP governs like any other script, the style and the tiles are fetched, and MapLibre GL JS runs its tile work in a Web Worker that is constructed from a `blob:` URL when the library is loaded cross-origin, which is the default from a CDN.
 
 ```
+script-src 'self' https://unpkg.com ;
+connect-src 'self' https://unpkg.com https://your.tile.host ;
 worker-src 'self' blob: ;
 img-src data: blob: 'self' ;
 ```
 
-[Self-hosting](#self-hosting-maplibre-gl-js) the library makes the worker same-origin, and then `blob:` is not needed in `worker-src`.
+[Self-hosting](#self-hosting-maplibre-gl-js) the library makes the worker same-origin, so `blob:` is not needed in `worker-src` and the CDN host drops out of `script-src` and `connect-src`.
 
 ### Self-hosting MapLibre GL JS
 
@@ -104,7 +106,7 @@ void main() {
 }
 ```
 
-MapLibre GL JS 6 is an ES module, so `scriptUrl` points at the `.mjs` build. Serve the whole `dist` directory, not just that one file: the library resolves its worker relative to its own URL, so the worker build has to sit next to it.
+MapLibre GL JS 6 is an ES module, so `scriptUrl` points at the `.mjs` build. Serve the whole `dist` directory, not just that one file: the library resolves its worker relative to its own URL, so the worker build has to sit next to it. Check too that your server answers `.mjs` with a JavaScript MIME type, `text/javascript`: a module script is refused outright when the type is something else, such as the `application/octet-stream` some servers still default to.
 
 If the page loads MapLibre GL JS itself, set `MapLibreMap.webLibrarySource = const MapLibreJsSource.preloaded()`: the plugin then imports nothing and waits for the `maplibregl` global. An ES module defines no global on its own, so the page has to publish one:
 

@@ -16,7 +16,7 @@ import 'package:web/web.dart' as web;
 const kMapLibreJsVersion = '6.2.0';
 
 /// Thrown when maplibre-gl-js cannot be brought onto the page, whether the
-/// injected script fails or times out, or a preloaded page never provides the
+/// import fails or times out, or a preloaded page never provides the
 /// `maplibregl` global.
 class MapLibreJsLoaderException implements Exception {
   MapLibreJsLoaderException(this.message);
@@ -45,9 +45,24 @@ abstract final class MapLibreJsLoader {
   static const defaultStyleUrl =
       'https://unpkg.com/maplibre-gl@$kMapLibreJsVersion/dist/maplibre-gl.css';
 
+  /// The tail both ways of not getting the library share.
+  ///
+  /// The MIME type is worth naming: a module script is refused outright when
+  /// the server answers with the wrong one, which is what a self-hosted copy
+  /// gets from a server that does not know `.mjs` yet.
+  static const _importFailureHint =
+      'A Content-Security-Policy that blocks that host, a device that is '
+      'offline, or a server that does not serve .mjs as a JavaScript MIME type '
+      'are the usual causes. MapLibreMap.webLibrarySource can point the plugin '
+      'at a self-hosted copy instead.';
+
   /// The single in-flight or completed load. Cleared on failure (see
   /// [ensureLoaded]), never on success.
   static Future<void>? _pending;
+
+  /// How many imports have failed outright this session, which is what makes
+  /// the next attempt ask for a slightly different URL (see [_importLibrary]).
+  static int _failedImports = 0;
 
   /// Seam for tests, which run under `flutter test --platform chrome` and
   /// must not touch the network.
@@ -59,6 +74,7 @@ abstract final class MapLibreJsLoader {
   @visibleForTesting
   static void debugReset() {
     _pending = null;
+    _failedImports = 0;
     loadResources = _loadResources;
   }
 
@@ -69,7 +85,7 @@ abstract final class MapLibreJsLoader {
     // Fast path: the global is already there. This covers a classic
     // `<script src>` in index.html, which has run before Flutter starts, and
     // web hot restart, where Dart statics (including [_pending]) are reset
-    // while the previously injected script is still in the document.
+    // while the global a previous run published is still on the page.
     if (globalContext.has('maplibregl')) return Future<void>.value();
     return _pending ??= _load();
   }
@@ -117,10 +133,7 @@ abstract final class MapLibreJsLoader {
       onTimeout: () {
         throw MapLibreJsLoaderException(
           'timed out after ${source.timeout.inSeconds}s waiting for '
-          'maplibre-gl-js from $scriptUrl. This usually means a '
-          'Content-Security-Policy blocks that host, or the device is '
-          'offline. MapLibreMap.webLibrarySource can point the plugin at a '
-          'self-hosted copy instead.',
+          'maplibre-gl-js from $scriptUrl. $_importFailureHint',
         );
       },
     );
@@ -133,16 +146,23 @@ abstract final class MapLibreJsLoader {
   /// own, while every `@JS` binding in this package addresses `maplibregl.*`.
   /// Publishing the namespace here keeps that one assumption in one place, and
   /// keeps the global the fast path in [ensureLoaded] looks for.
+  ///
+  /// A retry asks for a slightly different URL, because a failed module fetch
+  /// is remembered: the browser keeps a null entry for that URL in its module
+  /// map, and every later import of it rejects on the spot without going to the
+  /// network. Without the extra query the retry [ensureLoaded] allows would be
+  /// no retry at all, and a map built while the device was offline could never
+  /// recover, where the `<script>` tag this replaced simply tried again.
   static Future<void> _importLibrary(String url) async {
+    final target = _failedImports == 0 ? url : _retryUrl(url, _failedImports);
     final JSObject module;
     try {
-      module = await importModule(url.toJS).toDart;
+      module = await importModule(target.toJS).toDart;
     } catch (error) {
+      _failedImports++;
       throw MapLibreJsLoaderException(
-        'could not import maplibre-gl-js from $url ($error). This usually '
-        'means a Content-Security-Policy blocks that host, or the device is '
-        'offline. MapLibreMap.webLibrarySource can point the plugin at a '
-        'self-hosted copy instead.',
+        'could not import maplibre-gl-js from $target ($error). '
+        '$_importFailureHint',
       );
     }
 
@@ -158,11 +178,17 @@ abstract final class MapLibreJsLoader {
     }
     if (globalContext.has('maplibregl')) return;
     throw MapLibreJsLoaderException(
-      'loaded $url, but it provided no maplibre-gl-js: neither the module it '
+      'loaded $target, but it provided no maplibre-gl-js: neither the module it '
       'returned nor globalThis.maplibregl has a Map constructor. If that URL '
       'is a self-hosted copy, check it is the ESM build (maplibre-gl.mjs).',
     );
   }
+
+  /// The same URL, asking the browser for a fetch it has not cached a failure
+  /// for. The query is inert: a relative worker URL still resolves against the
+  /// path, so the library finds its own worker as before.
+  static String _retryUrl(String url, int attempt) =>
+      '$url${url.contains('?') ? '&' : '?'}maplibreGlRetry=$attempt';
 
   /// Polls for the `maplibregl` global on a page that loads the library
   /// itself ([MapLibreJsSource.preloaded]).

@@ -588,8 +588,8 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   ///  Since maplibre-gl-js 6 this is the only way to satisfy such a request: a
   ///  `styleimagemissing` listener can still observe it, but calling
-  ///  [addImage] from there no longer resolves it.
-  external void setMissingStyleImageResolver(JSFunction resolver);
+  ///  [addImage] from there no longer resolves it. Null removes the resolver.
+  external void setMissingStyleImageResolver(JSFunction? resolver);
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
