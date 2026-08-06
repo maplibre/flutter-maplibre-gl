@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* **Android, iOS**: `setTrackingCameraOptions()` pitches the camera without giving up the active tracking mode, for a navigation-style view that stays tilted while it keeps following the user. The regular camera calls are not tracking-aware: on Android they end tracking, so the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Web reports that its engine has no tracking-aware camera. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#888).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 **No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\

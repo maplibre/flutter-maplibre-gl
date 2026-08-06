@@ -1,3 +1,10 @@
+## Unreleased
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Added
+* `setTrackingCameraOptions` on `MapLibrePlatform`, forwarded over the channel as `locationComponent#setTrackingCameraOptions` with a `tilt` and an optional `duration`. It answers with whether the pitch animation ran (#888).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.

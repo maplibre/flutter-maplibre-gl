@@ -1,5 +1,10 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Added
+* `setTrackingCameraOptions()` throws an `UnsupportedError` naming the platform. maplibre-gl-js has no location component, and `GeolocateControl` stops following the user on any programmatic camera change it did not make itself, firing `trackuserlocationend`, which this package forwards as a tracking dismissal. Suppressing those events would report tracking that is no longer happening (#888).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added

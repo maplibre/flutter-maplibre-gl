@@ -29,6 +29,26 @@ MapLibreMap(
 
 On web only `none` and `tracking` are meaningful, since the browser exposes no compass heading.
 
+## Pitch the camera while tracking
+
+A navigation-style view wants both things at once: the camera pitched, and the map still following the user. The regular camera calls (`animateCamera`, `easeCamera`, `moveCamera`) are not tracking-aware, so on Android they end tracking outright: the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Use `setTrackingCameraOptions` instead, which goes through the platform's tracking machinery and leaves the mode alone.
+
+```dart
+await controller.updateMyLocationTrackingMode(MyLocationTrackingMode.trackingGps);
+
+await controller.setTrackingCameraOptions(
+  tilt: 45,
+  duration: const Duration(milliseconds: 250),
+);
+```
+
+`tilt` is the pitch in degrees, from 0 to 60, the maximum both native SDKs allow. `duration` animates the change; omit it for the platform default. The call completes with `true` once the animation has run, or `false` if the platform cancelled it, which happens when another tracking-camera animation supersedes it or when the tracking mode is still transitioning.
+
+A tracking mode other than `none` must already be active, so enable tracking first and set the tilt after. Calling it with tracking off throws a `PlatformException` with code `TRACKING_NOT_ACTIVE`.
+
+!!! warning "Android and iOS only"
+    Web throws an `UnsupportedError`. maplibre-gl-js has no location component, and its `GeolocateControl` gives up following the user on any programmatic camera change, so there is no way to pitch a tracking camera there. A pitch set *before* tracking starts does survive on web, since the control never writes the pitch itself.
+
 ## Tune the location engine
 
 `locationEnginePlatforms` passes platform options straight through to the underlying engine, so each platform takes only what it understands:
@@ -101,6 +121,7 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 |-----|---------|
 | `myLocationEnabled` | show or hide the puck |
 | `myLocationTrackingMode` | how the camera follows the user |
+| `controller.setTrackingCameraOptions` | pitch the camera without ending tracking (not on web) |
 | `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (not on iOS) |
 | `locationSource` | `PlatformLocationSource` (default) or `ManualLocationSource` |
 | `locationEnginePlatforms` | per-platform engine options, including iOS pulsing |
@@ -108,4 +129,4 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 | `controller.requestMyLocationLatLng` | read the last known position |
 | `onUserLocationUpdated` | callback for every update, either source |
 
-The example app's **Manual Location Source** page drives the puck around a simulated loop, with start and stop, single pushes, tracking-mode switching and a live accuracy ring.
+The example app's **Manual Location Source** page drives the puck around a simulated loop, with start and stop, single pushes, tracking-mode switching and a live accuracy ring. Its **GPS Location** page cycles the tracking modes and carries the tilt slider for `setTrackingCameraOptions`.
