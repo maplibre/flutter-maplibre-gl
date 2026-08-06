@@ -113,6 +113,7 @@ class MapLibreMapController extends MapLibrePlatform
         attributionControl: false, //avoid duplicate control
       ),
     );
+    _reportMissingRenderer();
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
     _mapSubscriptions.add(_map.on('click', _onMapClick));
     // long click not available in web, so it is mapped to double click
@@ -149,6 +150,30 @@ class MapLibreMapController extends MapLibrePlatform
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
   }
+
+  /// Says why the map will stay blank when it came up without a renderer.
+  ///
+  /// Since maplibre-gl-js 6 that is what a browser without WebGL2 gets: version
+  /// 5 fell back to WebGL1 and threw when even that was missing, 6 requires
+  /// WebGL2 and only fires an `error` from inside the constructor, which is too
+  /// early for [MapLibreMap.on] to catch. Without this the map is simply empty,
+  /// with one line in the console from the library and nothing pointing at the
+  /// way out.
+  ///
+  /// Logged once per session: several maps on one screen would repeat it, and
+  /// the cause is the browser rather than any one map.
+  void _reportMissingRenderer() {
+    if (_missingRendererReported) return;
+    final diagnostic = webGlDiagnostic(
+      hasRenderer: _map.painter != null,
+      probe: canCreateWebGlContext,
+    );
+    if (diagnostic == null) return;
+    _missingRendererReported = true;
+    debugPrint(diagnostic);
+  }
+
+  static bool _missingRendererReported = false;
 
   void _initResizeObserver() {
     final resizeObserver = web.ResizeObserver(

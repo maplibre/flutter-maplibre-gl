@@ -51,10 +51,11 @@ Two setups need more than deleting the tags:
 
 ### Web: the engine moves to MapLibre GL JS 6
 
-The web build now runs on MapLibre GL JS 6, which ships as an ES module. The plugin imports it for you, so most apps need nothing. Two setups do:
+The web build now runs on MapLibre GL JS 6, which ships as an ES module. The plugin imports it for you, so most apps need nothing. Three setups do:
 
 * **You self-host the library.** Point `MapLibreJsSource.urls` at the `.mjs` build rather than `.js`, and serve the whole `dist` directory: the library resolves its worker relative to its own URL. Pointing at the old `.js` build still works, because the plugin keeps the global that build defines, but you stay on version 5 while the plugin's interop is written against 6.
 * **The page loads the library itself** (`MapLibreJsSource.preloaded`). An ES module defines no global, so the page has to publish `globalThis.maplibregl` explicitly. A page that still loads a version 5 bundle keeps working as before.
+* **Your users are not all on WebGL2.** Version 6 requires it and dropped the WebGL1 fallback, so a browser without WebGL2 now shows no map where version 5 showed a slow one: Safari and iOS before 15, and setups where the browser blocklists WebGL2 for the GPU driver. Flutter itself renders on WebGL1, so only the map goes missing. The plugin logs the reason and the way out, which is to point `MapLibreJsSource.urls` at a version 5 build. See [Requirements](getting-started.md#requirements).
 
 Content-Security-Policy rules do not change: version 5 also built its Web Worker from a `blob:` URL, so `worker-src 'self' blob:` was already required and still is. What changes is the other direction, in your favour: version 6 only needs `blob:` when the library is loaded cross-origin, so a self-hosted, same-origin copy can now drop it. See [Content-Security-Policy](getting-started.md#content-security-policy).
 

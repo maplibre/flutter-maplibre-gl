@@ -73,6 +73,12 @@ On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-g
 !!! warning "Upgrading from an older version"
     If your `index.html` still has the `maplibre-gl.js` script and `maplibre-gl.css` link tags from an earlier setup, remove them. An existing `maplibregl` global is reused as it is, so a manually pinned copy silently overrides the version the plugin is tested against.
 
+### Requirements
+
+The browser has to provide **WebGL2**. MapLibre GL JS 6 draws with it and no longer falls back to WebGL1, so a browser without it shows no map at all: that is Safari and iOS before 15, Chrome and Firefox from before 2017, and any setup where the browser puts WebGL2 on its blocklist for the GPU driver. Flutter itself renders on WebGL1, so the app around the map keeps working, which is what makes this easy to miss. The plugin logs the reason and the way out when it happens.
+
+Browsers like that need a MapLibre GL JS 5 build, the last major with the WebGL1 fallback. Point the plugin at one with `MapLibreMap.webLibrarySource`, the same way as for [self-hosting](#self-hosting-maplibre-gl-js) but at a version 5 copy: the plugin keeps working against it, which is what the leftover script tag above also relies on, though you then stay off the version it is tested against.
+
 ### Content-Security-Policy
 
 Skip this if your app has no CSP. If it does: MapLibre GL JS runs its tile work in a Web Worker, and when the library is loaded cross-origin, which is the default from a CDN, that worker is constructed from a `blob:` URL.
