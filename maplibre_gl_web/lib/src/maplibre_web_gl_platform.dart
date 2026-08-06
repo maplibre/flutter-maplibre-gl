@@ -1896,8 +1896,10 @@ class MapLibreMapController extends MapLibrePlatform
     final state = _map.getFeatureState(feature);
     if (state == null) return null;
 
-    // Convert JSObject to Dart Map
-    return (state as JSObject).dartify() as Map<String, dynamic>?;
+    // Not `dartify()`: for a JS object that returns a Map<Object?, Object?>,
+    // so casting it to Map<String, dynamic> threw on every call that found a
+    // state. dartifyMap builds the typed map this signature promises.
+    return dartifyMap(state);
   }
 
   @override

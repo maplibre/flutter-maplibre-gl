@@ -11,6 +11,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
 
 ### Fixed
+* `getFeatureState()` returns the state instead of throwing. It converted the JS object with `dartify()` and cast the result to `Map<String, dynamic>`, which that conversion never produces, so every call that found a state threw (#889).
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
