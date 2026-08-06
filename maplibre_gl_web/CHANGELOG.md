@@ -11,6 +11,8 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
 
 ### Fixed
+* `getFeatureState()` returns the state instead of throwing, and reports no state as null rather than as an empty map, matching Android. It converted the JS object with `dartify()` and cast the result to `Map<String, dynamic>`, which that conversion never produces, so every call that found a state threw (#889).
+* `removeFeatureState(sourceId)` with no feature id resets the whole source. It built the target with `id: null`, and maplibre-gl-js only treats a missing id as "every feature of this source", so the call matched nothing and cleared nothing, without an error. A `stateKey` with no `featureId` now raises the same `INVALID_ARGUMENT` as Android instead of being ignored (#889).
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
