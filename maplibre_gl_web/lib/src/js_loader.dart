@@ -13,7 +13,7 @@ import 'package:web/web.dart' as web;
 /// package is written against one specific build, so which build ships must
 /// only change together with a review of that interop, not because the CDN
 /// resolved a range to something newer.
-const kMapLibreJsVersion = '6.1.0';
+const kMapLibreJsVersion = '6.2.0';
 
 /// Thrown when maplibre-gl-js cannot be brought onto the page, whether the
 /// injected script fails or times out, or a preloaded page never provides the
