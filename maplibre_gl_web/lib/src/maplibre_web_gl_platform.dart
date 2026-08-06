@@ -400,6 +400,35 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) {
+    // maplibre-gl-js has no location component, so there is no tracking-aware
+    // camera call to route this to, and neither of the two things that follow the
+    // user on web can be pitched while they do it:
+    //
+    //  * `GeolocateControl` gives up its follow lock on any programmatic camera
+    //    change it did not make itself, firing `trackuserlocationend`, which this
+    //    class forwards as `onCameraTrackingChanged(none)` plus
+    //    `onCameraTrackingDismissed`. Swallowing those events would be worse than
+    //    throwing: the control really has stopped following the user by then.
+    //  * the manual puck ([ManualLocationPuck]) recenters with `jumpTo` on every
+    //    fix, which would keep a pitch, but only manual-source maps have one.
+    //
+    // Failing follows the same call the plugin makes for feature state on iOS: a
+    // capability the platform's engine does not have is reported, not silently
+    // dropped.
+    throw UnsupportedError(
+      'setTrackingCameraOptions is not available on web because maplibre-gl-js '
+      'has no location component, and its GeolocateControl stops following the '
+      'user on any programmatic camera change. Tracking camera options are '
+      'supported on Android and iOS. A pitch set before tracking starts does '
+      'survive on web, since the control never writes the pitch itself.',
+    );
+  }
+
+  @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
     // On web, manual mode renders its own puck (no native engine, no
     // GeolocateControl); see [ManualLocationPuck]. The wire payload uses
