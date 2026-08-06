@@ -403,7 +403,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool> setTrackingCameraOptions({
     required double tilt,
     Duration? duration,
-  }) {
+  }) async {
     // maplibre-gl-js has no location component, so there is no tracking-aware
     // camera call to route this to, and neither of the two things that follow the
     // user on web can be pitched while they do it:

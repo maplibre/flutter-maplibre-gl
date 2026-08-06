@@ -8,10 +8,12 @@ void main() {
   group('MethodChannel Camera', () {
     late MapLibreMethodChannel platform;
     late List<MethodCall> methodCalls;
+    late Object? trackingCameraReply;
 
     setUp(() async {
       platform = MapLibreMethodChannel();
       methodCalls = [];
+      trackingCameraReply = true;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
@@ -39,6 +41,8 @@ void main() {
                   return true;
                 case 'camera#ease':
                   return true;
+                case 'locationComponent#setTrackingCameraOptions':
+                  return trackingCameraReply;
                 default:
                   return null;
               }
@@ -134,6 +138,51 @@ void main() {
       expect(result.tilt, 30.0);
       expect(result.zoom, 15.0);
     });
+
+    test('setTrackingCameraOptions sends tilt and duration', () async {
+      final result = await platform.setTrackingCameraOptions(
+        tilt: 45.0,
+        duration: const Duration(milliseconds: 250),
+      );
+
+      expect(methodCalls.length, 1);
+      expect(
+        methodCalls[0].method,
+        'locationComponent#setTrackingCameraOptions',
+      );
+      final args = methodCalls[0].arguments as Map;
+      expect(args['tilt'], 45.0);
+      expect(args['duration'], 250);
+      expect(result, isTrue);
+    });
+
+    test(
+      'setTrackingCameraOptions sends a null duration when omitted',
+      () async {
+        await platform.setTrackingCameraOptions(tilt: 30.0);
+
+        final args = methodCalls[0].arguments as Map;
+        expect(args['tilt'], 30.0);
+        // Absent rather than zero: each platform picks its own default duration.
+        expect(args['duration'], isNull);
+      },
+    );
+
+    test('setTrackingCameraOptions reports a cancelled animation', () async {
+      trackingCameraReply = false;
+
+      expect(await platform.setTrackingCameraOptions(tilt: 45.0), isFalse);
+    });
+
+    test(
+      'setTrackingCameraOptions treats a null reply as not applied',
+      () async {
+        // An older native side that does not answer must not read as success.
+        trackingCameraReply = null;
+
+        expect(await platform.setTrackingCameraOptions(tilt: 45.0), isFalse);
+      },
+    );
 
     test(
       'updateMapOptions passes options and returns CameraPosition',
