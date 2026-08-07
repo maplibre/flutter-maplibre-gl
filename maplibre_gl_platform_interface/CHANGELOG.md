@@ -10,6 +10,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, which is what routes `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
 * `setFeatureState`, `removeFeatureState` and `getFeatureState` are forwarded over the channel instead of throwing `UnimplementedError`, so feature state works on Android. iOS throws an `UnsupportedError` naming the platform (#889).
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does, so nested properties survive the channel (#896).
+* `setTrackingCameraOptions` on `MapLibrePlatform`, forwarded over the channel as `locationComponent#setTrackingCameraOptions` with a `tilt` and an optional `duration`. It answers with whether the pitch animation ran (#888).
 ### Fixed
 * A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode; smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
 

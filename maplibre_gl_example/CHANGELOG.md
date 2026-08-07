@@ -2,6 +2,7 @@
 
 ### Changed
 * The Cluster example zooms to a tapped cluster's real expansion zoom, and reports its point, child and leaf counts (#896).
+* The GPS Location Tracking example carries a tilt slider that pitches the camera without ending tracking (#888).
 
 ## 0.26.0
 

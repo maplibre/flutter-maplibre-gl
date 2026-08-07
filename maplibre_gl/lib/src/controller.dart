@@ -967,6 +967,54 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Pitches the camera without giving up the active tracking mode, for a
+  /// navigation-style view that keeps following the user while tilted.
+  ///
+  /// [tilt] is the pitch in degrees, from 0 (straight down) to 60, the maximum
+  /// both native SDKs allow. [duration] animates the change; each platform
+  /// picks its own default when it is omitted.
+  ///
+  /// The regular camera calls ([animateCamera], [easeCamera], [moveCamera]) are
+  /// not tracking-aware: on Android they end tracking outright, so the map stops
+  /// following the user and [MapLibreMap.onCameraTrackingChanged] reports
+  /// [MyLocationTrackingMode.none]. This call goes through the tracking machinery
+  /// instead, so the mode stays active, later location updates keep moving the
+  /// camera, and no dismissal is reported.
+  ///
+  /// A tracking mode other than [MyLocationTrackingMode.none] must already be
+  /// active, otherwise this throws a [PlatformException]; enable tracking first,
+  /// then set the tilt.
+  ///
+  /// **Platform support**: Android and iOS. Web throws an [UnsupportedError]:
+  /// maplibre-gl-js has no location component, and its `GeolocateControl` gives
+  /// up following the user on any programmatic camera change, so there is no way
+  /// to pitch a tracking camera there. A pitch set *before* tracking starts does
+  /// survive on web, since the control never writes the pitch itself.
+  ///
+  /// The returned [Future] completes with true once the pitch animation has run,
+  /// or false if the platform cancelled it, either because another
+  /// tracking-camera animation superseded it or because the tracking mode was
+  /// still transitioning.
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) async {
+    if (tilt.isNaN || tilt < 0 || tilt > 60) {
+      throw ArgumentError.value(
+        tilt,
+        'tilt',
+        'must be between 0 and 60 degrees',
+      );
+    }
+    if (duration != null && duration.isNegative) {
+      throw ArgumentError.value(duration, 'duration', 'must not be negative');
+    }
+    return _maplibrePlatform.setTrackingCameraOptions(
+      tilt: tilt,
+      duration: duration,
+    );
+  }
+
   /// Updates the language of the map labels to match the device's language.
   ///
   /// The returned [Future] completes after the change has been made on the
@@ -1691,6 +1739,10 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features in a Rect in screen coordinates
+  ///
+  /// Unlike [queryRenderedFeatures], which takes the filter expression itself,
+  /// [filter] is that expression encoded as a JSON string, for example
+  /// `'["==", "type", "park"]'`.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,

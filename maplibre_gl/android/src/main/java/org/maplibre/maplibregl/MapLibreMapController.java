@@ -175,6 +175,14 @@ final class MapLibreMapController
         OnCameraTrackingChangedListener,
         PlatformView {
   private static final String TAG = "MapLibreMapController";
+
+  /**
+   * Duration used for {@code locationComponent#setTrackingCameraOptions} when Dart
+   * sends none. Mirrors the SDK's own {@code DEFAULT_TRACKING_TILT_ANIM_DURATION},
+   * which is package-private, so the callback-taking overload cannot reuse it.
+   */
+  private static final long DEFAULT_TRACKING_TILT_DURATION_MS = 1250;
+
   private final int id;
   private final MethodChannel methodChannel;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
@@ -1534,8 +1542,18 @@ final class MapLibreMapController
 
           String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
 
-          List<Object> filter = call.argument("filter");
-          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          // queryRenderedFeatures sends the filter as a list, while
+          // queryRenderedFeaturesInRect sends the same expression already
+          // encoded as a JSON string. Reading only the list shape dropped the
+          // filter for the rect call, which then answered with every feature
+          // in the rectangle.
+          Object filter = call.argument("filter");
+          JsonElement jsonElement = null;
+          if (filter instanceof String) {
+            jsonElement = JsonParser.parseString((String) filter);
+          } else if (filter != null) {
+            jsonElement = new Gson().toJsonTree(filter);
+          }
           JsonArray jsonArray = null;
           if (jsonElement != null && jsonElement.isJsonArray()) {
             jsonArray = jsonElement.getAsJsonArray();
@@ -2297,6 +2315,62 @@ final class MapLibreMapController
           } else {
             result.error("LOCATION_DISABLED",
                 "Location is disabled or location component is unavailable", null);
+          }
+          break;
+        }
+        // Pitches the camera through the location component instead of the regular
+        // camera API. MapLibreMap#animateCamera and friends notify the SDK's
+        // developer-animation listeners, which the location component answers by
+        // dropping to CameraMode.NONE, so a plain camera call would end tracking and
+        // report a dismissal. LocationComponent#tiltWhileTracking feeds the same
+        // animator that drives tracking, so the camera mode is left alone.
+      case "locationComponent#setTrackingCameraOptions":
+        {
+          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+            result.error(
+                "LOCATION_COMPONENT_NOT_READY",
+                "The location component is not ready. Ensure the map was created with "
+                    + "myLocationEnabled: true.",
+                null);
+            break;
+          }
+          if (locationComponent.getCameraMode() == CameraMode.NONE) {
+            result.error(
+                "TRACKING_NOT_ACTIVE",
+                "A tracking mode other than MyLocationTrackingMode.none must be active "
+                    + "before a tracking camera option can be applied.",
+                null);
+            break;
+          }
+          final Object tilt = call.argument("tilt");
+          if (!(tilt instanceof Number)) {
+            result.error("INVALID_ARGUMENT", "Missing or invalid 'tilt'.", null);
+            break;
+          }
+          final Object duration = call.argument("duration");
+          final MapLibreMap.CancelableCallback callback =
+              new MapLibreMap.CancelableCallback() {
+                @Override
+                public void onCancel() {
+                  // Either superseded by a newer tracking-camera animation, or refused
+                  // because the camera mode was still transitioning. The tilt is not
+                  // guaranteed to have been applied, so report that rather than success.
+                  result.success(false);
+                }
+
+                @Override
+                public void onFinish() {
+                  result.success(true);
+                }
+              };
+          if (duration instanceof Number) {
+            locationComponent.tiltWhileTracking(
+                ((Number) tilt).doubleValue(), ((Number) duration).longValue(), callback);
+          } else {
+            // Three-argument overload only; the two-argument one takes no callback, and
+            // the SDK's own default duration is not public.
+            locationComponent.tiltWhileTracking(
+                ((Number) tilt).doubleValue(), DEFAULT_TRACKING_TILT_DURATION_MS, callback);
           }
           break;
         }

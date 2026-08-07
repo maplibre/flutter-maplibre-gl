@@ -71,6 +71,65 @@ void main() {
       expect(calls.first.namedArgs['duration'], const Duration(seconds: 1));
     });
 
+    test('setTrackingCameraOptions delegates to platform', () async {
+      final applied = await controller.setTrackingCameraOptions(
+        tilt: 45,
+        duration: const Duration(milliseconds: 250),
+      );
+
+      final calls = platform.callsFor('setTrackingCameraOptions');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['tilt'], 45.0);
+      expect(
+        calls.first.namedArgs['duration'],
+        const Duration(milliseconds: 250),
+      );
+      expect(applied, isTrue);
+    });
+
+    test('setTrackingCameraOptions passes a null duration through', () async {
+      await controller.setTrackingCameraOptions(tilt: 0);
+
+      final calls = platform.callsFor('setTrackingCameraOptions');
+      expect(calls.first.namedArgs['duration'], isNull);
+    });
+
+    test('setTrackingCameraOptions reports a cancelled animation', () async {
+      platform.trackingCameraOptionsResult = false;
+
+      expect(await controller.setTrackingCameraOptions(tilt: 45), isFalse);
+    });
+
+    test('setTrackingCameraOptions rejects a tilt out of range', () async {
+      // 60 degrees is the maximum pitch both native SDKs allow.
+      for (final tilt in <double>[-1, 60.5, double.nan]) {
+        expect(
+          () => controller.setTrackingCameraOptions(tilt: tilt),
+          throwsArgumentError,
+          reason: 'tilt $tilt should be rejected',
+        );
+      }
+      expect(platform.wasCalled('setTrackingCameraOptions'), isFalse);
+    });
+
+    test('setTrackingCameraOptions accepts the range boundaries', () async {
+      await controller.setTrackingCameraOptions(tilt: 0);
+      await controller.setTrackingCameraOptions(tilt: 60);
+
+      expect(platform.callsFor('setTrackingCameraOptions').length, 2);
+    });
+
+    test('setTrackingCameraOptions rejects a negative duration', () async {
+      expect(
+        () => controller.setTrackingCameraOptions(
+          tilt: 45,
+          duration: const Duration(milliseconds: -1),
+        ),
+        throwsArgumentError,
+      );
+      expect(platform.wasCalled('setTrackingCameraOptions'), isFalse);
+    });
+
     test('queryCameraPosition delegates to platform', () async {
       final result = await controller.queryCameraPosition();
 

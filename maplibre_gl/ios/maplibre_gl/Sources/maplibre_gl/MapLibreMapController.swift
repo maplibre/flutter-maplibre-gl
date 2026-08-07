@@ -37,6 +37,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var locationPulseWindowMs: Int = MapLibreMapController.defaultPulseWindowMs
     static let defaultPulseWindowMs: Int = 5000
 
+    /// Duration used for `locationComponent#setTrackingCameraOptions` when Dart sends
+    /// none. Matches the MapLibre Android location component's own tilt-while-tracking
+    /// default, so the two platforms animate alike.
+    static let defaultTrackingTiltDurationMs: Int = 1250
+
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
     private var userFps: MLNMapViewPreferredFramesPerSecond = .default
@@ -350,6 +355,62 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                         details: nil
                     )
                 )
+            }
+        case "locationComponent#setTrackingCameraOptions":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let tilt = (arguments["tilt"] as? NSNumber)?.doubleValue
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'tilt'.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            // Same precondition Android checks, and the same error code: without the
+            // user-location component there is nothing to track, and telling the app
+            // to enable a tracking mode would not be the fix.
+            guard mapView.showsUserLocation else {
+                result(
+                    FlutterError(
+                        code: "LOCATION_COMPONENT_NOT_READY",
+                        message: "The location component is not ready. Ensure the map was "
+                            + "created with myLocationEnabled: true.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard mapView.userTrackingMode != .none else {
+                result(
+                    FlutterError(
+                        code: "TRACKING_NOT_ACTIVE",
+                        message: "A tracking mode other than MyLocationTrackingMode.none "
+                            + "must be active before a tracking camera option can be applied.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            // The iOS SDK has no tracking-aware camera call, so the pitch goes through
+            // the ordinary camera. That is safe on the pinned SDK:
+            // `setCamera(_:withDuration:...)` leaves `userTrackingMode` alone, and the
+            // follow paths (`didUpdateLocationIncrementallyDuration:`,
+            // `didUpdateLocationSignificantlyAnimated:`) never write the pitch, so the
+            // camera keeps following the user tilted. Nothing is restored afterwards on
+            // purpose: a mode change arriving during the animation is the user panning,
+            // and putting the mode back would fight the gesture and hide the dismissal.
+            let camera = mapView.camera
+            camera.pitch = CGFloat(tilt)
+            let durationMs = (arguments["duration"] as? NSNumber)?.doubleValue
+            mapView.setCamera(
+                camera,
+                withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
+                animationTimingFunction: nil
+            ) {
+                result(true)
             }
         case "locationComponent#setManualLocation":
             guard manualLocationSource else {
