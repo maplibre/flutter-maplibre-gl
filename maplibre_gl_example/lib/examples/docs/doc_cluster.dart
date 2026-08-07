@@ -150,7 +150,8 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
     );
     if (features.isEmpty) return;
 
-    final properties = features.first['properties'] as Map?;
+    final feature = features.first as Map;
+    final properties = feature['properties'] as Map?;
     // cluster_id arrives as a num: an int from the native channels, a double
     // from the JS interop on web.
     final clusterId = (properties?['cluster_id'] as num?)?.toInt();
@@ -170,11 +171,19 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
     );
     final children = await ctrl.getClusterChildren(_sourceId, clusterId);
 
-    // Nudge past the expansion zoom so the split is visibly complete. The tap
-    // position stands in for the cluster centre, which is close enough here and
-    // avoids reading the geometry back out of the queried feature.
+    // Centre on the cluster itself and go to exactly the zoom it splits at,
+    // like the MapLibre GL JS cluster example. The tap can land well off the
+    // centre of a big bubble, which would leave the split half off screen.
+    final coordinatesOfCluster = (feature['geometry'] as Map?)?['coordinates'];
+    final target =
+        coordinatesOfCluster is List && coordinatesOfCluster.length >= 2
+            ? LatLng(
+              (coordinatesOfCluster[1] as num).toDouble(),
+              (coordinatesOfCluster[0] as num).toDouble(),
+            )
+            : coordinates;
     await ctrl.animateCamera(
-      CameraUpdate.newLatLngZoom(coordinates, expansionZoom + 0.4),
+      CameraUpdate.newLatLngZoom(target, expansionZoom.toDouble()),
       duration: const Duration(milliseconds: 600),
     );
 
@@ -200,6 +209,10 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
             styleString: ExampleConstants.demoMapStyle,
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
+            // The cluster circles are an interactive layer, so a tap on one is
+            // delivered as a feature tap and onMapClick stays silent by
+            // default: exactly the taps this example needs to hear about.
+            featureTapsTriggersMapClick: true,
             onMapClick: _onMapClick,
             initialCameraPosition: const CameraPosition(
               target: _initialTarget,

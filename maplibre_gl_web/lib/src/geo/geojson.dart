@@ -86,7 +86,11 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
 class Geometry extends JsObjectWrapper<GeometryJsImpl> {
   String get type => utils.dartify(jsObject.type) as String;
 
-  dynamic get coordinates => jsObject.coordinates;
+  /// Dartified on the way out: this value is handed to app code through the
+  /// query replies, and a raw JS array only behaves like a Dart List when
+  /// compiling to JavaScript. Under dart2wasm it stays a JSAny, which the app
+  /// cannot index.
+  dynamic get coordinates => utils.dartify(jsObject.coordinates);
 
   factory Geometry({
     String? type,

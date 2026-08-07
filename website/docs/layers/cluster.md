@@ -121,16 +121,33 @@ Future<void> onTap(math.Point<double> point, LatLng coordinates) async {
   );
   if (features.isEmpty) return;
 
-  final properties = features.first['properties'] as Map?;
+  final feature = features.first as Map;
+  final properties = feature['properties'] as Map?;
   // A num: an int from the native channels, a double from the JS interop on web.
   final clusterId = (properties?['cluster_id'] as num?)?.toInt();
   if (clusterId == null) return;
 
   final zoom = await controller.getClusterExpansionZoom('events', clusterId);
+  // Centre on the cluster rather than on the tap: on a large bubble the two
+  // are far enough apart to leave the split half off screen.
+  final coords = (feature['geometry'] as Map)['coordinates'] as List;
   await controller.animateCamera(
-    CameraUpdate.newLatLngZoom(coordinates, zoom + 0.4),
+    CameraUpdate.newLatLngZoom(
+      LatLng((coords[1] as num).toDouble(), (coords[0] as num).toDouble()),
+      zoom.toDouble(),
+    ),
   );
 }
+```
+
+Wiring that up needs one extra option. Layers are interactive by default, so a tap that lands on a cluster circle is reported as a feature tap, and `onMapClick` is not called at all: the handler above would never run.
+
+```dart
+MapLibreMap(
+  featureTapsTriggersMapClick: true, // otherwise cluster taps never reach onMapClick
+  onMapClick: onTap,
+  // ...
+)
 ```
 
 ```dart
