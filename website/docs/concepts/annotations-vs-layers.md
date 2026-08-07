@@ -10,14 +10,14 @@ This is the most important conceptual distinction in flutter-maplibre-gl. The li
     <tr><th>Capability</th><th>Annotations</th><th>Style Layers</th></tr>
   </thead>
   <tbody>
-    <tr><td>API</td><td><code>addSymbol()</code>, <code>addCircle()</code>, <code>addFill()</code>, <code>addLine()</code></td><td><code>addGeoJsonSource()</code> + <code>addSymbolLayer()</code> etc.</td></tr>
+    <tr><td>API</td><td><code>addSymbol()</code>, <code>addCircle()</code>, <code>addFill()</code>, <code>addLine()</code></td><td><code>addGeoJsonSource()</code> (or <code>addSource()</code>) + <code>addSymbolLayer()</code> etc.</td></tr>
     <tr><td>Complexity</td><td>Low</td><td>Medium</td></tr>
     <tr><td>Max features</td><td>~hundreds</td><td>100,000+</td></tr>
     <tr><td>Data-driven styling</td><td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes (expressions)</span></td></tr>
-    <tr><td>Tap callbacks</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Manual (<code>queryRenderedFeatures</code>)</span></td></tr>
-    <tr><td>Draggable</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Via onFeatureDrag</span></td></tr>
+    <tr><td>Tap callbacks</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in (typed annotation)</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in (<code>onFeatureTapped</code>, id + layer id)</span></td></tr>
+    <tr><td>Draggable</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> <code>draggable: true</code>, geometry moved for you</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> <code>draggable</code> feature property, you move the data</span></td></tr>
     <tr><td>Clustering</td><td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td></tr>
-    <tr><td>Live update</td><td><code>updateSymbol()</code></td><td><code>setGeoJsonSource()</code></td></tr>
+    <tr><td>Live update</td><td><code>updateSymbol()</code></td><td><code>setGeoJsonFeature()</code> / <code>setGeoJsonSource()</code></td></tr>
     <tr><td><strong>Best for</strong></td><td>A few interactive pins</td><td>Datasets, heatmaps, clusters</td></tr>
   </tbody>
 </table>
@@ -234,9 +234,21 @@ this list.
 - **Annotation managers own hidden layers too.** They add their own sources and
   layers with generated ids, so do not assume your layer sits on top when you
   mix both APIs. Use `belowLayerId` to place your layer explicitly.
-- **No built-in tap callbacks.** Add the layer with `enableInteraction: true`
-  and listen to `onFeatureTapped`, or query the map yourself with
-  `queryRenderedFeatures()`.
+- **Tap callbacks hand you ids, not objects.** Layers added with
+  `enableInteraction: true` (the default) are hit-tested on tap and fire
+  `onFeatureTapped` with the feature id, the layer id and `annotation == null`.
+  The payload carries no properties and the id is the GeoJSON feature's own
+  `id`, so features without one cannot be told apart: look them up in your own
+  data, or call `queryRenderedFeatures()` when you need the properties. Only the
+  topmost feature of the topmost interactive layer is reported.
+- **Dragging needs an opt-in on the data, and you own the move.** A feature is
+  draggable only if its properties carry `"draggable": true`; `onFeatureDrag`
+  then reports start, drag and end with the coordinates, but nothing moves on
+  screen until you write the new position back into the source. See
+  [Draggable](../annotations/draggable.md#dragging-style-layer-features-too).
+- **Clustering is a source setting.** `addGeoJsonSource()` cannot enable it: use
+  `addSource()` with `GeojsonSourceProperties(cluster: true)`. See
+  [Clustering](../layers/cluster.md).
 - **Expressions fail quietly.** A malformed expression usually renders nothing
   rather than throwing. Check the native logs when a layer stays invisible.
 - **You own the data.** There are no per-feature handles: to change one feature
@@ -251,7 +263,7 @@ this list.
 #### Start with Annotations when
 
 - You have fewer than ~50 features
-- Each feature needs a tap callback
+- You want taps to hand you the feature object, not just an id
 - Features need to be individually draggable
 - You need quick prototyping
 
