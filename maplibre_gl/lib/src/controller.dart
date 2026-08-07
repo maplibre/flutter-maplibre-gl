@@ -1730,6 +1730,10 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1743,6 +1747,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// Unlike [queryRenderedFeatures], which takes the filter expression itself,
   /// [filter] is that expression encoded as a JSON string, for example
   /// `'["==", "type", "park"]'`.
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
@@ -1761,6 +1769,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// regardless of whether they are currently rendered by the current style.
   ///
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,

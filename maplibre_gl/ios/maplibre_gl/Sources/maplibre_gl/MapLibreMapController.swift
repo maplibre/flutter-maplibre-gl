@@ -463,33 +463,65 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(nil)
         case "map#queryRenderedFeatures":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "queryRenderedFeatures needs a map of arguments.",
+                    details: nil
+                ))
+                return
+            }
             var styleLayerIdentifiers: Set<String>?
             if let layerIds = arguments["layerIds"] as? [String], !layerIds.isEmpty {
                 styleLayerIdentifiers = Set<String>(layerIds)
             }
+            // queryRenderedFeatures sends the filter as a JSON array,
+            // queryRenderedFeaturesInRect as the same expression already
+            // encoded as a JSON string. Reading only one of the two shapes
+            // would drop the filter without telling the caller.
             var filterExpression: NSPredicate?
             if let filter = arguments["filter"] as? [Any] {
                 filterExpression = NSPredicate(mglJSONObject: filter)
+            } else if let filter = arguments["filter"] as? String,
+                      let data = filter.data(using: .utf8),
+                      let jsonFilter = try? JSONSerialization.jsonObject(
+                          with: data,
+                          options: .fragmentsAllowed
+                      ),
+                      !(jsonFilter is NSNull)
+            {
+                filterExpression = NSPredicate(mglJSONObject: jsonFilter)
             }
             var features: [MLNFeature] = []
+            // The Dart-side name of the call, for anything reported back.
+            var queryName = "queryRenderedFeatures"
             if let x = arguments["x"] as? Double, let y = arguments["y"] as? Double {
                 features = mapView.visibleFeatures(
                     at: CGPoint(x: x, y: y),
                     styleLayerIdentifiers: styleLayerIdentifiers,
                     predicate: filterExpression
                 )
-            }
-            if let top = arguments["top"] as? Double,
-               let bottom = arguments["bottom"] as? Double,
-               let left = arguments["left"] as? Double,
-               let right = arguments["right"] as? Double
+            } else if let top = arguments["top"] as? Double,
+                      let bottom = arguments["bottom"] as? Double,
+                      let left = arguments["left"] as? Double,
+                      let right = arguments["right"] as? Double
             {
-                var width = right - left
-                var height = bottom - top
+                queryName = "queryRenderedFeaturesInRect"
+                let width = right - left
+                let height = bottom - top
                 features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
+            } else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "queryRenderedFeatures needs either 'x' and 'y', or "
+                        + "'left', 'top', 'right' and 'bottom', as numbers. "
+                        + "Answering with an empty list would look like a query "
+                        + "that found nothing.",
+                    details: nil
+                ))
+                return
             }
-            result(featuresReply(features, methodName: "queryRenderedFeatures"))
+            result(featuresReply(features, methodName: queryName))
         case "map#setTelemetryEnabled":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             let telemetryEnabled = arguments["enabled"] as? Bool
@@ -1329,8 +1361,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "map#querySourceFeatures":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "querySourceFeatures needs a 'sourceId' string.",
+                    details: nil
+                ))
+                return
+            }
 
             var sourceLayerId = Set<String>()
             if let layerId = arguments["sourceLayerId"] as? String {
@@ -1343,7 +1383,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             var features: [MLNFeature] = []
 
-            guard let style = mapView.style else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
             if let source = style.source(withIdentifier: sourceId) {
                 if let vectorSource = source as? MLNVectorTileSource {
                     features = vectorSource.features(sourceLayerIdentifiers: sourceLayerId, predicate: filterExpression)
@@ -2388,24 +2431,32 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         methodName: String
     ) -> Any {
         var featuresJson = [String]()
-        for feature in features {
-            guard let data = try? JSONSerialization.data(
-                withJSONObject: feature.geoJSONDictionary(),
-                options: []
-            ),
-                let json = String(data: data, encoding: .utf8)
+        for (index, feature) in features.enumerated() {
+            let dictionary = feature.geoJSONDictionary()
+            // JSONSerialization raises an Objective-C exception, which Swift
+            // cannot catch, for an object it considers invalid: a non-finite
+            // coordinate, or an attribute of a type it does not write. Asking
+            // first is what turns that trap into the error below.
+            guard JSONSerialization.isValidJSONObject(dictionary),
+                  let json = jsonString(from: dictionary)
             else {
+                let identifier = feature.identifier ?? "none"
+                let details: String = "Feature at index \(index) of "
+                    + "\(features.count), id \(identifier), is not valid JSON: "
+                    + "it holds a non-finite number, or a value of a type JSON "
+                    + "cannot carry. The \(featuresJson.count) features before "
+                    + "it encoded fine."
                 return FlutterError(
                     code: "FEATURE_ENCODING_FAILED",
                     message: "\(methodName) could not encode one of the features "
                         + "it found as GeoJSON, so the result would have been "
                         + "incomplete without saying so.",
-                    details: nil
+                    details: details
                 )
             }
             featuresJson.append(json)
         }
-        return ["features": featuresJson as NSObject] as NSObject
+        return ["features": featuresJson]
     }
 
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {
