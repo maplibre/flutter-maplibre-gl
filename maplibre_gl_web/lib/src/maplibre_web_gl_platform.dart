@@ -750,6 +750,79 @@ class MapLibreMapController extends MapLibrePlatform
         .toList();
   }
 
+  /// Resolves the GeoJSON source a cluster-inspection call addresses.
+  GeoJsonSource _clusterSource(String sourceId, String methodName) {
+    final source = _map.getSource(sourceId);
+    if (source == null) {
+      throw PlatformException(
+        code: 'SOURCE_NOT_FOUND',
+        message: "Source '$sourceId' does not exist in the current style.",
+      );
+    }
+    if (source is! GeoJsonSource || !source.hasClusterInspection) {
+      throw PlatformException(
+        code: 'UNSUPPORTED_SOURCE_TYPE',
+        message:
+            "Source '$sourceId' is not a GeoJSON source. $methodName only "
+            'applies to clustered GeoJSON sources.',
+      );
+    }
+    return source;
+  }
+
+  /// Reports a rejected cluster query as a [PlatformException].
+  ///
+  /// maplibre-gl-js rejects when the source is not clustered or the id is
+  /// unknown, where Android and iOS answer 0 or an empty list instead. The
+  /// rejection carries a bare JS error, so it is named here rather than
+  /// surfacing untyped.
+  Future<T> _clusterQuery<T>(String methodName, Future<T> Function() query) {
+    return query().catchError((Object error) {
+      throw PlatformException(
+        code: 'CLUSTER_QUERY_FAILED',
+        message:
+            '$methodName failed. The source is probably not clustered, or the '
+            'cluster id is not one of its current clusters.',
+        details: error.toString(),
+      );
+    });
+  }
+
+  @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) {
+    final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
+    return _clusterQuery(
+      'getClusterExpansionZoom',
+      () => source.getClusterExpansionZoom(clusterId),
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) {
+    final source = _clusterSource(sourceId, 'getClusterChildren');
+    return _clusterQuery(
+      'getClusterChildren',
+      () => source.getClusterChildren(clusterId),
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) {
+    final source = _clusterSource(sourceId, 'getClusterLeaves');
+    return _clusterQuery(
+      'getClusterLeaves',
+      () => source.getClusterLeaves(clusterId, limit, offset),
+    );
+  }
+
   @override
   Future invalidateAmbientCache() async {
     print('Offline storage not available in web');

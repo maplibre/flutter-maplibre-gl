@@ -262,6 +262,53 @@ void main() {
     });
   });
 
+  group('Cluster inspection delegation', () {
+    test('getClusterExpansionZoom delegates to platform', () async {
+      platform.clusterExpansionZoom = 11;
+
+      final zoom = await controller.getClusterExpansionZoom('events', 42);
+
+      final calls = platform.callsFor('getClusterExpansionZoom');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['events', 42]);
+      expect(zoom, 11);
+    });
+
+    test('getClusterChildren delegates to platform', () async {
+      platform.clusterFeatures = [
+        {
+          'type': 'Feature',
+          'properties': {'cluster_id': 7},
+        },
+      ];
+
+      final children = await controller.getClusterChildren('events', 42);
+
+      final calls = platform.callsFor('getClusterChildren');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['events', 42]);
+      expect(children, platform.clusterFeatures);
+    });
+
+    test('getClusterLeaves defaults limit to 10 and offset to 0', () async {
+      await controller.getClusterLeaves('events', 42);
+
+      final calls = platform.callsFor('getClusterLeaves');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['events', 42]);
+      expect(calls.first.namedArgs['limit'], 10);
+      expect(calls.first.namedArgs['offset'], 0);
+    });
+
+    test('getClusterLeaves forwards limit and offset', () async {
+      await controller.getClusterLeaves('events', 42, limit: 50, offset: 100);
+
+      final calls = platform.callsFor('getClusterLeaves');
+      expect(calls.first.namedArgs['limit'], 50);
+      expect(calls.first.namedArgs['offset'], 100);
+    });
+  });
+
   group('Snapshot delegation', () {
     test(
       'takeSnapshot captures current view when no dimensions given',

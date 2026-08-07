@@ -525,8 +525,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   List<Map<String, dynamic>> _decodeFeatures(dynamic reply) {
     final features = (reply as Map?)?['features'] as List? ?? const [];
     return features
-        .map((feature) => (jsonDecode(feature as String) as Map)
-            .cast<String, dynamic>())
+        .map(
+          (feature) =>
+              (jsonDecode(feature as String) as Map).cast<String, dynamic>(),
+        )
         .toList();
   }
 
