@@ -21,6 +21,14 @@ dynamic dartify(Object? jsObject) {
     if (jsObject.isA<JSString>()) {
       return (jsObject as JSString).toDart;
     }
+
+    // Handle a JS array. Asking the JS side rather than relying on the Dart
+    // check below, which only answers true when compiling to JavaScript: there
+    // a JS array is a Dart List, while under dart2wasm it is a boxed JSValue
+    // that would fall through to dartifyMap and come back as {'0': ...}.
+    if (jsObject.isA<JSArray>()) {
+      return (jsObject as JSArray).toDart.map(dartify).toList();
+    }
   }
 
   // Handle list

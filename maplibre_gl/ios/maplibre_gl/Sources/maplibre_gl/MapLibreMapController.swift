@@ -409,8 +409,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 camera,
                 withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
                 animationTimingFunction: nil
-            ) {
-                result(true)
+            ) { [weak self] in
+                // The completion runs both when the animation finishes and when it is
+                // interrupted, with no flag telling the two apart, so the pitch that
+                // actually landed decides the answer. Android reports a cancelled tilt
+                // as false the same way, and the Dart API promises that.
+                guard let self = self else {
+                    result(false)
+                    return
+                }
+                result(abs(self.mapView.camera.pitch - CGFloat(tilt)) < 0.5)
             }
         case "locationComponent#setManualLocation":
             guard manualLocationSource else {

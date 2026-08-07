@@ -508,7 +508,15 @@ class Camera extends Evented {
     } else {
       optionsJs = options as JSAny;
     }
-    return MapLibreMap.fromJsObject(jsObject.easeTo(optionsJs));
+    // eventData was accepted and then dropped, so the properties a caller adds
+    // to the events this fires never reached them. Still omitted entirely when
+    // there is none, rather than passed as an explicit null.
+    final eventDataJs = utils.jsify(eventData);
+    return MapLibreMap.fromJsObject(
+      eventDataJs == null
+          ? jsObject.easeTo(optionsJs)
+          : jsObject.easeTo(optionsJs, eventDataJs),
+    );
   }
 
   ///  Changes any combination of center, zoom, bearing, and pitch, animating the transition along a curve that

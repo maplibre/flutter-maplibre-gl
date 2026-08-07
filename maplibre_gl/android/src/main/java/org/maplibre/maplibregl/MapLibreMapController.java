@@ -1315,6 +1315,14 @@ final class MapLibreMapController
         break;
       case "map#update":
         {
+          // Almost every option setter below goes through mapLibreMap, which is
+          // null while the MapView is being rebuilt after activity recreation.
+          // Answer like the map-touching cases do rather than reading it blind.
+          if (mapLibreMap == null) {
+            result.error(
+                "MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
+            break;
+          }
           Convert.interpretMapLibreMapOptions(call.argument("options"), this, context);
           result.success(Convert.toJson(getCameraPosition()));
           break;
@@ -1849,6 +1857,16 @@ final class MapLibreMapController
           final String sourceLayer = call.argument("sourceLayer");
           final String featureId = call.argument("featureId");
           final Map<String, Object> state = call.argument("state");
+          // Read blind these would surface as an IllegalStateException from Gson
+          // or a NullPointerException from the SDK, both reaching Dart as a bare
+          // "error" rather than something a caller can act on.
+          if (featureId == null || state == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "setFeatureState requires a 'featureId' and a 'state' map.",
+                null);
+            break;
+          }
           final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
           if (source == null) {
             break;
@@ -1954,6 +1972,13 @@ final class MapLibreMapController
         {
           final String sourceId = call.argument("sourceId");
           final Number clusterId = call.argument("clusterId");
+          if (clusterId == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "getClusterExpansionZoom requires an int 'clusterId'.",
+                null);
+            break;
+          }
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterExpansionZoom", result);
           if (source == null) {
@@ -1966,6 +1991,11 @@ final class MapLibreMapController
         {
           final String sourceId = call.argument("sourceId");
           final Number clusterId = call.argument("clusterId");
+          if (clusterId == null) {
+            result.error(
+                "INVALID_ARGUMENT", "getClusterChildren requires an int 'clusterId'.", null);
+            break;
+          }
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterChildren", result);
           if (source == null) {
@@ -1981,6 +2011,13 @@ final class MapLibreMapController
           final Number clusterId = call.argument("clusterId");
           final Number limit = call.argument("limit");
           final Number offset = call.argument("offset");
+          if (clusterId == null || limit == null || offset == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "getClusterLeaves requires an int 'clusterId', 'limit' and 'offset'.",
+                null);
+            break;
+          }
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterLeaves", result);
           if (source == null) {

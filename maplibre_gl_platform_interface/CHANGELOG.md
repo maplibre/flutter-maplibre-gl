@@ -2,6 +2,8 @@
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+The `MapLibrePlatform` members added below have no default implementation, so an external platform package, or a mock in tests, has to add them. Apps calling the API are unaffected.
+
 ### Added
 * `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning a layer's or source's properties as a style-spec map, or `null` for an unknown id (#513).
 * `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs`, forwarded to the iOS location engine so GPS can be pulsed instead of tracked continuously (#901).

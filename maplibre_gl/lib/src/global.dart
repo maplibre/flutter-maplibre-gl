@@ -110,6 +110,12 @@ Future<String?> getOfflineDatabasePath() async {
 ///
 /// Android and iOS only; throws [UnsupportedError] on web.
 Future<String?> exportOfflineDatabase(String destinationPath) async {
+  // Reject here rather than let the method channel answer first: on web that
+  // call fails with a MissingPluginException, which is not the error this
+  // documents and not one an app can tell apart from a broken registration.
+  if (kIsWeb) {
+    throw UnsupportedError('Offline database export is not available on web.');
+  }
   final dbPath = await getOfflineDatabasePath();
   if (dbPath == null) return null;
   return copyOfflineDatabase(dbPath, destinationPath);

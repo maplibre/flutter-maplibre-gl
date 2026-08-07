@@ -37,6 +37,7 @@ class MapLibreMapController extends MapLibrePlatform
   bool _myLocationEnabled = false;
   int _manualTrackingMode = 0;
   ManualLocationPuck? _manualPuck;
+  ManualLocationUpdate? _lastManualFix;
 
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
@@ -445,15 +446,15 @@ class MapLibreMapController extends MapLibrePlatform
     final speed = (map['speed'] as num?)?.toDouble();
     final timestampMs = map['timestamp'] as int;
 
+    // Kept so the puck can be restored at the last known position when
+    // myLocationEnabled is toggled off and on again, which disposes it.
+    _lastManualFix = update;
+
     // Move / render the puck when manual mode is active. The puck is created
     // lazily on the first fix (a maplibre Marker crashes if added without a
     // position), so this also builds it as needed.
     if (_manualLocationSource && _myLocationEnabled) {
-      _ensureManualPuck().update(
-        latLng,
-        accuracyMeters: horizontalAccuracy,
-        bearing: bearing,
-      );
+      _showManualPuck();
     }
 
     // Keep parity with the native platforms: manual updates ride the same
@@ -469,6 +470,19 @@ class MapLibreMapController extends MapLibrePlatform
         heading: null,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampMs),
       ),
+    );
+  }
+
+  /// Shows the puck at the last fix pushed via [setManualLocation], if there
+  /// has been one. No-op before the first fix, since a maplibre Marker cannot
+  /// be added without a position.
+  void _showManualPuck() {
+    final fix = _lastManualFix;
+    if (fix == null) return;
+    _ensureManualPuck().update(
+      fix.target,
+      accuracyMeters: fix.horizontalAccuracy,
+      bearing: fix.bearing,
     );
   }
 
@@ -1341,9 +1355,12 @@ class MapLibreMapController extends MapLibrePlatform
     _myLocationEnabled = myLocationEnabled;
     if (myLocationEnabled) {
       if (_manualLocationSource) {
-        // Never use the browser geolocation control in manual mode. The puck is
-        // (re)built lazily on the next fix pushed via setManualLocation.
+        // Never use the browser geolocation control in manual mode. Re-enabling
+        // replays the last fix so the puck comes back where it was, the way the
+        // native components do; without one it is built on the next fix pushed
+        // via setManualLocation.
         _removeGeolocateControl();
+        _showManualPuck();
       } else {
         _addGeolocateControl();
       }
@@ -2021,15 +2038,23 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
     // MapLibre GL JS expresses content insets as camera `padding`. easeTo with
     // a zero duration applies it immediately (the non-animated case).
-    _map.easeTo({
-      'padding': {
-        'top': insets.top,
-        'bottom': insets.bottom,
-        'left': insets.left,
-        'right': insets.right,
+    //
+    // The event data matters: GeolocateControl drops its follow lock on any
+    // movestart it did not cause, so padding a map for a bottom sheet would
+    // otherwise stop it following the user and report a tracking dismissal.
+    // Flagging the move the way the control flags its own keeps the lock.
+    _map.easeTo(
+      {
+        'padding': {
+          'top': insets.top,
+          'bottom': insets.bottom,
+          'left': insets.left,
+          'right': insets.right,
+        },
+        'duration': animated ? 300 : 0,
       },
-      'duration': animated ? 300 : 0,
-    });
+      {'geolocateSource': true},
+    );
   }
 
   @override
@@ -2165,7 +2190,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (layers is! List) return null;
     for (final layer in layers) {
       if (layer is Map && layer['id'] == layerId) {
-        return Map<String, dynamic>.from(layer);
+        return _styleShaped(layer);
       }
     }
     return null;
@@ -2177,7 +2202,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (sources is! Map) return null;
     final source = sources[sourceId];
     if (source is! Map) return null;
-    return Map<String, dynamic>.from(source);
+    return _styleShaped(source);
   }
 
   /// The current style as a Dart map (style-spec shaped), or null if unset.
@@ -2185,6 +2210,32 @@ class MapLibreMapController extends MapLibrePlatform
     final styleJs = _map.getStyle();
     if (styleJs == null) return null;
     return dartify(styleJs) as Map<String, dynamic>?;
+  }
+
+  /// A style entry in the shape Android and iOS answer with.
+  ///
+  /// JavaScript has one number type, so everything arrives here as a double,
+  /// while the native platforms send JSON that decodes `4` as an int. Without
+  /// this, `properties['minzoom'] as int` works on Android and iOS and throws
+  /// in the browser. Integral values become ints; genuinely fractional ones
+  /// (`0.5`, an opacity) stay doubles, exactly as `jsonDecode` would give them.
+  Map<String, dynamic> _styleShaped(Map<dynamic, dynamic> entry) => entry.map(
+    (key, dynamic value) => MapEntry(key.toString(), _styleShapedValue(value)),
+  );
+
+  static Object? _styleShapedValue(Object? value) {
+    if (value is double) {
+      return value.isFinite && value == value.roundToDouble()
+          ? value.toInt()
+          : value;
+    }
+    if (value is List) return value.map(_styleShapedValue).toList();
+    if (value is Map) {
+      return value.map(
+        (key, dynamic child) => MapEntry(key, _styleShapedValue(child)),
+      );
+    }
+    return value;
   }
 
   @override

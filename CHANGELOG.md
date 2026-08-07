@@ -5,7 +5,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
-**No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
+**No breaking API changes for apps**: nothing in an app stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
 The plugin also has a **documentation site** now, at [**maplibre.org/flutter-maplibre-gl**](https://maplibre.org/flutter-maplibre-gl/): guides for every part of the API, each with a live example you can pan and click, running the real plugin compiled for web.
 
 ### Actions needed
@@ -13,6 +13,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Android**: a map now survives its activity being destroyed and recreated, but your style content does not come back with it. Add sources, layers and images inside `onStyleLoadedCallback`, which fires again after every recreation, rather than in `onMapCreated` or `initState`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-style-content) (#805).
 * **Web**: the plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script tag and the `maplibre-gl.css` link tag from `web/index.html`: if they stay, your pinned copy silently overrides the version the plugin is tested against. Self-hosting and Content-Security-Policy setups are covered in the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-remove-the-script-and-stylesheet-tags) (#928).
 * **Web**: the engine moves to MapLibre GL JS 6, which requires WebGL2 and no longer falls back to WebGL1: a browser without it (Safari and iOS before 15) shows no map, and such an app has to point `MapLibreMap.webLibrarySource` at a version 5 build. Beyond that there is nothing to do unless you self-host the library or load it yourself, all covered in the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-the-engine-moves-to-maplibre-gl-js-6). Content-Security-Policy rules are unchanged. `queryRenderedFeatures` can return a different set of features, because version 6 slices vector tiles instead of overscaling them (#943).
+* **Packages implementing the platform interface**: `MapLibrePlatform` gained `setTrackingCameraOptions`, `setManualLocation`, `pauseMap`, `resumeMap`, `getClusterExpansionZoom`, `getClusterChildren`, `getClusterLeaves`, `getLayerProperties` and `getSourceProperties`, and `MapLibreMapOptionsSink` gained `setLocationSource` plus, on Android and iOS, `setAttributionButtonColor`. None of them have a default implementation, so anything implementing or extending those types, a third-party platform package or a mock in tests, has to add them. Apps are unaffected (#513, #840, #888, #889, #896).
 
 ### Added
 * `MapLibreMap.preWarm()` starts the map engine during app start-up, for apps whose first screen is a map. Saves roughly 170 to 480 ms on Android, 45 to 165 ms on iOS and 10 to 50 ms on web at the first map (#867).
