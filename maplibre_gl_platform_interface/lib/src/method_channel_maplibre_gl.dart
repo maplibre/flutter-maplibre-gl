@@ -481,6 +481,56 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    final zoom = await _channel.invokeMethod(
+      'source#getClusterExpansionZoom',
+      <String, Object?>{'sourceId': sourceId, 'clusterId': clusterId},
+    );
+    return zoom as int;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    final reply = await _channel.invokeMethod(
+      'source#getClusterChildren',
+      <String, Object?>{'sourceId': sourceId, 'clusterId': clusterId},
+    );
+    return _decodeFeatures(reply);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    final reply = await _channel.invokeMethod(
+      'source#getClusterLeaves',
+      <String, Object?>{
+        'sourceId': sourceId,
+        'clusterId': clusterId,
+        'limit': limit,
+        'offset': offset,
+      },
+    );
+    return _decodeFeatures(reply);
+  }
+
+  /// Decodes a `{'features': [json, ...]}` reply, the shape the native sides
+  /// use to keep nested GeoJSON intact across the channel.
+  List<Map<String, dynamic>> _decodeFeatures(dynamic reply) {
+    final features = (reply as Map?)?['features'] as List? ?? const [];
+    return features
+        .map((feature) => (jsonDecode(feature as String) as Map)
+            .cast<String, dynamic>())
+        .toList();
+  }
+
+  @override
   Future invalidateAmbientCache() async {
     try {
       await _channel.invokeMethod('map#invalidateAmbientCache');

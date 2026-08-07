@@ -219,6 +219,27 @@ abstract class MapLibrePlatform {
     String? sourceLayerId,
     List<Object>? filter,
   );
+
+  /// The zoom at which the cluster identified by [clusterId] splits into its
+  /// children, on the clustered GeoJSON source [sourceId].
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId);
+
+  /// The immediate children of the cluster identified by [clusterId], on the
+  /// clustered GeoJSON source [sourceId], as GeoJSON features.
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  );
+
+  /// The original points belonging to the cluster identified by [clusterId], on
+  /// the clustered GeoJSON source [sourceId], as GeoJSON features.
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  });
+
   Future invalidateAmbientCache();
   Future clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
