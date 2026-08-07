@@ -1,10 +1,5 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
-## Unreleased
-
-### Added
-* `setTrackingCameraOptions()` throws an `UnsupportedError` naming the platform. maplibre-gl-js has no location component, and `GeolocateControl` stops following the user on any programmatic camera change it did not make itself, firing `trackuserlocationend`, which this package forwards as a tracking dismissal. Suppressing those events would report tracking that is no longer happening (#888).
-
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
@@ -15,6 +10,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * The plugin loads maplibre-gl-js itself before the first map is built, so apps should remove the script and stylesheet tags from `web/index.html`. It loads the exact build its interop is written against, or whatever `MapLibreMap.webLibrarySource` configures, and reuses an existing `maplibregl` global as it is. A failed stylesheet only logs, since it affects how the controls and the puck look and not the map; a failed import clears the memoized attempt so the next map build retries (#928).
 * `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
 * `getClusterExpansionZoom()`, `getClusterChildren()` and `getClusterLeaves()` read a clustered GeoJSON source. maplibre-gl-js 6 returns promises from all three, where version 5 took a trailing callback, so the interop is typed as promises. A rejection, which is how the library reports a source that is not clustered or an unknown cluster id, answers 0 or an empty list, matching Android and iOS (#896).
+* `setTrackingCameraOptions()` throws an `UnsupportedError` naming the platform. maplibre-gl-js has no location component, and `GeolocateControl` stops following the user on any programmatic camera change it did not make itself, firing `trackuserlocationend`, which this package forwards as a tracking dismissal. Suppressing those events would report tracking that is no longer happening (#888).
 ### Changed
 * MapLibre GL JS 5 replaced by 6. Version 6 ships as an ES module only, with no UMD bundle and no global of its own, so the loader imports it with `importModule` and publishes the namespace as `globalThis.maplibregl`, which is what every `@JS` binding here addresses. `MapLibreJsSource.urls` now points at the `.mjs` build, and a page using `MapLibreJsSource.preloaded` has to publish the global itself (#943).
 * `setGeoJsonSource()` and `setFeatureForGeoJsonSource()` complete once the data has been applied, rather than as soon as it has been handed over. Version 6 returns a promise from `GeoJSONSource.setData` where version 5 returned the source, so the promise is awaited when there is one, which also stops a rejection on invalid GeoJSON from going unhandled (#943).

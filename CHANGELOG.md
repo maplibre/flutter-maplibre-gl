@@ -3,11 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
-
-### Added
-* **Android, iOS**: `setTrackingCameraOptions()` pitches the camera without giving up the active tracking mode, for a navigation-style view that stays tilted while it keeps following the user. The regular camera calls are not tracking-aware: on Android they end tracking, so the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Web reports that its engine has no tracking-aware camera. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#888).
-
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 **No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\
@@ -28,6 +23,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Android, iOS, Web**: the location puck can be driven from your own fixes instead of the device GPS, with no location permission needed: `locationSource: ManualLocationSource()` plus `controller.updateManualLocation()`. For a paired receiver, a replayed track or a simulation. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#840).
 * **Android, iOS, Web**: a clustered GeoJSON source can be inspected. `getClusterExpansionZoom()` gives the zoom at which a cluster splits, so a cluster tap can zoom to exactly that instead of guessing with `zoom + 2`, while `getClusterLeaves()` and `getClusterChildren()` read the points behind a cluster. All three take the `cluster_id` property of the cluster feature. See the [cluster guide](https://maplibre.org/flutter-maplibre-gl/layers/cluster/) (#896).
 * **Android, iOS**: offline regions can move between devices. `exportOfflineDatabase()` writes a shareable copy, `mergeOfflineRegions()` imports one (now on iOS too), and `getOfflineDatabasePath()` locates the store. See the [offline regions guide](https://maplibre.org/flutter-maplibre-gl/advanced/offline-regions/) (#886).
+* **Android, iOS**: `setTrackingCameraOptions()` pitches the camera without giving up the active tracking mode, for a navigation-style view that stays tilted while it keeps following the user. The regular camera calls are not tracking-aware: on Android they end tracking, so the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Web reports that its engine has no tracking-aware camera. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#888).
 * **Android**: feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) works on Android as well as web, so single features can be restyled without re-feeding the source. iOS reports that its SDK does not expose the API yet. `promoteId` stays web-only, so Android features need a top-level `id` in the GeoJSON. See the [feature state guide](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) (#889).
 * **iOS**: `LocationEnginePlatforms.iOS` takes `intervalMs` and `pulseWindowMs` to pulse GPS instead of tracking continuously, easing battery use on maps that stay open a long time. The default keeps continuous tracking (#901).
 * **Web**: `MapLibreMap.webLibrarySource` chooses where MapLibre GL JS comes from: the build the plugin is tested against, a self-hosted copy, or one the page loads itself. `MapLibreMap.ensureWebLibraryLoaded()` completes once `maplibregl` is usable, for your own JS interop such as `addProtocol` (#928).
