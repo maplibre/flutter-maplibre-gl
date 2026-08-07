@@ -48,17 +48,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var pausedByDart = false
     private var isBackgroundPaused = false
 
-    /// The tracking mode a `locationComponent#setTrackingCameraOptions` call must
-    /// keep, non-nil only while that camera change is in flight.
-    ///
-    /// `MLNMapView.setCamera(_:withDuration:animationTimingFunction:completionHandler:)`
-    /// does not clear `userTrackingMode` on MapLibre iOS 6.28.0, so on that version
-    /// nothing has to be restored. This guards the case anyway, because the reset
-    /// would be a side effect of our own call and not something the app asked for:
-    /// the mode is put back and Dart is told nothing. See
-    /// `mapView(_:didChange:animated:)`.
-    private var trackingModeToPreserve: MLNUserTrackingMode?
-
     func view() -> UIView {
         return mapView
     }
@@ -380,8 +369,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 )
                 return
             }
-            let trackingMode = mapView.userTrackingMode
-            guard trackingMode != .none else {
+            // Same precondition Android checks, and the same error code: without the
+            // user-location component there is nothing to track, and telling the app
+            // to enable a tracking mode would not be the fix.
+            guard mapView.showsUserLocation else {
+                result(
+                    FlutterError(
+                        code: "LOCATION_COMPONENT_NOT_READY",
+                        message: "The location component is not ready. Ensure the map was "
+                            + "created with myLocationEnabled: true.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard mapView.userTrackingMode != .none else {
                 result(
                     FlutterError(
                         code: "TRACKING_NOT_ACTIVE",
@@ -393,24 +395,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             // The iOS SDK has no tracking-aware camera call, so the pitch goes through
-            // the ordinary camera. That is safe here: `setCamera(_:withDuration:...)`
-            // leaves `userTrackingMode` alone, and the follow paths
-            // (`didUpdateLocationIncrementallyDuration:`,
+            // the ordinary camera. That is safe on the pinned SDK:
+            // `setCamera(_:withDuration:...)` leaves `userTrackingMode` alone, and the
+            // follow paths (`didUpdateLocationIncrementallyDuration:`,
             // `didUpdateLocationSignificantlyAnimated:`) never write the pitch, so the
-            // camera keeps following the user tilted. `trackingModeToPreserve` covers a
-            // future version that does reset the mode, including asynchronously.
+            // camera keeps following the user tilted. Nothing is restored afterwards on
+            // purpose: a mode change arriving during the animation is the user panning,
+            // and putting the mode back would fight the gesture and hide the dismissal.
             let camera = mapView.camera
             camera.pitch = CGFloat(tilt)
-            trackingModeToPreserve = trackingMode
             let durationMs = (arguments["duration"] as? NSNumber)?.doubleValue
             mapView.setCamera(
                 camera,
                 withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
                 animationTimingFunction: nil
-            ) { [weak self] in
-                // Released a turn later so any tracking-mode callback the camera change
-                // queued behind this one is still guarded when it lands.
-                DispatchQueue.main.async { self?.trackingModeToPreserve = nil }
+            ) {
                 result(true)
             }
         case "locationComponent#setManualLocation":
@@ -1849,28 +1848,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapView(_: MLNMapView, didChange mode: MLNUserTrackingMode, animated _: Bool) {
-        if let preserved = trackingModeToPreserve {
-            if mode == .none {
-                // A tracking-aware camera change is in flight and the SDK dropped
-                // tracking as a side effect of it. Put the mode back and report
-                // nothing: `onCameraTrackingChanged(none)` means the app or the user
-                // ended tracking, and neither did. Restoring re-enters here with the
-                // preserved mode, which the next branch swallows.
-                //
-                // A pan gesture landing inside this window is also restored. The window
-                // is one camera animation long and the SDK applies a move threshold
-                // before it drops tracking, so an intentional pan reaches us after the
-                // animation instead.
-                mapView.userTrackingMode = preserved
-                return
-            }
-            if mode == preserved {
-                return
-            }
-            // A real switch to some other mode: the app asked for it, so stop guarding
-            // and forward it.
-            trackingModeToPreserve = nil
-        }
         if let channel = channel {
             channel.invokeMethod("map#onCameraTrackingChanged", arguments: ["mode": mode.rawValue])
             if mode == .none {
@@ -2615,9 +2592,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode) {
-        // An explicit request from the app outranks a tracking-aware camera change that
-        // is still in flight, so stop guarding before applying it.
-        trackingModeToPreserve = nil
         mapView.userTrackingMode = myLocationTrackingMode
     }
 
