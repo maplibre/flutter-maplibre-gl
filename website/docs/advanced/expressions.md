@@ -218,6 +218,6 @@ await controller.addCircleLayer(
 | `Expressions.heatmapDensity` | `"heatmap-density"` | Heatmap layer input |
 | `Expressions.lineProgress` | `"line-progress"` | Line gradient position |
 | `Expressions.has` | `"has"` | Check property exists |
-| `Expressions.notHasExpression` | `"!"` + `"has"` | Negate |
+| `Expressions.not` | `"!"` | Negate a boolean |
 
 For the full expression reference, see the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec/expressions/).

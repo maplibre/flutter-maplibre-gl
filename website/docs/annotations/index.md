@@ -9,7 +9,7 @@ Annotations are interactive overlays drawn on top of the map. flutter-maplibre-g
 | Line | `Line` | Polylines and paths |
 | Fill | `Fill` | Polygons and filled areas |
 
-- [Markers](markers.md): add and style symbol annotations, including custom image icons
+- [Adding Annotations](markers.md): add and style symbol annotations, including custom image icons
 - [Animated](animated.md): animate annotation position changes
 - [Draggable](draggable.md): allow users to drag annotations
 

@@ -1,6 +1,6 @@
 # Annotations vs Style Layers
 
-This is the most important conceptual distinction in flutter-maplibre-gl. The library provides **two completely different APIs** for putting things on a map. Choosing the right one saves you from performance problems and unexpected limitations.
+This is the most important conceptual distinction in flutter-maplibre-gl. The library provides **two completely different APIs** for putting things on a map. Choosing the right one saves you from performance problems and unexpected limitations. Both APIs also have rules that are easy to miss; they are collected under [Constraints and gotchas](#constraints-and-gotchas).
 
 ## The short version
 
@@ -12,7 +12,7 @@ This is the most important conceptual distinction in flutter-maplibre-gl. The li
   <tbody>
     <tr><td>API</td><td><code>addSymbol()</code>, <code>addCircle()</code>, <code>addFill()</code>, <code>addLine()</code></td><td><code>addGeoJsonSource()</code> (or <code>addSource()</code>) + <code>addSymbolLayer()</code> etc.</td></tr>
     <tr><td>Complexity</td><td>Low</td><td>Medium</td></tr>
-    <tr><td>Max features</td><td>~hundreds</td><td>100,000+</td></tr>
+    <tr><td>Max features</td><td>~hundreds, switch past ~50</td><td>100,000+</td></tr>
     <tr><td>Data-driven styling</td><td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes (expressions)</span></td></tr>
     <tr><td>Tap callbacks</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in (typed annotation)</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> Built-in (<code>onFeatureTapped</code>, id + layer id)</span></td></tr>
     <tr><td>Draggable</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span> <code>draggable: true</code>, geometry moved for you</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> <code>draggable</code> feature property, you move the data</span></td></tr>
@@ -22,6 +22,9 @@ This is the most important conceptual distinction in flutter-maplibre-gl. The li
   </tbody>
 </table>
 </div>
+
+<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--mid">●</span> supported with the caveat named in the cell &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
+{ .legend }
 
 ## Annotations: the simple API
 
@@ -60,7 +63,7 @@ controller.onSymbolTapped.add((Symbol s) {
 
 ## Style Layers: the powerful API
 
-Style layers give you direct access to the MapLibre style specification. You manage the data yourself (as GeoJSON), and MapLibre renders it using data-driven expressions.
+Style Layers give you direct access to the MapLibre style specification. You manage the data yourself (as GeoJSON), and MapLibre renders it using data-driven expressions.
 
 ```dart
 // 1. Add the data source
@@ -102,59 +105,6 @@ await controller.setGeoJsonSource('cities', newFeatureCollection);
 - **Clustering**: group nearby points automatically at low zoom
 - **Heatmaps**: density visualization
 - **Performance at scale**: render hundreds of thousands of features natively
-
-## Side-by-side: the same markers, two ways
-
-<div class="code-compare" markdown="1">
-<div markdown="1">
-
-**Annotations**
-```dart
-// Simple, managed
-await controller.addSymbol(
-  const SymbolOptions(
-    geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'my-pin',
-    iconColor: '#E74C3C',
-    textField: 'Paris',
-  ),
-);
-
-// Built-in tap handling
-controller.onSymbolTapped.add(
-  (s) => print('Tapped!'),
-);
-```
-
-</div>
-<div markdown="1">
-
-**Style Layers**
-```dart
-// Source + layer
-await controller.addGeoJsonSource('pts', {
-  'type': 'FeatureCollection',
-  'features': [{
-    'type': 'Feature',
-    'properties': {'name': 'Paris'},
-    'geometry': {
-      'type': 'Point',
-      'coordinates': [2.3522, 48.8566],
-    },
-  }],
-});
-
-await controller.addSymbolLayer('pts', 'pts-layer',
-  SymbolLayerProperties(
-    iconImage: 'my-pin',
-    iconColor: '#E74C3C',
-    textField: [Expressions.get, 'name'],
-  ),
-);
-```
-
-</div>
-</div>
 
 ## Live demo
 
@@ -227,7 +177,7 @@ this list.
   nothing and only logs a warning. See
   [Markers](../annotations/markers.md#where-icons-come-from).
 
-### Style layers
+### Style Layers
 
 - **Ids must be unique** across the whole style, and the source must exist
   before the layer that renders it.

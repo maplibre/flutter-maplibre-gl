@@ -4,7 +4,7 @@ The map can show where the user is with a location puck: a dot, an accuracy ring
 
 ## Show the puck
 
-Set `myLocationEnabled: true` and make sure the platform permissions from [Installation & Setup](../getting-started.md) are in place. The plugin does not request permissions itself, so ask for them before enabling the puck, with a package such as [`permission_handler`](https://pub.dev/packages/permission_handler).
+Set `myLocationEnabled: true` and make sure the platform permissions from [Getting Started](../getting-started.md) are in place. The plugin does not request permissions itself, so ask for them before enabling the puck, with a package such as [`permission_handler`](https://pub.dev/packages/permission_handler).
 
 ```dart
 MapLibreMap(
@@ -47,7 +47,7 @@ await controller.setTrackingCameraOptions(
 A tracking mode other than `none` must already be active, so enable tracking first and set the tilt after. Calling it with tracking off throws a `PlatformException` with code `TRACKING_NOT_ACTIVE`.
 
 !!! warning "Android and iOS only"
-    Web throws an `UnsupportedError`. maplibre-gl-js has no location component, and its `GeolocateControl` gives up following the user on any programmatic camera change, so there is no way to pitch a tracking camera there. A pitch set *before* tracking starts does survive on web, since the control never writes the pitch itself.
+    Web throws an `UnsupportedError`. MapLibre GL JS has no location component, and its `GeolocateControl` gives up following the user on any programmatic camera change, so there is no way to pitch a tracking camera there. A pitch set *before* tracking starts does survive on web, since the control never writes the pitch itself.
 
 ## Tune the location engine
 
@@ -122,7 +122,7 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 | `myLocationEnabled` | show or hide the puck |
 | `myLocationTrackingMode` | how the camera follows the user |
 | `controller.setTrackingCameraOptions` | pitch the camera without ending tracking (not on web) |
-| `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (not on iOS) |
+| `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (`gps` is not supported on iOS) |
 | `locationSource` | `PlatformLocationSource` (default) or `ManualLocationSource` |
 | `locationEnginePlatforms` | per-platform engine options, including iOS pulsing |
 | `controller.updateManualLocation` | push a fix in manual mode |

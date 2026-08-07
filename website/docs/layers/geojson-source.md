@@ -9,7 +9,13 @@ A GeoJSON source is the data container that style layers read from. It holds a F
   loading="lazy"
 ></iframe>
 
-South American capitals rendered from an inline FeatureCollection. Circle radius scales with population.
+Capital cities across the Americas rendered from an inline FeatureCollection. Circle radius scales with population.
+
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
 
 ## The source + layer pattern
 
@@ -62,27 +68,31 @@ await controller.addGeoJsonSource('my-source', {
 ### Remote URL
 
 ```dart
-await controller.addGeoJsonSource('rivers', {
-  'type': 'geojson',
-  'data': 'https://example.com/data/rivers.geojson',
-});
+await controller.addSource(
+  'rivers',
+  const GeojsonSourceProperties(
+    data: 'https://example.com/data/rivers.geojson',
+  ),
+);
 ```
 
-MapLibre fetches and caches the URL. CORS headers must be present when running on web.
+A URL goes through `addSource` rather than `addGeoJsonSource`, which takes the GeoJSON itself. MapLibre fetches and caches the URL. CORS headers must be present when running on web.
 
 ### With clustering enabled
 
 ```dart
 await controller.addSource(
   'events',
-  const GeojsonSourceProperties(
+  GeojsonSourceProperties(
+    data: featureCollection, // inline GeoJSON map, or a URL string
     cluster: true,
-    clusterMaxZoom: 14,   // stop clustering above zoom 14
-    clusterRadius: 50,    // pixel radius for clustering
+    clusterMaxZoom: 14, // stop clustering above zoom 14
+    clusterRadius: 50, // pixel radius for clustering
   ),
 );
-await controller.setGeoJsonSource('events', featureCollection);
 ```
+
+Pass the data when you create the source: a geojson source needs its `data` up front, and on web a source added without it fails validation, so the layers that depend on it never attach.
 
 See [Cluster](cluster.md) for the full clustering setup.
 
@@ -148,8 +158,8 @@ await controller.removeSource('my-source');
 
 | Method | Description |
 |---|---|
-| `addGeoJsonSource(id, data)` | Add a source with inline or URL data |
-| `addSource(id, GeojsonSourceProperties(...))` | Add a source with clustering options |
+| `addGeoJsonSource(id, data)` | Add a source with inline GeoJSON data |
+| `addSource(id, GeojsonSourceProperties(...))` | Add a source from a URL, or with clustering options |
 | `setGeoJsonSource(id, data)` | Replace all features |
 | `setGeoJsonFeature(id, feature)` | Update one feature by id |
 | `removeSource(id)` | Remove source (remove layers first) |

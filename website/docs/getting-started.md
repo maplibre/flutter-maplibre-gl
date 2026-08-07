@@ -1,4 +1,9 @@
-# Installation & Setup
+# Getting Started
+
+Add `maplibre_gl` to a Flutter app and get a map on screen. Android and iOS need
+one platform file each; web needs nothing to start. Later sections cover the web
+setups that need more: a Content-Security-Policy, a self-hosted copy of the
+library, or your own JS interop.
 
 ## Add the dependency
 
@@ -73,6 +78,37 @@ On web, the plugin renders with [MapLibre GL JS](https://maplibre.org/maplibre-g
 !!! warning "Upgrading from an older version"
     If your `index.html` still has the `maplibre-gl.js` script and `maplibre-gl.css` link tags from an earlier setup, remove them. An existing `maplibregl` global is reused as it is, so a manually pinned copy silently overrides the version the plugin is tested against.
 
+## Basic Usage
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
+
+class MapPage extends StatelessWidget {
+  const MapPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: MapLibreMap(
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(51.5, -0.09),
+          zoom: 11,
+        ),
+        styleString: MapLibreStyles.demo,
+      ),
+    );
+  }
+}
+```
+
+!!! tip "Style URL"
+    Pass any MapLibre-compatible style URL to `styleString`. You can self-host styles
+    with [MapTiler](https://www.maptiler.com/), [Protomaps](https://protomaps.com/),
+    or your own tile server.
+
+## Web: advanced setup
+
 ### Requirements
 
 The browser has to provide **WebGL2**. MapLibre GL JS 6 draws with it and no longer falls back to WebGL1, so a browser without it shows no map at all. Two cases end differently:
@@ -80,11 +116,19 @@ The browser has to provide **WebGL2**. MapLibre GL JS 6 draws with it and no lon
 * **The browser has no WebGL2 at all**, as on Safari and iOS before 15, and on Chrome and Firefox from before 2017. Flutter's own renderer asks for WebGL1 on such a browser, so the app around the map keeps working and only the map goes missing, which is what makes this easy to miss. The plugin logs the cause when this happens.
 * **WebGL2 exists but no context can be created**, because the browser blocklists it for the GPU driver, or hardware acceleration is switched off. Flutter's renderer asks for WebGL2 there, and does not fall back either, so the whole app stays blank and the library version makes no difference.
 
-Only the first case has a way out: a MapLibre GL JS 5 build, the last major with the WebGL1 fallback. Point the plugin at one with `MapLibreMap.webLibrarySource`, the same way as for [self-hosting](#self-hosting-maplibre-gl-js) but at a version 5 copy: the plugin keeps working against it, which is what the leftover script tag above also relies on, though you then stay off the version it is tested against.
+Only the first case has a way out: MapLibre GL JS 5, the last major version with
+the WebGL1 fallback. Point the plugin at a version 5 copy with
+`MapLibreMap.webLibrarySource`, exactly as for
+[self-hosting](#self-hosting-maplibre-gl-js). The plugin keeps working against
+it, but you then stay off the version it is tested against.
 
 ### Content-Security-Policy
 
-Skip this if your app has no CSP. If it does: the plugin imports the library, which a CSP governs like any other script, the style and the tiles are fetched, and MapLibre GL JS runs its tile work in a Web Worker that is constructed from a `blob:` URL when the library is loaded cross-origin, which is the default from a CDN.
+Skip this if your app has no CSP. If it does, three things need allowing: the
+plugin imports the library, which a CSP governs like any other script; the style
+and the tiles are fetched; and MapLibre GL JS runs its tile work in a Web Worker.
+That worker is built from a `blob:` URL whenever the library is loaded
+cross-origin, which is what a CDN is.
 
 ```
 script-src 'self' https://unpkg.com ;
@@ -158,31 +202,12 @@ Future<void> main() async {
 
 `registerPmTilesProtocol` is a small piece of JS interop around `maplibregl.addProtocol` and the `pmtiles` global. See [`pmtiles_protocol_web.dart`](https://github.com/maplibre/flutter-maplibre-gl/blob/main/maplibre_gl_example/lib/pmtiles_protocol_web.dart) in the example app for a complete implementation, including the conditional import that keeps the app compiling for Android and iOS.
 
-## Basic Usage
+## Minimum versions
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
-
-class MapPage extends StatelessWidget {
-  const MapPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: MapLibreMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(51.5, -0.09),
-          zoom: 11,
-        ),
-        styleString: MapLibreStyles.demo,
-      ),
-    );
-  }
-}
-```
-
-!!! tip "Style URL"
-    Pass any MapLibre-compatible style URL to `styleString`. You can self-host styles
-    with [MapTiler](https://www.maptiler.com/), [Protomaps](https://protomaps.com/),
-    or your own tile server.
+| Platform | Minimum version |
+|----------|----------------|
+| Flutter  | 3.29.0 |
+| Dart     | 3.7.0 |
+| Android  | API 21 (Android 5.0) |
+| iOS      | iOS 13 |
+| Web      | WebGL2, see [Requirements](#requirements) |

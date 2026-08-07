@@ -1,4 +1,4 @@
-# Markers
+# Adding Annotations
 
 The Annotation API lets you place individual interactive markers, circles, lines, and polygons on the map with built-in tap and drag callbacks.
 
@@ -22,12 +22,13 @@ Use annotations when you have **fewer than ~50 features** and need individual in
 ## Add a symbol (icon + text)
 
 `iconImage` references an image **from the active style's sprite**, or one you
-registered yourself with `addImage` / `addImageFromAsset`. There are no icons
+registered yourself with `addImage`. There are no icons
 that exist in every style, so register your own first (see
 [Custom image markers](#custom-image-markers) below) and reference it by name:
 
 ```dart
-await addImageFromAsset(controller, 'my-pin', 'assets/markers/pin.png');
+final bytes = await rootBundle.load('assets/markers/pin.png');
+await controller.addImage('my-pin', bytes.buffer.asUint8List());
 
 final symbol = await controller.addSymbol(
   const SymbolOptions(
@@ -104,11 +105,12 @@ final symbols = await controller.addSymbols([
 
 `iconImage` resolves against the images the map currently has:
 
-- **The active style's sprite** — some styles bundle a named icon set (e.g. a
+- **The active style's sprite**: some styles bundle a named icon set (e.g. a
   style built on the Maki icons exposes `marker-15`, `restaurant-15`, …). These
   names only exist if *that* style includes them; they are not guaranteed.
-- **Images you register at runtime** with `addImage` / `addImageFromAsset` —
-  always available regardless of the style. This is the portable choice.
+- **Images you register at runtime** with `addImage` (see
+  [Custom image markers](#custom-image-markers)): always available regardless
+  of the style. This is the portable choice.
 
 Because the MapLibre demo style (and many others) ship no general-purpose
 marker sprite, the examples here register their own image rather than relying on

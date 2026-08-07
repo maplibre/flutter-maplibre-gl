@@ -11,6 +11,12 @@ A circle layer renders filled circles at point locations. It's ideal for data vi
 
 Simulated earthquake data. Circle size and color driven by the `magnitude` property using `interpolate` expressions.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## Basic setup
 
 ```dart
@@ -68,12 +74,16 @@ CircleLayerProperties(
 )
 ```
 
-## Handle taps via `queryRenderedFeatures`
+## Handle taps
 
-Circle layers don't have built-in tap callbacks. Use `queryRenderedFeatures` instead:
+A circle layer is hit-tested on tap by default (`enableInteraction: true`), so
+`onFeatureTapped` fires with the feature id and the layer id. That payload
+carries no properties, so when you need those, let the tap reach `onMapClick`
+too and query the tapped point:
 
 ```dart
 MapLibreMap(
+  featureTapsTriggersMapClick: true, // otherwise circle taps never reach onMapClick
   onMapClick: (point, latLng) async {
     final features = await controller.queryRenderedFeatures(
       point,

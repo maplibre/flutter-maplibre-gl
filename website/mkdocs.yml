@@ -5,6 +5,16 @@ repo_name: GitHub
 edit_uri: edit/main/website/docs/
 docs_dir: docs
 site_dir: site
+site_description: "Flutter plugin for MapLibre: vector maps, offline regions and GPU rendering on Android, iOS and web."
+
+copyright: >
+  Built on <a href="https://github.com/maplibre/maplibre-native">MapLibre Native</a> and
+  <a href="https://github.com/maplibre/maplibre-gl-js">MapLibre GL JS</a>.
+  Demo maps render MapLibre demo tiles (Natural Earth data), OpenFreeMap and Protomaps basemaps;
+  map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.
+
+plugins:
+  - search
 
 theme:
   name: material
@@ -97,26 +107,26 @@ nav:
       - Camera Bounds: camera/camera-bounds.md
     - Annotations:
       - annotations/index.md
-      - Markers: annotations/markers.md
+      - Adding Annotations: annotations/markers.md
       - Animated: annotations/animated.md
       - Draggable: annotations/draggable.md
     - Layers & Sources:
       - layers/index.md
+      - GeoJSON Source: layers/geojson-source.md
       - Symbol Layer: layers/symbol-layer.md
       - Circle Layer: layers/circle-layer.md
       - Fill Layer: layers/fill-layer.md
       - Line Layer: layers/line-layer.md
       - Heatmap: layers/heatmap.md
       - Cluster: layers/cluster.md
-      - GeoJSON Source: layers/geojson-source.md
       - Various Sources: layers/various-sources.md
     - Advanced:
       - advanced/index.md
+      - Data-Driven Expressions: advanced/expressions.md
       - PMTiles: advanced/pmtiles.md
       - Offline Regions: advanced/offline-regions.md
       - Map Language: advanced/map-language.md
       - Snapshot: advanced/snapshot.md
-      - Data-Driven Expressions: advanced/expressions.md
       - Feature State: advanced/feature-state.md
       - User Location: advanced/user-location.md
       - Startup & Performance: advanced/performance.md

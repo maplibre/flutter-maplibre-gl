@@ -1,6 +1,6 @@
 # Feature State
 
-Feature state attaches key-value pairs to individual features at runtime, and paint properties read them back through the `["feature-state", ...]` expression. Selecting, highlighting or recolouring one feature becomes a single cheap call, and the source data stays untouched. The alternative, re-feeding the source with `setGeoJsonSource`, is expensive: the whole collection is re-encoded and re-tessellated even if only one color changed.
+Feature state attaches key-value pairs to individual features at runtime, and paint properties read them back through the `["feature-state", ...]` expression. Selecting, highlighting or recoloring one feature becomes a single cheap call, and the source data stays untouched. The alternative, re-feeding the source with `setGeoJsonSource`, is expensive: the whole collection is re-encoded and re-built for the GPU even if only one color changed.
 
 !!! note "Platform support"
     Feature state works on **web and Android**. On iOS the three methods throw an `UnsupportedError`, because the MapLibre iOS SDK does not expose the API yet.
@@ -42,7 +42,7 @@ await controller.addGeoJsonSource('parcels', {
 ```
 
 !!! warning "`promoteId` is web only"
-    On web, [`promoteId`](../concepts/geojson.md) can promote a property to be the feature ID. The Android SDK does not expose it, so on Android every feature must carry a top-level `id` member itself.
+    On web, [`promoteId`](../concepts/geojson.md#promoteid-web-only-caveat) can promote a property to be the feature ID. The Android SDK does not expose it, so on Android every feature must carry a top-level `id` member itself.
 
 ### 2. A layer whose paint reads the state
 
@@ -68,6 +68,7 @@ await controller.addFillLayer(
 ```dart
 MapLibreMap(
   // ...
+  featureTapsTriggersMapClick: true, // otherwise fill taps never reach onMapClick
   onMapClick: (point, latLng) async {
     final features =
         await controller.queryRenderedFeatures(point, ['parcel-fills'], null);
@@ -80,8 +81,6 @@ MapLibreMap(
   },
 )
 ```
-
-The fill repaints immediately. No source update, no re-tessellation.
 
 ## Removing state
 

@@ -47,7 +47,7 @@ await controller.moveCamera(
 | `CameraUpdate.newLatLng(LatLng)` | Move to position, keep zoom |
 | `CameraUpdate.newLatLngZoom(LatLng, double)` | Move to position with zoom |
 | `CameraUpdate.newCameraPosition(CameraPosition)` | Full control: position + zoom + bearing + tilt |
-| `CameraUpdate.newLatLngBounds(LatLngBounds, {padding})` | Fit a bounding box into view |
+| `CameraUpdate.newLatLngBounds(LatLngBounds, {left, top, right, bottom})` | Fit a bounding box into view, with per-edge padding |
 | `CameraUpdate.zoomIn()` | Zoom in one level |
 | `CameraUpdate.zoomOut()` | Zoom out one level |
 | `CameraUpdate.zoomTo(double)` | Zoom to a specific level |
@@ -74,10 +74,12 @@ await controller.animateCamera(
 
 ```dart
 final position = await controller.queryCameraPosition();
-print('Center: ${position.target}');
-print('Zoom: ${position.zoom}');
-print('Bearing: ${position.bearing}');
-print('Tilt: ${position.tilt}');
+if (position != null) {
+  print('Center: ${position.target}');
+  print('Zoom: ${position.zoom}');
+  print('Bearing: ${position.bearing}');
+  print('Tilt: ${position.tilt}');
+}
 ```
 
 ## `easeCamera`: interpolated animation
@@ -91,15 +93,15 @@ await controller.easeCamera(
 );
 ```
 
-## Padding: keep content centred behind an overlay
+## Padding: keep content centered behind an overlay
 
-A bottom sheet or a side panel covers part of the map, so the geometric centre of the widget is no longer the centre the user sees. `setPadding` shifts the map's centre by insetting the viewport, and every later camera call respects it, so you do not have to pass padding to each one:
+A bottom sheet or a side panel covers part of the map, so the geometric center of the widget is no longer the center the user sees. `setPadding` shifts the map's center by insetting the viewport, and every later camera call respects it, so you do not have to pass padding to each one:
 
 ```dart
 // A 240 dp bottom sheet just opened.
 await controller.setPadding(bottom: 240, animated: true);
 
-// Centres in the visible part of the map, not behind the sheet.
+// Centers in the visible part of the map, not behind the sheet.
 await controller.animateCamera(CameraUpdate.newLatLng(marker));
 
 // Sheet dismissed.

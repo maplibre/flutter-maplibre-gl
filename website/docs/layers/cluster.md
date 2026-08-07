@@ -11,6 +11,12 @@ Clustering groups nearby points into a single bubble at low zoom levels. As user
 
 200 random points around Paris. Clusters show a count and collapse/expand as you zoom. Tap one to zoom to the level where it splits.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## How clustering works
 
 ```mermaid
@@ -95,7 +101,7 @@ await controller.addCircleLayer(
 | Property | Default | Description |
 |---|---|---|
 | `cluster` | false | Enable clustering |
-| `clusterMaxZoom` | 14 | Zoom at which clustering stops |
+| `clusterMaxZoom` | one less than `maxzoom` (17 by default) | Zoom at which clustering stops |
 | `clusterRadius` | 50 | Pixel radius to group points |
 
 ## Cluster feature properties
@@ -167,7 +173,7 @@ final children = await controller.getClusterChildren('events', clusterId);
 | `getClusterLeaves(sourceId, clusterId, {limit, offset})` | The cluster's original points, as GeoJSON features |
 | `getClusterChildren(sourceId, clusterId)` | The cluster's immediate children, as GeoJSON features |
 
-For a source that is not clustered, or a `clusterId` that is not one of its current clusters, every platform answers 0 or an empty list.
+For a GeoJSON source that is not clustered, or a `clusterId` that is not one of its current clusters, every platform answers 0 or an empty list. An unknown source id, or one that is not a GeoJSON source, raises a `PlatformException` instead.
 
 ## Filters for cluster vs. point layers
 

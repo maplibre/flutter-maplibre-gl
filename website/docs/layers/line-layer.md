@@ -11,6 +11,12 @@ A line layer renders LineString and Polygon geometries as stroked paths. Use it 
 
 A simplified Trans-Siberian Railway route rendered as a dashed line with a dark casing.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## Basic setup
 
 ```dart

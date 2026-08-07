@@ -11,11 +11,18 @@ A symbol layer renders icons, text labels, or both at point locations from a Geo
 
 Ten European cities with custom marker icons and text labels, rendered from a GeoJSON source.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## Basic setup
 
 ```dart
 // 1. Register a custom icon
-await addImageFromAsset(controller, 'my-marker', 'assets/marker.png');
+final bytes = await rootBundle.load('assets/marker.png');
+await controller.addImage('my-marker', bytes.buffer.asUint8List());
 
 // 2. Add a GeoJSON source with point features
 await controller.addGeoJsonSource('cities', {

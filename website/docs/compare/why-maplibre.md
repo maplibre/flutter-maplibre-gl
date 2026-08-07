@@ -1,6 +1,6 @@
 # Why MapLibre GL
 
-There are three mainstream ways to put a map in a Flutter app. This page is an honest comparison, not a sales pitch, to help you pick the right one. If another library fits your project better, you should use it.
+There are several ways to put a map in a Flutter app. This page compares the three most widely used ones, so you can pick the right one; other packages exist, including other MapLibre-based ones, so a look at pub.dev is worth it too. If another library fits your project better, use it.
 
 <div class="table-scroll" markdown>
 <table class="comparison-table">
@@ -22,14 +22,14 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
     <tr>
       <td>Offline maps</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Android &amp; iOS</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Via plugin</span></td>
       <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
     </tr>
     <tr>
       <td>Custom vector styles</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Full spec</span></td>
       <td><span class="cell-ic"><span class="ic ic--mid">●</span> Limited</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Cloud styling</span></td>
     </tr>
     <tr>
       <td>GeoJSON support</td>
@@ -47,7 +47,7 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
       <td>Clustering</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Native</span></td>
       <td><span class="cell-ic"><span class="ic ic--mid">●</span> Via plugin</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Marker clustering</span></td>
     </tr>
     <tr>
       <td>Heatmaps</td>
@@ -71,13 +71,13 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
       <td>Vector tiles</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Not as your own source</span></td>
     </tr>
     <tr>
       <td>Open tile sources</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Key required</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> As overlays; key for the base map</span></td>
     </tr>
     <tr>
       <td>Web support</td>
@@ -87,9 +87,9 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
     </tr>
     <tr>
       <td>License</td>
-      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> BSD-2</span></td>
-      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> BSD-2</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Proprietary</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> BSD-3</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> BSD-3</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Plugin BSD-3, SDK proprietary</span></td>
     </tr>
     <tr>
       <td>Tile cost</td>
@@ -97,11 +97,35 @@ There are three mainstream ways to put a map in a Flutter app. This page is an h
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Free options</span></td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Free options</span></td>
     </tr>
+    <tr>
+      <td>Desktop (Windows, macOS, Linux)</td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Not a target</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+    </tr>
+    <tr>
+      <td>Flutter widgets inside the map</td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Overlay only</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Overlay only</span></td>
+    </tr>
+    <tr>
+      <td>Built-in POI, traffic and Street View data</td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Bring your own</span></td>
+      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Bring your own</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
+    </tr>
+    <tr>
+      <td>Native setup required</td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Permissions only</span></td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> None</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Key and permissions</span></td>
+    </tr>
   </tbody>
 </table>
 </div>
 
-<span class="ic ic--yes">✔</span> full support &nbsp;·&nbsp; <span class="ic ic--mid">●</span> partial / via plugin &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
+<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--mid">●</span> partial / via plugin &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
 { .legend }
 
 ## Choose flutter-maplibre-gl when
@@ -123,7 +147,7 @@ You need any of these, and they are hard or impossible elsewhere:
 - You want **pure Flutter rendering** with no native code, including smooth desktop support without platform-view overhead.
 - You need to overlay **arbitrary Flutter widgets** directly inside the tile layer.
 - Your map is simple: raster tiles plus a handful of markers.
-- You target **Linux or Windows** desktop, where native MapLibre support is limited.
+- You target **Linux, macOS or Windows** desktop, which this package does not support.
 - Your team wants to avoid native iOS and Android setup.
 
 flutter_map renders raster tiles (PNG/WebP) by default. It does not do vector styles, expressions, or GPU-accelerated vector rendering natively.
@@ -137,7 +161,7 @@ flutter_map renders raster tiles (PNG/WebP) by default. It does not do vector st
 - You need **Google-specific features**: Street View, Places integration, Google traffic.
 - Your organization mandates Google services.
 
-The mobile Maps SDK (Android/iOS) is free with no map-load billing, though it still requires an API key and a billing account on file, and usage-based services (Places, Directions, the Maps JavaScript SDK for web) are billed beyond a monthly free credit. Google Maps also has no offline support, and the style cannot be customized beyond basic color tweaks.
+Pricing and quotas change, so check [Google Maps Platform pricing](https://mapsplatform.google.com/pricing/) for the current terms; as of August 2026 the mobile Maps SDKs carry no map-load billing, though an API key and a billing account are still required. The plugin exposes no offline download API, and styling goes through Google's cloud-based map styling or a style JSON rather than the MapLibre style spec.
 
 ## Performance at scale
 
@@ -163,25 +187,19 @@ Rendering 10,000 point features is where the architectural difference shows:
     <tr>
       <td>10k points</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Native cluster/layer</span></td>
-      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Plugin, may lag</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> Not designed for it</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Plugin, cost grows per feature</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Marker clustering</span></td>
     </tr>
     <tr>
-      <td>Smooth at 60fps</td>
-      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
-      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Depends on count</span></td>
-      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Depends</span></td>
-    </tr>
-    <tr>
-      <td>Data-driven colors</td>
-      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Expressions</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
-      <td><span class="cell-ic"><span class="ic ic--no">✘</span> No</span></td>
+      <td>Where features are drawn</td>
+      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> GPU, native engine</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Flutter canvas</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Google Maps SDK</span></td>
     </tr>
   </tbody>
 </table>
 </div>
 
-All rendering is delegated to the native MapLibre engine, which runs on the GPU. The Flutter layer only manages configuration. It never draws map tiles itself.
+All rendering is delegated to the native MapLibre engine, which runs on the GPU. The Flutter layer only manages configuration. The difference is architectural rather than a benchmark result: see [Architecture](../concepts/architecture.md). Measure with your own data and target devices before deciding.
 
 For the full platform-by-platform breakdown, see the [Feature Matrix](feature-matrix.md).

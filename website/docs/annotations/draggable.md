@@ -9,6 +9,8 @@ Allow users to drag annotations to new positions on the map.
   loading="lazy"
 ></iframe>
 
+Add draggable symbols and circles over Sydney, then drag one to watch the drag phase and its start and current coordinates update live.
+
 !!! note "Prerequisites"
     Annotations only work once the style has loaded and if their type is part of
     the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
@@ -110,7 +112,9 @@ controller.onFeatureDrag.add((point, origin, current, delta, id, annotation, eve
 Dragging is not limited to annotations. Features rendered from a GeoJSON source through a style layer can also be dragged. The setup differs:
 
 1. Give each feature a `'draggable': true` property and a stable `id`.
-2. Add the source with `promoteId: 'id'` and the layer with `enableInteraction: true`.
+2. Add the layer with `enableInteraction: true`. On web, add the source with
+   `promoteId: 'id'` so the string id survives; `promoteId` is web only, so on
+   Android and iOS the top-level `id` from step 1 is what identifies the feature.
 3. Listen to `controller.onFeatureDrag` and write the new position back into the source.
 
 ```dart
@@ -124,7 +128,7 @@ await controller.addGeoJsonSource('points', {
       'properties': {'id': 'p1', 'draggable': true},
     },
   ],
-}, promoteId: 'id');
+}, promoteId: 'id'); // web only, native reads the top-level 'id'
 
 await controller.addCircleLayer(
   'points',

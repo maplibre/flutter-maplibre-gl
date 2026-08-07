@@ -1,5 +1,9 @@
 # Advanced
 
+Everything beyond drawing data on a map: how tiles reach the device, how to
+style from data rather than constants, and what to tune when a map-heavy app
+feels slow.
+
 - [PMTiles](pmtiles.md): serve map tiles from a single portable file
 - [Offline Regions](offline-regions.md): download tiles for offline use (Android & iOS)
 - [Map Language](map-language.md): switch map label language at runtime

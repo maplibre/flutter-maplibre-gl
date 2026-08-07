@@ -28,7 +28,7 @@ flowchart TD
 
 ### Layer 1: The Flutter widget
 
-`MapLibreMap` is a Flutter widget that embeds a native map view using a [Platform View](https://docs.flutter.dev/platform-integration/platform-views). It is **not** drawn by Flutter's Skia/Impeller renderer, the map is rendered natively at full GPU speed by MapLibre's C++ engine.
+`MapLibreMap` is a Flutter widget that embeds a native map view using a [Platform View](https://docs.flutter.dev/platform-integration/platform-views). It is **not** drawn by Flutter's Skia/Impeller renderer, the map is rendered natively at full GPU speed by [MapLibre Native](https://github.com/maplibre/maplibre-native), the project's C++ engine.
 
 This means:
 
@@ -68,16 +68,14 @@ Some features are only available on certain platforms:
   <tbody>
     <tr><td>Offline regions</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
     <tr><td>Hover events</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Image sources</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Limited</span></td></tr>
-    <tr><td>GeoJSON sources</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>PMTiles</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Camera animation interpolation</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Partial</span></td></tr>
   </tbody>
 </table>
 </div>
 
-<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--mid">●</span> partial &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
+<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
 { .legend }
+
+These are the differences the three-layer stack itself creates: offline caching lives in MapLibre Native, and hover exists only where there is a pointer. For the complete platform breakdown see the [Feature Matrix](../compare/feature-matrix.md).
 
 Use `kIsWeb` from `package:flutter/foundation.dart` to guard platform-specific code:
 
@@ -93,60 +91,12 @@ if (kIsWeb) {
 }
 ```
 
-## Platform view mode (Android)
+### Platform views on Android
 
-On Android the map is a platform view, and Flutter has several ways to embed one.
-Which one you get is decided by the Android `View` the map renders into, and that
-is what `MapLibreMap.useHybridComposition` controls:
-
-- **`false` (the default, since 0.16.0)**: the map renders into a `GLSurfaceView`.
-  Flutter cannot redirect a `SurfaceView`'s drawing into a texture, so it embeds
-  the map through Virtual Display. The map renders as directly as Android allows,
-  and you inherit Virtual Display's limitations around text input, accessibility
-  and z-order.
-- **`true`**: the map renders into a `TextureView`, which is MapLibre's
-  `textureMode`. Flutter composites it as a texture layer, so the map behaves
-  like a regular widget: Flutter content can paint over it, and the map itself
-  can be transformed, clipped or animated. A `TextureView` costs more to render
-  than a `SurfaceView` on every Android version.
-
-```dart
-MapLibreMap.useHybridComposition = true; // call before runApp()
-```
-
-Set it before the first map is built. The mode is fixed once a platform view
-exists, so changing it later leaves maps already on screen untouched.
-
-Two things about this flag are worth knowing. Despite the name it does not select
-Flutter's "Hybrid Composition" mode: both values go through
-`PlatformViewsService.initAndroidView`, and Flutter chooses Texture Layer Hybrid
-Composition or Virtual Display based on the native view it finds. And the
-`translucentTextureSurface` map option moves the map to a `TextureView` as well,
-additionally making it non-opaque, so reach for `useHybridComposition` when you
-want the texture layer with an opaque surface.
-
-### Hybrid Composition++
-
-Flutter's [Hybrid Composition++](https://docs.flutter.dev/platform-integration/android/platform-views)
-composites platform views through the Android OS instead of through a texture, which
-removes the reason to choose between the two modes above: the map keeps its
-`SurfaceView` and still behaves like a widget. It needs Android 14 (API 34) or
-newer, Impeller and Vulkan, and Flutter falls back to the mode configured above
-on devices that do not qualify.
-
-It is opt-in per app, not per plugin, so nothing changes on the `maplibre_gl`
-side. Leave `useHybridComposition` at `false` and add this to your app's
-`AndroidManifest.xml`, inside `<application>`:
-
-```xml
-<meta-data
-    android:name="io.flutter.embedding.android.EnableHcpp"
-    android:value="true" />
-```
-
-For a local run, `flutter run --enable-hcpp` does the same thing. The flag is not
-accepted by `flutter build`, which is what the manifest entry is for. It is still
-experimental, so test it on the Android versions you support before shipping it.
+On Android the map is a platform view, and which embedding Flutter uses depends
+on the Android `View` the map renders into. The default is fine for most apps;
+[Startup & Performance](../advanced/performance.md#platform-view-mode-android)
+covers when to change it.
 
 ## Callback lifecycle
 

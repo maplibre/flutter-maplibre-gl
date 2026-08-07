@@ -7,7 +7,7 @@ hide:
 <div class="hero">
   <span class="hero__eyebrow">Maps for Flutter</span>
   <h1>MapLibre, natively in Flutter</h1>
-  <p class="hero__tagline">Open data, the full MapLibre style spec, and no proprietary tokens. One Dart API across Android, iOS, and web.</p>
+  <p class="hero__tagline">Any tile provider or your own server, the full MapLibre style spec, and no API key to get started. One Dart API across Android, iOS, and web.</p>
   <div class="badge-row">
     <span class="platform-badge platform-badge--android">Android</span>
     <span class="platform-badge platform-badge--ios">iOS</span>
@@ -16,7 +16,7 @@ hide:
   <div class="badge-row">
     <a href="https://pub.dev/packages/maplibre_gl"><img src="https://img.shields.io/pub/v/maplibre_gl.svg?style=flat-square" alt="pub.dev version" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl"><img src="https://img.shields.io/github/stars/maplibre/flutter-maplibre-gl?style=flat-square&logo=github" alt="GitHub Stars" /></a>
-    <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--2-blue?style=flat-square" alt="License" /></a>
+    <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--3-blue?style=flat-square" alt="License" /></a>
   </div>
   <div class="cta-row">
     <a href="getting-started/" class="cta-btn cta-btn--primary">Get started</a>
@@ -42,8 +42,8 @@ hide:
   </div>
   <div class="feature-card">
     <span class="feature-card__icon">🔓</span>
-    <div class="feature-card__title">Truly open source</div>
-    <div class="feature-card__desc">BSD-2 license. Use OpenFreeMap, OpenMapTiles, or self-host with PMTiles. Zero vendor lock-in.</div>
+    <div class="feature-card__title">Open source, end to end</div>
+    <div class="feature-card__desc">BSD-3 license. Use OpenFreeMap, OpenMapTiles, or self-host with PMTiles. Zero vendor lock-in.</div>
   </div>
   <div class="feature-card">
     <span class="feature-card__icon">📴</span>
@@ -89,12 +89,15 @@ MapLibreMap(
     zoom: 11,
   ),
   onMapCreated: (MapLibreMapController controller) {
-    // Add symbols, layers, and more
+    // Keep the controller
+  },
+  onStyleLoadedCallback: () {
+    // Add symbols, layers, and more here, once the style is ready
   },
 )
 ```
 
-See [Installation & Setup](getting-started.md) for Android, iOS, and web platform configuration.
+See [Getting Started](getting-started.md) for Android, iOS, and web platform configuration.
 
 </div>
 
@@ -123,6 +126,6 @@ See [Installation & Setup](getting-started.md) for Android, iOS, and web platfor
   </div>
   <div class="feature-card">
     <div class="feature-card__title"><a href="compare/why-maplibre/">Why MapLibre GL?</a></div>
-    <div class="feature-card__desc">Honest comparison with flutter_map and google_maps_flutter: features, tradeoffs, and when to choose each.</div>
+    <div class="feature-card__desc">Side-by-side comparison with flutter_map and google_maps_flutter: features, tradeoffs, and when to choose each.</div>
   </div>
 </div>

@@ -21,7 +21,13 @@ PMTiles is a single-file archive format for storing map tiles. Instead of a tile
 | Per-request cost | Flat storage cost |
 | Hard to version | Just replace the file |
 
-PMTiles is ideal for: offline-capable apps, self-hosted tile data, distributing maps without a backend, and reducing operational complexity.
+PMTiles is ideal for: self-hosted tile data, distributing maps without a backend, and reducing operational complexity.
+
+!!! warning "PMTiles is not the offline feature"
+    A hosted `.pmtiles` archive is still read over the network, with HTTP range
+    requests. For a map that works with no connection, bundle the `.pmtiles`
+    file as a Flutter asset and reference it with a local path, or use
+    [Offline Regions](offline-regions.md).
 
 ## How it works
 
@@ -64,7 +70,7 @@ The style JSON references the PMTiles archive as a vector source. Save this as `
     "protomaps": {
       "type": "vector",
       "url": "pmtiles://https://demo-bucket.protomaps.com/v4.pmtiles",
-      "attribution": "© OpenStreetMap"
+      "attribution": "<a href=\"https://github.com/protomaps/basemaps\">Protomaps</a> © <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
     }
   },
   "layers": [
@@ -108,6 +114,8 @@ The style JSON references the PMTiles archive as a vector source. Save this as `
   ]
 }
 ```
+
+The `glyphs` URL above points at the MapLibre demo font server, which exists for demos and examples. Point it at your own glyph server, or your tile provider's, before shipping. And keep the `attribution` string in any style you ship: OpenStreetMap data is published under the ODbL, which requires crediting `© OpenStreetMap contributors` with a link to [openstreetmap.org/copyright](https://www.openstreetmap.org/copyright), and tile producers ask to be named alongside it.
 
 The `source-layer` names (`water`, `roads`, `places`) depend on the PMTiles schema. Protomaps uses [its own schema](https://docs.protomaps.com/vector-tiles/schema).
 
@@ -166,11 +174,8 @@ Future<void> _onStyleLoaded() async {
 | **GitHub Releases** | Free hosting via CDN, good for small-medium files |
 | **Cloudflare R2** | S3-compatible, free egress, ideal for large files |
 | **AWS S3** | Production, large scale |
-| **Protomaps CDN** | Public world basemap, free for reasonable usage |
+| **Protomaps CDN** | Public world basemap; check [the Protomaps docs](https://docs.protomaps.com/) for current usage terms |
 
 ## Platform support
 
 PMTiles works on **all platforms**: Android, iOS, and Web. On Android and iOS the `pmtiles://` protocol is handled by MapLibre Native itself, with no extra code. On web it has to be registered once at startup; see [PMTiles on web](../getting-started.md#pmtiles-on-web).
-
-!!! tip "Offline + PMTiles"
-    PMTiles and offline regions are separate features. PMTiles reduces server dependency but still requires network access for HTTP range requests. For truly offline use, bundle the `.pmtiles` file as a Flutter asset and reference it with a local path.
