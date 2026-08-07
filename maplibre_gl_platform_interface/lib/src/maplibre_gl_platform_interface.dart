@@ -109,6 +109,15 @@ abstract class MapLibrePlatform {
     MyLocationTrackingMode myLocationTrackingMode,
   );
 
+  /// Applies a camera pitch that the active tracking mode keeps.
+  ///
+  /// Supported on Android and iOS. Web throws an [UnsupportedError]; see
+  /// `MapLibreMapController.setTrackingCameraOptions` for why.
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  });
+
   /// Pushes an app-provided location into the map's user-location component.
   ///
   /// Requires the map to be created with

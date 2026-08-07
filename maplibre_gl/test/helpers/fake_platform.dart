@@ -93,6 +93,23 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     );
   }
 
+  /// What [setTrackingCameraOptions] reports back.
+  bool trackingCameraOptionsResult = true;
+
+  @override
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) async {
+    calls.add(
+      PlatformCall('setTrackingCameraOptions', [], {
+        'tilt': tilt,
+        'duration': duration,
+      }),
+    );
+    return trackingCameraOptionsResult;
+  }
+
   @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
     calls.add(PlatformCall('setManualLocation', [update]));

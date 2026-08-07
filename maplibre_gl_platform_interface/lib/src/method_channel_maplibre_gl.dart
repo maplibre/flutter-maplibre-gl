@@ -242,6 +242,21 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) async {
+    final result = await _channel.invokeMethod(
+      'locationComponent#setTrackingCameraOptions',
+      <String, dynamic>{
+        'tilt': tilt,
+        'duration': duration?.inMilliseconds,
+      },
+    );
+    return result == true;
+  }
+
+  @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
     await _channel.invokeMethod(
       'locationComponent#setManualLocation',
