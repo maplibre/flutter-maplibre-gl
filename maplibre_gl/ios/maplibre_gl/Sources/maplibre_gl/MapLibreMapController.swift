@@ -472,7 +472,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             if let filter = arguments["filter"] as? [Any] {
                 filterExpression = NSPredicate(mglJSONObject: filter)
             }
-            var reply = [String: NSObject]()
             var features: [MLNFeature] = []
             if let x = arguments["x"] as? Double, let y = arguments["y"] as? Double {
                 features = mapView.visibleFeatures(
@@ -490,20 +489,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 var height = bottom - top
                 features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
             }
-            var featuresJson = [String]()
-            for feature in features {
-                let dictionary = feature.geoJSONDictionary()
-                if let theJSONData = try? JSONSerialization.data(
-                    withJSONObject: dictionary,
-                    options: []
-                ),
-                    let theJSONText = String(data: theJSONData, encoding: .utf8)
-                {
-                    featuresJson.append(theJSONText)
-                }
-            }
-            reply["features"] = featuresJson as NSObject
-            result(reply)
+            result(featuresReply(features, methodName: "queryRenderedFeatures"))
         case "map#setTelemetryEnabled":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             let telemetryEnabled = arguments["enabled"] as? Bool
@@ -1355,7 +1341,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 filterExpression = NSPredicate(mglJSONObject: filter)
             }
 
-            var reply = [String: NSObject]()
             var features: [MLNFeature] = []
 
             guard let style = mapView.style else { return }
@@ -1367,20 +1352,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
 
-            var featuresJson = [String]()
-            for feature in features {
-                let dictionary = feature.geoJSONDictionary()
-                if let theJSONData = try? JSONSerialization.data(
-                    withJSONObject: dictionary,
-                    options: []
-                ),
-                    let theJSONText = String(data: theJSONData, encoding: .utf8)
-                {
-                    featuresJson.append(theJSONText)
-                }
-            }
-            reply["features"] = featuresJson as NSObject
-            result(reply)
+            result(featuresReply(features, methodName: "querySourceFeatures"))
 
         case "style#getLayerIds":
             var layerIds = [String]()
@@ -2401,14 +2373,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
     }
 
-    /// Serializes features for the channel as JSON strings, like
-    /// `map#querySourceFeatures`, so nested properties survive intact.
+    /// Serializes features for the channel as JSON strings, so nested
+    /// properties survive intact. Shared by every call that answers with
+    /// features.
     ///
     /// Returns a `FlutterError` if any feature fails to serialize, rather than
-    /// skipping it. A short list is worse than an error here: the caller pages
-    /// through leaves by `point_count` and would silently step over the gap,
-    /// and Android cannot lose a feature this way, so dropping one would also
-    /// make the two platforms disagree.
+    /// skipping it. A short list is worse than an error: the caller has no way
+    /// to tell that something is missing, a cluster caller paging through
+    /// leaves by `point_count` would silently step over the gap, and Android
+    /// cannot lose a feature this way, so dropping one would also make the two
+    /// platforms disagree on the same call.
     private func featuresReply(
         _ features: [MLNFeature],
         methodName: String
