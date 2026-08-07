@@ -41,6 +41,9 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Android**: icons added with `addImage` are visible again, at the right size on high-density screens, and undecodable bytes report a clear error instead of crashing. Since 0.26.0 icons could be dropped whenever draggable annotations were in use, which is the default (#866, #868).
 * **Android**: merging an offline database whose regions carry no metadata, such as one produced by maplibre-native, no longer fails with `type 'Null' is not a subtype of type 'Map<String, dynamic>'` (#865).
 * **iOS**: `mergeOfflineRegions()` returns only the regions it imported, not every region already stored (#886).
+* **iOS**: `queryRenderedFeatures()` and `querySourceFeatures()` no longer drop a feature they cannot encode. One that failed to serialize was skipped, so the call answered with a shorter list and no way to tell that anything was missing; it now reports the failure. Android was never affected (#949).
+* **iOS**: `queryRenderedFeaturesInRect()` applies the `filter` it is given. The filter was ignored, so the call answered with every feature in the rectangle (#949).
+* **iOS**: `queryRenderedFeatures()` and `querySourceFeatures()` report a call they cannot answer, such as one made before the style has loaded, instead of leaving the caller waiting forever (#949).
 * **iOS**: `queryCameraPosition()` returns the camera position even when `trackCameraPosition` is `false`, matching Android. It used to return `null` (#892).
 * **iOS**: `controller.cameraPosition` no longer sticks on a `NaN` zoom from a camera event that arrived before the first layout, which misplaced camera-anchored content on maps the user had not touched (#903).
 * **Web**: `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
