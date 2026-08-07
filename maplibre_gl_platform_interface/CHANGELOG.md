@@ -6,15 +6,17 @@ The `MapLibrePlatform` members added below have no default implementation, so an
 
 ### Added
 * `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning a layer's or source's properties as a style-spec map, or `null` for an unknown id (#513).
+* `pauseMap()` and `resumeMap()`, forwarded over the channel as `map#pause` and `map#resume`, to stop and restart rendering for a map that is alive but off screen (#805).
 * `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs`, forwarded to the iOS location engine so GPS can be pulsed instead of tracked continuously (#901).
-* An app-provided location source: `LocationSource` with `ManualLocationSource` and `PlatformLocationSource`, the `ManualLocationUpdate` model, and the `setLocationSource` and `updateManualLocation` calls (#840).
+* An app-provided location source. Adds `LocationSource` with `ManualLocationSource` and `PlatformLocationSource`, the `ManualLocationUpdate` model, and `setManualLocation`, forwarded over the channel as `locationComponent#setManualLocation`. Which source a map uses arrives as the `locationSource` key in the map options (#840).
 * `MapLibreJsSource`, describing where the web implementation loads MapLibre GL JS from. It lives here so apps can configure it through `maplibre_gl` without importing the web package; Android and iOS ignore it (#928).
-* `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, which is what routes `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
+* `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, routing `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
 * `setFeatureState`, `removeFeatureState` and `getFeatureState` are forwarded over the channel instead of throwing `UnimplementedError`, so feature state works on Android. iOS throws an `UnsupportedError` naming the platform (#889).
-* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does, so nested properties survive the channel (#896).
-* `setTrackingCameraOptions` on `MapLibrePlatform`, forwarded over the channel as `locationComponent#setTrackingCameraOptions` with a `tilt` and an optional `duration`. It answers with whether the pitch animation ran (#888).
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does (#896).
+* `setTrackingCameraOptions`, forwarded over the channel as `locationComponent#setTrackingCameraOptions` with a `tilt` and an optional `duration`. It returns whether the pitch animation ran (#888).
+
 ### Fixed
-* A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode; smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
+* A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode. Smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
