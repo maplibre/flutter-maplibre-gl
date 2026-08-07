@@ -1721,6 +1721,71 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// The zoom at which a cluster splits into its children, for a "tap a cluster
+  /// to zoom to where it splits" gesture.
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature, which
+  /// [onFeatureTapped] and [queryRenderedFeatures] hand you as a [num], so
+  /// read it as `(properties['cluster_id'] as num).toInt()`.
+  ///
+  /// ```dart
+  /// final zoom = await controller.getClusterExpansionZoom(
+  ///   'events',
+  ///   (properties['cluster_id'] as num).toInt(),
+  /// );
+  /// await controller.animateCamera(CameraUpdate.newLatLngZoom(center, zoom + 0.5));
+  /// ```
+  ///
+  /// For a source that is not clustered, or a [clusterId] that is not one of
+  /// its current clusters, this answers 0 on every platform.
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    return _maplibrePlatform.getClusterExpansionZoom(sourceId, clusterId);
+  }
+
+  /// The immediate children of a cluster, one zoom level in, as GeoJSON
+  /// features.
+  ///
+  /// A child may itself be a cluster, and may be the cluster passed in when the
+  /// next zoom level is not the one where it splits, see
+  /// [getClusterExpansionZoom].
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature.
+  ///
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    return _maplibrePlatform.getClusterChildren(sourceId, clusterId);
+  }
+
+  /// The original points belonging to a cluster, as GeoJSON features.
+  ///
+  /// Paginated: [limit] is how many to return, [offset] how many to skip. To
+  /// read a whole cluster at once, pass its `point_count` as [limit].
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature.
+  ///
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    return _maplibrePlatform.getClusterLeaves(
+      sourceId,
+      clusterId,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
   Future invalidateAmbientCache() async {
     return _maplibrePlatform.invalidateAmbientCache();
   }

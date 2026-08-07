@@ -750,6 +750,83 @@ class MapLibreMapController extends MapLibrePlatform
         .toList();
   }
 
+  /// Resolves the GeoJSON source a cluster-inspection call addresses.
+  GeoJsonSource _clusterSource(String sourceId, String methodName) {
+    final source = _map.getSource(sourceId);
+    if (source == null) {
+      throw PlatformException(
+        code: 'SOURCE_NOT_FOUND',
+        message: "Source '$sourceId' does not exist in the current style.",
+      );
+    }
+    if (source is! GeoJsonSource || !source.hasClusterInspection) {
+      throw PlatformException(
+        code: 'UNSUPPORTED_SOURCE_TYPE',
+        message:
+            "Source '$sourceId' is not a GeoJSON source. $methodName only "
+            'applies to clustered GeoJSON sources.',
+      );
+    }
+    return source;
+  }
+
+  /// Runs a cluster query, answering null if maplibre-gl-js rejects.
+  ///
+  /// It rejects when the source is not clustered or the id is not one of its
+  /// current clusters, where the native SDKs answer 0 or an empty list. The
+  /// callers translate the null into those same values, so the three platforms
+  /// agree instead of one of them throwing.
+  ///
+  /// Only the JS call runs inside the guard. Decoding happens after this
+  /// returns, so a bug there throws on its own rather than being reported as a
+  /// clustering mistake.
+  Future<T?> _clusterQuery<T extends JSAny>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Decodes a cluster query result, treating a rejected query as no features.
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject>? features) =>
+      features == null ? const [] : features.toDart.map(dartifyMap).toList();
+
+  @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
+    final zoom = await _clusterQuery(
+      () => source.getClusterExpansionZoom(clusterId),
+    );
+    return zoom?.toDartDouble.round() ?? 0;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    final source = _clusterSource(sourceId, 'getClusterChildren');
+    return _clusterFeatures(
+      await _clusterQuery(() => source.getClusterChildren(clusterId)),
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    final source = _clusterSource(sourceId, 'getClusterLeaves');
+    return _clusterFeatures(
+      await _clusterQuery(
+        () => source.getClusterLeaves(clusterId, limit, offset),
+      ),
+    );
+  }
+
   @override
   Future invalidateAmbientCache() async {
     print('Offline storage not available in web');

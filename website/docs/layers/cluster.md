@@ -9,7 +9,7 @@ Clustering groups nearby points into a single bubble at low zoom levels. As user
   loading="lazy"
 ></iframe>
 
-200 random points around Paris. Clusters show a count and collapse/expand as you zoom.
+200 random points around Paris. Clusters show a count and collapse/expand as you zoom. Tap one to zoom to the level where it splits.
 
 ## How clustering works
 
@@ -109,6 +109,49 @@ When clustering is enabled, cluster features have extra properties:
 | `cluster_id` | Internal cluster ID |
 | `cluster` | Always `true` for cluster features |
 
+## Inspect a cluster
+
+Three calls read a cluster back from the source, all keyed on the `cluster_id` property of the cluster feature. They work on Android, iOS and web.
+
+```dart
+// Tap a cluster: zoom to exactly where it splits, instead of guessing zoom + 2.
+Future<void> onTap(math.Point<double> point, LatLng coordinates) async {
+  final features = await controller.queryRenderedFeatures(
+    point, ['cluster-circles'], null,
+  );
+  if (features.isEmpty) return;
+
+  final properties = features.first['properties'] as Map?;
+  // A num: an int from the native channels, a double from the JS interop on web.
+  final clusterId = (properties?['cluster_id'] as num?)?.toInt();
+  if (clusterId == null) return;
+
+  final zoom = await controller.getClusterExpansionZoom('events', clusterId);
+  await controller.animateCamera(
+    CameraUpdate.newLatLngZoom(coordinates, zoom + 0.4),
+  );
+}
+```
+
+```dart
+// The original points behind the bubble, paginated.
+final pointCount = (properties['point_count'] as num).toInt();
+final leaves = await controller.getClusterLeaves(
+  'events', clusterId, limit: pointCount,
+);
+
+// The next zoom level's clusters and points. A child may itself be a cluster.
+final children = await controller.getClusterChildren('events', clusterId);
+```
+
+| Method | Returns |
+|---|---|
+| `getClusterExpansionZoom(sourceId, clusterId)` | The zoom at which the cluster splits |
+| `getClusterLeaves(sourceId, clusterId, {limit, offset})` | The cluster's original points, as GeoJSON features |
+| `getClusterChildren(sourceId, clusterId)` | The cluster's immediate children, as GeoJSON features |
+
+For a source that is not clustered, or a `clusterId` that is not one of its current clusters, every platform answers 0 or an empty list.
+
 ## Filters for cluster vs. point layers
 
 ```dart
@@ -134,3 +177,6 @@ await controller.setGeoJsonSource('events', newFeatureCollection);
 - [`MapLibreMapController.addSource()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/addSource.html)
 - [`GeojsonSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/GeojsonSourceProperties-class.html)
 - [`Expressions.step`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/Expressions/step-constant.html)
+- [`MapLibreMapController.getClusterExpansionZoom()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterExpansionZoom.html)
+- [`MapLibreMapController.getClusterLeaves()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterLeaves.html)
+- [`MapLibreMapController.getClusterChildren()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterChildren.html)

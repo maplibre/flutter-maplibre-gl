@@ -1209,6 +1209,65 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             case let .failure(error): result(error.flutterError)
             }
 
+        case "source#getClusterExpansionZoom":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int
+            else {
+                result(clusterArgumentError("getClusterExpansionZoom"))
+                return
+            }
+
+            switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
+            case let .failure(error): result(error.flutterError)
+            case let .success(source):
+                let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
+                // The SDK returns -1 for a cluster it cannot expand, whereas
+                // Android returns 0 for the same case. Report the Android value
+                // so the Dart return type can stay a plain int on both.
+                result(zoom < 0 ? 0 : Int(zoom.rounded()))
+            }
+
+        case "source#getClusterChildren":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int
+            else {
+                result(clusterArgumentError("getClusterChildren"))
+                return
+            }
+
+            switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
+            case let .failure(error): result(error.flutterError)
+            case let .success(source):
+                result(featuresReply(
+                    source.children(of: clusterFeature(clusterId)),
+                    methodName: "getClusterChildren"
+                ))
+            }
+
+        case "source#getClusterLeaves":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int,
+                  let limit = arguments["limit"] as? Int,
+                  let offset = arguments["offset"] as? Int
+            else {
+                result(clusterArgumentError("getClusterLeaves"))
+                return
+            }
+
+            switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
+            case let .failure(error): result(error.flutterError)
+            case let .success(source):
+                let leaves = source.leaves(
+                    of: clusterFeature(clusterId),
+                    offset: UInt(max(0, offset)),
+                    limit: UInt(max(0, limit))
+                )
+                result(featuresReply(leaves, methodName: "getClusterLeaves"))
+            }
+
         case "layer#setVisibility":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
@@ -2226,6 +2285,93 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     }
 
+
+    /// Resolves the shape source a cluster-inspection call addresses.
+    ///
+    /// Clustering is a shape (GeoJSON) source feature, and the iOS SDK exposes
+    /// the inspection methods on `MLNShapeSource` only.
+    func clusterSource(
+        sourceId: String,
+        methodName: String
+    ) -> Result<MLNShapeSource, MethodCallError> {
+        guard let style = mapView.style else {
+            return .failure(.styleNotFound)
+        }
+        guard let source = style.source(withIdentifier: sourceId) else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
+        }
+        guard let shapeSource = source as? MLNShapeSource else {
+            return .failure(.invalidSourceType(
+                details: "Source with id \(sourceId) is a \(type(of: source)). " +
+                    "\(methodName) only applies to clustered GeoJSON sources."
+            ))
+        }
+        return .success(shapeSource)
+    }
+
+    /// Builds the argument the SDK's cluster methods take.
+    ///
+    /// They are declared as taking an `MLNPointFeatureCluster`, but everything
+    /// below them reads a single attribute off it: the source converts the
+    /// feature to GeoJSON and the renderer looks up `cluster_id` in the source's
+    /// supercluster index, ignoring the coordinate and every other attribute. A
+    /// minimal point feature carrying the id is therefore the whole input, which
+    /// is what lets the Dart API be an Int.
+    ///
+    /// The id has to stay an integer `NSNumber`: the renderer only accepts an
+    /// unsigned integer there, and a floating-point one would be ignored,
+    /// leaving every call to report an empty result.
+    private func clusterFeature(_ clusterId: Int) -> MLNPointFeatureCluster {
+        let feature = MLNPointFeatureCluster()
+        feature.attributes = ["cluster_id": NSNumber(value: clusterId)]
+        return feature
+    }
+
+    /// The error a cluster call answers when its arguments do not decode.
+    ///
+    /// Replying rather than returning matters: a channel call that never
+    /// answers leaves the Dart future pending for good, with nothing to catch.
+    private func clusterArgumentError(_ methodName: String) -> FlutterError {
+        return FlutterError(
+            code: "INVALID_ARGUMENT",
+            message: "\(methodName) requires a String 'sourceId' and an int "
+                + "'clusterId', and getClusterLeaves also an int 'limit' and 'offset'.",
+            details: nil
+        )
+    }
+
+    /// Serializes features for the channel as JSON strings, like
+    /// `map#querySourceFeatures`, so nested properties survive intact.
+    ///
+    /// Returns a `FlutterError` if any feature fails to serialize, rather than
+    /// skipping it. A short list is worse than an error here: the caller pages
+    /// through leaves by `point_count` and would silently step over the gap,
+    /// and Android cannot lose a feature this way, so dropping one would also
+    /// make the two platforms disagree.
+    private func featuresReply(
+        _ features: [MLNFeature],
+        methodName: String
+    ) -> Any {
+        var featuresJson = [String]()
+        for feature in features {
+            guard let data = try? JSONSerialization.data(
+                withJSONObject: feature.geoJSONDictionary(),
+                options: []
+            ),
+                let json = String(data: data, encoding: .utf8)
+            else {
+                return FlutterError(
+                    code: "FEATURE_ENCODING_FAILED",
+                    message: "\(methodName) could not encode one of the features "
+                        + "it found as GeoJSON, so the result would have been "
+                        + "incomplete without saying so.",
+                    details: nil
+                )
+            }
+            featuresJson.append(json)
+        }
+        return ["features": featuresJson as NSObject] as NSObject
+    }
 
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {

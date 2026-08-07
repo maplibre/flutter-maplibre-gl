@@ -9,7 +9,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `MapLibreJsSource`, describing where the web implementation loads MapLibre GL JS from. It lives here so apps can configure it through `maplibre_gl` without importing the web package; Android and iOS ignore it (#928).
 * `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, which is what routes `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
 * `setFeatureState`, `removeFeatureState` and `getFeatureState` are forwarded over the channel instead of throwing `UnimplementedError`, so feature state works on Android. iOS throws an `UnsupportedError` naming the platform (#889).
-
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does, so nested properties survive the channel (#896).
 ### Fixed
 * A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode; smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
 

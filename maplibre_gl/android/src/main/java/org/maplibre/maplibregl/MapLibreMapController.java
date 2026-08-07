@@ -85,6 +85,7 @@ import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
+import org.maplibre.geojson.Point;
 import org.maplibre.android.net.ConnectivityReceiver;
 import org.maplibre.android.snapshotter.MapSnapshot;
 import org.maplibre.android.snapshotter.MapSnapshotter;
@@ -803,6 +804,78 @@ final class MapLibreMapController
     return null;
   }
 
+  // Resolves the GeoJSON source a cluster-inspection call addresses, or replies
+  // with a descriptive error and returns null so the caller can just bail out.
+  //
+  // Clustering is a GeoJSON source feature, and the Android SDK exposes the
+  // inspection methods on GeoJsonSource only.
+  private GeoJsonSource getClusterCapableSource(
+      String sourceId, String methodName, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return null;
+    }
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      result.error(
+          "SOURCE_NOT_FOUND",
+          "Source '" + sourceId + "' does not exist in the current style.",
+          null);
+      return null;
+    }
+    if (source instanceof GeoJsonSource) {
+      return (GeoJsonSource) source;
+    }
+    result.error(
+        "UNSUPPORTED_SOURCE_TYPE",
+        "Source '"
+            + sourceId
+            + "' is a "
+            + source.getClass().getSimpleName()
+            + ". "
+            + methodName
+            + " only applies to clustered GeoJSON sources.",
+        null);
+    return null;
+  }
+
+  // Builds the argument the SDK's cluster methods take.
+  //
+  // They are declared as taking a Feature, but everything below them reads a
+  // single property off it: the JNI layer copies properties.cluster_id and the
+  // renderer looks up that id in the source's supercluster index, ignoring the
+  // geometry and every other property. A minimal point feature carrying the id
+  // is therefore the whole input, which is what lets the Dart API be an int.
+  private static Feature clusterFeature(long clusterId) {
+    final JsonObject properties = new JsonObject();
+    properties.addProperty("cluster_id", clusterId);
+    return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
+  }
+
+  // Serializes features for the channel as JSON strings, so nested properties
+  // survive intact. Shared by every call that answers with features:
+  // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
+  private static Map<String, Object> featuresReply(List<Feature> features) {
+    final List<String> featuresJson = new ArrayList<>();
+    if (features != null) {
+      for (Feature feature : features) {
+        featuresJson.add(feature.toJson());
+      }
+    }
+    final Map<String, Object> reply = new HashMap<>();
+    reply.put("features", featuresJson);
+    return reply;
+  }
+
+  // The cluster calls answer with a FeatureCollection, which is null when the
+  // id matches nothing.
+  private static Map<String, Object> featuresReply(FeatureCollection collection) {
+    return featuresReply(collection == null ? null : collection.features());
+  }
+
   private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
     JsonElement jsonElement = JsonParser.parseString(geojson);
     String type = jsonElement.getAsJsonObject().get("type").getAsString();
@@ -1457,7 +1530,6 @@ final class MapLibreMapController
         }
       case "map#queryRenderedFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
           String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
@@ -1485,12 +1557,7 @@ final class MapLibreMapController
                     left.floatValue(), top.floatValue(), right.floatValue(), bottom.floatValue());
             features = mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layerIds);
           }
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
       case "map#setTelemetryEnabled":
@@ -1847,6 +1914,50 @@ final class MapLibreMapController
           final Map<String, Object> reply = new HashMap<>();
           reply.put("state", stateJson == null ? null : stateJson.toString());
           result.success(reply);
+          break;
+        }
+      case "source#getClusterExpansionZoom":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterExpansionZoom", result);
+          if (source == null) {
+            break;
+          }
+          result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
+          break;
+        }
+      case "source#getClusterChildren":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterChildren", result);
+          if (source == null) {
+            break;
+          }
+          result.success(
+              featuresReply(source.getClusterChildren(clusterFeature(clusterId.longValue()))));
+          break;
+        }
+      case "source#getClusterLeaves":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          final Number limit = call.argument("limit");
+          final Number offset = call.argument("offset");
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterLeaves", result);
+          if (source == null) {
+            break;
+          }
+          result.success(
+              featuresReply(
+                  source.getClusterLeaves(
+                      clusterFeature(clusterId.longValue()),
+                      limit.longValue(),
+                      offset.longValue())));
           break;
         }
       case "symbolLayer#add":
@@ -2535,7 +2646,6 @@ final class MapLibreMapController
         }
         case "map#querySourceFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
           String sourceId = (String) call.argument("sourceId");
@@ -2563,12 +2673,7 @@ final class MapLibreMapController
             features = Collections.emptyList();
           }
 
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
         case "style#getLayerIds":

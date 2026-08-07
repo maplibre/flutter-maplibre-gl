@@ -205,6 +205,44 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     List<Object>? filter,
   ) async => [];
 
+  /// What [getClusterExpansionZoom] answers.
+  int clusterExpansionZoom = 7;
+
+  /// What [getClusterChildren] and [getClusterLeaves] answer.
+  List<Map<String, dynamic>> clusterFeatures = const [];
+
+  @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    calls.add(PlatformCall('getClusterExpansionZoom', [sourceId, clusterId]));
+    return clusterExpansionZoom;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    calls.add(PlatformCall('getClusterChildren', [sourceId, clusterId]));
+    return clusterFeatures;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    calls.add(
+      PlatformCall(
+        'getClusterLeaves',
+        [sourceId, clusterId],
+        {'limit': limit, 'offset': offset},
+      ),
+    );
+    return clusterFeatures;
+  }
+
   @override
   Future invalidateAmbientCache() async {}
 
