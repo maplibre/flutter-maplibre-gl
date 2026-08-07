@@ -1540,7 +1540,13 @@ final class MapLibreMapController
         {
           List<Feature> features;
 
-          String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
+          List<String> layerIdsArgument = call.argument("layerIds");
+          if (layerIdsArgument == null) {
+            result.error(
+                "INVALID_ARGUMENT", "queryRenderedFeatures requires a 'layerIds' list.", null);
+            break;
+          }
+          String[] layerIds = layerIdsArgument.toArray(new String[0]);
 
           // queryRenderedFeatures sends the filter as a list, while
           // queryRenderedFeaturesInRect sends the same expression already
@@ -1560,20 +1566,30 @@ final class MapLibreMapController
           }
           Expression filterExpression =
               jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-          if (call.hasArgument("x")) {
-            Double x = call.argument("x");
-            Double y = call.argument("y");
+          Double x = call.argument("x");
+          Double y = call.argument("y");
+          Double left = call.argument("left");
+          Double top = call.argument("top");
+          Double right = call.argument("right");
+          Double bottom = call.argument("bottom");
+          if (x != null && y != null) {
             PointF pixel = new PointF(x.floatValue(), y.floatValue());
             features = mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layerIds);
-          } else {
-            Double left = call.argument("left");
-            Double top = call.argument("top");
-            Double right = call.argument("right");
-            Double bottom = call.argument("bottom");
+          } else if (left != null && top != null && right != null && bottom != null) {
             RectF rectF =
                 new RectF(
                     left.floatValue(), top.floatValue(), right.floatValue(), bottom.floatValue());
             features = mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layerIds);
+          } else {
+            // Reading the coordinates blind turned a bad call into a
+            // NullPointerException, and answering with an empty list would look
+            // like a query that found nothing. Say which arguments are missing.
+            result.error(
+                "INVALID_ARGUMENT",
+                "queryRenderedFeatures requires either 'x' and 'y', or 'left', 'top', 'right' "
+                    + "and 'bottom', as numbers.",
+                null);
+            break;
           }
           result.success(featuresReply(features));
           break;
@@ -2723,6 +2739,22 @@ final class MapLibreMapController
           List<Feature> features;
 
           String sourceId = (String) call.argument("sourceId");
+          if (sourceId == null) {
+            result.error(
+                "INVALID_ARGUMENT", "querySourceFeatures requires a 'sourceId' string.", null);
+            break;
+          }
+
+          // A source is resolved by id out of the style, so without a style
+          // there is no source to query. Reading it blind raised a
+          // NullPointerException, which reached the caller as a bare "error".
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
 
           String sourceLayerId = (String) call.argument("sourceLayerId");
 
