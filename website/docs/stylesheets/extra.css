@@ -672,6 +672,45 @@ body, .md-typeset {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
 }
 
+/* Two live examples side by side, for comparison pages. At half the 46rem
+   content column each frame is only ~360px wide, so the default 3/2 ratio
+   would leave a 240px-tall strip of map: square keeps it usable. Collapses
+   to one column at the same breakpoint as .code-compare. */
+.example-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Two shared rows, caption then frame. Each column opts into them via
+     subgrid, so a caption that wraps to two lines grows the row for both
+     columns and the frames still start on the same line. */
+  grid-template-rows: auto auto;
+  gap: 1rem;
+  margin: 1.2rem 0 2rem;
+}
+.example-compare > div {
+  min-width: 0;
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 0.6rem;
+}
+/* Own the caption spacing: the theme's paragraph margin would otherwise sit
+   on top of the row gap. */
+.example-compare > div > p { margin: 0; }
+.example-compare .example-iframe {
+  aspect-ratio: 1 / 1;
+  margin: 0;
+  align-self: start;
+}
+@media screen and (max-width: 50em) {
+  .example-compare { grid-template-columns: 1fr; }
+  /* Stacked: nothing left to align across, so drop the subgrid and match the
+     portrait ratio every other iframe gets on mobile. The explicit ratio is
+     needed because the rule above outranks the plain .example-iframe one. */
+  .example-compare > div { display: block; }
+  .example-compare > div > p { margin: 0 0 0.6rem; }
+  .example-compare .example-iframe { aspect-ratio: 4 / 5; margin-bottom: 1rem; }
+}
+
 /* ============================================================
    ADMONITIONS
    ============================================================ */

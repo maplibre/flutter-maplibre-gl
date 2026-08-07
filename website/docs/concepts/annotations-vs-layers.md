@@ -158,6 +158,9 @@ await controller.addSymbolLayer('pts', 'pts-layer',
 
 ## Live demo
 
+<div class="example-compare" markdown="1">
+<div markdown="1">
+
 **Annotations** (5 tappable landmarks via `addSymbol()`):
 
 <iframe
@@ -167,6 +170,9 @@ await controller.addSymbolLayer('pts', 'pts-layer',
   loading="lazy"
 ></iframe>
 
+</div>
+<div markdown="1">
+
 **Style Layers** (10 cities via `addGeoJsonSource` + `addSymbolLayer`):
 
 <iframe
@@ -175,6 +181,9 @@ await controller.addSymbolLayer('pts', 'pts-layer',
   title="Symbol layer"
   loading="lazy"
 ></iframe>
+
+</div>
+</div>
 
 ## Constraints and gotchas
 
