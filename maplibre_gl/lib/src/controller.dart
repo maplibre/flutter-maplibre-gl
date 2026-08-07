@@ -1739,6 +1739,10 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features in a Rect in screen coordinates
+  ///
+  /// Unlike [queryRenderedFeatures], which takes the filter expression itself,
+  /// [filter] is that expression encoded as a JSON string, for example
+  /// `'["==", "type", "park"]'`.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,

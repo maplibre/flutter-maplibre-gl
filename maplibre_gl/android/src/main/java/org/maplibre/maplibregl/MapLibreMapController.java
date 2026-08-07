@@ -1542,8 +1542,18 @@ final class MapLibreMapController
 
           String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
 
-          List<Object> filter = call.argument("filter");
-          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          // queryRenderedFeatures sends the filter as a list, while
+          // queryRenderedFeaturesInRect sends the same expression already
+          // encoded as a JSON string. Reading only the list shape dropped the
+          // filter for the rect call, which then answered with every feature
+          // in the rectangle.
+          Object filter = call.argument("filter");
+          JsonElement jsonElement = null;
+          if (filter instanceof String) {
+            jsonElement = JsonParser.parseString((String) filter);
+          } else if (filter != null) {
+            jsonElement = new Gson().toJsonTree(filter);
+          }
           JsonArray jsonArray = null;
           if (jsonElement != null && jsonElement.isJsonArray()) {
             jsonArray = jsonElement.getAsJsonArray();

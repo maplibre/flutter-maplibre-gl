@@ -712,7 +712,11 @@ class MapLibreMapController extends MapLibrePlatform
       options['layers'] = layerIds;
     }
     if (filter != null) {
-      options['filter'] = filter;
+      // This call takes the filter as a JSON string, where
+      // queryRenderedFeatures takes the expression itself. maplibre-gl-js only
+      // accepts the expression, so the string has to be decoded here or the
+      // filter never reaches the query.
+      options['filter'] = jsonDecode(filter);
     }
 
     final geometry = jsify([
