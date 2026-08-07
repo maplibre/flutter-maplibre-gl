@@ -855,11 +855,11 @@ final class MapLibreMapController
     return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
   }
 
-  // Serializes features for the channel as JSON strings, like
-  // map#querySourceFeatures, so nested properties survive intact.
-  private static Map<String, Object> featuresReply(FeatureCollection collection) {
+  // Serializes features for the channel as JSON strings, so nested properties
+  // survive intact. Shared by every call that answers with features:
+  // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
+  private static Map<String, Object> featuresReply(List<Feature> features) {
     final List<String> featuresJson = new ArrayList<>();
-    final List<Feature> features = collection == null ? null : collection.features();
     if (features != null) {
       for (Feature feature : features) {
         featuresJson.add(feature.toJson());
@@ -868,6 +868,12 @@ final class MapLibreMapController
     final Map<String, Object> reply = new HashMap<>();
     reply.put("features", featuresJson);
     return reply;
+  }
+
+  // The cluster calls answer with a FeatureCollection, which is null when the
+  // id matches nothing.
+  private static Map<String, Object> featuresReply(FeatureCollection collection) {
+    return featuresReply(collection == null ? null : collection.features());
   }
 
   private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
@@ -1524,7 +1530,6 @@ final class MapLibreMapController
         }
       case "map#queryRenderedFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
           String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
@@ -1552,12 +1557,7 @@ final class MapLibreMapController
                     left.floatValue(), top.floatValue(), right.floatValue(), bottom.floatValue());
             features = mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layerIds);
           }
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
       case "map#setTelemetryEnabled":
@@ -2646,7 +2646,6 @@ final class MapLibreMapController
         }
         case "map#querySourceFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
           String sourceId = (String) call.argument("sourceId");
@@ -2674,12 +2673,7 @@ final class MapLibreMapController
             features = Collections.emptyList();
           }
 
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
         case "style#getLayerIds":
