@@ -44,6 +44,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **iOS**: `controller.cameraPosition` no longer sticks on a `NaN` zoom from a camera event that arrived before the first layout, which misplaced camera-anchored content on maps the user had not touched (#903).
 * **Web**: `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 * **Web**: `updateContentInsets` and the new `setPadding` no longer throw `UnimplementedError` (#258).
+* **Web**: `querySourceFeatures()` reports a call made before the style has loaded, matching Android and iOS. It answered with an empty list, which the caller cannot tell apart from a source holding no features (#952).
 * The bundled LICENSE no longer breaks Flutter's license collector, which showed an untitled, truncated first entry on every dependent app's `showLicensePage()` (#895).
 
 ### Changed

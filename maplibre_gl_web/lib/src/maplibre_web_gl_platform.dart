@@ -747,12 +747,18 @@ class MapLibreMapController extends MapLibrePlatform
     String? sourceLayerId,
     List<Object>? filter,
   ) async {
+    // A source is resolved by id out of the style, so without a style there is
+    // no source to query. Answering with an empty list would look like a
+    // source that holds no features, which the caller cannot tell apart, so
+    // report it as Android and iOS do.
     if (!_map.isStyleLoaded()) {
-      // Style is not loaded yet, return empty list
-      print(
-        'MapLibreMapController: querySourceFeatures, Style not loaded yet, returning empty list',
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'querySourceFeatures was called before the style finished '
+            "loading, so source '$sourceId' does not exist yet. Wait for "
+            'onStyleLoadedCallback.',
       );
-      return [];
     }
 
     final parameters = <String, dynamic>{};
@@ -764,7 +770,6 @@ class MapLibreMapController extends MapLibrePlatform
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    print('Query source features parameters: $parameters');
 
     return _map
         .querySourceFeatures(sourceId, parameters)
