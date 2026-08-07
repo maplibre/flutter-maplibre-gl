@@ -770,42 +770,45 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
-  /// Reports a rejected cluster query as a [PlatformException].
+  /// Runs a cluster query, answering null if maplibre-gl-js rejects.
   ///
-  /// maplibre-gl-js rejects when the source is not clustered or the id is
-  /// unknown, where Android and iOS answer 0 or an empty list instead. The
-  /// rejection carries a bare JS error, so it is named here rather than
-  /// surfacing untyped.
-  Future<T> _clusterQuery<T>(String methodName, Future<T> Function() query) {
-    return query().catchError((Object error) {
-      throw PlatformException(
-        code: 'CLUSTER_QUERY_FAILED',
-        message:
-            '$methodName failed. The source is probably not clustered, or the '
-            'cluster id is not one of its current clusters.',
-        details: error.toString(),
-      );
-    });
+  /// It rejects when the source is not clustered or the id is not one of its
+  /// current clusters, where the native SDKs answer 0 or an empty list. The
+  /// callers translate the null into those same values, so the three platforms
+  /// agree instead of one of them throwing.
+  ///
+  /// Only the JS call runs inside the guard. Decoding happens after this
+  /// returns, so a bug there throws on its own rather than being reported as a
+  /// clustering mistake.
+  Future<T?> _clusterQuery<T extends JSAny>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } catch (_) {
+      return null;
+    }
   }
 
+  /// Decodes a cluster query result, treating a rejected query as no features.
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject>? features) =>
+      features == null ? const [] : features.toDart.map(dartifyMap).toList();
+
   @override
-  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) {
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
-    return _clusterQuery(
-      'getClusterExpansionZoom',
+    final zoom = await _clusterQuery(
       () => source.getClusterExpansionZoom(clusterId),
     );
+    return zoom?.toDartDouble.round() ?? 0;
   }
 
   @override
   Future<List<Map<String, dynamic>>> getClusterChildren(
     String sourceId,
     int clusterId,
-  ) {
+  ) async {
     final source = _clusterSource(sourceId, 'getClusterChildren');
-    return _clusterQuery(
-      'getClusterChildren',
-      () => source.getClusterChildren(clusterId),
+    return _clusterFeatures(
+      await _clusterQuery(() => source.getClusterChildren(clusterId)),
     );
   }
 
@@ -815,11 +818,12 @@ class MapLibreMapController extends MapLibrePlatform
     int clusterId, {
     int limit = 10,
     int offset = 0,
-  }) {
+  }) async {
     final source = _clusterSource(sourceId, 'getClusterLeaves');
-    return _clusterQuery(
-      'getClusterLeaves',
-      () => source.getClusterLeaves(clusterId, limit, offset),
+    return _clusterFeatures(
+      await _clusterQuery(
+        () => source.getClusterLeaves(clusterId, limit, offset),
+      ),
     );
   }
 

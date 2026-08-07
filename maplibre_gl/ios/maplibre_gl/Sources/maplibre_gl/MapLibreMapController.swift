@@ -1210,9 +1210,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "source#getClusterExpansionZoom":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let clusterId = arguments["clusterId"] as? Int else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int
+            else {
+                result(clusterArgumentError("getClusterExpansionZoom"))
+                return
+            }
 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
             case let .failure(error): result(error.flutterError)
@@ -1225,22 +1229,33 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "source#getClusterChildren":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let clusterId = arguments["clusterId"] as? Int else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int
+            else {
+                result(clusterArgumentError("getClusterChildren"))
+                return
+            }
 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
-                result(featuresReply(source.children(of: clusterFeature(clusterId))))
+                result(featuresReply(
+                    source.children(of: clusterFeature(clusterId)),
+                    methodName: "getClusterChildren"
+                ))
             }
 
         case "source#getClusterLeaves":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let clusterId = arguments["clusterId"] as? Int else { return }
-            guard let limit = arguments["limit"] as? Int else { return }
-            guard let offset = arguments["offset"] as? Int else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let sourceId = arguments["sourceId"] as? String,
+                  let clusterId = arguments["clusterId"] as? Int,
+                  let limit = arguments["limit"] as? Int,
+                  let offset = arguments["offset"] as? Int
+            else {
+                result(clusterArgumentError("getClusterLeaves"))
+                return
+            }
 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
             case let .failure(error): result(error.flutterError)
@@ -1250,7 +1265,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     offset: UInt(max(0, offset)),
                     limit: UInt(max(0, limit))
                 )
-                result(featuresReply(leaves))
+                result(featuresReply(leaves, methodName: "getClusterLeaves"))
             }
 
         case "layer#setVisibility":
@@ -2312,21 +2327,50 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return feature
     }
 
+    /// The error a cluster call answers when its arguments do not decode.
+    ///
+    /// Replying rather than returning matters: a channel call that never
+    /// answers leaves the Dart future pending for good, with nothing to catch.
+    private func clusterArgumentError(_ methodName: String) -> FlutterError {
+        return FlutterError(
+            code: "INVALID_ARGUMENT",
+            message: "\(methodName) requires a String 'sourceId' and an int "
+                + "'clusterId', and getClusterLeaves also an int 'limit' and 'offset'.",
+            details: nil
+        )
+    }
+
     /// Serializes features for the channel as JSON strings, like
     /// `map#querySourceFeatures`, so nested properties survive intact.
-    private func featuresReply(_ features: [MLNFeature]) -> [String: NSObject] {
+    ///
+    /// Returns a `FlutterError` if any feature fails to serialize, rather than
+    /// skipping it. A short list is worse than an error here: the caller pages
+    /// through leaves by `point_count` and would silently step over the gap,
+    /// and Android cannot lose a feature this way, so dropping one would also
+    /// make the two platforms disagree.
+    private func featuresReply(
+        _ features: [MLNFeature],
+        methodName: String
+    ) -> Any {
         var featuresJson = [String]()
         for feature in features {
-            if let data = try? JSONSerialization.data(
+            guard let data = try? JSONSerialization.data(
                 withJSONObject: feature.geoJSONDictionary(),
                 options: []
             ),
                 let json = String(data: data, encoding: .utf8)
-            {
-                featuresJson.append(json)
+            else {
+                return FlutterError(
+                    code: "FEATURE_ENCODING_FAILED",
+                    message: "\(methodName) could not encode one of the features "
+                        + "it found as GeoJSON, so the result would have been "
+                        + "incomplete without saying so.",
+                    details: nil
+                )
             }
+            featuresJson.append(json)
         }
-        return ["features": featuresJson as NSObject]
+        return ["features": featuresJson as NSObject] as NSObject
     }
 
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {

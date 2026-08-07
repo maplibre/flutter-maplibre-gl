@@ -55,6 +55,7 @@ melos:
         scope:
           - maplibre_gl_platform_interface
           - maplibre_gl
+          - maplibre_gl_web
 
     analyze-all:
       description: Run static analysis on all packages

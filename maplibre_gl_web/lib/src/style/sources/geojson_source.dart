@@ -4,7 +4,6 @@ import 'dart:js_interop_unsafe';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/interop/style/sources/geojson_source_interop.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
-import 'package:maplibre_gl_web/src/utils.dart';
 
 class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
   FeatureCollection get data => FeatureCollection.fromJsObject(jsObject.data);
@@ -40,29 +39,29 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
   /// GeoJSON source apart from a vector or raster one.
   bool get hasClusterInspection => jsObject.has('getClusterExpansionZoom');
 
+  /// The three cluster-inspection calls, stopping at the JS boundary.
+  ///
+  /// They hand back the raw promise result rather than Dart values on purpose.
+  /// Converting here would put the conversion inside the same future as the
+  /// call, so a decoding bug would be indistinguishable from a rejected query
+  /// and would be reported as one. The caller converts after the promise has
+  /// settled.
+
   /// The zoom at which the cluster [clusterId] splits into its children.
-  Future<int> getClusterExpansionZoom(int clusterId) async {
-    final zoom = await jsObject.getClusterExpansionZoom(clusterId).toDart;
-    return zoom.toDartDouble.round();
-  }
+  Future<JSNumber> getClusterExpansionZoom(int clusterId) =>
+      jsObject.getClusterExpansionZoom(clusterId).toDart;
 
   /// The immediate children of the cluster [clusterId], on the next zoom level.
-  Future<List<Map<String, dynamic>>> getClusterChildren(int clusterId) async {
-    final features = await jsObject.getClusterChildren(clusterId).toDart;
-    return features.toDart.map(dartifyMap).toList();
-  }
+  Future<JSArray<JSObject>> getClusterChildren(int clusterId) =>
+      jsObject.getClusterChildren(clusterId).toDart;
 
   /// The original points belonging to the cluster [clusterId], [limit] at a
   /// time from [offset].
-  Future<List<Map<String, dynamic>>> getClusterLeaves(
+  Future<JSArray<JSObject>> getClusterLeaves(
     int clusterId,
     int limit,
     int offset,
-  ) async {
-    final features =
-        await jsObject.getClusterLeaves(clusterId, limit, offset).toDart;
-    return features.toDart.map(dartifyMap).toList();
-  }
+  ) => jsObject.getClusterLeaves(clusterId, limit, offset).toDart;
 
   /// Creates a new GeoJsonSource from a [jsObject].
   GeoJsonSource.fromJsObject(super.jsObject) : super.fromJsObject();

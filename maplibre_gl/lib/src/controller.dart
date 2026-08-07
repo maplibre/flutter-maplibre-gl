@@ -1737,9 +1737,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// await controller.animateCamera(CameraUpdate.newLatLngZoom(center, zoom + 0.5));
   /// ```
   ///
-  /// **Platform differences**: for a source that is not clustered, or a
-  /// [clusterId] that is not one of its current clusters, Android and iOS
-  /// return 0, while web throws a [PlatformException].
+  /// For a source that is not clustered, or a [clusterId] that is not one of
+  /// its current clusters, this answers 0 on every platform.
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     return _maplibrePlatform.getClusterExpansionZoom(sourceId, clusterId);
   }
@@ -1754,9 +1753,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// **Platform differences**: for a source that is not clustered, or an
-  /// unknown [clusterId], Android and iOS return an empty list, while web
-  /// throws a [PlatformException].
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
   Future<List<Map<String, dynamic>>> getClusterChildren(
     String sourceId,
     int clusterId,
@@ -1772,9 +1770,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// **Platform differences**: for a source that is not clustered, or an
-  /// unknown [clusterId], Android and iOS return an empty list, while web
-  /// throws a [PlatformException].
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
   Future<List<Map<String, dynamic>>> getClusterLeaves(
     String sourceId,
     int clusterId, {

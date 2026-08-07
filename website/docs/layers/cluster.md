@@ -150,7 +150,7 @@ final children = await controller.getClusterChildren('events', clusterId);
 | `getClusterLeaves(sourceId, clusterId, {limit, offset})` | The cluster's original points, as GeoJSON features |
 | `getClusterChildren(sourceId, clusterId)` | The cluster's immediate children, as GeoJSON features |
 
-For a source that is not clustered, or a `clusterId` that is not one of its current clusters, Android and iOS answer 0 or an empty list, while web throws a `PlatformException`.
+For a source that is not clustered, or a `clusterId` that is not one of its current clusters, every platform answers 0 or an empty list.
 
 ## Filters for cluster vs. point layers
 
