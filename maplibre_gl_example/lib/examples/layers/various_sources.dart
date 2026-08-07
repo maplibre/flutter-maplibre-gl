@@ -308,13 +308,15 @@ class FullMapState extends State<FullMap> {
   static Future<void> addCountries(MapLibreMapController controller) async {
     // Add a simple additional layer to demonstrate layering on the default style
     // Remove existing layers/source if they exist (in case of re-loading)
+    // Ids are namespaced: the demo style ships its own "countries-fill", and
+    // the plain name would make the cleanup below delete that base layer.
     try {
-      await controller.removeLayer("countries-fill");
+      await controller.removeLayer("ne-countries-fill");
     } catch (e) {
       // Layer doesn't exist, ignore
     }
     try {
-      await controller.removeLayer("countries-outline");
+      await controller.removeLayer("ne-countries-outline");
     } catch (e) {
       // Layer doesn't exist, ignore
     }
@@ -338,7 +340,7 @@ class FullMapState extends State<FullMap> {
 
     await controller.addLayer(
       "countries-highlight",
-      "countries-fill",
+      "ne-countries-fill",
       const FillLayerProperties(
         fillColor: "#627BC1",
         fillOpacity: 0.3,
@@ -347,7 +349,7 @@ class FullMapState extends State<FullMap> {
 
     await controller.addLayer(
       "countries-highlight",
-      "countries-outline",
+      "ne-countries-outline",
       const LineLayerProperties(
         lineColor: "#627BC1",
         lineWidth: 2,

@@ -26,9 +26,11 @@ class _DocExpressionsBody extends StatefulWidget {
 class _DocExpressionsBodyState extends State<_DocExpressionsBody> {
   MapLibreMapController? _controller;
   bool _layersAdded = false;
-  static const _sourceId = 'countries-source';
-  static const _fillLayerId = 'countries-fill';
-  static const _labelLayerId = 'countries-labels';
+  // Namespaced ids: the demo style already ships a layer called
+  // "countries-fill", and addLayer throws on a duplicate id.
+  static const _sourceId = 'doc-expr-countries';
+  static const _fillLayerId = 'doc-expr-countries-fill';
+  static const _labelLayerId = 'doc-expr-countries-labels';
 
   // Countries with GDP per capita (USD) and continent
   static final List<Map<String, Object>> _countries = [
