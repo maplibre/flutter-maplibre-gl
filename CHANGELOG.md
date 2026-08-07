@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* **Android, iOS, Web**: a clustered GeoJSON source can be inspected. `getClusterExpansionZoom()` gives the zoom at which a cluster splits, so a cluster tap can zoom to exactly that instead of guessing with `zoom + 2`, while `getClusterLeaves()` and `getClusterChildren()` read the points behind a cluster. All three take the `cluster_id` property of the cluster feature. See the [cluster guide](https://maplibre.org/flutter-maplibre-gl/layers/cluster/) (#896).
+
+### Docs
+* The [cluster guide](https://maplibre.org/flutter-maplibre-gl/layers/cluster/) covers the new inspection calls, and its live example zooms to a tapped cluster's real expansion zoom (#896).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 **No breaking API changes**: nothing stops compiling. Android and Web apps each need one small change, below. The rest closes platform gaps in the public API and cuts what the map costs at start-up and on data updates.\

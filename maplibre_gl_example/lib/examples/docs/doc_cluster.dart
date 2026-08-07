@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -31,6 +32,9 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
   static const _clusterCircleId = 'cluster-circles';
   static const _clusterCountId = 'cluster-count';
   static const _unclusteredId = 'unclustered-point';
+
+  /// What the last cluster tap reported, shown in the banner.
+  String? _lastTapMessage;
 
   void _onMapCreated(MapLibreMapController controller) {
     _controller = controller;
@@ -129,18 +133,106 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
     );
   }
 
+  void _onMapClick(Point<double> point, LatLng coordinates) {
+    unawaited(_zoomToClusterAt(point, coordinates));
+  }
+
+  /// Zooms to the level at which the tapped cluster splits, rather than
+  /// guessing with the current zoom plus a constant.
+  Future<void> _zoomToClusterAt(Point<double> point, LatLng coordinates) async {
+    final ctrl = _controller;
+    if (ctrl == null) return;
+
+    final features = await ctrl.queryRenderedFeatures(
+      point,
+      [_clusterCircleId],
+      null,
+    );
+    if (features.isEmpty) return;
+
+    final properties = features.first['properties'] as Map?;
+    // cluster_id arrives as a num: an int from the native channels, a double
+    // from the JS interop on web.
+    final clusterId = (properties?['cluster_id'] as num?)?.toInt();
+    final pointCount = (properties?['point_count'] as num?)?.toInt() ?? 0;
+    if (clusterId == null) return;
+
+    final expansionZoom = await ctrl.getClusterExpansionZoom(
+      _sourceId,
+      clusterId,
+    );
+    // The leaves are the original points behind the bubble. Asking for
+    // point_count of them reads the whole cluster in one call.
+    final leaves = await ctrl.getClusterLeaves(
+      _sourceId,
+      clusterId,
+      limit: pointCount,
+    );
+    final children = await ctrl.getClusterChildren(_sourceId, clusterId);
+
+    // Nudge past the expansion zoom so the split is visibly complete. The tap
+    // position stands in for the cluster centre, which is close enough here and
+    // avoids reading the geometry back out of the queried feature.
+    await ctrl.animateCamera(
+      CameraUpdate.newLatLngZoom(coordinates, expansionZoom + 0.4),
+      duration: const Duration(milliseconds: 600),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _lastTapMessage =
+          'Cluster $clusterId: $pointCount points, ${children.length} children, '
+          'splits at zoom $expansionZoom (${leaves.length} leaves read)';
+    });
+  }
+
+  static const _initialTarget = LatLng(49.0, 3.0);
+
   @override
   Widget build(BuildContext context) {
-    return MapExampleScaffold(
-      mapOnly: true,
-      map: MapLibreMap(
-        styleString: ExampleConstants.demoMapStyle,
-        onMapCreated: _onMapCreated,
-        onStyleLoadedCallback: _onStyleLoaded,
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(49.0, 3.0),
-          zoom: 4.0,
-        ),
+    final theme = Theme.of(context);
+    // A plain Scaffold rather than MapExampleScaffold, whose map slot takes a
+    // MapLibreMap and so cannot hold the banner overlaid on the map.
+    return Scaffold(
+      body: Stack(
+        children: [
+          MapLibreMap(
+            styleString: ExampleConstants.demoMapStyle,
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoaded,
+            onMapClick: _onMapClick,
+            initialCameraPosition: const CameraPosition(
+              target: _initialTarget,
+              zoom: 4.0,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Material(
+                  elevation: 2,
+                  borderRadius: BorderRadius.circular(16),
+                  color: theme.colorScheme.surface,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      _lastTapMessage ??
+                          'Tap a cluster to zoom to where it splits',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

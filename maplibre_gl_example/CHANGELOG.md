@@ -1,3 +1,8 @@
+## Unreleased
+
+### Changed
+* The Cluster example zooms to a tapped cluster's real expansion zoom, and reports its point, child and leaf counts (#896).
+
 ## 0.26.0
 
 Example app updates aligned with the 0.26.0 plugin release.

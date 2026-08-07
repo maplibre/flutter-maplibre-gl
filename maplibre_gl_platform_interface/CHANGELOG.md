@@ -1,3 +1,10 @@
+## Unreleased
+
+See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+
+### Added
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does, so nested properties survive the channel (#896).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.

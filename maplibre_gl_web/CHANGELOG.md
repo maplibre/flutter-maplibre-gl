@@ -1,5 +1,10 @@
 See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Added
+* `getClusterExpansionZoom()`, `getClusterChildren()` and `getClusterLeaves()` read a clustered GeoJSON source. maplibre-gl-js 6 returns promises from all three, where version 5 took a trailing callback, so the interop is typed as promises. A rejection, which is how the library reports a source that is not clustered or an unknown cluster id, is reported as a `PlatformException` naming the likely cause; Android and iOS answer 0 or an empty list for the same case (#896).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 ### Added
