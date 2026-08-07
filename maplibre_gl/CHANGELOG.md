@@ -30,7 +30,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode. Large payloads are encoded on a background isolate, cutting main-isolate time by two to three times (#366).
 * **Android, iOS**: downloading an area that is already downloaded replaces its region instead of adding a duplicate, and keeps the same region id (#886).
 * **Android, iOS**: `MapLibreMap.preWarm()` no longer throws "Binding has not yet been initialized" when called at the top of `main()`, where its own documentation puts it (#867).
-* **Android**: `queryRenderedFeaturesInRect()` applies the `filter` it is given. This call takes the filter as a JSON string, which the Android side read as a list, so it never reached the query and the answer held every feature in the rectangle. The dartdoc now says which shape the parameter takes (#953).
+* **Android, Web**: `queryRenderedFeaturesInRect()` applies the `filter` it is given. This call takes the filter as a JSON string, which neither platform decoded, so it never reached the query and the answer held every feature in the rectangle. The dartdoc now says which shape the parameter takes (#953).
 * **Android**: `queryRenderedFeatures()` and `querySourceFeatures()` say what is wrong with a call they cannot answer: `STYLE_NOT_READY` before the style has loaded, `INVALID_ARGUMENT` for a missing `sourceId`, `layerIds` or query geometry. They read their arguments blind, so the failure arrived as a bare `error` carrying a `NullPointerException` message (#954).
 * **Android**: a map no longer stays blank for good after its activity is recreated, whether by "Don't keep activities", memory pressure or rotation; the camera position comes back with it (#805).
 * **Android**: icons added with `addImage` are visible again, at the right size on high-density screens, and undecodable bytes report a clear error instead of crashing. Since 0.26.0 icons could be dropped whenever draggable annotations were in use, which is the default (#866, #868).
@@ -40,6 +40,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **iOS**: `controller.cameraPosition` no longer sticks on a `NaN` zoom from a camera event that arrived before the first layout, which misplaced camera-anchored content on maps the user had not touched (#903).
 * **Web**: `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
 * **Web**: `updateContentInsets` and the new `setPadding` no longer throw `UnimplementedError` (#258).
+* **Web**: `querySourceFeatures()` reports a call made before the style has loaded, matching Android and iOS. It answered with an empty list, which the caller cannot tell apart from a source holding no features (#952).
 * The bundled LICENSE no longer breaks Flutter's license collector, which showed an untitled, truncated first entry on every dependent app's `showLicensePage()` (#895).
 
 ### Changed
