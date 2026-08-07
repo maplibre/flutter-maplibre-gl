@@ -21,6 +21,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `getFeatureState()` returns the state instead of throwing, and reports no state as null rather than as an empty map, matching Android. It converted the JS object with `dartify()` and cast the result to `Map<String, dynamic>`, which that conversion never produces, so every call that found a state threw (#889).
 * `removeFeatureState(sourceId)` with no feature id resets the whole source. It built the target with `id: null`, and maplibre-gl-js only treats a missing id as "every feature of this source", so the call matched nothing and cleared nothing, without an error. A `stateKey` with no `featureId` now raises the same `INVALID_ARGUMENT` as Android instead of being ignored (#889).
 * `onMapIdle` now fires, matching Android and iOS; code waiting on it never ran (#857).
+* `querySourceFeatures()` raises `STYLE_NOT_READY` when the style has not loaded yet, instead of logging and answering with an empty list that the caller cannot tell apart from a source holding no features. The two `queryRenderedFeatures` calls keep answering with an empty list, since nothing is rendered yet either way. The debug print of the query parameters is gone too (#952).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
