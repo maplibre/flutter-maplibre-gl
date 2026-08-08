@@ -205,6 +205,33 @@ await controller.addCircleLayer(
 );
 ```
 
+## Global state (web only)
+
+`Expressions.globalState` reads a value shared by the whole style instead of a
+feature property, so one switch can restyle any number of layers at once.
+Set the value with `setGlobalStateProperty`:
+
+```dart
+await controller.addFillLayer(
+  "buildings-source",
+  "buildings",
+  const FillLayerProperties(
+    fillColor: [
+      Expressions.match,
+      [Expressions.globalState, "theme"],
+      "dark", "#222222",
+      "#eeeeee", // fallback
+    ],
+  ),
+);
+
+// Later, from a toggle in your UI:
+await controller.setGlobalStateProperty("theme", "dark");
+```
+
+On Android and iOS `setGlobalStateProperty` throws an `UnsupportedError`;
+MapLibre Native does not implement global state yet.
+
 ## Key `Expressions` constants
 
 | Constant | Style spec equivalent | Use case |

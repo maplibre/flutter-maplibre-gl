@@ -162,10 +162,11 @@ void main() {
       'default toList() returns [interval, priority.index, displacement]',
       () {
         const props = LocationEnginePlatforms.android();
-        expect(
-          props.toList(targetPlatform: platform),
-          [1000, LocationPriority.balanced.index, 0],
-        );
+        expect(props.toList(targetPlatform: platform), [
+          1000,
+          LocationPriority.balanced.index,
+          0,
+        ]);
       },
     );
 
@@ -190,10 +191,11 @@ void main() {
         interval: 500,
         displacement: 10,
       );
-      expect(
-        props.toList(targetPlatform: platform),
-        [500, LocationPriority.highAccuracy.index, 10],
-      );
+      expect(props.toList(targetPlatform: platform), [
+        500,
+        LocationPriority.highAccuracy.index,
+        10,
+      ]);
     });
 
     test('all priority values serialize correctly', () {
@@ -209,10 +211,11 @@ void main() {
         timeout: 5000,
       );
       // Only interval, priority, displacement (all defaults)
-      expect(
-        props.toList(targetPlatform: platform),
-        [1000, LocationPriority.balanced.index, 0],
-      );
+      expect(props.toList(targetPlatform: platform), [
+        1000,
+        LocationPriority.balanced.index,
+        0,
+      ]);
     });
   });
 

@@ -61,11 +61,7 @@ class ManualLocationPuck {
 
   /// Pushes a new fix: (re)builds the puck if needed, moves it, updates the
   /// accuracy circle and bearing arrow, and recenters the camera when tracking.
-  void update(
-    LatLng position, {
-    double? accuracyMeters,
-    double? bearing,
-  }) {
+  void update(LatLng position, {double? accuracyMeters, double? bearing}) {
     _position = position;
     _accuracyMeters = accuracyMeters;
     _bearing = bearing;
@@ -168,9 +164,7 @@ class ManualLocationPuck {
     dotEl.appendChild(arrowEl);
     _arrowEl = arrowEl;
     _dotMarker =
-        Marker(
-            MarkerOptions(element: dotEl, subpixelPositioning: true),
-          )
+        Marker(MarkerOptions(element: dotEl, subpixelPositioning: true))
           ..setLngLat(lngLat)
           ..addTo(_map);
 

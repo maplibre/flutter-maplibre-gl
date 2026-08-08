@@ -194,9 +194,7 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(24.0),
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               ),
             )
           else if (_displayData.isNotEmpty)

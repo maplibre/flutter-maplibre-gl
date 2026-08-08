@@ -5,12 +5,7 @@
 part of '../maplibre_gl_platform_interface.dart';
 
 /// The camera mode, which determines how the map camera will track the rendered location.
-enum MyLocationTrackingMode {
-  none,
-  tracking,
-  trackingCompass,
-  trackingGps,
-}
+enum MyLocationTrackingMode { none, tracking, trackingCompass, trackingGps }
 
 /// Specifies if and how the user's heading/bearing is rendered in the user location indicator.
 enum MyLocationRenderMode {
@@ -25,43 +20,19 @@ enum MyLocationRenderMode {
 }
 
 /// Compass View Position
-enum CompassViewPosition {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
+enum CompassViewPosition { topLeft, topRight, bottomLeft, bottomRight }
 
 /// Attribution Button Position
-enum AttributionButtonPosition {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
+enum AttributionButtonPosition { topLeft, topRight, bottomLeft, bottomRight }
 
 /// Logo View Position
-enum LogoViewPosition {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
+enum LogoViewPosition { topLeft, topRight, bottomLeft, bottomRight }
 
 /// Scale Control Position
-enum ScaleControlPosition {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}
+enum ScaleControlPosition { topLeft, topRight, bottomLeft, bottomRight }
 
 /// Scale Control Unit
-enum ScaleControlUnit {
-  metric,
-  imperial,
-  nautical,
-}
+enum ScaleControlUnit { metric, imperial, nautical }
 
 /// Bounds for the map camera target.
 /// Used with [MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows

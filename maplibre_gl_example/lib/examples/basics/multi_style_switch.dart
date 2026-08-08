@@ -143,11 +143,8 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
                           child: Text.rich(
                             TextSpan(
                               text: 'Current style: ',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                               children: [
                                 TextSpan(
                                   text: current.label,

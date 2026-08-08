@@ -10,10 +10,7 @@ extension type ScaleControlOptionsJsImpl._(JSObject _) implements JSObject {
   external num get maxWidth;
   external String get unit;
 
-  external factory ScaleControlOptionsJsImpl({
-    num? maxWidth,
-    String? unit,
-  });
+  external factory ScaleControlOptionsJsImpl({num? maxWidth, String? unit});
 }
 
 /// A `ScaleControl` control displays the ratio of a distance on the map

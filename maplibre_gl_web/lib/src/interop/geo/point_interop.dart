@@ -7,10 +7,7 @@ import 'dart:js_interop';
 @staticInterop
 @anonymous
 class PointJsImpl {
-  external factory PointJsImpl({
-    num x,
-    num y,
-  });
+  external factory PointJsImpl({num x, num y});
 }
 
 extension PointJsImplExtension on PointJsImpl {

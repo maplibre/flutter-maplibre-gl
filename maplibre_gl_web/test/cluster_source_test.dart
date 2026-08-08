@@ -31,9 +31,7 @@ void main() {
             'getClusterExpansionZoom'.toJS,
             ((JSNumber _) => Future<JSNumber>.value(3.toJS).toJS).toJS,
           );
-      final source = GeoJsonSource.fromJsObject(
-        target as GeoJsonSourceJsImpl,
-      );
+      final source = GeoJsonSource.fromJsObject(target as GeoJsonSourceJsImpl);
 
       expect(source.hasClusterInspection, isTrue);
     });
@@ -69,9 +67,7 @@ void main() {
             'getClusterExpansionZoom'.toJS,
             ((JSNumber _) => Future<JSNumber>.value(9.toJS).toJS).toJS,
           );
-      final source = GeoJsonSource.fromJsObject(
-        target as GeoJsonSourceJsImpl,
-      );
+      final source = GeoJsonSource.fromJsObject(target as GeoJsonSourceJsImpl);
 
       expect((await source.getClusterExpansionZoom(1)).toDartDouble, 9);
     });

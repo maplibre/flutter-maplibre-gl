@@ -85,13 +85,10 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
       );
 
       // Add GeoJSON source with points
-      await _controller!.addGeoJsonSource(
-        _sourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': _generateRandomPoints(10),
-        },
-      );
+      await _controller!.addGeoJsonSource(_sourceId, {
+        'type': 'FeatureCollection',
+        'features': _generateRandomPoints(10),
+      });
 
       // Add symbol layer
       await _controller!.addSymbolLayer(
@@ -159,9 +156,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
     for (var i = 0; i < count; i++) {
       points.add({
         'type': 'Feature',
-        'properties': {
-          'name': cities[i % cities.length],
-        },
+        'properties': {'name': cities[i % cities.length]},
         'geometry': {
           'type': 'Point',
           'coordinates': [
@@ -469,18 +464,9 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'left',
-                                label: 'Left',
-                              ),
-                              ExampleSegment(
-                                value: 'center',
-                                label: 'Center',
-                              ),
-                              ExampleSegment(
-                                value: 'right',
-                                label: 'Right',
-                              ),
+                              ExampleSegment(value: 'left', label: 'Left'),
+                              ExampleSegment(value: 'center', label: 'Center'),
+                              ExampleSegment(value: 'right', label: 'Right'),
                             ],
                             selected: _textJustify,
                             onSelectionChanged: (value) async {
@@ -582,14 +568,8 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'point',
-                                label: 'Point',
-                              ),
-                              ExampleSegment(
-                                value: 'line',
-                                label: 'Line',
-                              ),
+                              ExampleSegment(value: 'point', label: 'Point'),
+                              ExampleSegment(value: 'line', label: 'Line'),
                             ],
                             selected: _symbolPlacement,
                             onSelectionChanged: (value) async {

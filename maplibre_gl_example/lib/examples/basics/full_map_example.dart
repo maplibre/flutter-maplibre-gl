@@ -45,9 +45,7 @@ class _FullMapBodyState extends State<_FullMapBody> {
 
   Future<void> _resetCamera() async {
     await _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        ExampleConstants.defaultCameraPosition,
-      ),
+      CameraUpdate.newCameraPosition(ExampleConstants.defaultCameraPosition),
     );
     setState(() => canReset = false);
   }

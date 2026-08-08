@@ -60,10 +60,7 @@ void main() {
 
     test('easeCamera delegates to platform', () async {
       final update = CameraUpdate.zoomTo(12);
-      await controller.easeCamera(
-        update,
-        duration: const Duration(seconds: 1),
-      );
+      await controller.easeCamera(update, duration: const Duration(seconds: 1));
 
       final calls = platform.callsFor('easeCamera');
       expect(calls.length, 1);
@@ -339,6 +336,59 @@ void main() {
       expect(platform.wasCalled('addBackgroundLayer'), isFalse);
     });
 
+    test('setSky delegates to platform', () async {
+      await controller.setSky(const SkyProperties(skyColor: '#88C6FC'));
+
+      final calls = platform.callsFor('setSky');
+      expect(calls.length, 1);
+      expect(
+        (calls.first.positionalArgs.first as SkyProperties).skyColor,
+        '#88C6FC',
+      );
+    });
+
+    test('setTerrain delegates to platform', () async {
+      await controller.setTerrain(
+        const TerrainProperties(source: 'dem-1', exaggeration: 1.5),
+      );
+      await controller.setTerrain(null);
+
+      final calls = platform.callsFor('setTerrain');
+      expect(calls.length, 2);
+      expect(
+        (calls.first.positionalArgs.first as TerrainProperties).source,
+        'dem-1',
+      );
+      expect(calls[1].positionalArgs.first, isNull);
+    });
+
+    test('setProjection delegates to platform', () async {
+      await controller.setProjection('globe');
+
+      final calls = platform.callsFor('setProjection');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'globe');
+    });
+
+    test('setLight delegates to platform', () async {
+      await controller.setLight(const LightProperties(intensity: 0.4));
+
+      final calls = platform.callsFor('setLight');
+      expect(calls.length, 1);
+      expect(
+        (calls.first.positionalArgs.first as LightProperties).intensity,
+        0.4,
+      );
+    });
+
+    test('setGlobalStateProperty delegates to platform', () async {
+      await controller.setGlobalStateProperty('theme', 'dark');
+
+      final calls = platform.callsFor('setGlobalStateProperty');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['theme', 'dark']);
+    });
+
     test('addLayer with CircleLayerProperties', () async {
       await controller.addLayer(
         'src-1',
@@ -519,10 +569,7 @@ void main() {
   group('Camera state tracking', () {
     test('initial cameraPosition matches constructor', () {
       expect(controller.cameraPosition, isNotNull);
-      expect(
-        controller.cameraPosition!.target,
-        const LatLng(0, 0),
-      );
+      expect(controller.cameraPosition!.target, const LatLng(0, 0));
     });
 
     test('isCameraMoving is initially false', () {

@@ -8,9 +8,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   List<Feature> get features =>
       jsObject.features.toDart.map((f) => Feature.fromJsObject(f)).toList();
 
-  factory FeatureCollection({
-    required List<Feature> features,
-  }) {
+  factory FeatureCollection({required List<Feature> features}) {
     return FeatureCollection.fromJsObject(
       FeatureCollectionJsImpl(
         type: 'FeatureCollection',
@@ -92,15 +90,10 @@ class Geometry extends JsObjectWrapper<GeometryJsImpl> {
   /// cannot index.
   dynamic get coordinates => utils.dartify(jsObject.coordinates);
 
-  factory Geometry({
-    String? type,
-    dynamic coordinates,
-  }) => Geometry.fromJsObject(
-    GeometryJsImpl(
-      type: type,
-      coordinates: utils.jsify(coordinates),
-    ),
-  );
+  factory Geometry({String? type, dynamic coordinates}) =>
+      Geometry.fromJsObject(
+        GeometryJsImpl(type: type, coordinates: utils.jsify(coordinates)),
+      );
 
   /// Creates a new Geometry from a [jsObject].
   Geometry.fromJsObject(super.jsObject) : super.fromJsObject();

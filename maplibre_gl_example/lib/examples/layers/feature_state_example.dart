@@ -150,10 +150,7 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     await controller.addLayer(
       _sourceId,
       _borderLayerId,
-      const LineLayerProperties(
-        lineColor: '#627BC1',
-        lineWidth: 2,
-      ),
+      const LineLayerProperties(lineColor: '#627BC1', lineWidth: 2),
       enableInteraction: false,
     );
   }
@@ -166,11 +163,9 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     final controller = _controller;
     if (controller == null) return;
 
-    final features = await controller.queryRenderedFeatures(
-      point,
-      [_fillLayerId],
-      null,
-    );
+    final features = await controller.queryRenderedFeatures(point, [
+      _fillLayerId,
+    ], null);
     if (features.isEmpty) return;
 
     final feature = features.first;
@@ -300,10 +295,7 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.storage,
-                        color: theme.colorScheme.primary,
-                      ),
+                      Icon(Icons.storage, color: theme.colorScheme.primary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(

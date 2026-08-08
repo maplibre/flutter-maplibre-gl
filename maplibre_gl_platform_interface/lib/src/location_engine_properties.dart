@@ -130,17 +130,9 @@ class LocationEnginePlatforms {
   List<int> toList({TargetPlatform? targetPlatform}) {
     final platform = targetPlatform ?? defaultTargetPlatform;
     if (targetPlatform == null && kIsWeb) {
-      return [
-        if (enableHighAccuracy) 1 else 0,
-        maximumAge ?? 0,
-        timeout ?? 0,
-      ];
+      return [if (enableHighAccuracy) 1 else 0, maximumAge ?? 0, timeout ?? 0];
     } else if (platform == TargetPlatform.android) {
-      return [
-        interval ?? 1000,
-        resolvedPriority.index,
-        displacement ?? 0,
-      ];
+      return [interval ?? 1000, resolvedPriority.index, displacement ?? 0];
     } else if (platform == TargetPlatform.iOS) {
       return [
         if (enableHighAccuracy) 1 else 0,

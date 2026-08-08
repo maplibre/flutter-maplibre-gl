@@ -4,9 +4,6 @@
 
 /// Web stub: offline storage does not exist on web, so exporting is
 /// unsupported. Kept so the conditional import resolves on all platforms.
-Future<String?> copyOfflineDatabase(
-  String sourcePath,
-  String destinationPath,
-) {
+Future<String?> copyOfflineDatabase(String sourcePath, String destinationPath) {
   throw UnsupportedError('Offline database export is not available on web.');
 }

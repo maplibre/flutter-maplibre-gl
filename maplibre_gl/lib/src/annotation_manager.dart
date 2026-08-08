@@ -237,12 +237,8 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(
-    super.controller, {
-    super.enableInteraction = true,
-  }) : super(
-         selectLayer: (line) => line.options.linePattern == null ? 0 : 1,
-       );
+  LineManager(super.controller, {super.enableInteraction = true})
+    : super(selectLayer: (line) => line.options.linePattern == null ? 0 : 1);
 
   static const _baseProperties = LineLayerProperties(
     lineJoin: [Expressions.get, 'lineJoin'],
@@ -264,12 +260,8 @@ class LineManager extends AnnotationManager<Line> {
 }
 
 class FillManager extends AnnotationManager<Fill> {
-  FillManager(
-    super.controller, {
-    super.enableInteraction = true,
-  }) : super(
-         selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1,
-       );
+  FillManager(super.controller, {super.enableInteraction = true})
+    : super(selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1);
 
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -288,10 +280,7 @@ class FillManager extends AnnotationManager<Fill> {
 }
 
 class CircleManager extends AnnotationManager<Circle> {
-  CircleManager(
-    super.controller, {
-    super.enableInteraction = true,
-  });
+  CircleManager(super.controller, {super.enableInteraction = true});
 
   @override
   List<LayerProperties> get allLayerProperties => const [

@@ -61,13 +61,10 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
 
     try {
       // Add GeoJSON source with multiple points
-      await _controller!.addGeoJsonSource(
-        _sourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': _generateRandomPoints(20),
-        },
-      );
+      await _controller!.addGeoJsonSource(_sourceId, {
+        'type': 'FeatureCollection',
+        'features': _generateRandomPoints(20),
+      });
 
       // Add circle layer
       await _controller!.addCircleLayer(
@@ -288,14 +285,8 @@ class _CircleLayerBodyState extends State<_CircleLayerBody> {
                       title: const Text('Pitch Alignment'),
                       subtitle: ExampleSegmentedButton<double>(
                         segments: const [
-                          ExampleSegment(
-                            value: 0.0,
-                            label: 'Viewport',
-                          ),
-                          ExampleSegment(
-                            value: 1.0,
-                            label: 'Map',
-                          ),
+                          ExampleSegment(value: 0.0, label: 'Viewport'),
+                          ExampleSegment(value: 1.0, label: 'Map'),
                         ],
                         selected: _circlePitchAlignment,
                         onSelectionChanged: (value) async {

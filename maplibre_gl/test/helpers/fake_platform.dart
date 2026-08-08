@@ -326,6 +326,31 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setSky(SkyProperties sky) async {
+    calls.add(PlatformCall('setSky', [sky]));
+  }
+
+  @override
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    calls.add(PlatformCall('setTerrain', [terrain]));
+  }
+
+  @override
+  Future<void> setProjection(Object type) async {
+    calls.add(PlatformCall('setProjection', [type]));
+  }
+
+  @override
+  Future<void> setLight(LightProperties light) async {
+    calls.add(PlatformCall('setLight', [light]));
+  }
+
+  @override
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    calls.add(PlatformCall('setGlobalStateProperty', [name, value]));
+  }
+
+  @override
   Future<void> removeLayer(String layerId) async {
     calls.add(PlatformCall('removeLayer', [layerId]));
   }

@@ -57,10 +57,7 @@ class _DocLineLayerBodyState extends State<_DocLineLayerBody> {
         {
           'type': 'Feature',
           'properties': {'name': 'Trans-Siberian Railway'},
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': _routeCoords,
-          },
+          'geometry': {'type': 'LineString', 'coordinates': _routeCoords},
         },
       ],
     });

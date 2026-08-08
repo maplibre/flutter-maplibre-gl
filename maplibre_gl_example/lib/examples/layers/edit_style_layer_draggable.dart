@@ -148,14 +148,10 @@ class _EditStyleLayerDraggableBodyState
 
     try {
       // Create circle layer
-      await _controller!.addGeoJsonSource(
-        _circleSourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': [],
-        },
-        promoteId: 'id',
-      );
+      await _controller!.addGeoJsonSource(_circleSourceId, {
+        'type': 'FeatureCollection',
+        'features': [],
+      }, promoteId: 'id');
 
       await _controller!.addCircleLayer(
         _circleSourceId,
@@ -171,14 +167,10 @@ class _EditStyleLayerDraggableBodyState
       );
 
       // Create symbol layer
-      await _controller!.addGeoJsonSource(
-        _symbolSourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': [],
-        },
-        promoteId: 'id',
-      );
+      await _controller!.addGeoJsonSource(_symbolSourceId, {
+        'type': 'FeatureCollection',
+        'features': [],
+      }, promoteId: 'id');
 
       await _controller!.addSymbolLayer(
         _symbolSourceId,
@@ -205,9 +197,9 @@ class _EditStyleLayerDraggableBodyState
     } catch (e) {
       dev.log('Error creating layers: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating layers: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error creating layers: $e')));
       }
     }
   }
@@ -275,25 +267,19 @@ class _EditStyleLayerDraggableBodyState
   Future<void> _updateCircleSource() async {
     if (_controller == null) return;
 
-    await _controller!.setGeoJsonSource(
-      _circleSourceId,
-      {
-        'type': 'FeatureCollection',
-        'features': _circleFeatures,
-      },
-    );
+    await _controller!.setGeoJsonSource(_circleSourceId, {
+      'type': 'FeatureCollection',
+      'features': _circleFeatures,
+    });
   }
 
   Future<void> _updateSymbolSource() async {
     if (_controller == null) return;
 
-    await _controller!.setGeoJsonSource(
-      _symbolSourceId,
-      {
-        'type': 'FeatureCollection',
-        'features': _symbolFeatures,
-      },
-    );
+    await _controller!.setGeoJsonSource(_symbolSourceId, {
+      'type': 'FeatureCollection',
+      'features': _symbolFeatures,
+    });
   }
 
   Future<void> _clearAll() async {
@@ -328,10 +314,7 @@ class _EditStyleLayerDraggableBodyState
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
             ),
           ),
         ],

@@ -86,9 +86,7 @@ void main() {
     });
 
     test('preloaded injects nothing', () {
-      const source = MapLibreJsSource.preloaded(
-        timeout: Duration(seconds: 5),
-      );
+      const source = MapLibreJsSource.preloaded(timeout: Duration(seconds: 5));
 
       expect(source.scriptUrl, isNull);
       expect(source.styleUrl, isNull);

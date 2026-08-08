@@ -50,6 +50,7 @@ import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
 
 // Advanced examples
+import 'examples/advanced/globe_terrain_sky.dart';
 import 'examples/advanced/offline_regions.dart';
 import 'examples/advanced/pmtiles.dart';
 import 'examples/advanced/translucent_full_map.dart';
@@ -187,6 +188,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const MapLanguageExample(),
   const PMTilesPage(),
   // Offline regions are Android/iOS only — MapLibre GL JS has no offline API.
+  const GlobeTerrainSkyPage(),
   if (!kIsWeb) const OfflineRegionsPage(),
   const TranslucentFullMapPage(),
   const MapSnapshotPage(),
@@ -311,73 +313,70 @@ class _MapsDemoState extends State<MapsDemo> {
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                const categories = ExampleCategory.values;
-                if (index >= categories.length) {
-                  // About tile at the end
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: AboutListTile(
-                      icon: Icon(Icons.info),
-                      applicationName: "MapLibre GL Flutter",
-                      aboutBoxChildren: [
-                        Text(
-                          'MapLibre GL Flutter is an open-source Flutter plugin for embedding interactive maps using the MapLibre GL Native library.',
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'This example app showcases various features and capabilities of the MapLibre GL Flutter plugin through interactive examples.',
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final category = categories[index];
-                final pages = groupedPages[category] ?? [];
-
-                if (pages.isEmpty) return const SizedBox.shrink();
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              const categories = ExampleCategory.values;
+              if (index >= categories.length) {
+                // About tile at the end
+                return const Padding(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 16.0,
-                    vertical: 4.0,
+                    vertical: 8.0,
                   ),
-                  child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: ExpansionTile(
-                      leading: Icon(
-                        category.icon,
-                        color: theme.colorScheme.primary,
+                  child: AboutListTile(
+                    icon: Icon(Icons.info),
+                    applicationName: "MapLibre GL Flutter",
+                    aboutBoxChildren: [
+                      Text(
+                        'MapLibre GL Flutter is an open-source Flutter plugin for embedding interactive maps using the MapLibre GL Native library.',
                       ),
-                      title: Text(
-                        category.label,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      SizedBox(height: 8),
+                      Text(
+                        'This example app showcases various features and capabilities of the MapLibre GL Flutter plugin through interactive examples.',
                       ),
-                      subtitle: Text('${pages.length} examples'),
-                      children:
-                          pages
-                              .map(
-                                (page) => ListTile(
-                                  leading: page.leading,
-                                  title: Text(page.title),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  onTap: () => _pushPage(context, page),
-                                ),
-                              )
-                              .toList(),
-                    ),
+                    ],
                   ),
                 );
-              },
-              childCount: ExampleCategory.values.length + 1,
-            ),
+              }
+
+              final category = categories[index];
+              final pages = groupedPages[category] ?? [];
+
+              if (pages.isEmpty) return const SizedBox.shrink();
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: ExpansionTile(
+                    leading: Icon(
+                      category.icon,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: Text(
+                      category.label,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text('${pages.length} examples'),
+                    children:
+                        pages
+                            .map(
+                              (page) => ListTile(
+                                leading: page.leading,
+                                title: Text(page.title),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () => _pushPage(context, page),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
+              );
+            }, childCount: ExampleCategory.values.length + 1),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
         ],

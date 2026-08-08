@@ -33,15 +33,10 @@ extension type FeatureJsImpl._(JSObject _) implements JSObject {
 extension type GeometryJsImpl._(JSObject _) implements JSObject {
   external String get type;
   external JSAny? get coordinates;
-  external factory GeometryJsImpl({
-    String? type,
-    JSAny? coordinates,
-  });
+  external factory GeometryJsImpl({String? type, JSAny? coordinates});
 }
 
 extension type FeatureLayerJsImpl._(JSObject _) implements JSObject {
   external String get id;
-  external factory FeatureLayerJsImpl({
-    String id,
-  });
+  external factory FeatureLayerJsImpl({String id});
 }

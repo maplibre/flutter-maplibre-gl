@@ -77,6 +77,8 @@ import org.maplibre.android.style.layers.LineLayer;
 import org.maplibre.android.style.layers.Property;
 import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
+import org.maplibre.android.style.light.Position;
+import org.maplibre.android.style.light.Light;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
 import org.maplibre.android.style.sources.CustomGeometrySource;
@@ -2186,6 +2188,12 @@ final class MapLibreMapController
             } else if (layer instanceof RasterLayer) {
               properties = LayerPropertyConverter
                   .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillExtrusionLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillExtrusionLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HeatmapLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHeatmapLayerProperties(call.argument("properties"));
             } else if (layer instanceof HillshadeLayer) {
               properties = LayerPropertyConverter
                   .interpretHillshadeLayerProperties(call.argument("properties"));
@@ -2411,6 +2419,41 @@ final class MapLibreMapController
           }
           updateLocationComponentLayer();
 
+          result.success(null);
+          break;
+        }
+      case "style#setLight":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final Map<String, Object> lightProperties = call.argument("light");
+          final Light light = style.getLight();
+          final Object anchor = lightProperties.get("anchor");
+          if (anchor != null) {
+            light.setAnchor((String) anchor);
+          }
+          final Object position = lightProperties.get("position");
+          if (position != null) {
+            final List<?> values = (List<?>) position;
+            light.setPosition(
+                new Position(
+                    ((Number) values.get(0)).floatValue(),
+                    ((Number) values.get(1)).floatValue(),
+                    ((Number) values.get(2)).floatValue()));
+          }
+          final Object color = lightProperties.get("color");
+          if (color != null) {
+            light.setColor((String) color);
+          }
+          final Object intensity = lightProperties.get("intensity");
+          if (intensity != null) {
+            light.setIntensity(((Number) intensity).floatValue());
+          }
           result.success(null);
           break;
         }

@@ -114,12 +114,7 @@ class PaddingOptions extends JsObjectWrapper<PaddingOptionsJsImpl> {
 
   num? get right => jsObject.right;
 
-  factory PaddingOptions({
-    num? top,
-    num? bottom,
-    num? left,
-    num? right,
-  }) {
+  factory PaddingOptions({num? top, num? bottom, num? left, num? right}) {
     final jsImpl = PaddingOptionsJsImpl();
     if (top != null) jsImpl.top = top;
     if (bottom != null) jsImpl.bottom = bottom;

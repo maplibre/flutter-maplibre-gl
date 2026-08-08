@@ -993,8 +993,42 @@ class MapLibreMap extends Camera {
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap setLight(dynamic light, StyleSetterOptions options) =>
-      MapLibreMap.fromJsObject(jsObject.setLight(light, options.jsObject));
+  MapLibreMap setLight(dynamic light, [StyleSetterOptions? options]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setLight(utils.jsify(light)!, options?.jsObject),
+      );
+
+  ///  Sets the any combination of sky values.
+  ///
+  ///  @param sky Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky/).
+  ///  @param {Object} [options]
+  ///  @param {boolean} [options.validate=true] Whether to check if the sky conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setSky(dynamic sky, [StyleSetterOptions? options]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setSky(utils.jsify(sky)!, options?.jsObject),
+      );
+
+  ///  Loads a 3D terrain mesh, based on a "raster-dem" source.
+  ///
+  ///  @param {Object | null} terrain The terrain to set, or `null` to remove the terrain.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setTerrain(dynamic terrain) =>
+      MapLibreMap.fromJsObject(jsObject.setTerrain(utils.jsify(terrain)));
+
+  ///  Sets the map's projection.
+  ///
+  ///  @param {Object | null} projection A projection definition object, or `null` to reset to the default mercator projection.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setProjection(dynamic projection) =>
+      MapLibreMap.fromJsObject(jsObject.setProjection(utils.jsify(projection)));
+
+  ///  Sets one property of the style's global state, read by the
+  ///  `global-state` expression.
+  MapLibreMap setGlobalStateProperty(String name, dynamic value) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setGlobalStateProperty(name, utils.jsify(value)),
+      );
 
   ///  Returns the value of the light object.
   ///

@@ -9,15 +9,9 @@ class ScaleControlOptions extends JsObjectWrapper<ScaleControlOptionsJsImpl> {
   /// Unit of the distance (e.g. "metric", "imperial", or "nautical").
   String get unit => jsObject.unit;
 
-  factory ScaleControlOptions({
-    num? maxWidth,
-    String? unit,
-  }) {
+  factory ScaleControlOptions({num? maxWidth, String? unit}) {
     return ScaleControlOptions.fromJsObject(
-      ScaleControlOptionsJsImpl(
-        maxWidth: maxWidth,
-        unit: unit,
-      ),
+      ScaleControlOptionsJsImpl(maxWidth: maxWidth, unit: unit),
     );
   }
 
@@ -38,9 +32,7 @@ class ScaleControl extends JsObjectWrapper<ScaleControlJsImpl> {
 
   /// Creates a new ScaleControl with the given [options].
   factory ScaleControl(ScaleControlOptions options) {
-    return ScaleControl.fromJsObject(
-      ScaleControlJsImpl(options.jsObject),
-    );
+    return ScaleControl.fromJsObject(ScaleControlJsImpl(options.jsObject));
   }
 
   /// Create a [ScaleControl] from an existing [ScaleControlJsImpl].

@@ -9,16 +9,14 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
   FeatureCollection get data => FeatureCollection.fromJsObject(jsObject.data);
   String? get promoteId => jsObject.promoteId;
 
-  factory GeoJsonSource({
-    required FeatureCollection data,
-    String? promoteId,
-  }) => GeoJsonSource.fromJsObject(
-    GeoJsonSourceJsImpl(
-      type: 'geojson',
-      promoteId: promoteId,
-      data: data.jsObject,
-    ),
-  );
+  factory GeoJsonSource({required FeatureCollection data, String? promoteId}) =>
+      GeoJsonSource.fromJsObject(
+        GeoJsonSourceJsImpl(
+          type: 'geojson',
+          promoteId: promoteId,
+          data: data.jsObject,
+        ),
+      );
 
   /// Replaces the source's data, completing once the worker has it.
   ///
