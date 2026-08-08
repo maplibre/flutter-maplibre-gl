@@ -9,11 +9,6 @@ hide:
   <h1>MapLibre, natively in Flutter</h1>
   <p class="hero__tagline">Any tile provider or your own server, the full MapLibre style spec, and no API key to get started. One Dart API across Android, iOS, and web.</p>
   <div class="badge-row">
-    <span class="platform-badge platform-badge--android">Android</span>
-    <span class="platform-badge platform-badge--ios">iOS</span>
-    <span class="platform-badge platform-badge--web">Web</span>
-  </div>
-  <div class="badge-row">
     <a href="https://pub.dev/packages/maplibre_gl"><img src="https://img.shields.io/pub/v/maplibre_gl.svg?style=flat-square" alt="pub.dev version" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl"><img src="https://img.shields.io/github/stars/maplibre/flutter-maplibre-gl?style=flat-square&logo=github" alt="GitHub Stars" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--3-blue?style=flat-square" alt="License" /></a>
@@ -26,9 +21,15 @@ hide:
 </div>
 
 <iframe
-  class="example-iframe"
-  src="/flutter-maplibre-gl/demo/?example=doc-full-map"
-  title="flutter-maplibre-gl live preview"
+  class="hero-globe hero-globe--light"
+  src="/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=ffffff"
+  title="The globe projection, live"
+  loading="lazy"
+></iframe>
+<iframe
+  class="hero-globe hero-globe--dark"
+  src="/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=0d1420"
+  title="The globe projection, live"
   loading="lazy"
 ></iframe>
 

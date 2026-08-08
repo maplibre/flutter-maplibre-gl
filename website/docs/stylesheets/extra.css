@@ -672,6 +672,28 @@ body, .md-typeset {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
 }
 
+/* The homepage globe: frameless, so the demo's background (passed via its
+   `bg` query parameter, one iframe per color scheme) blends into the page
+   and the globe floats on it. */
+.hero-globe {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 560px;
+  border: 0;
+  margin: 1.6rem 0 2rem;
+  display: block;
+  background: transparent;
+}
+.hero-globe--dark {
+  display: none;
+}
+[data-md-color-scheme="slate"] .hero-globe--light {
+  display: none;
+}
+[data-md-color-scheme="slate"] .hero-globe--dark {
+  display: block;
+}
+
 /* Two live examples side by side, for comparison pages. At half the 46rem
    content column each frame is only ~360px wide, so the default 3/2 ratio
    would leave a 240px-tall strip of map: square keeps it usable. Collapses
@@ -1070,35 +1092,6 @@ body, .md-typeset {
   align-items: center;
   margin-bottom: 0.9rem;
 }
-.platform-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.28rem 0.8rem;
-  border-radius: 100px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
-}
-.platform-badge--android {
-  background: rgba(22, 163, 74, 0.10);
-  color: #15803d;
-  border-color: rgba(22, 163, 74, 0.22);
-}
-.platform-badge--ios {
-  background: rgba(100, 116, 139, 0.10);
-  color: var(--md-default-fg-color--light);
-  border-color: rgba(100, 116, 139, 0.20);
-}
-.platform-badge--web {
-  background: var(--ml-blue-soft);
-  color: var(--ml-blue);
-  border-color: rgba(31, 111, 235, 0.22);
-}
-[data-md-color-scheme="slate"] .platform-badge--android { color: #4ade80; }
-[data-md-color-scheme="slate"] .platform-badge--web { color: var(--ml-blue); }
-
 .badge-row img { height: 1.3rem; }
 
 /* CTA buttons */
