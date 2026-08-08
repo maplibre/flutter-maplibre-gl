@@ -135,6 +135,8 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
+      - name: Check style spec alignment with upstream
+        run: melos run check-style-spec
       - run: melos run generate
       - run: melos run format-all
       - name: Check Git changes

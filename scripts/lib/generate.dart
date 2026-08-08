@@ -34,6 +34,17 @@ Future<void> main() async {
   final styleFilePath = '$currentPath/input/style.json';
   final styleJson = jsonDecode(await File(styleFilePath).readAsString());
 
+  // style.json is a verbatim copy of the upstream MapLibre style spec, so it
+  // also describes properties the pinned native SDKs do not implement yet.
+  // The Java/Swift templates emit a native call per property, therefore each
+  // native template only receives the properties its SDK supports (per the
+  // spec's own sdk-support metadata). The versions are parsed from the build
+  // files so upgrading the SDKs automatically unlocks newly supported
+  // properties on the next generate run.
+  final androidVersion = readAndroidSdkVersion();
+  final iosVersion = readIosSdkVersion();
+  print('Native SDK versions: android $androidVersion, ios $iosVersion');
+
   /// Layer types in the order we want to render them. Order matters for
   /// deterministic output & smaller diffs.
   final layerTypes = [
@@ -70,6 +81,30 @@ Future<void> main() async {
           "typeCamel": ReCase(type).camelCase,
           "paint_properties": buildStyleProperties(styleJson, "paint_$type"),
           "layout_properties": buildStyleProperties(styleJson, "layout_$type"),
+          "paint_properties_android": buildStyleProperties(
+            styleJson,
+            "paint_$type",
+            platform: "android",
+            platformVersion: androidVersion,
+          ),
+          "layout_properties_android": buildStyleProperties(
+            styleJson,
+            "layout_$type",
+            platform: "android",
+            platformVersion: androidVersion,
+          ),
+          "paint_properties_ios": buildStyleProperties(
+            styleJson,
+            "paint_$type",
+            platform: "ios",
+            platformVersion: iosVersion,
+          ),
+          "layout_properties_ios": buildStyleProperties(
+            styleJson,
+            "layout_$type",
+            platform: "ios",
+            platformVersion: iosVersion,
+          ),
         },
     ],
     "sourceTypes": [
@@ -153,14 +188,92 @@ Future<String> render(
   return outputFile.path;
 }
 
+/// Read the MapLibre Android SDK version pinned in the plugin build.gradle.
+String readAndroidSdkVersion() {
+  final gradle =
+      File(
+        '${Directory.current.parent.path}/maplibre_gl/android/build.gradle',
+      ).readAsStringSync();
+  final match = RegExp(
+    r"org\.maplibre\.gl:android-sdk[\w-]*:(\d+(?:\.\d+)*)",
+  ).firstMatch(gradle);
+  if (match == null) {
+    throw StateError(
+      'Could not find the MapLibre Android SDK version in build.gradle',
+    );
+  }
+  return match.group(1)!;
+}
+
+/// Read the MapLibre iOS SDK version pinned in the plugin podspec.
+String readIosSdkVersion() {
+  final podspec =
+      File(
+        '${Directory.current.parent.path}/maplibre_gl/ios/maplibre_gl.podspec',
+      ).readAsStringSync();
+  final match = RegExp(
+    r"s\.dependency\s+'MapLibre',\s+'(\d+(?:\.\d+)*)'",
+  ).firstMatch(podspec);
+  if (match == null) {
+    throw StateError(
+      'Could not find the MapLibre iOS SDK version in maplibre_gl.podspec',
+    );
+  }
+  return match.group(1)!;
+}
+
+/// Compare two dotted version strings ("13.4.1"). Returns a negative value
+/// if [a] < [b], zero if equal, positive if [a] > [b].
+int compareVersions(String a, String b) {
+  final pa = a.split('.').map(int.parse).toList();
+  final pb = b.split('.').map(int.parse).toList();
+  for (var i = 0; i < pa.length || i < pb.length; i++) {
+    final va = i < pa.length ? pa[i] : 0;
+    final vb = i < pb.length ? pb[i] : 0;
+    if (va != vb) return va - vb;
+  }
+  return 0;
+}
+
+/// Whether the native SDK at [platformVersion] supports a property, based on
+/// the spec's sdk-support metadata: a version number means "supported since",
+/// while an issue URL (or any non-version value) means "not implemented yet".
+/// Properties without sdk-support info are treated as supported: they predate
+/// the metadata, and if that assumption is ever wrong the generated native
+/// code fails to compile loudly instead of silently dropping the property.
+bool isSupportedOnPlatform(
+  Map<String, dynamic> propertySpec,
+  String platform,
+  String platformVersion,
+) {
+  final Map<String, dynamic>? support =
+      propertySpec["sdk-support"]?["basic functionality"];
+  if (support == null) return true;
+  final since = support[platform];
+  if (since == null) return false;
+  if (!RegExp(r'^\d+(\.\d+)*$').hasMatch('$since')) return false;
+  return compareVersions(platformVersion, '$since') >= 0;
+}
+
 /// Build the (paint/layout) style properties list for a given style.json key.
+/// When [platform] is given, properties the native SDK at [platformVersion]
+/// does not support are omitted.
 List<Map<String, dynamic>> buildStyleProperties(
   Map<String, dynamic> styleJson,
-  String key,
-) {
-  final Map<String, dynamic> items = styleJson[key];
+  String key, {
+  String? platform,
+  String? platformVersion,
+}) {
+  final Map<String, dynamic> items = styleJson[key] ?? <String, dynamic>{};
 
-  return items.entries.map((e) => buildStyleProperty(e.key, e.value)).toList();
+  return items.entries
+      .where(
+        (e) =>
+            platform == null ||
+            isSupportedOnPlatform(e.value, platform, platformVersion!),
+      )
+      .map((e) => buildStyleProperty(e.key, e.value))
+      .toList();
 }
 
 /// Translate a single raw style property spec into a template-ready map.
@@ -175,17 +288,23 @@ Map<String, dynamic> buildStyleProperty(
   final camelCase = ReCase(key).camelCase;
 
   // MapLibre 6.24.0+ changed some hillshade properties to array types
-  // for multidirectional hillshading support.
+  // for multidirectional hillshading support. A single value coming from the
+  // Dart API has to be wrapped in an array before it reaches the native SDK.
+  final isColorArrayProperty =
+      key == 'hillshade-shadow-color' || key == 'hillshade-highlight-color';
+  final isNumberArrayProperty = key == 'hillshade-illumination-direction';
   var iosExpression = 'expression';
-  if (key == 'hillshade-shadow-color' || key == 'hillshade-highlight-color') {
+  if (isColorArrayProperty) {
     iosExpression = 'wrapColorAsArray(expression)';
-  } else if (key == 'hillshade-illumination-direction') {
+  } else if (isNumberArrayProperty) {
     iosExpression = 'wrapValueAsArray(expression)';
   }
 
   return <String, dynamic>{
     'value': key,
     'isFloatArrayProperty': typeDart == "List" && nestedTypeDart == "double",
+    'isColorArrayProperty': isColorArrayProperty,
+    'isNumberArrayProperty': isNumberArrayProperty,
     'isVisibilityProperty': key == "visibility",
     'isPatternProperty': key.endsWith("-pattern"),
     'requiresLiteral': key == "icon-image" || key == "text-field",
@@ -212,6 +331,18 @@ List<Map<String, dynamic>> buildSourceProperties(
       .toList();
 }
 
+/// Source properties that are only valid under another property's setting
+/// (the raster-dem custom-encoding factors require `encoding: "custom"`).
+/// Their spec defaults must not become Dart constructor defaults: MapLibre
+/// GL JS validates the source JSON and rejects these keys when the encoding
+/// does not allow them, so they may only be serialized when set explicitly.
+const conditionalSourceProperties = {
+  "redFactor",
+  "greenFactor",
+  "blueFactor",
+  "baseShift",
+};
+
 /// Translate one source property spec to a template map, including default
 /// value normalization (prefixing const for literal lists, quoting strings).
 Map<String, dynamic> buildSourceProperty(
@@ -228,7 +359,8 @@ Map<String, dynamic> buildSourceProperty(
       swiftTypeMappingTable[value["value"]] ??
       swiftTypeMappingTable[value["value"]?["type"]];
 
-  var defaultValue = value["default"];
+  var defaultValue =
+      conditionalSourceProperties.contains(key) ? null : value["default"];
   if (defaultValue is List) {
     defaultValue = "const$defaultValue";
   } else if (defaultValue is String) {
@@ -239,7 +371,7 @@ Map<String, dynamic> buildSourceProperty(
     'value': key,
     'doc': value["doc"],
     'default': defaultValue,
-    'hasDefault': value["default"] != null,
+    'hasDefault': defaultValue != null,
     'type': nestedTypeDart == null ? typeDart : "$typeDart<$nestedTypeDart>",
     'typeSwift':
         nestedTypeSwift == null ? typeSwift : "$typeSwift<$nestedTypeSwift>",

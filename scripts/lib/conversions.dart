@@ -47,6 +47,7 @@ const dartTypeMappingTable = {
   "enum": "String",
   "promoteId": "String",
   "boolean": "bool",
+  "filter": "Object",
   "*": "Object",
 };
 

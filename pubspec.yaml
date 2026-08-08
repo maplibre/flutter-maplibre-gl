@@ -25,6 +25,18 @@ melos:
       packageFilters:
         scope: maplibre_code_gen
 
+    check-style-spec:
+      description: Verify input/style.json matches the pinned upstream MapLibre style spec
+      exec: dart run lib/check_style_spec.dart --latest
+      packageFilters:
+        scope: maplibre_code_gen
+
+    update-style-spec:
+      description: Re-download input/style.json from the latest upstream style spec release
+      exec: dart run lib/check_style_spec.dart --update
+      packageFilters:
+        scope: maplibre_code_gen
+
     test:
       description: Run all tests
       run: |

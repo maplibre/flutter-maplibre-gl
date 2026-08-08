@@ -1,0 +1,81 @@
+# Weekly check of scripts/input/style.json against the latest release of
+# @maplibre/maplibre-gl-style-spec. When upstream has published a newer
+# release, this opens (or updates) a single PR that re-pins the spec and
+# regenerates the code from it, so the PR is complete and CI-green on its own.
+#
+# Requires "Allow GitHub Actions to create and approve pull requests" under
+# Settings > Actions > General. PRs opened with the default GITHUB_TOKEN do
+# not trigger the pull_request CI workflows; either pass a PAT / GitHub App
+# token to create-pull-request below, or close and reopen the PR once.
+name: Style spec update
+
+on:
+  schedule:
+    # Monday 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-style-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+
+      # Captured before updating: reports pinned vs latest, per platform.
+      - name: Report upstream drift
+        id: report
+        working-directory: scripts
+        run: |
+          dart run lib/check_style_spec.dart --latest | tee /tmp/style-spec-report.txt || true
+          {
+            echo 'report<<REPORT_EOF'
+            cat /tmp/style-spec-report.txt
+            echo 'REPORT_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update to the latest release
+        working-directory: scripts
+        run: dart run lib/check_style_spec.dart --update
+
+      - name: Regenerate code
+        run: melos run generate
+
+      - name: Read pinned version
+        id: version
+        run: echo "version=$(cat scripts/input/style_spec_version.txt)" >> "$GITHUB_OUTPUT"
+
+      # No-op when the working tree is unchanged (already on the latest
+      # release). Reuses one branch, so weekly runs update the same PR
+      # instead of stacking new ones.
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-style-spec
+          delete-branch: true
+          commit-message: "chore: update MapLibre style spec to ${{ steps.version.outputs.version }}"
+          title: "chore: update MapLibre style spec to ${{ steps.version.outputs.version }}"
+          body: |
+            Automated weekly update of `scripts/input/style.json` to
+            `@maplibre/maplibre-gl-style-spec@${{ steps.version.outputs.version }}`,
+            with the code regenerated from it (`melos run generate`).
+
+            Drift report at the time of the run:
+
+            ```
+            ${{ steps.report.outputs.report }}
+            ```
+
+            Before merging:
+            - [ ] Check the generated diff for new properties that deserve a CHANGELOG entry.
+            - [ ] Properties listed as web-only above are expected to be absent from the Java/Swift converters.

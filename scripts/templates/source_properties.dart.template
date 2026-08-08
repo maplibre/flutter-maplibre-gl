@@ -27,11 +27,11 @@ class {{typePascal}}SourceProperties implements SourceProperties {
     {{/properties}}
   });
 
-  {{typePascal}}SourceProperties copyWith(
+  {{typePascal}}SourceProperties copyWith({
       {{#properties}}
       {{{type}}}? {{valueAsCamelCase}},
       {{/properties}}
-  ) {
+  }) {
     return {{typePascal}}SourceProperties(
       {{#properties}}
       {{valueAsCamelCase}}: {{valueAsCamelCase}} ?? this.{{valueAsCamelCase}},

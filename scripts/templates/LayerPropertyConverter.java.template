@@ -29,11 +29,35 @@ class LayerPropertyConverter {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
       Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
-        {{#paint_properties}}
+        {{#paint_properties_android}}
         {{^isFloatArrayProperty}}
         {{^isPatternProperty}}
+        {{^isColorArrayProperty}}
+        {{^isNumberArrayProperty}}
         case "{{value}}":
           properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+        {{/isNumberArrayProperty}}
+        {{/isColorArrayProperty}}
+        {{#isColorArrayProperty}}
+        case "{{value}}": {
+          final String[] colorArray = wrapColorAsArray(jsonElement);
+          if (colorArray != null) {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(colorArray));
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+          }
+        }
+        {{/isColorArrayProperty}}
+        {{#isNumberArrayProperty}}
+        case "{{value}}": {
+          final Float[] numberArray = wrapValueAsArray(jsonElement);
+          if (numberArray != null) {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(numberArray));
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
+          }
+        }
+        {{/isNumberArrayProperty}}
         {{/isPatternProperty}}
         {{#isPatternProperty}}
         case "{{value}}":
@@ -58,8 +82,8 @@ class LayerPropertyConverter {
           }
         {{/isFloatArrayProperty}}
           break;
-        {{/paint_properties}}
-        {{#layout_properties}}
+        {{/paint_properties_android}}
+        {{#layout_properties_android}}
         {{^isFloatArrayProperty}}
         {{^isVisibilityProperty}}
         {{^requiresLiteral}}
@@ -111,7 +135,7 @@ class LayerPropertyConverter {
           }
         {{/isFloatArrayProperty}}
           break;
-        {{/layout_properties}}
+        {{/layout_properties_android}}
         default:
           break;
       }
@@ -123,6 +147,36 @@ class LayerPropertyConverter {
 {{/layerTypes}}
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+  }
+
+  // MapLibre 6.24.0+ expects an array of colors for the hillshade shadow and
+  // highlight colors (multidirectional hillshading), so a single color has to
+  // be wrapped. Returns null when the value is an expression instead.
+  private static String[] wrapColorAsArray(JsonElement jsonElement) {
+    if (jsonElement == null) {
+      return null;
+    }
+    if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+      return new String[]{jsonElement.getAsString()};
+    }
+    if (jsonElement.isJsonArray()) {
+      return convertJsonToStringArray(jsonElement);
+    }
+    return null;
+  }
+
+  // Same as wrapColorAsArray, for the numeric hillshade illumination direction.
+  private static Float[] wrapValueAsArray(JsonElement jsonElement) {
+    if (jsonElement == null) {
+      return null;
+    }
+    if (isNumber(jsonElement)) {
+      return new Float[]{jsonElement.getAsFloat()};
+    }
+    if (jsonElement.isJsonArray()) {
+      return convertJsonToFloatArray(jsonElement);
+    }
+    return null;
   }
 
   private static String[] convertJsonToStringArray(JsonElement jsonElement) {
