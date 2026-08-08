@@ -704,6 +704,34 @@ class LayerPropertyConverter {
     return properties.toArray(new PropertyValue[properties.size()]);
   }
 
+  static PropertyValue[] interpretColorReliefLayerProperties(Object o) {
+    final Map<String, Object> data = (Map<String, Object>) toMap(o);
+    final List<PropertyValue> properties = new LinkedList();
+    final Gson gson = new Gson();
+
+    for (Map.Entry<String, Object> entry : data.entrySet()) {
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      switch (entry.getKey()) {
+        case "color-relief-opacity":
+          properties.add(PropertyFactory.colorReliefOpacity(expression));
+          break;
+        case "color-relief-color":
+          properties.add(PropertyFactory.colorReliefColor(expression));
+          break;
+        case "visibility":
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return properties.toArray(new PropertyValue[properties.size()]);
+  }
+
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
   }

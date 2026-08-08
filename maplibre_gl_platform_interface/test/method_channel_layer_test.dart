@@ -111,6 +111,20 @@ void main() {
       expect(methodCalls[0].method, 'hillshadeLayer#add');
     });
 
+    test('addColorReliefLayer sends correct method', () async {
+      await platform.addColorReliefLayer(
+        'dem-source',
+        'color-relief-layer',
+        {'color-relief-opacity': 0.7},
+      );
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'colorReliefLayer#add');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['sourceId'], 'dem-source');
+      expect(args['layerId'], 'color-relief-layer');
+    });
+
     test('addHeatmapLayer sends correct method', () async {
       await platform.addHeatmapLayer(
         'heat-source',

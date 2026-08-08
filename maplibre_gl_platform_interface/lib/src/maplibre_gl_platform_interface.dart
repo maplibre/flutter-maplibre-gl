@@ -434,6 +434,16 @@ abstract class MapLibrePlatform {
     double? maxzoom,
   });
 
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  });
+
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,

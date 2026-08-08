@@ -397,6 +397,63 @@ class FullMapState extends State<FullMap> {
     );
   }
 
+  static Future<void> addDemColorRelief(
+    MapLibreMapController controller,
+  ) async {
+    // Remove existing layers/source if they exist
+    try {
+      await controller.removeLayer("color-relief-layer");
+    } catch (e) {
+      // Layer doesn't exist, ignore
+    }
+    try {
+      await controller.removeSource("terrarium-dem");
+    } catch (e) {
+      // Source doesn't exist, ignore
+    }
+
+    // Source: Terrarium terrain tiles
+    await controller.addSource(
+      "terrarium-dem",
+      const RasterDemSourceProperties(
+        tiles: [
+          'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+        ],
+        minzoom: 0,
+        maxzoom: 15,
+        tileSize: 256,
+        encoding: 'terrarium',
+        attribution:
+            '<a href="https://registry.opendata.aws/terrain-tiles/">Elevation data © AWS Terrain Tiles</a>',
+      ),
+    );
+
+    await controller.addLayer(
+      "terrarium-dem",
+      "color-relief-layer",
+      const ColorReliefLayerProperties(
+        colorReliefOpacity: 0.7,
+        colorReliefColor: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.elevation],
+          0,
+          '#2b83ba',
+          500,
+          '#abdda4',
+          1500,
+          '#ffffbf',
+          2500,
+          '#fdae61',
+          3500,
+          '#d7191c',
+          4500,
+          '#ffffff',
+        ],
+      ),
+    );
+  }
+
   final _stylesAndLoaders = [
     const StyleInfo(
       name: "Vector",
@@ -423,6 +480,12 @@ class FullMapState extends State<FullMap> {
         bearing: 80,
         tilt: 60,
       ),
+    ),
+    const StyleInfo(
+      name: "DEM Color Relief",
+      baseStyle: MapLibreStyles.demo,
+      addDetails: addDemColorRelief,
+      position: CameraPosition(target: LatLng(46.5, 8.0), zoom: 8),
     ),
     const StyleInfo(
       name: "Geojson cluster",

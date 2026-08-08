@@ -92,6 +92,9 @@ await controller.addSource(
 );
 ```
 
+A raster DEM source feeds a hillshade layer for shaded relief, or a
+[color relief layer](color-relief.md) to colour the terrain by elevation.
+
 ## Image source (geo-referenced overlay)
 
 Overlay a single image at specific geographic coordinates:

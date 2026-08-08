@@ -66,6 +66,7 @@ import org.maplibre.android.maps.Style;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.ColorReliefLayer;
 import org.maplibre.android.style.layers.FillExtrusionLayer;
 import org.maplibre.android.style.layers.FillLayer;
 import org.maplibre.android.style.layers.HeatmapLayer;
@@ -1244,6 +1245,35 @@ final class MapLibreMapController
     return true;
   }
 
+  private boolean addColorReliefLayer(
+      String layerName,
+      String sourceName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties,
+      Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addColorReliefLayer: style not ready, skipping");
+      return false;
+    }
+    ColorReliefLayer layer = new ColorReliefLayer(layerName, sourceName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+    return true;
+  }
+
+
   private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
@@ -2131,6 +2161,9 @@ final class MapLibreMapController
             } else if (layer instanceof HillshadeLayer) {
               properties = LayerPropertyConverter
                   .interpretHillshadeLayerProperties(call.argument("properties"));
+            } else if (layer instanceof ColorReliefLayer) {
+              properties = LayerPropertyConverter
+                  .interpretColorReliefLayerProperties(call.argument("properties"));
             } else {
               result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
               return;
@@ -2278,6 +2311,31 @@ final class MapLibreMapController
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
           if (!addHillshadeLayer(
+              layerId,
+              sourceId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties,
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
+      case "colorReliefLayer#add":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretColorReliefLayerProperties(call.argument("properties"));
+          if (!addColorReliefLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,

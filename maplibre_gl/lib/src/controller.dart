@@ -921,6 +921,42 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a color relief layer to the map with the given properties
+  ///
+  /// The layer colors the terrain by elevation and needs a raster dem source.
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [sourceLayer] is used to selected a specific source layer from
+  /// Raster source.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    ColorReliefLayerProperties properties, {
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _maplibrePlatform.addColorReliefLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      sourceLayer: sourceLayer,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
   /// Add a heatmap layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.
@@ -2176,6 +2212,19 @@ class MapLibreMapController extends ChangeNotifier {
       );
     } else if (properties is HeatmapLayerProperties) {
       await addHeatmapLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
+    } else if (properties is ColorReliefLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("ColorReliefLayer does not support filter");
+      }
+      await addColorReliefLayer(
         sourceId,
         layerId,
         properties,
