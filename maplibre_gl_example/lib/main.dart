@@ -16,6 +16,7 @@ import 'shared/constants.dart';
 // Basics examples
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
+import 'examples/layers/background_layer_example.dart';
 import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
@@ -176,6 +177,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const ClusterPropertiesExample(),
   const FillLayerExample(),
   const LineLayerExample(),
+  const BackgroundLayerExample(),
   // Feature state is available on web and Android, not on iOS yet.
   if (FeatureStateExample.isSupported) const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),

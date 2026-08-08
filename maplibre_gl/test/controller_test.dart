@@ -297,6 +297,19 @@ void main() {
       expect(platform.wasCalled('addColorReliefLayer'), isFalse);
     });
 
+    test('addLayer rejects a filter on BackgroundLayerProperties', () async {
+      expect(
+        () => controller.addLayer(
+          'unused-source',
+          'layer-1',
+          const BackgroundLayerProperties(),
+          filter: ['==', 'foo', 'bar'],
+        ),
+        throwsUnimplementedError,
+      );
+      expect(platform.wasCalled('addBackgroundLayer'), isFalse);
+    });
+
     test('addLayer with CircleLayerProperties', () async {
       await controller.addLayer(
         'src-1',

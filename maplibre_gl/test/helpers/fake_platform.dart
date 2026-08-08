@@ -561,6 +561,17 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addBackgroundLayer(
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    calls.add(PlatformCall('addBackgroundLayer', [layerId, properties]));
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,

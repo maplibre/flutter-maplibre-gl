@@ -66,6 +66,7 @@ import org.maplibre.android.maps.Style;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.BackgroundLayer;
 import org.maplibre.android.style.layers.ColorReliefLayer;
 import org.maplibre.android.style.layers.FillExtrusionLayer;
 import org.maplibre.android.style.layers.FillLayer;
@@ -1273,6 +1274,33 @@ final class MapLibreMapController
     return true;
   }
 
+  private boolean addBackgroundLayer(
+      String layerName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addBackgroundLayer: style not ready, skipping");
+      return false;
+    }
+    BackgroundLayer layer = new BackgroundLayer(layerName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+    return true;
+  }
+
+
 
   private boolean addHeatmapLayer(
       String layerName,
@@ -2164,6 +2192,9 @@ final class MapLibreMapController
             } else if (layer instanceof ColorReliefLayer) {
               properties = LayerPropertyConverter
                   .interpretColorReliefLayerProperties(call.argument("properties"));
+            } else if (layer instanceof BackgroundLayer) {
+              properties = LayerPropertyConverter
+                  .interpretBackgroundLayerProperties(call.argument("properties"));
             } else {
               result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
               return;
@@ -2343,6 +2374,28 @@ final class MapLibreMapController
               belowLayerId,
               properties,
               null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
+      case "backgroundLayer#add":
+        {
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
+          if (!addBackgroundLayer(
+              layerId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties)) {
             result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
             break;
           }

@@ -495,6 +495,39 @@ class LayerPropertyConverter {
         }
     }
 
+    class func addBackgroundProperties(backgroundLayer: MLNBackgroundStyleLayer, properties: [String: Any]) {
+        for (propertyName, propertyValue) in properties {
+            // Check if the value is explicitly null to clear the property
+            var expression: NSExpression?
+            if propertyValue is NSNull {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
+            switch propertyName {
+                case "background-color":
+                    backgroundLayer.backgroundColor = expression
+                case "background-pattern":
+                    backgroundLayer.backgroundPattern = expression
+                case "background-opacity":
+                    backgroundLayer.backgroundOpacity = expression
+                case "visibility":
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            backgroundLayer.isVisible = visibilityValue == "visible"
+                        }
+                    }
+             
+                default:
+                    break
+            }
+        }
+    }
+
     /// Wraps a single-color NSExpression in an array, as required by
     /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
     private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {
