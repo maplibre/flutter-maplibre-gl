@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 /// Common constants used across examples
@@ -129,13 +128,13 @@ class ExampleConstants {
       'https://demotiles.maplibre.org/tiles/0/0/0.pbf',
     ];
     const timeout = Duration(seconds: 4);
-    final client = HttpClient()..connectionTimeout = timeout;
+    // package:http works on every platform, web included, where a CORS or
+    // rate-limit failure surfaces as an exception and lands in the fallback.
+    final client = http.Client();
     try {
       final statuses = await Future.wait(
         probes.map((url) async {
-          final request = await client.getUrl(Uri.parse(url)).timeout(timeout);
-          final response = await request.close().timeout(timeout);
-          await response.drain<void>();
+          final response = await client.get(Uri.parse(url)).timeout(timeout);
           return response.statusCode;
         }),
       );
@@ -157,7 +156,7 @@ class ExampleConstants {
         'demo style unreachable ($error); falling back to $fallbackMapStyle',
       );
     } finally {
-      client.close(force: true);
+      client.close();
     }
   }
 

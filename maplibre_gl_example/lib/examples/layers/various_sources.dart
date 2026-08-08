@@ -135,25 +135,28 @@ class FullMapState extends State<FullMap> {
   }
 
   static Future<void> addVector(MapLibreMapController controller) async {
+    // OpenMapTiles-schema vector tiles without an API key. The source id is
+    // namespaced: the OpenFreeMap fallback style has its own source called
+    // "openmaptiles", and adding a second source with that name throws.
     await controller.addSource(
-      "openmaptiles",
+      "example-vector-tiles",
       const VectorSourceProperties(
-        tiles: ['https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf'],
-        maxzoom: 14,
+        url: 'https://tiles.openfreemap.org/planet',
         attribution:
-            '<a href="https://maplibre.org">© MapLibre contributors</a',
+            '<a href="https://openfreemap.org">OpenFreeMap</a> '
+            '<a href="https://www.openmaptiles.org/">© OpenMapTiles</a>',
       ),
     );
 
     await controller.addLayer(
-      "openmaptiles",
+      "example-vector-tiles",
       "water-fill",
       const FillLayerProperties(fillColor: "#0080ff", fillOpacity: 0.5),
       sourceLayer: "water",
     );
 
     await controller.addLayer(
-      "openmaptiles",
+      "example-vector-tiles",
       "roads",
       const LineLayerProperties(
         lineColor: "#ff69b4",
@@ -434,70 +437,73 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  final _stylesAndLoaders = [
-    const StyleInfo(
+  // The base style goes through ExampleConstants.demoMapStyle so this page
+  // benefits from the startup fallback when demotiles.maplibre.org is
+  // rate-limited or unreachable, like every other example page.
+  late final _stylesAndLoaders = [
+    StyleInfo(
       name: "Vector",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addVector,
-      position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
+      position: const CameraPosition(
+        target: LatLng(33.3832, -118.4333),
+        zoom: 6,
+      ),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Countries GeoJSON",
-      // Using the raw github file version of MapLibreStyles.DEMO here, because we need to
-      // specify a different baseStyle for consecutive elements in this list,
-      // otherwise the map will not update
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addCountries,
-      position: CameraPosition(target: LatLng(20, 0), zoom: 2),
+      position: const CameraPosition(target: LatLng(20, 0), zoom: 2),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "DEM Hillshade",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addDemHillshade,
-      position: CameraPosition(
+      position: const CameraPosition(
         target: LatLng(46.5, 8.0),
         zoom: 8,
         bearing: 80,
         tilt: 60,
       ),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "DEM Color Relief",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addDemColorRelief,
-      position: CameraPosition(target: LatLng(46.5, 8.0), zoom: 8),
+      position: const CameraPosition(target: LatLng(46.5, 8.0), zoom: 8),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Geojson cluster",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addGeojsonCluster,
-      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
+      position: const CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Raster",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addRaster,
-      position: CameraPosition(target: LatLng(40, -100), zoom: 3),
+      position: const CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Image",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addImage,
-      position: CameraPosition(target: LatLng(43, -75), zoom: 6),
+      position: const CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Heatmap",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addHeatMap,
-      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
+      position: const CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
     ),
     //video only supported on web
     if (kIsWeb)
-      const StyleInfo(
+      StyleInfo(
         name: "Video",
-        baseStyle: MapLibreStyles.demo,
+        baseStyle: ExampleConstants.demoMapStyle,
         addDetails: addVideo,
-        position: CameraPosition(
+        position: const CameraPosition(
           target: LatLng(37.562984, -122.514426),
           zoom: 17,
           bearing: -96,
@@ -517,7 +523,13 @@ class FullMapState extends State<FullMap> {
   Future<void> _onStyleLoadedCallback() async {
     if (controller == null) return;
     final styleInfo = _stylesAndLoaders[selectedStyleId];
-    await styleInfo.addDetails(controller!);
+    try {
+      await styleInfo.addDetails(controller!);
+    } catch (error) {
+      // An example whose remote data is unreachable must not block the
+      // camera move or the switch to the next example.
+      debugPrint('VariousSources: "${styleInfo.name}" failed to load: $error');
+    }
     await controller!.animateCamera(
       CameraUpdate.newCameraPosition(styleInfo.position),
     );
