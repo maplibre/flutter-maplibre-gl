@@ -1,9 +1,8 @@
-name: maplibre_gl
+name: sharemap_maplibre_gl
 description: A Flutter plugin for integrating MapLibre Maps inside a Flutter application on Android, iOS and web platforms.
-version: 0.26.2
-repository: https://github.com/maplibre/flutter-maplibre-gl
-issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
-resolution: workspace
+version: 0.26.2+sharemap.2
+repository: https://github.com/Le-Hai-Dang/flutter-maplibre-gl
+issue_tracker: https://github.com/Le-Hai-Dang/flutter-maplibre-gl/issues
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
@@ -13,13 +12,13 @@ dependencies:
   collection: ^1.19.1
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.26.2
-  maplibre_gl_web: ^0.26.2
+  sharemap_maplibre_gl_platform_interface: ^0.26.2+sharemap.1
+  sharemap_maplibre_gl_web: ^0.26.2+sharemap.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^10.2.0
+  very_good_analysis: 10.0.0
 
 flutter:
   plugin:
@@ -30,7 +29,7 @@ flutter:
       ios:
         pluginClass: MapLibreMapsPlugin
       web:
-        default_package: maplibre_gl_web
+        default_package: sharemap_maplibre_gl_web
 
 platforms:
   android:

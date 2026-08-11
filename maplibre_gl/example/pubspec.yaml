@@ -1,6 +1,6 @@
-name: maplibre_gl_example
+name: sharemap_maplibre_gl_example
 publish_to: none
-description: Minimal example app for the maplibre_gl package published on pub.dev.
+description: Minimal example app for the sharemap_maplibre_gl package.
 version: 0.0.1
 
 environment:
@@ -10,17 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl:
+  sharemap_maplibre_gl:
     path: ..
 
 dev_dependencies:
-  very_good_analysis: ^10.2.0
-
-dependency_overrides:
-  maplibre_gl_platform_interface:
-    path: ../../maplibre_gl_platform_interface
-  maplibre_gl_web:
-    path: ../../maplibre_gl_web
+  very_good_analysis: 10.0.0
 
 flutter:
   uses-material-design: true

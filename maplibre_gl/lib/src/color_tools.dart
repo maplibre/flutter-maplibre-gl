@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use --- IGNORE ---
 
-part of '../maplibre_gl.dart';
+part of '../sharemap_maplibre_gl.dart';
 
 extension MapLibreColorConversion on Color {
   String toHexStringRGB() {

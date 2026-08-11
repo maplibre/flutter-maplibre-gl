@@ -1,4 +1,4 @@
-part of '../maplibre_gl.dart';
+part of '../sharemap_maplibre_gl.dart';
 
 /// MapLibre styles used mostly for demonstration.
 abstract class MapLibreStyles {
