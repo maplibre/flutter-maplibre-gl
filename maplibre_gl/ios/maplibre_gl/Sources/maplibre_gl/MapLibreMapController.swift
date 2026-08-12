@@ -746,12 +746,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: Any] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
             let addResult = addHeatmapLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
                 minimumZoomLevel: minzoom,
                 maximumZoomLevel: maxzoom,
                 properties: properties
@@ -1821,6 +1823,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
         properties: [String: Any]
@@ -1834,6 +1837,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 heatmapLayer: layer,
                 properties: properties
             )
+            if let sourceLayerIdentifier = sourceLayerIdentifier {
+                layer.sourceLayerIdentifier = sourceLayerIdentifier
+            }
             if let minimumZoomLevel = minimumZoomLevel {
                 layer.minimumZoomLevel = Float(minimumZoomLevel)
             }

@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [Unreleased]
+
+### Fixed
+* **Android/iOS**: `addHeatmapLayer` now forwards `sourceLayer` to the platform side. It was accepted by the Dart API but never included in the `heatmapLayer#add` method-channel arguments, so a heatmap layer over a vector tile source was left with no `source-layer` and rendered nothing. `source-layer` is required for vector tile sources; GeoJSON-backed heatmap layers were unaffected, which is why this went unnoticed.
+
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
 > **Note:** Several users reported crashes on a range of Android devices after upgrading to 0.26.0, particularly on older / less recent hardware. These issues are addressed in 0.26.1 (see the Android fixes below).

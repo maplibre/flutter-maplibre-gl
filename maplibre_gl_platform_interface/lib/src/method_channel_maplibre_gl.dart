@@ -989,6 +989,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
+      'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
       'properties': properties,

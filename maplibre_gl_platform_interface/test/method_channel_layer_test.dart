@@ -107,6 +107,29 @@ void main() {
       expect(methodCalls[0].method, 'heatmapLayer#add');
     });
 
+    test('addHeatmapLayer forwards sourceLayer', () async {
+      // source-layer is required for vector tile sources, so dropping it here
+      // leaves the layer bound to no source layer and rendering nothing.
+      await platform.addHeatmapLayer(
+        'heat-source',
+        'heatmap-layer',
+        {'heatmap-radius': 30},
+        sourceLayer: 'default',
+        belowLayerId: 'below-layer',
+        minzoom: 5,
+        maxzoom: 15,
+      );
+
+      final args = methodCalls[0].arguments as Map;
+      expect(args['sourceId'], 'heat-source');
+      expect(args['layerId'], 'heatmap-layer');
+      expect(args['sourceLayer'], 'default');
+      expect(args['belowLayerId'], 'below-layer');
+      expect(args['minzoom'], 5.0);
+      expect(args['maxzoom'], 15.0);
+      expect((args['properties'] as Map)['heatmap-radius'], 30);
+    });
+
     test('addLayer sends correct method', () async {
       await platform.addLayer('image-layer', 'image-source', 5, 15);
 
