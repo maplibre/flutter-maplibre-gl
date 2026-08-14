@@ -3332,6 +3332,32 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "style#moveLayer":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          String layerId = call.argument("layerId");
+          String belowLayerId = call.argument("belowLayerId");
+          Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            result.error(
+                "layerNotFound", "Layer with id " + layerId + " not found.", null);
+            break;
+          }
+          style.removeLayer(layer);
+          if (belowLayerId != null) {
+            style.addLayerBelow(layer, belowLayerId);
+          } else {
+            style.addLayer(layer);
+          }
+          result.success(null);
+          break;
+        }
       case "map#setCameraBounds":
         {
           double west = call.argument("west");

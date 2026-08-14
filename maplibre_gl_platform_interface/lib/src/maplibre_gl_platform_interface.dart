@@ -289,6 +289,13 @@ abstract class MapLibrePlatform {
 
   Future<void> removeLayer(String imageLayerId);
 
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  Future<void> moveLayer(String layerId, {String? belowLayerId});
+
   Future<List> getLayerIds();
 
   Future<List> getSourceIds();

@@ -604,17 +604,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(nil)
         case "camera#ease":
-            guard let arguments = methodCall.arguments as? [String: Any] else { 
+            guard let arguments = methodCall.arguments as? [String: Any] else {
                 result(false)
-                return 
+                return
             }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { 
+            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else {
                 result(false)
-                return 
+                return
             }
-            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { 
+            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else {
                 result(false)
-                return 
+                return
             }
 
             let completion = {
@@ -623,7 +623,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
-                
+
                 // Create timing function based on interpolation parameter
                 var timingFunction: CAMediaTimingFunction?
                 if let interpolationStr = arguments["interpolation"] as? String {
@@ -643,7 +643,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 } else {
                     timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                 }
-                
+
                 mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
@@ -1415,6 +1415,34 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             mapView.style?.removeLayer(layer)
             result(nil)
 
+        case "style#moveLayer":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(
+                   layerId: layerId
+                ).flutterError)
+                return
+            }
+            style.removeLayer(layer)
+            if let belowLayerId = belowLayerId {
+                guard let belowLayer = style.layer(withIdentifier: belowLayerId) else {
+                    result(MethodCallError.layerNotFound(
+                       layerId: belowLayerId
+                    ).flutterError)
+                    return
+                }
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            result(nil)
+
         case "map#setCameraBounds":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let west = arguments["west"] as? Double else { return }
@@ -1939,12 +1967,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     ) -> (feature: MLNFeature?, layerId: String?) {
         guard let style = mapView.style else { 
             NSLog("MapLibreMapController - Map style is nil")
-            return (nil, nil) 
+            return (nil, nil)
         }
-        
-        guard styleIsReady else { 
+
+        guard styleIsReady else {
             NSLog("MapLibreMapController - Map style is not ready yet")
-            return (nil, nil) 
+            return (nil, nil)
         }
 
         // get layers in order (interactiveFeatureLayerIds is unordered)
@@ -2985,7 +3013,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Use MapLibre defaults (0 for min, 22 for max) when unbounded (nil)
         let minZoom = min ?? 0.0
         let maxZoom = max ?? 22.0
-        
+
         mapView.minimumZoomLevel = minZoom
         mapView.maximumZoomLevel = maxZoom
     }

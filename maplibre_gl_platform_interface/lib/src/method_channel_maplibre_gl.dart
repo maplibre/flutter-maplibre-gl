@@ -753,6 +753,18 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    try {
+      return await _channel.invokeMethod('style#moveLayer', <String, Object>{
+        'layerId': layerId,
+        if (belowLayerId != null) 'belowLayerId': belowLayerId,
+      });
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     try {
       return await _channel.invokeMethod('style#setFilter', <String, Object>{

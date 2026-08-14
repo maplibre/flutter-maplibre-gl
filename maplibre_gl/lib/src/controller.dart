@@ -2117,6 +2117,21 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.removeLayer(layerId);
   }
 
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  ///
+  /// This is implemented as a single atomic operation on the native side
+  /// (the existing layer object is removed and re-inserted at the new
+  /// position without being recreated), so the layer's paint, layout,
+  /// filter and source binding are preserved and there is no visible
+  /// flicker.
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) {
+    return _maplibrePlatform.moveLayer(layerId, belowLayerId: belowLayerId);
+  }
+
   /// Shows only the features of the layer [layerId] that match [filter].
   ///
   /// [filter] is an expression like `['==', ['get', 'type'], 'park']`, or the

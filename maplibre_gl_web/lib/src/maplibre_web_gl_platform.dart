@@ -1685,6 +1685,11 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    _map.moveLayer(layerId, belowLayerId);
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
