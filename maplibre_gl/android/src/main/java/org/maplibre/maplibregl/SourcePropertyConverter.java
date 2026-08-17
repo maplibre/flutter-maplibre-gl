@@ -106,14 +106,11 @@ class SourcePropertyConverter {
       options = options.withLineMetrics(Convert.toBoolean(lineMetrics));
     }
 
-    final Object maxZoom = data.get("maxZoom");
+    // The spec key is lowercase, which is what GeojsonSourceProperties sends.
+    // A GeoJSON source has no minzoom, so there is nothing to read for one.
+    final Object maxZoom = data.get("maxzoom");
     if (maxZoom != null) {
       options = options.withMaxZoom(Convert.toInt(maxZoom));
-    }
-
-    final Object minZoom = data.get("minZoom");
-    if (minZoom != null) {
-      options = options.withMinZoom(Convert.toInt(minZoom));
     }
 
     final Object tolerance = data.get("tolerance");
