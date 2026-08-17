@@ -72,6 +72,106 @@ void main() {
       expect(properties['url'], 'https://example.com/tiles.json');
     });
 
+    // The native converters read these two keys by name, so a rename on the
+    // Dart side has to fail here rather than silently stop working on device.
+    test('addSource forwards volatile and clusterMinPoints', () async {
+      await platform.addSource(
+        'vec-source',
+        const VectorSourceProperties(
+          url: 'https://example.com/tiles.json',
+          volatile: true,
+        ),
+      );
+      await platform.addSource(
+        'points',
+        const GeojsonSourceProperties(cluster: true, clusterMinPoints: 5),
+      );
+
+      final vector = (methodCalls[0].arguments as Map)['properties'] as Map;
+      expect(vector['volatile'], true);
+      final geojson = (methodCalls[1].arguments as Map)['properties'] as Map;
+      expect(geojson['clusterMinPoints'], 5);
+    });
+
+    // MapLibre Native decodes only mapbox and terrarium, and would read custom
+    // tiles as mapbox-encoded: plausible map, wrong elevations. The message has
+    // to say that only addSource() is checked, because the same encoding inside
+    // MapLibreMap.styleString still falls back to mapbox silently.
+    test('addSource rejects the custom raster-dem encoding', () async {
+      expect(
+        () => platform.addSource(
+          'dem',
+          const RasterDemSourceProperties(
+            tiles: ['https://example.com/{z}/{x}/{y}.png'],
+            encoding: 'custom',
+            redFactor: 256,
+            baseShift: -32768,
+          ),
+        ),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            contains('styleString'),
+          ),
+        ),
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    // The factors are read only on a custom encoding, so next to mapbox or
+    // terrarium they are the no-op Android and iOS have always made of them.
+    // One properties object shared by all three platforms, or a style copied
+    // from JSON carrying the spec defaults, must keep working.
+    test('addSource accepts the factors on a known encoding', () async {
+      await platform.addSource(
+        'dem-mapbox',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          // Spelling out the encoding is the case under test: a style copied
+          // from JSON carries it, default or not.
+          // ignore: avoid_redundant_argument_values
+          encoding: 'mapbox',
+          redFactor: 1.0,
+          baseShift: 0.0,
+        ),
+      );
+      await platform.addSource(
+        'dem-terrarium',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          encoding: 'terrarium',
+          greenFactor: 2.0,
+        ),
+      );
+
+      expect(methodCalls.length, 2);
+      final mapbox = (methodCalls[0].arguments as Map)['properties'] as Map;
+      expect(mapbox['encoding'], 'mapbox');
+      expect(mapbox['redFactor'], 1.0);
+      final terrarium = (methodCalls[1].arguments as Map)['properties'] as Map;
+      expect(terrarium['encoding'], 'terrarium');
+      expect(terrarium['greenFactor'], 2.0);
+    });
+
+    test(
+      'addSource passes the mapbox and terrarium encodings through',
+      () async {
+        await platform.addSource(
+          'dem',
+          const RasterDemSourceProperties(
+            tiles: ['https://example.com/{z}/{x}/{y}.png'],
+            encoding: 'terrarium',
+          ),
+        );
+
+        expect(methodCalls.length, 1);
+        final properties =
+            (methodCalls[0].arguments as Map)['properties'] as Map;
+        expect(properties['encoding'], 'terrarium');
+      },
+    );
+
     test('removeSource sends correct method', () async {
       await platform.removeSource('test-source');
 

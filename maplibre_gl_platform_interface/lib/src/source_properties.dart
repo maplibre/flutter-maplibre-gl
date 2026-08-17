@@ -76,7 +76,7 @@ class VectorSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with android (not on ios, js)
   final bool? volatile;
 
   /// The encoding used by this source. Mapbox Vector Tiles encoding is used
@@ -240,7 +240,7 @@ class RasterSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with android (not on ios, js)
   final bool? volatile;
 
   const RasterSourceProperties({
@@ -431,7 +431,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with android (not on ios, js)
   final bool? volatile;
 
   const RasterDemSourceProperties({

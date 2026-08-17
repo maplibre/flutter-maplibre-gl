@@ -132,8 +132,22 @@ class SourcePropertyConverter {
         if let tiles = properties["tiles"] as? [String] {
             var options = interpretTileOptions(properties: properties)
             if let encoding = properties["encoding"] as? String {
-                let demEncoding: MLNDEMEncoding = encoding == "terrarium" ? .terrarium : .mapbox
-                options[.demEncoding] = NSNumber(value: demEncoding.rawValue)
+                // MLNDEMEncoding only knows mapbox and terrarium; the spec's
+                // "custom" encoding is web-only and is rejected before it gets
+                // here. Refusing anything else lets addSource report an
+                // invalidSourceType failure, rather than decoding the tiles as
+                // mapbox and drawing a plausible map from wrong elevations.
+                // The encoding is caller input, so it goes through the %@
+                // argument instead of into the NSLog format string.
+                switch encoding {
+                case "terrarium":
+                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.terrarium.rawValue)
+                case "mapbox":
+                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.mapbox.rawValue)
+                default:
+                    NSLog("%@", "maplibre_gl: unsupported raster-dem encoding '\(encoding)'")
+                    return nil
+                }
             }
             return MLNRasterDEMSource(
                 identifier: identifier,
@@ -166,6 +180,9 @@ class SourcePropertyConverter {
         }
         if let clusterMaxZoom = properties["clusterMaxZoom"] as? Double {
             options[.maximumZoomLevelForClustering] = clusterMaxZoom
+        }
+        if let clusterMinPoints = properties["clusterMinPoints"] as? Double {
+            options[.clusterMinPoints] = clusterMinPoints
         }
 
         if let clusterProperties = properties["clusterProperties"] as? [String: Any] {

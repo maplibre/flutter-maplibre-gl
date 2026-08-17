@@ -240,6 +240,19 @@ int compareVersions(String a, String b) {
 bool isImplemented(Object? sdkSupportValue) =>
     RegExp(r'^\d+(\.\d+)*$').hasMatch('$sdkSupportValue');
 
+/// Platforms the spec credits with a property their SDK does not expose,
+/// keyed by the property name in the spec. Only the generated docs are
+/// corrected, so this is for source properties, which every platform shares
+/// one class for; a layer property would also have to be gated out of the
+/// native converters.
+///
+/// `volatile` records ios since 5.10.0, which is a Mapbox iOS version. The
+/// MapLibre iOS SDK has no equivalent of Android's `Source.setVolatile`, so an
+/// app that trusts the doc gets tiles cached to disk with nothing to warn it.
+const unsupportedPlatformOverrides = {
+  "volatile": {"ios"},
+};
+
 /// Whether the native SDK at [platformVersion] supports a property, based on
 /// the spec's sdk-support metadata.
 /// Properties without sdk-support info are treated as supported: they predate
@@ -338,7 +351,8 @@ Map<String, dynamic> buildStyleProperty(
     'iosAsCamelCase': renamedIosProperties[camelCase],
     'iosExpression': iosExpression,
     'doc': value["doc"],
-    'docSplit': buildDocSplit(value).map((s) => {"part": s}).toList(),
+    'docSplit':
+        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
   };
 }
@@ -400,14 +414,16 @@ Map<String, dynamic> buildSourceProperty(
     'type': nestedTypeDart == null ? typeDart : "$typeDart<$nestedTypeDart>",
     'typeSwift':
         nestedTypeSwift == null ? typeSwift : "$typeSwift<$nestedTypeSwift>",
-    'docSplit': buildDocSplit(value).map((s) => {"part": s}).toList(),
+    'docSplit':
+        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
   };
 }
 
 /// Produce a wrapped documentation block (array of lines) including
-/// type/default/constraints plus enumerated option docs.
-List<String> buildDocSplit(Map<String, dynamic> item) {
+/// type/default/constraints plus enumerated option docs. [name] is the
+/// property name in the spec, used to look up [unsupportedPlatformOverrides].
+List<String> buildDocSplit(Map<String, dynamic> item, {String? name}) {
   final defaultValue = item["default"];
   final maxValue = item["maximum"];
   final minValue = item["minimum"];
@@ -433,8 +449,8 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
     }
   }
   final support = [
-    ...buildSupportLines("basic functionality", sdkSupport),
-    ...buildSupportLines("data-driven styling", sdkSupport),
+    ...buildSupportLines("basic functionality", sdkSupport, name),
+    ...buildSupportLines("data-driven styling", sdkSupport, name),
   ];
   if (support.isNotEmpty) {
     result.add("");
@@ -449,12 +465,20 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
 /// it and the ones that do not. Both belong in the docs: a platform the spec
 /// records with an issue URL instead of a version accepts the property and
 /// silently ignores it, which is worth saying out loud.
-List<String> buildSupportLines(String kind, Map<dynamic, dynamic>? sdkSupport) {
+List<String> buildSupportLines(
+  String kind,
+  Map<dynamic, dynamic>? sdkSupport, [
+  String? name,
+]) {
   final Map<String, dynamic>? support = sdkSupport?[kind];
   if (support == null || support.isEmpty) return [];
 
-  final implemented = support.keys.where((p) => isImplemented(support[p]));
-  final missing = support.keys.where((p) => !isImplemented(support[p]));
+  final overridden = unsupportedPlatformOverrides[name] ?? const <String>{};
+  bool implementsIt(String platform) =>
+      isImplemented(support[platform]) && !overridden.contains(platform);
+
+  final implemented = support.keys.where(implementsIt);
+  final missing = support.keys.where((p) => !implementsIt(p));
   if (implemented.isEmpty) {
     return ["  $kind on no platform yet"];
   }
@@ -526,7 +550,8 @@ List<Map<String, dynamic>> buildExpressionProperties(
     return <String, dynamic>{
       'value': e.key,
       'doc': e.value["doc"],
-      'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
+      'docSplit':
+          buildDocSplit(e.value, name: e.key).map((s) => {"part": s}).toList(),
       'valueAsCamelCase': name,
       'deprecatedName': alias?.$1,
       'deprecationReason': alias?.$2,

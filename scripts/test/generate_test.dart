@@ -105,6 +105,25 @@ void main() {
       expect(lines, ['  basic functionality on no platform yet']);
     });
 
+    // The spec credits ios with `volatile` since 5.10.0, a Mapbox iOS version
+    // the MapLibre iOS SDK never matched with an API, so the docs must move it
+    // to the unimplemented side rather than promise silent caching.
+    test('moves an overridden platform to the unimplemented side', () {
+      final sdkSupport = {
+        'basic functionality': {
+          'android': '9.3.0',
+          'ios': '5.10.0',
+          'js': 'wontfix',
+        },
+      };
+      expect(buildSupportLines('basic functionality', sdkSupport, 'volatile'), [
+        '  basic functionality with android (not on ios, js)',
+      ]);
+      expect(buildSupportLines('basic functionality', sdkSupport), [
+        '  basic functionality with android, ios (not on js)',
+      ]);
+    });
+
     // An entry shaped differently (the vector encoding lists mvt and mlt
     // instead) must not print an empty "Sdk Support:" header.
     test('returns nothing for an absent or empty entry', () {
