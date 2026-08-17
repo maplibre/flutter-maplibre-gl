@@ -159,7 +159,7 @@ Future<String> _fetchString(String url) async {
     if (response.statusCode != 200) {
       throw HttpException('GET $url returned ${response.statusCode}');
     }
-    return response.transform(utf8.decoder).join();
+    return await response.transform(utf8.decoder).join();
   } finally {
     client.close();
   }
