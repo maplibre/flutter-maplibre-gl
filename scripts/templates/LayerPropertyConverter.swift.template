@@ -19,7 +19,7 @@ class LayerPropertyConverter {
             }
             
             switch propertyName {
-                {{#paint_properties}}
+                {{#paint_properties_ios}}
                 case "{{{value}}}":
                 {{#isIosAsCamelCase}}
                     {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
@@ -27,8 +27,8 @@ class LayerPropertyConverter {
                 {{^isIosAsCamelCase}}
                     {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
                 {{/isIosAsCamelCase}}
-                {{/paint_properties}}
-                {{#layout_properties}}
+                {{/paint_properties_ios}}
+                {{#layout_properties_ios}}
                 case "{{{value}}}":
                 {{^isVisibilityProperty}}
                 {{#isIosAsCamelCase}}
@@ -45,7 +45,7 @@ class LayerPropertyConverter {
                         }
                     }
                 {{/isVisibilityProperty}}
-                {{/layout_properties}}
+                {{/layout_properties_ios}}
              
                 default:
                     break

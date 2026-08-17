@@ -106,6 +106,8 @@ class LayerPropertyConverter {
                     symbolLayer.textRadialOffset = expression
                 case "text-variable-anchor":
                     symbolLayer.textVariableAnchor = expression
+                case "text-variable-anchor-offset":
+                    symbolLayer.textVariableAnchorOffset = expression
                 case "text-anchor":
                     symbolLayer.textAnchor = expression
                 case "text-max-angle":
@@ -330,6 +332,8 @@ class LayerPropertyConverter {
                             fillExtrusionLayer.isVisible = visibilityValue == "visible"
                         }
                     }
+                case "fill-extrusion-rounded-corner-distance":
+                    fillExtrusionLayer.fillExtrusionRoundedCornerDistance = expression
              
                 default:
                     break
@@ -396,6 +400,8 @@ class LayerPropertyConverter {
             switch propertyName {
                 case "hillshade-illumination-direction":
                     hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
+                case "hillshade-illumination-altitude":
+                    hillshadeLayer.hillshadeIlluminationAltitude = wrapValueAsArray(expression)
                 case "hillshade-illumination-anchor":
                     hillshadeLayer.hillshadeIlluminationAnchor = expression
                 case "hillshade-exaggeration":
@@ -406,6 +412,8 @@ class LayerPropertyConverter {
                     hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
                 case "hillshade-accent-color":
                     hillshadeLayer.hillshadeAccentColor = expression
+                case "hillshade-method":
+                    hillshadeLayer.hillshadeMethod = expression
                 case "visibility":
                     if !(propertyValue is NSNull) {
                         if let visibilityValue = propertyValue as? String {

@@ -213,6 +213,9 @@ class LayerPropertyConverter {
         case "text-variable-anchor":
           properties.add(PropertyFactory.textVariableAnchor(expression));
           break;
+        case "text-variable-anchor-offset":
+          properties.add(PropertyFactory.textVariableAnchorOffset(expression));
+          break;
         case "text-anchor":
           properties.add(PropertyFactory.textAnchor(expression));
           break;
@@ -537,6 +540,9 @@ class LayerPropertyConverter {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
           }
           break;
+        case "fill-extrusion-rounded-corner-distance":
+          properties.add(PropertyFactory.fillExtrusionRoundedCornerDistance(expression));
+          break;
         default:
           break;
       }
@@ -600,8 +606,23 @@ class LayerPropertyConverter {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
       Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
       switch (entry.getKey()) {
-        case "hillshade-illumination-direction":
-          properties.add(PropertyFactory.hillshadeIlluminationDirection(expression));
+        case "hillshade-illumination-direction": {
+          final Float[] numberArray = wrapValueAsArray(jsonElement);
+          if (numberArray != null) {
+            properties.add(PropertyFactory.hillshadeIlluminationDirection(numberArray));
+          } else {
+            properties.add(PropertyFactory.hillshadeIlluminationDirection(expression));
+          }
+        }
+          break;
+        case "hillshade-illumination-altitude": {
+          final Float[] numberArray = wrapValueAsArray(jsonElement);
+          if (numberArray != null) {
+            properties.add(PropertyFactory.hillshadeIlluminationAltitude(numberArray));
+          } else {
+            properties.add(PropertyFactory.hillshadeIlluminationAltitude(expression));
+          }
+        }
           break;
         case "hillshade-illumination-anchor":
           properties.add(PropertyFactory.hillshadeIlluminationAnchor(expression));
@@ -609,14 +630,29 @@ class LayerPropertyConverter {
         case "hillshade-exaggeration":
           properties.add(PropertyFactory.hillshadeExaggeration(expression));
           break;
-        case "hillshade-shadow-color":
-          properties.add(PropertyFactory.hillshadeShadowColor(expression));
+        case "hillshade-shadow-color": {
+          final String[] colorArray = wrapColorAsArray(jsonElement);
+          if (colorArray != null) {
+            properties.add(PropertyFactory.hillshadeShadowColor(colorArray));
+          } else {
+            properties.add(PropertyFactory.hillshadeShadowColor(expression));
+          }
+        }
           break;
-        case "hillshade-highlight-color":
-          properties.add(PropertyFactory.hillshadeHighlightColor(expression));
+        case "hillshade-highlight-color": {
+          final String[] colorArray = wrapColorAsArray(jsonElement);
+          if (colorArray != null) {
+            properties.add(PropertyFactory.hillshadeHighlightColor(colorArray));
+          } else {
+            properties.add(PropertyFactory.hillshadeHighlightColor(expression));
+          }
+        }
           break;
         case "hillshade-accent-color":
           properties.add(PropertyFactory.hillshadeAccentColor(expression));
+          break;
+        case "hillshade-method":
+          properties.add(PropertyFactory.hillshadeMethod(expression));
           break;
         case "visibility":
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
@@ -670,6 +706,36 @@ class LayerPropertyConverter {
 
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+  }
+
+  // MapLibre 6.24.0+ expects an array of colors for the hillshade shadow and
+  // highlight colors (multidirectional hillshading), so a single color has to
+  // be wrapped. Returns null when the value is an expression instead.
+  private static String[] wrapColorAsArray(JsonElement jsonElement) {
+    if (jsonElement == null) {
+      return null;
+    }
+    if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+      return new String[]{jsonElement.getAsString()};
+    }
+    if (jsonElement.isJsonArray()) {
+      return convertJsonToStringArray(jsonElement);
+    }
+    return null;
+  }
+
+  // Same as wrapColorAsArray, for the numeric hillshade illumination direction.
+  private static Float[] wrapValueAsArray(JsonElement jsonElement) {
+    if (jsonElement == null) {
+      return null;
+    }
+    if (isNumber(jsonElement)) {
+      return new Float[]{jsonElement.getAsFloat()};
+    }
+    if (jsonElement.isJsonArray()) {
+      return convertJsonToFloatArray(jsonElement);
+    }
+    return null;
   }
 
   private static String[] convertJsonToStringArray(JsonElement jsonElement) {

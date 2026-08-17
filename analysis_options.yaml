@@ -9,6 +9,14 @@ analyzer:
 
   errors:
     avoid_catches_without_on_clauses: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:
