@@ -8,3 +8,11 @@ analyzer:
     - macos/**
     - linux/**
 include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # The package is still 0.x, so every release reads as a breaking version to
+    # this rule and it would forbid ever introducing a deprecated alias. The
+    # aliases exist so a rename does not break callers, and they are removed
+    # deliberately, not on the next version bump.
+    remove_deprecations_in_breaking_versions: false

@@ -43,6 +43,13 @@ melos:
         set -e
         melos run test:io
         melos run test:web
+        melos run test:scripts
+
+    test:scripts:
+      description: Run the code generator tests
+      exec: dart test
+      packageFilters:
+        scope: maplibre_code_gen
 
     test:io:
       description: Run IO tests

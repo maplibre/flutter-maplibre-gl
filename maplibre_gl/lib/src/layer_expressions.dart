@@ -484,14 +484,24 @@ class Expressions {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  static const precent = "%";
+  static const modulo = "%";
+
+  /// Renamed to [modulo], which says what the operator does.
+  @Deprecated('Use modulo instead: "%" is the remainder operator')
+  static const String precent = modulo;
 
   /// Returns the result of raising the first input to the power specified
   /// by the second.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  static const xor = "^";
+  static const power = "^";
+
+  /// Renamed to [power], which says what the operator does.
+  @Deprecated(
+    'Use power instead: "^" raises the first input to the power of the second',
+  )
+  static const String xor = power;
 
   /// Returns the square root of the input.
   ///

@@ -14,6 +14,7 @@
 //   dart run lib/check_style_spec.dart --update=26.2.1    # pin to a version
 //
 // After --update, re-run the generator: melos run generate
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -35,6 +36,20 @@ const _generatorSections = [
 ];
 
 Future<void> main(List<String> args) async {
+  try {
+    await run(args);
+  } on _UpstreamUnreachable catch (e) {
+    // This check gates every PR, so a registry or CDN hiccup must not read as
+    // "someone edited style.json".
+    stderr.writeln(
+      'FAIL: the upstream style spec could not be read, so alignment could not '
+      'be checked. This is not a local drift of style.json.\n  ${e.message}',
+    );
+    exitCode = 1;
+  }
+}
+
+Future<void> run(List<String> args) async {
   final latest = args.contains('--latest');
   final updateArgs = args.where((a) => a.startsWith('--update'));
   final updateArg = updateArgs.isEmpty ? null : updateArgs.first;
@@ -91,6 +106,9 @@ Future<void> main(List<String> args) async {
   // 2. Drift report against the latest upstream release: what a spec bump
   //    would add, and which platforms could use it today.
   final latestVersion = await _fetchLatestVersion();
+  // Printed in a fixed shape so the weekly workflow can pass it to --update
+  // instead of resolving the same version from the registry a second time.
+  print('latest=$latestVersion');
   if (latestVersion == pinnedVersion) {
     print('Already pinned to the latest upstream release ($latestVersion).');
     return;
@@ -153,16 +171,39 @@ Future<String> _fetchLatestVersion() async {
   return jsonDecode(body)['version'] as String;
 }
 
+/// Long enough for a cold CDN fetch of the spec, short enough that a request
+/// the CDN never answers (an unresolvable version, for one) fails instead of
+/// holding the CI job open.
+const _fetchTimeout = Duration(seconds: 30);
+
 Future<String> _fetchString(String url) async {
-  final client = HttpClient();
+  final client = HttpClient()..connectionTimeout = _fetchTimeout;
   try {
     final request = await client.getUrl(Uri.parse(url));
-    final response = await request.close();
+    final response = await request.close().timeout(_fetchTimeout);
     if (response.statusCode != 200) {
-      throw HttpException('GET $url returned ${response.statusCode}');
+      throw _UpstreamUnreachable('GET $url returned ${response.statusCode}');
     }
-    return await response.transform(utf8.decoder).join();
+    return await response.transform(utf8.decoder).join().timeout(_fetchTimeout);
+  } on SocketException catch (e) {
+    throw _UpstreamUnreachable('GET $url failed: ${e.message}');
+  } on HttpException catch (e) {
+    throw _UpstreamUnreachable('GET $url failed: ${e.message}');
+  } on TimeoutException {
+    throw _UpstreamUnreachable(
+      'GET $url timed out after ${_fetchTimeout.inSeconds}s',
+    );
   } finally {
     client.close();
   }
+}
+
+/// Upstream could not be read, as opposed to style.json having drifted.
+class _UpstreamUnreachable implements Exception {
+  _UpstreamUnreachable(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

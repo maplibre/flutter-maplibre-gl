@@ -13,4 +13,5 @@ dependencies:
   recase: ^4.1.0
 
 dev_dependencies:
+  test: ^1.25.0
   very_good_analysis: ^10.2.0

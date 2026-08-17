@@ -43,10 +43,20 @@ jobs:
             cat /tmp/style-spec-report.txt
             echo 'REPORT_EOF'
           } >> "$GITHUB_OUTPUT"
+          # The report already resolved the latest version; pass it on so the
+          # update step does not ask the registry again, and so the two steps
+          # cannot disagree if upstream publishes in between.
+          sed -n 's/^latest=/latest=/p' /tmp/style-spec-report.txt >> "$GITHUB_OUTPUT"
 
       - name: Update to the latest release
         working-directory: scripts
-        run: dart run lib/check_style_spec.dart --update
+        run: |
+          version='${{ steps.report.outputs.latest }}'
+          if [ -n "$version" ]; then
+            dart run lib/check_style_spec.dart --update="$version"
+          else
+            dart run lib/check_style_spec.dart --update
+          fi
 
       - name: Regenerate code
         run: melos run generate

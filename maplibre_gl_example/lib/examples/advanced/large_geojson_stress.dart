@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ class _LargeGeojsonStressBodyState extends State<_LargeGeojsonStressBody>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _spinner.repeat();
+    unawaited(_spinner.repeat());
   }
 
   @override

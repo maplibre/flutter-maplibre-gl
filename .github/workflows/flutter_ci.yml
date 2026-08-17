@@ -42,6 +42,7 @@ jobs:
               - 'maplibre_gl_platform_interface/**'
               - 'maplibre_gl_web/**'
               - 'maplibre_gl_example/**'
+              - 'scripts/**'
               - 'pubspec.yaml'
               - '.github/workflows/**'
             docs:
@@ -98,6 +99,8 @@ jobs:
         with:
           run-bootstrap: true
       - run: melos run test:io:coverage --no-select
+      - name: Run the code generator tests
+        run: melos run test:scripts
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v7

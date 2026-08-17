@@ -269,14 +269,36 @@ List<Map<String, dynamic>> buildStyleProperties(
 }) {
   final Map<String, dynamic> items = styleJson[key] ?? <String, dynamic>{};
 
-  return items.entries
-      .where(
-        (e) =>
-            platform == null ||
-            isSupportedOnPlatform(e.value, platform, platformVersion!),
-      )
-      .map((e) => buildStyleProperty(e.key, e.value))
-      .toList();
+  final properties =
+      items.entries
+          .where(
+            (e) =>
+                platform == null ||
+                isSupportedOnPlatform(e.value, platform, platformVersion!),
+          )
+          .map((e) => buildStyleProperty(e.key, e.value))
+          .toList();
+
+  // Only the paint branch of the native templates wraps a single value into the
+  // array the SDK expects. No layout property is array-typed in the spec today,
+  // so rather than carrying a second copy of that logic, stop here if one ever
+  // appears: the wrap has to be added to the layout branch first, or the value
+  // would reach the native SDK unwrapped and be rejected at runtime.
+  if (key.startsWith("layout_")) {
+    for (final property in properties) {
+      if (property['isColorArrayProperty'] == true ||
+          property['isNumberArrayProperty'] == true) {
+        throw StateError(
+          'The layout property $key.${property['value']} is array-typed, which '
+          'the Java and Swift layout templates do not wrap yet. Add the '
+          'colorArray/numberArray handling to the layout section of '
+          'scripts/templates/LayerPropertyConverter.{java,swift}.template.',
+        );
+      }
+    }
+  }
+
+  return properties;
 }
 
 /// Translate a single raw style property spec into a template-ready map.
@@ -479,7 +501,7 @@ List<Map<String, dynamic>> buildExpressionProperties(
     "+": "plus",
     "*": "multiply",
     "-": "minus",
-    "%": "precent",
+    "%": "modulo",
     ">": "larger",
     ">=": "largerOrEqual",
     "<": "smaller",
@@ -487,18 +509,27 @@ List<Map<String, dynamic>> buildExpressionProperties(
     "!=": "notEqual",
     "==": "equal",
     "/": "divide",
-    "^": "xor",
+    "^": "power",
     "!": "not",
   };
 
-  return items.entries
-      .map(
-        (e) => <String, dynamic>{
-          'value': e.key,
-          'doc': e.value["doc"],
-          'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
-          'valueAsCamelCase': ReCase(renamed[e.key] ?? e.key).camelCase,
-        },
-      )
-      .toList();
+  /// Names that shipped for an operator before it was named after what it
+  /// actually does. Kept as deprecated aliases so existing code still compiles.
+  const deprecated = {
+    "modulo": ("precent", '"%" is the remainder operator'),
+    "power": ("xor", '"^" raises the first input to the power of the second'),
+  };
+
+  return items.entries.map((e) {
+    final name = ReCase(renamed[e.key] ?? e.key).camelCase;
+    final alias = deprecated[name];
+    return <String, dynamic>{
+      'value': e.key,
+      'doc': e.value["doc"],
+      'docSplit': buildDocSplit(e.value).map((s) => {"part": s}).toList(),
+      'valueAsCamelCase': name,
+      'deprecatedName': alias?.$1,
+      'deprecationReason': alias?.$2,
+    };
+  }).toList();
 }
