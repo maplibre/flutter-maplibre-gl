@@ -58,9 +58,9 @@ class _EditStyleLayerAnimatedBodyState
       end: Colors.purple,
     ).animate(_colorAnimationController)..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        unawaited(_colorAnimationController.reverse());
+        _colorAnimationController.reverse();
       } else if (status == AnimationStatus.dismissed) {
-        unawaited(_colorAnimationController.forward());
+        _colorAnimationController.forward();
       }
     });
 
@@ -228,7 +228,7 @@ class _EditStyleLayerAnimatedBodyState
   void _startColorAnimation() {
     if (_isAnimating) return;
     setState(() => _isAnimating = true);
-    unawaited(_colorAnimationController.forward());
+    _colorAnimationController.forward();
   }
 
   void _stopAnimation() {

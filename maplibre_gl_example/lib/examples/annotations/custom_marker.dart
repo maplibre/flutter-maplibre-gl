@@ -179,7 +179,6 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
-      // ignore: discarded_futures --- IGNORE ---
     )..repeat(reverse: true);
     _animation = CurvedAnimation(
       parent: _controller,

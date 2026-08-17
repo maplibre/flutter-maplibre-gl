@@ -55,9 +55,9 @@ class _EditAnnotationAnimatedBodyState
       end: Colors.red,
     ).animate(_colorAnimationController)..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        unawaited(_colorAnimationController.reverse());
+        _colorAnimationController.reverse();
       } else if (status == AnimationStatus.dismissed) {
-        unawaited(_colorAnimationController.forward());
+        _colorAnimationController.forward();
       }
     });
 
