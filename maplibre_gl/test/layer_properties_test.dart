@@ -328,6 +328,64 @@ void main() {
     });
   });
 
+  group('ColorReliefLayerProperties', () {
+    // A color ramp keyed on ["elevation"], the shape the style spec expects
+    // for color-relief-color.
+    const colorRamp = [
+      'interpolate',
+      ['linear'],
+      ['elevation'],
+      0,
+      '#000000',
+      1000,
+      '#FFFFFF',
+    ];
+
+    test('toJson with skipNulls', () {
+      const props = ColorReliefLayerProperties(
+        colorReliefOpacity: 0.7,
+        colorReliefColor: colorRamp,
+      );
+      final json = props.toJson();
+      expect(json['color-relief-opacity'], 0.7);
+      expect(json['color-relief-color'], colorRamp);
+      expect(json.containsKey('resampling'), isFalse);
+    });
+
+    test('fromJson roundtrip', () {
+      const original = ColorReliefLayerProperties(
+        colorReliefOpacity: 0.7,
+        colorReliefColor: colorRamp,
+        resampling: 'nearest',
+        visibility: 'visible',
+      );
+      final restored = ColorReliefLayerProperties.fromJson(original.toJson());
+      expect(restored.colorReliefOpacity, 0.7);
+      expect(restored.colorReliefColor, colorRamp);
+      expect(restored.resampling, 'nearest');
+      expect(restored.visibility, 'visible');
+    });
+
+    test('copyWith overrides specified fields', () {
+      const original = ColorReliefLayerProperties(
+        colorReliefOpacity: 0.7,
+        colorReliefColor: colorRamp,
+        resampling: 'linear',
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const ColorReliefLayerProperties(
+          colorReliefOpacity: 0.4,
+          resampling: 'nearest',
+        ),
+      );
+      expect(updated.colorReliefOpacity, 0.4);
+      expect(updated.resampling, 'nearest');
+      expect(updated.colorReliefColor, colorRamp);
+      expect(updated.visibility, 'visible');
+    });
+  });
+
   group('LayerProperties visibility', () {
     test('all layer types support visibility', () {
       final layers = <LayerProperties>[
@@ -339,6 +397,7 @@ void main() {
         const RasterLayerProperties(visibility: 'none'),
         const HillshadeLayerProperties(visibility: 'visible'),
         const HeatmapLayerProperties(visibility: 'none'),
+        const ColorReliefLayerProperties(visibility: 'visible'),
       ];
       for (final layer in layers) {
         final json = layer.toJson();
