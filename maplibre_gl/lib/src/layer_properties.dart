@@ -289,7 +289,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      overlap mode, the new icon is visible.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic iconOverlap;
 
   /// If true, other symbols can be visible even if they collide with the
@@ -404,7 +404,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  ///   data-driven styling with js, android, ios
+  ///   data-driven styling with js (not on android, ios)
   final dynamic iconPadding;
 
   /// If true, the icon may be flipped to prevent it from being rendered
@@ -680,7 +680,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, ios, android
-  ///   data-driven styling with js, ios, android
+  ///   data-driven styling with js (not on ios, android)
   final dynamic textVariableAnchorOffset;
 
   /// Part of the text placed closest to the anchor.
@@ -837,7 +837,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      overlap mode, the new text is visible.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic textOverlap;
 
   /// If true, other symbols can be visible even if they collide with the
@@ -1408,7 +1408,7 @@ class LineLayerProperties implements LayerProperties {
   ///   maximum: 1
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic lineLayerOpacity;
 
   /// The color with which the line will be drawn.
@@ -1506,7 +1506,7 @@ class LineLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  ///   data-driven styling with js, ios, android
+  ///   data-driven styling with js (not on ios, android)
   final dynamic lineDasharray;
 
   /// Name of image in sprite to use for drawing image lines. For seamless
@@ -1549,7 +1549,7 @@ class LineLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  ///   data-driven styling with js, android, ios
+  ///   data-driven styling with js (not on android, ios)
   final dynamic lineCap;
 
   /// The display of lines when joining.
@@ -1581,7 +1581,7 @@ class LineLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  ///   data-driven styling with js, android, ios
+  ///   data-driven styling with js (not on android, ios)
   final dynamic lineMiterLimit;
 
   /// Used to automatically convert round joins to miter joins for shallow
@@ -1592,7 +1592,7 @@ class LineLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
-  ///   data-driven styling with js, android, ios
+  ///   data-driven styling with js (not on android, ios)
   final dynamic lineRoundLimit;
 
   /// Sorts features in ascending order based on this value. Features with a
@@ -1760,7 +1760,7 @@ class FillLayerProperties implements LayerProperties {
   ///   maximum: 1
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic fillLayerOpacity;
 
   /// The color of the filled part of this layer. This color can be
@@ -2036,7 +2036,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   minimum: 0
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with android, ios (not on js)
   final dynamic fillExtrusionRoundedCornerDistance;
 
   const FillExtrusionLayerProperties({
@@ -2208,7 +2208,7 @@ class RasterLayerProperties implements LayerProperties {
   ///      when overscaled
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic resampling;
 
   /// The resampling/interpolation method to use for overscaling, also known
@@ -2458,7 +2458,7 @@ class HillshadeLayerProperties implements LayerProperties {
   ///      when overscaled
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   final dynamic resampling;
 
   // Layout Properties

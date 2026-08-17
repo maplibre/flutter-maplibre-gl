@@ -65,7 +65,9 @@ Future<void> main(List<String> args) async {
 
   // 1. Alignment check: style.json must be byte-identical to the pinned
   //    upstream release, so any hand edit or partial update is caught.
-  final local = await styleFile.readAsString();
+  // Line endings are normalized so a Windows checkout (core.autocrlf) does not
+  // read as drift.
+  final local = (await styleFile.readAsString()).replaceAll('\r\n', '\n');
   final upstream = await _fetchString(_specUrl(pinnedVersion));
   if (local == upstream) {
     print(

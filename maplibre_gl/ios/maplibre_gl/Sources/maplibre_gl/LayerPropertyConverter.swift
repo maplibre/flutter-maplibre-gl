@@ -401,7 +401,7 @@ class LayerPropertyConverter {
                 case "hillshade-illumination-direction":
                     hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
                 case "hillshade-illumination-altitude":
-                    hillshadeLayer.hillshadeIlluminationAltitude = expression
+                    hillshadeLayer.hillshadeIlluminationAltitude = wrapValueAsArray(expression)
                 case "hillshade-illumination-anchor":
                     hillshadeLayer.hillshadeIlluminationAnchor = expression
                 case "hillshade-exaggeration":

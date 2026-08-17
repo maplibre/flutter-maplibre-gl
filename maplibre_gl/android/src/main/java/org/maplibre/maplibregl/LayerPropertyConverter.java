@@ -615,8 +615,14 @@ class LayerPropertyConverter {
           }
         }
           break;
-        case "hillshade-illumination-altitude":
-          properties.add(PropertyFactory.hillshadeIlluminationAltitude(expression));
+        case "hillshade-illumination-altitude": {
+          final Float[] numberArray = wrapValueAsArray(jsonElement);
+          if (numberArray != null) {
+            properties.add(PropertyFactory.hillshadeIlluminationAltitude(numberArray));
+          } else {
+            properties.add(PropertyFactory.hillshadeIlluminationAltitude(expression));
+          }
+        }
           break;
         case "hillshade-illumination-anchor":
           properties.add(PropertyFactory.hillshadeIlluminationAnchor(expression));

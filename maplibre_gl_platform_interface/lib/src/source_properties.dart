@@ -76,7 +76,7 @@ class VectorSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios, js
+  ///   basic functionality with android, ios (not on js)
   final bool? volatile;
 
   /// The encoding used by this source. Mapbox Vector Tiles encoding is used
@@ -91,8 +91,6 @@ class VectorSourceProperties implements SourceProperties {
   ///   "mlt"
   ///      MapLibre Vector Tiles. See
   ///      https://github.com/maplibre/maplibre-tile-spec for more info.
-  ///
-  /// Sdk Support:
   final String? encoding;
 
   const VectorSourceProperties({
@@ -242,7 +240,7 @@ class RasterSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios, js
+  ///   basic functionality with android, ios (not on js)
   final bool? volatile;
 
   const RasterSourceProperties({
@@ -385,8 +383,6 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   "custom"
   ///      Decodes tiles using the redFactor, blueFactor, greenFactor,
   ///      baseShift parameters.
-  ///
-  /// Sdk Support:
   final String? encoding;
 
   /// Value that will be multiplied by the red channel value when decoding.
@@ -396,7 +392,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 1.0
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   final double? redFactor;
 
   /// Value that will be multiplied by the blue channel value when decoding.
@@ -406,7 +402,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 1.0
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   final double? blueFactor;
 
   /// Value that will be multiplied by the green channel value when
@@ -416,7 +412,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 1.0
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   final double? greenFactor;
 
   /// Value that will be added to the encoding mix when decoding. Only used
@@ -426,7 +422,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 0.0
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   final double? baseShift;
 
   /// A setting to determine whether a source's tiles are cached locally.
@@ -435,7 +431,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: false
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios, js
+  ///   basic functionality with android, ios (not on js)
   final bool? volatile;
 
   const RasterDemSourceProperties({

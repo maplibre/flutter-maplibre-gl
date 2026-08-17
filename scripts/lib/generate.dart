@@ -235,9 +235,13 @@ int compareVersions(String a, String b) {
   return 0;
 }
 
+/// In sdk-support metadata a version number means "supported since", while
+/// an issue URL or "wontfix" means "not implemented on this platform".
+bool isImplemented(Object? sdkSupportValue) =>
+    RegExp(r'^\d+(\.\d+)*$').hasMatch('$sdkSupportValue');
+
 /// Whether the native SDK at [platformVersion] supports a property, based on
-/// the spec's sdk-support metadata: a version number means "supported since",
-/// while an issue URL (or any non-version value) means "not implemented yet".
+/// the spec's sdk-support metadata.
 /// Properties without sdk-support info are treated as supported: they predate
 /// the metadata, and if that assumption is ever wrong the generated native
 /// code fails to compile loudly instead of silently dropping the property.
@@ -250,8 +254,7 @@ bool isSupportedOnPlatform(
       propertySpec["sdk-support"]?["basic functionality"];
   if (support == null) return true;
   final since = support[platform];
-  if (since == null) return false;
-  if (!RegExp(r'^\d+(\.\d+)*$').hasMatch('$since')) return false;
+  if (since == null || !isImplemented(since)) return false;
   return compareVersions(platformVersion, '$since') >= 0;
 }
 
@@ -287,12 +290,12 @@ Map<String, dynamic> buildStyleProperty(
       dartTypeMappingTable[value["value"]?["type"]];
   final camelCase = ReCase(key).camelCase;
 
-  // MapLibre 6.24.0+ changed some hillshade properties to array types
-  // for multidirectional hillshading support. A single value coming from the
-  // Dart API has to be wrapped in an array before it reaches the native SDK.
-  final isColorArrayProperty =
-      key == 'hillshade-shadow-color' || key == 'hillshade-highlight-color';
-  final isNumberArrayProperty = key == 'hillshade-illumination-direction';
+  // Multidirectional hillshading turned some properties into array types
+  // (MapLibre Native 6.24.0 / Android 13.0.0), which the spec marks with the
+  // colorArray and numberArray types. A single value coming from the Dart API
+  // has to be wrapped in an array before it reaches the native SDK.
+  final isColorArrayProperty = value["type"] == "colorArray";
+  final isNumberArrayProperty = value["type"] == "numberArray";
   var iosExpression = 'expression';
   if (isColorArrayProperty) {
     iosExpression = 'wrapColorAsArray(expression)';
@@ -407,21 +410,34 @@ List<String> buildDocSplit(Map<String, dynamic> item) {
       }
     }
   }
-  if (sdkSupport != null) {
-    final Map<String, dynamic>? basic = sdkSupport["basic functionality"];
-    final Map<String, dynamic>? dataDriven = sdkSupport["data-driven styling"];
-
+  final support = [
+    ...buildSupportLines("basic functionality", sdkSupport),
+    ...buildSupportLines("data-driven styling", sdkSupport),
+  ];
+  if (support.isNotEmpty) {
     result.add("");
     result.add("Sdk Support:");
-    if (basic != null && basic.isNotEmpty) {
-      result.add("  basic functionality with ${basic.keys.join(", ")}");
-    }
-    if (dataDriven != null && dataDriven.isNotEmpty) {
-      result.add("  data-driven styling with ${dataDriven.keys.join(", ")}");
-    }
+    result.addAll(support);
   }
 
   return result;
+}
+
+/// The doc line for one sdk-support entry, naming the platforms that implement
+/// it and the ones that do not. Both belong in the docs: a platform the spec
+/// records with an issue URL instead of a version accepts the property and
+/// silently ignores it, which is worth saying out loud.
+List<String> buildSupportLines(String kind, Map<dynamic, dynamic>? sdkSupport) {
+  final Map<String, dynamic>? support = sdkSupport?[kind];
+  if (support == null || support.isEmpty) return [];
+
+  final implemented = support.keys.where((p) => isImplemented(support[p]));
+  final missing = support.keys.where((p) => !isImplemented(support[p]));
+  if (implemented.isEmpty) {
+    return ["  $kind on no platform yet"];
+  }
+  final not = missing.isEmpty ? "" : " (not on ${missing.join(", ")})";
+  return ["  $kind with ${implemented.join(", ")}$not"];
 }
 
 /// Simple greedy word-wrapping utility used for docs.

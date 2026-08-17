@@ -143,7 +143,7 @@ class Expressions {
   /// is performed in the Hue-Chroma-Luminance color space.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   static const interpolateHcl = "interpolate-hcl";
 
   /// Produces continuous, smooth results by interpolating between pairs of
@@ -152,7 +152,7 @@ class Expressions {
   /// is performed in the CIELAB color space.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   static const interpolateLab = "interpolate-lab";
 
   /// Returns the mathematical constant ln(2).
@@ -255,7 +255,7 @@ class Expressions {
   /// retrieved property.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   static const globalState = "global-state";
 
   /// Converts the input number into a string representation using the
@@ -264,7 +264,7 @@ class Expressions {
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js, android (not on ios)
   static const numberFormat = "number-format";
 
   /// Converts the input value to a string. If the input is `null`, the
@@ -394,7 +394,7 @@ class Expressions {
   /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   static const featureState = "feature-state";
 
   /// Returns the feature's simple geometry type: `Point`, `LineString`, or
@@ -447,7 +447,7 @@ class Expressions {
   /// used in the `clusterProperties` option of a clustered GeoJSON source.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, ios, android
+  ///   basic functionality with js (not on ios, android)
   static const accumulated = "accumulated";
 
   /// Returns the sum of the inputs.
@@ -735,7 +735,7 @@ class Expressions {
   /// `mapbox-gl-rtl-text` plugin is not in use in MapLibre GL JS).
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js, android (not on ios)
   static const isSupportedScript = "is-supported-script";
 
   /// Returns the input string converted to uppercase. Follows the Unicode
@@ -785,13 +785,13 @@ class Expressions {
   /// a separator string.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   static const split = "split";
 
   /// Returns a string formed by concatenating the elements of the input
   /// array, inserting a separator between each element.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios
+  ///   basic functionality with js (not on android, ios)
   static const join = "join";
 }
