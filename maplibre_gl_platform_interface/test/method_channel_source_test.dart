@@ -72,6 +72,77 @@ void main() {
       expect(properties['url'], 'https://example.com/tiles.json');
     });
 
+    // The native converters read these two keys by name, so a rename on the
+    // Dart side has to fail here rather than silently stop working on device.
+    test('addSource forwards volatile and clusterMinPoints', () async {
+      await platform.addSource(
+        'vec-source',
+        const VectorSourceProperties(
+          url: 'https://example.com/tiles.json',
+          volatile: true,
+        ),
+      );
+      await platform.addSource(
+        'points',
+        const GeojsonSourceProperties(cluster: true, clusterMinPoints: 5),
+      );
+
+      final vector = (methodCalls[0].arguments as Map)['properties'] as Map;
+      expect(vector['volatile'], true);
+      final geojson = (methodCalls[1].arguments as Map)['properties'] as Map;
+      expect(geojson['clusterMinPoints'], 5);
+    });
+
+    // MapLibre Native decodes only mapbox and terrarium, and would read custom
+    // tiles as mapbox-encoded: plausible map, wrong elevations.
+    test('addSource rejects the custom raster-dem encoding', () async {
+      expect(
+        () => platform.addSource(
+          'dem',
+          const RasterDemSourceProperties(
+            tiles: ['https://example.com/{z}/{x}/{y}.png'],
+            encoding: 'custom',
+            redFactor: 256,
+            baseShift: -32768,
+          ),
+        ),
+        throwsA(isA<UnsupportedError>()),
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test('addSource rejects custom-encoding factors on a known encoding', () {
+      expect(
+        () => platform.addSource(
+          'dem',
+          const RasterDemSourceProperties(
+            tiles: ['https://example.com/{z}/{x}/{y}.png'],
+            greenFactor: 2,
+          ),
+        ),
+        throwsA(isA<UnsupportedError>()),
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test(
+      'addSource passes the mapbox and terrarium encodings through',
+      () async {
+        await platform.addSource(
+          'dem',
+          const RasterDemSourceProperties(
+            tiles: ['https://example.com/{z}/{x}/{y}.png'],
+            encoding: 'terrarium',
+          ),
+        );
+
+        expect(methodCalls.length, 1);
+        final properties =
+            (methodCalls[0].arguments as Map)['properties'] as Map;
+        expect(properties['encoding'], 'terrarium');
+      },
+    );
+
     test('removeSource sends correct method', () async {
       await platform.removeSource('test-source');
 

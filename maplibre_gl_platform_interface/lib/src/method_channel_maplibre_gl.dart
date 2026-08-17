@@ -1149,10 +1149,35 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _ensureDemEncodingSupported(properties);
     await _channel.invokeMethod('style#addSource', <String, dynamic>{
       'sourceId': sourceId,
       'properties': properties.toJson(),
     });
+  }
+
+  /// The `custom` raster-dem encoding, and the colour-channel factors that go
+  /// with it, are a MapLibre GL JS feature. MapLibre Native decodes only the
+  /// `mapbox` and `terrarium` formulas (maplibre-native#2783) and would read
+  /// the tiles as mapbox-encoded, so the map would render plausible but wrong
+  /// elevations. Failing here says so instead.
+  void _ensureDemEncodingSupported(SourceProperties properties) {
+    if (properties is! RasterDemSourceProperties) return;
+    final usesFactors =
+        properties.redFactor != null ||
+        properties.greenFactor != null ||
+        properties.blueFactor != null ||
+        properties.baseShift != null;
+    if (properties.encoding != 'custom' && !usesFactors) return;
+
+    throw UnsupportedError(
+      'The custom raster-dem encoding is not available on Android and iOS '
+      'because MapLibre Native decodes only the mapbox and terrarium '
+      'encodings. Use encoding: "mapbox" or "terrarium" without '
+      'redFactor, greenFactor, blueFactor and baseShift, or serve the '
+      'terrain tiles in one of those encodings. Custom encoding is '
+      'supported on web.',
+    );
   }
 
   @override

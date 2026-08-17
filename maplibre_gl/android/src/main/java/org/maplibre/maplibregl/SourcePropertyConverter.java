@@ -96,6 +96,11 @@ class SourcePropertyConverter {
       options = options.withClusterRadius(Convert.toInt(clusterRadius));
     }
 
+    final Object clusterMinPoints = data.get("clusterMinPoints");
+    if (clusterMinPoints != null) {
+      options = options.withClusterMinPoints(Convert.toInt(clusterMinPoints));
+    }
+
     final Object lineMetrics = data.get("lineMetrics");
     if (lineMetrics != null) {
       options = options.withLineMetrics(Convert.toBoolean(lineMetrics));
@@ -280,6 +285,13 @@ class SourcePropertyConverter {
     }
 
     if (source != null) {
+      // Tile caching is a source-level setting rather than a tileset option, so
+      // it is applied to the built source. Set before the source joins the
+      // style, so the first tile requests already honour it.
+      final Object volatileTiles = properties.get("volatile");
+      if (volatileTiles != null) {
+        source.setVolatile(Convert.toBoolean(volatileTiles));
+      }
       style.addSource(source);
     }
   }

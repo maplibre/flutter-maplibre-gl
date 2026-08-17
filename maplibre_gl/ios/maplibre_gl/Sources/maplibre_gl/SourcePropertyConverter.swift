@@ -132,8 +132,21 @@ class SourcePropertyConverter {
         if let tiles = properties["tiles"] as? [String] {
             var options = interpretTileOptions(properties: properties)
             if let encoding = properties["encoding"] as? String {
-                let demEncoding: MLNDEMEncoding = encoding == "terrarium" ? .terrarium : .mapbox
-                options[.demEncoding] = NSNumber(value: demEncoding.rawValue)
+                // MLNDEMEncoding only knows mapbox and terrarium; the spec's
+                // "custom" encoding is web-only and is rejected before it gets
+                // here, so anything unknown is a bug rather than a user error.
+                switch encoding {
+                case "terrarium":
+                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.terrarium.rawValue)
+                case "mapbox":
+                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.mapbox.rawValue)
+                default:
+                    NSLog(
+                        "maplibre_gl: unsupported raster-dem encoding '\(encoding)', "
+                            + "falling back to mapbox"
+                    )
+                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.mapbox.rawValue)
+                }
             }
             return MLNRasterDEMSource(
                 identifier: identifier,
@@ -166,6 +179,9 @@ class SourcePropertyConverter {
         }
         if let clusterMaxZoom = properties["clusterMaxZoom"] as? Double {
             options[.maximumZoomLevelForClustering] = clusterMaxZoom
+        }
+        if let clusterMinPoints = properties["clusterMinPoints"] as? Double {
+            options[.clusterMinPoints] = clusterMinPoints
         }
 
         if let clusterProperties = properties["clusterProperties"] as? [String: Any] {
