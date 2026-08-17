@@ -134,18 +134,19 @@ class SourcePropertyConverter {
             if let encoding = properties["encoding"] as? String {
                 // MLNDEMEncoding only knows mapbox and terrarium; the spec's
                 // "custom" encoding is web-only and is rejected before it gets
-                // here, so anything unknown is a bug rather than a user error.
+                // here. Refusing anything else lets addSource report an
+                // invalidSourceType failure, rather than decoding the tiles as
+                // mapbox and drawing a plausible map from wrong elevations.
+                // The encoding is caller input, so it goes through the %@
+                // argument instead of into the NSLog format string.
                 switch encoding {
                 case "terrarium":
                     options[.demEncoding] = NSNumber(value: MLNDEMEncoding.terrarium.rawValue)
                 case "mapbox":
                     options[.demEncoding] = NSNumber(value: MLNDEMEncoding.mapbox.rawValue)
                 default:
-                    NSLog(
-                        "maplibre_gl: unsupported raster-dem encoding '\(encoding)', "
-                            + "falling back to mapbox"
-                    )
-                    options[.demEncoding] = NSNumber(value: MLNDEMEncoding.mapbox.rawValue)
+                    NSLog("%@", "maplibre_gl: unsupported raster-dem encoding '\(encoding)'")
+                    return nil
                 }
             }
             return MLNRasterDEMSource(

@@ -94,7 +94,9 @@ void main() {
     });
 
     // MapLibre Native decodes only mapbox and terrarium, and would read custom
-    // tiles as mapbox-encoded: plausible map, wrong elevations.
+    // tiles as mapbox-encoded: plausible map, wrong elevations. The message has
+    // to say that only addSource() is checked, because the same encoding inside
+    // MapLibreMap.styleString still falls back to mapbox silently.
     test('addSource rejects the custom raster-dem encoding', () async {
       expect(
         () => platform.addSource(
@@ -106,23 +108,50 @@ void main() {
             baseShift: -32768,
           ),
         ),
-        throwsA(isA<UnsupportedError>()),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            contains('styleString'),
+          ),
+        ),
       );
       expect(methodCalls, isEmpty);
     });
 
-    test('addSource rejects custom-encoding factors on a known encoding', () {
-      expect(
-        () => platform.addSource(
-          'dem',
-          const RasterDemSourceProperties(
-            tiles: ['https://example.com/{z}/{x}/{y}.png'],
-            greenFactor: 2,
-          ),
+    // The factors are read only on a custom encoding, so next to mapbox or
+    // terrarium they are the no-op Android and iOS have always made of them.
+    // One properties object shared by all three platforms, or a style copied
+    // from JSON carrying the spec defaults, must keep working.
+    test('addSource accepts the factors on a known encoding', () async {
+      await platform.addSource(
+        'dem-mapbox',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          // Spelling out the encoding is the case under test: a style copied
+          // from JSON carries it, default or not.
+          // ignore: avoid_redundant_argument_values
+          encoding: 'mapbox',
+          redFactor: 1.0,
+          baseShift: 0.0,
         ),
-        throwsA(isA<UnsupportedError>()),
       );
-      expect(methodCalls, isEmpty);
+      await platform.addSource(
+        'dem-terrarium',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          encoding: 'terrarium',
+          greenFactor: 2.0,
+        ),
+      );
+
+      expect(methodCalls.length, 2);
+      final mapbox = (methodCalls[0].arguments as Map)['properties'] as Map;
+      expect(mapbox['encoding'], 'mapbox');
+      expect(mapbox['redFactor'], 1.0);
+      final terrarium = (methodCalls[1].arguments as Map)['properties'] as Map;
+      expect(terrarium['encoding'], 'terrarium');
+      expect(terrarium['greenFactor'], 2.0);
     });
 
     test(

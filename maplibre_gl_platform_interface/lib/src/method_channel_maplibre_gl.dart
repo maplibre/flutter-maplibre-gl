@@ -1156,27 +1156,27 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     });
   }
 
-  /// The `custom` raster-dem encoding, and the colour-channel factors that go
-  /// with it, are a MapLibre GL JS feature. MapLibre Native decodes only the
-  /// `mapbox` and `terrarium` formulas (maplibre-native#2783) and would read
-  /// the tiles as mapbox-encoded, so the map would render plausible but wrong
-  /// elevations. Failing here says so instead.
+  /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre
+  /// Native decodes only the `mapbox` and `terrarium` formulas
+  /// (maplibre-native#2783) and would read the tiles as mapbox-encoded, so the
+  /// map would render plausible but wrong elevations. Failing here says so
+  /// instead.
+  ///
+  /// `redFactor`, `greenFactor`, `blueFactor` and `baseShift` are read only on
+  /// a custom encoding, so on `mapbox` and `terrarium` they stay the no-op they
+  /// have always been on Android and iOS and are not rejected.
   void _ensureDemEncodingSupported(SourceProperties properties) {
     if (properties is! RasterDemSourceProperties) return;
-    final usesFactors =
-        properties.redFactor != null ||
-        properties.greenFactor != null ||
-        properties.blueFactor != null ||
-        properties.baseShift != null;
-    if (properties.encoding != 'custom' && !usesFactors) return;
+    if (properties.encoding != 'custom') return;
 
     throw UnsupportedError(
       'The custom raster-dem encoding is not available on Android and iOS '
       'because MapLibre Native decodes only the mapbox and terrarium '
-      'encodings. Use encoding: "mapbox" or "terrarium" without '
-      'redFactor, greenFactor, blueFactor and baseShift, or serve the '
+      'encodings. Use encoding: "mapbox" or "terrarium", or serve the '
       'terrain tiles in one of those encodings. Custom encoding is '
-      'supported on web.',
+      'supported on web. This check covers addSource() only: a raster-dem '
+      'source declared inside MapLibreMap.styleString never reaches it and '
+      'is decoded as mapbox without any error.',
     );
   }
 
