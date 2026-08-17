@@ -99,6 +99,25 @@ void main() {
       expect(restored.fillOutlineColor, '#000000');
       expect(restored.visibility, 'none');
     });
+
+    test('copyWith keeps fill-layer-opacity distinct from fill-opacity', () {
+      const original = FillLayerProperties(
+        fillColor: '#00FF00',
+        fillOpacity: 0.5,
+        fillLayerOpacity: 1,
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const FillLayerProperties(fillLayerOpacity: 0.25),
+      );
+      expect(updated.fillColor, '#00FF00');
+      expect(updated.fillOpacity, 0.5);
+      expect(updated.visibility, 'visible');
+
+      final json = updated.toJson();
+      expect(json['fill-layer-opacity'], 0.25);
+      expect(json['fill-opacity'], 0.5);
+    });
   });
 
   group('SymbolLayerProperties', () {
@@ -127,6 +146,39 @@ void main() {
       expect(restored.iconSize, 1.5);
       expect(restored.textField, 'Hello');
       expect(restored.textColor, '#FF0000');
+    });
+
+    test('copyWith overrides the overlap and variable anchor offset', () {
+      const original = SymbolLayerProperties(
+        iconImage: 'marker',
+        iconOverlap: 'never',
+        textOverlap: 'never',
+        textVariableAnchorOffset: [
+          'top',
+          [0, 4],
+        ],
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const SymbolLayerProperties(
+          iconOverlap: 'always',
+          textOverlap: 'cooperative',
+          textVariableAnchorOffset: [
+            'bottom',
+            [0, -4],
+          ],
+        ),
+      );
+      expect(updated.iconImage, 'marker');
+      expect(updated.visibility, 'visible');
+
+      final json = updated.toJson();
+      expect(json['icon-overlap'], 'always');
+      expect(json['text-overlap'], 'cooperative');
+      expect(json['text-variable-anchor-offset'], [
+        'bottom',
+        [0, -4],
+      ]);
     });
   });
 
@@ -192,6 +244,24 @@ void main() {
       final restored = RasterLayerProperties.fromJson(original.toJson());
       expect(restored.rasterOpacity, 0.8);
       expect(restored.rasterSaturation, -0.5);
+    });
+
+    test('copyWith keeps resampling distinct from raster-resampling', () {
+      const original = RasterLayerProperties(
+        rasterOpacity: 0.8,
+        resampling: 'linear',
+        rasterResampling: 'linear',
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const RasterLayerProperties(resampling: 'nearest'),
+      );
+      expect(updated.rasterOpacity, 0.8);
+      expect(updated.visibility, 'visible');
+
+      final json = updated.toJson();
+      expect(json['resampling'], 'nearest');
+      expect(json['raster-resampling'], 'linear');
     });
   });
 
