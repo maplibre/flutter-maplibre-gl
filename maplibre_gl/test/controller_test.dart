@@ -297,6 +297,35 @@ void main() {
       expect(platform.wasCalled('addColorReliefLayer'), isFalse);
     });
 
+    test('addBackgroundLayer delegates to platform', () async {
+      await controller.addBackgroundLayer(
+        'layer-1',
+        const BackgroundLayerProperties(backgroundColor: '#ff0000'),
+      );
+
+      final calls = platform.callsFor('addBackgroundLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], {'background-color': '#ff0000'});
+    });
+
+    test('addLayer with BackgroundLayerProperties', () async {
+      await controller.addLayer(
+        'unused-source',
+        'layer-1',
+        const BackgroundLayerProperties(backgroundOpacity: 0.5),
+      );
+
+      final calls = platform.callsFor('addBackgroundLayer');
+      expect(calls.length, 1);
+      // The background layer has no source, so the source id is dropped and
+      // the layer id stays the first argument.
+      expect(calls.first.positionalArgs, [
+        'layer-1',
+        {'background-opacity': 0.5},
+      ]);
+    });
+
     test('addLayer rejects a filter on BackgroundLayerProperties', () async {
       expect(
         () => controller.addLayer(
