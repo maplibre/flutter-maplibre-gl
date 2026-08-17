@@ -37,8 +37,9 @@ class _BackgroundLayerBodyState extends State<_BackgroundLayerBody> {
 
   Future<void> _onStyleLoaded() async {
     // The style's own layers draw on top, so the background only shows where
-    // they leave the map bare. Adding it below the lowest layer of the demo
-    // style keeps that ordering explicit.
+    // they leave the map bare. Anchor it above the style's own background,
+    // which is the first layer of most styles: below that one it would be
+    // covered by an opaque colour and nothing would show.
     final layerIds = await _controller!.getLayerIds();
     await _controller!.addBackgroundLayer(
       _layerId,
@@ -46,7 +47,7 @@ class _BackgroundLayerBodyState extends State<_BackgroundLayerBody> {
         backgroundColor: _backgroundColor.toHexStringRGB(),
         backgroundOpacity: _backgroundOpacity,
       ),
-      belowLayerId: layerIds.isEmpty ? null : layerIds.first as String,
+      belowLayerId: layerIds.length < 2 ? null : layerIds[1] as String,
     );
     setState(() {});
   }

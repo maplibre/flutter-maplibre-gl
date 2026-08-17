@@ -26,13 +26,16 @@ await controller.addBackgroundLayer(
 A background layer added last sits on top of every other layer and hides them,
 so pass `belowLayerId` to place it under the layers it should back:
 
+Anchor it above the style's own background layer, which most styles put first.
+Below that one your layer is covered by an opaque colour and nothing shows:
+
 ```dart
 final layerIds = await controller.getLayerIds();
 
 await controller.addBackgroundLayer(
   'ocean-background',
   const BackgroundLayerProperties(backgroundColor: '#1b3a5c'),
-  belowLayerId: layerIds.first as String,
+  belowLayerId: layerIds.length < 2 ? null : layerIds[1] as String,
 );
 ```
 
