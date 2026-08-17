@@ -30,6 +30,10 @@ await controller.addSource(
     ],
     tileSize: 256,
     encoding: 'terrarium',
+    // The tileset stops at zoom 15. Without this the spec default of 22
+    // applies and zooming past 15 asks for tiles that do not exist.
+    minzoom: 0,
+    maxzoom: 15,
     attribution: '© AWS Terrain Tiles',
   ),
 );
