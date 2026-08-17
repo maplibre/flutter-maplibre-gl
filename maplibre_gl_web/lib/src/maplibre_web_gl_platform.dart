@@ -1876,6 +1876,13 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
+  /// Replaces the map this controller drives with [map].
+  ///
+  /// For tests of the calls that do nothing but hand a payload to
+  /// maplibre-gl-js, which can then be driven against a stand-in for it.
+  @visibleForTesting
+  void debugSetMap(MapLibreMap map) => _map = map;
+
   @override
   Future<void> setSky(SkyProperties sky) async {
     _map.setSky(sky.toJson());

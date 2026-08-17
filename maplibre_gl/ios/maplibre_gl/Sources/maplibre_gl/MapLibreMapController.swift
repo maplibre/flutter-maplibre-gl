@@ -1052,9 +1052,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     )
                 ))
             }
-            if let color = lightProperties["color"] as? String,
-               let parsed = UIColor(hexString: color) {
-                light.color = NSExpression(forConstantValue: parsed)
+            if let color = lightProperties["color"] as? String {
+                if let parsed = UIColor(hexString: color) {
+                    light.color = NSExpression(forConstantValue: parsed)
+                } else {
+                    // UIColor(hexString:) only reads #rrggbb and #aarrggbb, so
+                    // "#fff", "red" or "rgba(...)" are handed to the renderer as
+                    // LayerPropertyConverter does for layer colors, rather than
+                    // dropped. Without the fallback argument MLN raises an
+                    // uncaught NSInternalInconsistencyException at render time
+                    // when the input string can't be cast.
+                    light.color = NSExpression(mglJSONObject: ["to-color", color, "#000000"])
+                }
             }
             if let intensity = lightProperties["intensity"] as? Double {
                 light.intensity = NSExpression(forConstantValue: intensity)
