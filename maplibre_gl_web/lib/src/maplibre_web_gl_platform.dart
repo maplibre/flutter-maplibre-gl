@@ -1806,7 +1806,6 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties, {
     String? belowLayerId,
-    String? sourceLayer,
     double? minzoom,
     double? maxzoom,
   }) async {
@@ -1816,7 +1815,6 @@ class MapLibreMapController extends MapLibrePlatform
       properties,
       "color-relief",
       belowLayerId: belowLayerId,
-      sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
       enableInteraction: false,

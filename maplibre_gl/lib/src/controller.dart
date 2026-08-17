@@ -931,8 +931,6 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// Setting [belowLayerId] adds the new layer below the given id.
-  /// [sourceLayer] is used to selected a specific source layer from
-  /// Raster source.
   /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
@@ -942,7 +940,6 @@ class MapLibreMapController extends ChangeNotifier {
     String layerId,
     ColorReliefLayerProperties properties, {
     String? belowLayerId,
-    String? sourceLayer,
     double? minzoom,
     double? maxzoom,
   }) async {
@@ -951,7 +948,6 @@ class MapLibreMapController extends ChangeNotifier {
       layerId,
       properties.toJson(),
       belowLayerId: belowLayerId,
-      sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
     );
@@ -2102,8 +2098,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
-  /// events this has no effect for [RasterLayerProperties] and
-  /// [HillshadeLayerProperties].
+  /// events this has no effect for [RasterLayerProperties],
+  /// [HillshadeLayerProperties] and [ColorReliefLayerProperties].
   /// [sourceLayer] is used to selected a specific source layer from Vector
   /// source.
   /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
@@ -2112,7 +2108,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
-  /// [filter] is not supported by RasterLayer and HillshadeLayer.
+  /// [filter] is not supported by RasterLayer, HillshadeLayer and
+  /// ColorReliefLayer.
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
@@ -2229,7 +2226,6 @@ class MapLibreMapController extends ChangeNotifier {
         layerId,
         properties,
         belowLayerId: belowLayerId,
-        sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
       );

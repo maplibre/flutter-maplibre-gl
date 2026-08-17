@@ -439,7 +439,6 @@ abstract class MapLibrePlatform {
     String layerId,
     Map<String, dynamic> properties, {
     String? belowLayerId,
-    String? sourceLayer,
     double? minzoom,
     double? maxzoom,
   });

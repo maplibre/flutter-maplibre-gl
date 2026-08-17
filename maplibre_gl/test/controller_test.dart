@@ -268,6 +268,10 @@ void main() {
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], 'dem-1');
       expect(calls.first.positionalArgs[1], 'layer-1');
+      expect(
+        (calls.first.positionalArgs[2] as Map)['color-relief-opacity'],
+        0.7,
+      );
     });
 
     test('addLayer with ColorReliefLayerProperties', () async {
