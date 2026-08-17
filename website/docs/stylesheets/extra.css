@@ -673,7 +673,7 @@ body, .md-typeset {
 }
 
 /* The homepage globe: frameless, so the demo's background (passed via its
-   `bg` query parameter, one iframe per color scheme) blends into the page
+   `bg` query parameter, set from the active scheme) blends into the page
    and the globe floats on it. */
 .hero-globe {
   width: 100%;
@@ -683,15 +683,6 @@ body, .md-typeset {
   margin: 1.6rem 0 2rem;
   display: block;
   background: transparent;
-}
-.hero-globe--dark {
-  display: none;
-}
-[data-md-color-scheme="slate"] .hero-globe--light {
-  display: none;
-}
-[data-md-color-scheme="slate"] .hero-globe--dark {
-  display: block;
 }
 
 /* Two live examples side by side, for comparison pages. At half the 46rem

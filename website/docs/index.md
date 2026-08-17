@@ -21,17 +21,36 @@ hide:
 </div>
 
 <iframe
-  class="hero-globe hero-globe--light"
-  src="/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=ffffff"
+  class="hero-globe"
+  id="hero-globe"
   title="The globe projection, live"
   loading="lazy"
 ></iframe>
-<iframe
-  class="hero-globe hero-globe--dark"
-  src="/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=0d1420"
-  title="The globe projection, live"
-  loading="lazy"
-></iframe>
+<script>
+  // One iframe, pointed at the background that matches the active scheme.
+  // Shipping two and hiding one with CSS would boot the demo app twice on
+  // every visit: a hidden iframe is excluded from lazy loading, so both
+  // would download and run a Flutter engine each.
+  (function () {
+    var frame = document.getElementById("hero-globe");
+    var base = "/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=";
+    var current = null;
+    function apply() {
+      var next =
+        document.body.getAttribute("data-md-color-scheme") === "slate"
+          ? "0d1420"
+          : "ffffff";
+      if (next === current) return;
+      current = next;
+      frame.src = base + next;
+    }
+    apply();
+    new MutationObserver(apply).observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-md-color-scheme"],
+    });
+  })();
+</script>
 
 <div class="section-label">Why this library</div>
 

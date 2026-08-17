@@ -71,6 +71,9 @@ class _DocGlobeBodyState extends State<_DocGlobeBody> {
     await controller.setProjection('globe');
     // Defaults for the sky colors; the halo is what matters here.
     await controller.setSky(const SkyProperties(atmosphereBlend: 1));
+    // Two platform round trips happened above; without this a widget disposed
+    // meanwhile would still install a timer that nothing ever cancels.
+    if (!mounted) return;
     _spinTimer ??= Timer.periodic(_tick, (_) {
       _longitude += _spinStep;
       if (_longitude > 180) _longitude -= 360;
