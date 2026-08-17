@@ -2281,7 +2281,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if let maximumZoomLevel = maximumZoomLevel {
             layer.maximumZoomLevel = Float(maximumZoomLevel)
         }
-        if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
+        if let id = belowLayerId {
+            // A background layer covers the whole viewport, so falling back to the
+            // top of the stack when the anchor is unknown would hide the map.
+            guard let belowLayer = style.layer(withIdentifier: id) else {
+                return .failure(.layerNotFound(layerId: id))
+            }
             style.insertLayer(layer, below: belowLayer)
         } else {
             style.addLayer(layer)

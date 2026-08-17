@@ -2390,6 +2390,16 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
+          // Nearly every published style already has a layer called "background", the
+          // natural id to reach for here. Report the clash the way iOS does instead of
+          // letting the SDK throw a CannotAddLayerException.
+          if (style != null && style.isFullyLoaded() && style.getLayer(layerId) != null) {
+            result.error(
+                "layerAlreadyExists",
+                "Layer already exists",
+                "Layer with id " + layerId + " already exists.");
+            break;
+          }
           if (!addBackgroundLayer(
               layerId,
               minzoom != null ? minzoom.floatValue() : null,
