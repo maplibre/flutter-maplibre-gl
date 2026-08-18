@@ -43,13 +43,13 @@ class _MultiStyleSwitchBodyState extends State<_MultiStyleSwitchBody> {
   static const String _embeddedMinimalStyle =
       '{"version":8,"glyphs":"https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#90EE90"}}]}';
   static const String _assetStyle = 'assets/style.json';
-  static const String _osmAssetStyle = 'assets/osm_style.json';
+  static const String _rasterAssetStyle = 'assets/raster_style.json';
 
   late final List<_StyleEntry> _styles = [
     _StyleEntry('Remote demo style', _remoteStyle),
     const _StyleEntry('Empty JSON string', _embeddedMinimalStyle),
     const _StyleEntry('Asset style', _assetStyle),
-    const _StyleEntry('OSM Asset style', _osmAssetStyle),
+    const _StyleEntry('Raster asset style', _rasterAssetStyle),
   ];
 
   Future<void> _applyStyle(int index) async {

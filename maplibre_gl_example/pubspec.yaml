@@ -70,7 +70,7 @@ flutter:
     - assets/symbols/custom-marker.png
     - assets/style.json
     - assets/translucent_style.json
-    - assets/osm_style.json
+    - assets/raster_style.json
     - assets/pmtiles_style.json
     - assets/sydney0.png
     - assets/sydney1.png
