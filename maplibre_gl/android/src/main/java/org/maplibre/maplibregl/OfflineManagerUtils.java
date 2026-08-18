@@ -184,20 +184,10 @@ abstract class OfflineManagerUtils {
 
           @Override
           public void onError(OfflineRegionError error) {
-            // Recoverable by contract: the SDK re-requests what failed, backing
-            // off and retrying when network access returns. So this only
-            // reports, and the download stays active.
-            //
-            // Ending it here made a moment without DNS fatal, which is the
-            // opposite of what downloading a region offline is for. It was
-            // worse than one lost download: the Dart side cancels its
-            // subscription on the first error, so the app stopped hearing about
-            // a download the SDK was still retrying, and this callback, unlike
-            // onStatusChanged, had no isComplete guard, so every failed
-            // resource ran the teardown again and put another error on a
-            // channel nobody was listening to any more.
-            //
-            // tileCountLimitExceeded below is the one that really is terminal.
+            // Recoverable: the SDK re-requests what failed once the network is
+            // back, so this only reports and the download stays active. Ending
+            // it here lost the whole download to any brief outage.
+            // tileCountLimitExceeded below is the one that is really terminal.
             Log.w(
                 TAG,
                 "offline download error, the SDK will retry (reason "
