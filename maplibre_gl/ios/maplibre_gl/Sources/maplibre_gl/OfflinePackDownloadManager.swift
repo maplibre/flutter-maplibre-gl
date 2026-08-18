@@ -229,23 +229,24 @@ class OfflinePackDownloader {
         guard let pack = notification.object as? MLNOfflinePack,
               verifyPack(pack: pack) else { return }
         let error = notification.userInfo?[MLNOfflinePackUserInfoKey.error] as? NSError
-        print("Pack download error: \(String(describing: error?.localizedDescription))")
-        // set download state to inactive
-        isCompleted = true
-        channelHandler.onError(
-            errorCode: "Downloading error",
-            errorMessage: error?.localizedDescription,
-            errorDetails: nil
+        // Recoverable by contract: MLNOfflineStorage.h says the error "may be
+        // recoverable" and that the pack re-requests what failed on an
+        // exponential backoff, or once network access is restored. So this only
+        // reports, and the pack is left downloading.
+        //
+        // Ending it here made a moment without DNS fatal, which is the opposite
+        // of what downloading a region offline is for. Worse, it went on to
+        // delete the region, so a brief drop did not just stop the download, it
+        // threw away everything already fetched.
+        //
+        // onMaximumAllowedMapboxTiles is the one that really is terminal, and
+        // the Flutter result stays pending here on purpose: the completion in
+        // onPackDownloadProgress answers it once the pack finishes.
+        NSLog(
+            "%@",
+            "maplibre_gl: offline download error, the SDK will retry: "
+                + (error?.localizedDescription ?? "unknown error")
         )
-        result(FlutterError(
-            code: "Downloading error",
-            message: error?.localizedDescription,
-            details: nil
-        ))
-        if let region = OfflineRegion.fromOfflinePack(pack) {
-            OfflineManagerUtils.activePacks.removeValue(forKey: region.id)
-            OfflineManagerUtils.deleteRegion(result: result, id: region.id)
-        }
     }
 
     @objc private func onMaximumAllowedMapboxTiles(notification: NSNotification) {

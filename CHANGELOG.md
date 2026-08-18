@@ -41,6 +41,7 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Web**: `MapLibreMap.webLibrarySource` chooses where MapLibre GL JS comes from: the build the plugin is tested against, a self-hosted copy, or one the page loads itself. `MapLibreMap.ensureWebLibraryLoaded()` completes once MapLibre GL JS is loaded, for calling into it directly, for example `addProtocol` (#928).
 
 ### Fixed
+* **Android, iOS**: a network error no longer cancels an offline region download. Both platforms treated every error from the SDK as final, but the SDK documents them as recoverable and re-requests what failed on a backoff and when network access returns, so a moment without DNS ended a download for good. On iOS it was worse: the region was deleted too, throwing away everything already fetched. Only the tile-count limit is final now. Android also stopped reporting the same failure once per retried resource (#986).
 * **Android**: `maxzoom` on a GeoJSON source is applied again. The converter read a camel-cased key the Dart side never sends, so the value was dropped on Android while iOS and web honoured it (#981).
 * A map that fails to be created now reports the failure. Code awaiting the controller, `onMapCreated` included, used to wait forever for a map that never arrived, with only an unhandled error in the console (#943).
 * The bundled LICENSE no longer breaks Flutter's license collector, which showed an untitled, truncated first entry on every dependent app's `showLicensePage()` (#895).
