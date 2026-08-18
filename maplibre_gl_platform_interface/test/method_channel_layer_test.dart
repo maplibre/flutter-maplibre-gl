@@ -125,6 +125,20 @@ void main() {
       expect(args['layerId'], 'color-relief-layer');
     });
 
+    test('addBackgroundLayer sends correct method', () async {
+      await platform.addBackgroundLayer('background-layer', {
+        'background-color': '#ff0000',
+      }, belowLayerId: 'below-this');
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'backgroundLayer#add');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerId'], 'background-layer');
+      expect(args['belowLayerId'], 'below-this');
+      expect(args.containsKey('sourceId'), false);
+      expect((args['properties'] as Map)['background-color'], '#ff0000');
+    });
+
     test('addHeatmapLayer sends correct method', () async {
       await platform.addHeatmapLayer(
         'heat-source',

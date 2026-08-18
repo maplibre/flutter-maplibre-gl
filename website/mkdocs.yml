@@ -119,6 +119,7 @@ nav:
       - Line Layer: layers/line-layer.md
       - Heatmap: layers/heatmap.md
       - Color Relief: layers/color-relief.md
+      - Background: layers/background.md
       - Cluster: layers/cluster.md
       - Various Sources: layers/various-sources.md
     - Advanced:

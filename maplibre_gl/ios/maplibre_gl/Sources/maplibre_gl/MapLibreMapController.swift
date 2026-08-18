@@ -863,6 +863,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 LayerPropertyConverter.addHillshadeProperties(hillshadeLayer: hillshadeLayer, properties: properties)
             case let colorReliefLayer as MLNColorReliefStyleLayer:
                 LayerPropertyConverter.addColorReliefProperties(colorReliefLayer: colorReliefLayer, properties: properties)
+            case let backgroundLayer as MLNBackgroundStyleLayer:
+                LayerPropertyConverter.addBackgroundProperties(backgroundLayer: backgroundLayer, properties: properties)
             default:
                 result(FlutterError(
                     code: "UNSUPPORTED_LAYER_TYPE",
@@ -992,6 +994,27 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             let addResult = addColorReliefLayer(
                 sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                minimumZoomLevel: minzoom,
+                maximumZoomLevel: maxzoom,
+                properties: properties
+            )
+
+            switch addResult {
+            case .success: result(nil)
+            case let .failure(error): result(error.flutterError)
+            }
+
+        case "backgroundLayer#add":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let properties = arguments["properties"] as? [String: Any] else { return }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            let minzoom = arguments["minzoom"] as? Double
+            let maxzoom = arguments["maxzoom"] as? Double
+
+            let addResult = addBackgroundLayer(
                 layerId: layerId,
                 belowLayerId: belowLayerId,
                 minimumZoomLevel: minzoom,
@@ -2233,6 +2256,44 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return .success(())
         }
     }
+
+    func addBackgroundLayer(
+        layerId: String,
+        belowLayerId: String?,
+        minimumZoomLevel: Double?,
+        maximumZoomLevel: Double?,
+        properties: [String: Any]
+    ) -> Result<Void, MethodCallError> {
+        guard let style = mapView.style else {
+            return .failure(.styleNotFound)
+        }
+        guard style.layer(withIdentifier: layerId) == nil else {
+            return .failure(.layerAlreadyExists(layerId: layerId))
+        }
+        let layer = MLNBackgroundStyleLayer(identifier: layerId)
+        LayerPropertyConverter.addBackgroundProperties(
+            backgroundLayer: layer,
+            properties: properties
+        )
+        if let minimumZoomLevel = minimumZoomLevel {
+            layer.minimumZoomLevel = Float(minimumZoomLevel)
+        }
+        if let maximumZoomLevel = maximumZoomLevel {
+            layer.maximumZoomLevel = Float(maximumZoomLevel)
+        }
+        if let id = belowLayerId {
+            // A background layer covers the whole viewport, so falling back to the
+            // top of the stack when the anchor is unknown would hide the map.
+            guard let belowLayer = style.layer(withIdentifier: id) else {
+                return .failure(.layerNotFound(layerId: id))
+            }
+            style.insertLayer(layer, below: belowLayer)
+        } else {
+            style.addLayer(layer)
+        }
+        return .success(())
+    }
+
 
 
     func addHeatmapLayer(

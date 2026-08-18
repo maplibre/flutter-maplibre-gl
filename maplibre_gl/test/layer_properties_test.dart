@@ -386,6 +386,52 @@ void main() {
     });
   });
 
+  group('BackgroundLayerProperties', () {
+    test('toJson with skipNulls', () {
+      const props = BackgroundLayerProperties(
+        backgroundColor: '#FF0000',
+        backgroundOpacity: 0.5,
+      );
+      final json = props.toJson();
+      expect(json['background-color'], '#FF0000');
+      expect(json['background-opacity'], 0.5);
+      expect(json.containsKey('background-pattern'), isFalse);
+      expect(json.containsKey('visibility'), isFalse);
+    });
+
+    test('fromJson roundtrip', () {
+      const original = BackgroundLayerProperties(
+        backgroundColor: '#FF0000',
+        backgroundPattern: 'grid',
+        backgroundOpacity: 0.5,
+        visibility: 'visible',
+      );
+      final restored = BackgroundLayerProperties.fromJson(original.toJson());
+      expect(restored.backgroundColor, '#FF0000');
+      expect(restored.backgroundPattern, 'grid');
+      expect(restored.backgroundOpacity, 0.5);
+      expect(restored.visibility, 'visible');
+    });
+
+    test('copyWith overrides specified fields', () {
+      const original = BackgroundLayerProperties(
+        backgroundColor: '#FF0000',
+        backgroundPattern: 'grid',
+        visibility: 'visible',
+      );
+      final updated = original.copyWith(
+        const BackgroundLayerProperties(
+          backgroundColor: '#00FF00',
+          backgroundOpacity: 0.5,
+        ),
+      );
+      expect(updated.backgroundColor, '#00FF00');
+      expect(updated.backgroundOpacity, 0.5);
+      expect(updated.backgroundPattern, 'grid');
+      expect(updated.visibility, 'visible');
+    });
+  });
+
   group('LayerProperties visibility', () {
     test('all layer types support visibility', () {
       final layers = <LayerProperties>[
@@ -398,6 +444,7 @@ void main() {
         const HillshadeLayerProperties(visibility: 'visible'),
         const HeatmapLayerProperties(visibility: 'none'),
         const ColorReliefLayerProperties(visibility: 'visible'),
+        const BackgroundLayerProperties(visibility: 'visible'),
       ];
       for (final layer in layers) {
         final json = layer.toJson();

@@ -2781,3 +2781,93 @@ class ColorReliefLayerProperties implements LayerProperties {
     );
   }
 }
+
+class BackgroundLayerProperties implements LayerProperties {
+  // Paint Properties
+  /// The color with which the background will be drawn.
+  ///
+  /// Type: color
+  ///   default: #000000
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic backgroundColor;
+
+  /// Name of image in sprite to use for drawing an image background. For
+  /// seamless patterns, image width and height must be a factor of two (2,
+  /// 4, 8, ..., 512). Note that zoom-dependent expressions will be
+  /// evaluated only at integer zoom levels.
+  ///
+  /// Type: resolvedImage
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic backgroundPattern;
+
+  /// The opacity at which the background will be drawn.
+  ///
+  /// Type: number
+  ///   default: 1
+  ///   minimum: 0
+  ///   maximum: 1
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic backgroundOpacity;
+
+  // Layout Properties
+  /// Whether this layer is displayed.
+  ///
+  /// Type: enum
+  ///   default: visible
+  /// Options:
+  ///   "visible"
+  ///      The layer is shown.
+  ///   "none"
+  ///      The layer is not shown.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic visibility;
+
+  const BackgroundLayerProperties({
+    this.backgroundColor,
+    this.backgroundPattern,
+    this.backgroundOpacity,
+    this.visibility,
+  });
+
+  BackgroundLayerProperties copyWith(BackgroundLayerProperties changes) {
+    return BackgroundLayerProperties(
+      backgroundColor: changes.backgroundColor ?? backgroundColor,
+      backgroundPattern: changes.backgroundPattern ?? backgroundPattern,
+      backgroundOpacity: changes.backgroundOpacity ?? backgroundOpacity,
+      visibility: changes.visibility ?? visibility,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson({bool skipNulls = true}) {
+    final json = <String, dynamic>{};
+
+    void addIfPresent(String fieldName, dynamic value) {
+      if (value == null && skipNulls) return;
+      json[fieldName] = value;
+    }
+
+    addIfPresent('background-color', backgroundColor);
+    addIfPresent('background-pattern', backgroundPattern);
+    addIfPresent('background-opacity', backgroundOpacity);
+    addIfPresent('visibility', visibility);
+    return json;
+  }
+
+  factory BackgroundLayerProperties.fromJson(Map<String, dynamic> json) {
+    return BackgroundLayerProperties(
+      backgroundColor: json['background-color'],
+      backgroundPattern: json['background-pattern'],
+      backgroundOpacity: json['background-opacity'],
+      visibility: json['visibility'],
+    );
+  }
+}

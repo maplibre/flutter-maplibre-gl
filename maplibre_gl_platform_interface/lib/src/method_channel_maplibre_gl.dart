@@ -1240,6 +1240,23 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addBackgroundLayer(
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _channel.invokeMethod('backgroundLayer#add', <String, dynamic>{
+      'layerId': layerId,
+      'belowLayerId': belowLayerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
+      'properties': properties,
+    });
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,

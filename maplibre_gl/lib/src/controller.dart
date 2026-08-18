@@ -953,6 +953,37 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a background layer to the map with the given properties
+  ///
+  /// The layer paints the whole map with a color or a pattern and has no
+  /// source.
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  Future<void> addBackgroundLayer(
+    String layerId,
+    BackgroundLayerProperties properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _maplibrePlatform.addBackgroundLayer(
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
   /// Add a heatmap layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.
@@ -2223,6 +2254,17 @@ class MapLibreMapController extends ChangeNotifier {
       }
       await addColorReliefLayer(
         sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
+    } else if (properties is BackgroundLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("BackgroundLayer does not support filter");
+      }
+      await addBackgroundLayer(
         layerId,
         properties,
         belowLayerId: belowLayerId,

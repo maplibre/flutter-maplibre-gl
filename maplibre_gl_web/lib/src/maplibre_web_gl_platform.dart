@@ -1822,6 +1822,31 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> addBackgroundLayer(
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    final layout = Map<String, dynamic>.fromEntries(
+      properties.entries.where((entry) => isLayoutProperty(entry.key)),
+    );
+    final paint = Map<String, dynamic>.fromEntries(
+      properties.entries.where((entry) => !isLayoutProperty(entry.key)),
+    );
+
+    _map.addLayer(<String, dynamic>{
+      'id': layerId,
+      'type': 'background',
+      'layout': layout,
+      'paint': paint,
+      if (minzoom != null) 'minzoom': minzoom,
+      if (maxzoom != null) 'maxzoom': maxzoom,
+    }, belowLayerId);
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,

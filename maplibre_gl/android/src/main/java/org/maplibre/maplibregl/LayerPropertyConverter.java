@@ -732,6 +732,41 @@ class LayerPropertyConverter {
     return properties.toArray(new PropertyValue[properties.size()]);
   }
 
+  static PropertyValue[] interpretBackgroundLayerProperties(Object o) {
+    final Map<String, Object> data = (Map<String, Object>) toMap(o);
+    final List<PropertyValue> properties = new LinkedList();
+    final Gson gson = new Gson();
+
+    for (Map.Entry<String, Object> entry : data.entrySet()) {
+      final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
+      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      switch (entry.getKey()) {
+        case "background-color":
+          properties.add(PropertyFactory.backgroundColor(expression));
+          break;
+        case "background-pattern":
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.backgroundPattern(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.backgroundPattern(expression));
+          }
+          break;
+        case "background-opacity":
+          properties.add(PropertyFactory.backgroundOpacity(expression));
+          break;
+        case "visibility":
+          if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return properties.toArray(new PropertyValue[properties.size()]);
+  }
+
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
   }

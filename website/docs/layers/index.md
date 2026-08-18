@@ -11,6 +11,7 @@ for paths, fill for areas, heatmap and cluster for many points at once.
 - [Line Layer](line-layer.md): polylines and paths
 - [Heatmap](heatmap.md): point density as a heat surface
 - [Color Relief](color-relief.md): terrain coloured by elevation from a raster DEM
+- [Background](background.md): a colour or pattern behind every other layer
 - [Cluster](cluster.md): cluster many points into grouped circles
 - [GeoJSON Source](geojson-source.md): feed layers from inline data or a URL
 - [Various Sources](various-sources.md): GeoJSON, vector tiles, raster tiles, and more
