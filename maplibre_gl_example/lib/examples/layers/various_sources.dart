@@ -68,8 +68,9 @@ class FullMapState extends State<FullMap> {
         // The tileset stops at zoom 8; without this the spec default of 22
         // applies and zooming further asks for tiles that do not exist.
         maxzoom: 8,
+        // The acknowledgment GIBS asks for, in its own words.
         attribution:
-            '<a href="https://www.earthdata.nasa.gov/">Imagery courtesy of NASA EOSDIS GIBS</a>',
+            '<a href="https://nasa-gibs.github.io/gibs-api-docs/">We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS).</a>',
       ),
     );
     await controller.addLayer(

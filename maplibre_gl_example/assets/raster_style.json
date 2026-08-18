@@ -9,7 +9,7 @@
         "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg"
       ],
       "tileSize": 256,
-      "attribution": "Imagery courtesy of NASA EOSDIS GIBS",
+      "attribution": "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).",
       "maxzoom": 8
     }
   },
