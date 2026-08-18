@@ -456,6 +456,11 @@ class _MapLibreMapState extends State<MapLibreMap> {
   late MapLibreMapOptions _maplibreMapOptions;
   final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
 
+  /// Set in [dispose], which also tears the platform down. Creating a map is
+  /// asynchronous and can outlive the widget that asked for it, so everything
+  /// that runs after an await checks this before touching the platform again.
+  bool _disposed = false;
+
   @override
   Widget build(BuildContext context) {
     assert(
@@ -489,6 +494,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
 
   @override
   void dispose() {
+    _disposed = true;
     // Once the controller exists it owns the platform and disposes it for us.
     // Before that it does not, and there are two ways to get here without one:
     // the map is still being created, or its creation threw. Tearing the
@@ -557,9 +563,17 @@ class _MapLibreMapState extends State<MapLibreMap> {
     try {
       await _maplibrePlatform.initPlatform(id);
     } catch (error, stack) {
-      _controller.completeError(error, stack);
+      // Reporting a failure nobody can act on would only be an unhandled
+      // error: the widget is gone and dispose() has torn the platform down.
+      if (!_disposed) _controller.completeError(error, stack);
       return;
     }
+    // The widget was disposed while the map was being created, so dispose()
+    // has already torn the platform down. Publishing the controller now would
+    // hand out one whose native map no longer exists, and the style-loaded
+    // callback it wires up would then fail against it, which on iOS surfaces
+    // as an unhandled `styleNotFound` out of the annotation managers.
+    if (_disposed) return;
     _mapController = controller;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);
