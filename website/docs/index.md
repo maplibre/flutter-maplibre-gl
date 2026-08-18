@@ -9,11 +9,6 @@ hide:
   <h1>MapLibre, natively in Flutter</h1>
   <p class="hero__tagline">Any tile provider or your own server, the full MapLibre style spec, and no API key to get started. One Dart API across Android, iOS, and web.</p>
   <div class="badge-row">
-    <span class="platform-badge platform-badge--android">Android</span>
-    <span class="platform-badge platform-badge--ios">iOS</span>
-    <span class="platform-badge platform-badge--web">Web</span>
-  </div>
-  <div class="badge-row">
     <a href="https://pub.dev/packages/maplibre_gl"><img src="https://img.shields.io/pub/v/maplibre_gl.svg?style=flat-square" alt="pub.dev version" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl"><img src="https://img.shields.io/github/stars/maplibre/flutter-maplibre-gl?style=flat-square&logo=github" alt="GitHub Stars" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--3-blue?style=flat-square" alt="License" /></a>
@@ -26,11 +21,36 @@ hide:
 </div>
 
 <iframe
-  class="example-iframe"
-  src="/flutter-maplibre-gl/demo/?example=doc-full-map"
-  title="flutter-maplibre-gl live preview"
+  class="hero-globe"
+  id="hero-globe"
+  title="The globe projection, live"
   loading="lazy"
 ></iframe>
+<script>
+  // One iframe, pointed at the background that matches the active scheme.
+  // Shipping two and hiding one with CSS would boot the demo app twice on
+  // every visit: a hidden iframe is excluded from lazy loading, so both
+  // would download and run a Flutter engine each.
+  (function () {
+    var frame = document.getElementById("hero-globe");
+    var base = "/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=";
+    var current = null;
+    function apply() {
+      var next =
+        document.body.getAttribute("data-md-color-scheme") === "slate"
+          ? "0d1420"
+          : "ffffff";
+      if (next === current) return;
+      current = next;
+      frame.src = base + next;
+    }
+    apply();
+    new MutationObserver(apply).observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-md-color-scheme"],
+    });
+  })();
+</script>
 
 <div class="section-label">Why this library</div>
 

@@ -71,6 +71,7 @@ import 'examples/docs/doc_geojson_source.dart';
 import 'examples/docs/doc_pmtiles.dart';
 import 'examples/docs/doc_heatmap.dart';
 import 'examples/docs/doc_expressions.dart';
+import 'examples/docs/doc_globe.dart';
 
 String? _initialExampleSlug() {
   if (!kIsWeb) return null;
@@ -210,6 +211,7 @@ final List<ExamplePage> _docPages = [
   const DocPMTilesExample(),
   const DocHeatmapExample(),
   const DocExpressionsExample(),
+  const DocGlobeExample(),
 ];
 
 class MapsDemo extends StatefulWidget {

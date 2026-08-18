@@ -1,5 +1,14 @@
 # Globe, Terrain and Sky
 
+<iframe
+  class="example-iframe"
+  src="/flutter-maplibre-gl/demo/?example=doc-globe"
+  title="Globe projection"
+  loading="lazy"
+></iframe>
+
+The globe projection with its atmosphere, made of two calls: `setProjection('globe')` and `setSky()`.
+
 !!! note "Platform support"
     The projection, terrain and sky style root objects are **web only**. On Android and iOS `setProjection`, `setTerrain` and `setSky` throw an `UnsupportedError`, because MapLibre Native renders the mercator projection on a flat map and implements neither 3D terrain nor the sky yet. `setLight`, at the bottom of this page, works everywhere.
 
