@@ -4,17 +4,24 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 /// User-Agent this example sends with every request the map makes: tiles,
 /// style JSON, sprites and glyphs.
 ///
-/// Tile servers use it to tell one client from another, and several of them
-/// now refuse traffic they cannot attribute to an application. OpenStreetMap's
-/// tile usage policy is the strictest of the ones this example has met: it
-/// asks for "a clear, unique User-Agent string that names your app" and blocks
-/// library defaults such as `okhttp/...` outright, answering every tile with a
-/// picture that says "Access blocked" instead of the map.
+/// Every tile this example draws is served by someone else, for free:
+/// demotiles.maplibre.org, OpenFreeMap, NASA GIBS, the AWS terrain tiles. The
+/// documentation site embeds this app about nineteen times over, so its
+/// traffic is not negligible to them. A client that names itself can be
+/// throttled, or its authors reached, on its own; one that does not leaves an
+/// operator with nothing to act on but the address, which is how a whole
+/// network ends up blocked for what one page was doing.
+///
+/// Some providers require it outright. OpenStreetMap's tile usage policy asks
+/// for "a clear, unique User-Agent string that names your app" and rejects
+/// library defaults such as `okhttp/...`, answering with a picture that says
+/// "Access blocked" instead of the map.
 /// See https://operations.osmfoundation.org/policies/tiles/.
 ///
-/// Name your own app here rather than copying this string, and point the URL
-/// at something that reaches you.
-const String tileClientUserAgent = 'flutter-maplibre-gl-example';
+/// Name your own app here rather than copying this string, and keep the URL
+/// pointing at something that reaches you.
+const String tileClientUserAgent =
+    'flutter-maplibre-gl-example (+https://github.com/maplibre/flutter-maplibre-gl)';
 
 /// Announces this app to every tile server the example talks to.
 ///
