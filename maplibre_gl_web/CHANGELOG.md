@@ -1,4 +1,4 @@
-See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
@@ -9,7 +9,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * The manual location puck is drawn by the plugin, since maplibre-gl-js has no injectable location component. It reuses maplibre-gl-js' own user-location classes plus a bearing arrow, so it needs `maplibre-gl.css`. The plugin loads that with the library (#840).
 * The plugin loads maplibre-gl-js itself before the first map is built. It loads the build its interop is written against, or whatever `MapLibreMap.webLibrarySource` configures, and reuses an existing `maplibregl` global as it is. A failed stylesheet only logs, since it affects the controls and the puck, not the map. A failed import is not memoized, so the next map build retries (#928).
 * `MapLibreGlobalWeb` implements the new `MapLibreGlobalPlatform` at plugin registration, which is how `MapLibreMap.preWarm()` and `MapLibreMap.ensureWebLibraryLoaded()` get their web behaviour (#928).
-* `getClusterExpansionZoom()`, `getClusterChildren()` and `getClusterLeaves()` read a clustered GeoJSON source. maplibre-gl-js 6 returns promises from all three, where version 5 took a trailing callback, so the interop is typed as promises. The library rejects on a source that is not clustered or an unknown cluster id; the plugin then answers 0 or an empty list, matching Android and iOS (#896).
+* `getClusterExpansionZoom()`, `getClusterChildren()` and `getClusterLeaves()` read a clustered GeoJSON source. maplibre-gl-js 6 returns promises from all three, where version 5 took a trailing callback, so the interop is typed as promises. The library rejects on a source that is not clustered or an unknown cluster id. `getClusterChildren()` and `getClusterLeaves()` report that as an empty list, matching Android and iOS; `getClusterExpansionZoom()` raises `CLUSTER_NOT_FOUND`, since 0 is a valid zoom and a caller could not tell it from a real answer (#896).
 * `setTrackingCameraOptions()` throws an `UnsupportedError` naming the platform, since maplibre-gl-js has no location component. `GeolocateControl` stops following the user on any programmatic camera change it did not make itself, and fires `trackuserlocationend`, which this package forwards as a tracking dismissal. Suppressing those events would report tracking that is no longer happening (#888).
 
 ### Fixed
@@ -20,6 +20,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 * `queryRenderedFeaturesInRect()` decodes the JSON string filter before handing it to maplibre-gl-js, which accepts only the expression itself. The filter was ignored, so the call answered with every feature in the rectangle (#953).
 
 ### Changed
+* The pinned maplibre-gl-js build is 6.4.1. Over 6.2 it fixes a permanent frame-rate drop after a style switch, a rejected missing-image resolver taking the rest of its batch down with it, globe zoom drifting away from the pointer and globe panning stalling at the poles, and an attribute-sanitising hole in popup and marker HTML (#943).
 * MapLibre GL JS 5 replaced by 6. Version 6 ships as an ES module only, with no UMD bundle and no global of its own. The loader imports it with `importModule` and publishes the namespace as `globalThis.maplibregl`, which every `@JS` binding here addresses. `MapLibreJsSource.urls` now points at the `.mjs` build. An older non-module bundle still works: the loader keeps the global that build defines rather than publishing an empty namespace over it. A page using `MapLibreJsSource.preloaded` has to publish the global itself (#943).
 * `setGeoJsonSource()` and `setFeatureForGeoJsonSource()` complete once the data has been applied, rather than as soon as it has been handed over. Version 6 returns a promise from `GeoJSONSource.setData` where version 5 returned the source, so the promise is awaited when there is one. That also stops a rejection on invalid GeoJSON from going unhandled (#943).
 * Missing style images are supplied through `Map.setMissingStyleImageResolver` instead of a `styleimagemissing` listener. Since version 6 the listener can observe the request, but calling `addImage` from it no longer resolves it, which would have silently stopped asset images from loading. The listener is kept as a fallback when the library on the page has no resolver, so a page still providing version 5 keeps working (#943).
@@ -27,11 +28,11 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
-No web-specific changes; version aligned with the `maplibre_gl` 0.26.2 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+No web-specific changes; version aligned with the `maplibre_gl` 0.26.2 release. See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
-No web-specific changes; version aligned with the `maplibre_gl` 0.26.1 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+No web-specific changes; version aligned with the `maplibre_gl` 0.26.1 release. See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 

@@ -5,13 +5,16 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
-**No breaking API changes for apps**: nothing stops compiling. Android apps need one small change and web apps one or two, below. The rest closes platform gaps in the public API and cuts start-up time and the cost of large data updates.\
+**Almost no breaking API changes for apps**: the one compile-time change is `SourceProperties.copyWith` moving to named parameters, below. Android apps need one small change and web apps one or two, below. The rest closes platform gaps in the public API and cuts start-up time and the cost of large data updates.\
 The plugin also has a **documentation site** now, at [**maplibre.org/flutter-maplibre-gl**](https://maplibre.org/flutter-maplibre-gl/): guides for every part of the API, each with a live example you can pan and click.
 
 ### Actions needed
+* `Expressions.xor` never meant xor: `^` is the style spec's exponentiation operator, so the expression raised the first input to the power of the second. It is now `Expressions.power`, and `Expressions.modulo` replaces the misspelled `Expressions.precent` for the remainder operator `%`. The old names still work as deprecated aliases, so nothing stops compiling, but any style built with `xor` expecting a bitwise operation was doing something else (#957).
+* `SourceProperties.copyWith` takes named parameters instead of a dozen required positional ones, so `props.copyWith(cluster: true)` works and future spec additions stop breaking every caller. Calls that passed values positionally need the parameter names added (#957).
 * **Android**: a map now survives its activity being destroyed and recreated, but your style content does not come back with it. Add sources, layers and images inside `onStyleLoadedCallback`, which fires again after every recreation, rather than in `onMapCreated` or `initState`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-style-content) (#805).
 * **Web**: the plugin now loads MapLibre GL JS itself. Delete the `maplibre-gl.js` script tag and the `maplibre-gl.css` link tag from `web/index.html`: if they stay, your pinned copy silently overrides the version the plugin is tested against. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-remove-the-script-and-stylesheet-tags) (#928).
 * **Web**: MapLibre GL JS 6 requires WebGL2 and no longer falls back to WebGL1, so a browser without it (Safari and iOS before 15) shows no map. Point `MapLibreMap.webLibrarySource` at a version 5 build to keep those browsers working. Version 6 also slices vector tiles instead of overscaling them, so `queryRenderedFeatures` can return a different set of features. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#web-the-engine-moves-to-maplibre-gl-js-6) (#943).
+* **Android, iOS**: the two offline download errors that carried a vendor name in their code are renamed: `mapboxTileCountLimitExceeded` is now `tileCountLimitExceeded` and `mapboxInvalidRegionDefinition` is now `invalidRegionDefinition`. When and why they fire does not change, but the `PlatformException` code does, so a `catch` block matching either old string stops matching and needs the new one (#956).
 
 ### Added
 * `MapLibreMap.preWarm()` starts the map engine during app start-up, for apps whose first screen is a map. Saves roughly 170 to 480 ms on Android, 45 to 165 ms on iOS and 10 to 50 ms on web (#867).
@@ -19,27 +22,38 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * `pauseMap()` and `resumeMap()` stop and restart rendering for a map that is alive but off screen, such as one on an inactive tab. No-op on web (#805).
 * `getLayerProperties()` and `getSourceProperties()` read a layer's or source's properties by id, in the same shape on every platform, or `null` if the id is unknown (#513).
 * `attributionButtonColor` tints the attribution button on Android and iOS, for styles where the default tint is hard to see. No effect on web (#805).
+* **Android, iOS, Web**: the style property surface is regenerated from the current MapLibre style spec instead of a four-year-old copy. New layer properties: `textVariableAnchorOffset` on symbols, `hillshadeMethod` and `hillshadeIlluminationAltitude` for multidirectional hillshading. New expressions: `Expressions.distance`, `within`, `indexOf`, `slice` and `elevation` (#957).
+* **Android, iOS, Web**: `fillExtrusionRoundedCornerDistance` rounds the corners of extruded shapes. The generated dartdoc still reads `not on js`, because the pinned style spec records MapLibre GL JS support for it as an open issue; it shipped in GL JS 6.2.0 and works on web (#957).
+* **Android, iOS, Web**: `addColorReliefLayer()` adds a color-relief layer, which colours the terrain by elevation from a raster DEM source, the hypsometric tint of a physical map. The colour ramp is a `colorReliefColor` expression over `Expressions.elevation`, and `colorReliefOpacity` sets how strongly it covers what is below. `addLayer()` accepts `ColorReliefLayerProperties` too. See the [color relief guide](https://maplibre.org/flutter-maplibre-gl/layers/color-relief/) (#958).
+* **Android, iOS, Web**: `addBackgroundLayer()` adds a background layer, the one layer type with no source, which paints the whole map with `backgroundColor` or tiles it with `backgroundPattern`. Pass `belowLayerId` to place it under the layers it backs. On Android and iOS a `belowLayerId` no layer in the style carries fails the call instead of leaving an opaque background on top of the map, and a layer id the style already carries, `background` in most published styles, fails with `layerAlreadyExists`. `addLayer()` accepts `BackgroundLayerProperties` too, ignoring the source id. See the [background layer guide](https://maplibre.org/flutter-maplibre-gl/layers/background/) (#959).
+* **Android, iOS, Web**: `setLight()` sets the style's light source, which shades extruded geometries: `anchor`, `position`, `color` and `intensity`. Android and iOS take constant values, web also accepts expressions; Android answers `INVALID_ARGUMENT` for a value it cannot take, an expression included. See the [globe, terrain and sky guide](https://maplibre.org/flutter-maplibre-gl/advanced/globe-terrain-sky/) (#960).
 * **Android, iOS, Web**: the location puck can be driven from your own position updates instead of the device GPS, with no location permission needed: `locationSource: ManualLocationSource()` plus `controller.updateManualLocation()`. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#840).
 * **Android, iOS, Web**: `getClusterExpansionZoom()` gives the zoom at which a cluster splits, so a cluster tap can zoom to exactly that instead of guessing with `zoom + 2`. `getClusterLeaves()` and `getClusterChildren()` read the points behind a cluster. All three take the cluster feature's `cluster_id`. See the [cluster guide](https://maplibre.org/flutter-maplibre-gl/layers/cluster/) (#896).
 * **Android, iOS**: offline regions can move between devices. `exportOfflineDatabase()` writes a shareable copy, `mergeOfflineRegions()` imports one (now on iOS too), and `getOfflineDatabasePath()` locates the store. See the [offline regions guide](https://maplibre.org/flutter-maplibre-gl/advanced/offline-regions/) (#886).
 * **Android, iOS**: `setTrackingCameraOptions()` pitches the camera without giving up the active tracking mode, for a navigation-style view that stays tilted while it keeps following the user. On web it throws an `UnsupportedError`. See the [user location guide](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/) (#888).
 * **Android**: feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) works on Android as well as web, so single features can be restyled without re-feeding the source. iOS throws; its SDK does not expose the API yet. `promoteId` stays web-only, so Android features need a top-level `id` in the GeoJSON. See the [feature state guide](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) (#889).
 * **iOS**: `LocationEnginePlatforms.iOS` takes `intervalMs` and `pulseWindowMs` to pulse GPS instead of tracking continuously, easing battery use on maps that stay open a long time. The default keeps continuous tracking (#901).
+* **Android, iOS, Web**: `clusterMinPoints` on a GeoJSON source sets how many points have to fall together before they become a cluster, instead of the fixed default of two (#957, #981).
+* **Android**: `volatile` on vector, raster and raster-dem sources keeps their tiles out of the on-disk cache, for tiles that change often or must not be stored. The MapLibre iOS SDK exposes no equivalent and MapLibre GL JS will not implement one, so it has no effect there (#957, #981).
+* **Web**: properties MapLibre GL JS supports but MapLibre Native does not implement yet are exposed too: `iconOverlap` and `textOverlap` on symbols, `fillLayerOpacity` on fills, `lineLayerOpacity` on lines, `resampling` on raster and hillshade layers, `filter` on GeoJSON sources, the `custom` raster-dem encoding with its `redFactor`, `greenFactor`, `blueFactor` and `baseShift` factors, and the `Expressions.globalState`, `join` and `split` expressions. Android and iOS ignore them, except the custom encoding, which now throws, and `join` and `split`, which MapLibre Native implemented in Android 13.5.0 and so work there too, though the pinned style spec does not credit it yet and the generated dartdoc still reads `not on android` (#957, #981).
+* **Web**: `setProjection()` switches between the `mercator`, `globe` and `vertical-perspective` projections, or interpolates between them by zoom with an expression. `setTerrain()` raises the map by the elevation of a raster DEM source, with `null` to flatten it again, and `setSky()` draws the sky and the atmosphere above the horizon. All three throw an `UnsupportedError` on Android and iOS, where MapLibre Native implements none of them yet. See the [globe, terrain and sky guide](https://maplibre.org/flutter-maplibre-gl/advanced/globe-terrain-sky/) (#960).
+* **Web**: `setGlobalStateProperty()` sets a value in the style's global state, which the `Expressions.globalState` expression reads, so one switch restyles any number of layers at once. Android and iOS throw an `UnsupportedError`; MapLibre Native does not implement global state yet. See the [expressions guide](https://maplibre.org/flutter-maplibre-gl/advanced/expressions/) (#960).
 * **Web**: `MapLibreMap.webLibrarySource` chooses where MapLibre GL JS comes from: the build the plugin is tested against, a self-hosted copy, or one the page loads itself. `MapLibreMap.ensureWebLibraryLoaded()` completes once MapLibre GL JS is loaded, for calling into it directly, for example `addProtocol` (#928).
 
 ### Fixed
+* **Android**: `maxzoom` on a GeoJSON source is applied again. The converter read a camel-cased key the Dart side never sends, so the value was dropped on Android while iOS and web honoured it (#981).
 * A map that fails to be created now reports the failure. Code awaiting the controller, `onMapCreated` included, used to wait forever for a map that never arrived, with only an unhandled error in the console (#943).
 * The bundled LICENSE no longer breaks Flutter's license collector, which showed an untitled, truncated first entry on every dependent app's `showLicensePage()` (#895).
 * **Android, iOS, Web**: `queryRenderedFeaturesInRect()` applies the `filter` it is given; no platform decoded it, so the answer held every feature in the rectangle. Note that this call takes the filter as a JSON string, unlike `queryRenderedFeatures()` (#949, #953).
 * **Android, iOS**: symbols added with `addSymbol` are visible again on styles whose glyph server does not host the old default font. A missing font used to hide the whole symbol, icon included. The default is now `Noto Sans Regular`; for another font use `addSymbolLayer` with `textFont` (#940).
 * **Android, iOS**: adding or updating a GeoJSON source with a large payload no longer blocks the UI for the whole encode. Large payloads are encoded in the background, cutting the blocking time by a factor of two to three (#366).
 * **Android, iOS**: downloading an area that is already downloaded replaces its region instead of adding a duplicate. iOS keeps the region id the app already knows; Android assigns a new one, so read it back from the returned `OfflineRegion` (#886).
-* **Android, iOS**: `MapLibreMap.preWarm()` no longer throws "Binding has not yet been initialized" when called at the top of `main()` (#867).
+* **Android**: a hillshade layer takes its colours again. `hillshadeShadowColor`, `hillshadeHighlightColor`, `hillshadeIlluminationDirection` and `hillshadeIlluminationAltitude` became arrays in MapLibre Native 6.24 for multidirectional hillshading, so a single value was rejected with `Expected array<color> but found string instead` and the layer silently kept the default black and white. A single value is now wrapped for you on Android and iOS, and a list of values is passed through (#957).
+* **Android, iOS**: `setLayerProperties()` works on fill-extrusion and heatmap layers too; both used to answer `UNSUPPORTED_LAYER_TYPE` (#960).
 * **Android**: `queryRenderedFeatures()` and `querySourceFeatures()` say what is wrong with a call they cannot answer: `STYLE_NOT_READY` before the style has loaded, `INVALID_ARGUMENT` for a missing `sourceId`, `layerIds` or query geometry. The failure used to arrive as a bare `error` carrying a `NullPointerException` message (#954).
 * **Android**: a map no longer stays blank for good after its activity is recreated, whether by "Don't keep activities", memory pressure or rotation; the camera position comes back with it (#805).
 * **Android**: icons added with `addImage` are visible again, at the right size on high-density screens. Undecodable bytes now report a clear error instead of crashing. Since 0.26.0 icons could be dropped whenever draggable annotations were in use, which is the default (#866, #868).
 * **Android**: merging an offline database whose regions carry no metadata, such as one produced by maplibre-native, no longer fails with `type 'Null' is not a subtype of type 'Map<String, dynamic>'` (#865).
-* **iOS**: `mergeOfflineRegions()` returns only the regions it imported, not every region already stored (#886).
 * **iOS**: `queryRenderedFeatures()` and `querySourceFeatures()` no longer skip a feature that failed to serialize without telling you, and no longer hang on a call they cannot answer, such as one made before the style has loaded. Both now report the failure (#949).
 * **iOS**: `queryCameraPosition()` returns the camera position even when `trackCameraPosition` is `false`, matching Android. It used to return `null` (#892).
 * **iOS**: `controller.cameraPosition` no longer sticks on a `NaN` zoom from a camera event that arrived before the first layout, which misplaced camera-anchored content on maps the user had not touched (#903).
@@ -50,24 +64,31 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 * **Web**: `querySourceFeatures()` now reports an error when it is called before the style has loaded, matching Android and iOS. It answered with an empty list, which the caller cannot tell apart from a source holding no features (#952).
 
 ### Changed
+* Every generated layer property, source option and expression now documents which platforms implement it, from the spec's own `sdk-support` metadata. `iconOverlap` reads `basic functionality with js (not on android, ios)` instead of claiming all three. Where the spec credits a platform whose SDK exposes no such API, the docs say so rather than repeat the spec: `volatile` reads `basic functionality with android (not on ios, js)` (#957, #981).
+* **Android, iOS**: a raster-dem source with `encoding: "custom"` now throws an `UnsupportedError` from `addSource()`. MapLibre Native decodes only the `mapbox` and `terrarium` formulas and used to read custom tiles as mapbox-encoded, drawing a plausible map from wrong elevations. Only `addSource()` is checked: the same encoding declared inside `MapLibreMap.styleString` never reaches the check and is still decoded as mapbox without an error. `redFactor`, `greenFactor`, `blueFactor` and `baseShift` are accepted next to `mapbox` and `terrarium`, where they are ignored as before, since they only apply to a custom encoding. Custom encoding keeps working on web (#981).
+* The style spec the code is generated from (`scripts/input/style.json`) is now a verbatim copy of a pinned upstream release (`@maplibre/maplibre-gl-style-spec`, currently 26.2.1). `melos run check-style-spec` fails on any local drift, a weekly workflow reports what a newer release would bring to each platform and opens the update PR, and the generator reads the spec's `sdk-support` metadata against the pinned MapLibre Native versions, so properties the native SDKs do not implement yet are generated for web only and upgrading the SDKs unlocks them automatically (#957).
 * The error from `addSymbol`, `addCircle`, `addLine` and `addFill` when the annotation manager is missing now names the type and both causes: the style has not finished loading, or that type is not in the widget's `annotationOrder` (#910).
 * **Android, iOS**: panning a pitched map no longer moves the camera past the horizon, and changing a layer's `source-layer` or `source-id` now takes effect (#929).
 * **Android**: the Kotlin Gradle Plugin is applied only below AGP 9, so builds on AGP 9 or later no longer break. Nothing changes on AGP 8 (#905).
-* **Android**: MapLibre Native upgraded from 13.3.0 to 13.4.1 ([13.4.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.0), [13.4.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.1)), plus OkHttp 5.4.0, Play Services Location 21.4.0 and androidx.core-ktx 1.18.0 (#877, #919, #929).
+* **Android**: MapLibre Native upgraded from 13.3.0 to 13.5.0 ([13.4.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.0), [13.4.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.4.1), [13.5.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.5.0)), plus OkHttp 5.4.0, Play Services Location 21.4.0 and androidx.core-ktx 1.18.0. 13.5.0 repaints symbol paint properties driven by feature state, fixes a surface-changed ANR and works around a device-lost crash on Adreno GPUs (#877, #919, #929).
 * **Android**: the unused `android-plugin-annotation-v9` and `android-plugin-offline-v9` dependencies are dropped, so apps pull two fewer artifacts (#929).
 * **iOS**: the plugin supports Flutter's Swift Package Manager integration. The CocoaPods podspec still ships, so CocoaPods apps need no migration (#891).
 * **iOS**: MapLibre Native upgraded from 6.27.0 to 6.28.0 ([release notes](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.28.0)): the map view is no longer blurry in landscape on iPad (#929).
-* **Web**: MapLibre GL JS upgraded from 5 to 6; see Actions needed above (#943).
+* **Web**: MapLibre GL JS upgraded from 5 to 6.4.1; see Actions needed above. Over 6.2 this fixes a permanent frame-rate drop after a style switch, a rejected missing-image resolver taking the rest of its batch down with it, globe zoom drifting away from the pointer and globe panning stalling at the poles, and an attribute-sanitising hole in popup and marker HTML (#943).
 
 ### Docs
 * New guides for [user location](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/), [startup and performance](https://maplibre.org/flutter-maplibre-gl/advanced/performance/) and [feature state](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) (#840, #867, #889).
-* **Annotations**: the section overview now states the two conditions every annotation depends on, and Annotations vs Style Layers collects the constraints of both APIs in one place (#910).
-* **Android**: `MapLibreMap.useHybridComposition` was documented with the wrong default; it has been `false` since 0.16.0. Its docs and the [performance page](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) now describe what each value selects (#816).
+* **Annotations**: the two conditions every annotation depends on, and the constraints of both APIs, are now stated in one place (#910).
+* **Android**: `MapLibreMap.useHybridComposition` was documented with the wrong default; it has been `false` since 0.16.0. Its docs and the [performance page](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) now say what each value selects (#816).
+* **Example app**: the Data-Driven Expressions demo drew the USA as a triangle across the Atlantic, because one coordinate was missing its minus sign. Its polygon is now a bounding box over the contiguous states (#956).
 * **Example app**: new Manual Location Source and Feature State pages, and the Offline Regions demo now walks through the export and import round-trip (#840, #886, #889).
 
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
+
+### Added
+* A live web demo of the example app is now available at [maplibre.org/flutter-maplibre-gl](https://maplibre.org/flutter-maplibre-gl/).
 
 ### Fixed
 * Setting map options inside a widget that rebuilds frequently (e.g. with `setState`) no longer causes unnecessary map updates. Options containing nested lists such as `cameraTargetBounds` were always treated as changed, even when the value was identical (#849).
@@ -102,15 +123,13 @@ The plugin also has a **documentation site** now, at [**maplibre.org/flutter-map
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
-#### Version 0.26.0 marks a milestone for `flutter-maplibre-gl`
-This release resolves numerous long-standing bugs accumulated over the years and completes the transition to **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.\
-It also introduces a new Example App for users to explore the latest features - see [maplibre_gl_example](maplibre_gl_example/) for details.
+**Version 0.26.0 is a milestone release for flutter-maplibre-gl.** \
+This release addresses numerous long-standing bugs that have accumulated over the years and completes the transition to the **WASM compilation** for the web platform, ensuring full compatibility with Flutter's modern web toolchain.
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
-* `requestMyLocationLatLng()` now returns `Future<LatLng?>` instead of `Future<LatLng>`. Returns `null` when the user's location is unavailable (#784).
 * Removed `LocationEngineAndroidProperties`. All fields flattened into `LocationEnginePlatforms` with nullable platform-specific fields.\
-Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead (#774).
+Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()`, `.web()` instead.
 * Removed deprecated typedefs: `MaplibreMapController`, `MaplibreMap`, `MaplibreStyles`. Use `MapLibreMapController`, `MapLibreMap`, `MapLibreStyles` instead.
 * Removed deprecated callback: `onInfoWindowTapped` from `MapLibreMapController`.
 * Removed deprecated methods: `removeImageSource` (use `removeSource`) and `addLayerBelow` (use `addImageLayerBelow`).
@@ -181,7 +200,6 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * **Web**: `GeolocateControl` now respects `MyLocationTrackingMode` and triggers programmatically.
 * **Example**: GPS location page. Fixed web permission check, wired `onUserLocationUpdated`, web-specific tracking modes.
 * **Example**: GeoJSON cluster. Added `['has', 'point_count']` filter to fix null property errors on unclustered points.
-* **Example**: Added `ClusterPropertiesExample` demonstrating both the simple and reduce-expression forms of `clusterProperties` on the earthquakes dataset (#792).
 
 **Full Changelog**: [v0.25.0...v0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
@@ -190,17 +208,9 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 ### Added
 * Logo customization options including visibility and position settings (#b4fb174).
 * Explicit annotation manager initialization with clear error handling (#668).
-* Web: Implemented `getStyle()` to return map style as JSON string.
-* Web: Implemented `getSourceIds()` to return list of source IDs.
-* Web: Improved `getLayers()` with safe null handling.
+* iOS: Attribution support for tile and raster sources with HTML link parsing.
 
 ### Changed
-* **BREAKING**: Web implementation migrated from deprecated `dart:js_util` to modern `dart:js_interop` API (#687).
-  - **WASM compatible**: Now supports Flutter's upcoming WASM compilation target
-  - Required for Flutter 3.38.4+ compatibility
-  - All JS interop classes updated to `@staticInterop` pattern with extension methods
-  - Improved type safety for JS ↔ Dart conversions
-  - No public API changes for users
 * MapLibre Android SDK upgraded from `11.13.5` to `12.3.0` (#690).
   - Includes synchronous GeoJSON source updates
   - Support for MLT-format vector tile sources
@@ -217,26 +227,16 @@ Use Platform-specific constructors: `LocationEnginePlatforms.android()`, `.iOS()
 * Min/max zoom preference on iOS (#5230fab).
 * `queryRenderedFeatures` now returns all targets when supplying empty layers list on iOS, aligning behavior with Android (#680).
 * iOS: Enhanced LayerPropertyConverter to handle null values and improve expression parsing (#98660dc).
-  - Better handling of null values in layer properties
-  - Improved expression parsing for complex layer configurations
-* Web: Fixed `setPaintProperty` and `setLayoutProperty` to handle nullable `JSAny` values correctly (#12dfad2).
-* Web: Improved `jsify` function to create JS arrays correctly (#2b550ed).
 * Fixed `lineDasharray` and patterns reset to null in layer properties (#2b550ed).
-* Improved MapLibreMapController disposing to prevent memory leaks (#2b550ed).
+* Improved MapLibreMapController disposing to prevent memory leaks.
 * Removed unnecessary disposing of mapController in example app (#f989797).
-  - Cleaned up example code with minor fixes
-  - Improved example app stability
 * Fixed `setLayerProperties` and pattern images on web and Android (#9ce52a6).
   - Pattern images now correctly converted to RGBA format on web
   - Fixed mismatched image size error when loading pattern images
 
 ### Refactor
 * Complete refactor of example app with new UI and improved user experience (#ac877a4).
-  - Improved map sizing with responsive layouts (50-60% of screen height)
-  - Better button and control layouts across different screen sizes
-  - Enhanced visual design and usability
 * Refactored `cameraTargetBounds` implementation on Android and iOS for consistent behavior (#8bcd74a).
-* Refactored image upload on web - all images now converted to RGBA format for consistency (#9ce52a6).
 
 **Full Changelog**: [v0.24.1...v0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0)
 
@@ -298,47 +298,39 @@ controller.onFeatureTapped.add((p, latLng, id, layerId, annotation) {
 ## [0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
 > **Note**: This release has breaking changes.
 
-This consolidated release delivers runtime style switching, hover interactions, heatmap & visibility features, native SDK updates (Android 11.9.0 / iOS 6.14.0 with PMTiles), and broad naming / enum casing harmonization. It also fixes several interaction and stability issues across web and mobile. If you are upgrading from <= 0.22.x:
-* Review the breaking rename (`Maplibre` -> `MapLibre`) and enum / const lowerCamelCase migration.
-* Adapt feature interaction callbacks: `onFeatureTapped` / `onFeatureDrag` now receive an `Annotation` instead of an `id` argument.
-* Ensure any style access happens after `onStyleLoaded` due to stricter style readiness checks.
+This release aligns the plugin with the latest MapLibre Native (Android 11.9.0 / iOS 6.14.0), introduces runtime style switching APIs, hover interaction callbacks, and several annotation interaction improvements. It also contains a small breaking change for feature interaction callbacks.
 
 A big thank you to everyone who contributed to this update!
 
-### Breaking changes
-* Rename `Maplibre` to `MapLibre` across APIs (#441).
-* Enum fields & const identifiers migrated to lower camel case (#415).
-* `onFeatureTapped` / `onFeatureDrag` replaced the raw `id` parameter with an `Annotation annotation` instance (update handler signatures).
+### Breaking Changes
+* `onFeatureDrag` / `onFeatureTapped` callback signatures now provide an `Annotation annotation` object instead of an `id` parameter. Update your handlers to remove the `id` argument and use `annotation.id` (or other annotation fields) as needed.
 
-### Added / Features
-* Runtime style switching APIs on controller (#444) and raw style JSON setting on iOS / Web (#603).
-* Hover interaction events (`onFeatureHover`) (#614).
-* Heatmap layer support (#365).
-* Bounds fitting API to change viewport to given bounds (#133).
-* Layer visibility control (#138).
-* `LatLngBounds.contains` convenience (#498).
+### Highlights
+* Runtime style switching via controller (`setStyle…`) without tearing down the map (#444, #603).
+* Hover interaction events (`onFeatureHover`) for richer desktop/web UX (#614).
+* Improved event handling reliability (cancellation & consumption fixes) (#621, #623).
+* Offline region download crash fix in example (#569) and style loaded safety checks (#563).
+* Updated MapLibre Native bringing PMTiles & performance improvements (#552, #582).
 
-### Changed / Updates
-* MapLibre Native: Android 11.9.0 & iOS 6.14.0 (PMTiles support, performance) (#552, #582).
-* Flutter / Gradle plugin & tooling compatibility update (#542).
-* Lint and analysis alignment via very_good_analysis and flutter_lints (#452, #434, #414, #419).
-* Package link updates & style resource relocation (`MaplibreStyles` moved to main package) (#435, #413).
+### Added / Updated
+* **Feature:** added set style method on controller (#444) & support setting raw style JSON on iOS/web (#603).
+* **Feature:** expose hovering events (`onFeatureHover`) (#614).
+* **Update:** bump Android to 11.9.0 & iOS to 6.14.0 (#582).
+* **Update:** update maplibre-native to the latest versions / PMTiles support (#552).
+* **CI/Tooling:** upgrade Flutter Gradle Plugin & compatibility with Flutter 3.29.0 (#542).
 
 ### Fixed
-* iOS code generation (Offset / Translate / expression arrays) (#481).
-* Annotation tap consumption now properly respected (`annotationConsumeTapEvents`).
+* iOS code generation: corrected handling of Offset / Translate / expression arrays in generated bindings (#481).
+* Annotation tap consumption now respected (`annotationConsumeTapEvents`).
 * Prevent calling `notifyListeners()` after controller disposal (#621).
 * Web: event listener cancellation & hover handling robustness (#623).
-* Offline region download crash in example (#569).
-* Added style loaded safety checks (#563).
-* Aligned example and web pubspec versions (#476).
-* Web: enforce maplibre-gl-js 4.x & remove shadow root stylesheet workaround (#409).
+* Example: offline region download crash (#569).
+* Added style readiness checks before access (#563).
 
 ### Refactor / Quality
-* Enable and fix additional lint rules (#452).
+* Enable and fix additional lint rules to enforce consistency (#452).
 
 **Full Changelog**: [v0.22.0...v0.23.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.22.0...v0.23.0)
-
 
 ## [0.22.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.21.0...v0.22.0)
 
