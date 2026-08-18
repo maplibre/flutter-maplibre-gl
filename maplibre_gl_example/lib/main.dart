@@ -14,6 +14,7 @@ import 'pmtiles_protocol_native.dart'
 // Page system
 import 'page.dart';
 import 'shared/constants.dart';
+import 'shared/tile_client_identity.dart';
 
 // Basics examples
 import 'examples/basics/full_map_example.dart';
@@ -115,6 +116,11 @@ Future<void> main() async {
   // blank for that long, on every embed, including the ones that show a map
   // built from a local asset.
   unawaited(ExampleConstants.resolveDemoMapStyle());
+
+  // Name this app to the tile servers it talks to. Several refuse
+  // traffic they cannot attribute, so this has to happen before the
+  // first map is built.
+  unawaited(configureTileClientIdentity());
 
   runApp(const MapLibreExampleApp());
 }

@@ -152,7 +152,7 @@ class ExampleConstants {
   }
 
   /// Style asset paths
-  static const String osmStyleAsset = 'assets/osm_style.json';
+  static const String rasterStyleAsset = 'assets/raster_style.json';
   static const String pmtilesStyleAsset = 'assets/pmtiles_style.json';
   static const String translucenStyleAsset = 'assets/translucent_style.json';
   static const String localStyleAsset = 'assets/style.json';

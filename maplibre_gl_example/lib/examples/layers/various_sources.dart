@@ -49,23 +49,33 @@ class FullMapState extends State<FullMap> {
     setState(() => this.controller = controller);
   }
 
+  /// Night lights imagery, published by NASA for public use and keyless.
+  static const _nasaCityLightsTiles =
+      'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg';
+
   static Future<void> addRaster(MapLibreMapController controller) async {
+    // NASA GIBS rather than the OpenStreetMap tile servers. OSM's tile usage
+    // policy asks that its tiles not be used as the raster basemap of an
+    // application, and blocks clients it cannot attribute, so an example that
+    // pointed there taught a pattern that gets an app blocked. GIBS publishes
+    // this imagery for public use and needs no key.
+    // See https://operations.osmfoundation.org/policies/tiles/.
     await controller.addSource(
-      "osm-raster",
+      "nasa-raster",
       const RasterSourceProperties(
-        tiles: [
-          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        ],
+        tiles: [_nasaCityLightsTiles],
         tileSize: 256,
+        // The tileset stops at zoom 8; without this the spec default of 22
+        // applies and zooming further asks for tiles that do not exist.
+        maxzoom: 8,
+        // The acknowledgment GIBS asks for, in its own words.
         attribution:
-            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>',
+            '<a href="https://nasa-gibs.github.io/gibs-api-docs/">We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS).</a>',
       ),
     );
     await controller.addLayer(
-      "osm-raster",
-      "osm-raster",
+      "nasa-raster",
+      "nasa-raster",
       const RasterLayerProperties(),
     );
   }
