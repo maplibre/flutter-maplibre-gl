@@ -143,11 +143,9 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
     final ctrl = _controller;
     if (ctrl == null) return;
 
-    final features = await ctrl.queryRenderedFeatures(
-      point,
-      [_clusterCircleId],
-      null,
-    );
+    final features = await ctrl.queryRenderedFeatures(point, [
+      _clusterCircleId,
+    ], null);
     if (features.isEmpty) return;
 
     final feature = features.first as Map;

@@ -100,10 +100,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
     await _controller!.addLayer(
       _sourceName,
       _borderLayerId,
-      const LineLayerProperties(
-        lineColor: '#627BC1',
-        lineWidth: 2,
-      ),
+      const LineLayerProperties(lineColor: '#627BC1', lineWidth: 2),
       enableInteraction: false,
     );
   }
@@ -113,10 +110,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
 
     // Listen to mouse move events and query features manually
     // NOTE: You could also use onFeatureHover listener for annotation layers
-    _controller!.onMapMouseMove.add((
-      point,
-      coordinates,
-    ) {
+    _controller!.onMapMouseMove.add((point, coordinates) {
       unawaited(_handleMouseMove(point));
     });
   }
@@ -145,11 +139,9 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
         }
 
         // Set hover state on new feature
-        await _controller?.setFeatureState(
-          _sourceName,
-          featureId,
-          {'hover': true},
-        );
+        await _controller?.setFeatureState(_sourceName, featureId, {
+          'hover': true,
+        });
 
         if (mounted) {
           setState(() {

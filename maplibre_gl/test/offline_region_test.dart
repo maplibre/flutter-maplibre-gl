@@ -112,10 +112,7 @@ void main() {
       };
       final region = OfflineRegion.fromMap(map);
       expect(region.id, 42);
-      expect(
-        region.definition.mapStyleUrl,
-        'https://example.com/style.json',
-      );
+      expect(region.definition.mapStyleUrl, 'https://example.com/style.json');
       expect(region.metadata['name'], 'Test Region');
     });
 

@@ -4,10 +4,7 @@ class LineLayerJsImpl {
   static toJs(LineLayer lineLayer) => toDict(lineLayer).jsify();
 
   static toDict(LineLayer lineLayer) {
-    final dict = <String, dynamic>{
-      'id': lineLayer.id,
-      'type': 'line',
-    };
+    final dict = <String, dynamic>{'id': lineLayer.id, 'type': 'line'};
     if (lineLayer.source != null) {
       dict['source'] =
           lineLayer.source is String ? lineLayer.source : lineLayer.source.dict;

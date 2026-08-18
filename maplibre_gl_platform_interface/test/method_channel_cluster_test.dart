@@ -48,9 +48,7 @@ void main() {
     /// A cluster feature as the native sides serialize it, one JSON string per
     /// feature so nested properties survive the channel.
     Map<Object?, Object?> featuresReplyOf(List<Map<String, dynamic>> features) {
-      return <Object?, Object?>{
-        'features': features.map(jsonEncode).toList(),
-      };
+      return <Object?, Object?>{'features': features.map(jsonEncode).toList()};
     }
 
     test('getClusterExpansionZoom sends the source and cluster id', () async {

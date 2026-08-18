@@ -43,10 +43,7 @@ typedef OnMapLongClickCallback =
     void Function(Point<double> point, LatLng coordinates);
 
 typedef OnMapMouseMoveCallback =
-    void Function(
-      Point<double> point,
-      LatLng coordinates,
-    );
+    void Function(Point<double> point, LatLng coordinates);
 
 typedef OnStyleLoadedCallback = void Function();
 
@@ -273,10 +270,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onMapMouseMovePlatform.add((payload) {
       for (final fun in List.of(onMapMouseMove)) {
-        fun(
-          payload["point"],
-          payload["latLng"],
-        );
+        fun(payload["point"], payload["latLng"]);
       }
     });
 
@@ -1518,9 +1512,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the Line has no geometry set.
   List<LatLng> getLineLatLngs(Line line) {
     if (line.options.geometry == null) {
-      throw ArgumentError(
-        "Line geometry is null. Cannot determine position.",
-      );
+      throw ArgumentError("Line geometry is null. Cannot determine position.");
     }
 
     return line.options.geometry!;
@@ -1784,9 +1776,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the Fill has no geometry set.
   List<List<LatLng>> getFillLatLngs(Fill fill) {
     if (fill.options.geometry == null) {
-      throw ArgumentError(
-        "Fill geometry is null. Cannot determine position.",
-      );
+      throw ArgumentError("Fill geometry is null. Cannot determine position.");
     }
 
     return fill.options.geometry!;
@@ -2274,6 +2264,72 @@ class MapLibreMapController extends ChangeNotifier {
     } else {
       throw UnimplementedError("Unknown layer type $properties");
     }
+  }
+
+  /// Sets the style's `sky` root object, which draws the sky and the
+  /// atmosphere above the horizon.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement the sky
+  /// yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setSky(SkyProperties sky) async {
+    await _maplibrePlatform.setSky(sky);
+  }
+
+  /// Sets the style's `terrain` root object, which renders the map in 3D from
+  /// the elevation of a raster dem source. A null [terrain] removes it.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement 3D terrain
+  /// yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    await _maplibrePlatform.setTerrain(terrain);
+  }
+
+  /// Sets the style's `projection` root object.
+  ///
+  /// [type] is either one of "mercator", "globe" and "vertical-perspective",
+  /// or an expression interpolating between them by zoom.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native only renders the mercator
+  /// projection.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setProjection(Object type) async {
+    await _maplibrePlatform.setProjection(type);
+  }
+
+  /// Sets the style's `light` root object, which lights extruded geometries.
+  ///
+  /// **Platform support**: all platforms. On Android and iOS the values must
+  /// be constants; only web also accepts expressions.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setLight(LightProperties light) async {
+    await _maplibrePlatform.setLight(light);
+  }
+
+  /// Sets property [name] of the style's global state, which the
+  /// [Expressions.globalState] expression reads, so any number of layers can
+  /// be restyled from a single switch.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement global
+  /// state yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    await _maplibrePlatform.setGlobalStateProperty(name, value);
   }
 
   Future<void> setLayerVisibility(String layerId, bool visible) async {

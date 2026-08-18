@@ -34,10 +34,7 @@ class ExampleButton extends StatelessWidget {
               icon: Icon(icon),
               label: Text(label),
             )
-            : FilledButton(
-              onPressed: onPressed,
-              child: Text(label),
-            );
+            : FilledButton(onPressed: onPressed, child: Text(label));
 
       case ExampleButtonStyle.tonal:
         return icon != null
@@ -46,10 +43,7 @@ class ExampleButton extends StatelessWidget {
               icon: Icon(icon),
               label: Text(label),
             )
-            : FilledButton.tonal(
-              onPressed: onPressed,
-              child: Text(label),
-            );
+            : FilledButton.tonal(onPressed: onPressed, child: Text(label));
 
       case ExampleButtonStyle.outlined:
         return icon != null
@@ -58,10 +52,7 @@ class ExampleButton extends StatelessWidget {
               icon: Icon(icon),
               label: Text(label),
             )
-            : OutlinedButton(
-              onPressed: onPressed,
-              child: Text(label),
-            );
+            : OutlinedButton(onPressed: onPressed, child: Text(label));
 
       case ExampleButtonStyle.text:
         return icon != null
@@ -70,10 +61,7 @@ class ExampleButton extends StatelessWidget {
               icon: Icon(icon),
               label: Text(label),
             )
-            : TextButton(
-              onPressed: onPressed,
-              child: Text(label),
-            );
+            : TextButton(onPressed: onPressed, child: Text(label));
 
       case ExampleButtonStyle.destructive:
         return icon != null
@@ -178,11 +166,7 @@ class ControlGroup extends StatelessWidget {
             ),
           )
         else
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: children,
-          ),
+          Wrap(spacing: 8.0, runSpacing: 8.0, children: children),
       ],
     );
   }
@@ -235,11 +219,7 @@ class ExampleSegment<T> {
   final String label;
   final IconData? icon;
 
-  const ExampleSegment({
-    required this.value,
-    required this.label,
-    this.icon,
-  });
+  const ExampleSegment({required this.value, required this.label, this.icon});
 }
 
 /// A toggle switch with label

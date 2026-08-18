@@ -100,10 +100,7 @@ void main() {
     });
 
     test('forwards definition and metadata', () async {
-      await downloadOfflineRegion(
-        definition,
-        metadata: {'name': 'test'},
-      );
+      await downloadOfflineRegion(definition, metadata: {'name': 'test'});
 
       final args = methodCalls[1].arguments as Map;
       expect(args['definition'], definition.toMap());
@@ -141,10 +138,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       // Wait for event stream processing.
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -190,10 +184,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
@@ -238,10 +229,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
 

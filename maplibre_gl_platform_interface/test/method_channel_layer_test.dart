@@ -56,12 +56,9 @@ void main() {
     });
 
     test('addFillLayer sends correct method', () async {
-      await platform.addFillLayer(
-        'source-id',
-        'fill-layer',
-        {'fill-color': '#FF0000'},
-        enableInteraction: true,
-      );
+      await platform.addFillLayer('source-id', 'fill-layer', {
+        'fill-color': '#FF0000',
+      }, enableInteraction: true);
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'fillLayer#add');
@@ -73,12 +70,9 @@ void main() {
     });
 
     test('addFillExtrusionLayer sends correct method', () async {
-      await platform.addFillExtrusionLayer(
-        'source-id',
-        'extrusion-layer',
-        {'fill-extrusion-height': 100},
-        enableInteraction: false,
-      );
+      await platform.addFillExtrusionLayer('source-id', 'extrusion-layer', {
+        'fill-extrusion-height': 100,
+      }, enableInteraction: false);
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'fillExtrusionLayer#add');
@@ -87,11 +81,9 @@ void main() {
     });
 
     test('addRasterLayer sends correct method', () async {
-      await platform.addRasterLayer(
-        'raster-source',
-        'raster-layer',
-        {'raster-opacity': 0.8},
-      );
+      await platform.addRasterLayer('raster-source', 'raster-layer', {
+        'raster-opacity': 0.8,
+      });
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'rasterLayer#add');
@@ -101,22 +93,18 @@ void main() {
     });
 
     test('addHillshadeLayer sends correct method', () async {
-      await platform.addHillshadeLayer(
-        'dem-source',
-        'hillshade-layer',
-        {'hillshade-exaggeration': 0.5},
-      );
+      await platform.addHillshadeLayer('dem-source', 'hillshade-layer', {
+        'hillshade-exaggeration': 0.5,
+      });
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'hillshadeLayer#add');
     });
 
     test('addColorReliefLayer sends correct method', () async {
-      await platform.addColorReliefLayer(
-        'dem-source',
-        'color-relief-layer',
-        {'color-relief-opacity': 0.7},
-      );
+      await platform.addColorReliefLayer('dem-source', 'color-relief-layer', {
+        'color-relief-opacity': 0.7,
+      });
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'colorReliefLayer#add');
@@ -139,12 +127,61 @@ void main() {
       expect((args['properties'] as Map)['background-color'], '#ff0000');
     });
 
-    test('addHeatmapLayer sends correct method', () async {
-      await platform.addHeatmapLayer(
-        'heat-source',
-        'heatmap-layer',
-        {'heatmap-radius': 30},
+    test('setLight sends correct method', () async {
+      await platform.setLight(
+        const LightProperties(
+          anchor: 'map',
+          position: [1.5, 90, 80],
+          color: '#ffffff',
+          intensity: 0.4,
+        ),
       );
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'style#setLight');
+      final light = (methodCalls[0].arguments as Map)['light'] as Map;
+      expect(light['anchor'], 'map');
+      expect(light['position'], [1.5, 90, 80]);
+      expect(light['color'], '#ffffff');
+      expect(light['intensity'], 0.4);
+    });
+
+    test('setSky throws and sends nothing', () async {
+      await expectLater(
+        platform.setSky(const SkyProperties(skyColor: '#88C6FC')),
+        throwsUnsupportedError,
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test('setTerrain throws and sends nothing', () async {
+      await expectLater(
+        platform.setTerrain(const TerrainProperties(source: 'dem')),
+        throwsUnsupportedError,
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test('setProjection throws and sends nothing', () async {
+      await expectLater(
+        platform.setProjection('globe'),
+        throwsUnsupportedError,
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test('setGlobalStateProperty throws and sends nothing', () async {
+      await expectLater(
+        platform.setGlobalStateProperty('theme', 'dark'),
+        throwsUnsupportedError,
+      );
+      expect(methodCalls, isEmpty);
+    });
+
+    test('addHeatmapLayer sends correct method', () async {
+      await platform.addHeatmapLayer('heat-source', 'heatmap-layer', {
+        'heatmap-radius': 30,
+      });
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'heatmapLayer#add');

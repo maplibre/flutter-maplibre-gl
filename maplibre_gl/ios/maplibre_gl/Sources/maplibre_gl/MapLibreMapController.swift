@@ -859,6 +859,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 LayerPropertyConverter.addSymbolProperties(symbolLayer: symbolLayer, properties: properties)
             case let rasterLayer as MLNRasterStyleLayer:
                 LayerPropertyConverter.addRasterProperties(rasterLayer: rasterLayer, properties: properties)
+            case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+                LayerPropertyConverter.addFillExtrusionProperties(fillExtrusionLayer: fillExtrusionLayer, properties: properties)
+            case let heatmapLayer as MLNHeatmapStyleLayer:
+                LayerPropertyConverter.addHeatmapProperties(heatmapLayer: heatmapLayer, properties: properties)
             case let hillshadeLayer as MLNHillshadeStyleLayer:
                 LayerPropertyConverter.addHillshadeProperties(hillshadeLayer: hillshadeLayer, properties: properties)
             case let colorReliefLayer as MLNColorReliefStyleLayer:
@@ -1026,6 +1030,47 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             case .success: result(nil)
             case let .failure(error): result(error.flutterError)
             }
+
+        case "style#setLight":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let lightProperties = arguments["light"] as? [String: Any] else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+
+            let light = style.light
+            if let anchor = lightProperties["anchor"] as? String {
+                light.anchor = NSExpression(forConstantValue: anchor)
+            }
+            if let position = lightProperties["position"] as? [Double], position.count == 3 {
+                light.position = NSExpression(forConstantValue: NSValue(
+                    mlnSphericalPosition: MLNSphericalPositionMake(
+                        CGFloat(position[0]),
+                        position[1],
+                        position[2]
+                    )
+                ))
+            }
+            if let color = lightProperties["color"] as? String {
+                if let parsed = UIColor(hexString: color) {
+                    light.color = NSExpression(forConstantValue: parsed)
+                } else {
+                    // UIColor(hexString:) only reads #rrggbb and #aarrggbb, so
+                    // "#fff", "red" or "rgba(...)" are handed to the renderer as
+                    // LayerPropertyConverter does for layer colors, rather than
+                    // dropped. Without the fallback argument MLN raises an
+                    // uncaught NSInternalInconsistencyException at render time
+                    // when the input string can't be cast.
+                    light.color = NSExpression(mglJSONObject: ["to-color", color, "#000000"])
+                }
+            }
+            if let intensity = lightProperties["intensity"] as? Double {
+                light.intensity = NSExpression(forConstantValue: intensity)
+            }
+            style.light = light
+
+            result(nil)
 
         case "heatmapLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }

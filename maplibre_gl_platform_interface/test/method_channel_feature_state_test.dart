@@ -60,12 +60,10 @@ void main() {
     });
 
     test('setFeatureState forwards the sourceLayer', () async {
-      await platform.setFeatureState(
-        'terrain',
-        '42',
-        {'hover': true, 'score': 3},
-        sourceLayer: 'contour',
-      );
+      await platform.setFeatureState('terrain', '42', {
+        'hover': true,
+        'score': 3,
+      }, sourceLayer: 'contour');
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'source#setFeatureState');

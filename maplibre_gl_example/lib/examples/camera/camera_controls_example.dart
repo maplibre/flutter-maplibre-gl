@@ -98,9 +98,7 @@ class _CameraControlsBodyState extends State<_CameraControlsBody> {
   );
 
   Future<void> _goToLondon() => _moveCamera(
-    CameraUpdate.newCameraPosition(
-      ExampleConstants.londonCameraPosition,
-    ),
+    CameraUpdate.newCameraPosition(ExampleConstants.londonCameraPosition),
   );
 
   @override

@@ -22,10 +22,7 @@ import 'package:maplibre_gl_web/src/interop/geo/lng_lat_interop.dart';
 @JS('LngLatBounds')
 @staticInterop
 class LngLatBoundsJsImpl {
-  external factory LngLatBoundsJsImpl(
-    LngLatJsImpl sw,
-    LngLatJsImpl ne,
-  );
+  external factory LngLatBoundsJsImpl(LngLatJsImpl sw, LngLatJsImpl ne);
 }
 
 extension LngLatBoundsJsImplExtension on LngLatBoundsJsImpl {

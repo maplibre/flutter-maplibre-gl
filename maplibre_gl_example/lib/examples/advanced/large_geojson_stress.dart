@@ -122,9 +122,9 @@ class _LargeGeojsonStressBodyState extends State<_LargeGeojsonStressBody>
     } catch (e) {
       stopwatch.stop();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading source: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading source: $e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);

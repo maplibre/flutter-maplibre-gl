@@ -463,6 +463,22 @@ abstract class MapLibrePlatform {
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
+  /// Sets the style's `sky` root object.
+  Future<void> setSky(SkyProperties sky);
+
+  /// Sets the style's `terrain` root object, or removes it when [terrain] is
+  /// null.
+  Future<void> setTerrain(TerrainProperties? terrain);
+
+  /// Sets the style's `projection` root object.
+  Future<void> setProjection(Object type);
+
+  /// Sets the style's `light` root object.
+  Future<void> setLight(LightProperties light);
+
+  /// Sets one property of the style's global state.
+  Future<void> setGlobalStateProperty(String name, Object? value);
+
   Future<void> setLayerVisibility(String layerId, bool visible);
 
   /// Returns the visibility of a layer.

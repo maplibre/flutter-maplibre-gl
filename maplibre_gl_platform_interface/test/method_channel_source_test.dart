@@ -280,12 +280,8 @@ void main() {
     // Writes to one source must reach the platform in call order even when an
     // earlier, larger payload takes longer to encode than a later, small one.
     test('GeoJSON writes to the same source keep their order', () async {
-      final big = featureCollection(
-        geometry('LineString', ring(40000)),
-      );
-      final small = featureCollection(
-        geometry('Point', [0.0, 0.0]),
-      );
+      final big = featureCollection(geometry('LineString', ring(40000)));
+      final small = featureCollection(geometry('Point', [0.0, 0.0]));
 
       final first = platform.setGeoJsonSource('same-source', big);
       final second = platform.setGeoJsonSource('same-source', small);

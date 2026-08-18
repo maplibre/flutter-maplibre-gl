@@ -77,6 +77,8 @@ import org.maplibre.android.style.layers.LineLayer;
 import org.maplibre.android.style.layers.Property;
 import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
+import org.maplibre.android.style.light.Position;
+import org.maplibre.android.style.light.Light;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
 import org.maplibre.android.style.sources.CustomGeometrySource;
@@ -2186,6 +2188,12 @@ final class MapLibreMapController
             } else if (layer instanceof RasterLayer) {
               properties = LayerPropertyConverter
                   .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillExtrusionLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillExtrusionLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HeatmapLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHeatmapLayerProperties(call.argument("properties"));
             } else if (layer instanceof HillshadeLayer) {
               properties = LayerPropertyConverter
                   .interpretHillshadeLayerProperties(call.argument("properties"));
@@ -2411,6 +2419,74 @@ final class MapLibreMapController
           }
           updateLocationComponentLayer();
 
+          result.success(null);
+          break;
+        }
+      case "style#setLight":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final Map<String, Object> lightProperties = call.argument("light");
+          final Light light = style.getLight();
+          // Every LightProperties field is dynamic, so anything can arrive here. The
+          // values are checked rather than cast: MapLibre Native takes constants only,
+          // and an expression is a List, which would leave onMethodCall as a bare
+          // ClassCastException.
+          final String constantsOnly =
+              " MapLibre Native takes constant light values only, not expressions.";
+          final Object anchor = lightProperties.get("anchor");
+          if (anchor != null) {
+            if (!(anchor instanceof String)) {
+              result.error(
+                  "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setAnchor((String) anchor);
+          }
+          final Object position = lightProperties.get("position");
+          if (position != null) {
+            final List<?> values = position instanceof List ? (List<?>) position : null;
+            if (values == null
+                || values.size() != 3
+                || !(values.get(0) instanceof Number)
+                || !(values.get(1) instanceof Number)
+                || !(values.get(2) instanceof Number)) {
+              result.error(
+                  "INVALID_ARGUMENT",
+                  "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
+                      + " polar]."
+                      + constantsOnly,
+                  null);
+              break;
+            }
+            light.setPosition(
+                new Position(
+                    ((Number) values.get(0)).floatValue(),
+                    ((Number) values.get(1)).floatValue(),
+                    ((Number) values.get(2)).floatValue()));
+          }
+          final Object color = lightProperties.get("color");
+          if (color != null) {
+            if (!(color instanceof String)) {
+              result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setColor((String) color);
+          }
+          final Object intensity = lightProperties.get("intensity");
+          if (intensity != null) {
+            if (!(intensity instanceof Number)) {
+              result.error(
+                  "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setIntensity(((Number) intensity).floatValue());
+          }
           result.success(null);
           break;
         }

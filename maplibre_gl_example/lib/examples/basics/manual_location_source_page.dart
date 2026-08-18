@@ -55,10 +55,7 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   // Current simulated fix. Kept in state so the accuracy slider can re-emit at
   // the same position without advancing the track.
   double _angle = 0; // radians around the loop
-  LatLng _position = LatLng(
-    _center.latitude + _radiusDeg,
-    _center.longitude,
-  );
+  LatLng _position = LatLng(_center.latitude + _radiusDeg, _center.longitude);
   double _bearing = 0;
   bool _started = false;
 
@@ -288,10 +285,7 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
         myLocationEnabled: true,
         myLocationTrackingMode: _trackingMode,
         myLocationRenderMode: _renderMode,
-        initialCameraPosition: const CameraPosition(
-          target: _center,
-          zoom: 15,
-        ),
+        initialCameraPosition: const CameraPosition(target: _center, zoom: 15),
         trackCameraPosition: true,
       ),
       controls: [

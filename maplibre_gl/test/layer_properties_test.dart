@@ -45,10 +45,7 @@ void main() {
 
   group('LineLayerProperties', () {
     test('toJson with skipNulls', () {
-      const props = LineLayerProperties(
-        lineColor: '#0000FF',
-        lineWidth: 3,
-      );
+      const props = LineLayerProperties(lineColor: '#0000FF', lineWidth: 3);
       final json = props.toJson();
       expect(json['line-color'], '#0000FF');
       expect(json['line-width'], 3);
@@ -76,10 +73,7 @@ void main() {
 
   group('FillLayerProperties', () {
     test('toJson with skipNulls', () {
-      const props = FillLayerProperties(
-        fillColor: '#00FF00',
-        fillOpacity: 0.5,
-      );
+      const props = FillLayerProperties(fillColor: '#00FF00', fillOpacity: 0.5);
       final json = props.toJson();
       expect(json['fill-color'], '#00FF00');
       expect(json['fill-opacity'], 0.5);

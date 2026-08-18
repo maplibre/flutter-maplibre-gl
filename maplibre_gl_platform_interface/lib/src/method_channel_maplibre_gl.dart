@@ -55,7 +55,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         onCameraMoveStartedPlatform(null);
       case 'camera#onMove':
         final cameraPosition =
-            CameraPosition.fromMap(call.arguments['position'])!;
+            CameraPosition.fromMap(
+              call.arguments['position'],
+            )!;
         onCameraMovePlatform(cameraPosition);
       case 'camera#onIdle':
         final cameraPosition = CameraPosition.fromMap(
@@ -145,10 +147,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       if (useHybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
-          surfaceFactory: (
-            context,
-            controller,
-          ) {
+          surfaceFactory: (context, controller) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
               gestureRecognizers:
@@ -170,9 +169,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
             controller.addOnPlatformViewCreatedListener(
               params.onPlatformViewCreated,
             );
-            controller.addOnPlatformViewCreatedListener(
-              onPlatformViewCreated,
-            );
+            controller.addOnPlatformViewCreatedListener(onPlatformViewCreated);
 
             unawaited(controller.create());
             return controller;
@@ -207,9 +204,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     final dynamic json = await _channel.invokeMethod(
       'map#update',
-      <String, dynamic>{
-        'options': optionsUpdate,
-      },
+      <String, dynamic>{'options': optionsUpdate},
     );
     return CameraPosition.fromMap(json);
   }
@@ -235,9 +230,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     await _channel.invokeMethod(
       'map#updateMyLocationTrackingMode',
-      <String, dynamic>{
-        'mode': myLocationTrackingMode.index,
-      },
+      <String, dynamic>{'mode': myLocationTrackingMode.index},
     );
   }
 
@@ -248,10 +241,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }) async {
     final result = await _channel.invokeMethod(
       'locationComponent#setTrackingCameraOptions',
-      <String, dynamic>{
-        'tilt': tilt,
-        'duration': duration?.inMilliseconds,
-      },
+      <String, dynamic>{'tilt': tilt, 'duration': duration?.inMilliseconds},
     );
     return result == true;
   }
@@ -348,10 +338,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> editGeoJsonSource(String id, String data) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#editGeoJsonSource',
-      <String, dynamic>{
-        'id': id,
-        'data': data,
-      },
+      <String, dynamic>{'id': id, 'data': data},
     );
     final result = reply['result'];
     return result == true;
@@ -361,10 +348,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> editGeoJsonUrl(String id, String url) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#editGeoJsonUrl',
-      <String, String>{
-        'id': id,
-        'url': url,
-      },
+      <String, String>{'id': id, 'url': url},
     );
     final result = reply['result'];
     return result == true;
@@ -374,10 +358,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> setLayerFilter(String layerId, String filter) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#setLayerFilter',
-      <String, dynamic>{
-        'id': layerId,
-        'filter': filter,
-      },
+      <String, dynamic>{'id': layerId, 'filter': filter},
     );
     final result = reply['result'];
     return result == true;
@@ -709,10 +690,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<void> removeSource(String sourceId) async {
     try {
-      return await _channel.invokeMethod(
-        'style#removeSource',
-        <String, Object>{'sourceId': sourceId},
-      );
+      return await _channel.invokeMethod('style#removeSource', <String, Object>{
+        'sourceId': sourceId,
+      });
     } on PlatformException catch (e) {
       return Future.error(e);
     }
@@ -789,9 +769,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
         'style#getFilter',
-        <String, dynamic>{
-          'layerId': layerId,
-        },
+        <String, dynamic>{'layerId': layerId},
       );
       final filter = reply["filter"];
       return filter != null ? jsonDecode(filter) : null;
@@ -805,10 +783,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final latLngMap = await _channel.invokeMethod(
         'map#toLatLng',
-        <String, dynamic>{
-          'x': screenLocation.x,
-          'y': screenLocation.y,
-        },
+        <String, dynamic>{'x': screenLocation.x, 'y': screenLocation.y},
       );
       return LatLng(latLngMap['latitude'], latLngMap['longitude']);
     } on PlatformException catch (e) {
@@ -821,9 +796,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final latLngMap = await _channel.invokeMethod(
         'map#getMetersPerPixelAtLatitude',
-        <String, dynamic>{
-          'latitude': latitude,
-        },
+        <String, dynamic>{'latitude': latitude},
       );
       return latLngMap['metersperpixel'];
     } on PlatformException catch (e) {
@@ -846,10 +819,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
-  Future<void> setGeoJsonSource(
-    String sourceId,
-    Map<String, dynamic> geojson,
-  ) {
+  Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson) {
     return _writeGeoJson(sourceId, () async {
       await _channel.invokeMethod('source#setGeoJson', <String, dynamic>{
         'sourceId': sourceId,
@@ -1360,6 +1330,48 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setSky(SkyProperties sky) async {
+    throw UnsupportedError(
+      'setSky is not available on Android and iOS because MapLibre Native '
+      'does not implement the sky style root object yet. '
+      'The sky is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    throw UnsupportedError(
+      'setTerrain is not available on Android and iOS because MapLibre Native '
+      'does not implement 3D terrain yet. Terrain is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setProjection(Object type) async {
+    throw UnsupportedError(
+      'setProjection is not available on Android and iOS because MapLibre '
+      'Native only renders the mercator projection. '
+      'Projections are supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    throw UnsupportedError(
+      'setGlobalStateProperty is not available on Android and iOS because '
+      'MapLibre Native does not implement global state yet. '
+      'Global state is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setLight(LightProperties light) async {
+    await _channel.invokeMethod('style#setLight', <String, dynamic>{
+      'light': light.toJson(),
+    });
+  }
+
+  @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
@@ -1372,9 +1384,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final result = await _channel.invokeMethod(
         'layer#getVisibility',
-        <String, dynamic>{
-          'layerId': layerId,
-        },
+        <String, dynamic>{'layerId': layerId},
       );
       return result as bool?;
     } on PlatformException catch (e) {
@@ -1486,12 +1496,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<void> setStyle(String styleString) async {
     try {
-      await _channel.invokeMethod(
-        'style#setStyle',
-        <String, dynamic>{
-          'style': styleString,
-        },
-      );
+      await _channel.invokeMethod('style#setStyle', <String, dynamic>{
+        'style': styleString,
+      });
     } on PlatformException catch (e) {
       return Future.error(e);
     } catch (e) {

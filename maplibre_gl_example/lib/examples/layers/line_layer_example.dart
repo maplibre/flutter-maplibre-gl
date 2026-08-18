@@ -61,13 +61,10 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
     await _loadPatternImages();
 
     // Add GeoJSON source with multiple lines
-    await _controller!.addGeoJsonSource(
-      _sourceId,
-      {
-        'type': 'FeatureCollection',
-        'features': _generateRandomLines(5),
-      },
-    );
+    await _controller!.addGeoJsonSource(_sourceId, {
+      'type': 'FeatureCollection',
+      'features': _generateRandomLines(5),
+    });
     await _addLineLayer();
   }
 
@@ -115,9 +112,9 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
     } catch (e) {
       print('LineLayerExample: Error adding line layer: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding line layer: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding line layer: $e')));
       }
     }
   }
@@ -142,10 +139,7 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
       lines.add({
         'type': 'Feature',
         'properties': {},
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': coordinates,
-        },
+        'geometry': {'type': 'LineString', 'coordinates': coordinates},
       });
     }
 
@@ -177,9 +171,9 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
     } catch (e) {
       print('LineLayerExample: Error updating line layer: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating layer: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating layer: $e')));
       }
     }
   }
@@ -272,18 +266,9 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'butt',
-                                label: 'Butt',
-                              ),
-                              ExampleSegment(
-                                value: 'round',
-                                label: 'Round',
-                              ),
-                              ExampleSegment(
-                                value: 'square',
-                                label: 'Square',
-                              ),
+                              ExampleSegment(value: 'butt', label: 'Butt'),
+                              ExampleSegment(value: 'round', label: 'Round'),
+                              ExampleSegment(value: 'square', label: 'Square'),
                             ],
                             selected: _lineCap,
                             onSelectionChanged: (value) async {
@@ -303,18 +288,9 @@ class _LineLayerBodyState extends State<_LineLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'bevel',
-                                label: 'Bevel',
-                              ),
-                              ExampleSegment(
-                                value: 'round',
-                                label: 'Round',
-                              ),
-                              ExampleSegment(
-                                value: 'miter',
-                                label: 'Miter',
-                              ),
+                              ExampleSegment(value: 'bevel', label: 'Bevel'),
+                              ExampleSegment(value: 'round', label: 'Round'),
+                              ExampleSegment(value: 'miter', label: 'Miter'),
                             ],
                             selected: _lineJoin,
                             onSelectionChanged: (value) async {

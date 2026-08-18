@@ -502,14 +502,14 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
     try {
       await clearAmbientCache();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ambient cache cleared')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ambient cache cleared')));
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Clear ambient cache failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Clear ambient cache failed: $e')));
     }
   }
 
@@ -542,14 +542,14 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       if (!mounted) return;
       await _updateListOfRegions();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Offline database reset')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Offline database reset')));
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reset database failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Reset database failed: $e')));
     }
   }
 
@@ -591,9 +591,9 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
     }
   }
 
@@ -644,9 +644,9 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     }
   }
 
@@ -673,16 +673,14 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Merged ${merged.length} region(s) from database',
-          ),
+          content: Text('Merged ${merged.length} region(s) from database'),
         ),
       );
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Merge failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Merge failed: $e')));
     }
   }
 
@@ -716,9 +714,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
     try {
       final downloadingRegion = await downloadOfflineRegion(
         item.offlineRegionDefinition,
-        metadata: {
-          'name': regionNames[index],
-        },
+        metadata: {'name': regionNames[index]},
         onEvent: (status) {
           if (!mounted) return;
           if (status is InProgress) {
@@ -800,10 +796,8 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
   }
 
   Future<void> _goToMap(OfflineRegionListItem item) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => OfflineRegionMap(item),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => OfflineRegionMap(item)));
   }
 }

@@ -923,11 +923,7 @@ class MapLibreMapController extends MapLibrePlatform
 
       await _map.addImage(
         name,
-        {
-          'width': photo.width,
-          'height': photo.height,
-          'data': data,
-        },
+        {'width': photo.width, 'height': photo.height, 'data': data},
         {'sdf': sdf, 'pixelRatio': 1},
       );
     } else {
@@ -1190,9 +1186,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  void _updateAttributionButton(
-    AttributionButtonPosition position,
-  ) {
+  void _updateAttributionButton(AttributionButtonPosition position) {
     String? positionString;
     switch (position) {
       case AttributionButtonPosition.topRight:
@@ -1276,11 +1270,7 @@ class MapLibreMapController extends MapLibrePlatform
       ScaleControlPosition.bottomRight => 'bottom-right',
     };
 
-    _scaleControl = ScaleControl(
-      ScaleControlOptions(
-        maxWidth: 80,
-      ),
-    );
+    _scaleControl = ScaleControl(ScaleControlOptions(maxWidth: 80));
     _scaleControlPosition = positionString;
     _map.addControl(_scaleControl, positionString);
   }
@@ -1300,14 +1290,8 @@ class MapLibreMapController extends MapLibrePlatform
     } else {
       _map.setMaxBounds(
         LngLatBounds(
-          LngLat(
-            bounds.southwest.longitude,
-            bounds.southwest.latitude,
-          ),
-          LngLat(
-            bounds.northeast.longitude,
-            bounds.northeast.latitude,
-          ),
+          LngLat(bounds.southwest.longitude, bounds.southwest.latitude),
+          LngLat(bounds.northeast.longitude, bounds.northeast.latitude),
         ),
       );
     }
@@ -1890,6 +1874,38 @@ class MapLibreMapController extends MapLibrePlatform
       maxzoom: maxzoom,
       enableInteraction: false,
     );
+  }
+
+  /// Replaces the map this controller drives with [map].
+  ///
+  /// For tests of the calls that do nothing but hand a payload to
+  /// maplibre-gl-js, which can then be driven against a stand-in for it.
+  @visibleForTesting
+  void debugSetMap(MapLibreMap map) => _map = map;
+
+  @override
+  Future<void> setSky(SkyProperties sky) async {
+    _map.setSky(sky.toJson());
+  }
+
+  @override
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    _map.setTerrain(terrain?.toJson());
+  }
+
+  @override
+  Future<void> setProjection(Object type) async {
+    _map.setProjection(<String, dynamic>{'type': type});
+  }
+
+  @override
+  Future<void> setLight(LightProperties light) async {
+    _map.setLight(light.toJson());
+  }
+
+  @override
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    _map.setGlobalStateProperty(name, value);
   }
 
   Future<void> _addLayer(

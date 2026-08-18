@@ -109,10 +109,7 @@ class FullMapState extends State<FullMap> {
           40,
         ],
       ),
-      filter: [
-        'has',
-        'point_count',
-      ],
+      filter: ['has', 'point_count'],
     );
     await controller.addLayer(
       "earthquakes",
@@ -124,18 +121,12 @@ class FullMapState extends State<FullMap> {
         textFont: ExampleConstants.demoBoldFontStack,
         textSize: 12,
       ),
-      filter: [
-        'has',
-        'point_count',
-      ],
+      filter: ['has', 'point_count'],
     );
     await controller.addLayer(
       "earthquakes",
       "earthquakes-unclustered",
-      const CircleLayerProperties(
-        circleColor: '#51bbd6',
-        circleRadius: 5,
-      ),
+      const CircleLayerProperties(circleColor: '#51bbd6', circleRadius: 5),
       filter: [
         '!',
         ['has', 'point_count'],
@@ -147,9 +138,7 @@ class FullMapState extends State<FullMap> {
     await controller.addSource(
       "openmaptiles",
       const VectorSourceProperties(
-        tiles: [
-          'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf',
-        ],
+        tiles: ['https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf'],
         maxzoom: 14,
         attribution:
             '<a href="https://maplibre.org">© MapLibre contributors</a',
@@ -159,10 +148,7 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
       "openmaptiles",
       "water-fill",
-      const FillLayerProperties(
-        fillColor: "#0080ff",
-        fillOpacity: 0.5,
-      ),
+      const FillLayerProperties(fillColor: "#0080ff", fillOpacity: 0.5),
       sourceLayer: "water",
     );
 
@@ -341,19 +327,13 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
       "countries-highlight",
       "ne-countries-fill",
-      const FillLayerProperties(
-        fillColor: "#627BC1",
-        fillOpacity: 0.3,
-      ),
+      const FillLayerProperties(fillColor: "#627BC1", fillOpacity: 0.3),
     );
 
     await controller.addLayer(
       "countries-highlight",
       "ne-countries-outline",
-      const LineLayerProperties(
-        lineColor: "#627BC1",
-        lineWidth: 2,
-      ),
+      const LineLayerProperties(lineColor: "#627BC1", lineWidth: 2),
     );
   }
 

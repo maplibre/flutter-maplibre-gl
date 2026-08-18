@@ -181,10 +181,7 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
 }
 
 class StyleFunction extends JsObjectWrapper<StyleFunctionJsImpl> {
-  factory StyleFunction({
-    dynamic base,
-    dynamic stops,
-  }) {
+  factory StyleFunction({dynamic base, dynamic stops}) {
     final jsImpl = StyleFunctionJsImpl();
     if (base != null) jsImpl.base = base.toJS;
     if (stops != null) jsImpl.stops = stops.toJS;

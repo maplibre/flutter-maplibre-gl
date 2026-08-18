@@ -52,9 +52,7 @@ void main() {
     });
 
     test('copyWith replaces specified fields', () {
-      const original = VectorSourceProperties(
-        url: 'https://old.com',
-      );
+      const original = VectorSourceProperties(url: 'https://old.com');
       final updated = original.copyWith(url: 'https://new.com', minzoom: 5);
       expect(updated.url, 'https://new.com');
       expect(updated.minzoom, 5);
@@ -374,9 +372,7 @@ void main() {
     });
 
     test('toJson with values', () {
-      const props = ImageSourceProperties(
-        url: 'https://example.com/image.png',
-      );
+      const props = ImageSourceProperties(url: 'https://example.com/image.png');
       final json = props.toJson();
       expect(json['url'], 'https://example.com/image.png');
     });
@@ -390,9 +386,7 @@ void main() {
     });
 
     test('copyWith replaces specified fields', () {
-      const original = ImageSourceProperties(
-        url: 'https://old.com/image.png',
-      );
+      const original = ImageSourceProperties(url: 'https://old.com/image.png');
       final updated = original.copyWith(url: 'https://new.com/image.png');
       expect(updated.url, 'https://new.com/image.png');
     });

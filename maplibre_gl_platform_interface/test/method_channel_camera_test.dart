@@ -87,10 +87,7 @@ void main() {
 
     test('easeCamera sends correct method and arguments', () async {
       final update = CameraUpdate.zoomTo(12.0);
-      await platform.easeCamera(
-        update,
-        duration: const Duration(seconds: 1),
-      );
+      await platform.easeCamera(update, duration: const Duration(seconds: 1));
 
       expect(methodCalls.length, 1);
       expect(methodCalls[0].method, 'camera#ease');

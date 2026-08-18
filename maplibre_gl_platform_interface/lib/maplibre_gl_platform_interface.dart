@@ -23,4 +23,5 @@ part 'src/fill.dart';
 part 'src/ui.dart';
 part 'src/maplibre_gl_platform_interface.dart';
 part 'src/source_properties.dart';
+part 'src/style_properties.dart';
 part 'src/location_engine_properties.dart';
