@@ -135,13 +135,22 @@ class _EditAnnotationAnimatedBodyState
     });
   }
 
+  /// True while there is still a live map to talk to.
+  ///
+  /// The animation listener starts this without awaiting it, so a call is
+  /// usually in flight when the page is closed. Resuming after that reaches a
+  /// controller whose map is gone and fails with a `MissingPluginException`,
+  /// so every await below is followed by this check as well.
+  bool get _canDrawAnnotations =>
+      mounted &&
+      _controller != null &&
+      !_controller!.isDisposed &&
+      _animatedSymbol != null &&
+      _animatedCircle != null &&
+      _animatedLine != null;
+
   Future<void> _updateAnnotationColors() async {
-    if (_controller == null ||
-        _animatedSymbol == null ||
-        _animatedCircle == null ||
-        _animatedLine == null) {
-      return;
-    }
+    if (!_canDrawAnnotations) return;
 
     final color = _colorAnimation.value;
     if (color == null) return;
@@ -157,12 +166,14 @@ class _EditAnnotationAnimatedBodyState
       );
 
       // Update circle color
+      if (!_canDrawAnnotations) return;
       await _controller!.updateCircle(
         _animatedCircle!,
         CircleOptions(circleColor: hexColor),
       );
 
       // Update line color
+      if (!_canDrawAnnotations) return;
       await _controller!.updateLine(
         _animatedLine!,
         LineOptions(lineColor: hexColor),
