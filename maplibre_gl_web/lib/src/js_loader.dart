@@ -64,6 +64,10 @@ abstract final class MapLibreJsLoader {
   /// the next attempt ask for a slightly different URL (see [_importLibrary]).
   static int _failedImports = 0;
 
+  /// Stylesheet URLs already added to the document, so a retried load does not
+  /// append a second copy of one that arrived the first time.
+  static final _injectedStylesheets = <String>{};
+
   /// Seam for tests, which run under `flutter test --platform chrome` and
   /// must not touch the network.
   @visibleForTesting
@@ -75,6 +79,7 @@ abstract final class MapLibreJsLoader {
   static void debugReset() {
     _pending = null;
     _failedImports = 0;
+    _injectedStylesheets.clear();
     loadResources = _loadResources;
   }
 
@@ -114,7 +119,12 @@ abstract final class MapLibreJsLoader {
     // The stylesheet must not be fatal: it only affects how the controls and
     // the location puck look, so a blocked maplibre-gl.css must not take the
     // whole map down with it.
-    if (styleUrl != null) {
+    //
+    // Injected at most once per URL. A failed import clears _pending so the
+    // next map build retries, and the usual shape of that failure is a script
+    // that would not load while the stylesheet did, so without this guard every
+    // retry would append another identical <link> to <head>, without bound.
+    if (styleUrl != null && _injectedStylesheets.add(styleUrl)) {
       unawaited(
         _injectStylesheet(styleUrl).timeout(source.timeout).catchError((
           Object error,

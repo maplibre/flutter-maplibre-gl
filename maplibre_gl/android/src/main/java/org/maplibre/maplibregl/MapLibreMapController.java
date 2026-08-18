@@ -255,12 +255,11 @@ final class MapLibreMapController
         public void onStyleLoaded(@NonNull Style style) {
           MapLibreMapController.this.style = style;
 
-          // commented out while cherry-picking upstream956
-          // if (myLocationEnabled) {
-          //   if (hasLocationPermission()) {
-          //     updateMyLocationEnabled();
-          //   }
-          // }
+          // Called unconditionally: updateMyLocationEnabled() checks myLocationEnabled
+          // itself, and enableLocationComponent() checks the permission, so a map
+          // without either ends up doing nothing here. Calling it on every style load
+          // is what brings the location component back after the style is replaced or
+          // the activity is recreated, which an early return would skip.
           updateMyLocationEnabled();
 
           if (null != bounds) {
@@ -340,6 +339,20 @@ final class MapLibreMapController
    * {@link MapView} if the previous one was destroyed, and rebinds the new lifecycle.
    */
   void onActivityAttached() {
+    rebindToActivity();
+  }
+
+  /**
+   * Points the controller at the activity currently hosting it: refreshes the context
+   * references, rebuilds the {@link MapView} if the previous one was destroyed, and
+   * moves the lifecycle subscription to the new activity.
+   *
+   * <p>Shared by {@link #onActivityAttached()} and {@link #onActivityRebound()}. Both
+   * hooks reach this in the same state, because in the Flutter standard ordering the
+   * old activity's {@code onDestroy} has already torn the MapView down by the time
+   * either runs; keeping one implementation is what stops the two paths drifting.
+   */
+  private void rebindToActivity() {
     if (disposed) {
       return;
     }
@@ -385,20 +398,7 @@ final class MapLibreMapController
    * {@link #savedMapViewState} bridge the gap either way.
    */
   void onActivityRebound() {
-    if (disposed) {
-      return;
-    }
-    unregisterFromLifecycle();
-    updateActivityContext();
-
-    final boolean recreated = (mapView == null);
-    if (recreated) {
-      recreateMapViewIfNecessary();
-    }
-    registerToLifecycle();
-    if (recreated) {
-      mapView.getMapAsync(this);
-    }
+    rebindToActivity();
   }
 
   /**
@@ -3235,6 +3235,16 @@ final class MapLibreMapController
       activeSnapshotter = null;
     }
     methodChannel.setMethodCallHandler(null);
+    // A map#waitForMap parked while the map was still being built is only ever
+    // answered by onMapReady, which will not fire now. Answer it here, or the Dart
+    // side keeps awaiting initPlatform: onMapCreated never fires and everything
+    // waiting on the controller waits forever. Only dispose() does this; a MapView
+    // torn down for an activity recreation is rebuilt and does reach onMapReady.
+    if (mapReadyResult != null) {
+      mapReadyResult.error(
+          "MAP_DISPOSED", "The map was disposed before it finished being created", null);
+      mapReadyResult = null;
+    }
     // destroyMapViewIfNecessary drives the full pause -> stop -> destroy sequence,
     // gated by the mapViewResumed/Started/Created flags so each step fires at most
     // once. No manual onPause/onStop dance needed here.

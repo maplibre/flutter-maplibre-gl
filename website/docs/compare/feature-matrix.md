@@ -23,7 +23,9 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     <tr><td>Offline regions</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
     <tr><td>Offline database export &amp; import</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
     <tr><td>Snapshot (static image)</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Pause / resume rendering</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
+    <tr><td>Pause / resume rendering</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> No-op</span></td></tr>
+    <tr><td>Content insets / padding</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Tracking camera options</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
   </tbody>
 </table>
 </div>
@@ -62,9 +64,29 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     <tr><td>Heatmap layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Hillshade layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Raster layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Color relief layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Background layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Data-driven expressions</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Feature state</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Clustering</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Cluster inspection</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+  </tbody>
+</table>
+</div>
+
+## Style Root Objects
+
+<div class="table-scroll" markdown>
+<table class="comparison-table comparison-table--matrix">
+  <thead>
+    <tr><th>Feature</th><th>Android</th><th>iOS</th><th>Web</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Globe &amp; vertical-perspective projection</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Terrain (raster DEM elevation)</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Sky &amp; atmosphere</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Light (3D shading)</td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Constants</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Constants</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Global state</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
   </tbody>
 </table>
 </div>
@@ -94,6 +116,15 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
 
 !!! note "Feature state on iOS"
     [Feature state](../advanced/feature-state.md) works on Android and web. On iOS the calls throw an `UnsupportedError`, because the MapLibre iOS SDK does not expose the API yet.
+
+!!! note "Projection, terrain and sky on Android and iOS"
+    `setProjection()`, `setTerrain()`, `setSky()` and `setGlobalStateProperty()` throw an `UnsupportedError` on Android and iOS: MapLibre Native implements none of them yet, so the map stays a flat mercator projection there. See [Globe, Terrain and Sky](../advanced/globe-terrain-sky.md).
+
+!!! note "Light on Android and iOS"
+    `setLight()` works on all three platforms, but MapLibre Native takes constant values only. An expression for `anchor`, `position`, `color` or `intensity` is rejected with `INVALID_ARGUMENT` on Android and iOS; web accepts it.
+
+!!! note "Tracking camera options on web"
+    `setTrackingCameraOptions()` throws an `UnsupportedError` on web. MapLibre GL JS has no location component, and its `GeolocateControl` drops its follow lock on any programmatic camera change. See [User Location](../advanced/user-location.md).
 
 !!! note "Image sources on web"
     A style-spec image source, added with `addSource()` and `ImageSourceProperties`, works on every platform. The byte-based calls, `addImageSource()` and `updateImageSource()`, are Android and iOS only: on web they throw `UnimplementedError`.

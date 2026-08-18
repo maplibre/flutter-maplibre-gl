@@ -489,8 +489,16 @@ class _MapLibreMapState extends State<MapLibreMap> {
 
   @override
   void dispose() {
-    if (_controller.isCompleted) {
-      _mapController?.dispose();
+    // Once the controller exists it owns the platform and disposes it for us.
+    // Before that it does not, and there are two ways to get here without one:
+    // the map is still being created, or its creation threw. Tearing the
+    // platform down anyway is what keeps the registered platform view, and on
+    // web the map element and its listeners, from outliving the widget.
+    final controller = _mapController;
+    if (controller != null) {
+      controller.dispose();
+    } else {
+      _maplibrePlatform.dispose();
     }
 
     super.dispose();

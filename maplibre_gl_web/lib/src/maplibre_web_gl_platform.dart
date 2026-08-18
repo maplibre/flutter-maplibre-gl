@@ -6,6 +6,11 @@ class MapLibreMapController extends MapLibrePlatform
 
   late Map<String, dynamic> _creationParams;
   late MapLibreMap _map;
+
+  /// Whether [_map] has been assigned. [initPlatform] can fail before it is,
+  /// now that it loads maplibre-gl-js first, and [dispose] still runs after
+  /// that: reading a `late` field that was never written throws.
+  bool _mapCreated = false;
   dynamic _draggedFeatureId;
   LatLng? _dragOrigin;
   LatLng? _dragPrevious;
@@ -66,8 +71,10 @@ class MapLibreMapController extends MapLibrePlatform
       sub.unsubscribe();
     }
     _mapSubscriptions.clear();
-    _map.clearMissingStyleImageHandler();
-    _map.remove();
+    if (_mapCreated) {
+      _map.clearMissingStyleImageHandler();
+      _map.remove();
+    }
     super.dispose();
   }
 
@@ -137,6 +144,7 @@ class MapLibreMapController extends MapLibrePlatform
       );
       rethrow;
     }
+    _mapCreated = true;
     _reportMissingRenderer();
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
     _mapSubscriptions.add(_map.on('click', _onMapClick));
@@ -472,12 +480,11 @@ class MapLibreMapController extends MapLibrePlatform
   /// tracking mode. The puck itself defers building its markers until the first
   /// position is pushed.
   ManualLocationPuck _ensureManualPuck() {
+    // _onCameraTrackingChanged writes _trackUserLocation itself, the same way
+    // the GeolocateControl path reaches it, so the flag has one writer.
     return _manualPuck ??= ManualLocationPuck(
       _map,
-      onTrackingChanged: (tracking) {
-        _trackUserLocation = tracking;
-        _onCameraTrackingChanged(tracking);
-      },
+      onTrackingChanged: _onCameraTrackingChanged,
     )..setTrackingMode(_manualTrackingMode);
   }
 
@@ -807,9 +814,9 @@ class MapLibreMapController extends MapLibrePlatform
   /// Runs a cluster query, answering null if maplibre-gl-js rejects.
   ///
   /// It rejects when the source is not clustered or the id is not one of its
-  /// current clusters, where the native SDKs answer 0 or an empty list. The
-  /// callers translate the null into those same values, so the three platforms
-  /// agree instead of one of them throwing.
+  /// current clusters. For the two calls that answer with features that is the
+  /// same thing as finding none, so they report an empty list; a zoom has no
+  /// such neutral value and [getClusterExpansionZoom] reports the rejection.
   ///
   /// Only the JS call runs inside the guard. Decoding happens after this
   /// returns, so a bug there throws on its own rather than being reported as a
@@ -832,7 +839,20 @@ class MapLibreMapController extends MapLibrePlatform
     final zoom = await _clusterQuery(
       () => source.getClusterExpansionZoom(clusterId),
     );
-    return zoom?.toDartDouble.round() ?? 0;
+    // Not 0: that is a valid zoom, so a caller could not tell a cluster that
+    // splits at zoom 0 from one that was never found, and the documented
+    // cluster-tap pattern would animate the camera out to the whole world on a
+    // stale cluster_id (ids are reassigned as the viewport changes).
+    if (zoom == null) {
+      throw PlatformException(
+        code: 'CLUSTER_NOT_FOUND',
+        message:
+            "Cluster '$clusterId' is not one of the current clusters of source "
+            "'$sourceId'. Cluster ids are reassigned as the data or the "
+            'viewport changes, so read the id from a freshly queried feature.',
+      );
+    }
+    return zoom.toDartDouble.round();
   }
 
   @override
@@ -2095,11 +2115,24 @@ class MapLibreMapController extends MapLibrePlatform
           'left': insets.left,
           'right': insets.right,
         },
-        'duration': animated ? 300 : 0,
+        'duration': animated ? _contentInsetsDuration.inMilliseconds : 0,
       },
       {'geolocateSource': true},
     );
+    // easeTo is fire-and-forget, so without this the future resolves while the
+    // camera is still moving and a caller that awaits setPadding and then reads
+    // the camera, or fits bounds against the new padding, sees the state from
+    // before the ease. Waiting out the duration rather than the `moveend` event
+    // on purpose: a map disposed mid-animation, or a second move arriving over
+    // this one, must not leave the caller awaiting an event that never comes.
+    if (animated) await Future<void>.delayed(_contentInsetsDuration);
   }
+
+  /// How long an animated content-inset change takes. MapLibre GL JS has no
+  /// default of its own for this (`easeTo` requires a duration), and
+  /// `updateContentInsets` takes no duration to pass through, so the value is
+  /// fixed here and matches the SDK's usual short camera ease.
+  static const _contentInsetsDuration = Duration(milliseconds: 300);
 
   @override
   Future<void> setFeatureForGeoJsonSource(
@@ -2256,31 +2289,14 @@ class MapLibreMapController extends MapLibrePlatform
     return dartify(styleJs) as Map<String, dynamic>?;
   }
 
-  /// A style entry in the shape Android and iOS answer with.
+  /// A style entry in the shape every platform answers with.
   ///
-  /// JavaScript has one number type, so everything arrives here as a double,
-  /// while the native platforms send JSON that decodes `4` as an int. Without
-  /// this, `properties['minzoom'] as int` works on Android and iOS and throws
-  /// in the browser. Integral values become ints; genuinely fractional ones
-  /// (`0.5`, an opacity) stay doubles, exactly as `jsonDecode` would give them.
-  Map<String, dynamic> _styleShaped(Map<dynamic, dynamic> entry) => entry.map(
-    (key, dynamic value) => MapEntry(key.toString(), _styleShapedValue(value)),
-  );
-
-  static Object? _styleShapedValue(Object? value) {
-    if (value is double) {
-      return value.isFinite && value == value.roundToDouble()
-          ? value.toInt()
-          : value;
-    }
-    if (value is List) return value.map(_styleShapedValue).toList();
-    if (value is Map) {
-      return value.map(
-        (key, dynamic child) => MapEntry(key, _styleShapedValue(child)),
-      );
-    }
-    return value;
-  }
+  /// [shapeStyleProperties] is the shared rule, applied to the native replies
+  /// too, so `minzoom` and a `fill-opacity` of `1.0` read the same here as they
+  /// do on Android and iOS. It lives in the platform interface because getting
+  /// the two sides to agree is the whole point of it.
+  Map<String, dynamic> _styleShaped(Map<dynamic, dynamic> entry) =>
+      shapeStyleProperties(entry);
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {

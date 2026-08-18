@@ -21,7 +21,10 @@ void main() {
   // newest, so it evades [cdnPin] while being worse than a pin.
   final cdnUnpinned = RegExp('maplibre-gl/dist/');
   // Prose naming a full maplibre-gl-js version, e.g. "MapLibre GL JS 5.24.0".
-  final proseVersion = RegExp(r'\d+\.\d+\.\d+');
+  // A `v`-prefixed number is this plugin's own release tag, not a library
+  // version: the README pins its screenshot URLs to one so a published package
+  // page keeps showing the images it shipped with.
+  final proseVersion = RegExp(r'(?<!v)\d+\.\d+\.\d+');
   final glJsMention = RegExp('maplibre[- ]gl[- ]js', caseSensitive: false);
 
   List<File> filesUnderTest() {
