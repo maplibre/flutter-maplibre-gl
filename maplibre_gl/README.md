@@ -6,7 +6,7 @@
   </picture>
   <h1 align="center">Flutter MapLibre GL</h1>
   <p align="center">
-    Interactive, vector-tile, fully styleable maps for Flutter on <b>Android, iOS and Web</b>, powered by the open source <a href="https://github.com/maplibre">MapLibre</a> engines.<br>
+    Interactive, fully styleable vector maps on <b>Android, iOS and Web</b>, powered by open source <a href="https://github.com/maplibre">MapLibre</a>.<br>
     <b>Vendor-neutral</b>: host your own tiles or mix providers, no account or API key required to get started.
   </p>
   <p align="center">
