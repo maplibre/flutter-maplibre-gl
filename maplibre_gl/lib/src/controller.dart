@@ -2355,6 +2355,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// `maxzoom`, `filter`, and the `paint` and `layout` property objects keyed
   /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
   /// values are returned as JSON literals or expressions.
+  ///
+  /// **iOS**: only layers that came with the style are readable. iOS reads the
+  /// style as it was loaded, so a layer added at runtime through this API is
+  /// not in it and this answers null for it, where Android and web answer
+  /// normally. See
+  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);
   }
@@ -2365,6 +2371,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned map mirrors a source entry in a MapLibre style JSON: it
   /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
   /// `data`, `attribution`, `minzoom`, `maxzoom`).
+  ///
+  /// **iOS**: only sources that came with the style are readable. iOS reads the
+  /// style as it was loaded, so a source added at runtime through this API is
+  /// not in it and this answers null for it, where Android and web answer
+  /// normally. See
+  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getSourceProperties(String sourceId) {
     return _maplibrePlatform.getSourceProperties(sourceId);
   }
