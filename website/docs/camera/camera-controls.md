@@ -84,14 +84,21 @@ if (position != null) {
 
 ## `easeCamera`: interpolated animation
 
-`easeCamera` is like `animateCamera` but uses MapLibre's easing functions instead of a linear interpolation:
+`easeCamera` moves the camera along a single eased path, where `animateCamera` uses the
+platform's fly-to animation. Pass `interpolation` to pick the curve; `linear` is the one to
+use for continuous tracking, since it has no acceleration between successive calls:
 
 ```dart
 await controller.easeCamera(
   CameraUpdate.newLatLng(const LatLng(35.6762, 139.6503)),
   duration: const Duration(seconds: 3),
+  interpolation: CameraAnimationInterpolation.linear,
 );
 ```
+
+The default is `easeInOut`. Android only distinguishes linear from eased, so the other
+curves render as its native ease-in/ease-out; see the
+[Feature Matrix](../compare/feature-matrix.md).
 
 ## Padding: keep content centered behind an overlay
 

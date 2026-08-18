@@ -103,9 +103,9 @@ class MapPage extends StatelessWidget {
 ```
 
 !!! tip "Style URL"
-    Pass any MapLibre-compatible style URL to `styleString`. You can self-host styles
-    with [MapTiler](https://www.maptiler.com/), [Protomaps](https://protomaps.com/),
-    or your own tile server.
+    Pass any MapLibre-compatible style URL to `styleString`: a hosted provider such as
+    [MapTiler](https://www.maptiler.com/) or [Protomaps](https://protomaps.com/), your own
+    tile server, or a style JSON shipped as an asset. See [Map Styles](concepts/styles.md).
 
 ## Web: advanced setup
 

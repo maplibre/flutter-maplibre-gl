@@ -118,7 +118,7 @@ LineLayerProperties(
 | `lineJoin` | `bevel`, `round`, `miter` |
 | `lineDasharray` | `[on, off, ...]` dash pattern |
 | `lineBlur` | Feather the edges |
-| `lineOffset` | Perpendicular offset (positive = left side) |
+| `lineOffset` | Perpendicular offset (positive = right of the line direction) |
 | `lineGapWidth` | Inner gap for a double-line effect |
 | `linePattern` | Repeat a registered image along the line |
 | `lineTranslate` | [x, y] pixel shift |

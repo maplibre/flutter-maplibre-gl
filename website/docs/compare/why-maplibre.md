@@ -70,7 +70,7 @@ There are several ways to put a map in a Flutter app. This page compares the thr
     <tr>
       <td>Vector tiles</td>
       <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
-      <td><span class="cell-ic"><span class="ic ic--yes">✔</span> Yes</span></td>
+      <td><span class="cell-ic"><span class="ic ic--mid">●</span> Via plugin</span></td>
       <td><span class="cell-ic"><span class="ic ic--no">✘</span> Not as your own source</span></td>
     </tr>
     <tr>
@@ -150,7 +150,7 @@ You need any of these, and they are hard or impossible elsewhere:
 - You target **Linux, macOS or Windows** desktop, which this package does not support.
 - Your team wants to avoid native iOS and Android setup.
 
-flutter_map renders raster tiles (PNG/WebP) by default. It does not do vector styles, expressions, or GPU-accelerated vector rendering natively.
+flutter_map renders raster tiles (PNG/WebP) by default: vector styles, expressions and GPU-accelerated vector rendering are not part of the core package, though community plugins such as [vector_map_tiles](https://pub.dev/packages/vector_map_tiles) add vector tile rendering on top.
 
 ## Choose google_maps_flutter when
 

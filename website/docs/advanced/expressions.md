@@ -152,15 +152,15 @@ CircleLayerProperties(
 Expressions compose. Any argument can itself be an expression:
 
 ```dart
-// Circle size interpolated by zoom, but capped at 20px by a max() expression
+// Circle size interpolated by zoom, then capped at 20px by a min() expression
 circleRadius: [
-  'min',
+  Expressions.min,
   [
     Expressions.interpolate, ['linear'], [Expressions.zoom],
     0, 2,
     12, 30,
   ],
-  20,  // max cap
+  20,  // upper cap
 ],
 ```
 

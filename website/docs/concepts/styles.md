@@ -78,6 +78,15 @@ styleString: 'assets/my_style.json'
 
 This is how PMTiles styles work: the style JSON is local, but it references remote or bundled `.pmtiles` data.
 
+### File on device
+
+An absolute path to a JSON file the app wrote itself, for example a style downloaded into
+the documents directory:
+
+```dart
+styleString: '/data/user/0/com.example.app/app_flutter/my_style.json'
+```
+
 ### Raw JSON string
 
 On Android only, you can pass a raw JSON string:

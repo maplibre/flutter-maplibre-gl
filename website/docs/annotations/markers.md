@@ -21,10 +21,9 @@ Use annotations when you have **fewer than ~50 features** and need individual in
 
 ## Add a symbol (icon + text)
 
-`iconImage` references an image **from the active style's sprite**, or one you
-registered yourself with `addImage`. There are no icons
-that exist in every style, so register your own first (see
-[Custom image markers](#custom-image-markers) below) and reference it by name:
+`iconImage` names an image the map already has: one from the active style's sprite, or
+one you registered with `addImage`. No icon name exists in every style, so registering
+your own is the portable choice (see [Where icons come from](#where-icons-come-from)):
 
 ```dart
 final bytes = await rootBundle.load('assets/markers/pin.png');
@@ -46,23 +45,12 @@ final symbol = await controller.addSymbol(
 );
 ```
 
-!!! warning "Icons are style-dependent"
-    `iconImage` must name an image the map actually has. If you reference a name
-    that isn't in the style's sprite and wasn't registered with `addImage`, the
-    symbol renders nothing and the console logs *"image … could not be loaded"*.
-    Many styles (including the MapLibre demo style) ship no general-purpose
-    marker sprite, so register your own image rather than assuming a built-in
-    name exists.
-
-!!! note "The text font is fixed for the whole layer"
-    Symbol annotations render with **Noto Sans Regular** on Android and iOS,
-    which the common public glyph endpoints all serve. MapLibre Native asks the
-    glyph server for a layer's font stack as a single token, and a font it does
-    not host comes back 404, which hides the whole symbol, icon included. The
-    font belongs to the annotation layer rather than to each symbol, so there is
-    no per-symbol override: if you need a different one, add a symbol style
-    layer with `addSymbolLayer` and set `textFont` there. On web the active
-    style decides.
+!!! note "One font for all symbol annotations"
+    Symbol annotations render in **Noto Sans Regular** on Android and iOS, which the
+    common public glyph servers all host: a font the server does not have comes back 404
+    and hides the whole symbol, icon included. The font belongs to the annotation layer
+    rather than to each symbol, so for a different one add a symbol style layer with
+    `addSymbolLayer` and set `textFont` there. On web the active style decides.
 
 ## Tap callback
 
@@ -105,33 +93,14 @@ final symbols = await controller.addSymbols([
 
 `iconImage` resolves against the images the map currently has:
 
-- **The active style's sprite**: some styles bundle a named icon set (e.g. a
-  style built on the Maki icons exposes `marker-15`, `restaurant-15`, …). These
-  names only exist if *that* style includes them; they are not guaranteed.
-- **Images you register at runtime** with `addImage` (see
-  [Custom image markers](#custom-image-markers)): always available regardless
-  of the style. This is the portable choice.
+- **The active style's sprite**: some styles bundle a named icon set (a style built on
+  the Maki icons exposes `marker-15`, `restaurant-15`, …). Those names exist only if
+  *that* style includes them, and the MapLibre demo style ships no marker sprite at all.
+- **Images you register at runtime** with `addImage`, from `onStyleLoadedCallback`:
+  available whatever the style, which is why the examples here do it that way.
 
-Because the MapLibre demo style (and many others) ship no general-purpose
-marker sprite, the examples here register their own image rather than relying on
-a built-in name.
-
-### Custom image markers
-
-Register your image once with `addImage()` (in `onStyleLoadedCallback`), then reference it by name as the `iconImage`:
-
-```dart
-final bytes = await rootBundle.load('assets/markers/pin.png');
-await controller.addImage('my-pin', bytes.buffer.asUint8List());
-
-await controller.addSymbol(
-  const SymbolOptions(
-    geometry: LatLng(48.8566, 2.3522),
-    iconImage: 'my-pin',
-    iconSize: 1.0,
-  ),
-);
-```
+A name the map does not have renders nothing and only logs *"image … could not be
+loaded"*, so it fails quietly.
 
 ## Other annotation types
 

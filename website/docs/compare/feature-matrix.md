@@ -87,8 +87,10 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
 </table>
 </div>
 
-!!! note "Web hover events"
-    Pointer hover events are available only on the web build (MapLibre GL JS). On Android and iOS, use tap and long-press instead. Guard hover-only logic with `kIsWeb`.
+!!! note "Pointer events on web"
+    Hover events exist only on the web build (MapLibre GL JS); on Android and iOS use tap
+    and long-press instead, and guard hover-only logic with `kIsWeb`. The browser has no
+    long-press gesture, so on web `onMapLongClick` fires on a double-click.
 
 !!! note "Feature state on iOS"
     [Feature state](../advanced/feature-state.md) works on Android and web. On iOS the calls throw an `UnsupportedError`, because the MapLibre iOS SDK does not expose the API yet.
