@@ -2284,9 +2284,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// The current style as a Dart map (style-spec shaped), or null if unset.
   Map<String, dynamic>? _styleMap() {
-    final styleJs = _map.getStyle();
+    // getStyleObject, not getStyle: the latter is typed as the @staticInterop
+    // StyleJsImpl, which dartify cannot walk under dart2wasm, so both callers
+    // failed there with "Attempt to execute code removed by Dart AOT compiler
+    // (TFA)" while working fine on JavaScript.
+    final styleJs = _map.getStyleObject();
     if (styleJs == null) return null;
-    return dartify(styleJs) as Map<String, dynamic>?;
+    return dartifyMap(styleJs);
   }
 
   /// A style entry in the shape every platform answers with.

@@ -468,6 +468,18 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  var styleJson = map.getStyle();
   external StyleJsImpl? getStyle();
 
+  /// The same call as [getStyle], typed as a plain [JSObject].
+  ///
+  /// [StyleJsImpl] is a `@staticInterop` class, and passing one to `dartify`
+  /// does not survive dart2wasm: the runtime type checks it makes are the ones
+  /// `invalid_runtime_check_with_js_interop_types` warns about, so the walk
+  /// ends in a cast the compiler proved impossible and the call fails with
+  /// "Attempt to execute code removed by Dart AOT compiler (TFA)". Reading the
+  /// style as a `JSObject` keeps it on the path `dartify` handles, the one
+  /// `getFeatureState` already uses.
+  @JS('getStyle')
+  external JSObject? getStyleObject();
+
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
   ///
   ///  @returns {boolean} A Boolean indicating whether the style is fully loaded.

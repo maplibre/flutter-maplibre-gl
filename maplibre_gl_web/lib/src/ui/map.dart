@@ -517,6 +517,11 @@ class MapLibreMap extends Camera {
   ///  var styleJson = map.getStyle();
   StyleJsImpl? getStyle() => jsObject.getStyle();
 
+  /// The style as a plain JS object, for reading it as data rather than
+  /// calling methods on it. See `getStyleObject` in the interop for why the
+  /// typed [StyleJsImpl] cannot be walked by `dartify` under dart2wasm.
+  JSObject? getStyleObject() => jsObject.getStyleObject();
+
   /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
   List<StyleLayerJsImpl> getLayers() {
     final style = jsObject.getStyle();
