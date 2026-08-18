@@ -179,12 +179,12 @@ class OfflinePackDownloader {
     private func onPackCreationError(error: Error?) {
         // Reset downloading state
         channelHandler.onError(
-            errorCode: "mapboxInvalidRegionDefinition",
+            errorCode: "invalidRegionDefinition",
             errorMessage: error?.localizedDescription,
             errorDetails: nil
         )
         result(FlutterError(
-            code: "mapboxInvalidRegionDefinition",
+            code: "invalidRegionDefinition",
             message: error?.localizedDescription,
             details: nil
         ))
@@ -257,12 +257,12 @@ class OfflinePackDownloader {
         // set download state to inactive
         isCompleted = true
         channelHandler.onError(
-            errorCode: "mapboxTileCountLimitExceeded",
+            errorCode: "tileCountLimitExceeded",
             errorMessage: "MapLibre tile count limit exceeded: \(maximumCount)",
             errorDetails: nil
         )
         result(FlutterError(
-            code: "mapboxTileCountLimitExceeded",
+            code: "tileCountLimitExceeded",
             message: "MapLibre tile count limit exceeded: \(maximumCount)",
             details: nil
         ))

@@ -122,7 +122,7 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
   /**
    * Called by Flutter when the plugin is being fully detached from the host
-   * activity (no config change is in progress — e.g. "Don't keep activities" has
+   * activity (no config change is in progress, e.g. "Don't keep activities" has
    * been triggered, or the activity is finishing). Notifies controllers to save
    * what state they can and tear down their {@code MapView}. The state is held
    * in the controllers themselves and will be restored on the next attach.
@@ -142,7 +142,7 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
    *
    * <p>The plugin instance returned by {@link io.flutter.embedding.engine.plugins.activity.ActivityAware}
    * callbacks can outlive any single activity, so controllers must NOT cache these
-   * values across activity recreation — they should fetch them through this provider
+   * values across activity recreation: they should fetch them through this provider
    * whenever they (re)attach. Both methods return {@code null} when the plugin is
    * not currently attached to an activity.
    */

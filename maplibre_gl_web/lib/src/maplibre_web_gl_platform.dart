@@ -169,22 +169,14 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Says why the map will stay blank when it came up without a renderer.
   ///
-  /// Since maplibre-gl-js 6 that is what a browser without WebGL2 gets: version
-  /// 5 fell back to WebGL1 and threw when even that was missing, 6 requires
-  /// WebGL2 and only fires an `error` from inside the constructor, which is too
-  /// early for [MapLibreMap.on] to catch. Without this the map is simply empty,
-  /// with one line in the console from the library and nothing pointing at the
-  /// way out.
+  /// Since maplibre-gl-js 6 that is what a browser without WebGL2 gets, and the
+  /// library only fires an `error` from inside its constructor, too early for
+  /// [MapLibreMap.on] to catch, so without this the map is just empty.
   ///
-  /// Each distinct cause is reported once per session: several maps on one
-  /// screen share a browser, so they would repeat one message, while a second
-  /// map failing for another reason still gets its own.
-  ///
-  /// Reported through [FlutterError.reportError] rather than [debugPrint],
-  /// which apps are free to silence, because this one says the map will not
-  /// work at all. Nothing here may throw: the future this runs in is not
-  /// awaited, so an error would turn a blank map into one that never finishes
-  /// being created.
+  /// Each distinct cause is reported once per session, through
+  /// [FlutterError.reportError] rather than the silenceable [debugPrint]. Nothing
+  /// here may throw: this runs in a future nobody awaits, so an error would turn a
+  /// blank map into one that never finishes being created.
   void _reportMissingRenderer() {
     try {
       final diagnostic = mapRendererDiagnostic(_map);
@@ -405,21 +397,11 @@ class MapLibreMapController extends MapLibrePlatform
     required double tilt,
     Duration? duration,
   }) async {
-    // maplibre-gl-js has no location component, so there is no tracking-aware
-    // camera call to route this to, and neither of the two things that follow the
-    // user on web can be pitched while they do it:
-    //
-    //  * `GeolocateControl` gives up its follow lock on any programmatic camera
-    //    change it did not make itself, firing `trackuserlocationend`, which this
-    //    class forwards as `onCameraTrackingChanged(none)` plus
-    //    `onCameraTrackingDismissed`. Swallowing those events would be worse than
-    //    throwing: the control really has stopped following the user by then.
-    //  * the manual puck ([ManualLocationPuck]) recenters with `jumpTo` on every
-    //    fix, which would keep a pitch, but only manual-source maps have one.
-    //
-    // Failing follows the same call the plugin makes for feature state on iOS: a
-    // capability the platform's engine does not have is reported, not silently
-    // dropped.
+    // Neither thing that follows the user on web can be pitched while it does so:
+    // `GeolocateControl` drops its follow lock on any programmatic camera change,
+    // which this class forwards as onCameraTrackingChanged(none), and the manual
+    // puck ([ManualLocationPuck]) only exists on manual-source maps. So report it
+    // rather than pretend, as feature state does on iOS.
     throw UnsupportedError(
       'setTrackingCameraOptions is not available on web because maplibre-gl-js '
       'has no location component, and its GeolocateControl stops following the '

@@ -79,7 +79,7 @@ class OfflineManagerUtils {
     /// Converts a pack into the `[id, metadata, definition]` dictionary the Dart
     /// side expects, or `nil` if the pack is not a tile-pyramid region.
     private static func regionDictionary(for pack: MLNOfflinePack) -> [String: Any]? {
-        // Normal path: pack was created by this Flutter plugin — context holds
+        // Normal path: pack was created by this Flutter plugin, so context holds
         // {"id": <int>, "metadata": <dict>}.
         if let region = OfflineRegion.fromOfflinePack(pack) {
             return region.toDictionary()
@@ -173,7 +173,7 @@ class OfflineManagerUtils {
             // in-memory MLNOfflineStorage.packs array populated with stale
             // pack references. Without a reload, a follow-up getListOfRegions
             // call would still report the pre-reset regions as downloaded.
-            // reloadPacks is async — observe the KVO `packs` change before
+            // reloadPacks is async: observe the KVO `packs` change before
             // returning to Dart so the next getListOfRegions sees fresh state.
             let storage = MLNOfflineStorage.shared
             let observer = PacksReloadObserver {

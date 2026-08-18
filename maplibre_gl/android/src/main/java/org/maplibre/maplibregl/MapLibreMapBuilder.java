@@ -258,7 +258,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setAttributionButtonColor(int color) {
     // The tint is applied through UiSettings, which only exists once the map
-    // is ready — stash it and forward to the controller in build().
+    // is ready, so stash it and forward to the controller in build().
     this.attributionButtonColor = color;
   }
 

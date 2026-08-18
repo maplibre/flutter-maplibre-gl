@@ -124,7 +124,7 @@ class ManualLocationPuck {
 
     // Accuracy circle. maplibre-gl-js owns the `transform` of a Marker's root
     // element (it writes `translate(...)` there every frame), so the circle we
-    // scale must be an INNER child — otherwise our `scale(...)` is overwritten
+    // scale must be an INNER child, otherwise our `scale(...)` is overwritten
     // and the ring never resizes. The inner element keeps a fixed base size and
     // is scaled with a compositor-only transform on zoom (see
     // [_updateAccuracyCircle]) to avoid per-update layout reflows.

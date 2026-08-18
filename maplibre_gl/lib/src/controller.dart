@@ -337,7 +337,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive drag events for features (geojson layer) placed on this map.
   final onFeatureDrag = <OnFeatureDragCallback>[];
 
-  /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
+  /// Callbacks for mouse enter, move and leave over features of a style layer.
+  ///
+  /// Web only: the list exists on every platform and compiles fine, but Android
+  /// and iOS have no pointer to hover with, so nothing is ever added to it there.
+  /// Use [onFeatureTapped] for those.
   final onFeatureHover = <OnFeatureHoverCallback>[];
 
   /// Callbacks to receive mouse move events over the map.
@@ -1031,27 +1035,21 @@ class MapLibreMapController extends ChangeNotifier {
   /// both native SDKs allow. [duration] animates the change; each platform
   /// picks its own default when it is omitted.
   ///
-  /// The regular camera calls ([animateCamera], [easeCamera], [moveCamera]) are
+  /// Use this rather than [animateCamera], [easeCamera] or [moveCamera], which are
   /// not tracking-aware: on Android they end tracking outright, so the map stops
   /// following the user and [MapLibreMap.onCameraTrackingChanged] reports
-  /// [MyLocationTrackingMode.none]. This call goes through the tracking machinery
-  /// instead, so the mode stays active, later location updates keep moving the
-  /// camera, and no dismissal is reported.
+  /// [MyLocationTrackingMode.none].
   ///
   /// A tracking mode other than [MyLocationTrackingMode.none] must already be
-  /// active, otherwise this throws a [PlatformException]; enable tracking first,
-  /// then set the tilt.
+  /// active, otherwise this throws a [PlatformException].
   ///
-  /// **Platform support**: Android and iOS. Web throws an [UnsupportedError]:
-  /// maplibre-gl-js has no location component, and its `GeolocateControl` gives
-  /// up following the user on any programmatic camera change, so there is no way
-  /// to pitch a tracking camera there. A pitch set *before* tracking starts does
-  /// survive on web, since the control never writes the pitch itself.
+  /// **Platform support**: Android and iOS. Web throws an [UnsupportedError],
+  /// since maplibre-gl-js has no location component; a pitch set *before* tracking
+  /// starts does survive there.
   ///
-  /// The returned [Future] completes with true once the pitch animation has run,
-  /// or false if the platform cancelled it, either because another
-  /// tracking-camera animation superseded it or because the tracking mode was
-  /// still transitioning.
+  /// Completes with true once the pitch animation has run, or false if the platform
+  /// cancelled it, which happens when another tracking-camera animation supersedes
+  /// it or the tracking mode is still transitioning.
   Future<bool> setTrackingCameraOptions({
     required double tilt,
     Duration? duration,

@@ -200,7 +200,7 @@ abstract class OfflineManagerUtils {
             activeDownloads.remove(region.getId());
             isComplete.set(true);
             channelHandler.onError(
-                "mapboxTileCountLimitExceeded",
+                "tileCountLimitExceeded",
                 "MapLibre tile count limit exceeded: " + limit,
                 null);
             deleteRegion(null, context, region.getId());
@@ -351,8 +351,8 @@ abstract class OfflineManagerUtils {
                 if (_offlineRegion != null) {
                   _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
                 }
-                channelHandler.onError("mapboxInvalidRegionDefinition", error, null);
-                result.error("mapboxInvalidRegionDefinition", error, null);
+                channelHandler.onError("invalidRegionDefinition", error, null);
+                result.error("invalidRegionDefinition", error, null);
               }
             });
   }

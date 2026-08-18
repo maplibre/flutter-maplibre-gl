@@ -25,7 +25,7 @@ import java.util.WeakHashMap;
  *
  * <h2>Thread-safety</h2>
  * The registry is a {@link WeakHashMap} wrapper (not thread-safe), but all
- * accessors — {@link #create}, the broadcast methods, and dispose-driven removals —
+ * accessors ({@link #create}, the broadcast methods, and dispose-driven removals)
  * run on the Flutter platform thread (the Android main thread), so no external
  * synchronization is required. {@link ArrayList} snapshots are taken before
  * iteration to defend against re-entrant mutations (e.g. a controller disposing

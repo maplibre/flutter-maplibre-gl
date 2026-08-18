@@ -311,7 +311,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Android and iOS only — the web has no offline API.',
+                  'Android and iOS only: the web has no offline API.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -553,11 +553,10 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
     }
   }
 
-  // Exports a copy of the offline database so it can be shared off-device and
-  // fed back into "Merge regions from file". exportOfflineDatabase copies the
-  // whole store (all regions plus the ambient cache, including SQLite sidecars)
-  // — the native SDKs expose no per-region export. Android/iOS only; this page
-  // is gated behind !kIsWeb.
+  // Exports a copy of the offline database so it can be shared off-device and fed
+  // back into "Merge regions from file". The export covers the whole store, all
+  // regions plus the ambient cache, since the native SDKs offer no per-region
+  // export. Android and iOS only; this page is gated behind !kIsWeb.
   Future<void> _handleExportDatabase() async {
     try {
       // Export into the temp dir under a friendly name; the returned path is
@@ -620,7 +619,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         // a store that has been checkpointed; if you need a guaranteed-complete
         // copy including un-checkpointed writes, use "Share database" instead,
         // which carries the sidecars too. The DB is tens of MB, so this loads it
-        // into memory once — fine for an example.
+        // into memory once, fine for an example.
         final bytes = await File(exported).readAsBytes();
         final savedPath = await FilePicker.saveFile(
           dialogTitle: 'Save offline database',
@@ -731,7 +730,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         },
       );
 
-      // Region created — set the downloadedId so pause/resume can use it,
+      // Region created: set the downloadedId so pause/resume can use it,
       // but keep isDownloading: true until the Success event arrives.
       if (mounted) {
         setState(() {

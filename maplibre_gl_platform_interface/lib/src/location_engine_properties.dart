@@ -3,9 +3,9 @@ part of '../maplibre_gl_platform_interface.dart';
 /// Location engine properties that apply across all platforms.
 ///
 /// Use the platform-specific constructors to only set relevant properties:
-/// - [LocationEnginePlatforms.android] — [enableHighAccuracy], [interval], [displacement], [priority]
-/// - [LocationEnginePlatforms.iOS] — [enableHighAccuracy], [displacement], [intervalMs], [pulseWindowMs]
-/// - [LocationEnginePlatforms.web] — [enableHighAccuracy], [maximumAge], [timeout]
+/// - [LocationEnginePlatforms.android]: [enableHighAccuracy], [interval], [displacement], [priority]
+/// - [LocationEnginePlatforms.iOS]: [enableHighAccuracy], [displacement], [intervalMs], [pulseWindowMs]
+/// - [LocationEnginePlatforms.web]: [enableHighAccuracy], [maximumAge], [timeout]
 @immutable
 class LocationEnginePlatforms {
   // -- Common --

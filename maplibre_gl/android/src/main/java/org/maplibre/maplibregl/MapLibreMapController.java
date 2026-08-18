@@ -119,49 +119,27 @@ import io.flutter.plugin.platform.PlatformView;
  * activity {@link Lifecycle}, and the native {@link MapView}.
  *
  * <h2>Surviving activity recreation</h2>
- * Android can destroy and recreate the host activity at any time (rotation,
- * "Don't keep activities", memory pressure). Because the {@link MapView} holds
- * GL resources tied to its constructing activity context, it must be destroyed
- * alongside the activity and rebuilt against the new one. This controller
- * handles that automatically so the Flutter widget tree never sees the swap.
+ * Android can destroy and recreate the host activity at any time (rotation, "Don't keep
+ * activities", memory pressure). The {@link MapView} holds GL resources tied to the activity
+ * that built it, so it is destroyed with the activity and rebuilt against the new one, without
+ * the Flutter widget tree seeing the swap.
  *
- * <h3>State bridge</h3>
- * <ul>
- *   <li>{@link #lastCameraPosition} — explicit camera snapshot, restored in
- *       {@link #onMapReady}.</li>
- *   <li>{@link #savedMapViewState} — opaque MapLibre bundle written via
- *       {@link MapView#onSaveInstanceState(Bundle)} and replayed into
- *       {@link MapView#onCreate(Bundle)} on the new instance.</li>
- *   <li>Controller fields (e.g. {@link #myLocationEnabled},
- *       {@link #trackCameraPosition}, {@link #bounds}) — live on the controller
- *       which itself outlives the activity.</li>
- * </ul>
+ * <p>Carried across: the camera ({@link #lastCameraPosition}), MapLibre's own state bundle
+ * ({@link #savedMapViewState}), and the controller fields, which outlive the activity. Lost:
+ * sources, layers, images and other runtime style changes, which Dart re-applies when
+ * {@code map#onStyleLoaded} fires for the new MapView. {@link #recreateMapViewIfNecessary()}
+ * lists both sides in full.
  *
- * <h3>State NOT preserved</h3>
- * Sources, layers, images, runtime style switches, runtime UI tweaks via
- * {@code map#update}, and in-flight gestures are all lost. Dart code is
- * expected to re-apply them when {@code map#onStyleLoaded} fires for the new
- * MapView. See {@link #recreateMapViewIfNecessary()} for the full breakdown.
+ * <p>{@link MapLibreMapFactory} broadcasts the activity hooks ({@link #onActivityAttached()},
+ * {@link #onActivityDetached()}, {@link #onActivityRebound()}); with the
+ * {@code mapViewCreated/Started/Resumed} flags they keep each MapView's lifecycle calls
+ * balanced however Jetpack replays events. While the MapView is being rebuilt,
+ * {@code map#waitForMap} parks its result until {@link #onMapReady} fires again, and every
+ * other map-touching call answers {@code MAP_NOT_READY}.
  *
- * <h3>Lifecycle plumbing</h3>
- * Three hooks ({@link #onActivityAttached()}, {@link #onActivityDetached()},
- * {@link #onActivityRebound()}) are broadcast from {@link MapLibreMapFactory}
- * in response to Flutter's {@code ActivityAware} callbacks. Combined with the
- * idempotent {@code mapViewCreated/Started/Resumed} flags they ensure each
- * {@link MapView} instance sees a balanced sequence of {@code onCreate} →
- * {@code onStart} → {@code onResume} → {@code onPause} → {@code onStop} →
- * {@code onDestroy} regardless of how Jetpack replays lifecycle events.
- *
- * <h3>Method channel during recreation</h3>
- * While the {@link MapView} is being rebuilt the controller may receive method
- * calls from Dart. {@code map#waitForMap} parks the result and replies once
- * {@link #onMapReady} fires again; every other map-touching call returns
- * {@code MAP_NOT_READY} so Dart can decide whether to retry.
- *
- * <h3>Dart-driven pause</h3>
- * {@code map#pause} / {@code map#resume} expose explicit rendering control via
- * {@link #userPaused}. When set, the natural lifecycle {@code onResume} is
- * suppressed so a paused map stays paused across backgrounding.
+ * <p>{@code map#pause} / {@code map#resume} drive rendering explicitly through
+ * {@link #userPaused}: a map paused from Dart stays paused even when the activity returns to
+ * the foreground.
  */
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
@@ -215,9 +193,8 @@ final class MapLibreMapController
   /**
    * Activity context used to build the {@link MapView}. Re-pointed at the current
    * activity on every {@link #onActivityAttached()}/{@link #onActivityRebound()} so
-   * we don't pin a destroyed activity in memory. Do NOT register long-lived listeners
-   * against this field directly — for component callbacks and similar, prefer
-   * {@link #applicationContext}.
+   * we don't pin a destroyed activity in memory. Register long-lived listeners against
+   * {@link #applicationContext} instead of this field.
    */
   private Context context;
   private final String styleStringInitial;
@@ -244,11 +221,8 @@ final class MapLibreMapController
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
   /**
-   * Idempotency guards for {@link MapView} lifecycle dispatch. Jetpack's
-   * {@code Lifecycle.addObserver} replays missed events synchronously, which would
-   * otherwise re-invoke {@code mapView.onCreate/onStart/onResume} on an already
-   * initialized {@link MapView}. These flags ensure each transition fires once
-   * per {@link MapView} instance.
+   * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
+   * once per {@link MapView} instance. See the lifecycle observer section below.
    */
   private boolean mapViewCreated = false;
   private boolean mapViewStarted = false;
@@ -391,7 +365,7 @@ final class MapLibreMapController
 
   /**
    * Invoked when the plugin is fully detached from the activity (i.e. the host
-   * activity is being destroyed without a config change — e.g. "Don't keep
+   * activity is being destroyed without a config change, e.g. "Don't keep
    * activities" or a real activity finish). Saves what state we can and tears
    * down the native {@link MapView}.
    */
@@ -3392,12 +3366,10 @@ final class MapLibreMapController
 
   // -- Lifecycle observer ----------------------------------------------------
   //
-  // All five state transitions below are idempotent: each only mutates the
-  // MapView once per (MapView instance, transition) pair. This matters because
-  // Jetpack's Lifecycle.addObserver replays missed events synchronously when we
-  // re-subscribe to a fresh activity Lifecycle. Without the guards the replay
-  // would re-call mapView.onCreate / onStart / onResume on an already-initialized
-  // MapView (segnalazione #2 in PR review).
+  // Each transition below mutates the MapView at most once per instance. Jetpack's
+  // Lifecycle.addObserver replays missed events synchronously when we subscribe to a
+  // fresh activity Lifecycle, and without the guards that replay would re-call
+  // onCreate / onStart / onResume on an already initialized MapView.
 
   @Override
   public void onCreate(@NonNull LifecycleOwner owner) {
@@ -3472,7 +3444,7 @@ final class MapLibreMapController
   public void onDestroy(@NonNull LifecycleOwner owner) {
     if (owner.getLifecycle() != boundLifecycle) {
       // Stale callback from an old activity (e.g. after config change where we already
-      // rebound to the new lifecycle). Ignore — destroying now would kill the live map.
+      // rebound to the new lifecycle). Ignore it: destroying now would kill the live map.
       return;
     }
     unregisterFromLifecycle();
@@ -3789,16 +3761,16 @@ final class MapLibreMapController
   }
 
   private void updateMyLocationTrackingMode() {
-    int[] mapboxTrackingModes =
+    int[] cameraModes =
         new int[] {
           CameraMode.NONE, CameraMode.TRACKING, CameraMode.TRACKING_COMPASS, CameraMode.TRACKING_GPS
         };
-    locationComponent.setCameraMode(mapboxTrackingModes[this.myLocationTrackingMode]);
+    locationComponent.setCameraMode(cameraModes[this.myLocationTrackingMode]);
   }
 
   private void updateMyLocationRenderMode() {
-    int[] mapboxRenderModes = new int[] {RenderMode.NORMAL, RenderMode.COMPASS, RenderMode.GPS};
-    locationComponent.setRenderMode(mapboxRenderModes[this.myLocationRenderMode]);
+    int[] renderModes = new int[] {RenderMode.NORMAL, RenderMode.COMPASS, RenderMode.GPS};
+    locationComponent.setRenderMode(renderModes[this.myLocationRenderMode]);
   }
 
   private boolean hasLocationPermission() {

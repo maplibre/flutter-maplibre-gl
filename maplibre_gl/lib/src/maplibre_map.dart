@@ -303,8 +303,17 @@ class MapLibreMap extends StatefulWidget {
   /// were not claimed by any other gesture recognizer.
   final Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers;
 
+  /// Called when the user taps the map, with the screen point and the
+  /// coordinates under it.
+  ///
+  /// A tap that lands on an interactive layer is reported as a feature tap
+  /// instead, and does not reach this callback unless
+  /// [featureTapsTriggersMapClick] is set.
   final OnMapClickCallback? onMapClick;
-  final OnMapClickCallback? onMapLongClick;
+
+  /// Called on a long press on Android and iOS, and on a double click on web,
+  /// which has no long-press gesture. Same arguments as [onMapClick].
+  final OnMapLongClickCallback? onMapLongClick;
 
   /// While the `myLocationEnabled` property is set to `true`, this method is
   /// called whenever a new location update is received by the map view.

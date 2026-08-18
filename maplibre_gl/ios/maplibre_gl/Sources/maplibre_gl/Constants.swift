@@ -1,8 +1,9 @@
 import MapLibre
 
 /*
- * The mapping is based on the values defined here:
- *  https://docs.mapbox.com/android/api/map-sdk/8.4.0/constant-values.html
+ * The string keys below are the style spec's own values for icon-anchor,
+ * text-anchor and the other symbol layout properties:
+ *  https://maplibre.org/maplibre-style-spec/layers/
  */
 
 class Constants {
