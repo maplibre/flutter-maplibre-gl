@@ -3,7 +3,7 @@
 This folder contains a **small, self‑contained example** used by pub.dev to display how to start with `maplibre_gl`.
 
 What it demonstrates:
-* Creating a `MaplibreMap` widget
+* Creating a `MapLibreMap` widget
 * Loading a public style (`https://demotiles.maplibre.org/style.json`)
 * Animating the camera with a floating action button
 

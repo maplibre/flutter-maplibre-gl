@@ -24,6 +24,18 @@
   </p>
 </div>
 
+## 🖼️ What it looks like
+
+| **3D buildings** | **Clustering** | **Globe, on web** |
+|:---:|:---:|:---:|
+| ![Midtown Manhattan with the camera pitched and rotated](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/buildings-3d.webp) | ![GeoJSON points clustered with live counts](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/cluster.webp) | ![globe projection rendered by MapLibre GL JS](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/globe.webp) |
+
+| **Data-driven styling** | **Heatmaps** | **Annotations** |
+|:---:|:---:|:---:|
+| ![countries coloured and faded by their own properties](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/expressions.webp) | ![point density drawn on the GPU](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/heatmap.webp) | ![symbol markers with custom icons and labels](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/annotations.webp) |
+
+All of these are live in the [demo](https://maplibre.org/flutter-maplibre-gl/demo/), and every [guide](https://maplibre.org/flutter-maplibre-gl/) embeds an interactive map you can pan and click.
+
 ## 🚀 Quick start
 
 ```bash
@@ -59,11 +71,14 @@ Engines: [maplibre-native](https://github.com/maplibre/maplibre-native) (Android
 | User Location | ✅ | ✅ | ✅ |
 | Annotations | ✅ | ✅ | ✅ |
 | All layer types (Symbol to Hillshade) | ✅ | ✅ | ✅ |
+| GeoJSON, vector, raster & PMTiles sources | ✅ | ✅ | ✅ |
 | Offline regions | ✅ | ✅ | ❌ |
 | Feature state | ✅ | ❌ | ✅ |
-| Hover events | ❌ | ❌ | ✅ |
 
 See the full [feature matrix](https://maplibre.org/flutter-maplibre-gl/compare/feature-matrix/) for details.
+
+**Not supported**: desktop targets (Windows, macOS, Linux), and Flutter widgets *inside* the map. The map is a
+platform view rendered by the native engines, so your widgets go over it in a `Stack`, not between its layers.
 
 ## 🔗 Links
 

@@ -1,0 +1,4 @@
+# Keep local Flutter build artifacts out of the published archive. maplibre_gl/build
+# can hold hundreds of MB of compiler caches, and publishing from a working copy that
+# has them ships every byte: measured 42 MB instead of ~0.5 MB.
+build/
