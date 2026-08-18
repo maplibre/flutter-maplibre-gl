@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 /// Common constants used across examples
@@ -63,8 +62,9 @@ class ExampleConstants {
 
   /// Demo map style URL (default). demotiles.maplibre.org is aggressively
   /// rate-limited (HTTP 429); [resolveDemoMapStyle] swaps in
-  /// [fallbackMapStyle] when it is unreachable (probed at startup and again
-  /// right before each example page opens).
+  /// [fallbackMapStyle] when it is unreachable. Await [resolveDemoMapStyle]
+  /// before reading this, otherwise you may read the value the probe is
+  /// about to replace.
   static String demoMapStyle = preferredDemoMapStyle;
 
   /// The canonical MapLibre demo style.
@@ -92,14 +92,9 @@ class ExampleConstants {
           ? const ['Open Sans Semibold']
           : const ['Noto Sans Bold'];
 
-  /// Sticky flag: once the demo style probe fails we stay on
-  /// [fallbackMapStyle] for the rest of the session (a limiter that just
-  /// rejected us will most likely reject the map's burst of requests too).
-  static bool _demoStyleFellBack = false;
-
-  /// When the last successful probe completed, for [resolveDemoMapStyle]'s
-  /// maxAge memoization.
-  static DateTime? _lastSuccessfulProbe;
+  /// The one style probe of this session, created by the first call to
+  /// [resolveDemoMapStyle]. Every later call awaits this same future.
+  static Future<void>? _resolution;
 
   /// Probes the demo style AND its tile endpoint, falling back to
   /// [fallbackMapStyle] when either fails. Probing the style alone is not
@@ -107,19 +102,18 @@ class ExampleConstants {
   /// the tile paths are already rate-limited with 429, which would render
   /// the style background with no tiles.
   ///
-  /// The rate limiter answers per request (429 with retry-after: 0), so a
-  /// probe that passed at startup proves nothing minutes later. Call this
-  /// again right before opening a map page, passing [maxAge] to skip the
-  /// network round-trip when a recent probe already succeeded. Once fallen
-  /// back the choice is sticky and this returns immediately.
-  static Future<void> resolveDemoMapStyle({Duration? maxAge}) async {
-    if (_demoStyleFellBack) return;
-    final lastSuccess = _lastSuccessfulProbe;
-    if (maxAge != null &&
-        lastSuccess != null &&
-        DateTime.now().difference(lastSuccess) < maxAge) {
-      return;
-    }
+  /// The probe runs at most once per session: the first caller starts it,
+  /// everyone else awaits the same future and gets the same answer, so the
+  /// resolved style is sticky and the app never puts a second burst on a
+  /// limiter that rejects bursts. Awaiting this is therefore cheap, and safe
+  /// to do from a widget that rebuilds.
+  ///
+  /// Start it early, but do not block the first frame on it: it can take
+  /// seconds when demotiles is unreachable.
+  static Future<void> resolveDemoMapStyle() =>
+      _resolution ??= _probeDemoMapStyle();
+
+  static Future<void> _probeDemoMapStyle() async {
     // Probe with a small CONCURRENT burst: the limiter tends to pass
     // isolated requests while rejecting bursts, and a real map load is a
     // burst of style + sprite + glyphs + tiles.
@@ -129,35 +123,31 @@ class ExampleConstants {
       'https://demotiles.maplibre.org/tiles/0/0/0.pbf',
     ];
     const timeout = Duration(seconds: 4);
-    final client = HttpClient()..connectionTimeout = timeout;
+    // package:http works on every platform, web included, where a CORS or
+    // rate-limit failure surfaces as an exception and lands in the fallback.
+    final client = http.Client();
     try {
       final statuses = await Future.wait(
         probes.map((url) async {
-          final request = await client.getUrl(Uri.parse(url)).timeout(timeout);
-          final response = await request.close().timeout(timeout);
-          await response.drain<void>();
+          final response = await client.get(Uri.parse(url)).timeout(timeout);
           return response.statusCode;
         }),
       );
       final failed = statuses.indexWhere((code) => code >= 400);
       if (failed != -1) {
-        _demoStyleFellBack = true;
         demoMapStyle = fallbackMapStyle;
         debugPrint(
           'demo style unreachable (${probes[failed]}: '
           'HTTP ${statuses[failed]}); falling back to $fallbackMapStyle',
         );
-        return;
       }
-      _lastSuccessfulProbe = DateTime.now();
     } catch (error) {
-      _demoStyleFellBack = true;
       demoMapStyle = fallbackMapStyle;
       debugPrint(
         'demo style unreachable ($error); falling back to $fallbackMapStyle',
       );
     } finally {
-      client.close(force: true);
+      client.close();
     }
   }
 

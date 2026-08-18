@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -103,11 +105,16 @@ Future<void> main() async {
           : "debug"} mode',
     );
   } else {
-    // demotiles.maplibre.org rate-limits aggressively (HTTP 429); pick a
-    // reachable default style before the gallery builds any map.
     WidgetsFlutterBinding.ensureInitialized();
-    await ExampleConstants.resolveDemoMapStyle();
   }
+
+  // demotiles.maplibre.org rate-limits aggressively (HTTP 429); start the
+  // probe that picks a reachable default style here, but do not await it.
+  // The probe waits up to 4 seconds for a server that may be hanging, and
+  // web/index.html has an empty body, so awaiting it would leave the page
+  // blank for that long, on every embed, including the ones that show a map
+  // built from a local asset.
+  unawaited(ExampleConstants.resolveDemoMapStyle());
 
   runApp(const MapLibreExampleApp());
 }
@@ -117,6 +124,12 @@ class MapLibreExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final initialPage =
+        [
+          ..._allPages,
+          ..._docPages,
+        ].where((p) => p.slug == _initialExampleSlug()).firstOrNull;
+
     return MaterialApp(
       title: 'MapLibre Examples',
       debugShowCheckedModeBanner: false,
@@ -136,11 +149,36 @@ class MapLibreExampleApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.system,
       home:
-          [
-            ..._allPages,
-            ..._docPages,
-          ].where((p) => p.slug == _initialExampleSlug()).firstOrNull ??
-          const MapsDemo(),
+          initialPage == null
+              ? const MapsDemo()
+              : _DemoStyleGate(page: initialPage),
+    );
+  }
+}
+
+/// Holds a directly opened example (`?example=<slug>`) back until the demo
+/// style probe has settled, because the page reads
+/// [ExampleConstants.demoMapStyle] while it builds. The gallery does not need
+/// this: it opens on a list of examples and awaits the same future when one
+/// of them is tapped.
+class _DemoStyleGate extends StatelessWidget {
+  const _DemoStyleGate({required this.page});
+
+  final ExamplePage page;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      // Always the same future, so a rebuild here never starts a new probe.
+      future: ExampleConstants.resolveDemoMapStyle(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return page;
+      },
     );
   }
 }
@@ -223,14 +261,11 @@ class MapsDemo extends StatefulWidget {
 
 class _MapsDemoState extends State<MapsDemo> {
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
-    if (!kIsWeb) {
-      // Re-check right before the map loads: demotiles' limiter answers per
-      // request, so the startup probe can pass and the page's style request
-      // still get a 429 minutes later. A recent success skips the probe.
-      await ExampleConstants.resolveDemoMapStyle(
-        maxAge: const Duration(seconds: 30),
-      );
-    }
+    // The page reads ExampleConstants.demoMapStyle while it builds, so wait
+    // for the probe started in main() to settle. Tapping a second example
+    // while it is still in flight awaits that same probe instead of putting
+    // a second burst of requests on the limiter.
+    await ExampleConstants.resolveDemoMapStyle();
     if (!kIsWeb && page.needsLocationPermission) {
       final status = await Permission.locationWhenInUse.status;
       if (!status.isGranted) {
