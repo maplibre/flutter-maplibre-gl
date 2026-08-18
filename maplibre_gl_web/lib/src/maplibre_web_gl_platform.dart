@@ -1801,6 +1801,27 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    return _addLayer(
+      sourceId,
+      layerId,
+      properties,
+      "color-relief",
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,

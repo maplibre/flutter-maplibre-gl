@@ -56,6 +56,7 @@ Future<void> main() async {
     "raster",
     "hillshade",
     "heatmap",
+    "color-relief",
   ];
 
   /// Source types. The template will convert snake_case to

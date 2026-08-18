@@ -464,6 +464,37 @@ class LayerPropertyConverter {
         }
     }
 
+    class func addColorReliefProperties(colorReliefLayer: MLNColorReliefStyleLayer, properties: [String: Any]) {
+        for (propertyName, propertyValue) in properties {
+            // Check if the value is explicitly null to clear the property
+            var expression: NSExpression?
+            if propertyValue is NSNull {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
+            switch propertyName {
+                case "color-relief-opacity":
+                    colorReliefLayer.colorReliefOpacity = expression
+                case "color-relief-color":
+                    colorReliefLayer.colorReliefColor = expression
+                case "visibility":
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            colorReliefLayer.isVisible = visibilityValue == "visible"
+                        }
+                    }
+             
+                default:
+                    break
+            }
+        }
+    }
+
     /// Wraps a single-color NSExpression in an array, as required by
     /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
     private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {

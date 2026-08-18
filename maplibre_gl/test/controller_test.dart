@@ -257,6 +257,46 @@ void main() {
       expect(platform.wasCalled('addFillLayer'), isTrue);
     });
 
+    test('addColorReliefLayer delegates to platform', () async {
+      await controller.addColorReliefLayer(
+        'dem-1',
+        'layer-1',
+        const ColorReliefLayerProperties(colorReliefOpacity: 0.7),
+      );
+
+      final calls = platform.callsFor('addColorReliefLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'dem-1');
+      expect(calls.first.positionalArgs[1], 'layer-1');
+      expect(
+        (calls.first.positionalArgs[2] as Map)['color-relief-opacity'],
+        0.7,
+      );
+    });
+
+    test('addLayer with ColorReliefLayerProperties', () async {
+      await controller.addLayer(
+        'dem-1',
+        'layer-1',
+        const ColorReliefLayerProperties(colorReliefOpacity: 0.7),
+      );
+
+      expect(platform.wasCalled('addColorReliefLayer'), isTrue);
+    });
+
+    test('addLayer rejects a filter on ColorReliefLayerProperties', () async {
+      expect(
+        () => controller.addLayer(
+          'dem-1',
+          'layer-1',
+          const ColorReliefLayerProperties(),
+          filter: ['==', 'foo', 'bar'],
+        ),
+        throwsUnimplementedError,
+      );
+      expect(platform.wasCalled('addColorReliefLayer'), isFalse);
+    });
+
     test('addLayer with CircleLayerProperties', () async {
       await controller.addLayer(
         'src-1',

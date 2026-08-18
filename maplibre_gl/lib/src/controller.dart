@@ -921,6 +921,38 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a color relief layer to the map with the given properties
+  ///
+  /// The layer colors the terrain by elevation and needs a raster dem source.
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    ColorReliefLayerProperties properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _maplibrePlatform.addColorReliefLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
   /// Add a heatmap layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.
@@ -2066,8 +2098,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
-  /// events this has no effect for [RasterLayerProperties] and
-  /// [HillshadeLayerProperties].
+  /// events this has no effect for [RasterLayerProperties],
+  /// [HillshadeLayerProperties] and [ColorReliefLayerProperties].
   /// [sourceLayer] is used to selected a specific source layer from Vector
   /// source.
   /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
@@ -2076,7 +2108,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
-  /// [filter] is not supported by RasterLayer and HillshadeLayer.
+  /// [filter] is not supported by RasterLayer, HillshadeLayer and
+  /// ColorReliefLayer.
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
@@ -2181,6 +2214,18 @@ class MapLibreMapController extends ChangeNotifier {
         properties,
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
+    } else if (properties is ColorReliefLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("ColorReliefLayer does not support filter");
+      }
+      await addColorReliefLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
         minzoom: minzoom,
         maxzoom: maxzoom,
       );

@@ -2682,3 +2682,102 @@ class HeatmapLayerProperties implements LayerProperties {
     );
   }
 }
+
+class ColorReliefLayerProperties implements LayerProperties {
+  // Paint Properties
+  /// The opacity at which the color-relief will be drawn.
+  ///
+  /// Type: number
+  ///   default: 1
+  ///   minimum: 0
+  ///   maximum: 1
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic colorReliefOpacity;
+
+  /// Defines the color of each pixel based on its elevation. Should be an
+  /// expression that uses `["elevation"]` as input.
+  ///
+  /// Type: color
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic colorReliefColor;
+
+  /// The resampling/interpolation method to use for overscaling, also known
+  /// as texture magnification filter.![Visual comparison of linear
+  /// resampling versus nearest resampling](assets/resampling.png)
+  ///
+  /// Type: enum
+  ///   default: linear
+  /// Options:
+  ///   "linear"
+  ///      (Bi)linear filtering interpolates pixel values using the weighted
+  ///      average of the four closest original source pixels creating a
+  ///      smooth but blurry look when overscaled
+  ///   "nearest"
+  ///      Nearest neighbor filtering interpolates pixel values using the
+  ///      nearest original source pixel creating a sharp but pixelated look
+  ///      when overscaled
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  final dynamic resampling;
+
+  // Layout Properties
+  /// Whether this layer is displayed.
+  ///
+  /// Type: enum
+  ///   default: visible
+  /// Options:
+  ///   "visible"
+  ///      The layer is shown.
+  ///   "none"
+  ///      The layer is not shown.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  final dynamic visibility;
+
+  const ColorReliefLayerProperties({
+    this.colorReliefOpacity,
+    this.colorReliefColor,
+    this.resampling,
+    this.visibility,
+  });
+
+  ColorReliefLayerProperties copyWith(ColorReliefLayerProperties changes) {
+    return ColorReliefLayerProperties(
+      colorReliefOpacity: changes.colorReliefOpacity ?? colorReliefOpacity,
+      colorReliefColor: changes.colorReliefColor ?? colorReliefColor,
+      resampling: changes.resampling ?? resampling,
+      visibility: changes.visibility ?? visibility,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson({bool skipNulls = true}) {
+    final json = <String, dynamic>{};
+
+    void addIfPresent(String fieldName, dynamic value) {
+      if (value == null && skipNulls) return;
+      json[fieldName] = value;
+    }
+
+    addIfPresent('color-relief-opacity', colorReliefOpacity);
+    addIfPresent('color-relief-color', colorReliefColor);
+    addIfPresent('resampling', resampling);
+    addIfPresent('visibility', visibility);
+    return json;
+  }
+
+  factory ColorReliefLayerProperties.fromJson(Map<String, dynamic> json) {
+    return ColorReliefLayerProperties(
+      colorReliefOpacity: json['color-relief-opacity'],
+      colorReliefColor: json['color-relief-color'],
+      resampling: json['resampling'],
+      visibility: json['visibility'],
+    );
+  }
+}

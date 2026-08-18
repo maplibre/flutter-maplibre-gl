@@ -118,6 +118,7 @@ nav:
       - Fill Layer: layers/fill-layer.md
       - Line Layer: layers/line-layer.md
       - Heatmap: layers/heatmap.md
+      - Color Relief: layers/color-relief.md
       - Cluster: layers/cluster.md
       - Various Sources: layers/various-sources.md
     - Advanced:

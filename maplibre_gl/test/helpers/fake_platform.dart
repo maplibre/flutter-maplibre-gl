@@ -547,6 +547,20 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    calls.add(
+      PlatformCall('addColorReliefLayer', [sourceId, layerId, properties]),
+    );
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
