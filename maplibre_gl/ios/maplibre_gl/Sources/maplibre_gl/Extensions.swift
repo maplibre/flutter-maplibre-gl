@@ -2,12 +2,20 @@ import MapLibre
 
 extension MLNMapCamera {
     func toDict(mapView: MLNMapView) -> [String: Any] {
-        let zoom = MLNZoomLevelForAltitude(
+        // MLNZoomLevelForAltitude derives the zoom from the view size, so a
+        // camera event that arrives before the map view has a laid-out frame
+        // divides by zero and yields a non-finite zoom. Sending that over the
+        // channel poisons the controller's cached camera position on the Dart
+        // side, and on a map nobody touches no later event arrives to correct
+        // it (#903). The map view's own zoomLevel needs no view size and is
+        // always finite, so it stands in.
+        let computedZoom = MLNZoomLevelForAltitude(
             altitude,
             pitch,
             centerCoordinate.latitude,
             mapView.frame.size
         )
+        let zoom = computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
         return ["bearing": heading,
                 "target": centerCoordinate.toArray(),
                 "tilt": pitch,

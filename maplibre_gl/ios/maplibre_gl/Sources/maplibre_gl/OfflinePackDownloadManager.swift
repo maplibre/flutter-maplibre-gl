@@ -62,21 +62,99 @@ class OfflinePackDownloader {
 
     func download() -> Int {
         let storage = MLNOfflineStorage.shared
-        // While the Android SDK generates a region ID in createOfflineRegion, the iOS
-        // SDK does not have this feature. Therefore, we generate a region ID here.
-        let id = UUID().hashValue
-        let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
         let tilePyramidRegion = regionDefinition.toMLNTilePyramidOfflineRegion()
-        storage
-            .addPack(for: tilePyramidRegion,
-                     withContext: regionData.prepareContext()) { [weak self] pack, error in
+
+        // Downloading the same area twice would otherwise create a second, duplicate
+        // pack (addPack does not deduplicate). Remove any existing pack covering the
+        // same region first, so a re-download replaces it rather than piling up.
+        //
+        // Note: existingPack reads MLNOfflineStorage.shared.packs, which may be nil
+        // or stale until reloadPacks completes (e.g. right after launch). If the
+        // duplicate isn't loaded yet the dedup simply no-ops and a fresh pack is
+        // created, the same behavior as before this feature, never a crash.
+        let duplicate = existingPack(matching: tilePyramidRegion, in: storage)
+
+        // A replacement keeps the ID the Dart side already knows. Apps pair their own
+        // data to a region ID (the offline database itself cannot carry custom
+        // metadata when built by the native CLI tooling), so handing back a fresh ID
+        // for the same area would silently orphan those pairings. While the Android
+        // SDK generates a region ID in createOfflineRegion, the iOS SDK does not, so
+        // a genuinely new region still gets one here.
+        let id = duplicate.flatMap { OfflineManagerUtils.dartVisibleId(for: $0) }
+            ?? UUID().hashValue
+        let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
+
+        if let duplicate = duplicate {
+            // Tear down any tracking and in-flight download tied to the old pack so
+            // we don't leak state or leave a Dart subscription hanging when we
+            // replace it. Its progress events go to its own channel, which is named
+            // per download call, so reusing the ID does not cross the two streams.
+            releaseDuplicate(duplicate)
+            duplicate.suspend()
+            storage.removePack(duplicate) { [weak self] error in
+                if let error = error {
+                    print("Failed to remove duplicate offline pack: \(error.localizedDescription)")
+                }
+                // Add the new pack whether or not removal succeeded, so the Dart
+                // Future always resolves. Worst case a stale duplicate lingers,
+                // which is better than a hung download.
+                self?.addPack(tilePyramidRegion, context: regionData.prepareContext())
+            }
+        } else {
+            addPack(tilePyramidRegion, context: regionData.prepareContext())
+        }
+        return id
+    }
+
+    /// Clears any tracking/in-flight download tied to a pack we're about to
+    /// replace, so re-downloading an area does not orphan the previous pack's
+    /// `activePacks`/`activeDownloaders` entries or leave its Dart subscription
+    /// waiting forever.
+    private func releaseDuplicate(_ pack: MLNOfflinePack) {
+        guard let oldId = OfflineRegion.fromOfflinePack(pack)?.id else { return }
+        OfflineManagerUtils.activeDownloaders[oldId]?.terminate(
+            errorCode: "RegionReplaced",
+            errorMessage: "Region was replaced by a new download of the same area"
+        )
+        OfflineManagerUtils.activePacks.removeValue(forKey: oldId)
+        OfflineManagerUtils.releaseDownloader(id: oldId)
+    }
+
+    private func addPack(_ region: MLNTilePyramidOfflineRegion, context: Data) {
+        MLNOfflineStorage.shared
+            .addPack(for: region, withContext: context) { [weak self] pack, error in
                 if let pack = pack {
                     self?.onPackCreated(pack: pack)
                 } else {
                     self?.onPackCreationError(error: error)
                 }
             }
-        return id
+    }
+
+    /// Finds an already-stored pack covering the same tile-pyramid region
+    /// (style, bounds and zoom range), if any.
+    private func existingPack(
+        matching region: MLNTilePyramidOfflineRegion,
+        in storage: MLNOfflineStorage
+    ) -> MLNOfflinePack? {
+        return storage.packs?.first { pack in
+            guard let existing = pack.region as? MLNTilePyramidOfflineRegion else {
+                return false
+            }
+            // Coordinates round-trip through JSON as doubles, so compare with a
+            // small tolerance rather than requiring exact equality.
+            func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
+            return existing.styleURL == region.styleURL
+                // A region with a different ideograph setting is not equivalent
+                // (different downloaded font data), so it is not a duplicate.
+                && existing.includesIdeographicGlyphs == region.includesIdeographicGlyphs
+                && close(existing.minimumZoomLevel, region.minimumZoomLevel)
+                && close(existing.maximumZoomLevel, region.maximumZoomLevel)
+                && close(existing.bounds.sw.latitude, region.bounds.sw.latitude)
+                && close(existing.bounds.sw.longitude, region.bounds.sw.longitude)
+                && close(existing.bounds.ne.latitude, region.bounds.ne.latitude)
+                && close(existing.bounds.ne.longitude, region.bounds.ne.longitude)
+        }
     }
 
     // MARK: Pack management
@@ -101,12 +179,12 @@ class OfflinePackDownloader {
     private func onPackCreationError(error: Error?) {
         // Reset downloading state
         channelHandler.onError(
-            errorCode: "mapboxInvalidRegionDefinition",
+            errorCode: "invalidRegionDefinition",
             errorMessage: error?.localizedDescription,
             errorDetails: nil
         )
         result(FlutterError(
-            code: "mapboxInvalidRegionDefinition",
+            code: "invalidRegionDefinition",
             message: error?.localizedDescription,
             details: nil
         ))
@@ -151,23 +229,16 @@ class OfflinePackDownloader {
         guard let pack = notification.object as? MLNOfflinePack,
               verifyPack(pack: pack) else { return }
         let error = notification.userInfo?[MLNOfflinePackUserInfoKey.error] as? NSError
-        print("Pack download error: \(String(describing: error?.localizedDescription))")
-        // set download state to inactive
-        isCompleted = true
-        channelHandler.onError(
-            errorCode: "Downloading error",
-            errorMessage: error?.localizedDescription,
-            errorDetails: nil
+        // Recoverable: MLNOfflineStorage.h says the pack re-requests what failed
+        // once network access returns, so this only reports and the pack keeps
+        // downloading. Ending it here lost the download to any brief outage, and
+        // deleted the region with it. The Flutter result stays pending on
+        // purpose: onPackDownloadProgress answers it when the pack finishes.
+        NSLog(
+            "%@",
+            "maplibre_gl: offline download error, the SDK will retry: "
+                + (error?.localizedDescription ?? "unknown error")
         )
-        result(FlutterError(
-            code: "Downloading error",
-            message: error?.localizedDescription,
-            details: nil
-        ))
-        if let region = OfflineRegion.fromOfflinePack(pack) {
-            OfflineManagerUtils.activePacks.removeValue(forKey: region.id)
-            OfflineManagerUtils.deleteRegion(result: result, id: region.id)
-        }
     }
 
     @objc private func onMaximumAllowedMapboxTiles(notification: NSNotification) {
@@ -179,12 +250,12 @@ class OfflinePackDownloader {
         // set download state to inactive
         isCompleted = true
         channelHandler.onError(
-            errorCode: "mapboxTileCountLimitExceeded",
+            errorCode: "tileCountLimitExceeded",
             errorMessage: "MapLibre tile count limit exceeded: \(maximumCount)",
             errorDetails: nil
         )
         result(FlutterError(
-            code: "mapboxTileCountLimitExceeded",
+            code: "tileCountLimitExceeded",
             message: "MapLibre tile count limit exceeded: \(maximumCount)",
             details: nil
         ))

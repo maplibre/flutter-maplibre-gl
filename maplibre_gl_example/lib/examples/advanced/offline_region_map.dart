@@ -16,9 +16,7 @@ class _OfflineRegionMapState extends State<OfflineRegionMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Offline Region: ${widget.item.name}'),
-      ),
+      appBar: AppBar(title: Text('Offline Region: ${widget.item.name}')),
       body: MapLibreMap(
         initialCameraPosition: CameraPosition(
           target: _center,

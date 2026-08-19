@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -27,9 +29,16 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
   MapLibreMapController? _controller;
   String _displayData = '';
   bool _isLoading = false;
+  int _idleCount = 0;
 
   void _onMapCreated(MapLibreMapController controller) {
     setState(() => _controller = controller);
+  }
+
+  void _onMapIdle() {
+    // Fires whenever the map settles (no pending tiles, animations, or
+    // gestures). Now wired on web too, matching Android and iOS (#857).
+    if (mounted) setState(() => _idleCount++);
   }
 
   Future<void> _displaySources() async {
@@ -70,6 +79,58 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     }
   }
 
+  /// Reads the full style-spec properties of the first layer on the map,
+  /// demonstrating getLayerProperties (#513).
+  Future<void> _displayFirstLayerProperties() async {
+    if (_controller == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final ids = (await _controller!.getLayerIds()).cast<String>();
+      final props =
+          ids.isEmpty ? null : await _controller!.getLayerProperties(ids.first);
+      setState(() {
+        _displayData =
+            props == null
+                ? 'No layers found.'
+                : 'Layer "${ids.first}":\n'
+                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _displayData = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Reads the full style-spec properties of the first source on the map,
+  /// demonstrating getSourceProperties (#513).
+  Future<void> _displayFirstSourceProperties() async {
+    if (_controller == null) return;
+    setState(() => _isLoading = true);
+    try {
+      final ids = await _controller!.getSourceIds();
+      final props =
+          ids.isEmpty
+              ? null
+              : await _controller!.getSourceProperties(ids.first);
+      setState(() {
+        _displayData =
+            props == null
+                ? 'No sources found.'
+                : 'Source "${ids.first}":\n'
+                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _displayData = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasController = _controller != null;
@@ -77,6 +138,7 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     return MapExampleScaffold(
       map: MapLibreMap(
         onMapCreated: _onMapCreated,
+        onMapIdle: _onMapIdle,
         styleString: ExampleConstants.demoMapStyle,
         initialCameraPosition: ExampleConstants.defaultCameraPosition,
       ),
@@ -105,15 +167,34 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                 icon: Icons.source,
                 style: ExampleButtonStyle.filled,
               ),
+              ExampleButton(
+                label: 'First Layer Props',
+                onPressed: hasController ? _displayFirstLayerProperties : null,
+                icon: Icons.data_object,
+                style: ExampleButtonStyle.outlined,
+              ),
+              ExampleButton(
+                label: 'First Source Props',
+                onPressed: hasController ? _displayFirstSourceProperties : null,
+                icon: Icons.data_object,
+                style: ExampleButtonStyle.outlined,
+              ),
             ],
+          ),
+          InfoCard(
+            title:
+                'onMapIdle fired: $_idleCount time'
+                '${_idleCount == 1 ? '' : 's'}',
+            subtitle:
+                'Pan or zoom the map; the counter increments each time '
+                'the map settles (works on web too).',
+            icon: Icons.motion_photos_paused,
           ),
           if (_isLoading)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(24.0),
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               ),
             )
           else if (_displayData.isNotEmpty)

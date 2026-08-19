@@ -17,12 +17,9 @@ final Map<String, StreamSubscription<dynamic>> _offlineDownloadSubscriptions =
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
 Future<void> installOfflineMapTiles(String tilesDb) async {
-  await _globalChannel.invokeMethod(
-    'installOfflineMapTiles',
-    <String, dynamic>{
-      'tilesdb': tilesDb,
-    },
-  );
+  await _globalChannel.invokeMethod('installOfflineMapTiles', <String, dynamic>{
+    'tilesdb': tilesDb,
+  });
 }
 
 enum DragEventType { start, drag, end }
@@ -31,9 +28,7 @@ enum HoverEventType { enter, move, leave }
 
 Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
   'setOffline',
-  <String, dynamic>{
-    'offline': offline,
-  },
+  <String, dynamic>{'offline': offline},
 );
 
 /// Sets HTTP headers that are injected into every network request MapLibre
@@ -65,23 +60,55 @@ Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
 /// await setHttpHeaders({});
 /// ```
 Future<void> setHttpHeaders(Map<String, String> headers) {
-  return _globalChannel.invokeMethod(
-    'setHttpHeaders',
-    <String, dynamic>{
-      'headers': headers,
-    },
-  );
+  return _globalChannel.invokeMethod('setHttpHeaders', <String, dynamic>{
+    'headers': headers,
+  });
 }
 
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'mergeOfflineRegions',
-    <String, dynamic>{
-      'path': path,
-    },
+    <String, dynamic>{'path': path},
   );
   final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
   return regions.map(OfflineRegion.fromMap).toList();
+}
+
+/// Returns the absolute path of the offline database backing the offline packs
+/// and the ambient cache, or `null` if it cannot be resolved.
+///
+/// This is the file [mergeOfflineRegions] imports from. It holds the whole
+/// store, every region plus the ambient cache, so it is not a per-region
+/// export.
+///
+/// Android and iOS only; there is no offline support on web.
+Future<String?> getOfflineDatabasePath() async {
+  return _globalChannel.invokeMethod<String>('getOfflineDatabasePath');
+}
+
+/// Writes a copy of the offline database to a path of your choosing, file name
+/// included, for example
+/// `'${(await getTemporaryDirectory()).path}/regions.db'`. The parent directory
+/// of [destinationPath] must already exist.
+///
+/// Returns that same path once written, or `null` when nothing has been
+/// downloaded yet. Import the copy elsewhere with [mergeOfflineRegions].
+///
+/// Like [getOfflineDatabasePath], this covers the whole store rather than one
+/// region, and it brings the SQLite `-wal` and `-shm` sidecars along so the
+/// copy is consistent.
+///
+/// Android and iOS only; throws [UnsupportedError] on web.
+Future<String?> exportOfflineDatabase(String destinationPath) async {
+  // Reject here rather than let the method channel answer first: on web that
+  // call fails with a MissingPluginException, which is not the error this
+  // documents and not one an app can tell apart from a broken registration.
+  if (kIsWeb) {
+    throw UnsupportedError('Offline database export is not available on web.');
+  }
+  final dbPath = await getOfflineDatabasePath();
+  if (dbPath == null) return null;
+  return copyOfflineDatabase(dbPath, destinationPath);
 }
 
 Future<List<OfflineRegion>> getListOfRegions() async {
@@ -99,22 +126,16 @@ Future<OfflineRegion> updateOfflineRegionMetadata(
 ) async {
   final regionJson = await _globalChannel.invokeMethod(
     'updateOfflineRegionMetadata',
-    <String, dynamic>{
-      'id': id,
-      'metadata': metadata,
-    },
+    <String, dynamic>{'id': id, 'metadata': metadata},
   );
 
   return OfflineRegion.fromMap(json.decode(regionJson));
 }
 
 Future<dynamic> setOfflineTileCountLimit(int limit) =>
-    _globalChannel.invokeMethod(
-      'setOfflineTileCountLimit',
-      <String, dynamic>{
-        'limit': limit,
-      },
-    );
+    _globalChannel.invokeMethod('setOfflineTileCountLimit', <String, dynamic>{
+      'limit': limit,
+    });
 
 /// Sets the maximum number of concurrent HTTP requests for tile downloads.
 ///
@@ -171,9 +192,7 @@ Future<OfflineRegionStatus> getOfflineRegionStatus(int id) async {
 
 Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
   'deleteOfflineRegion',
-  <String, dynamic>{
-    'id': id,
-  },
+  <String, dynamic>{'id': id},
 );
 
 /// Removes all tiles from the shared ambient cache that are not associated
@@ -216,9 +235,7 @@ Future<OfflineRegion> downloadOfflineRegion(
 
   await _globalChannel.invokeMethod(
     'downloadOfflineRegion#setup',
-    <String, dynamic>{
-      'channelName': channelName,
-    },
+    <String, dynamic>{'channelName': channelName},
   );
 
   if (onEvent != null) {
@@ -275,10 +292,7 @@ Future<OfflineRegion> downloadOfflineRegion(
 
   final result = await _globalChannel.invokeMethod(
     'downloadOfflineRegion',
-    <String, dynamic>{
-      'definition': definition.toMap(),
-      'metadata': metadata,
-    },
+    <String, dynamic>{'definition': definition.toMap(), 'metadata': metadata},
   );
 
   return OfflineRegion.fromMap(json.decode(result));

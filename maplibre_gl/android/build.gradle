@@ -22,7 +22,17 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+
+// Flutter is moving Kotlin compilation into AGP itself. From AGP 9 a plugin that
+// applies the Kotlin Gradle Plugin breaks the host app's build, and Flutter already
+// warns about it today (#905). Applying KGP only below AGP 9 keeps this plugin
+// working on both, without forcing the package minimum to Flutter 3.44, which the
+// unconditional migration would require. Drop the condition, and apply nothing,
+// once that floor is normal for us.
+def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
+if (agpMajor < 9) {
+    apply plugin: 'kotlin-android'
+}
 
 android {
     if (project.android.hasProperty("namespace")) {
@@ -31,7 +41,7 @@ android {
     compileSdkVersion 36
     buildToolsVersion "36.0.0"
 
-    ndkVersion "28.1.13356709"
+    ndkVersion "28.2.13676358"
 
     defaultConfig {
         minSdkVersion 21
@@ -46,9 +56,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21.toString()
-    }
     configurations.all {
         // Exclude the regular (Vulkan) SDK to avoid duplicate classes with the OpenGL variant
         // If we want to use the Vulkan-based renderer in the future, we can remove this exclusion and switch to the regular SDK dependency below.
@@ -57,15 +64,22 @@ android {
     dependencies {
         // Using OpenGL instead of new Vulkan-based renderer for now, as it is more stable and has better performance on older devices.
         // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
-        implementation 'org.maplibre.gl:android-sdk-opengl:13.3.0'
-        implementation 'org.maplibre.gl:android-plugin-annotation-v9:3.0.2'
-        implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
-        implementation 'com.squareup.okhttp3:okhttp:5.3.2'
+        implementation 'org.maplibre.gl:android-sdk-opengl:13.5.0'
+        implementation 'com.squareup.okhttp3:okhttp:5.4.0'
         implementation 'com.google.android.gms:play-services-base:18.10.0'
-        implementation 'com.google.android.gms:play-services-location:21.3.0'
+        implementation 'com.google.android.gms:play-services-location:21.4.0'
+    }
+}
+
+// Set through the Kotlin extension rather than android.kotlinOptions, which AGP 9
+// removes. The extension is present whether KGP was applied above or AGP provides
+// Kotlin itself.
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation 'androidx.core:core-ktx:1.18.0'
 }

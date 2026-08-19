@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../page.dart';
+import '../../shared/shared.dart';
 
 class StyleInfo {
   final String name;
@@ -48,23 +49,33 @@ class FullMapState extends State<FullMap> {
     setState(() => this.controller = controller);
   }
 
+  /// Night lights imagery, published by NASA for public use and keyless.
+  static const _nasaCityLightsTiles =
+      'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg';
+
   static Future<void> addRaster(MapLibreMapController controller) async {
+    // NASA GIBS rather than the OpenStreetMap tile servers. OSM's tile usage
+    // policy asks that its tiles not be used as the raster basemap of an
+    // application, and blocks clients it cannot attribute, so an example that
+    // pointed there taught a pattern that gets an app blocked. GIBS publishes
+    // this imagery for public use and needs no key.
+    // See https://operations.osmfoundation.org/policies/tiles/.
     await controller.addSource(
-      "osm-raster",
+      "nasa-raster",
       const RasterSourceProperties(
-        tiles: [
-          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        ],
+        tiles: [_nasaCityLightsTiles],
         tileSize: 256,
+        // The tileset stops at zoom 8; without this the spec default of 22
+        // applies and zooming further asks for tiles that do not exist.
+        maxzoom: 8,
+        // The acknowledgment GIBS asks for, in its own words.
         attribution:
-            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>',
+            '<a href="https://nasa-gibs.github.io/gibs-api-docs/">We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS).</a>',
       ),
     );
     await controller.addLayer(
-      "osm-raster",
-      "osm-raster",
+      "nasa-raster",
+      "nasa-raster",
       const RasterLayerProperties(),
     );
   }
@@ -108,31 +119,24 @@ class FullMapState extends State<FullMap> {
           40,
         ],
       ),
-      filter: [
-        'has',
-        'point_count',
-      ],
+      filter: ['has', 'point_count'],
     );
     await controller.addLayer(
       "earthquakes",
       "earthquakes-count",
-      const SymbolLayerProperties(
-        textField: [Expressions.get, 'point_count_abbreviated'],
-        textFont: ['Open Sans Semibold'],
+      SymbolLayerProperties(
+        textField: const [Expressions.get, 'point_count_abbreviated'],
+        // A font stack the active demo style actually serves; a glyph 404
+        // would hide the labels entirely.
+        textFont: ExampleConstants.demoBoldFontStack,
         textSize: 12,
       ),
-      filter: [
-        'has',
-        'point_count',
-      ],
+      filter: ['has', 'point_count'],
     );
     await controller.addLayer(
       "earthquakes",
       "earthquakes-unclustered",
-      const CircleLayerProperties(
-        circleColor: '#51bbd6',
-        circleRadius: 5,
-      ),
+      const CircleLayerProperties(circleColor: '#51bbd6', circleRadius: 5),
       filter: [
         '!',
         ['has', 'point_count'],
@@ -141,30 +145,28 @@ class FullMapState extends State<FullMap> {
   }
 
   static Future<void> addVector(MapLibreMapController controller) async {
+    // OpenMapTiles-schema vector tiles without an API key. The source id is
+    // namespaced: the OpenFreeMap fallback style has its own source called
+    // "openmaptiles", and adding a second source with that name throws.
     await controller.addSource(
-      "openmaptiles",
+      "example-vector-tiles",
       const VectorSourceProperties(
-        tiles: [
-          'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf',
-        ],
-        maxzoom: 14,
+        url: 'https://tiles.openfreemap.org/planet',
         attribution:
-            '<a href="https://maplibre.org">© MapLibre contributors</a',
+            '<a href="https://openfreemap.org">OpenFreeMap</a> '
+            '<a href="https://www.openmaptiles.org/">© OpenMapTiles</a>',
       ),
     );
 
     await controller.addLayer(
-      "openmaptiles",
+      "example-vector-tiles",
       "water-fill",
-      const FillLayerProperties(
-        fillColor: "#0080ff",
-        fillOpacity: 0.5,
-      ),
+      const FillLayerProperties(fillColor: "#0080ff", fillOpacity: 0.5),
       sourceLayer: "water",
     );
 
     await controller.addLayer(
-      "openmaptiles",
+      "example-vector-tiles",
       "roads",
       const LineLayerProperties(
         lineColor: "#ff69b4",
@@ -305,13 +307,15 @@ class FullMapState extends State<FullMap> {
   static Future<void> addCountries(MapLibreMapController controller) async {
     // Add a simple additional layer to demonstrate layering on the default style
     // Remove existing layers/source if they exist (in case of re-loading)
+    // Ids are namespaced: the demo style ships its own "countries-fill", and
+    // the plain name would make the cleanup below delete that base layer.
     try {
-      await controller.removeLayer("countries-fill");
+      await controller.removeLayer("ne-countries-fill");
     } catch (e) {
       // Layer doesn't exist, ignore
     }
     try {
-      await controller.removeLayer("countries-outline");
+      await controller.removeLayer("ne-countries-outline");
     } catch (e) {
       // Layer doesn't exist, ignore
     }
@@ -335,20 +339,14 @@ class FullMapState extends State<FullMap> {
 
     await controller.addLayer(
       "countries-highlight",
-      "countries-fill",
-      const FillLayerProperties(
-        fillColor: "#627BC1",
-        fillOpacity: 0.3,
-      ),
+      "ne-countries-fill",
+      const FillLayerProperties(fillColor: "#627BC1", fillOpacity: 0.3),
     );
 
     await controller.addLayer(
       "countries-highlight",
-      "countries-outline",
-      const LineLayerProperties(
-        lineColor: "#627BC1",
-        lineWidth: 2,
-      ),
+      "ne-countries-outline",
+      const LineLayerProperties(lineColor: "#627BC1", lineWidth: 2),
     );
   }
 
@@ -392,64 +390,130 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  final _stylesAndLoaders = [
-    const StyleInfo(
+  static Future<void> addDemColorRelief(
+    MapLibreMapController controller,
+  ) async {
+    // Remove existing layers/source if they exist
+    try {
+      await controller.removeLayer("color-relief-layer");
+    } catch (e) {
+      // Layer doesn't exist, ignore
+    }
+    try {
+      await controller.removeSource("terrarium-dem");
+    } catch (e) {
+      // Source doesn't exist, ignore
+    }
+
+    // Source: Terrarium terrain tiles
+    await controller.addSource(
+      "terrarium-dem",
+      const RasterDemSourceProperties(
+        tiles: [
+          'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+        ],
+        minzoom: 0,
+        maxzoom: 15,
+        tileSize: 256,
+        encoding: 'terrarium',
+        attribution:
+            '<a href="https://registry.opendata.aws/terrain-tiles/">Elevation data © AWS Terrain Tiles</a>',
+      ),
+    );
+
+    await controller.addLayer(
+      "terrarium-dem",
+      "color-relief-layer",
+      const ColorReliefLayerProperties(
+        colorReliefOpacity: 0.7,
+        colorReliefColor: [
+          Expressions.interpolate,
+          ['linear'],
+          [Expressions.elevation],
+          0,
+          '#2b83ba',
+          500,
+          '#abdda4',
+          1500,
+          '#ffffbf',
+          2500,
+          '#fdae61',
+          3500,
+          '#d7191c',
+          4500,
+          '#ffffff',
+        ],
+      ),
+    );
+  }
+
+  // The base style goes through ExampleConstants.demoMapStyle so this page
+  // benefits from the startup fallback when demotiles.maplibre.org is
+  // rate-limited or unreachable, like every other example page.
+  late final _stylesAndLoaders = [
+    StyleInfo(
       name: "Vector",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addVector,
-      position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 6),
+      position: const CameraPosition(
+        target: LatLng(33.3832, -118.4333),
+        zoom: 6,
+      ),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Countries GeoJSON",
-      // Using the raw github file version of MapLibreStyles.DEMO here, because we need to
-      // specify a different baseStyle for consecutive elements in this list,
-      // otherwise the map will not update
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addCountries,
-      position: CameraPosition(target: LatLng(20, 0), zoom: 2),
+      position: const CameraPosition(target: LatLng(20, 0), zoom: 2),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "DEM Hillshade",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addDemHillshade,
-      position: CameraPosition(
+      position: const CameraPosition(
         target: LatLng(46.5, 8.0),
         zoom: 8,
         bearing: 80,
         tilt: 60,
       ),
     ),
-    const StyleInfo(
+    StyleInfo(
+      name: "DEM Color Relief",
+      baseStyle: ExampleConstants.demoMapStyle,
+      addDetails: addDemColorRelief,
+      position: const CameraPosition(target: LatLng(46.5, 8.0), zoom: 8),
+    ),
+    StyleInfo(
       name: "Geojson cluster",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addGeojsonCluster,
-      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
+      position: const CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Raster",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addRaster,
-      position: CameraPosition(target: LatLng(40, -100), zoom: 3),
+      position: const CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Image",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addImage,
-      position: CameraPosition(target: LatLng(43, -75), zoom: 6),
+      position: const CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
-    const StyleInfo(
+    StyleInfo(
       name: "Heatmap",
-      baseStyle: MapLibreStyles.demo,
+      baseStyle: ExampleConstants.demoMapStyle,
       addDetails: addHeatMap,
-      position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
+      position: const CameraPosition(target: LatLng(33.5, -118.1), zoom: 2),
     ),
     //video only supported on web
     if (kIsWeb)
-      const StyleInfo(
+      StyleInfo(
         name: "Video",
-        baseStyle: MapLibreStyles.demo,
+        baseStyle: ExampleConstants.demoMapStyle,
         addDetails: addVideo,
-        position: CameraPosition(
+        position: const CameraPosition(
           target: LatLng(37.562984, -122.514426),
           zoom: 17,
           bearing: -96,
@@ -469,7 +533,13 @@ class FullMapState extends State<FullMap> {
   Future<void> _onStyleLoadedCallback() async {
     if (controller == null) return;
     final styleInfo = _stylesAndLoaders[selectedStyleId];
-    await styleInfo.addDetails(controller!);
+    try {
+      await styleInfo.addDetails(controller!);
+    } catch (error) {
+      // An example whose remote data is unreachable must not block the
+      // camera move or the switch to the next example.
+      debugPrint('VariousSources: "${styleInfo.name}" failed to load: $error');
+    }
     await controller!.animateCamera(
       CameraUpdate.newCameraPosition(styleInfo.position),
     );

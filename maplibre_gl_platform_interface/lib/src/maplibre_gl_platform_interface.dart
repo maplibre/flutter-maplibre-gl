@@ -109,6 +109,23 @@ abstract class MapLibrePlatform {
     MyLocationTrackingMode myLocationTrackingMode,
   );
 
+  /// Applies a camera pitch that the active tracking mode keeps.
+  ///
+  /// Supported on Android and iOS. Web throws an [UnsupportedError]; see
+  /// `MapLibreMapController.setTrackingCameraOptions` for why.
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  });
+
+  /// Pushes an app-provided location into the map's user-location component.
+  ///
+  /// Requires the map to be created with
+  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  ///
+  /// Supported on Android, iOS and web.
+  Future<void> setManualLocation(ManualLocationUpdate update);
+
   Future<void> matchMapLanguageWithDeviceDefault();
 
   void resizeWebMap();
@@ -126,6 +143,12 @@ abstract class MapLibrePlatform {
 
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
+
+  /// Pauses map rendering. Call [resumeMap] to resume.
+  Future<void> pauseMap();
+
+  /// Resumes map rendering after [pauseMap].
+  Future<void> resumeMap();
 
   /// Animates the camera to a new position with a specified duration and interpolation.
   ///
@@ -205,6 +228,27 @@ abstract class MapLibrePlatform {
     String? sourceLayerId,
     List<Object>? filter,
   );
+
+  /// The zoom at which the cluster identified by [clusterId] splits into its
+  /// children, on the clustered GeoJSON source [sourceId].
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId);
+
+  /// The immediate children of the cluster identified by [clusterId], on the
+  /// clustered GeoJSON source [sourceId], as GeoJSON features.
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  );
+
+  /// The original points belonging to the cluster identified by [clusterId], on
+  /// the clustered GeoJSON source [sourceId], as GeoJSON features.
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  });
+
   Future invalidateAmbientCache();
   Future clearAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
@@ -245,6 +289,10 @@ abstract class MapLibrePlatform {
   Future<List> getLayerIds();
 
   Future<List> getSourceIds();
+
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId);
+
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId);
 
   Future<void> setFilter(String layerId, dynamic filter);
 
@@ -386,6 +434,23 @@ abstract class MapLibrePlatform {
     double? maxzoom,
   });
 
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  });
+
+  Future<void> addBackgroundLayer(
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  });
+
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
@@ -397,6 +462,22 @@ abstract class MapLibrePlatform {
   });
 
   Future<void> addSource(String sourceId, SourceProperties properties);
+
+  /// Sets the style's `sky` root object.
+  Future<void> setSky(SkyProperties sky);
+
+  /// Sets the style's `terrain` root object, or removes it when [terrain] is
+  /// null.
+  Future<void> setTerrain(TerrainProperties? terrain);
+
+  /// Sets the style's `projection` root object.
+  Future<void> setProjection(Object type);
+
+  /// Sets the style's `light` root object.
+  Future<void> setLight(LightProperties light);
+
+  /// Sets one property of the style's global state.
+  Future<void> setGlobalStateProperty(String name, Object? value);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 

@@ -1,0 +1,7 @@
+# Keep local Flutter build artifacts out of the published archive.
+#
+# `dart pub publish` only reads ignore files at or below the package root, so the
+# `build/` line in the repository-root .gitignore never reaches this package: git
+# ignores the directory, pub packs it anyway. Without this file the archive ships
+# the .dill compiler caches, which is tens of MB instead of well under one.
+build/

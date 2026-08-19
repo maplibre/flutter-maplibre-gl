@@ -93,70 +93,15 @@ SymbolLayerProperties(
 )
 ```
 
-## Adding a GeoJSON source
+## Adding and updating a source
 
-### Inline data
+Sources are added with `addGeoJsonSource` and updated with `setGeoJsonSource`
+(whole collection) or `setGeoJsonFeature` (one feature by id). See
+[GeoJSON Source](../layers/geojson-source.md) for the calls and their options.
 
-Pass a Dart `Map<String, dynamic>` representing the FeatureCollection:
+### Large payloads
 
-```dart
-await controller.addGeoJsonSource('my-source', {
-  'type': 'FeatureCollection',
-  'features': [
-    {
-      'type': 'Feature',
-      'properties': {'name': 'Paris', 'population': 2161000},
-      'geometry': {
-        'type': 'Point',
-        'coordinates': [2.3522, 48.8566],
-      },
-    },
-  ],
-});
-```
-
-### Remote URL
-
-Pass a URL string as the GeoJSON value. MapLibre fetches and parses it:
-
-```dart
-await controller.addGeoJsonSource('rivers', {
-  'type': 'geojson',
-  'data': 'https://example.com/rivers.geojson',
-});
-```
-
-!!! warning "CORS on web"
-    When running on web, the GeoJSON URL must have appropriate CORS headers. Requests to the same origin always work.
-
-## Updating data
-
-### Replace all features
-
-```dart
-await controller.setGeoJsonSource('my-source', {
-  'type': 'FeatureCollection',
-  'features': updatedFeatures,
-});
-```
-
-Use this when the dataset changes significantly (e.g. filtering, time-series playback).
-
-### Update a single feature
-
-```dart
-await controller.setGeoJsonFeature('my-source', {
-  'type': 'Feature',
-  'id': 'feature-42',  // must match an existing feature id
-  'properties': {'status': 'active'},
-  'geometry': {
-    'type': 'Point',
-    'coordinates': [2.3522, 48.8566],
-  },
-});
-```
-
-For this to work, features must have an `id` field. On web you may also need `promoteId` (see below).
+On Android and iOS, adding or updating a source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, is encoded on a background isolate, so the UI is not blocked for the whole encode. Smaller payloads keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame.
 
 ## `promoteId`: web-only caveat
 
@@ -170,7 +115,9 @@ await controller.addGeoJsonSource(
 );
 ```
 
-This parameter is ignored on Android and iOS (native MapLibre handles feature IDs natively).
+This parameter is only supported on web: the MapLibre Android SDK does not expose `promoteId`, and on iOS it is ignored as well. For feature state on Android, every feature must carry a top-level `id` member in the GeoJSON itself.
+
+Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
 
 ## Live demo
 
@@ -181,7 +128,7 @@ This parameter is ignored on Android and iOS (native MapLibre handles feature ID
   loading="lazy"
 ></iframe>
 
-South American capitals rendered from an inline GeoJSON FeatureCollection. Circle radius scales with population using an `interpolate` expression.
+Capital cities across the Americas rendered from an inline FeatureCollection. Circle radius scales with population using an `interpolate` expression.
 
 ## Next steps
 

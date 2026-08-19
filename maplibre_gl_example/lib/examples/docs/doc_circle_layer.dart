@@ -58,10 +58,7 @@ class _DocCircleLayerBodyState extends State<_DocCircleLayerBody> {
               .map(
                 (e) => {
                   'type': 'Feature',
-                  'properties': {
-                    'magnitude': e['mag'],
-                    'place': e['place'],
-                  },
+                  'properties': {'magnitude': e['mag'], 'place': e['place']},
                   'geometry': {
                     'type': 'Point',
                     'coordinates': [e['lng'], e['lat']],

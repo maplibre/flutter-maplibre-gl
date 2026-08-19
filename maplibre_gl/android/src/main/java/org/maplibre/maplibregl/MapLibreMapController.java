@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.os.Bundle;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -34,6 +35,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.jetbrains.annotations.NotNull;
@@ -64,6 +66,8 @@ import org.maplibre.android.maps.Style;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.BackgroundLayer;
+import org.maplibre.android.style.layers.ColorReliefLayer;
 import org.maplibre.android.style.layers.FillExtrusionLayer;
 import org.maplibre.android.style.layers.FillLayer;
 import org.maplibre.android.style.layers.HeatmapLayer;
@@ -73,6 +77,8 @@ import org.maplibre.android.style.layers.LineLayer;
 import org.maplibre.android.style.layers.Property;
 import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
+import org.maplibre.android.style.light.Position;
+import org.maplibre.android.style.light.Light;
 import org.maplibre.android.style.layers.RasterLayer;
 import org.maplibre.android.style.layers.SymbolLayer;
 import org.maplibre.android.style.sources.CustomGeometrySource;
@@ -83,6 +89,7 @@ import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
 import org.maplibre.geojson.FeatureCollection;
+import org.maplibre.geojson.Point;
 import org.maplibre.android.net.ConnectivityReceiver;
 import org.maplibre.android.snapshotter.MapSnapshot;
 import org.maplibre.android.snapshotter.MapSnapshotter;
@@ -106,7 +113,34 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.platform.PlatformView;
 
 
-/** Controller of a single MapLibreMaps MapView instance. */
+/**
+ * Controller of a single MapLibre {@link MapView} instance exposed as a Flutter
+ * {@link PlatformView}. Mediates between the Flutter method channel, the host
+ * activity {@link Lifecycle}, and the native {@link MapView}.
+ *
+ * <h2>Surviving activity recreation</h2>
+ * Android can destroy and recreate the host activity at any time (rotation, "Don't keep
+ * activities", memory pressure). The {@link MapView} holds GL resources tied to the activity
+ * that built it, so it is destroyed with the activity and rebuilt against the new one, without
+ * the Flutter widget tree seeing the swap.
+ *
+ * <p>Carried across: the camera ({@link #lastCameraPosition}), MapLibre's own state bundle
+ * ({@link #savedMapViewState}), and the controller fields, which outlive the activity. Lost:
+ * sources, layers, images and other runtime style changes, which Dart re-applies when
+ * {@code map#onStyleLoaded} fires for the new MapView. {@link #recreateMapViewIfNecessary()}
+ * lists both sides in full.
+ *
+ * <p>{@link MapLibreMapFactory} broadcasts the activity hooks ({@link #onActivityAttached()},
+ * {@link #onActivityDetached()}, {@link #onActivityRebound()}); with the
+ * {@code mapViewCreated/Started/Resumed} flags they keep each MapView's lifecycle calls
+ * balanced however Jetpack replays events. While the MapView is being rebuilt,
+ * {@code map#waitForMap} parks its result until {@link #onMapReady} fires again, and every
+ * other map-touching call answers {@code MAP_NOT_READY}.
+ *
+ * <p>{@code map#pause} / {@code map#resume} drive rendering explicitly through
+ * {@link #userPaused}: a map paused from Dart stays paused even when the activity returns to
+ * the foreground.
+ */
 @SuppressLint("MissingPermission")
 final class MapLibreMapController
     implements DefaultLifecycleObserver,
@@ -123,14 +157,52 @@ final class MapLibreMapController
         OnCameraTrackingChangedListener,
         PlatformView {
   private static final String TAG = "MapLibreMapController";
+
+  /**
+   * Duration used for {@code locationComponent#setTrackingCameraOptions} when Dart
+   * sends none. Mirrors the SDK's own {@code DEFAULT_TRACKING_TILT_ANIM_DURATION},
+   * which is package-private, so the callback-taking overload cannot reuse it.
+   */
+  private static final long DEFAULT_TRACKING_TILT_DURATION_MS = 1250;
+
   private final int id;
   private final MethodChannel methodChannel;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
+  private final MapLibreMapOptions mapLibreMapOptions;
+  /**
+   * The {@link Lifecycle} this controller is currently observing. Used to detect
+   * stale callbacks from a destroyed activity and to avoid double-subscription
+   * when the host activity is recreated (e.g. "Don't keep activities", rotation).
+   */
+  private Lifecycle boundLifecycle;
+  /**
+   * Last known camera position. Saved before destroying the {@link MapView} so it
+   * can be restored once the map is recreated in a fresh activity. Cleared after
+   * being applied in {@link #onMapReady(MapLibreMap)}.
+   */
+  private CameraPosition lastCameraPosition;
+  /**
+   * State bundle written by {@link MapView#onSaveInstanceState(Bundle)} before the
+   * {@link MapView} is destroyed and read back by {@link MapView#onCreate(Bundle)}
+   * on the recreated instance. Lets MapLibre restore internal state (camera, style
+   * progress, etc.) across activity recreation, complementing {@link #lastCameraPosition}.
+   */
+  private final Bundle savedMapViewState = new Bundle();
   private float density;
-  private final Context context;
+  private final Context applicationContext;
+  /**
+   * Activity context used to build the {@link MapView}. Re-pointed at the current
+   * activity on every {@link #onActivityAttached()}/{@link #onActivityRebound()} so
+   * we don't pin a destroyed activity in memory. Register long-lived listeners against
+   * {@link #applicationContext} instead of this field.
+   */
+  private Context context;
   private final String styleStringInitial;
   /**
-   * This container is returned as the final platform view instead of returning `mapView`.
+   * Container that wraps the {@link MapView}. Returned as the platform view so the
+   * inner {@link MapView} can be swapped out (after activity recreation) without
+   * Flutter noticing. Created with {@link #applicationContext} on purpose: it lives
+   * across activities, and uses no activity-themed attributes.
    * See {@link MapLibreMapController#destroyMapViewIfNecessary()} for details.
    */
   private FrameLayout mapViewContainer;
@@ -138,13 +210,30 @@ final class MapLibreMapController
   private MapLibreMap mapLibreMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+  private boolean manualLocationSource = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
+  // Tint of the attribution (i) button, or null to leave the MapLibre SDK
+  // default in place. Only set through the attributionButtonColor map option.
+  private Integer attributionButtonColor = null;
+  /**
+   * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
+   * once per {@link MapView} instance. See the lifecycle observer section below.
+   */
+  private boolean mapViewCreated = false;
   private boolean mapViewStarted = false;
+  private boolean mapViewResumed = false;
+  /**
+   * True when Dart has explicitly requested {@code pauseMap()}. Suppresses the
+   * natural {@link #onResume(LifecycleOwner)} until {@code resumeMap()} is called,
+   * so a backgrounded map stays paused even when the host activity returns to the
+   * foreground.
+   */
+  private boolean userPaused = false;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -166,12 +255,11 @@ final class MapLibreMapController
         public void onStyleLoaded(@NonNull Style style) {
           MapLibreMapController.this.style = style;
 
-          // commented out while cherry-picking upstream956
-          // if (myLocationEnabled) {
-          //   if (hasLocationPermission()) {
-          //     updateMyLocationEnabled();
-          //   }
-          // }
+          // Called unconditionally: updateMyLocationEnabled() checks myLocationEnabled
+          // itself, and enableLocationComponent() checks the permission, so a map
+          // without either ends up doing nothing here. Calling it on every style load
+          // is what brings the location component back after the style is replaced or
+          // the activity is recreated, which an early return would skip.
           updateMyLocationEnabled();
 
           if (null != bounds) {
@@ -198,10 +286,13 @@ final class MapLibreMapController
     MapLibreUtils.getMapLibre(context);
     this.id = id;
     this.context = context;
+    this.applicationContext =
+        context.getApplicationContext() != null ? context.getApplicationContext() : context;
+    this.mapLibreMapOptions = options;
     this.dragEnabled = dragEnabled;
     this.featureTapsTriggersMapClick = featureTapsTriggersMapClick;
     this.styleStringInitial = styleStringInitial;
-    this.mapViewContainer = new FrameLayout(context);
+    this.mapViewContainer = new FrameLayout(applicationContext);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
     this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
@@ -221,10 +312,181 @@ final class MapLibreMapController
     return mapViewContainer;
   }
 
+  /**
+   * Initial wire-up after construction. Order matters:
+   * <ol>
+   *   <li>Register component callbacks against the {@link #applicationContext}
+   *       so we don't pin the host {@link android.app.Activity}.</li>
+   *   <li>Subscribe to the host activity {@link Lifecycle}. Jetpack replays the
+   *       missed events synchronously, which drives {@code mapView.onCreate()},
+   *       {@code onStart()} and {@code onResume()} via our lifecycle observer
+   *       methods. The {@link #savedMapViewState} bundle is empty here, which
+   *       is equivalent to "no saved state" for MapLibre.</li>
+   *   <li>Call {@link MapView#getMapAsync} only AFTER {@code onCreate} has fired,
+   *       to comply with MapLibre's documented call order.</li>
+   * </ol>
+   */
   void init() {
-    lifecycleProvider.getLifecycle().addObserver(this);
-    context.registerComponentCallbacks(this);
+    applicationContext.registerComponentCallbacks(this);
+    registerToLifecycle();
     mapView.getMapAsync(this);
+  }
+
+  /**
+   * Invoked by {@link MapLibreMapFactory} when the plugin re-attaches to an activity.
+   * Triggered both on first attach and after a full activity teardown (e.g. with
+   * "Don't keep activities" enabled). Refreshes context references, recreates the
+   * {@link MapView} if the previous one was destroyed, and rebinds the new lifecycle.
+   */
+  void onActivityAttached() {
+    rebindToActivity();
+  }
+
+  /**
+   * Points the controller at the activity currently hosting it: refreshes the context
+   * references, rebuilds the {@link MapView} if the previous one was destroyed, and
+   * moves the lifecycle subscription to the new activity.
+   *
+   * <p>Shared by {@link #onActivityAttached()} and {@link #onActivityRebound()}. Both
+   * hooks reach this in the same state, because in the Flutter standard ordering the
+   * old activity's {@code onDestroy} has already torn the MapView down by the time
+   * either runs; keeping one implementation is what stops the two paths drifting.
+   */
+  private void rebindToActivity() {
+    if (disposed) {
+      return;
+    }
+
+    unregisterFromLifecycle();
+    updateActivityContext();
+
+    final boolean recreated = (mapView == null);
+    if (recreated) {
+      recreateMapViewIfNecessary();
+    }
+
+    // Register the new lifecycle BEFORE getMapAsync so Jetpack's synchronous
+    // replay drives mapView.onCreate(savedMapViewState) first. Calling
+    // getMapAsync against a not-yet-created MapView is technically tolerated
+    // by MapLibre but violates the documented contract.
+    registerToLifecycle();
+
+    if (recreated) {
+      mapView.getMapAsync(this);
+    }
+  }
+
+  /**
+   * Invoked when the plugin is fully detached from the activity (i.e. the host
+   * activity is being destroyed without a config change, e.g. "Don't keep
+   * activities" or a real activity finish). Saves what state we can and tears
+   * down the native {@link MapView}.
+   */
+  void onActivityDetached() {
+    saveCameraPosition();
+    destroyMapViewIfNecessary();
+    unregisterFromLifecycle();
+  }
+
+  /**
+   * Invoked after a configuration change (e.g. rotation). In the Flutter standard
+   * ordering the old activity's {@code onDestroy} fires before this hook, so by
+   * the time we get here the {@link MapView} has already been torn down via the
+   * lifecycle observer and we go through the same path as a full re-attach. The
+   * fast-path (mapView still alive) only triggers if reattachment somehow beats
+   * the old activity's destroy callback. {@link #lastCameraPosition} and
+   * {@link #savedMapViewState} bridge the gap either way.
+   */
+  void onActivityRebound() {
+    rebindToActivity();
+  }
+
+  /**
+   * Re-points {@link #context} at the freshly attached activity so we never hold a
+   * destroyed activity reference. Also refreshes {@link #density} because display
+   * configuration can change across activity recreation (font scale, display size).
+   */
+  private void updateActivityContext() {
+    final Context activityContext = lifecycleProvider.getContext();
+    if (activityContext != null) {
+      this.context = activityContext;
+      this.density = activityContext.getResources().getDisplayMetrics().density;
+    }
+  }
+
+  private void registerToLifecycle() {
+    Lifecycle lifecycle = lifecycleProvider.getLifecycle();
+    if (lifecycle != null && lifecycle != boundLifecycle) {
+      lifecycle.addObserver(this);
+      boundLifecycle = lifecycle;
+    }
+  }
+
+  private void unregisterFromLifecycle() {
+    if (boundLifecycle != null) {
+      boundLifecycle.removeObserver(this);
+      boundLifecycle = null;
+    }
+  }
+
+  private void saveCameraPosition() {
+    if (mapLibreMap != null) {
+      lastCameraPosition = mapLibreMap.getCameraPosition();
+    }
+  }
+
+  /**
+   * Builds a fresh {@link MapView} bound to the current activity context. Caller
+   * must have already updated {@link #context} via {@link #updateActivityContext()}
+   * and must call {@link MapView#getMapAsync} AFTER the lifecycle has been bound
+   * (so {@code mapView.onCreate(savedMapViewState)} runs first via the lifecycle
+   * observer replay).
+   *
+   * <p>State preserved across recreation:
+   * <ul>
+   *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
+   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}).</li>
+   *   <li>Construction-time {@link MapLibreMapOptions} (UI flags, gestures, etc.).</li>
+   *   <li>Controller fields like {@link #trackCameraPosition}, {@link #myLocationEnabled},
+   *       {@link #myLocationTrackingMode}, {@link #myLocationRenderMode}, {@link #bounds}.</li>
+   * </ul>
+   *
+   * <p>State lost across recreation (must be re-applied from Dart on
+   * {@code onStyleLoadedCallback}):
+   * <ul>
+   *   <li>Sources / layers / images added at runtime via the method channel.</li>
+   *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
+   *       initial style).</li>
+   *   <li>Runtime tweaks to UI flags applied via {@code map#update} after
+   *       construction (compass, attribution, content insets, etc.).</li>
+   *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
+   * </ul>
+   */
+  private void recreateMapViewIfNecessary() {
+    if (mapView != null) {
+      return;
+    }
+
+    final Context mapContext = (context != null) ? context : applicationContext;
+
+    mapLibreMap = null;
+    style = null;
+    locationComponent = null;
+    mapViewCreated = false;
+    mapViewStarted = false;
+    mapViewResumed = false;
+    interactiveFeatureLayerIds.clear();
+    addedFeaturesByLayer.clear();
+
+    mapViewContainer.removeAllViews();
+    mapView = new MapView(mapContext, mapLibreMapOptions);
+    if (dragEnabled) {
+      androidGesturesManager = new AndroidGesturesManager(mapView.getContext(), false);
+    }
+    mapViewContainer.addView(mapView);
+    // NOTE: getMapAsync is intentionally NOT called here. The caller is responsible
+    // for invoking it after registerToLifecycle() so that mapView.onCreate fires
+    // first (see onActivityAttached / onActivityRebound).
   }
 
   private void moveCamera(CameraUpdate cameraUpdate) {
@@ -236,7 +498,10 @@ final class MapLibreMapController
   }
 
   private CameraPosition getCameraPosition() {
-    return trackCameraPosition ? mapLibreMap.getCameraPosition() : null;
+    if (!trackCameraPosition || mapLibreMap == null) {
+      return null;
+    }
+    return mapLibreMap.getCameraPosition();
   }
 
   @Override
@@ -250,9 +515,31 @@ final class MapLibreMapController
     mapLibreMap.addOnCameraMoveListener(this);
     mapLibreMap.addOnCameraIdleListener(this);
 
+    // Re-apply an app-provided attribution tint: UiSettings belongs to the
+    // MapView, so a recreated view (activity rebind) would otherwise fall back
+    // to the SDK default. Without the option we leave that default alone.
+    if (attributionButtonColor != null) {
+      mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
+    }
+
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
       mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
+    }
+
+    // Camera restoration after activity recreation.
+    // Priority order:
+    //   1. lastCameraPosition saved before the previous MapView was destroyed.
+    //   2. initial camera supplied via MapLibreMapOptions (covers the edge case
+    //      where the previous MapView was destroyed before onMapReady ever ran,
+    //      so lastCameraPosition was never populated).
+    CameraPosition restorePosition = lastCameraPosition;
+    if (restorePosition == null) {
+      restorePosition = mapLibreMapOptions.getCamera();
+    }
+    if (restorePosition != null) {
+      mapLibreMap.moveCamera(CameraUpdateFactory.newCameraPosition(restorePosition));
+      lastCameraPosition = null;
     }
 
     if (androidGesturesManager != null) {
@@ -319,18 +606,23 @@ final class MapLibreMapController
 
   @SuppressWarnings({"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
-    if (hasLocationPermission()) {
+    if (manualLocationSource || hasLocationPermission()) {
 
       locationComponent = mapLibreMap.getLocationComponent();
 
-      LocationComponentActivationOptions options =
+      LocationComponentActivationOptions.Builder optionsBuilder =
               LocationComponentActivationOptions
                       .builder(context, style)
-                      .locationComponentOptions(buildLocationComponentOptions(style))
-                      .locationEngine(myLocationEngineFactory.getLocationEngine(context))
-                      .build();
+                      .locationComponentOptions(buildLocationComponentOptions(style));
+      if (manualLocationSource) {
+        // App-provided locations: disable the native engine. Updates arrive via
+        // locationComponent#setManualLocation -> forceLocationUpdate(location).
+        optionsBuilder.useDefaultLocationEngine(false);
+      } else {
+        optionsBuilder.locationEngine(myLocationEngineFactory.getLocationEngine(context));
+      }
 
-      locationComponent.activateLocationComponent(options);
+      locationComponent.activateLocationComponent(optionsBuilder.build());
       locationComponent.setLocationComponentEnabled(true);
       locationComponent.setMaxAnimationFps(30);
       updateMyLocationTrackingMode();
@@ -410,6 +702,164 @@ final class MapLibreMapController
     final Map<String, Object> arguments = new HashMap<>(1);
     arguments.put("userLocation", userLocation);
     methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
+  }
+
+  // Returns a reply map carrying the layer's MapLibre style-spec JSON under
+  // "properties" (the layer entry from the serialized style: id/type/source/
+  // paint/layout/...), or an empty map if the layer is absent. Reading the
+  // serialized style avoids enumerating every typed getter and guarantees the
+  // result matches the style spec, like the iOS and web implementations.
+  private Map<String, Object> getLayerProperties(String layerId) {
+    Map<String, Object> reply = new HashMap<>();
+    JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
+    JsonArray layers = styleJson.getAsJsonArray("layers");
+    if (layers != null) {
+      for (JsonElement element : layers) {
+        JsonObject layer = element.getAsJsonObject();
+        JsonElement id = layer.get("id");
+        if (id != null && layerId.equals(id.getAsString())) {
+          reply.put("properties", layer.toString());
+          break;
+        }
+      }
+    }
+    return reply;
+  }
+
+  // Same as getLayerProperties but for sources, which the style spec keys by id
+  // under the "sources" object rather than storing in an array.
+  private Map<String, Object> getSourceProperties(String sourceId) {
+    Map<String, Object> reply = new HashMap<>();
+    JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
+    JsonObject sources = styleJson.getAsJsonObject("sources");
+    if (sources != null && sources.has(sourceId)) {
+      reply.put("properties", sources.getAsJsonObject(sourceId).toString());
+    }
+    return reply;
+  }
+
+  // Resolves the source a feature-state call addresses, or replies with a
+  // descriptive error and returns null so the caller can just bail out.
+  //
+  // The Android SDK exposes feature state on the source objects themselves
+  // (there is no MapLibreMap-level entry point), and only GeoJsonSource and
+  // VectorSource carry the API. On a vector source every call is additionally
+  // scoped to a source layer, so a missing sourceLayer would leave the call
+  // with nothing to address; that is rejected here once instead of in each
+  // method-channel case.
+  private Source getFeatureStateCapableSource(
+      String sourceId, String sourceLayer, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return null;
+    }
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      result.error(
+          "SOURCE_NOT_FOUND",
+          "Source '" + sourceId + "' does not exist in the current style.",
+          null);
+      return null;
+    }
+    if (source instanceof VectorSource) {
+      if (sourceLayer == null) {
+        result.error(
+            "SOURCE_LAYER_REQUIRED",
+            "Source '"
+                + sourceId
+                + "' is a vector source, so feature state calls on it require a 'sourceLayer'.",
+            null);
+        return null;
+      }
+      return source;
+    }
+    if (source instanceof GeoJsonSource) {
+      return source;
+    }
+    result.error(
+        "UNSUPPORTED_SOURCE_TYPE",
+        "Source '"
+            + sourceId
+            + "' is a "
+            + source.getClass().getSimpleName()
+            + ". Feature state only applies to GeoJSON and vector sources.",
+        null);
+    return null;
+  }
+
+  // Resolves the GeoJSON source a cluster-inspection call addresses, or replies
+  // with a descriptive error and returns null so the caller can just bail out.
+  //
+  // Clustering is a GeoJSON source feature, and the Android SDK exposes the
+  // inspection methods on GeoJsonSource only.
+  private GeoJsonSource getClusterCapableSource(
+      String sourceId, String methodName, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return null;
+    }
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      result.error(
+          "SOURCE_NOT_FOUND",
+          "Source '" + sourceId + "' does not exist in the current style.",
+          null);
+      return null;
+    }
+    if (source instanceof GeoJsonSource) {
+      return (GeoJsonSource) source;
+    }
+    result.error(
+        "UNSUPPORTED_SOURCE_TYPE",
+        "Source '"
+            + sourceId
+            + "' is a "
+            + source.getClass().getSimpleName()
+            + ". "
+            + methodName
+            + " only applies to clustered GeoJSON sources.",
+        null);
+    return null;
+  }
+
+  // Builds the argument the SDK's cluster methods take.
+  //
+  // They are declared as taking a Feature, but everything below them reads a
+  // single property off it: the JNI layer copies properties.cluster_id and the
+  // renderer looks up that id in the source's supercluster index, ignoring the
+  // geometry and every other property. A minimal point feature carrying the id
+  // is therefore the whole input, which is what lets the Dart API be an int.
+  private static Feature clusterFeature(long clusterId) {
+    final JsonObject properties = new JsonObject();
+    properties.addProperty("cluster_id", clusterId);
+    return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
+  }
+
+  // Serializes features for the channel as JSON strings, so nested properties
+  // survive intact. Shared by every call that answers with features:
+  // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
+  private static Map<String, Object> featuresReply(List<Feature> features) {
+    final List<String> featuresJson = new ArrayList<>();
+    if (features != null) {
+      for (Feature feature : features) {
+        featuresJson.add(feature.toJson());
+      }
+    }
+    final Map<String, Object> reply = new HashMap<>();
+    reply.put("features", featuresJson);
+    return reply;
+  }
+
+  // The cluster calls answer with a FeatureCollection, which is null when the
+  // id matches nothing.
+  private static Map<String, Object> featuresReply(FeatureCollection collection) {
+    return featuresReply(collection == null ? null : collection.features());
   }
 
   private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
@@ -772,6 +1222,62 @@ final class MapLibreMapController
     return true;
   }
 
+  private boolean addColorReliefLayer(
+      String layerName,
+      String sourceName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties,
+      Expression filter) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addColorReliefLayer: style not ready, skipping");
+      return false;
+    }
+    ColorReliefLayer layer = new ColorReliefLayer(layerName, sourceName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+    return true;
+  }
+
+  private boolean addBackgroundLayer(
+      String layerName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties) {
+    if (style == null || !style.isFullyLoaded()) {
+      Log.w(TAG, "addBackgroundLayer: style not ready, skipping");
+      return false;
+    }
+    BackgroundLayer layer = new BackgroundLayer(layerName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+    return true;
+  }
+
+
+
   private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
@@ -843,10 +1349,56 @@ final class MapLibreMapController
         break;
       case "map#update":
         {
+          // Almost every option setter below goes through mapLibreMap, which is
+          // null while the MapView is being rebuilt after activity recreation.
+          // Answer like the map-touching cases do rather than reading it blind.
+          if (mapLibreMap == null) {
+            result.error(
+                "MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
+            break;
+          }
           Convert.interpretMapLibreMapOptions(call.argument("options"), this, context);
           result.success(Convert.toJson(getCameraPosition()));
           break;
         }
+      // Dart-driven pause/resume. Only flips MapView state when it's actually out
+      // of sync with the request, so we never double-call onPause/onResume against
+      // the natural Activity lifecycle (which the lifecycle observer handles).
+      case "map#pause":
+        userPaused = true;
+        if (!disposed && mapView != null && mapViewResumed) {
+          mapView.onPause();
+          mapViewResumed = false;
+        }
+        result.success(null);
+        break;
+      case "map#resume":
+        userPaused = false;
+        if (!disposed
+            && mapView != null
+            && !mapViewResumed
+            && boundLifecycle != null
+            && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+          mapView.onResume();
+          mapViewResumed = true;
+        }
+        result.success(null);
+        break;
+      // All cases below require a live mapLibreMap. If the map is being recreated
+      // (e.g. after "Don't keep activities") we stash the result so the Flutter
+      // side gets its answer once onMapReady fires again.
+      default:
+        if (mapLibreMap == null) {
+          result.error("MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
+          return;
+        }
+        onMethodCallWithMap(call, result);
+        return;
+    }
+  }
+
+  private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
+    switch (call.method) {
       case "map#updateMyLocationTrackingMode":
         {
           int myLocationTrackingMode = call.argument("mode");
@@ -1028,40 +1580,60 @@ final class MapLibreMapController
         }
       case "map#queryRenderedFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
-          String[] layerIds = ((List<String>) call.argument("layerIds")).toArray(new String[0]);
+          List<String> layerIdsArgument = call.argument("layerIds");
+          if (layerIdsArgument == null) {
+            result.error(
+                "INVALID_ARGUMENT", "queryRenderedFeatures requires a 'layerIds' list.", null);
+            break;
+          }
+          String[] layerIds = layerIdsArgument.toArray(new String[0]);
 
-          List<Object> filter = call.argument("filter");
-          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+          // queryRenderedFeatures sends the filter as a list, while
+          // queryRenderedFeaturesInRect sends the same expression already
+          // encoded as a JSON string. Reading only the list shape dropped the
+          // filter for the rect call, which then answered with every feature
+          // in the rectangle.
+          Object filter = call.argument("filter");
+          JsonElement jsonElement = null;
+          if (filter instanceof String) {
+            jsonElement = JsonParser.parseString((String) filter);
+          } else if (filter != null) {
+            jsonElement = new Gson().toJsonTree(filter);
+          }
           JsonArray jsonArray = null;
           if (jsonElement != null && jsonElement.isJsonArray()) {
             jsonArray = jsonElement.getAsJsonArray();
           }
           Expression filterExpression =
               jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-          if (call.hasArgument("x")) {
-            Double x = call.argument("x");
-            Double y = call.argument("y");
+          Double x = call.argument("x");
+          Double y = call.argument("y");
+          Double left = call.argument("left");
+          Double top = call.argument("top");
+          Double right = call.argument("right");
+          Double bottom = call.argument("bottom");
+          if (x != null && y != null) {
             PointF pixel = new PointF(x.floatValue(), y.floatValue());
             features = mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layerIds);
-          } else {
-            Double left = call.argument("left");
-            Double top = call.argument("top");
-            Double right = call.argument("right");
-            Double bottom = call.argument("bottom");
+          } else if (left != null && top != null && right != null && bottom != null) {
             RectF rectF =
                 new RectF(
                     left.floatValue(), top.floatValue(), right.floatValue(), bottom.floatValue());
             features = mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layerIds);
+          } else {
+            // Reading the coordinates blind turned a bad call into a
+            // NullPointerException, and answering with an empty list would look
+            // like a query that found nothing. Say which arguments are missing.
+            result.error(
+                "INVALID_ARGUMENT",
+                "queryRenderedFeatures requires either 'x' and 'y', or 'left', 'top', 'right' "
+                    + "and 'bottom', as numbers.",
+                null);
+            break;
           }
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
       case "map#setTelemetryEnabled":
@@ -1313,6 +1885,186 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "source#setFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final Map<String, Object> state = call.argument("state");
+          // Read blind these would surface as an IllegalStateException from Gson
+          // or a NullPointerException from the SDK, both reaching Dart as a bare
+          // "error" rather than something a caller can act on.
+          if (featureId == null || state == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "setFeatureState requires a 'featureId' and a 'state' map.",
+                null);
+            break;
+          }
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          final JsonObject stateJson = new Gson().toJsonTree(state).getAsJsonObject();
+          final boolean applied =
+              source instanceof VectorSource
+                  ? ((VectorSource) source).setFeatureState(sourceLayer, featureId, stateJson)
+                  : ((GeoJsonSource) source).setFeatureState(featureId, stateJson);
+          if (applied) {
+            result.success(null);
+          } else {
+            // The SDK setters return false instead of throwing; surfacing that
+            // as an error keeps a rejected call from looking like a success.
+            result.error(
+                "FEATURE_STATE_NOT_APPLIED",
+                "setFeatureState for feature '"
+                    + featureId
+                    + "' on source '"
+                    + sourceId
+                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+                null);
+          }
+          break;
+        }
+      case "source#removeFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final String stateKey = call.argument("stateKey");
+          // A stateKey lives inside one feature's state, so without a featureId
+          // there is nothing the SDK could remove it from.
+          if (featureId == null && stateKey != null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "removeFeatureState with a 'stateKey' also requires the 'featureId' that owns the key.",
+                null);
+            break;
+          }
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          // Which arguments are present picks the operation, matching web:
+          // both drop one key, featureId alone drops that feature's whole
+          // state, neither resets the whole source (or source layer).
+          final boolean applied;
+          if (source instanceof VectorSource) {
+            final VectorSource vectorSource = (VectorSource) source;
+            if (featureId == null) {
+              applied = vectorSource.resetFeatureStates(sourceLayer);
+            } else if (stateKey == null) {
+              applied = vectorSource.removeFeatureState(sourceLayer, featureId);
+            } else {
+              applied = vectorSource.removeFeatureState(sourceLayer, featureId, stateKey);
+            }
+          } else {
+            final GeoJsonSource geoJsonSource = (GeoJsonSource) source;
+            if (featureId == null) {
+              applied = geoJsonSource.resetFeatureStates();
+            } else if (stateKey == null) {
+              applied = geoJsonSource.removeFeatureState(featureId);
+            } else {
+              applied = geoJsonSource.removeFeatureState(featureId, stateKey);
+            }
+          }
+          if (applied) {
+            result.success(null);
+          } else {
+            result.error(
+                "FEATURE_STATE_NOT_APPLIED",
+                "removeFeatureState on source '"
+                    + sourceId
+                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+                null);
+          }
+          break;
+        }
+      case "source#getFeatureState":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String sourceLayer = call.argument("sourceLayer");
+          final String featureId = call.argument("featureId");
+          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+          if (source == null) {
+            break;
+          }
+          final JsonObject stateJson =
+              source instanceof VectorSource
+                  ? ((VectorSource) source).getFeatureState(sourceLayer, featureId)
+                  : ((GeoJsonSource) source).getFeatureState(featureId);
+          // Serialized as a JSON string so nested values survive the channel
+          // intact, like style#getLayerProperties. A null state must stay null
+          // rather than become an empty map: the Dart return type is nullable
+          // and callers distinguish "no state" from an empty state.
+          final Map<String, Object> reply = new HashMap<>();
+          reply.put("state", stateJson == null ? null : stateJson.toString());
+          result.success(reply);
+          break;
+        }
+      case "source#getClusterExpansionZoom":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          if (clusterId == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "getClusterExpansionZoom requires an int 'clusterId'.",
+                null);
+            break;
+          }
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterExpansionZoom", result);
+          if (source == null) {
+            break;
+          }
+          result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
+          break;
+        }
+      case "source#getClusterChildren":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          if (clusterId == null) {
+            result.error(
+                "INVALID_ARGUMENT", "getClusterChildren requires an int 'clusterId'.", null);
+            break;
+          }
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterChildren", result);
+          if (source == null) {
+            break;
+          }
+          result.success(
+              featuresReply(source.getClusterChildren(clusterFeature(clusterId.longValue()))));
+          break;
+        }
+      case "source#getClusterLeaves":
+        {
+          final String sourceId = call.argument("sourceId");
+          final Number clusterId = call.argument("clusterId");
+          final Number limit = call.argument("limit");
+          final Number offset = call.argument("offset");
+          if (clusterId == null || limit == null || offset == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "getClusterLeaves requires an int 'clusterId', 'limit' and 'offset'.",
+                null);
+            break;
+          }
+          final GeoJsonSource source =
+              getClusterCapableSource(sourceId, "getClusterLeaves", result);
+          if (source == null) {
+            break;
+          }
+          result.success(
+              featuresReply(
+                  source.getClusterLeaves(
+                      clusterFeature(clusterId.longValue()),
+                      limit.longValue(),
+                      offset.longValue())));
+          break;
+        }
       case "symbolLayer#add":
         {
           final String sourceId = call.argument("sourceId");
@@ -1410,9 +2162,21 @@ final class MapLibreMapController
             } else if (layer instanceof RasterLayer) {
               properties = LayerPropertyConverter
                   .interpretRasterLayerProperties(call.argument("properties"));
+            } else if (layer instanceof FillExtrusionLayer) {
+              properties = LayerPropertyConverter
+                  .interpretFillExtrusionLayerProperties(call.argument("properties"));
+            } else if (layer instanceof HeatmapLayer) {
+              properties = LayerPropertyConverter
+                  .interpretHeatmapLayerProperties(call.argument("properties"));
             } else if (layer instanceof HillshadeLayer) {
               properties = LayerPropertyConverter
                   .interpretHillshadeLayerProperties(call.argument("properties"));
+            } else if (layer instanceof ColorReliefLayer) {
+              properties = LayerPropertyConverter
+                  .interpretColorReliefLayerProperties(call.argument("properties"));
+            } else if (layer instanceof BackgroundLayer) {
+              properties = LayerPropertyConverter
+                  .interpretBackgroundLayerProperties(call.argument("properties"));
             } else {
               result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
               return;
@@ -1575,6 +2339,131 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "colorReliefLayer#add":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretColorReliefLayerProperties(call.argument("properties"));
+          if (!addColorReliefLayer(
+              layerId,
+              sourceId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties,
+              null)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
+      case "backgroundLayer#add":
+        {
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
+          // Nearly every published style already has a layer called "background", the
+          // natural id to reach for here. Report the clash the way iOS does instead of
+          // letting the SDK throw a CannotAddLayerException.
+          if (style != null && style.isFullyLoaded() && style.getLayer(layerId) != null) {
+            result.error(
+                "layerAlreadyExists",
+                "Layer already exists",
+                "Layer with id " + layerId + " already exists.");
+            break;
+          }
+          if (!addBackgroundLayer(
+              layerId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties)) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
+      case "style#setLight":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final Map<String, Object> lightProperties = call.argument("light");
+          final Light light = style.getLight();
+          // Every LightProperties field is dynamic, so anything can arrive here. The
+          // values are checked rather than cast: MapLibre Native takes constants only,
+          // and an expression is a List, which would leave onMethodCall as a bare
+          // ClassCastException.
+          final String constantsOnly =
+              " MapLibre Native takes constant light values only, not expressions.";
+          final Object anchor = lightProperties.get("anchor");
+          if (anchor != null) {
+            if (!(anchor instanceof String)) {
+              result.error(
+                  "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setAnchor((String) anchor);
+          }
+          final Object position = lightProperties.get("position");
+          if (position != null) {
+            final List<?> values = position instanceof List ? (List<?>) position : null;
+            if (values == null
+                || values.size() != 3
+                || !(values.get(0) instanceof Number)
+                || !(values.get(1) instanceof Number)
+                || !(values.get(2) instanceof Number)) {
+              result.error(
+                  "INVALID_ARGUMENT",
+                  "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
+                      + " polar]."
+                      + constantsOnly,
+                  null);
+              break;
+            }
+            light.setPosition(
+                new Position(
+                    ((Number) values.get(0)).floatValue(),
+                    ((Number) values.get(1)).floatValue(),
+                    ((Number) values.get(2)).floatValue()));
+          }
+          final Object color = lightProperties.get("color");
+          if (color != null) {
+            if (!(color instanceof String)) {
+              result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setColor((String) color);
+          }
+          final Object intensity = lightProperties.get("intensity");
+          if (intensity != null) {
+            if (!(intensity instanceof Number)) {
+              result.error(
+                  "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+              break;
+            }
+            light.setIntensity(((Number) intensity).floatValue());
+          }
+          result.success(null);
+          break;
+        }
       case "heatmapLayer#add":
         {
           final String sourceId = call.argument("sourceId");
@@ -1604,6 +2493,22 @@ final class MapLibreMapController
         {
           Log.e(TAG, "location component: getLastLocation");
           if (this.myLocationEnabled
+              && manualLocationSource
+              && locationComponent != null
+              && locationComponent.isLocationComponentActivated()) {
+            // Manual mode has no location engine; read the last forced location.
+            Location lastLocation = locationComponent.getLastKnownLocation();
+            if (lastLocation != null) {
+              Map<String, Object> reply = new HashMap<>();
+              reply.put("latitude", lastLocation.getLatitude());
+              reply.put("longitude", lastLocation.getLongitude());
+              reply.put("altitude", lastLocation.getAltitude());
+              result.success(reply);
+            } else {
+              result.error("LOCATION_UNAVAILABLE",
+                  "Last location is not available", null);
+            }
+          } else if (this.myLocationEnabled
               && locationComponent != null
               && locationComponent.isLocationComponentActivated()
               && locationComponent.getLocationEngine() != null) {
@@ -1635,6 +2540,117 @@ final class MapLibreMapController
             result.error("LOCATION_DISABLED",
                 "Location is disabled or location component is unavailable", null);
           }
+          break;
+        }
+        // Pitches the camera through the location component instead of the regular
+        // camera API. MapLibreMap#animateCamera and friends notify the SDK's
+        // developer-animation listeners, which the location component answers by
+        // dropping to CameraMode.NONE, so a plain camera call would end tracking and
+        // report a dismissal. LocationComponent#tiltWhileTracking feeds the same
+        // animator that drives tracking, so the camera mode is left alone.
+      case "locationComponent#setTrackingCameraOptions":
+        {
+          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+            result.error(
+                "LOCATION_COMPONENT_NOT_READY",
+                "The location component is not ready. Ensure the map was created with "
+                    + "myLocationEnabled: true.",
+                null);
+            break;
+          }
+          if (locationComponent.getCameraMode() == CameraMode.NONE) {
+            result.error(
+                "TRACKING_NOT_ACTIVE",
+                "A tracking mode other than MyLocationTrackingMode.none must be active "
+                    + "before a tracking camera option can be applied.",
+                null);
+            break;
+          }
+          final Object tilt = call.argument("tilt");
+          if (!(tilt instanceof Number)) {
+            result.error("INVALID_ARGUMENT", "Missing or invalid 'tilt'.", null);
+            break;
+          }
+          final Object duration = call.argument("duration");
+          final MapLibreMap.CancelableCallback callback =
+              new MapLibreMap.CancelableCallback() {
+                @Override
+                public void onCancel() {
+                  // Either superseded by a newer tracking-camera animation, or refused
+                  // because the camera mode was still transitioning. The tilt is not
+                  // guaranteed to have been applied, so report that rather than success.
+                  result.success(false);
+                }
+
+                @Override
+                public void onFinish() {
+                  result.success(true);
+                }
+              };
+          if (duration instanceof Number) {
+            locationComponent.tiltWhileTracking(
+                ((Number) tilt).doubleValue(), ((Number) duration).longValue(), callback);
+          } else {
+            // Three-argument overload only; the two-argument one takes no callback, and
+            // the SDK's own default duration is not public.
+            locationComponent.tiltWhileTracking(
+                ((Number) tilt).doubleValue(), DEFAULT_TRACKING_TILT_DURATION_MS, callback);
+          }
+          break;
+        }
+      case "locationComponent#setManualLocation":
+        {
+          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+            result.error(
+                "LOCATION_COMPONENT_NOT_READY",
+                "The location component is not ready. Ensure the map was created with "
+                    + "myLocationEnabled: true and locationSource: ManualLocationSource().",
+                null);
+            break;
+          }
+          if (!manualLocationSource) {
+            result.error(
+                "MANUAL_LOCATION_SOURCE_DISABLED",
+                "Manual locations require locationSource: ManualLocationSource().",
+                null);
+            break;
+          }
+          final List<?> position = (List<?>) call.argument("position");
+          if (position == null || position.size() < 2) {
+            result.error("INVALID_ARGUMENT", "Missing or invalid 'position'.", null);
+            break;
+          }
+          final Location location = new Location("ManualLocationSource");
+          location.setLatitude(((Number) position.get(0)).doubleValue());
+          location.setLongitude(((Number) position.get(1)).doubleValue());
+          final Object altitude = call.argument("altitude");
+          if (altitude != null) {
+            location.setAltitude(((Number) altitude).doubleValue());
+          }
+          final Object bearing = call.argument("bearing");
+          if (bearing != null) {
+            location.setBearing(((Number) bearing).floatValue());
+          }
+          final Object speed = call.argument("speed");
+          if (speed != null) {
+            location.setSpeed(((Number) speed).floatValue());
+          }
+          final Object horizontalAccuracy = call.argument("horizontalAccuracy");
+          if (horizontalAccuracy != null) {
+            location.setAccuracy(((Number) horizontalAccuracy).floatValue());
+          }
+          final Object verticalAccuracy = call.argument("verticalAccuracy");
+          if (verticalAccuracy != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            location.setVerticalAccuracyMeters(((Number) verticalAccuracy).floatValue());
+          }
+          final Object timestamp = call.argument("timestamp");
+          if (timestamp != null) {
+            location.setTime(((Number) timestamp).longValue());
+          }
+          locationComponent.forceLocationUpdate(location);
+          // Keep map#onUserLocationUpdated firing, mirroring the engine path.
+          onUserLocationUpdate(location);
+          result.success(null);
           break;
         }
       case "style#addImage":
@@ -1928,10 +2944,25 @@ final class MapLibreMapController
         }
         case "map#querySourceFeatures":
         {
-          Map<String, Object> reply = new HashMap<>();
           List<Feature> features;
 
           String sourceId = (String) call.argument("sourceId");
+          if (sourceId == null) {
+            result.error(
+                "INVALID_ARGUMENT", "querySourceFeatures requires a 'sourceId' string.", null);
+            break;
+          }
+
+          // A source is resolved by id out of the style, so without a style
+          // there is no source to query. Reading it blind raised a
+          // NullPointerException, which reached the caller as a bare "error".
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
 
           String sourceLayerId = (String) call.argument("sourceLayerId");
 
@@ -1956,12 +2987,7 @@ final class MapLibreMapController
             features = Collections.emptyList();
           }
 
-          List<String> featuresJson = new ArrayList<>();
-          for (Feature feature : features) {
-            featuresJson.add(feature.toJson());
-          }
-          reply.put("features", featuresJson);
-          result.success(reply);
+          result.success(featuresReply(features));
           break;
         }
         case "style#getLayerIds":
@@ -2002,6 +3028,32 @@ final class MapLibreMapController
 
         reply.put("sources", sourceIds);
         result.success(reply);
+        break;
+      }
+      case "style#getLayerProperties":
+      {
+        if (style == null || !style.isFullyLoaded()) {
+          result.error(
+                  "STYLE_NOT_READY",
+                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                  null);
+          break;
+        }
+        String layerId = call.argument("layerId");
+        result.success(getLayerProperties(layerId));
+        break;
+      }
+      case "style#getSourceProperties":
+      {
+        if (style == null || !style.isFullyLoaded()) {
+          result.error(
+                  "STYLE_NOT_READY",
+                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                  null);
+          break;
+        }
+        String sourceId = call.argument("sourceId");
+        result.success(getSourceProperties(sourceId));
         break;
       }
       case "style#setStyle":
@@ -2183,20 +3235,24 @@ final class MapLibreMapController
       activeSnapshotter = null;
     }
     methodChannel.setMethodCallHandler(null);
-    // Properly cleanup MapView lifecycle before destroying
-    if (mapView != null && mapViewStarted) {
-      mapView.onPause();
-      mapView.onStop();
-      mapViewStarted = false;
+    // A map#waitForMap parked while the map was still being built is only ever
+    // answered by onMapReady, which will not fire now. Answer it here, or the Dart
+    // side keeps awaiting initPlatform: onMapCreated never fires and everything
+    // waiting on the controller waits forever. Only dispose() does this; a MapView
+    // torn down for an activity recreation is rebuilt and does reach onMapReady.
+    if (mapReadyResult != null) {
+      mapReadyResult.error(
+          "MAP_DISPOSED", "The map was disposed before it finished being created", null);
+      mapReadyResult = null;
     }
+    // destroyMapViewIfNecessary drives the full pause -> stop -> destroy sequence,
+    // gated by the mapViewResumed/Started/Created flags so each step fires at most
+    // once. No manual onPause/onStop dance needed here.
     destroyMapViewIfNecessary();
-    Lifecycle lifecycle = lifecycleProvider.getLifecycle();
-    if (lifecycle != null) {
-      lifecycle.removeObserver(this);
-    }
+    unregisterFromLifecycle();
 
     try {
-      context.unregisterComponentCallbacks(this);
+      applicationContext.unregisterComponentCallbacks(this);
     } catch (Exception e) {
       // Ignore if already unregistered
     }
@@ -2255,18 +3311,27 @@ final class MapLibreMapController
   }
 
   /**
-   * Destroy the MapView and cleans up listeners.
-   * It's very important to call mapViewContainer.removeView(mapView) to make sure
-   * that {@link TextureView#onDetachedFromWindowInternal()} is called which releases the
-   * underlying surface.
-   * This is required due to an FlutterEngine change that was introduce when updating from
-   * Flutter 2.10.5 to Flutter 3.10.0.
-   * This FlutterEngine change is not calling `removeView` on a PlatformView which causes the issue.
-   * <p>
-   * For more information check out:
-   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>
-   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">Flutter Engine commit that introduced the issue</a>
-   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">The reported issue in the MapLibre repo</a>
+   * Destroy the {@link MapView} and clean up listeners.
+   *
+   * <p>It's very important to call {@code mapViewContainer.removeView(mapView)} to make
+   * sure that {@link TextureView#onDetachedFromWindowInternal()} is called, which
+   * releases the underlying surface. This is required due to a FlutterEngine change
+   * introduced between Flutter 2.10.5 and 3.10.0 where {@code removeView} is no longer
+   * called on a PlatformView automatically.
+   *
+   * <p>The teardown drives the MapView lifecycle backwards using the
+   * {@code mapViewResumed/Started/Created} flags, so each step fires at most once
+   * regardless of whether dispose, lifecycle-onDestroy, or a manual detach got here
+   * first. Before destroying, MapLibre's internal state is persisted into
+   * {@link #savedMapViewState} so a subsequent {@link #recreateMapViewIfNecessary()}
+   * can restore it.
+   *
+   * <p>For more information see:
+   * <a href="https://github.com/flutter/flutter/issues/107297">Flutter issue</a>,
+   * <a href="https://github.com/flutter/engine/commit/8dc7cd1b1a33b5da561ac859cdcc49705ad1e598">the
+   * Flutter Engine commit that introduced the issue</a>, and
+   * <a href="https://github.com/maplibre/flutter-maplibre-gl/issues/182">the
+   * MapLibre tracking issue</a>.
    */
   private void destroyMapViewIfNecessary() {
     if (mapView == null) {
@@ -2278,39 +3343,76 @@ final class MapLibreMapController
     }
     stopListeningForLocationUpdates();
 
+    // Persist MapView state so it can be restored when a new MapView is created
+    // (e.g. across "Don't keep activities" or rotation).
+    if (mapViewCreated) {
+      try {
+        mapView.onSaveInstanceState(savedMapViewState);
+      } catch (Exception e) {
+        Log.w(TAG, "mapView.onSaveInstanceState failed", e);
+      }
+    }
+
     mapViewContainer.removeView(mapView);
 
-    mapView.onStop();
-    mapView.onDestroy();
+    if (mapViewResumed) {
+      mapView.onPause();
+      mapViewResumed = false;
+    }
+    if (mapViewStarted) {
+      mapView.onStop();
+      mapViewStarted = false;
+    }
+    if (mapViewCreated) {
+      mapView.onDestroy();
+      mapViewCreated = false;
+    }
 
+    mapLibreMap = null;
+    style = null;
+    locationComponent = null;
     mapView = null;
   }
 
+  // -- Lifecycle observer ----------------------------------------------------
+  //
+  // Each transition below mutates the MapView at most once per instance. Jetpack's
+  // Lifecycle.addObserver replays missed events synchronously when we subscribe to a
+  // fresh activity Lifecycle, and without the guards that replay would re-call
+  // onCreate / onStart / onResume on an already initialized MapView.
+
   @Override
   public void onCreate(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewCreated) {
       return;
     }
-    mapView.onCreate(null);
+    // savedMapViewState is empty on first launch and populated on subsequent
+    // recreations via destroyMapViewIfNecessary().
+    mapView.onCreate(savedMapViewState);
+    mapViewCreated = true;
   }
 
   @Override
   public void onStart(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewStarted) {
       return;
     }
-    if (!mapViewStarted) {
-      mapView.onStart();
-      mapViewStarted = true;
-    }
+    mapView.onStart();
+    mapViewStarted = true;
   }
 
   @Override
   public void onResume(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || mapViewResumed) {
+      return;
+    }
+    if (userPaused) {
+      // Dart has explicitly paused rendering. Stay paused until resumeMap() is
+      // called, even though the host activity is in the foreground.
       return;
     }
     mapView.onResume();
+    mapViewResumed = true;
     if (myLocationEnabled) {
       startListeningForLocationUpdates();
     }
@@ -2332,29 +3434,34 @@ final class MapLibreMapController
 
   @Override
   public void onPause(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || !mapViewResumed) {
       return;
     }
     mapView.onPause();
+    mapViewResumed = false;
   }
 
   @Override
   public void onStop(@NonNull LifecycleOwner owner) {
-    if (disposed || mapView == null) {
+    if (disposed || mapView == null || !mapViewStarted) {
       return;
     }
-    if (mapViewStarted) {
-      mapView.onStop();
-      mapViewStarted = false;
-    }
+    mapView.onStop();
+    mapViewStarted = false;
   }
 
   @Override
   public void onDestroy(@NonNull LifecycleOwner owner) {
-    owner.getLifecycle().removeObserver(this);
+    if (owner.getLifecycle() != boundLifecycle) {
+      // Stale callback from an old activity (e.g. after config change where we already
+      // rebound to the new lifecycle). Ignore it: destroying now would kill the live map.
+      return;
+    }
+    unregisterFromLifecycle();
     if (disposed) {
       return;
     }
+    saveCameraPosition();
     destroyMapViewIfNecessary();
   }
 
@@ -2391,6 +3498,14 @@ final class MapLibreMapController
   @Override
   public void setLocationEngineProperties(@NotNull LocationEngineRequest locationEngineRequest) {
     myLocationEngineFactory.initLocationComponent(context, locationComponent, locationEngineRequest);
+  }
+
+  @Override
+  public void setLocationSource(@NotNull String token) {
+    // The token -> behavior mapping lives here, native-side. Any value other
+    // than "manual" (e.g. "platform"/unknown) resolves to the default engine.
+    // Applied at component activation; runtime changes do not re-activate it.
+    this.manualLocationSource = "manual".equals(token);
   }
 
   @Override
@@ -2576,6 +3691,14 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setAttributionButtonColor(int color) {
+    attributionButtonColor = color;
+    if (mapLibreMap != null) {
+      mapLibreMap.getUiSettings().setAttributionTintColor(color);
+    }
+  }
+
+  @Override
   public void setForegroundLoadColor(int color) {
     // foregroundLoadColor is only useful during initial map creation
     // not for runtime updates, so this is a no-op
@@ -2648,16 +3771,16 @@ final class MapLibreMapController
   }
 
   private void updateMyLocationTrackingMode() {
-    int[] mapboxTrackingModes =
+    int[] cameraModes =
         new int[] {
           CameraMode.NONE, CameraMode.TRACKING, CameraMode.TRACKING_COMPASS, CameraMode.TRACKING_GPS
         };
-    locationComponent.setCameraMode(mapboxTrackingModes[this.myLocationTrackingMode]);
+    locationComponent.setCameraMode(cameraModes[this.myLocationTrackingMode]);
   }
 
   private void updateMyLocationRenderMode() {
-    int[] mapboxRenderModes = new int[] {RenderMode.NORMAL, RenderMode.COMPASS, RenderMode.GPS};
-    locationComponent.setRenderMode(mapboxRenderModes[this.myLocationRenderMode]);
+    int[] renderModes = new int[] {RenderMode.NORMAL, RenderMode.COMPASS, RenderMode.GPS};
+    locationComponent.setRenderMode(renderModes[this.myLocationRenderMode]);
   }
 
   private boolean hasLocationPermission() {

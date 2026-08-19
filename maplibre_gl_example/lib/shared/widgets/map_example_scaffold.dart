@@ -67,14 +67,9 @@ class MapExampleScaffold extends StatelessWidget {
             : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: mapHeight,
-                  child: map,
-                ),
+                SizedBox(height: mapHeight, child: map),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: _buildControls(theme),
-                  ),
+                  child: SingleChildScrollView(child: _buildControls(theme)),
                 ),
               ],
             );
@@ -82,10 +77,7 @@ class MapExampleScaffold extends StatelessWidget {
     return Scaffold(
       appBar:
           showAppBar && title != null
-              ? AppBar(
-                title: Text(title!),
-                elevation: 0,
-              )
+              ? AppBar(title: Text(title!), elevation: 0)
               : null,
       body: body,
       floatingActionButton: floatingActionButton,
@@ -119,10 +111,7 @@ class MapExampleScaffold extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: padding,
-      child: wrappedControls,
-    );
+    return Padding(padding: padding, child: wrappedControls);
   }
 }
 
@@ -163,25 +152,15 @@ class MapExampleScaffoldBuilder extends StatelessWidget {
 
     final body = Column(
       children: [
-        SizedBox(
-          height: mapHeight,
-          child: map,
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: controlsBuilder(context),
-          ),
-        ),
+        SizedBox(height: mapHeight, child: map),
+        Expanded(child: SingleChildScrollView(child: controlsBuilder(context))),
       ],
     );
 
     return Scaffold(
       appBar:
           showAppBar && title != null
-              ? AppBar(
-                title: Text(title!),
-                elevation: 0,
-              )
+              ? AppBar(title: Text(title!), elevation: 0)
               : null,
       body: body,
       floatingActionButton: floatingActionButton,

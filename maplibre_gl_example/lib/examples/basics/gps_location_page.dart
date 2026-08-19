@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -54,6 +55,12 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
   bool _useHighAccuracy = false;
   bool _hasPermission = false;
   MyLocationTrackingMode _trackingMode = MyLocationTrackingMode.none;
+
+  /// Pitch last requested through [MapLibreMapController.setTrackingCameraOptions].
+  double _trackingTilt = 0;
+
+  /// What the last tracking-tilt attempt reported, shown under the slider.
+  String? _tiltStatus;
 
   @override
   void initState() {
@@ -136,6 +143,38 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
     if (_controller != null) {
       await _controller!.updateMyLocationTrackingMode(nextMode);
       setState(() => _trackingMode = nextMode);
+    }
+  }
+
+  /// Tracking camera options need a location component in the underlying SDK,
+  /// which Android and iOS have. maplibre-gl-js has none, so web is out.
+  static bool get _supportsTrackingCamera => !kIsWeb;
+
+  /// Pitches the camera without giving up tracking, the navigation-style view.
+  ///
+  /// A plain `animateCamera(CameraUpdate.tiltTo(...))` would end tracking here,
+  /// so the map would stop following the user.
+  Future<void> _setTrackingTilt(double tilt) async {
+    final controller = _controller;
+    if (controller == null) return;
+    setState(() => _trackingTilt = tilt);
+    try {
+      final applied = await controller.setTrackingCameraOptions(
+        tilt: tilt,
+        duration: const Duration(milliseconds: 250),
+      );
+      if (mounted) {
+        setState(
+          () =>
+              _tiltStatus =
+                  applied
+                      ? 'Applied, still tracking'
+                      : 'Cancelled by the platform',
+        );
+      }
+    } on PlatformException catch (e) {
+      // TRACKING_NOT_ACTIVE when no tracking mode is engaged yet.
+      if (mounted) setState(() => _tiltStatus = e.message);
     }
   }
 
@@ -233,6 +272,39 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
                   child: const Text('Change'),
                 ),
                 contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ControlGroup(
+            title: 'Tracking Camera Tilt',
+            vertical: true,
+            children: [
+              ListTile(
+                title: Text('Tilt ${_trackingTilt.round()}°'),
+                subtitle: Text(
+                  _tiltStatus ??
+                      (_supportsTrackingCamera
+                          ? 'Pitch the camera and keep following the user. '
+                              'Needs a tracking mode other than None.'
+                          : 'Not available on web: maplibre-gl-js has no '
+                              'location component to pitch a tracking camera.'),
+                ),
+                contentPadding: EdgeInsets.zero,
+              ),
+              Slider(
+                value: _trackingTilt,
+                max: 60,
+                divisions: 12,
+                label: '${_trackingTilt.round()}°',
+                onChanged:
+                    hasController && _supportsTrackingCamera
+                        ? (value) => setState(() => _trackingTilt = value)
+                        : null,
+                onChangeEnd:
+                    hasController && _supportsTrackingCamera
+                        ? _setTrackingTilt
+                        : null,
               ),
             ],
           ),

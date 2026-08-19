@@ -54,10 +54,7 @@ void main() {
 
     test('contains only alphanumeric characters', () {
       final result = getRandomString(100);
-      expect(
-        result,
-        matches(RegExp(r'^[A-Za-z0-9]+$')),
-      );
+      expect(result, matches(RegExp(r'^[A-Za-z0-9]+$')));
     });
   });
 }

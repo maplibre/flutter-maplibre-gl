@@ -9,6 +9,8 @@ Allow users to drag annotations to new positions on the map.
   loading="lazy"
 ></iframe>
 
+Add draggable symbols and circles over Sydney, then drag one to watch the drag phase and its start and current coordinates update live.
+
 !!! note "Prerequisites"
     Annotations only work once the style has loaded and if their type is part of
     the widget's `annotationOrder`. See [Prerequisites](index.md#prerequisites).
@@ -38,26 +40,40 @@ final symbol = await controller.addSymbol(
 
 ## Listen for drag events
 
-Three callbacks are available: drag start, drag (continuous), and drag end:
+There is a single drag callback, `onFeatureDrag`, and it covers all three
+phases through its `DragEventType` argument: `start`, `drag` (continuous) and
+`end`. For a dragged annotation the `annotation` argument is the typed object
+(`Symbol`, `Circle`, `Line`, `Fill`), already moved to the new position, so you
+only have to react to the drop:
 
 ```dart
-// When drag begins
-controller.onSymbolDragStart.add((Symbol symbol) {
-  print('Drag started at: ${symbol.options.geometry}');
-});
+controller.onFeatureDrag.add((
+  Point<double> point,
+  LatLng origin,
+  LatLng current,
+  LatLng delta,
+  String id,
+  Annotation? annotation,
+  DragEventType eventType,
+) {
+  if (annotation is! Symbol) return;
 
-// Called on every position change during drag
-controller.onSymbolDrag.add((Symbol symbol) {
-  print('Dragging: ${symbol.options.geometry}');
-});
-
-// When the user releases the symbol
-controller.onSymbolDragEnd.add((Symbol symbol) {
-  final pos = symbol.options.geometry!;
-  print('Dropped at: ${pos.latitude}, ${pos.longitude}');
-  _saveNewPosition(pos);
+  switch (eventType) {
+    case DragEventType.start:
+      print('Drag started at: $origin');
+    case DragEventType.drag:
+      print('Dragging: $current');
+    case DragEventType.end:
+      // annotation.options.geometry is already the dropped position.
+      print('Dropped at: ${current.latitude}, ${current.longitude}');
+      _saveNewPosition(current);
+  }
 });
 ```
+
+`origin` is where the drag started, `current` the position under the finger,
+and `delta` the movement since the previous event. `point` is the screen
+position, a `Point<double>` from `dart:math`.
 
 ## Toggle draggable at runtime
 
@@ -68,9 +84,11 @@ await controller.updateSymbol(
 );
 ```
 
-## Draggable circles and fills
+## Draggable circles, lines and fills
 
-The `draggable` property is also available on `CircleOptions` and `FillOptions`:
+The `draggable` property is available on all four annotation types, so
+`CircleOptions`, `LineOptions` and `FillOptions` behave exactly like
+`SymbolOptions`, geometry included:
 
 ```dart
 final circle = await controller.addCircle(
@@ -82,8 +100,10 @@ final circle = await controller.addCircle(
   ),
 );
 
-controller.onCircleDragEnd.add((Circle circle) {
-  print('Circle moved to: ${circle.options.geometry}');
+controller.onFeatureDrag.add((point, origin, current, delta, id, annotation, eventType) {
+  if (annotation is Circle && eventType == DragEventType.end) {
+    print('Circle moved to: ${annotation.options.geometry}');
+  }
 });
 ```
 
@@ -92,7 +112,9 @@ controller.onCircleDragEnd.add((Circle circle) {
 Dragging is not limited to annotations. Features rendered from a GeoJSON source through a style layer can also be dragged. The setup differs:
 
 1. Give each feature a `'draggable': true` property and a stable `id`.
-2. Add the source with `promoteId: 'id'` and the layer with `enableInteraction: true`.
+2. Add the layer with `enableInteraction: true`. On web, add the source with
+   `promoteId: 'id'` so the string id survives; `promoteId` is web only, so on
+   Android and iOS the top-level `id` from step 1 is what identifies the feature.
 3. Listen to `controller.onFeatureDrag` and write the new position back into the source.
 
 ```dart
@@ -106,7 +128,7 @@ await controller.addGeoJsonSource('points', {
       'properties': {'id': 'p1', 'draggable': true},
     },
   ],
-}, promoteId: 'id');
+}, promoteId: 'id'); // web only, native reads the top-level 'id'
 
 await controller.addCircleLayer(
   'points',
@@ -125,11 +147,11 @@ controller.onFeatureDrag.add((
 });
 ```
 
-The difference: annotations expose a typed `onSymbolDragEnd`/`onCircleDragEnd` and manage the geometry for you, while style layers give you a single low-level `onFeatureDrag` and you own the source update. See [Annotations vs Style Layers](../concepts/annotations-vs-layers.md).
+The difference is not the callback, both go through `onFeatureDrag`: for an annotation the manager moves the geometry for you and hands you the typed object, while for a style-layer feature `annotation` is `null` and you own the source update. See [Annotations vs Style Layers](../concepts/annotations-vs-layers.md).
 
 ## Key APIs
 
 - [`SymbolOptions.draggable`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/SymbolOptions/draggable.html)
-- [`MapLibreMapController.onSymbolDrag`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/onSymbolDrag.html)
-- [`MapLibreMapController.onSymbolDragEnd`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/onSymbolDragEnd.html)
 - [`MapLibreMapController.onFeatureDrag`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/onFeatureDrag.html)
+- [`MapLibreMap.dragEnabled`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMap/dragEnabled.html)
+- [`MapLibreMapController.setGeoJsonFeature`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/setGeoJsonFeature.html)

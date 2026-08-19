@@ -7,16 +7,11 @@ hide:
 <div class="hero">
   <span class="hero__eyebrow">Maps for Flutter</span>
   <h1>MapLibre, natively in Flutter</h1>
-  <p class="hero__tagline">Open data, the full MapLibre style spec, and no proprietary tokens. One Dart API across Android, iOS, and web.</p>
-  <div class="badge-row">
-    <span class="platform-badge platform-badge--android">Android</span>
-    <span class="platform-badge platform-badge--ios">iOS</span>
-    <span class="platform-badge platform-badge--web">Web</span>
-  </div>
+  <p class="hero__tagline">Any tile provider or your own server, the full MapLibre style spec, and no API key to get started. One Dart API across Android, iOS, and web.</p>
   <div class="badge-row">
     <a href="https://pub.dev/packages/maplibre_gl"><img src="https://img.shields.io/pub/v/maplibre_gl.svg?style=flat-square" alt="pub.dev version" /></a>
     <a href="https://github.com/maplibre/flutter-maplibre-gl"><img src="https://img.shields.io/github/stars/maplibre/flutter-maplibre-gl?style=flat-square&logo=github" alt="GitHub Stars" /></a>
-    <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--2-blue?style=flat-square" alt="License" /></a>
+    <a href="https://github.com/maplibre/flutter-maplibre-gl/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--3-blue?style=flat-square" alt="License" /></a>
   </div>
   <div class="cta-row">
     <a href="getting-started/" class="cta-btn cta-btn--primary">Get started</a>
@@ -26,11 +21,36 @@ hide:
 </div>
 
 <iframe
-  class="example-iframe"
-  src="/flutter-maplibre-gl/demo/?example=doc-full-map"
-  title="flutter-maplibre-gl live preview"
+  class="hero-globe"
+  id="hero-globe"
+  title="The globe projection, live"
   loading="lazy"
 ></iframe>
+<script>
+  // One iframe, pointed at the background that matches the active scheme.
+  // Shipping two and hiding one with CSS would boot the demo app twice on
+  // every visit: a hidden iframe is excluded from lazy loading, so both
+  // would download and run a Flutter engine each.
+  (function () {
+    var frame = document.getElementById("hero-globe");
+    var base = "/flutter-maplibre-gl/demo/?example=doc-globe&stars=0&bg=";
+    var current = null;
+    function apply() {
+      var next =
+        document.body.getAttribute("data-md-color-scheme") === "slate"
+          ? "0d1420"
+          : "ffffff";
+      if (next === current) return;
+      current = next;
+      frame.src = base + next;
+    }
+    apply();
+    new MutationObserver(apply).observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-md-color-scheme"],
+    });
+  })();
+</script>
 
 <div class="section-label">Why this library</div>
 
@@ -42,8 +62,8 @@ hide:
   </div>
   <div class="feature-card">
     <span class="feature-card__icon">🔓</span>
-    <div class="feature-card__title">Truly open source</div>
-    <div class="feature-card__desc">BSD-2 license. Use OpenFreeMap, OpenMapTiles, or self-host with PMTiles. Zero vendor lock-in.</div>
+    <div class="feature-card__title">Open source, end to end</div>
+    <div class="feature-card__desc">BSD-3 license. Use OpenFreeMap, OpenMapTiles, or self-host with PMTiles. Zero vendor lock-in.</div>
   </div>
   <div class="feature-card">
     <span class="feature-card__icon">📴</span>
@@ -75,7 +95,7 @@ hide:
 
 ```yaml
 dependencies:
-  maplibre_gl: ^0.26.2
+  maplibre_gl: ^0.27.0
 ```
 
 **2. Add the map widget**
@@ -89,12 +109,15 @@ MapLibreMap(
     zoom: 11,
   ),
   onMapCreated: (MapLibreMapController controller) {
-    // Add symbols, layers, and more
+    // Keep the controller
+  },
+  onStyleLoadedCallback: () {
+    // Add symbols, layers, and more here, once the style is ready
   },
 )
 ```
 
-See [Installation & Setup](getting-started.md) for Android, iOS, and web platform configuration.
+See [Getting Started](getting-started.md) for Android, iOS, and web platform configuration.
 
 </div>
 
@@ -123,6 +146,6 @@ See [Installation & Setup](getting-started.md) for Android, iOS, and web platfor
   </div>
   <div class="feature-card">
     <div class="feature-card__title"><a href="compare/why-maplibre/">Why MapLibre GL?</a></div>
-    <div class="feature-card__desc">Honest comparison with flutter_map and google_maps_flutter: features, tradeoffs, and when to choose each.</div>
+    <div class="feature-card__desc">Side-by-side comparison with flutter_map and google_maps_flutter: features, tradeoffs, and when to choose each.</div>
   </div>
 </div>

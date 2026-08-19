@@ -1,6 +1,22 @@
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 include: ../analysis_options.yaml
 
 linter:
   rules:
     public_member_api_docs: false
     avoid_redundant_argument_values: false
+    # Whether an animation call needs unawaited(), and whether an ignore
+    # comment is redundant, both depend on the Flutter version being used:
+    # @awaitNotRequired is honoured on newer stables and not on the version
+    # pinned in .fvmrc. The examples keep the explicit unawaited() form, which
+    # reads the same on every toolchain, so these two are off here.
+    unnecessary_unawaited: false
+    unnecessary_ignore: false

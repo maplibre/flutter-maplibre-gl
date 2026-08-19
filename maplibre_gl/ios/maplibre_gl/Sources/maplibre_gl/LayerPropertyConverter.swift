@@ -106,6 +106,8 @@ class LayerPropertyConverter {
                     symbolLayer.textRadialOffset = expression
                 case "text-variable-anchor":
                     symbolLayer.textVariableAnchor = expression
+                case "text-variable-anchor-offset":
+                    symbolLayer.textVariableAnchorOffset = expression
                 case "text-anchor":
                     symbolLayer.textAnchor = expression
                 case "text-max-angle":
@@ -330,6 +332,8 @@ class LayerPropertyConverter {
                             fillExtrusionLayer.isVisible = visibilityValue == "visible"
                         }
                     }
+                case "fill-extrusion-rounded-corner-distance":
+                    fillExtrusionLayer.fillExtrusionRoundedCornerDistance = expression
              
                 default:
                     break
@@ -396,6 +400,8 @@ class LayerPropertyConverter {
             switch propertyName {
                 case "hillshade-illumination-direction":
                     hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
+                case "hillshade-illumination-altitude":
+                    hillshadeLayer.hillshadeIlluminationAltitude = wrapValueAsArray(expression)
                 case "hillshade-illumination-anchor":
                     hillshadeLayer.hillshadeIlluminationAnchor = expression
                 case "hillshade-exaggeration":
@@ -406,6 +412,8 @@ class LayerPropertyConverter {
                     hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
                 case "hillshade-accent-color":
                     hillshadeLayer.hillshadeAccentColor = expression
+                case "hillshade-method":
+                    hillshadeLayer.hillshadeMethod = expression
                 case "visibility":
                     if !(propertyValue is NSNull) {
                         if let visibilityValue = propertyValue as? String {
@@ -447,6 +455,70 @@ class LayerPropertyConverter {
                     if !(propertyValue is NSNull) {
                         if let visibilityValue = propertyValue as? String {
                             heatmapLayer.isVisible = visibilityValue == "visible"
+                        }
+                    }
+             
+                default:
+                    break
+            }
+        }
+    }
+
+    class func addColorReliefProperties(colorReliefLayer: MLNColorReliefStyleLayer, properties: [String: Any]) {
+        for (propertyName, propertyValue) in properties {
+            // Check if the value is explicitly null to clear the property
+            var expression: NSExpression?
+            if propertyValue is NSNull {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
+            switch propertyName {
+                case "color-relief-opacity":
+                    colorReliefLayer.colorReliefOpacity = expression
+                case "color-relief-color":
+                    colorReliefLayer.colorReliefColor = expression
+                case "visibility":
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            colorReliefLayer.isVisible = visibilityValue == "visible"
+                        }
+                    }
+             
+                default:
+                    break
+            }
+        }
+    }
+
+    class func addBackgroundProperties(backgroundLayer: MLNBackgroundStyleLayer, properties: [String: Any]) {
+        for (propertyName, propertyValue) in properties {
+            // Check if the value is explicitly null to clear the property
+            var expression: NSExpression?
+            if propertyValue is NSNull {
+                expression = nil
+            } else {
+                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
+                    continue
+                }
+                expression = expr
+            }
+            
+            switch propertyName {
+                case "background-color":
+                    backgroundLayer.backgroundColor = expression
+                case "background-pattern":
+                    backgroundLayer.backgroundPattern = expression
+                case "background-opacity":
+                    backgroundLayer.backgroundOpacity = expression
+                case "visibility":
+                    if !(propertyValue is NSNull) {
+                        if let visibilityValue = propertyValue as? String {
+                            backgroundLayer.isVisible = visibilityValue == "visible"
                         }
                     }
              

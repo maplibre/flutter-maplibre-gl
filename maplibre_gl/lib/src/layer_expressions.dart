@@ -5,143 +5,178 @@ part of '../maplibre_gl.dart';
 
 class Expressions {
   /// Binds expressions to named variables, which can then be referenced in
-  /// the result expression using ["var", "variable_name"].
+  /// the result expression using `["var", "variable_name"]`.
+  /// - [Visualize population
+  /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const let = "let";
 
-  /// References variable bound using "let".
+  /// References variable bound using `let`.
+  /// - [Visualize population
+  /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const varExpression = "var";
 
   /// Provides a literal array or object value.
+  /// - [Display and style rich text
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const literal = "literal";
 
   /// Asserts that the input is an array (optionally with a specific item
-  /// type and length).  If, when the input expression is evaluated, it is
-  /// not of the asserted type, then this assertion will cause the whole
-  /// expression to be aborted.
+  /// type and length). If, when the input expression is evaluated, it is
+  /// not of the asserted type or length, then this assertion will cause the
+  /// whole expression to be aborted.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const array = "array";
 
   /// Retrieves an item from an array.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const at = "at";
 
   /// Determines whether an item exists in an array or a substring exists in
   /// a string.
+  /// - [Measure
+  /// distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure-distances/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js, android, ios
   static const inExpression = "in";
+
+  /// Returns the first position at which an item can be found in an array
+  /// or a substring can be found in a string, or `-1` if the input cannot
+  /// be found. Accepts an optional index from where to begin the search. In
+  /// a string, a UTF-16 surrogate pair counts as a single position.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  static const indexOf = "index-of";
+
+  /// Returns a subarray from an array or a substring from a string from a
+  /// specified start index, or between a start index and an end index if
+  /// set. The return value is inclusive of the start index but not of the
+  /// end index. In a string, a UTF-16 surrogate pair counts as a single
+  /// position.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  static const slice = "slice";
 
   /// Selects the first output whose corresponding test condition evaluates
   /// to true, or the fallback value otherwise.
+  /// - [Create a hover
+  /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const caseExpression = "case";
 
   /// Selects the output whose label value matches the input value, or the
   /// fallback value if no match is found. The input can be any expression
   /// (e.g. `["get", "building_type"]`). Each label must be either:
-  /// * a single literal value; or
-  /// * an array of literal values, whose values must be all strings or all
+  /// - a single literal value; or
+  /// - an array of literal values, whose values must be all strings or all
   /// numbers (e.g. `[100, 101]` or `["c", "b"]`). The input matches if any
   /// of the values in the array matches, similar to the `"in"`
   /// operator.Each label must be unique. If the input type does not match
   /// the type of the labels, the result will be the fallback value.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const match = "match";
 
   /// Evaluates each expression in turn until the first non-null value is
   /// obtained, and returns that value.
+  /// - [Use a fallback
+  /// image](https://maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const coalesce = "coalesce";
 
   /// Produces discrete, stepped results by evaluating a piecewise-constant
   /// function defined by pairs of input and output values ("stops"). The
   /// `input` may be any numeric expression (e.g., `["get", "population"]`).
-  /// Stop inputs must be numeric literals in strictly ascending order.
-  /// Returns the output value of the stop just less than the input, or the
-  /// first output if the input is less than the first stop.
+  /// Stop inputs must be numeric literals in strictly ascending
+  /// order.Returns the output value of the stop just less than the input,
+  /// or the first output if the input is less than the first stop.
+  /// - [Create and style
+  /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const step = "step";
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). The `input` may be any numeric
   /// expression (e.g., `["get", "population"]`). Stop inputs must be
   /// numeric literals in strictly ascending order. The output type must be
-  /// `number`, `array<number>`, or `color`.Interpolation types:-
-  /// `["linear"]`: interpolates linearly between the pair of stops just
-  /// less than and just greater than the input.- `["exponential", base]`:
-  /// interpolates exponentially between the stops just less than and just
-  /// greater than the input. `base` controls the rate at which the output
-  /// increases: higher values make the output increase more towards the
-  /// high end of the range. With values close to 1 the output increases
-  /// linearly.- `["cubic-bezier", x1, y1, x2, y2]`: interpolates using the
-  /// cubic bezier curve defined by the given control points.
+  /// `number`, `array<number>`, `color`, `array<color>`, or `projection`.
+  /// - [Animate map camera around a
+  /// point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-camera-around-point/)
+  /// - [Change building color based on zoom
+  /// level](https://maplibre.org/maplibre-gl-js/docs/examples/change-building-color-based-on-zoom-level/)
+  /// - [Create a heatmap
+  /// layer](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/)
+  /// - [Visualize population
+  /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const interpolate = "interpolate";
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). Works like `interpolate`, but the
-  /// output type must be `color`, and the interpolation is performed in the
-  /// Hue-Chroma-Luminance color space.
+  /// output type must be `color` or `array<color>`, and the interpolation
+  /// is performed in the Hue-Chroma-Luminance color space.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js (not on ios, android)
   static const interpolateHcl = "interpolate-hcl";
 
   /// Produces continuous, smooth results by interpolating between pairs of
   /// input and output values ("stops"). Works like `interpolate`, but the
-  /// output type must be `color`, and the interpolation is performed in the
-  /// CIELAB color space.
+  /// output type must be `color` or `array<color>`, and the interpolation
+  /// is performed in the CIELAB color space.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js (not on ios, android)
   static const interpolateLab = "interpolate-lab";
 
-  /// Returns mathematical constant ln(2).
+  /// Returns the mathematical constant ln(2).
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const ln2 = "ln2";
 
   /// Returns the mathematical constant pi.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const pi = "pi";
 
   /// Returns the mathematical constant e.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const e = "e";
 
   /// Returns a string describing the type of the given value.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const typeof = "typeof";
 
   /// Asserts that the input value is a string. If multiple values are
@@ -149,7 +184,7 @@ class Expressions {
   /// If none of the inputs are strings, the expression is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const string = "string";
 
   /// Asserts that the input value is a number. If multiple values are
@@ -157,15 +192,17 @@ class Expressions {
   /// If none of the inputs are numbers, the expression is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const number = "number";
 
   /// Asserts that the input value is a boolean. If multiple values are
   /// provided, each one is evaluated in order until a boolean is obtained.
   /// If none of the inputs are booleans, the expression is an error.
+  /// - [Create a hover
+  /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const boolean = "boolean";
 
   /// Asserts that the input value is an object. If multiple values are
@@ -173,32 +210,28 @@ class Expressions {
   /// If none of the inputs are objects, the expression is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const object = "object";
 
   /// Returns a `collator` for use in locale-dependent comparison
-  /// operations. The `case-sensitive` and `diacritic-sensitive` options
-  /// default to `false`. The `locale` argument specifies the IETF language
-  /// tag of the locale to use. If none is provided, the default locale is
-  /// used. If the requested locale is not available, the `collator` will
-  /// use a system-defined fallback locale. Use `resolved-locale` to test
-  /// the results of locale fallback behavior.
+  /// operations. Use `resolved-locale` to test the results of locale
+  /// fallback behavior.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const collator = "collator";
 
-  /// Returns `formatted` text containing annotations for use in
-  /// mixed-format `text-field` entries. For a `text-field` entries of a
-  /// string type, following option object's properties are supported: If
-  /// set, the `text-font` value overrides the font specified by the root
-  /// layout properties. If set, the `font-scale` value specifies a scaling
-  /// factor relative to the `text-size` specified in the root layout
-  /// properties. If set, the `text-color` value overrides the color
-  /// specified by the root paint properties for this layer.
+  /// Returns a `formatted` string for displaying mixed-format text in the
+  /// `text-field` property. The input may contain a string literal or
+  /// expression, including an [`'image'`](#image) expression. Strings may
+  /// be followed by a style override object.
+  /// - [Change the case of
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// - [Display and style rich text
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const format = "format";
 
   /// Returns an `image` type for use in `icon-image`, `*-pattern` entries
@@ -208,21 +241,30 @@ class Expressions {
   /// whether or not the image is currently in the style. This validation
   /// process is synchronous and requires the image to have been added to
   /// the style before requesting it in the `image` argument.
+  /// - [Use a fallback
+  /// image](https://maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/)
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const image = "image";
 
-  /// Converts the input number into a string representation using the
-  /// providing formatting rules. If set, the `locale` argument specifies
-  /// the locale to use, as a BCP 47 language tag. If set, the `currency`
-  /// argument specifies an ISO 4217 code to use for currency-style
-  /// formatting. If set, the `min-fraction-digits` and
-  /// `max-fraction-digits` arguments specify the minimum and maximum number
-  /// of fractional digits to include.
+  /// Retrieves a property value from global state that can be set with
+  /// platform-specific APIs. Defaults can be provided using the
+  /// [`state`](https://maplibre.org/maplibre-style-spec/root/#state) root
+  /// property. Returns `null` if no value nor default value is set for the
+  /// retrieved property.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js (not on android, ios)
+  static const globalState = "global-state";
+
+  /// Converts the input number into a string representation using the
+  /// provided format_options.
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android (not on ios)
   static const numberFormat = "number-format";
 
   /// Converts the input value to a string. If the input is `null`, the
@@ -237,9 +279,11 @@ class Expressions {
   /// specified by the
   /// [`JSON.stringify`](https://tc39.github.io/ecma262/#sec-json.stringify)
   /// function of the ECMAScript Language Specification.
+  /// - [Create a time
+  /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const toStringExpression = "to-string";
 
   /// Converts the input value to a number, if possible. If the input is
@@ -253,31 +297,33 @@ class Expressions {
   /// expression is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const toNumber = "to-number";
 
-  /// Converts the input value to a boolean. The result is `false` when then
+  /// Converts the input value to a boolean. The result is `false` when the
   /// input is an empty string, 0, `false`, `null`, or `NaN`; otherwise it
   /// is `true`.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const toBoolean = "to-boolean";
 
   /// Returns a four-element array containing the input color's red, green,
   /// blue, and alpha components, in that order.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const toRgba = "to-rgba";
 
   /// Converts the input value to a color. If multiple values are provided,
   /// each one is evaluated in order until the first successful conversion
   /// is obtained. If none of the inputs can be converted, the expression is
   /// an error.
+  /// - [Visualize population
+  /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const toColor = "to-color";
 
   /// Creates a color value from red, green, and blue components, which must
@@ -285,77 +331,92 @@ class Expressions {
   /// is out of range, the expression is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const rgb = "rgb";
 
   /// Creates a color value from red, green, blue components, which must
   /// range between 0 and 255, and an alpha component which must range
-  /// between 0 and 1. If any component is out of range, the expression is
-  /// an error.
+  /// between zero and one. If any component is out of range, the expression
+  /// is an error.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const rgba = "rgba";
 
   /// Retrieves a property value from the current feature's properties, or
   /// from another object if a second argument is provided. Returns null if
   /// the requested property is missing.
+  /// - [Change the case of
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
+  /// - [Extrude polygons for 3D indoor
+  /// mapping](https://maplibre.org/maplibre-gl-js/docs/examples/extrude-polygons-for-3d-indoor-mapping/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const get = "get";
 
-  /// Tests for the presence of an property value in the current feature's
+  /// Tests for the presence of a property value in the current feature's
   /// properties, or from another object if a second argument is provided.
+  /// - [Create and style
+  /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const has = "has";
 
-  /// Gets the length of an array or string.
+  /// Gets the length of an array or string. In a string, a UTF-16 surrogate
+  /// pair counts as a single position.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const length = "length";
 
   /// Gets the feature properties object.  Note that in some cases, it may
-  /// be more efficient to use ["get", "property_name"] directly.
+  /// be more efficient to use `["get", "property_name"]` directly.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const properties = "properties";
 
   /// Retrieves a property value from the current feature's state. Returns
   /// null if the requested property is not present on the feature's state.
   /// A feature's state is not part of the GeoJSON or vector tile data, and
-  /// must be set programmatically on each feature. Features are identified
-  /// by their `id` attribute, which must be an integer or a string that can
-  /// be cast to an integer. Note that ["feature-state"] can only be used
-  /// with paint properties that support data-driven styling.
+  /// must be set programmatically on each feature. When `source.promoteId`
+  /// is not provided, features are identified by their `id` attribute,
+  /// which must be an integer or a string that can be cast to an integer.
+  /// When `source.promoteId` is provided, features are identified by their
+  /// `promoteId` property, which may be a number, string, or any primitive
+  /// data type. Note that `["feature-state"]` can only be used with paint
+  /// properties that support data-driven styling.
+  /// - [Create a hover
+  /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js (not on ios, android)
   static const featureState = "feature-state";
 
-  /// Gets the feature's geometry type: Point, MultiPoint, LineString,
-  /// MultiLineString, Polygon, MultiPolygon.
+  /// Returns the feature's simple geometry type: `Point`, `LineString`, or
+  /// `Polygon`. `MultiPoint`, `MultiLineString`, and `MultiPolygon` are
+  /// returned as `Point`, `LineString`, and `Polygon`, respectively.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const geometryType = "geometry-type";
 
   /// Gets the feature's id, if it has one.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const id = "id";
 
   /// Gets the current zoom level.  Note that in style layout and paint
-  /// properties, ["zoom"] may only appear as the input to a top-level
-  /// "step" or "interpolate" expression.
+  /// properties, `["zoom"]` may only appear as the input to a top-level
+  /// `"step"` or `"interpolate"` expression.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const zoom = "zoom";
 
   /// Gets the kernel density estimation of a pixel in a heatmap layer,
@@ -363,33 +424,42 @@ class Expressions {
   /// a particular pixel. Can only be used in the `heatmap-color` property.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const heatmapDensity = "heatmap-density";
+
+  /// Gets the elevation of a pixel (in meters above the vertical datum
+  /// reference of the `raster-dem` tiles) from a `raster-dem` source. Can
+  /// only be used in the `color-relief-color` property of a `color-relief`
+  /// layer.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  static const elevation = "elevation";
 
   /// Gets the progress along a gradient line. Can only be used in the
   /// `line-gradient` property.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const lineProgress = "line-progress";
 
   /// Gets the value of a cluster property accumulated so far. Can only be
   /// used in the `clusterProperties` option of a clustered GeoJSON source.
   ///
   /// Sdk Support:
-  ///   basic functionality with js
+  ///   basic functionality with js (not on ios, android)
   static const accumulated = "accumulated";
 
   /// Returns the sum of the inputs.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const plus = "+";
 
   /// Returns the product of the inputs.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const multiply = "*";
 
   /// For two inputs, returns the result of subtracting the second input
@@ -397,127 +467,150 @@ class Expressions {
   /// it from 0.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const minus = "-";
 
   /// Returns the result of floating point division of the first input by
   /// the second.
+  /// - [Visualize population
+  /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const divide = "/";
 
   /// Returns the remainder after integer division of the first input by the
   /// second.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
-  static const precent = "%";
+  ///   basic functionality with js, android, ios
+  static const modulo = "%";
+
+  /// Renamed to [modulo], which says what the operator does.
+  @Deprecated('Use modulo instead: "%" is the remainder operator')
+  static const String precent = modulo;
 
   /// Returns the result of raising the first input to the power specified
   /// by the second.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
-  static const xor = "^";
+  ///   basic functionality with js, android, ios
+  static const power = "^";
+
+  /// Renamed to [power], which says what the operator does.
+  @Deprecated(
+    'Use power instead: "^" raises the first input to the power of the second',
+  )
+  static const String xor = power;
 
   /// Returns the square root of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const sqrt = "sqrt";
 
   /// Returns the base-ten logarithm of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const log10 = "log10";
 
   /// Returns the natural logarithm of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const ln = "ln";
 
   /// Returns the base-two logarithm of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const log2 = "log2";
 
   /// Returns the sine of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const sin = "sin";
 
   /// Returns the cosine of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const cos = "cos";
 
   /// Returns the tangent of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const tan = "tan";
 
   /// Returns the arcsine of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const asin = "asin";
 
   /// Returns the arccosine of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const acos = "acos";
 
   /// Returns the arctangent of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const atan = "atan";
 
   /// Returns the minimum value of the inputs.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const min = "min";
 
   /// Returns the maximum value of the inputs.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const max = "max";
 
   /// Rounds the input to the nearest integer. Halfway values are rounded
   /// away from zero. For example, `["round", -1.5]` evaluates to -2.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const round = "round";
 
   /// Returns the absolute value of the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const abs = "abs";
 
   /// Returns the smallest integer that is greater than or equal to the
   /// input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const ceil = "ceil";
 
   /// Returns the largest integer that is less than or equal to the input.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const floor = "floor";
+
+  /// Returns the shortest distance in meters between the evaluated feature
+  /// and the input geometry. The input value can be a valid GeoJSON of type
+  /// `Point`, `MultiPoint`, `LineString`, `MultiLineString`, `Polygon`,
+  /// `MultiPolygon`, `Feature`, or `FeatureCollection`. Distance values
+  /// returned may vary in precision due to loss in precision from encoding
+  /// geometries, particularly below zoom level 13.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  static const distance = "distance";
 
   /// Returns `true` if the input values are equal, `false` otherwise. The
   /// comparison is strictly typed: values of different runtime types are
@@ -525,9 +618,17 @@ class Expressions {
   /// different at parse time are considered invalid and will produce a
   /// parse error. Accepts an optional `collator` argument to control
   /// locale-dependent string comparisons.
+  /// - [Add multiple geometries from one GeoJSON
+  /// source](https://maplibre.org/maplibre-gl-js/docs/examples/multiple-geometries/)
+  /// - [Create a time
+  /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+  /// - [Display buildings in
+  /// 3D](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
+  /// - [Filter symbols by toggling a
+  /// list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-toggling-a-list/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const equal = "==";
 
   /// Returns `true` if the input values are not equal, `false` otherwise.
@@ -536,9 +637,11 @@ class Expressions {
   /// different at parse time are considered invalid and will produce a
   /// parse error. Accepts an optional `collator` argument to control
   /// locale-dependent string comparisons.
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const notEqual = "!=";
 
   /// Returns `true` if the first input is strictly greater than the second,
@@ -550,7 +653,7 @@ class Expressions {
   /// locale-dependent string comparisons.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const larger = ">";
 
   /// Returns `true` if the first input is strictly less than the second,
@@ -560,9 +663,11 @@ class Expressions {
   /// to hold at parse time are considered in valid and will produce a parse
   /// error. Accepts an optional `collator` argument to control
   /// locale-dependent string comparisons.
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const smaller = "<";
 
   /// Returns `true` if the first input is greater than or equal to the
@@ -572,9 +677,11 @@ class Expressions {
   /// is known not to hold at parse time are considered in valid and will
   /// produce a parse error. Accepts an optional `collator` argument to
   /// control locale-dependent string comparisons.
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const largerOrEqual = ">=";
 
   /// Returns `true` if the first input is less than or equal to the second,
@@ -586,16 +693,18 @@ class Expressions {
   /// locale-dependent string comparisons.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const smallerOrEqual = "<=";
 
   /// Returns `true` if all the inputs are `true`, `false` otherwise. The
   /// inputs are evaluated in order, and evaluation is short-circuiting:
   /// once an input expression evaluates to `false`, the result is `false`
   /// and no further input expressions are evaluated.
+  /// - [Display HTML clusters with custom
+  /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const all = "all";
 
   /// Returns `true` if any of the inputs are `true`, `false` otherwise. The
@@ -604,47 +713,74 @@ class Expressions {
   /// no further input expressions are evaluated.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const any = "any";
 
   /// Logical negation. Returns `true` if the input is `false`, and `false`
   /// if the input is `true`.
+  /// - [Create and style
+  /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const not = "!";
+
+  /// Returns `true` if the evaluated feature is fully contained inside a
+  /// boundary of the input geometry, `false` otherwise. The input value can
+  /// be a valid GeoJSON of type `Polygon`, `MultiPolygon`, `Feature`, or
+  /// `FeatureCollection`. Supported features for evaluation:- `Point`:
+  /// Returns `false` if a point is on the boundary or falls outside the
+  /// boundary.- `LineString`: Returns `false` if any part of a line falls
+  /// outside the boundary, the line intersects the boundary, or a line's
+  /// endpoint is on the boundary.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js, android, ios
+  static const within = "within";
 
   /// Returns `true` if the input string is expected to render legibly.
   /// Returns `false` if the input string contains sections that cannot be
   /// rendered without potential loss of meaning (e.g. Indic scripts that
-  /// require complex text shaping, or right-to-left scripts if the the
+  /// require complex text shaping, or right-to-left scripts if the
   /// `mapbox-gl-rtl-text` plugin is not in use in MapLibre GL JS).
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android
+  ///   basic functionality with js, android (not on ios)
   static const isSupportedScript = "is-supported-script";
 
   /// Returns the input string converted to uppercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
   /// mappings in the Unicode Character Database.
+  /// - [Change the case of
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const upcase = "upcase";
 
   /// Returns the input string converted to lowercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
   /// mappings in the Unicode Character Database.
+  /// - [Change the case of
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const downcase = "downcase";
 
   /// Returns a `string` consisting of the concatenation of the inputs. Each
   /// input is converted to a string as if by `to-string`.
+  /// - [Add a generated icon to the
+  /// map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
+  /// - [Create a time
+  /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
+  /// - [Use a fallback
+  /// image](https://maplibre.org/maplibre-gl-js/docs/examples/fallback-image/)
+  /// - [Variable label
+  /// placement](https://maplibre.org/maplibre-gl-js/docs/examples/variable-label-placement/)
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const concat = "concat";
 
   /// Returns the IETF language tag of the locale being used by the provided
@@ -652,6 +788,20 @@ class Expressions {
   /// or to determine if a requested locale was successfully loaded.
   ///
   /// Sdk Support:
-  ///   basic functionality with js, android, ios, macos
+  ///   basic functionality with js, android, ios
   static const resolvedLocale = "resolved-locale";
+
+  /// Returns an array of substrings formed by splitting an input string by
+  /// a separator string.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  static const split = "split";
+
+  /// Returns a string formed by concatenating the elements of the input
+  /// array, inserting a separator between each element.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  static const join = "join";
 }

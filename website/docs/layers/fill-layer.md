@@ -11,6 +11,12 @@ A fill layer renders polygons from a GeoJSON source. Use it for choropleth maps,
 
 Four European regions, each with a data-driven fill color from a `color` property, plus a line layer for the outline.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## Basic setup
 
 ```dart

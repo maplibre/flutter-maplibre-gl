@@ -237,12 +237,8 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(
-    super.controller, {
-    super.enableInteraction = true,
-  }) : super(
-         selectLayer: (line) => line.options.linePattern == null ? 0 : 1,
-       );
+  LineManager(super.controller, {super.enableInteraction = true})
+    : super(selectLayer: (line) => line.options.linePattern == null ? 0 : 1);
 
   static const _baseProperties = LineLayerProperties(
     lineJoin: [Expressions.get, 'lineJoin'],
@@ -264,12 +260,8 @@ class LineManager extends AnnotationManager<Line> {
 }
 
 class FillManager extends AnnotationManager<Fill> {
-  FillManager(
-    super.controller, {
-    super.enableInteraction = true,
-  }) : super(
-         selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1,
-       );
+  FillManager(super.controller, {super.enableInteraction = true})
+    : super(selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1);
 
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -288,10 +280,7 @@ class FillManager extends AnnotationManager<Fill> {
 }
 
 class CircleManager extends AnnotationManager<Circle> {
-  CircleManager(
-    super.controller, {
-    super.enableInteraction = true,
-  });
+  CircleManager(super.controller, {super.enableInteraction = true});
 
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -370,13 +359,13 @@ class SymbolManager extends AnnotationManager<Symbol> {
       iconHaloColor: [Expressions.get, 'iconHaloColor'],
       iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
       iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
-      textFont:
-          kIsWeb
-              ? null
-              : [
-                'Open Sans Regular',
-                'Arial Unicode MS Regular',
-              ],
+      // MapLibre Native requests a font stack as one comma-joined token, so the
+      // old default ('Open Sans Regular,Arial Unicode MS Regular') resolved
+      // only on demotiles. Anywhere else it 404s, and a symbol layer whose
+      // glyphs fail never finishes layout, so text and icon both vanish.
+      // 'Noto Sans Regular' is a single font that the common public glyph
+      // endpoints all serve. Web defers to the active style.
+      textFont: kIsWeb ? null : ['Noto Sans Regular'],
       textField: [Expressions.get, 'textField'],
       textSize: [Expressions.get, 'textSize'],
       textMaxWidth: [Expressions.get, 'textMaxWidth'],

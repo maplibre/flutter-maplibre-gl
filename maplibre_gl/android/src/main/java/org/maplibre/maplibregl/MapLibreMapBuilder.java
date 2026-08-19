@@ -26,8 +26,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private String styleString = "";
   private LatLngBounds bounds = null;
   private LocationEngineRequest locationEngineRequest = null;
+  private String locationSourceToken = "platform";
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
+  private Integer attributionButtonColor = null;
 
   MapLibreMapController build(
       int id,
@@ -51,6 +53,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
     controller.setTrackCameraPosition(trackCameraPosition);
+    controller.setLocationSource(locationSourceToken);
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
@@ -58,6 +61,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     if(null != locationEngineRequest ){
       controller.setLocationEngineProperties(locationEngineRequest);
+    }
+
+    if (null != attributionButtonColor) {
+      controller.setAttributionButtonColor(attributionButtonColor);
     }
 
     return controller;
@@ -248,6 +255,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     }
   }
 
+  @Override
+  public void setAttributionButtonColor(int color) {
+    // The tint is applied through UiSettings, which only exists once the map
+    // is ready, so stash it and forward to the controller in build().
+    this.attributionButtonColor = color;
+  }
+
   public void setDragEnabled(boolean enabled) {
     this.dragEnabled = enabled;
   }
@@ -259,6 +273,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setLocationEngineProperties(@NonNull LocationEngineRequest locationEngineRequest) {
     this.locationEngineRequest = locationEngineRequest;
+  }
+
+  @Override
+  public void setLocationSource(@NonNull String token) {
+    // Store the raw token here and forward it to the controller in build();
+    // the token -> behavior mapping is resolved on the controller (native side).
+    this.locationSourceToken = token;
   }
 
   @Override

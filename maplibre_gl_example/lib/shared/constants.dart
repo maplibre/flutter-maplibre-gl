@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 /// Common constants used across examples
@@ -59,12 +60,99 @@ class ExampleConstants {
   // Map Styles
   // ============================================================================
 
-  /// Demo map style URL (default)
-  static const String demoMapStyle =
+  /// Demo map style URL (default). demotiles.maplibre.org is aggressively
+  /// rate-limited (HTTP 429); [resolveDemoMapStyle] swaps in
+  /// [fallbackMapStyle] when it is unreachable. Await [resolveDemoMapStyle]
+  /// before reading this, otherwise you may read the value the probe is
+  /// about to replace.
+  static String demoMapStyle = preferredDemoMapStyle;
+
+  /// The canonical MapLibre demo style.
+  static const String preferredDemoMapStyle =
       'https://demotiles.maplibre.org/style.json';
 
+  /// Fallback style used when the demo style is unreachable.
+  static const String fallbackMapStyle =
+      'https://tiles.openfreemap.org/styles/liberty';
+
+  /// Font stack that exists on the glyph server of the ACTIVE demo style.
+  /// demotiles only serves "Open Sans Semibold"; OpenFreeMap only serves
+  /// Noto Sans variants; neither resolves multi-font stacks. When a symbol
+  /// layer's fonts 404, MapLibre Native never completes symbol layout for
+  /// the tile and the symbols disappear entirely, icons included.
+  static List<String> get demoFontStack =>
+      demoMapStyle == preferredDemoMapStyle
+          ? const ['Open Sans Semibold']
+          : const ['Noto Sans Regular'];
+
+  /// Bold variant of [demoFontStack] (e.g. cluster counts). demotiles only
+  /// serves a single font, so both getters collapse there.
+  static List<String> get demoBoldFontStack =>
+      demoMapStyle == preferredDemoMapStyle
+          ? const ['Open Sans Semibold']
+          : const ['Noto Sans Bold'];
+
+  /// The one style probe of this session, created by the first call to
+  /// [resolveDemoMapStyle]. Every later call awaits this same future.
+  static Future<void>? _resolution;
+
+  /// Probes the demo style AND its tile endpoint, falling back to
+  /// [fallbackMapStyle] when either fails. Probing the style alone is not
+  /// enough: GitHub Pages' edge cache can serve style.json with 200 while
+  /// the tile paths are already rate-limited with 429, which would render
+  /// the style background with no tiles.
+  ///
+  /// The probe runs at most once per session: the first caller starts it,
+  /// everyone else awaits the same future and gets the same answer, so the
+  /// resolved style is sticky and the app never puts a second burst on a
+  /// limiter that rejects bursts. Awaiting this is therefore cheap, and safe
+  /// to do from a widget that rebuilds.
+  ///
+  /// Start it early, but do not block the first frame on it: it can take
+  /// seconds when demotiles is unreachable.
+  static Future<void> resolveDemoMapStyle() =>
+      _resolution ??= _probeDemoMapStyle();
+
+  static Future<void> _probeDemoMapStyle() async {
+    // Probe with a small CONCURRENT burst: the limiter tends to pass
+    // isolated requests while rejecting bursts, and a real map load is a
+    // burst of style + sprite + glyphs + tiles.
+    const probes = [
+      preferredDemoMapStyle,
+      'https://demotiles.maplibre.org/tiles/tiles.json',
+      'https://demotiles.maplibre.org/tiles/0/0/0.pbf',
+    ];
+    const timeout = Duration(seconds: 4);
+    // package:http works on every platform, web included, where a CORS or
+    // rate-limit failure surfaces as an exception and lands in the fallback.
+    final client = http.Client();
+    try {
+      final statuses = await Future.wait(
+        probes.map((url) async {
+          final response = await client.get(Uri.parse(url)).timeout(timeout);
+          return response.statusCode;
+        }),
+      );
+      final failed = statuses.indexWhere((code) => code >= 400);
+      if (failed != -1) {
+        demoMapStyle = fallbackMapStyle;
+        debugPrint(
+          'demo style unreachable (${probes[failed]}: '
+          'HTTP ${statuses[failed]}); falling back to $fallbackMapStyle',
+        );
+      }
+    } catch (error) {
+      demoMapStyle = fallbackMapStyle;
+      debugPrint(
+        'demo style unreachable ($error); falling back to $fallbackMapStyle',
+      );
+    } finally {
+      client.close();
+    }
+  }
+
   /// Style asset paths
-  static const String osmStyleAsset = 'assets/osm_style.json';
+  static const String rasterStyleAsset = 'assets/raster_style.json';
   static const String pmtilesStyleAsset = 'assets/pmtiles_style.json';
   static const String translucenStyleAsset = 'assets/translucent_style.json';
   static const String localStyleAsset = 'assets/style.json';

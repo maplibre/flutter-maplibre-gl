@@ -57,10 +57,7 @@ class _DocGeoJsonSourceBodyState extends State<_DocGeoJsonSourceBody> {
               .map(
                 (c) => {
                   'type': 'Feature',
-                  'properties': {
-                    'name': c['name'],
-                    'population': c['pop'],
-                  },
+                  'properties': {'name': c['name'], 'population': c['pop']},
                   'geometry': {
                     'type': 'Point',
                     'coordinates': [c['lng'], c['lat']],

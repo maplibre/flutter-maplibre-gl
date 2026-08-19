@@ -29,6 +29,11 @@ class Convert {
         if let styleString = options["styleString"] as? String {
             delegate.setStyleString(styleString: styleString)
         }
+        // Parse before myLocationEnabled so the manual location manager is wired
+        // in before `showsUserLocation` is first enabled (SDK ordering rule).
+        if let locationSource = options["locationSource"] as? String {
+            delegate.setLocationSource(token: locationSource)
+        }
         if let rotateGesturesEnabled = options["rotateGesturesEnabled"] as? Bool {
             delegate.setRotateGesturesEnabled(rotateGesturesEnabled: rotateGesturesEnabled)
         }
@@ -90,18 +95,29 @@ class Convert {
         {
             delegate.setAttributionButtonPosition(position: position)
         }
+        if let attributionButtonColor = options["attributionButtonColor"] as? Int {
+            delegate.setAttributionButtonColor(color: attributionButtonColor)
+        }
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
-        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter]
+        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter, intervalMs, pulseWindowMs]
         if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
            locationEngineProperties.count >= 2
         {
             let enableHighAccuracy = locationEngineProperties[0] == 1
             let distanceFilter = Double(locationEngineProperties[1])
+            let intervalMs = locationEngineProperties.count >= 3
+                ? locationEngineProperties[2]
+                : 0
+            let pulseWindowMs = locationEngineProperties.count >= 4
+                ? locationEngineProperties[3]
+                : MapLibreMapController.defaultPulseWindowMs
             delegate.setLocationEngineProperties(
                 enableHighAccuracy: enableHighAccuracy,
-                distanceFilter: distanceFilter
+                distanceFilter: distanceFilter,
+                intervalMs: intervalMs,
+                pulseWindowMs: pulseWindowMs
             )
         }
     }

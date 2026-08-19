@@ -10,5 +10,11 @@ class Expressions {
   {{/docSplit}}
   static const {{valueAsCamelCase}} = "{{{value}}}";
 
+  {{#deprecatedName}}
+  /// Renamed to [{{valueAsCamelCase}}], which says what the operator does.
+  @Deprecated('Use {{valueAsCamelCase}} instead: {{{deprecationReason}}}')
+  static const String {{deprecatedName}} = {{valueAsCamelCase}};
+
+  {{/deprecatedName}}
   {{/expressions}}
 }

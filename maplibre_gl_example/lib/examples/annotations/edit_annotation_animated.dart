@@ -135,13 +135,22 @@ class _EditAnnotationAnimatedBodyState
     });
   }
 
+  /// True while there is still a live map to talk to.
+  ///
+  /// The animation listener starts this without awaiting it, so a call is
+  /// usually in flight when the page is closed. Resuming after that reaches a
+  /// controller whose map is gone and fails with a `MissingPluginException`,
+  /// so every await below is followed by this check as well.
+  bool get _canDrawAnnotations =>
+      mounted &&
+      _controller != null &&
+      !_controller!.isDisposed &&
+      _animatedSymbol != null &&
+      _animatedCircle != null &&
+      _animatedLine != null;
+
   Future<void> _updateAnnotationColors() async {
-    if (_controller == null ||
-        _animatedSymbol == null ||
-        _animatedCircle == null ||
-        _animatedLine == null) {
-      return;
-    }
+    if (!_canDrawAnnotations) return;
 
     final color = _colorAnimation.value;
     if (color == null) return;
@@ -157,12 +166,14 @@ class _EditAnnotationAnimatedBodyState
       );
 
       // Update circle color
+      if (!_canDrawAnnotations) return;
       await _controller!.updateCircle(
         _animatedCircle!,
         CircleOptions(circleColor: hexColor),
       );
 
       // Update line color
+      if (!_canDrawAnnotations) return;
       await _controller!.updateLine(
         _animatedLine!,
         LineOptions(lineColor: hexColor),
@@ -181,61 +192,58 @@ class _EditAnnotationAnimatedBodyState
     const center = ExampleConstants.sydneyCenter;
     var step = 0;
 
-    _animationTimer = Timer.periodic(
-      const Duration(milliseconds: 100),
-      (timer) async {
-        if (!_isAnimating || _controller == null) {
-          timer.cancel();
-          return;
-        }
+    _animationTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      timer,
+    ) async {
+      if (!_isAnimating || _controller == null) {
+        timer.cancel();
+        return;
+      }
 
-        step++;
-        final angle = step * 0.1;
-        const radius = 0.01;
+      step++;
+      final angle = step * 0.1;
+      const radius = 0.01;
 
-        // Animate symbol in a circle
-        if (_animatedSymbol != null) {
-          final newLat = center.latitude + radius * sin(angle);
-          final newLng = center.longitude + radius * cos(angle);
-          await _controller!.updateSymbol(
-            _animatedSymbol!,
-            SymbolOptions(
-              geometry: LatLng(newLat, newLng),
-              iconRotate: angle * 180 / pi,
-            ),
-          );
-        }
+      // Animate symbol in a circle
+      if (_animatedSymbol != null) {
+        final newLat = center.latitude + radius * sin(angle);
+        final newLng = center.longitude + radius * cos(angle);
+        await _controller!.updateSymbol(
+          _animatedSymbol!,
+          SymbolOptions(
+            geometry: LatLng(newLat, newLng),
+            iconRotate: angle * 180 / pi,
+          ),
+        );
+      }
 
-        // Animate circle in a figure-8 pattern
-        if (_animatedCircle != null) {
-          final newLat = center.latitude - 0.01 + 0.005 * sin(angle * 2);
-          final newLng = center.longitude + 0.01 * sin(angle);
-          await _controller!.updateCircle(
-            _animatedCircle!,
-            CircleOptions(
-              geometry: LatLng(newLat, newLng),
-              circleRadius: 15 + 5 * sin(angle * 3),
-            ),
-          );
-        }
+      // Animate circle in a figure-8 pattern
+      if (_animatedCircle != null) {
+        final newLat = center.latitude - 0.01 + 0.005 * sin(angle * 2);
+        final newLng = center.longitude + 0.01 * sin(angle);
+        await _controller!.updateCircle(
+          _animatedCircle!,
+          CircleOptions(
+            geometry: LatLng(newLat, newLng),
+            circleRadius: 15 + 5 * sin(angle * 3),
+          ),
+        );
+      }
 
-        // Animate line (wave effect)
-        if (_animatedLine != null) {
-          final points = <LatLng>[];
-          for (var i = 0; i < 20; i++) {
-            final x = -0.01 + (0.02 * i / 19);
-            final y = 0.005 * sin(angle + i * 0.5);
-            points.add(
-              LatLng(center.latitude + 0.01 + y, center.longitude + x),
-            );
-          }
-          await _controller!.updateLine(
-            _animatedLine!,
-            LineOptions(geometry: points),
-          );
+      // Animate line (wave effect)
+      if (_animatedLine != null) {
+        final points = <LatLng>[];
+        for (var i = 0; i < 20; i++) {
+          final x = -0.01 + (0.02 * i / 19);
+          final y = 0.005 * sin(angle + i * 0.5);
+          points.add(LatLng(center.latitude + 0.01 + y, center.longitude + x));
         }
-      },
-    );
+        await _controller!.updateLine(
+          _animatedLine!,
+          LineOptions(geometry: points),
+        );
+      }
+    });
   }
 
   void _stopAnimation() {

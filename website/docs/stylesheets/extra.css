@@ -338,6 +338,15 @@ body, .md-typeset {
   }
   .md-sidebar--primary .md-sidebar__scrollwrap {
     margin: 0;
+    /* The sidebar itself is height:0 and sticky, so the nav scrolls only if
+       this wrapper is capped. Nothing caps it here, so the wrapper grew to the
+       full height of the nav; once the nav passed the viewport it ran off the
+       bottom and printed over the footer instead of scrolling. 4.8rem is the
+       sticky offset under the lifted header, plus room for the 1.2rem padding
+       the sidebar carries at each end. */
+    max-height: calc(100vh - 6.4rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
@@ -407,14 +416,58 @@ body, .md-typeset {
     margin: 1.4em 0 0.25em;
     padding: 0 0.2rem;
     border-radius: 0;
-    background: none !important;
+    /* Material makes these sticky, and gives them the page background so the
+       rows scrolling underneath do not show through. Keep that background: at
+       the page colour it is invisible, so the label still reads as a label,
+       but the text underneath stays hidden. `none` let both show at once. */
+    background: var(--md-default-bg-color) !important;
     box-shadow: none !important;
     cursor: default;
     pointer-events: none;
   }
   .md-nav--primary .md-nav__item--section > .md-nav__link:hover {
-    background: none !important;
     color: var(--md-default-fg-color--lighter);
+  }
+
+  /* A section whose nav lists its own index page renders the header as a link
+     to that overview (mkdocs' navigation.indexes). The rules above turn headers
+     into inert labels, which would make those overviews unreachable by
+     clicking, so give the anchor its pointer back.
+
+     At rest it stays exactly a label: same size, colour and weight as a section
+     that has no overview, and no icon. Nothing marks it out until the pointer
+     is on it, when it takes the blue this sidebar already uses for the page you
+     are on. Same blue while its own overview is open. */
+  .md-nav--primary .md-nav__item--section > .md-nav__container > a.md-nav__link {
+    pointer-events: auto;
+    cursor: pointer;
+    /* The label rule above lands on the container, not on this anchor, so the
+       anchor keeps the geometry of an ordinary page link: it sat 9px further
+       right than an inert label, carried its vertical padding, and grew a hover
+       pill. Strip all three so a clickable header is pixel-identical to one
+       that is not. */
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    background: none !important;
+  }
+  .md-nav--primary .md-nav__item--section > .md-nav__container > a.md-nav__link:hover,
+  .md-nav--primary
+    .md-nav__item--section
+    > .md-nav__container
+    > a.md-nav__link--active {
+    color: var(--ml-blue);
+  }
+
+  /* Section headers never take the "you are here" dot from the rule below:
+     they are labels, and a dot would land on the uppercase text or, worse, on
+     the collapse chevron next to it. The blue above carries that state. */
+  .md-nav--primary .md-nav__item--section > .md-nav__link--active::before,
+  .md-nav--primary
+    .md-nav__item--section
+    > .md-nav__container
+    > .md-nav__link--active::before {
+    content: none;
   }
 
   /* ---- Per-page nav icons. The slot only appears for links that set
@@ -465,6 +518,9 @@ body, .md-typeset {
   .md-nav--primary .md-nav__link[href$="/expressions/"]::before,
   .md-nav--primary .md-nav__link[href$="/why-maplibre/"]::before,
   .md-nav--primary .md-nav__link[href$="/feature-matrix/"]::before,
+  .md-nav--primary .md-nav__link[href$="/feature-state/"]::before,
+  .md-nav--primary .md-nav__link[href$="/user-location/"]::before,
+  .md-nav--primary .md-nav__link[href$="/performance/"]::before,
   .md-nav--primary .md-nav__link[href$="/api/"]::before {
     content: "";
     display: inline-block;
@@ -500,6 +556,9 @@ body, .md-typeset {
   .md-nav--primary .md-nav__link[href$="/map-language/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22/%3E%3Cpath%20d%3D%22M3%2012h18M12%203a15%2015%200%200%201%200%2018%2015%2015%200%200%201%200-18Z%22/%3E%3C/svg%3E'); }
   .md-nav--primary .md-nav__link[href$="/snapshot/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M14.5%204h-5L7%207H4a2%202%200%200%200-2%202v9a2%202%200%200%200%202%202h16a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2h-3l-2.5-3Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213%22%20r%3D%223%22/%3E%3C/svg%3E'); }
   .md-nav--primary .md-nav__link[href$="/expressions/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m18%2016%204-4-4-4M6%208l-4%204%204%204M14.5%204l-5%2016%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/feature-state/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22/%3E%3Cpath%20d%3D%22m13%2013%208%203-3%201-1%203-4-7Z%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/user-location/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m3%2011%2019-9-9%2019-2-8-8-2Z%22/%3E%3C/svg%3E'); }
+  .md-nav--primary .md-nav__link[href$="/performance/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M13%202%203%2014h8l-1%208%2010-12h-8l1-8Z%22/%3E%3C/svg%3E'); }
   .md-nav--primary .md-nav__link[href$="/why-maplibre/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%2018%2022%2012%2016%206M8%206%202%2012l6%206%22/%3E%3C/svg%3E'); }
   .md-nav--primary .md-nav__link[href$="/feature-matrix/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%203h18v18H3zM3%209h18M3%2015h18M9%203v18M15%203v18%22/%3E%3C/svg%3E'); }
   .md-nav--primary .md-nav__link[href$="/api/"] { --nav-ic: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M10%2013a5%205%200%200%200%207%200l3-3a5%205%200%200%200-7-7l-1%201M14%2011a5%205%200%200%200-7%200l-3%203a5%205%200%200%200%207%207l1-1%22/%3E%3C/svg%3E'); }
@@ -611,6 +670,58 @@ body, .md-typeset {
 }
 [data-md-color-scheme="slate"] .example-iframe {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+}
+
+/* The homepage globe: frameless, so the demo's background (passed via its
+   `bg` query parameter, set from the active scheme) blends into the page
+   and the globe floats on it. */
+.hero-globe {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 560px;
+  border: 0;
+  margin: 1.6rem 0 2rem;
+  display: block;
+  background: transparent;
+}
+
+/* Two live examples side by side, for comparison pages. At half the 46rem
+   content column each frame is only ~360px wide, so the default 3/2 ratio
+   would leave a 240px-tall strip of map: square keeps it usable. Collapses
+   to one column at the same breakpoint as .code-compare. */
+.example-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Two shared rows, caption then frame. Each column opts into them via
+     subgrid, so a caption that wraps to two lines grows the row for both
+     columns and the frames still start on the same line. */
+  grid-template-rows: auto auto;
+  gap: 1rem;
+  margin: 1.2rem 0 2rem;
+}
+.example-compare > div {
+  min-width: 0;
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 0.6rem;
+}
+/* Own the caption spacing: the theme's paragraph margin would otherwise sit
+   on top of the row gap. */
+.example-compare > div > p { margin: 0; }
+.example-compare .example-iframe {
+  aspect-ratio: 1 / 1;
+  margin: 0;
+  align-self: start;
+}
+@media screen and (max-width: 50em) {
+  .example-compare { grid-template-columns: 1fr; }
+  /* Stacked: nothing left to align across, so drop the subgrid and match the
+     portrait ratio every other iframe gets on mobile. The explicit ratio is
+     needed because the rule above outranks the plain .example-iframe one. */
+  .example-compare > div { display: block; }
+  .example-compare > div > p { margin: 0 0 0.6rem; }
+  .example-compare .example-iframe { aspect-ratio: 4 / 5; margin-bottom: 1rem; }
 }
 
 /* ============================================================
@@ -972,35 +1083,6 @@ body, .md-typeset {
   align-items: center;
   margin-bottom: 0.9rem;
 }
-.platform-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.28rem 0.8rem;
-  border-radius: 100px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
-}
-.platform-badge--android {
-  background: rgba(22, 163, 74, 0.10);
-  color: #15803d;
-  border-color: rgba(22, 163, 74, 0.22);
-}
-.platform-badge--ios {
-  background: rgba(100, 116, 139, 0.10);
-  color: var(--md-default-fg-color--light);
-  border-color: rgba(100, 116, 139, 0.20);
-}
-.platform-badge--web {
-  background: var(--ml-blue-soft);
-  color: var(--ml-blue);
-  border-color: rgba(31, 111, 235, 0.22);
-}
-[data-md-color-scheme="slate"] .platform-badge--android { color: #4ade80; }
-[data-md-color-scheme="slate"] .platform-badge--web { color: var(--ml-blue); }
-
 .badge-row img { height: 1.3rem; }
 
 /* CTA buttons */

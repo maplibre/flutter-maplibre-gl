@@ -19,15 +19,8 @@ import 'package:maplibre_gl_web/src/interop/interop.dart';
 ///  var ne = new maplibregl.LngLat(-73.9397, 40.8002);
 ///  var llb = new maplibregl.LngLatBounds(sw, ne);
 class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
-  factory LngLatBounds(
-    LngLat sw,
-    LngLat ne,
-  ) => LngLatBounds.fromJsObject(
-    LngLatBoundsJsImpl(
-      sw.jsObject,
-      ne.jsObject,
-    ),
-  );
+  factory LngLatBounds(LngLat sw, LngLat ne) =>
+      LngLatBounds.fromJsObject(LngLatBoundsJsImpl(sw.jsObject, ne.jsObject));
 
   ///  Set the northeast corner of the bounding box
   ///

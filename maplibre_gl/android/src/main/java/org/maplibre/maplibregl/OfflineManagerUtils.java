@@ -184,13 +184,16 @@ abstract class OfflineManagerUtils {
 
           @Override
           public void onError(OfflineRegionError error) {
-            Log.e(TAG, "onError reason: " + error.getReason());
-            Log.e(TAG, "onError message: " + error.getMessage());
-            region.setDownloadState(OfflineRegion.STATE_INACTIVE);
-            activeDownloads.remove(region.getId());
-            isComplete.set(true);
-            channelHandler.onError(
-                "Downloading error", error.getMessage(), error.getReason());
+            // Recoverable: the SDK re-requests what failed once the network is
+            // back, so this only reports and the download stays active. Ending
+            // it here lost the whole download to any brief outage.
+            // tileCountLimitExceeded below is the one that is really terminal.
+            Log.w(
+                TAG,
+                "offline download error, the SDK will retry (reason "
+                    + error.getReason()
+                    + "): "
+                    + error.getMessage());
           }
 
           @Override
@@ -200,7 +203,7 @@ abstract class OfflineManagerUtils {
             activeDownloads.remove(region.getId());
             isComplete.set(true);
             channelHandler.onError(
-                "mapboxTileCountLimitExceeded",
+                "tileCountLimitExceeded",
                 "MapLibre tile count limit exceeded: " + limit,
                 null);
             deleteRegion(null, context, region.getId());
@@ -217,10 +220,109 @@ abstract class OfflineManagerUtils {
       OfflineChannelHandlerImpl channelHandler) {
     float pixelDensity = context.getResources().getDisplayMetrics().density;
     OfflineRegionDefinition definition = mapToRegionDefinition(definitionMap, pixelDensity);
-    String metadata = "{}";
+    String metadataJson = "{}";
     if (metadataMap != null) {
-      metadata = new Gson().toJson(metadataMap);
+      metadataJson = new Gson().toJson(metadataMap);
     }
+    final String metadata = metadataJson;
+    // Downloading the same area twice would otherwise create a second, duplicate
+    // region (createOfflineRegion does not deduplicate). Remove any existing
+    // region covering the same area first, then create, so a re-download replaces
+    // it rather than piling up.
+    OfflineManager.Companion.getInstance(context)
+        .listOfflineRegions(
+            new OfflineManager.ListOfflineRegionsCallback() {
+              @Override
+              public void onList(OfflineRegion[] offlineRegions) {
+                OfflineRegion duplicate = findRegionMatching(offlineRegions, definition);
+                if (duplicate != null) {
+                  // Tear down any in-flight download tracked for the region we're
+                  // about to replace, so we don't leak its activeDownloads entry
+                  // or leave its Dart subscription waiting forever.
+                  releaseDuplicateDownload(duplicate.getId());
+                  duplicate.delete(
+                      new OfflineRegion.OfflineRegionDeleteCallback() {
+                        @Override
+                        public void onDelete() {
+                          createRegion(result, context, definition, metadata, channelHandler);
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                          // Fall back to creating anyway; a stale duplicate is
+                          // better than failing the whole download.
+                          Log.e(TAG, "Failed to remove duplicate region: " + error);
+                          createRegion(result, context, definition, metadata, channelHandler);
+                        }
+                      });
+                } else {
+                  createRegion(result, context, definition, metadata, channelHandler);
+                }
+              }
+
+              @Override
+              public void onError(String error) {
+                // If we can't list regions, still attempt the download.
+                Log.e(TAG, "Failed to list regions for dedup: " + error);
+                createRegion(result, context, definition, metadata, channelHandler);
+              }
+            });
+  }
+
+  /// Compares an existing region's definition against a new one by area
+  /// (style, bounds, zoom range and ideograph setting), returning the first
+  /// match, if any.
+  private static OfflineRegion findRegionMatching(
+      OfflineRegion[] regions, OfflineRegionDefinition definition) {
+    for (OfflineRegion region : regions) {
+      OfflineRegionDefinition existing = region.getDefinition();
+      LatLngBounds a = existing.getBounds();
+      LatLngBounds b = definition.getBounds();
+      boolean sameArea =
+          existing.getStyleURL().equals(definition.getStyleURL())
+              // A different ideograph setting means different downloaded font
+              // data, so the region is not an equivalent duplicate.
+              && existing.getIncludeIdeographs() == definition.getIncludeIdeographs()
+              && close(existing.getMinZoom(), definition.getMinZoom())
+              && close(existing.getMaxZoom(), definition.getMaxZoom())
+              && close(a.getLatNorth(), b.getLatNorth())
+              && close(a.getLatSouth(), b.getLatSouth())
+              && close(a.getLonEast(), b.getLonEast())
+              && close(a.getLonWest(), b.getLonWest());
+      if (sameArea) {
+        return region;
+      }
+    }
+    return null;
+  }
+
+  // Coordinates and zoom levels round-trip through JSON as doubles, so compare
+  // with a small tolerance rather than requiring exact equality (matching iOS).
+  private static boolean close(double a, double b) {
+    return Math.abs(a - b) < 1e-9;
+  }
+
+  /// Clears any in-flight download tracked for a region that is about to be
+  /// replaced by a re-download of the same area, terminating its Dart
+  /// subscription so the awaiting Future resolves and no state is leaked.
+  private static void releaseDuplicateDownload(long id) {
+    ActiveDownload active = activeDownloads.remove(id);
+    if (active != null) {
+      active.isComplete.set(true);
+      active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
+      active.channelHandler.onError(
+          "RegionReplaced",
+          "Region was replaced by a new download of the same area",
+          null);
+    }
+  }
+
+  private static void createRegion(
+      MethodChannel.Result result,
+      Context context,
+      OfflineRegionDefinition definition,
+      String metadata,
+      OfflineChannelHandlerImpl channelHandler) {
     AtomicBoolean isComplete = new AtomicBoolean(false);
     // Download region
     OfflineManager.Companion.getInstance(context)
@@ -248,9 +350,12 @@ abstract class OfflineManagerUtils {
               @Override
               public void onError(String error) {
                 Log.e(TAG, "Error: " + error);
-                _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
-                channelHandler.onError("mapboxInvalidRegionDefinition", error, null);
-                result.error("mapboxInvalidRegionDefinition", error, null);
+                // onError can fire before onCreate, leaving _offlineRegion null.
+                if (_offlineRegion != null) {
+                  _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
+                }
+                channelHandler.onError("invalidRegionDefinition", error, null);
+                result.error("invalidRegionDefinition", error, null);
               }
             });
   }
@@ -552,7 +657,14 @@ abstract class OfflineManagerUtils {
 
   private static Map<String, Object> metadataBytesToMap(byte[] metadataBytes) {
     if (metadataBytes != null) {
-      return new Gson().fromJson(new String(metadataBytes), HashMap.class);
+      // Gson returns null for empty or "null" payloads, which can happen with
+      // offline databases created by external tools. Fall back to an empty map
+      // so the Dart side never receives a null metadata value.
+      Map<String, Object> metadata =
+          new Gson().fromJson(new String(metadataBytes), HashMap.class);
+      if (metadata != null) {
+        return metadata;
+      }
     }
     return new HashMap();
   }

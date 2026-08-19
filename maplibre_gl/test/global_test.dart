@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -99,10 +100,7 @@ void main() {
     });
 
     test('forwards definition and metadata', () async {
-      await downloadOfflineRegion(
-        definition,
-        metadata: {'name': 'test'},
-      );
+      await downloadOfflineRegion(definition, metadata: {'name': 'test'});
 
       final args = methodCalls[1].arguments as Map;
       expect(args['definition'], definition.toMap());
@@ -140,10 +138,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       // Wait for event stream processing.
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -189,10 +184,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
@@ -237,10 +229,7 @@ void main() {
             },
           );
 
-      await downloadOfflineRegion(
-        definition,
-        onEvent: statuses.add,
-      );
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
@@ -331,6 +320,56 @@ void main() {
       expect(status.downloadProgress, 50.0);
     });
   });
+
+  group('ensureWebLibraryLoaded', () {
+    // On Android and iOS there is nothing to load, so this must stay an
+    // immediate no-op that never throws: app code awaits it unconditionally
+    // on every platform before doing web-only JS interop.
+    test('completes immediately on the method-channel default', () async {
+      await expectLater(MapLibreMap.ensureWebLibraryLoaded(), completes);
+
+      expect(methodCalls, isEmpty);
+    });
+  });
+
+  if (!kIsWeb) {
+    group('preWarm', () {
+      test('sends correct method', () async {
+        await MapLibreMap.preWarm();
+
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'preWarm');
+      });
+
+      test('does not throw when mock returns null', () async {
+        // The default mock handler already returns null for unknown methods.
+        await expectLater(MapLibreMap.preWarm(), completes);
+      });
+
+      test('handles MissingPluginException gracefully', () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/maplibre_gl'),
+              (methodCall) async {
+                throw MissingPluginException('not implemented');
+              },
+            );
+
+        await expectLater(MapLibreMap.preWarm(), completes);
+      });
+
+      test('safe to call multiple times', () async {
+        await MapLibreMap.preWarm();
+        await MapLibreMap.preWarm();
+        await MapLibreMap.preWarm();
+
+        expect(methodCalls.length, 3);
+        for (final call in methodCalls) {
+          expect(call.method, 'preWarm');
+        }
+      });
+    });
+  }
 }
 
 /// Mocks an EventChannel to emit the given data items as a stream.

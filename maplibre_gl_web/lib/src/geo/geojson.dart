@@ -8,9 +8,7 @@ class FeatureCollection extends JsObjectWrapper<FeatureCollectionJsImpl> {
   List<Feature> get features =>
       jsObject.features.toDart.map((f) => Feature.fromJsObject(f)).toList();
 
-  factory FeatureCollection({
-    required List<Feature> features,
-  }) {
+  factory FeatureCollection({required List<Feature> features}) {
     return FeatureCollection.fromJsObject(
       FeatureCollectionJsImpl(
         type: 'FeatureCollection',
@@ -86,17 +84,16 @@ class Feature extends JsObjectWrapper<FeatureJsImpl> {
 class Geometry extends JsObjectWrapper<GeometryJsImpl> {
   String get type => utils.dartify(jsObject.type) as String;
 
-  dynamic get coordinates => jsObject.coordinates;
+  /// Dartified on the way out: this value is handed to app code through the
+  /// query replies, and a raw JS array only behaves like a Dart List when
+  /// compiling to JavaScript. Under dart2wasm it stays a JSAny, which the app
+  /// cannot index.
+  dynamic get coordinates => utils.dartify(jsObject.coordinates);
 
-  factory Geometry({
-    String? type,
-    dynamic coordinates,
-  }) => Geometry.fromJsObject(
-    GeometryJsImpl(
-      type: type,
-      coordinates: utils.jsify(coordinates),
-    ),
-  );
+  factory Geometry({String? type, dynamic coordinates}) =>
+      Geometry.fromJsObject(
+        GeometryJsImpl(type: type, coordinates: utils.jsify(coordinates)),
+      );
 
   /// Creates a new Geometry from a [jsObject].
   Geometry.fromJsObject(super.jsObject) : super.fromJsObject();

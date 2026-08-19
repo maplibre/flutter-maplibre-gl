@@ -80,6 +80,9 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
       case "mergeOfflineRegions":
         OfflineManagerUtils.mergeRegions(result, context, methodCall.argument("path"));
         break;
+      case "getOfflineDatabasePath":
+        result.success(new File(context.getFilesDir(), DATABASE_NAME).getAbsolutePath());
+        break;
       case "setOfflineTileCountLimit":
         OfflineManagerUtils.setOfflineTileCountLimit(
             result, context, methodCall.<Number>argument("limit").longValue());
@@ -153,6 +156,12 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
           MapLibreHttpRequestUtil.setMaxConcurrentRequests(maxRequests, maxRequestsPerHost, result);
           break;
         }
+      case "preWarm":
+        // MapLibreUtils.getMapLibre(context) at line 67 already triggers
+        // MapLibre.getInstance(context) on every method call. This case
+        // exists as an explicit, documented entry point for pre-warming.
+        result.success(null);
+        break;
       default:
         result.notImplemented();
         break;

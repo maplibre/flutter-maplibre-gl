@@ -252,9 +252,7 @@ void main() {
       String? received;
       platform.onInfoWindowTappedPlatform.add((id) => received = id);
 
-      await simulateNativeCallback('infoWindow#onTap', {
-        'symbol': 'sym-1',
-      });
+      await simulateNativeCallback('infoWindow#onTap', {'symbol': 'sym-1'});
 
       expect(received, 'sym-1');
     });

@@ -1,0 +1,30 @@
+{
+  "version": 8,
+  "name": "Raster asset style",
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "sources": {
+    "nasa-gibs": {
+      "type": "raster",
+      "tiles": [
+        "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg"
+      ],
+      "tileSize": 256,
+      "attribution": "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).",
+      "maxzoom": 8
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#0a1a2f"
+      }
+    },
+    {
+      "id": "nasa-gibs-layer",
+      "source": "nasa-gibs",
+      "type": "raster"
+    }
+  ]
+}

@@ -28,7 +28,7 @@ flowchart TD
 
 ### Layer 1: The Flutter widget
 
-`MapLibreMap` is a Flutter widget that embeds a native map view using a [Platform View](https://docs.flutter.dev/platform-integration/platform-views). It is **not** drawn by Flutter's Skia/Impeller renderer, the map is rendered natively at full GPU speed by MapLibre's C++ engine.
+`MapLibreMap` is a Flutter widget that embeds a native map view using a [Platform View](https://docs.flutter.dev/platform-integration/platform-views). It is **not** drawn by Flutter's Skia/Impeller renderer, the map is rendered natively at full GPU speed by [MapLibre Native](https://github.com/maplibre/maplibre-native), the project's C++ engine.
 
 This means:
 
@@ -68,16 +68,14 @@ Some features are only available on certain platforms:
   <tbody>
     <tr><td>Offline regions</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td></tr>
     <tr><td>Hover events</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Image sources</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Limited</span></td></tr>
-    <tr><td>GeoJSON sources</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>PMTiles</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Camera animation interpolation</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Partial</span></td></tr>
   </tbody>
 </table>
 </div>
 
-<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--mid">●</span> partial &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
+<span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
 { .legend }
+
+These are the differences the three-layer stack itself creates: offline caching lives in MapLibre Native, and hover exists only where there is a pointer. For the complete platform breakdown see the [Feature Matrix](../compare/feature-matrix.md).
 
 Use `kIsWeb` from `package:flutter/foundation.dart` to guard platform-specific code:
 
@@ -93,20 +91,12 @@ if (kIsWeb) {
 }
 ```
 
-## Hybrid composition (Android)
+### Platform views on Android
 
-On Android, Flutter offers two platform view rendering modes:
-
-- **Virtual displays** (default on older Android): renders into an off-screen surface
-- **Hybrid composition**: composites the native view directly into the Flutter layer tree
-
-For better touch handling and performance on Android 10+, you can enable hybrid composition:
-
-```dart
-MapLibreMap.useHybridComposition = true; // call before runApp()
-```
-
-The example app sets this automatically based on the Android SDK version.
+On Android the map is a platform view, and which embedding Flutter uses depends
+on the Android `View` the map renders into. The default is fine for most apps;
+[Startup & Performance](../advanced/performance.md#platform-view-mode-android)
+covers when to change it.
 
 ## Callback lifecycle
 

@@ -1,8 +1,31 @@
 name: maplibre_gl
-description: A Flutter plugin for integrating MapLibre Maps inside a Flutter application on Android, iOS and web platforms.
-version: 0.26.2
+description: "Native MapLibre maps for Flutter: Mapbox Vector Tile (MVT) and PMTiles sources, custom styles, GeoJSON layers and offline regions on Android, iOS and Web."
+version: 0.27.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
+documentation: https://maplibre.org/flutter-maplibre-gl/
+funding:
+  - https://github.com/sponsors/maplibre
+  - https://opencollective.com/maplibre
+screenshots:
+  - description: "Fill-extrusion buildings over Midtown Manhattan, camera pitched and rotated. The style describes the 3D, the plugin sets tilt and bearing."
+    path: screenshots/buildings-3d.webp
+  - description: "Clustered GeoJSON points with live counts. Tapping a cluster zooms to exactly the level where it splits, via getClusterExpansionZoom."
+    path: screenshots/cluster.webp
+  - description: "Globe projection with atmosphere and stars, from setProjection and setSky. Web only: Android and iOS render the mercator projection on a flat map."
+    path: screenshots/globe.webp
+  - description: "Data-driven styling: a match expression colours each country by continent, an interpolate expression sets opacity from GDP per capita."
+    path: screenshots/expressions.webp
+  - description: "A heatmap layer drawing point density on the GPU, with radius and colour ramp driven by zoom and per-point weight."
+    path: screenshots/heatmap.webp
+  - description: "Symbol annotations with custom icons and text labels, added with addSymbol and tappable through onSymbolTapped."
+    path: screenshots/annotations.webp
+topics:
+  - map
+  - maplibre
+  - vector-tiles
+  - openstreetmap
+  - gis
 resolution: workspace
 
 environment:
@@ -13,8 +36,8 @@ dependencies:
   collection: ^1.19.1
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.26.2
-  maplibre_gl_web: ^0.26.2
+  maplibre_gl_platform_interface: ^0.27.0
+  maplibre_gl_web: ^0.27.0
 
 dev_dependencies:
   flutter_test:

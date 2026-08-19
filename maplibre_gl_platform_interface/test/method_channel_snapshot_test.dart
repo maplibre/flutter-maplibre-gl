@@ -71,10 +71,7 @@ void main() {
             (methodCall) async => null,
           );
 
-      expect(
-        () => platform.takeSnapshot(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => platform.takeSnapshot(), throwsA(isA<Exception>()));
     });
   });
 }

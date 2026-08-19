@@ -2,6 +2,11 @@ part of '../maplibre_gl_platform_interface.dart';
 
 class MapLibreMethodChannel extends MapLibrePlatform {
   late MethodChannel _channel;
+
+  /// Backing field of `MapLibreMap.useHybridComposition`, which is the
+  /// documented way to set this and explains what each value selects. Android
+  /// only: `false` keeps the map on a `SurfaceView`, `true` moves it to a
+  /// `TextureView` via MapLibre's `textureMode`.
   static bool useHybridComposition = false;
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
@@ -50,7 +55,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
         onCameraMoveStartedPlatform(null);
       case 'camera#onMove':
         final cameraPosition =
-            CameraPosition.fromMap(call.arguments['position'])!;
+            CameraPosition.fromMap(
+              call.arguments['position'],
+            )!;
         onCameraMovePlatform(cameraPosition);
       case 'camera#onIdle':
         final cameraPosition = CameraPosition.fromMap(
@@ -140,10 +147,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
       if (useHybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
-          surfaceFactory: (
-            context,
-            controller,
-          ) {
+          surfaceFactory: (context, controller) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
               gestureRecognizers:
@@ -165,9 +169,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
             controller.addOnPlatformViewCreatedListener(
               params.onPlatformViewCreated,
             );
-            controller.addOnPlatformViewCreatedListener(
-              onPlatformViewCreated,
-            );
+            controller.addOnPlatformViewCreatedListener(onPlatformViewCreated);
 
             unawaited(controller.create());
             return controller;
@@ -202,9 +204,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     final dynamic json = await _channel.invokeMethod(
       'map#update',
-      <String, dynamic>{
-        'options': optionsUpdate,
-      },
+      <String, dynamic>{'options': optionsUpdate},
     );
     return CameraPosition.fromMap(json);
   }
@@ -230,9 +230,27 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   ) async {
     await _channel.invokeMethod(
       'map#updateMyLocationTrackingMode',
-      <String, dynamic>{
-        'mode': myLocationTrackingMode.index,
-      },
+      <String, dynamic>{'mode': myLocationTrackingMode.index},
+    );
+  }
+
+  @override
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) async {
+    final result = await _channel.invokeMethod(
+      'locationComponent#setTrackingCameraOptions',
+      <String, dynamic>{'tilt': tilt, 'duration': duration?.inMilliseconds},
+    );
+    return result == true;
+  }
+
+  @override
+  Future<void> setManualLocation(ManualLocationUpdate update) async {
+    await _channel.invokeMethod(
+      'locationComponent#setManualLocation',
+      update.toMap(),
     );
   }
 
@@ -286,6 +304,16 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> pauseMap() async {
+    await _channel.invokeMethod('map#pause');
+  }
+
+  @override
+  Future<void> resumeMap() async {
+    await _channel.invokeMethod('map#resume');
+  }
+
+  @override
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -310,10 +338,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> editGeoJsonSource(String id, String data) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#editGeoJsonSource',
-      <String, dynamic>{
-        'id': id,
-        'data': data,
-      },
+      <String, dynamic>{'id': id, 'data': data},
     );
     final result = reply['result'];
     return result == true;
@@ -323,10 +348,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> editGeoJsonUrl(String id, String url) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#editGeoJsonUrl',
-      <String, String>{
-        'id': id,
-        'url': url,
-      },
+      <String, String>{'id': id, 'url': url},
     );
     final result = reply['result'];
     return result == true;
@@ -336,10 +358,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<bool> setLayerFilter(String layerId, String filter) async {
     final Map<Object?, Object?> reply = await _channel.invokeMethod(
       'map#setLayerFilter',
-      <String, dynamic>{
-        'id': layerId,
-        'filter': filter,
-      },
+      <String, dynamic>{'id': layerId, 'filter': filter},
     );
     final result = reply['result'];
     return result == true;
@@ -455,6 +474,58 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     } on PlatformException catch (e) {
       return Future.error(e);
     }
+  }
+
+  @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    final zoom = await _channel.invokeMethod(
+      'source#getClusterExpansionZoom',
+      <String, Object?>{'sourceId': sourceId, 'clusterId': clusterId},
+    );
+    return zoom as int;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    final reply = await _channel.invokeMethod(
+      'source#getClusterChildren',
+      <String, Object?>{'sourceId': sourceId, 'clusterId': clusterId},
+    );
+    return _decodeFeatures(reply);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    final reply = await _channel.invokeMethod(
+      'source#getClusterLeaves',
+      <String, Object?>{
+        'sourceId': sourceId,
+        'clusterId': clusterId,
+        'limit': limit,
+        'offset': offset,
+      },
+    );
+    return _decodeFeatures(reply);
+  }
+
+  /// Decodes a `{'features': [json, ...]}` reply, the shape the native sides
+  /// use to keep nested GeoJSON intact across the channel.
+  List<Map<String, dynamic>> _decodeFeatures(dynamic reply) {
+    final features = (reply as Map?)?['features'] as List? ?? const [];
+    return features
+        .map(
+          (feature) =>
+              (jsonDecode(feature as String) as Map).cast<String, dynamic>(),
+        )
+        .toList();
   }
 
   @override
@@ -619,10 +690,9 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   @override
   Future<void> removeSource(String sourceId) async {
     try {
-      return await _channel.invokeMethod(
-        'style#removeSource',
-        <String, Object>{'sourceId': sourceId},
-      );
+      return await _channel.invokeMethod('style#removeSource', <String, Object>{
+        'sourceId': sourceId,
+      });
     } on PlatformException catch (e) {
       return Future.error(e);
     }
@@ -699,9 +769,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
         'style#getFilter',
-        <String, dynamic>{
-          'layerId': layerId,
-        },
+        <String, dynamic>{'layerId': layerId},
       );
       final filter = reply["filter"];
       return filter != null ? jsonDecode(filter) : null;
@@ -715,10 +783,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final latLngMap = await _channel.invokeMethod(
         'map#toLatLng',
-        <String, dynamic>{
-          'x': screenLocation.x,
-          'y': screenLocation.y,
-        },
+        <String, dynamic>{'x': screenLocation.x, 'y': screenLocation.y},
       );
       return LatLng(latLngMap['latitude'], latLngMap['longitude']);
     } on PlatformException catch (e) {
@@ -731,9 +796,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final latLngMap = await _channel.invokeMethod(
         'map#getMetersPerPixelAtLatitude',
-        <String, dynamic>{
-          'latitude': latitude,
-        },
+        <String, dynamic>{'latitude': latitude},
       );
       return latLngMap['metersperpixel'];
     } on PlatformException catch (e) {
@@ -746,22 +809,149 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String sourceId,
     Map<String, dynamic> geojson, {
     String? promoteId,
-  }) async {
-    await _channel.invokeMethod('source#addGeoJson', <String, dynamic>{
-      'sourceId': sourceId,
-      'geojson': jsonEncode(geojson),
+  }) {
+    return _writeGeoJson(sourceId, () async {
+      await _channel.invokeMethod('source#addGeoJson', <String, dynamic>{
+        'sourceId': sourceId,
+        'geojson': await _encodeGeoJson(geojson),
+      });
     });
   }
 
   @override
-  Future<void> setGeoJsonSource(
-    String sourceId,
-    Map<String, dynamic> geojson,
-  ) async {
-    await _channel.invokeMethod('source#setGeoJson', <String, dynamic>{
-      'sourceId': sourceId,
-      'geojson': jsonEncode(geojson),
+  Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson) {
+    return _writeGeoJson(sourceId, () async {
+      await _channel.invokeMethod('source#setGeoJson', <String, dynamic>{
+        'sourceId': sourceId,
+        'geojson': await _encodeGeoJson(geojson),
+      });
     });
+  }
+
+  /// Thresholds above which GeoJSON encoding moves to a background isolate:
+  /// the number of features in a collection, and the number of coordinate
+  /// positions anywhere in the payload.
+  ///
+  /// Native only accepts a JSON string, so the encode happens either way, and
+  /// `jsonEncode` on the main isolate froze the UI on large geometries (#366).
+  /// Above these thresholds the encode goes through [compute]; below them it
+  /// stays synchronous, since spawning an isolate would make the common case
+  /// slower and asynchronous for nothing.
+  ///
+  /// This buys a responsive UI, not speed: handing the payload over copies it on
+  /// the calling side. Measured on a desktop machine, a 100k-point line blocks
+  /// the main isolate for about 46 ms inline against about 30 ms offloaded,
+  /// while total duration grows from about 45 ms to about 72 ms. Dropping that
+  /// last 30 ms needs an API taking already encoded GeoJSON, since that copy is
+  /// the cost. A long-lived worker isolate was measured and rejected: the spawn
+  /// is only about 0.1 ms, and a shared worker queues a small write behind a
+  /// large one (58 ms) instead of letting it take the synchronous path.
+  ///
+  /// Web never gets here: it hands the decoded map straight to maplibre-gl-js.
+  static const _geoJsonOffloadFeatureCount = 100;
+  static const _geoJsonOffloadPositionCount = 2000;
+
+  /// Pending GeoJSON write per source id. See [_writeGeoJson].
+  final Map<String, Future<void>> _pendingGeoJsonWrites = {};
+
+  /// Runs [write] after any GeoJSON write already in flight for [sourceId].
+  ///
+  /// Encoding can now finish asynchronously, and it takes longer the larger the
+  /// payload is. Two writes fired without `await` on the same source would
+  /// otherwise be able to reach the platform channel in reverse order, leaving
+  /// the source holding the older payload. Chaining per source id keeps the
+  /// platform side in call order.
+  Future<void> _writeGeoJson(String sourceId, Future<void> Function() write) {
+    final pending = _pendingGeoJsonWrites[sourceId];
+    // A failed write must not block the writes queued behind it, so its error
+    // is ignored for chaining purposes only. Callers still see it through the
+    // future returned here.
+    final next = (pending == null
+            ? Future<void>.value()
+            : pending.then<void>((_) {}, onError: (_) {}))
+        .then((_) => write());
+    _pendingGeoJsonWrites[sourceId] = next;
+    unawaited(
+      next.then<void>((_) {}, onError: (_) {}).whenComplete(() {
+        if (_pendingGeoJsonWrites[sourceId] == next) {
+          // The removed future is the one already handled just above, so
+          // ignoring it here is deliberate rather than a dropped error.
+          _pendingGeoJsonWrites.remove(sourceId)?.ignore();
+        }
+      }),
+    );
+    return next;
+  }
+
+  /// Encodes [geojson] to a JSON string, offloading to a background isolate
+  /// when the payload is large enough to be worth it. See [isLargeGeoJson].
+  Future<String> _encodeGeoJson(Map<String, dynamic> geojson) {
+    if (isLargeGeoJson(geojson)) {
+      return compute(jsonEncode, geojson);
+    }
+    return Future.value(jsonEncode(geojson));
+  }
+
+  /// Whether [geojson] is large enough that encoding it should move off the
+  /// main isolate.
+  ///
+  /// Counting stops as soon as the threshold is reached, so this costs at most
+  /// [_geoJsonOffloadPositionCount] steps no matter how large the payload is.
+  /// Counting positions instead of the length of the top-level `coordinates`
+  /// array is what makes this correct for areas: a `Polygon` holds one entry
+  /// per ring, so a single ring of 50k points has a `coordinates` length of 1.
+  /// The same applies to `MultiLineString`, `MultiPolygon` and
+  /// `GeometryCollection`.
+  @visibleForTesting
+  static bool isLargeGeoJson(Map<String, dynamic> geojson) {
+    const limit = _geoJsonOffloadPositionCount;
+    final features = geojson['features'];
+    if (features is List) {
+      if (features.length >= _geoJsonOffloadFeatureCount) return true;
+      var positions = 0;
+      for (final feature in features) {
+        if (feature is! Map) continue;
+        positions += _countGeometryPositions(
+          feature['geometry'],
+          limit - positions,
+        );
+        if (positions >= limit) return true;
+      }
+      return false;
+    }
+    return _countGeometryPositions(geojson['geometry'] ?? geojson, limit) >=
+        limit;
+  }
+
+  /// Counts the coordinate positions of a single geometry, giving up once
+  /// [limit] is reached. The result is capped at [limit].
+  static int _countGeometryPositions(Object? geometry, int limit) {
+    if (limit <= 0 || geometry is! Map) return 0;
+    if (geometry['type'] == 'GeometryCollection') {
+      final geometries = geometry['geometries'];
+      if (geometries is! List) return 0;
+      var positions = 0;
+      for (final child in geometries) {
+        positions += _countGeometryPositions(child, limit - positions);
+        if (positions >= limit) return positions;
+      }
+      return positions;
+    }
+    return _countPositions(geometry['coordinates'], limit);
+  }
+
+  /// Counts positions inside a `coordinates` value of any nesting depth, giving
+  /// up once [limit] is reached. A position is a list of numbers, so a list
+  /// whose first entry is a number counts as one position.
+  static int _countPositions(Object? coordinates, int limit) {
+    if (limit <= 0 || coordinates is! List || coordinates.isEmpty) return 0;
+    if (coordinates.first is num) return 1;
+    var positions = 0;
+    for (final child in coordinates) {
+      positions += _countPositions(child, limit - positions);
+      if (positions >= limit) return positions;
+    }
+    return positions;
   }
 
   @override
@@ -929,10 +1119,35 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _ensureDemEncodingSupported(properties);
     await _channel.invokeMethod('style#addSource', <String, dynamic>{
       'sourceId': sourceId,
       'properties': properties.toJson(),
     });
+  }
+
+  /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre
+  /// Native decodes only the `mapbox` and `terrarium` formulas
+  /// (maplibre-native#2783) and would read the tiles as mapbox-encoded, so the
+  /// map would render plausible but wrong elevations. Failing here says so
+  /// instead.
+  ///
+  /// `redFactor`, `greenFactor`, `blueFactor` and `baseShift` are read only on
+  /// a custom encoding, so on `mapbox` and `terrarium` they stay the no-op they
+  /// have always been on Android and iOS and are not rejected.
+  void _ensureDemEncodingSupported(SourceProperties properties) {
+    if (properties is! RasterDemSourceProperties) return;
+    if (properties.encoding != 'custom') return;
+
+    throw UnsupportedError(
+      'The custom raster-dem encoding is not available on Android and iOS '
+      'because MapLibre Native decodes only the mapbox and terrarium '
+      'encodings. Use encoding: "mapbox" or "terrarium", or serve the '
+      'terrain tiles in one of those encodings. Custom encoding is '
+      'supported on web. This check covers addSource() only: a raster-dem '
+      'source declared inside MapLibreMap.styleString never reaches it and '
+      'is decoded as mapbox without any error.',
+    );
   }
 
   @override
@@ -976,6 +1191,42 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _channel.invokeMethod('colorReliefLayer#add', <String, dynamic>{
+      'sourceId': sourceId,
+      'layerId': layerId,
+      'belowLayerId': belowLayerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
+      'properties': properties,
+    });
+  }
+
+  @override
+  Future<void> addBackgroundLayer(
+    String layerId,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _channel.invokeMethod('backgroundLayer#add', <String, dynamic>{
+      'layerId': layerId,
+      'belowLayerId': belowLayerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
+      'properties': properties,
+    });
+  }
+
+  @override
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
@@ -999,11 +1250,28 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   Future<void> setFeatureForGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojsonFeature,
-  ) async {
-    await _channel.invokeMethod('source#setFeature', <String, dynamic>{
-      'sourceId': sourceId,
-      'geojsonFeature': jsonEncode(geojsonFeature),
+  ) {
+    return _writeGeoJson(sourceId, () async {
+      await _channel.invokeMethod('source#setFeature', <String, dynamic>{
+        'sourceId': sourceId,
+        'geojsonFeature': await _encodeGeoJson(geojsonFeature),
+      });
     });
+  }
+
+  /// Guard shared by the feature state methods. This class serves both
+  /// Android and iOS, but only the MapLibre Android SDK exposes the feature
+  /// state API, so on iOS the call has no native counterpart to reach.
+  /// Failing here keeps the error clear instead of surfacing as a
+  /// [MissingPluginException] from an unhandled channel call.
+  void _ensureFeatureStateAvailable(String methodName) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      throw UnsupportedError(
+        '$methodName is not available on iOS because the MapLibre iOS SDK '
+        'does not expose the feature state API yet. '
+        'Feature state is supported on Android and web.',
+      );
+    }
   }
 
   @override
@@ -1013,11 +1281,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'setFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
-    );
+    _ensureFeatureStateAvailable('setFeatureState');
+    await _channel.invokeMethod('source#setFeatureState', <String, dynamic>{
+      'sourceId': sourceId,
+      'featureId': featureId,
+      'state': state,
+      'sourceLayer': sourceLayer,
+    });
   }
 
   @override
@@ -1027,11 +1297,13 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String? stateKey,
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'removeFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
-    );
+    _ensureFeatureStateAvailable('removeFeatureState');
+    await _channel.invokeMethod('source#removeFeatureState', <String, dynamic>{
+      'sourceId': sourceId,
+      'featureId': featureId,
+      'stateKey': stateKey,
+      'sourceLayer': sourceLayer,
+    });
   }
 
   @override
@@ -1040,11 +1312,63 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String featureId, {
     String? sourceLayer,
   }) async {
-    // TODO: Implement feature state support for iOS and Android
-    throw UnimplementedError(
-      'getFeatureState is not yet implemented on iOS and Android. '
-      'This feature is currently only available on web.',
+    _ensureFeatureStateAvailable('getFeatureState');
+    final reply = await _channel.invokeMethod(
+      'source#getFeatureState',
+      <String, dynamic>{
+        'sourceId': sourceId,
+        'featureId': featureId,
+        'sourceLayer': sourceLayer,
+      },
     );
+    // The native side sends the state as a JSON string (so nested values
+    // survive the channel intact) and sends null, not an empty map, when the
+    // feature has no state, because callers distinguish the two.
+    final state = reply?['state'];
+    if (state == null) return null;
+    return (jsonDecode(state as String) as Map).cast<String, dynamic>();
+  }
+
+  @override
+  Future<void> setSky(SkyProperties sky) async {
+    throw UnsupportedError(
+      'setSky is not available on Android and iOS because MapLibre Native '
+      'does not implement the sky style root object yet. '
+      'The sky is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    throw UnsupportedError(
+      'setTerrain is not available on Android and iOS because MapLibre Native '
+      'does not implement 3D terrain yet. Terrain is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setProjection(Object type) async {
+    throw UnsupportedError(
+      'setProjection is not available on Android and iOS because MapLibre '
+      'Native only renders the mercator projection. '
+      'Projections are supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    throw UnsupportedError(
+      'setGlobalStateProperty is not available on Android and iOS because '
+      'MapLibre Native does not implement global state yet. '
+      'Global state is supported on web.',
+    );
+  }
+
+  @override
+  Future<void> setLight(LightProperties light) async {
+    await _channel.invokeMethod('style#setLight', <String, dynamic>{
+      'light': light.toJson(),
+    });
   }
 
   @override
@@ -1060,9 +1384,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     try {
       final result = await _channel.invokeMethod(
         'layer#getVisibility',
-        <String, dynamic>{
-          'layerId': layerId,
-        },
+        <String, dynamic>{'layerId': layerId},
       );
       return result as bool?;
     } on PlatformException catch (e) {
@@ -1135,21 +1457,89 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     }
   }
 
+  @override
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
+    return _getStyleObjectProperties('style#getLayerProperties', {
+      'layerId': layerId,
+    });
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
+    return _getStyleObjectProperties('style#getSourceProperties', {
+      'sourceId': sourceId,
+    });
+  }
+
+  /// Shared transport for [getLayerProperties] / [getSourceProperties].
+  ///
+  /// The native side serializes the layer/source to a MapLibre style-spec JSON
+  /// string (so nested expressions survive the platform channel intact) and
+  /// returns it under `reply['properties']`. Returns null when the object does
+  /// not exist.
+  Future<Map<String, dynamic>?> _getStyleObjectProperties(
+    String method,
+    Map<String, dynamic> arguments,
+  ) async {
+    try {
+      final reply = await _channel.invokeMethod(method, arguments);
+      final properties = reply?['properties'];
+      if (properties == null) return null;
+      return shapeStyleProperties(jsonDecode(properties as String) as Map);
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
   /// Method to set style string
   ///
   @override
   Future<void> setStyle(String styleString) async {
     try {
-      await _channel.invokeMethod(
-        'style#setStyle',
-        <String, dynamic>{
-          'style': styleString,
-        },
-      );
+      await _channel.invokeMethod('style#setStyle', <String, dynamic>{
+        'style': styleString,
+      });
     } on PlatformException catch (e) {
       return Future.error(e);
     } catch (e) {
       return Future.error(e);
     }
   }
+}
+
+/// Normalizes a style entry (a layer or a source, in MapLibre style-spec form)
+/// into the one shape [MapLibrePlatform.getLayerProperties] and
+/// [MapLibrePlatform.getSourceProperties] promise on every platform.
+///
+/// The problem this solves is that JavaScript has a single number type. A style
+/// that writes `4` and one that writes `4.0` are the same value in the browser,
+/// so the web implementation cannot report the difference the native platforms
+/// report: there, the SDK hands back JSON and `jsonDecode` turns `4` into an int
+/// and `1.0` into a double. Reading `properties['minzoom'] as int` therefore
+/// worked on Android and iOS and threw in the browser, and normalizing only the
+/// web side would have moved the same breakage onto `1.0`.
+///
+/// So both sides are normalized instead, to what the browser can actually
+/// represent: every integral number becomes an int, and only genuinely
+/// fractional ones stay doubles. `minzoom` reads as an int everywhere, and a
+/// `fill-opacity` of `1.0` reads as an int everywhere too, which is why callers
+/// should read numbers as `num` rather than `int` or `double`.
+Map<String, dynamic> shapeStyleProperties(Map<dynamic, dynamic> entry) =>
+    entry.map(
+      (key, dynamic value) => MapEntry(key.toString(), _shapeStyleValue(value)),
+    );
+
+Object? _shapeStyleValue(Object? value) {
+  if (value is double) {
+    return value.isFinite && value == value.roundToDouble()
+        ? value.toInt()
+        : value;
+  }
+  if (value is List) return value.map(_shapeStyleValue).toList();
+  if (value is Map) {
+    return value.map(
+      (key, dynamic child) => MapEntry(key, _shapeStyleValue(child)),
+    );
+  }
+  return value;
 }

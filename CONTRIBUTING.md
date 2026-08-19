@@ -143,6 +143,8 @@ Notes:
 
 If you add new style specification fields, extend the mapping logic in `scripts/lib/conversions.dart` and/or templates under `scripts/templates/`.
 
+`scripts/input/style.json` is a verbatim copy of the upstream release pinned in `scripts/input/style_spec_version.txt`, so never edit it by hand: `melos run check-style-spec` fails on any drift, in CI too. To move to a newer spec release, run `melos run update-style-spec` (or `dart run lib/check_style_spec.dart --update=<version>` from `scripts/` for a specific one) and then `melos run generate`. A weekly workflow does the same and opens the PR for you.
+
 ## Pull Request Checklist
 Before marking your PR ready for review, verify:
 - [ ] Example app updated (if API / behavior change)

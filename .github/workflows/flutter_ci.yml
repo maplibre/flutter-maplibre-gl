@@ -42,6 +42,7 @@ jobs:
               - 'maplibre_gl_platform_interface/**'
               - 'maplibre_gl_web/**'
               - 'maplibre_gl_example/**'
+              - 'scripts/**'
               - 'pubspec.yaml'
               - '.github/workflows/**'
             docs:
@@ -98,6 +99,8 @@ jobs:
         with:
           run-bootstrap: true
       - run: melos run test:io:coverage --no-select
+      - name: Run the code generator tests
+        run: melos run test:scripts
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v7
@@ -135,6 +138,8 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
+      - name: Check style spec alignment with upstream
+        run: melos run check-style-spec
       - run: melos run generate
       - run: melos run format-all
       - name: Check Git changes
@@ -190,12 +195,12 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download web demo artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: web-demo
           path: web-demo
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
           cache: pip
@@ -218,7 +223,7 @@ jobs:
           cp -r web-demo/. pages/demo/
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: pages
 
@@ -246,4 +251,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

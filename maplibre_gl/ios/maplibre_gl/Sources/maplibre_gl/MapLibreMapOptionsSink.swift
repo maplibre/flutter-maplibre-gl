@@ -21,6 +21,13 @@ protocol MapLibreMapOptionsSink {
     func setCompassViewMargins(x: Double, y: Double)
     func setAttributionButtonMargins(x: Double, y: Double)
     func setAttributionButtonPosition(position: MLNOrnamentPosition)
+    func setAttributionButtonColor(color: Int)
     func setFeatureTapsTriggersMapClick(triggers: Bool)
-    func setLocationEngineProperties(enableHighAccuracy: Bool, distanceFilter: Double)
+    func setLocationEngineProperties(
+        enableHighAccuracy: Bool,
+        distanceFilter: Double,
+        intervalMs: Int,
+        pulseWindowMs: Int
+    )
+    func setLocationSource(token: String)
 }

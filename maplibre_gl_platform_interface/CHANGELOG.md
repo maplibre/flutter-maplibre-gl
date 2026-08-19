@@ -1,17 +1,38 @@
+## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
+
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
+
+The `MapLibrePlatform` members added below have no default implementation, so an external platform package, or a mock in tests, has to add them. Apps calling the API are unaffected.
+
+### Added
+* `shapeStyleProperties()` normalizes a style entry into the shape every platform answers with, so `getLayerProperties()` and `getSourceProperties()` agree. JavaScript has one number type, so integral values become ints and only genuinely fractional ones stay doubles; read numbers as `num` (#513).
+* `getLayerProperties(layerId)` and `getSourceProperties(sourceId)`, returning a layer's or source's properties as a style-spec map, or `null` for an unknown id (#513).
+* `pauseMap()` and `resumeMap()`, forwarded over the channel as `map#pause` and `map#resume`, to stop and restart rendering for a map that is alive but off screen (#805).
+* `LocationEnginePlatforms.iOS` accepts `intervalMs` and `pulseWindowMs`, forwarded to the iOS location engine so GPS can be pulsed instead of tracked continuously (#901).
+* An app-provided location source. Adds `LocationSource` with `ManualLocationSource` and `PlatformLocationSource`, the `ManualLocationUpdate` model, and `setManualLocation`, forwarded over the channel as `locationComponent#setManualLocation`. Which source a map uses arrives as the `locationSource` key in the map options (#840).
+* `MapLibreJsSource`, describing where the web implementation loads MapLibre GL JS from. It lives here so apps can configure it through `maplibre_gl` without importing the web package; Android and iOS ignore it (#928).
+* `MapLibreGlobalPlatform`, for calls global to the plugin rather than tied to a single map, with `MapLibreGlobalMethodChannel` as the default. The web package replaces the instance at registration, routing `preWarm()` and `ensureWebLibraryLoaded()` to the web implementation (#928).
+* `setFeatureState`, `removeFeatureState` and `getFeatureState` are forwarded over the channel instead of throwing `UnimplementedError`, so feature state works on Android. iOS throws an `UnsupportedError` naming the platform (#889).
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves`, forwarded over the channel as `source#getCluster*`. Each takes the cluster's integer `cluster_id`; the two feature calls decode a list of JSON strings, as `querySourceFeatures` does (#896).
+* `setTrackingCameraOptions`, forwarded over the channel as `locationComponent#setTrackingCameraOptions` with a `tilt` and an optional `duration`. It returns whether the pitch animation ran (#888).
+
+### Fixed
+* A large GeoJSON payload is encoded on a background isolate instead of blocking the UI for the whole encode. Smaller ones keep the faster synchronous path, and writes to the same source id stay in the order they were issued (#366).
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
-No platform-interface changes; version aligned with the `maplibre_gl` 0.26.2 release. See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+No platform-interface changes; version aligned with the `maplibre_gl` 0.26.2 release. See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ## [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.0...v0.26.1)
 
-See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ### Fixed
 * **Android**: Forward `textureMode` through the method channel so hybrid composition can enable it when necessary (#816).
 
 ## [0.26.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.25.0...v0.26.0)
 
-See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ### Breaking
 * `initialCameraPosition` is now nullable to support style-defined camera options (#769).
@@ -33,7 +54,7 @@ See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
 
 ## [0.25.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.24.1...v0.25.0) - 2026-01-07
 
-See top-level [CHANGELOG.md](../CHANGELOG.md) for full details.
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ### Changed
 * Updated to align with main package v0.25.0.

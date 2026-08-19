@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:web/web.dart';
 import 'package:maplibre_gl_web/src/geo/geojson.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
@@ -8,6 +9,8 @@ import 'package:maplibre_gl_web/src/geo/point.dart';
 import 'package:maplibre_gl_web/src/style/layers/layer.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
 import 'package:maplibre_gl_web/src/style/sources/source.dart';
+// Prefixed because package:web has an Event of its own.
+import 'package:maplibre_gl_web/src/util/evented.dart' as evented;
 import 'package:maplibre_gl_web/src/utils.dart' as utils;
 import 'package:maplibre_gl_web/src/style/sources/vector_source.dart';
 import 'package:maplibre_gl_web/src/style/style.dart';
@@ -514,6 +517,11 @@ class MapLibreMap extends Camera {
   ///  var styleJson = map.getStyle();
   StyleJsImpl? getStyle() => jsObject.getStyle();
 
+  /// The style as a plain JS object, for reading it as data rather than
+  /// calling methods on it. See `getStyleObject` in the interop for why the
+  /// typed [StyleJsImpl] cannot be walked by `dartify` under dart2wasm.
+  JSObject? getStyleObject() => jsObject.getStyleObject();
+
   /// Return each layer of the  MapLibre style object, which can be used to check the order, toggle the visibility or change properties
   List<StyleLayerJsImpl> getLayers() {
     final style = jsObject.getStyle();
@@ -702,6 +710,62 @@ class MapLibreMap extends Camera {
   ///  // the style's sprite.
   ///  var catIconExists = map.hasImage('cat');
   bool hasImage(String id) => jsObject.hasImage(id);
+
+  ///  Whether this build of maplibre-gl-js has
+  ///  [setMissingStyleImageResolver], which arrived in version 6.
+  ///
+  ///  Worth checking rather than assuming: the library on the page is not
+  ///  always the one the plugin loads. A leftover `<script>` tag in
+  ///  `index.html`, or `MapLibreJsSource.preloaded`, can put version 5 there,
+  ///  and calling a method it does not have would throw on map creation.
+  bool get hasMissingStyleImageResolver =>
+      (jsObject as JSObject).has('setMissingStyleImageResolver');
+
+  ///  Registers [resolve] as the supplier of images the style asks for but does
+  ///  not have. It is called with the image id and should register the image by
+  ///  calling `addImage`; the map waits for the returned future. Null removes a
+  ///  previously registered resolver.
+  ///
+  ///  Since maplibre-gl-js 6 this replaces listening for `styleimagemissing`
+  ///  and calling `addImage` from the listener, which no longer resolves the
+  ///  request. Guard the call with [hasMissingStyleImageResolver], or let
+  ///  [setMissingStyleImageHandler] pick the path this build supports.
+  void setMissingStyleImageResolver(Future<void> Function(String id)? resolve) {
+    jsObject.setMissingStyleImageResolver(
+      resolve == null ? null : ((JSString id) => resolve(id.toDart).toJS).toJS,
+    );
+  }
+
+  ///  Has [resolve] supply the images the style asks for but does not have,
+  ///  whichever way the library on the page offers.
+  ///
+  ///  Keeps that difference here rather than at the call site: version 6 takes
+  ///  a resolver, version 5 has none and only lets a `styleimagemissing`
+  ///  listener do the work, and which of the two is on the page is not up to
+  ///  this plugin. A leftover `<script>` tag in `index.html`, or
+  ///  `MapLibreJsSource.preloaded`, can still put version 5 there.
+  ///
+  ///  Returns the listener's subscription on version 5, for the caller to
+  ///  unsubscribe, and null on version 6, where [clearMissingStyleImageHandler]
+  ///  is what removes the resolver again.
+  evented.Subscription? setMissingStyleImageHandler(
+    Future<void> Function(String id) resolve,
+  ) {
+    if (!hasMissingStyleImageResolver) {
+      return on(
+        'styleimagemissing',
+        (evented.Event event) => resolve(event.id),
+      );
+    }
+    setMissingStyleImageResolver(resolve);
+    return null;
+  }
+
+  ///  Undoes [setMissingStyleImageHandler] on a build that took a resolver. The
+  ///  version 5 path is undone by unsubscribing instead.
+  void clearMissingStyleImageHandler() {
+    if (hasMissingStyleImageResolver) setMissingStyleImageResolver(null);
+  }
 
   ///  Remove an image from a style. This can be an image from the style's original
   ///  [sprite]  or any images
@@ -934,8 +998,42 @@ class MapLibreMap extends Camera {
   ///  @param {Object} [options]
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
-  MapLibreMap setLight(dynamic light, StyleSetterOptions options) =>
-      MapLibreMap.fromJsObject(jsObject.setLight(light, options.jsObject));
+  MapLibreMap setLight(dynamic light, [StyleSetterOptions? options]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setLight(utils.jsify(light)!, options?.jsObject),
+      );
+
+  ///  Sets the any combination of sky values.
+  ///
+  ///  @param sky Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky/).
+  ///  @param {Object} [options]
+  ///  @param {boolean} [options.validate=true] Whether to check if the sky conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setSky(dynamic sky, [StyleSetterOptions? options]) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setSky(utils.jsify(sky)!, options?.jsObject),
+      );
+
+  ///  Loads a 3D terrain mesh, based on a "raster-dem" source.
+  ///
+  ///  @param {Object | null} terrain The terrain to set, or `null` to remove the terrain.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setTerrain(dynamic terrain) =>
+      MapLibreMap.fromJsObject(jsObject.setTerrain(utils.jsify(terrain)));
+
+  ///  Sets the map's projection.
+  ///
+  ///  @param {Object | null} projection A projection definition object, or `null` to reset to the default mercator projection.
+  ///  @returns {MapLibreMap} `this`
+  MapLibreMap setProjection(dynamic projection) =>
+      MapLibreMap.fromJsObject(jsObject.setProjection(utils.jsify(projection)));
+
+  ///  Sets one property of the style's global state, read by the
+  ///  `global-state` expression.
+  MapLibreMap setGlobalStateProperty(String name, dynamic value) =>
+      MapLibreMap.fromJsObject(
+        jsObject.setGlobalStateProperty(name, utils.jsify(value)),
+      );
 
   ///  Returns the value of the light object.
   ///

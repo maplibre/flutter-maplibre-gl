@@ -175,10 +175,7 @@ class _EditAnnotationDraggableBodyState
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
             ),
           ),
         ],

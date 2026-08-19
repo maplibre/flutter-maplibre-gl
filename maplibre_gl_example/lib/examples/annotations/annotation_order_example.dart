@@ -143,10 +143,7 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
         styleString: ExampleConstants.demoMapStyle,
         onMapCreated: _onMapCreated,
         onStyleLoadedCallback: _onStyleLoaded,
-        initialCameraPosition: CameraPosition(
-          target: _center,
-          zoom: 5.5,
-        ),
+        initialCameraPosition: CameraPosition(target: _center, zoom: 5.5),
         annotationOrder: _annotationOrder,
       ),
       controls: [
@@ -246,7 +243,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                           trailing: Icon(
                             Icons.drag_handle,
                             color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                                Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

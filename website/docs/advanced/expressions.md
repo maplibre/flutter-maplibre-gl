@@ -152,15 +152,15 @@ CircleLayerProperties(
 Expressions compose. Any argument can itself be an expression:
 
 ```dart
-// Circle size interpolated by zoom, but capped at 20px by a max() expression
+// Circle size interpolated by zoom, then capped at 20px by a min() expression
 circleRadius: [
-  'min',
+  Expressions.min,
   [
     Expressions.interpolate, ['linear'], [Expressions.zoom],
     0, 2,
     12, 30,
   ],
-  20,  // max cap
+  20,  // upper cap
 ],
 ```
 
@@ -205,6 +205,33 @@ await controller.addCircleLayer(
 );
 ```
 
+## Global state (web only)
+
+`Expressions.globalState` reads a value shared by the whole style instead of a
+feature property, so one switch can restyle any number of layers at once.
+Set the value with `setGlobalStateProperty`:
+
+```dart
+await controller.addFillLayer(
+  "buildings-source",
+  "buildings",
+  const FillLayerProperties(
+    fillColor: [
+      Expressions.match,
+      [Expressions.globalState, "theme"],
+      "dark", "#222222",
+      "#eeeeee", // fallback
+    ],
+  ),
+);
+
+// Later, from a toggle in your UI:
+await controller.setGlobalStateProperty("theme", "dark");
+```
+
+On Android and iOS `setGlobalStateProperty` throws an `UnsupportedError`;
+MapLibre Native does not implement global state yet.
+
 ## Key `Expressions` constants
 
 | Constant | Style spec equivalent | Use case |
@@ -218,6 +245,6 @@ await controller.addCircleLayer(
 | `Expressions.heatmapDensity` | `"heatmap-density"` | Heatmap layer input |
 | `Expressions.lineProgress` | `"line-progress"` | Line gradient position |
 | `Expressions.has` | `"has"` | Check property exists |
-| `Expressions.notHasExpression` | `"!"` + `"has"` | Negate |
+| `Expressions.not` | `"!"` | Negate a boolean |
 
 For the full expression reference, see the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec/expressions/).

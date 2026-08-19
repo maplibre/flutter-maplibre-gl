@@ -12,26 +12,26 @@ Capture a static image of the current map view as a `Uint8List` (PNG bytes). Use
 ## Capture a snapshot
 
 ```dart
-final Uint8List? bytes = await controller.takeSnapshot();
+final Uint8List bytes = await controller.takeSnapshot();
 
-if (bytes != null) {
-  // Display it in an Image widget
-  final image = Image.memory(bytes);
+// Display it in an Image widget
+final image = Image.memory(bytes);
 
-  // Or save it to a file
-  final file = File('${directory.path}/map_snapshot.png');
-  await file.writeAsBytes(bytes);
-}
+// Or save it to a file
+final file = File('${directory.path}/map_snapshot.png');
+await file.writeAsBytes(bytes);
 ```
 
 The snapshot captures the current viewport exactly as rendered, including any added layers, annotations, and the camera position.
+
+Pass `width` and `height` in logical pixels to render at a size other than the current map view, keeping the camera position and style.
 
 ## Show snapshot in a dialog
 
 ```dart
 Future<void> _shareSnapshot() async {
   final bytes = await controller.takeSnapshot();
-  if (bytes == null || !mounted) return;
+  if (!mounted) return;
 
   showDialog(
     context: context,

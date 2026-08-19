@@ -47,7 +47,7 @@ await controller.moveCamera(
 | `CameraUpdate.newLatLng(LatLng)` | Move to position, keep zoom |
 | `CameraUpdate.newLatLngZoom(LatLng, double)` | Move to position with zoom |
 | `CameraUpdate.newCameraPosition(CameraPosition)` | Full control: position + zoom + bearing + tilt |
-| `CameraUpdate.newLatLngBounds(LatLngBounds, {padding})` | Fit a bounding box into view |
+| `CameraUpdate.newLatLngBounds(LatLngBounds, {left, top, right, bottom})` | Fit a bounding box into view, with per-edge padding |
 | `CameraUpdate.zoomIn()` | Zoom in one level |
 | `CameraUpdate.zoomOut()` | Zoom out one level |
 | `CameraUpdate.zoomTo(double)` | Zoom to a specific level |
@@ -74,22 +74,48 @@ await controller.animateCamera(
 
 ```dart
 final position = await controller.queryCameraPosition();
-print('Center: ${position.target}');
-print('Zoom: ${position.zoom}');
-print('Bearing: ${position.bearing}');
-print('Tilt: ${position.tilt}');
+if (position != null) {
+  print('Center: ${position.target}');
+  print('Zoom: ${position.zoom}');
+  print('Bearing: ${position.bearing}');
+  print('Tilt: ${position.tilt}');
+}
 ```
 
 ## `easeCamera`: interpolated animation
 
-`easeCamera` is like `animateCamera` but uses MapLibre's easing functions instead of a linear interpolation:
+`easeCamera` moves the camera along a single eased path, where `animateCamera` uses the
+platform's fly-to animation. Pass `interpolation` to pick the curve; `linear` is the one to
+use for continuous tracking, since it has no acceleration between successive calls:
 
 ```dart
 await controller.easeCamera(
   CameraUpdate.newLatLng(const LatLng(35.6762, 139.6503)),
   duration: const Duration(seconds: 3),
+  interpolation: CameraAnimationInterpolation.linear,
 );
 ```
+
+The default is `easeInOut`. Android only distinguishes linear from eased, so the other
+curves render as its native ease-in/ease-out; see the
+[Feature Matrix](../compare/feature-matrix.md).
+
+## Padding: keep content centered behind an overlay
+
+A bottom sheet or a side panel covers part of the map, so the geometric center of the widget is no longer the center the user sees. `setPadding` shifts the map's center by insetting the viewport, and every later camera call respects it, so you do not have to pass padding to each one:
+
+```dart
+// A 240 dp bottom sheet just opened.
+await controller.setPadding(bottom: 240, animated: true);
+
+// Centers in the visible part of the map, not behind the sheet.
+await controller.animateCamera(CameraUpdate.newLatLng(marker));
+
+// Sheet dismissed.
+await controller.setPadding(animated: true);
+```
+
+Values are in logical pixels and default to zero, so a call with no arguments clears the padding. `setPadding` is a convenience wrapper around `updateContentInsets`, which takes an `EdgeInsets`; use whichever reads better. Both work on Android, iOS and web.
 
 ## React to camera movement
 

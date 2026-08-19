@@ -468,6 +468,18 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  var styleJson = map.getStyle();
   external StyleJsImpl? getStyle();
 
+  /// The same call as [getStyle], typed as a plain [JSObject].
+  ///
+  /// [StyleJsImpl] is a `@staticInterop` class, and passing one to `dartify`
+  /// does not survive dart2wasm: the runtime type checks it makes are the ones
+  /// `invalid_runtime_check_with_js_interop_types` warns about, so the walk
+  /// ends in a cast the compiler proved impossible and the call fails with
+  /// "Attempt to execute code removed by Dart AOT compiler (TFA)". Reading the
+  /// style as a `JSObject` keeps it on the path `dartify` handles, the one
+  /// `getFeatureState` already uses.
+  @JS('getStyle')
+  external JSObject? getStyleObject();
+
   ///  Returns a Boolean indicating whether the map's style is fully loaded.
   ///
   ///  @returns {boolean} A Boolean indicating whether the style is fully loaded.
@@ -581,6 +593,15 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
   ///  @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
   external void addImage(String id, JSAny image, [JSAny? options]);
+
+  ///  Sets the function that supplies an image the style asks for but does not
+  ///  have. The resolver is called with the image id and may return a promise;
+  ///  it registers the image by calling [addImage].
+  ///
+  ///  Since maplibre-gl-js 6 this is the only way to satisfy such a request: a
+  ///  `styleimagemissing` listener can still observe it, but calling
+  ///  [addImage] from there no longer resolves it. Null removes the resolver.
+  external void setMissingStyleImageResolver(JSFunction? resolver);
 
   ///  Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
   ///  [sprite]  using the image's ID with
@@ -817,9 +838,37 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setLight(
-    JSAny light,
-    StyleSetterOptionsJsImpl options,
-  );
+    JSAny light, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
+
+  ///  Sets the any combination of sky values.
+  ///
+  ///  @param sky Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky/).
+  ///  @param {Object} [options]
+  ///  @param {boolean} [options.validate=true] Whether to check if the sky conforms to the MapLibre JS Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+  ///  @returns {MapLibreMap} `this`
+  external MapLibreMapJsImpl setSky(
+    JSAny sky, [
+    StyleSetterOptionsJsImpl? options,
+  ]);
+
+  ///  Loads a 3D terrain mesh, based on a "raster-dem" source.
+  ///
+  ///  @param {Object | null} terrain The terrain to set, or `null` to remove the terrain.
+  ///  @returns {MapLibreMap} `this`
+  external MapLibreMapJsImpl setTerrain(JSAny? terrain);
+
+  ///  Sets the map's projection.
+  ///
+  ///  @param {Object | null} projection A projection definition object, or `null` to reset to the default mercator projection.
+  ///  @returns {MapLibreMap} `this`
+  external MapLibreMapJsImpl setProjection(JSAny? projection);
+
+  ///  Sets one property of the style's global state, read by the `global-state` expression.
+  ///
+  ///  @returns {MapLibreMap} `this`
+  external MapLibreMapJsImpl setGlobalStateProperty(String name, JSAny? value);
 
   ///  Returns the value of the light object.
   ///

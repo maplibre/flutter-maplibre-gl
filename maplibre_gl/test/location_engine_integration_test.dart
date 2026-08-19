@@ -25,9 +25,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MapLibreMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-            ),
+            initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
           ),
         ),
       );
@@ -44,9 +42,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MapLibreMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-            ),
+            initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
             locationEnginePlatforms: const LocationEnginePlatforms.android(
               enableHighAccuracy: true,
               interval: 500,
@@ -70,9 +66,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: MapLibreMap(
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(0, 0),
-              ),
+              initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
             ),
           ),
         );
@@ -85,9 +79,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: MapLibreMap(
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(0, 0),
-              ),
+              initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
               locationEnginePlatforms: const LocationEnginePlatforms.android(
                 enableHighAccuracy: true,
               ),
@@ -109,9 +101,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MapLibreMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-            ),
+            initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
             myLocationEnabled: true,
           ),
         ),
@@ -128,9 +118,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MapLibreMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-            ),
+            initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
             myLocationTrackingMode: MyLocationTrackingMode.tracking,
           ),
         ),
@@ -158,10 +146,7 @@ void main() {
 
       final calls = platform.callsFor('updateMyLocationTrackingMode');
       expect(calls.length, 1);
-      expect(
-        calls.first.positionalArgs.first,
-        MyLocationTrackingMode.tracking,
-      );
+      expect(calls.first.positionalArgs.first, MyLocationTrackingMode.tracking);
 
       controller.dispose();
     });
@@ -182,10 +167,7 @@ void main() {
       final calls = platform.callsFor('updateMyLocationTrackingMode');
       expect(calls.length, MyLocationTrackingMode.values.length);
       for (var i = 0; i < MyLocationTrackingMode.values.length; i++) {
-        expect(
-          calls[i].positionalArgs.first,
-          MyLocationTrackingMode.values[i],
-        );
+        expect(calls[i].positionalArgs.first, MyLocationTrackingMode.values[i]);
       }
 
       controller.dispose();

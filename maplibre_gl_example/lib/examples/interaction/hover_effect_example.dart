@@ -1,22 +1,26 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import '../../page.dart';
 import '../../shared/shared.dart';
 
-/// Example demonstrating hover effect on features using feature state (Web only)
+/// Example demonstrating a hover effect using feature state (web only).
 ///
-/// This example shows how to combine onMapMouseMove and queryRenderedFeatures
-/// to detect mouse events over vector tile layers, then use setFeatureState
-/// to update styling dynamically.
+/// This example combines onMapMouseMove and queryRenderedFeatures to detect
+/// which feature the mouse is over, then uses setFeatureState to update the
+/// styling dynamically without touching the source data.
+///
+/// The page is web only because mouse events do not exist on the other
+/// platforms. Feature state itself also runs on Android; its cross-platform,
+/// tap-driven side is demonstrated by the Feature State page under
+/// Layers & Sources.
 ///
 /// Important notes:
 /// - Uses onMapMouseMove + manual feature querying for vector tile layers
-/// - onFeatureHover: Works with annotation objects (addFill, addCircle, etc.)
-/// - Feature state API: Web-only (not available on iOS/Android)
+/// - onFeatureHover works with annotation objects (addFill, addCircle, etc.)
+///   and could be used instead of manual querying
 ///
 /// Based on: https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/
 class HoverEffectExample extends ExamplePage {
@@ -29,33 +33,7 @@ class HoverEffectExample extends ExamplePage {
       );
 
   @override
-  Widget build(BuildContext context) {
-    if (!kIsWeb) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.web, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Hover Effect Example',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'This example is only available on web platform.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return const _HoverEffectBody();
-  }
+  Widget build(BuildContext context) => const _HoverEffectBody();
 }
 
 class _HoverEffectBody extends StatefulWidget {
@@ -86,7 +64,9 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
   Future<void> _addStatesLayer() async {
     if (_controller == null) return;
 
-    // Add GeoJSON source with promoteId to use STATE_ID as feature id
+    // promoteId promotes STATE_ID to be the feature id. It is an option only
+    // MapLibre GL JS supports, which is fine here since this page only runs
+    // on web.
     await _controller!.addSource(
       _sourceName,
       const GeojsonSourceProperties(
@@ -120,10 +100,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
     await _controller!.addLayer(
       _sourceName,
       _borderLayerId,
-      const LineLayerProperties(
-        lineColor: '#627BC1',
-        lineWidth: 2,
-      ),
+      const LineLayerProperties(lineColor: '#627BC1', lineWidth: 2),
       enableInteraction: false,
     );
   }
@@ -133,10 +110,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
 
     // Listen to mouse move events and query features manually
     // NOTE: You could also use onFeatureHover listener for annotation layers
-    _controller!.onMapMouseMove.add((
-      point,
-      coordinates,
-    ) {
+    _controller!.onMapMouseMove.add((point, coordinates) {
       unawaited(_handleMouseMove(point));
     });
   }
@@ -165,11 +139,9 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
         }
 
         // Set hover state on new feature
-        await _controller?.setFeatureState(
-          _sourceName,
-          featureId,
-          {'hover': true},
-        );
+        await _controller?.setFeatureState(_sourceName, featureId, {
+          'hover': true,
+        });
 
         if (mounted) {
           setState(() {
@@ -179,7 +151,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
         }
       }
     } else {
-      // Mouse is not over any state features
+      // The mouse is not over any state feature
       if (_hoveredStateId != null) {
         await _controller?.removeFeatureState(
           _sourceName,
@@ -291,7 +263,7 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                 Row(
                   children: [
                     Icon(
-                      Icons.web,
+                      Icons.lightbulb_outline,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 12),

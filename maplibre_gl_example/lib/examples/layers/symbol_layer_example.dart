@@ -85,13 +85,10 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
       );
 
       // Add GeoJSON source with points
-      await _controller!.addGeoJsonSource(
-        _sourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': _generateRandomPoints(10),
-        },
-      );
+      await _controller!.addGeoJsonSource(_sourceId, {
+        'type': 'FeatureCollection',
+        'features': _generateRandomPoints(10),
+      });
 
       // Add symbol layer
       await _controller!.addSymbolLayer(
@@ -107,6 +104,9 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
           iconIgnorePlacement: _iconIgnorePlacement,
           // Text properties
           textField: '{name}',
+          // A font stack the active demo style actually serves; a glyph 404
+          // would hide the whole symbol, icon included.
+          textFont: ExampleConstants.demoFontStack,
           textSize: _textSize,
           textColor: '#${_textColor.toARGB32().toRadixString(16).substring(2)}',
           textOpacity: _textOpacity,
@@ -156,9 +156,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
     for (var i = 0; i < count; i++) {
       points.add({
         'type': 'Feature',
-        'properties': {
-          'name': cities[i % cities.length],
-        },
+        'properties': {'name': cities[i % cities.length]},
         'geometry': {
           'type': 'Point',
           'coordinates': [
@@ -188,6 +186,7 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
           iconIgnorePlacement: _iconIgnorePlacement,
           // Text properties
           textField: '{name}',
+          textFont: ExampleConstants.demoFontStack,
           textSize: _textSize,
           textColor: '#${_textColor.toARGB32().toRadixString(16).substring(2)}',
           textOpacity: _textOpacity,
@@ -465,18 +464,9 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'left',
-                                label: 'Left',
-                              ),
-                              ExampleSegment(
-                                value: 'center',
-                                label: 'Center',
-                              ),
-                              ExampleSegment(
-                                value: 'right',
-                                label: 'Right',
-                              ),
+                              ExampleSegment(value: 'left', label: 'Left'),
+                              ExampleSegment(value: 'center', label: 'Center'),
+                              ExampleSegment(value: 'right', label: 'Right'),
                             ],
                             selected: _textJustify,
                             onSelectionChanged: (value) async {
@@ -578,14 +568,8 @@ class _SymbolLayerBodyState extends State<_SymbolLayerBody> {
                           const SizedBox(height: 8),
                           ExampleSegmentedButton<String>(
                             segments: const [
-                              ExampleSegment(
-                                value: 'point',
-                                label: 'Point',
-                              ),
-                              ExampleSegment(
-                                value: 'line',
-                                label: 'Line',
-                              ),
+                              ExampleSegment(value: 'point', label: 'Point'),
+                              ExampleSegment(value: 'line', label: 'Line'),
                             ],
                             selected: _symbolPlacement,
                             onSelectionChanged: (value) async {

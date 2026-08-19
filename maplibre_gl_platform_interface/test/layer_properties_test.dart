@@ -86,10 +86,7 @@ void main() {
     test(
       'setLayerProperties passes properties without double encoding',
       () async {
-        final properties = {
-          'visibility': 'visible',
-          'circle-radius': 15,
-        };
+        final properties = {'visibility': 'visible', 'circle-radius': 15};
 
         await platform.setLayerProperties('layer-id', properties);
 

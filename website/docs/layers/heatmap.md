@@ -11,6 +11,12 @@ A heatmap visualizes the density or intensity of point data as a smooth color gr
 
 Simulated event density around major world cities. Color ramps from blue (sparse) to red (dense). Zoom in to see individual points emerge.
 
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
+
 ## When to use a heatmap
 
 - You have hundreds to millions of point features
@@ -132,6 +138,16 @@ await controller.addCircleLayer('events', 'events-circles',
   minzoom: 7,
 );
 ```
+
+## Key `HeatmapLayerProperties` fields
+
+| Property | Description |
+|---|---|
+| `heatmapRadius` | Pixel radius each point contributes to |
+| `heatmapWeight` | Per-point contribution (or expression) |
+| `heatmapIntensity` | Global multiplier on the accumulated density |
+| `heatmapColor` | Density-to-color ramp, keyed on `heatmap-density` |
+| `heatmapOpacity` | Layer opacity 0 to 1 |
 
 ## Key APIs
 

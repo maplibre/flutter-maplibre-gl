@@ -6,5 +6,8 @@ export 'widgets/color_picker.dart';
 // Constants
 export 'constants.dart';
 
+// Tile client identity
+export 'tile_client_identity.dart';
+
 // Extensions
 export 'extensions.dart';

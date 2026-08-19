@@ -77,13 +77,10 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
 
     try {
       // Add GeoJSON source with multiple polygons
-      await _controller!.addGeoJsonSource(
-        _sourceId,
-        {
-          'type': 'FeatureCollection',
-          'features': _generateRandomPolygons(5),
-        },
-      );
+      await _controller!.addGeoJsonSource(_sourceId, {
+        'type': 'FeatureCollection',
+        'features': _generateRandomPolygons(5),
+      });
 
       // Add fill layer
       await _controller!.addFillLayer(
@@ -105,9 +102,9 @@ class _FillLayerBodyState extends State<_FillLayerBody> {
     } catch (e) {
       print('FillLayerExample: Error adding fill layer: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding fill layer: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding fill layer: $e')));
       }
     }
   }

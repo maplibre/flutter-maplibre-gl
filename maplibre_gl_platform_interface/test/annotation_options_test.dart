@@ -67,10 +67,7 @@ void main() {
       // GeoJSON coordinates are [lng, lat]
       expect(geojson['geometry']['coordinates'], [20.0, 10.0]);
       // properties should not contain geometry
-      expect(
-        (geojson['properties'] as Map).containsKey('geometry'),
-        isFalse,
-      );
+      expect((geojson['properties'] as Map).containsKey('geometry'), isFalse);
     });
   });
 
@@ -96,11 +93,9 @@ void main() {
     });
 
     test('data property', () {
-      final symbol = Symbol(
-        'sym-1',
-        SymbolOptions.defaultOptions,
-        {'key': 'value'},
-      );
+      final symbol = Symbol('sym-1', SymbolOptions.defaultOptions, {
+        'key': 'value',
+      });
       expect(symbol.data, {'key': 'value'});
     });
 
@@ -281,9 +276,7 @@ void main() {
     test('toGeoJson includes id', () {
       final line = Line(
         'line-1',
-        const LineOptions(
-          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
-        ),
+        const LineOptions(geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)]),
       );
       final geojson = line.toGeoJson();
       expect(geojson['id'], 'line-1');
@@ -293,9 +286,7 @@ void main() {
     test('translate moves all geometry points', () {
       final line = Line(
         'line-1',
-        const LineOptions(
-          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
-        ),
+        const LineOptions(geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)]),
       );
       line.translate(const LatLng(1.0, 2.0));
       expect(line.options.geometry![0], const LatLng(11.0, 22.0));
@@ -305,9 +296,7 @@ void main() {
     test('toGeoJson includes data in properties', () {
       final line = Line(
         'line-1',
-        const LineOptions(
-          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
-        ),
+        const LineOptions(geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)]),
         {'route': 'A1', 'toll': true},
       );
       final geojson = line.toGeoJson();
@@ -319,9 +308,7 @@ void main() {
     test('toGeoJson without data does not fail', () {
       final line = Line(
         'line-1',
-        const LineOptions(
-          geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)],
-        ),
+        const LineOptions(geometry: [LatLng(10.0, 20.0), LatLng(30.0, 40.0)]),
       );
       final geojson = line.toGeoJson();
       expect(geojson['properties']['id'], 'line-1');

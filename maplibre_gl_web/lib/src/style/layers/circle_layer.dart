@@ -9,12 +9,7 @@ class CircleLayer extends Layer {
   CirclePaint? paint;
   dynamic sourceLayer;
 
-  CircleLayer({
-    required this.id,
-    this.source,
-    this.paint,
-    this.sourceLayer,
-  });
+  CircleLayer({required this.id, this.source, this.paint, this.sourceLayer});
 
   @override
   get jsObject => CircleLayerJsImpl.toJs(this);
@@ -27,10 +22,7 @@ class CirclePaint {
   dynamic circleRadius;
   dynamic circleColor;
 
-  CirclePaint({
-    this.circleRadius,
-    this.circleColor,
-  });
+  CirclePaint({this.circleRadius, this.circleColor});
 
   get jsObject => CirclePaintJsImpl.toJs(this);
 

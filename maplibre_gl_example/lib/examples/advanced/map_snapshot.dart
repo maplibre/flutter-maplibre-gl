@@ -58,9 +58,9 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
       await _showSnapshotDialog(imageBytes, width: width, height: height);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to take snapshot: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to take snapshot: $e')));
     } finally {
       if (mounted) {
         setState(() => _isCapturing = false);
@@ -109,10 +109,7 @@ class _MapSnapshotBodyState extends State<_MapSnapshotBody> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.memory(
-                          imageBytes,
-                          fit: BoxFit.contain,
-                        ),
+                        child: Image.memory(imageBytes, fit: BoxFit.contain),
                       ),
                     ),
                   ),

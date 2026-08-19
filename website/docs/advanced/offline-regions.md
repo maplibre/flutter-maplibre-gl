@@ -2,8 +2,12 @@
 
 Offline regions allow users to download a geographic area and use the map without internet access. The map tiles, fonts, and sprites are all stored on-device.
 
-!!! warning "Android and iOS only"
-    MapLibre GL JS (web) has no offline API. The offline region feature is only available on Android and iOS. Guard all offline code with `if (!kIsWeb)`.
+!!! warning "Android and iOS only, and iOS can evict"
+    MapLibre GL JS (web) has no offline API, so guard all offline code with
+    `if (!kIsWeb)`. On iOS the downloaded tiles live in the app's
+    Library/Caches, which the system may clear under low storage, so treat a
+    downloaded region as a cache and check it is still complete before relying
+    on it.
 
 ## How it works
 
@@ -11,7 +15,7 @@ Offline regions allow users to download a geographic area and use the map withou
 flowchart TD
     APP["Your app"] --> CALL["downloadOfflineRegion(<br/>definition, onEvent)"]
     CALL --> BG["MapLibre Native downloads<br/>tiles in the background"]
-    BG --> EV["onEvent(status)<br/>called periodically<br/><small>completed / required count<br/>state: active · complete · inactive</small>"]
+    BG --> EV["onEvent(status)<br/>called periodically<br/><small>completed / required count<br/>InProgress · Success · Error</small>"]
     BG --> CACHE["Tiles stored in MapLibre's<br/>SQLite cache on device"]
 
     classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
@@ -39,8 +43,11 @@ final definition = OfflineRegionDefinition(
 );
 ```
 
-!!! tip "Tile count warning"
-    Tile count grows exponentially with zoom levels. A 10×10 km area at zoom 10–16 can be thousands of tiles. Use [MapLibre's tile estimator](https://docs.maplibre.org) to estimate size before prompting users.
+!!! warning "Tile count and the 6,000 tile cap"
+    Tile count grows exponentially with zoom levels: a 10x10 km area at zoom 10
+    to 16 can be thousands of tiles, and a region holds 6,000 by default (raise
+    it with `setOfflineTileCountLimit`). Keep the bounds tight and the zoom
+    range short instead of downloading a whole city at street level in one go.
 
 ## Step 2: Download with a progress callback
 
@@ -52,23 +59,33 @@ Future<void> downloadRegion() async {
 
   final region = await downloadOfflineRegion(
     definition,
-    metadata: {'name': 'Paris Center'},  // arbitrary metadata
-    onEvent: (OfflineRegionStatus status) {
-      final progress = status.requiredResourceCount > 0
-          ? status.completedResourceCount / status.requiredResourceCount
-          : 0.0;
-
-      setState(() => _progress = progress);
-
-      if (status.downloadState == OfflineRegionDownloadState.complete) {
+    metadata: {'name': 'Paris Center'}, // arbitrary metadata
+    onEvent: (DownloadRegionStatus status) {
+      if (status is InProgress) {
+        final progress = status.requiredResourceCount > 0
+            ? status.completedResourceCount / status.requiredResourceCount
+            : 0.0;
+        setState(() => _progress = progress);
+      } else if (status is Success) {
         print('Download complete! Region ID: ${region.id}');
+      } else if (status is Error) {
+        print('Download failed: ${status.cause.message}');
       }
     },
   );
 }
 ```
 
+`onEvent` is called with a `DownloadRegionStatus`, which comes in three shapes: `InProgress` while tiles are arriving (it carries the resource counts and byte total), `Success` once the region is fully downloaded, and `Error` with the underlying `cause` if the download fails. Switch on the type rather than reading a state field.
+
 `downloadOfflineRegion` returns an `OfflineRegion` object with the assigned `id`. Store this ID if you need to delete the region later.
+
+!!! note "Re-downloading the same area"
+    Downloading a region whose area (bounds, zoom range and style) matches an
+    already-downloaded one replaces the existing region instead of creating a
+    duplicate. On iOS the replacement keeps the id the previous region had; on
+    Android the SDK assigns a new id when it creates the region. Read the id
+    back from the returned `OfflineRegion` rather than assuming either.
 
 ## Step 3: Track progress in UI
 
@@ -90,12 +107,11 @@ else
 
 | Field | Description |
 |---|---|
-| `completedResourceCount` | Tiles + assets downloaded so far |
-| `requiredResourceCount` | Total tiles + assets needed |
+| `completedResourceCount` | Tiles and assets downloaded so far |
+| `requiredResourceCount` | Total tiles and assets needed |
 | `completedResourceSize` | Bytes downloaded |
-| `downloadState` | `active`, `complete`, or `inactive` |
-
-Progress percentage: `completedResourceCount / requiredResourceCount * 100`
+| `downloadProgress` | Percentage complete, 0 to 100 |
+| `isComplete` | Whether the region has finished downloading |
 
 ## List downloaded regions
 
@@ -116,7 +132,7 @@ Use this to show users what they've downloaded and offer delete options.
 ```dart
 final status = await getOfflineRegionStatus(region.id);
 print('Downloaded: ${status.completedResourceCount} tiles');
-print('Complete: ${status.downloadState == OfflineRegionDownloadState.complete}');
+print('Complete: ${status.isComplete}');
 ```
 
 ## Delete a region
@@ -127,49 +143,78 @@ await deleteOfflineRegion(region.id);
 
 Frees the storage on device. If the user goes offline after deletion, those tiles are no longer available.
 
-## Complete example pattern
+## Move regions between devices
+
+Offline regions live in a single SQLite database on the device. You can copy that
+database to another device and merge its regions into the local store, so a region
+downloaded once can be reused elsewhere without downloading again.
+
+```mermaid
+flowchart LR
+    A["Device A<br/>download regions"] --> EXP["exportOfflineDatabase(path)<br/>share the .db"]
+    EXP --> FILE[(".db file")]
+    FILE --> MRG["Device B<br/>mergeOfflineRegions(path)"]
+    MRG --> B["Device B<br/>regions available offline"]
+
+    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class A,B root
+```
+
+### Export the database
+
+`exportOfflineDatabase(destinationPath)` writes a copy of the offline database
+to a location **you** choose. You pass the full destination file path (folder +
+file name); the function writes the copy there and returns that same path, or
+`null` if nothing has been downloaded yet. It also copies the SQLite
+`-wal`/`-shm` sidecars, so the exported file is consistent.
 
 ```dart
-class OfflineDownloadManager {
-  OfflineRegion? _region;
-  double _progress = 0.0;
+import 'package:path_provider/path_provider.dart';
 
-  Future<void> startDownload(LatLngBounds bounds) async {
-    if (kIsWeb) return;
+Future<String?> exportForSharing() async {
+  if (kIsWeb) return null; // offline not supported on web
 
-    final definition = OfflineRegionDefinition(
-      bounds: bounds,
-      minZoom: 10,
-      maxZoom: 15,
-      mapStyleUrl: MapLibreStyles.openfreemapLiberty,
-    );
-
-    _region = await downloadOfflineRegion(
-      definition,
-      onEvent: (status) {
-        _progress = status.requiredResourceCount > 0
-            ? status.completedResourceCount / status.requiredResourceCount
-            : 0.0;
-        notifyListeners(); // or setState
-      },
-    );
-  }
-
-  Future<void> deleteDownload() async {
-    if (_region != null) {
-      await deleteOfflineRegion(_region!.id);
-      _region = null;
-    }
-  }
+  final tmp = await getTemporaryDirectory();
+  // You decide where the copy goes: here, a temp file called offline_export.db.
+  final savedPath = await exportOfflineDatabase('${tmp.path}/offline_export.db');
+  // savedPath == '${tmp.path}/offline_export.db', or null if nothing downloaded.
+  return savedPath;
 }
 ```
+
+Then hand `savedPath` to a share sheet, upload it, or copy it elsewhere.
+
+If you only need the live database's location (for example to copy it yourself),
+use `getOfflineDatabasePath()`, which returns its absolute path or `null`.
+
+!!! warning "Whole-database export"
+    The native SDKs expose no per-region export, so the file contains **every**
+    region plus the ambient cache, not a single selected region. For the same
+    reason, copy the file while no download is in progress to avoid capturing a
+    half-written database.
+
+### Merge a database
+
+`mergeOfflineRegions(path)` imports every region contained in an external database
+into the local store and returns the merged regions.
+
+```dart
+Future<void> importOfflineDatabase(String path) async {
+  if (kIsWeb) return; // offline not supported on web
+
+  final List<OfflineRegion> merged = await mergeOfflineRegions(path);
+  print('Merged ${merged.length} region(s)');
+}
+```
+
+Databases produced by external tools (for example maplibre-native's `offline.cpp`)
+can also be merged; regions without Flutter-assigned metadata are imported with an
+empty metadata map and a stable, derived ID.
 
 ## Storage considerations
 
 - Tiles are stored in MapLibre's SQLite database on device
-- iOS: stored in the app's Library/Caches (may be cleared by the OS under low storage)
 - Android: stored in the app's internal storage
-- Maximum tile count per region: 6,000 tiles by default (configurable at the native SDK level)
 - Typical sizes: city center at zoom 10–15 ≈ 20–100 MB
 
 !!! note "Style assets"
@@ -183,3 +228,6 @@ class OfflineDownloadManager {
 | `getListOfRegions()` | List all downloaded regions |
 | `getOfflineRegionStatus(id)` | Check status of a specific region |
 | `deleteOfflineRegion(id)` | Delete a downloaded region |
+| `mergeOfflineRegions(path)` | Import regions from an external database file |
+| `exportOfflineDatabase(destPath)` | Copy the whole offline database to a shareable file |
+| `getOfflineDatabasePath()` | Absolute path of the live offline database file |

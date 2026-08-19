@@ -28,9 +28,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: MapLibreMap(initialCameraPosition: camera),
-        ),
+        MaterialApp(home: MapLibreMap(initialCameraPosition: camera)),
       );
 
       final params = platform.lastCreationParams;
@@ -47,9 +45,7 @@ void main() {
     });
 
     testWidgets('is omitted from creationParams when null', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: MapLibreMap()),
-      );
+      await tester.pumpWidget(MaterialApp(home: MapLibreMap()));
 
       final params = platform.lastCreationParams;
       expect(params, isNotNull);
@@ -102,9 +98,7 @@ void main() {
       const camera = CameraPosition(target: LatLng(0, 0));
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: MapLibreMap(initialCameraPosition: camera),
-        ),
+        MaterialApp(home: MapLibreMap(initialCameraPosition: camera)),
       );
 
       final params = platform.lastCreationParams!;
@@ -164,10 +158,7 @@ void main() {
     });
 
     test('cameraPosition matches provided initialCameraPosition', () {
-      const camera = CameraPosition(
-        target: LatLng(10, 20),
-        zoom: 5,
-      );
+      const camera = CameraPosition(target: LatLng(10, 20), zoom: 5);
 
       final controller = MapLibreMapController(
         maplibrePlatform: platform,
@@ -223,10 +214,7 @@ void main() {
       platform.onCameraIdlePlatform.call(styleCamera);
 
       expect(controller.cameraPosition, isNotNull);
-      expect(
-        controller.cameraPosition!.target.latitude,
-        closeTo(17.654, 1e-6),
-      );
+      expect(controller.cameraPosition!.target.latitude, closeTo(17.654, 1e-6));
       expect(
         controller.cameraPosition!.target.longitude,
         closeTo(32.954, 1e-6),

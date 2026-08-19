@@ -43,10 +43,7 @@ typedef OnMapLongClickCallback =
     void Function(Point<double> point, LatLng coordinates);
 
 typedef OnMapMouseMoveCallback =
-    void Function(
-      Point<double> point,
-      LatLng coordinates,
-    );
+    void Function(Point<double> point, LatLng coordinates);
 
 typedef OnStyleLoadedCallback = void Function();
 
@@ -188,14 +185,21 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onCameraMovePlatform.add((cameraPosition) {
-      _cameraPosition = cameraPosition;
-      onCameraMove?.call(cameraPosition);
+      // A non-finite camera is neither cached nor forwarded, so one bad event
+      // cannot outlive itself. See isFiniteCameraPosition.
+      if (isFiniteCameraPosition(cameraPosition)) {
+        _cameraPosition = cameraPosition;
+        onCameraMove?.call(cameraPosition);
+      }
       if (!isDisposed) notifyListeners();
     });
 
     _maplibrePlatform.onCameraIdlePlatform.add((cameraPosition) {
+      // The flag and the callback are unconditional: an unusable camera still
+      // means the movement ended, and a stuck isCameraMoving would be worse
+      // than a stale position.
       _isCameraMoving = false;
-      if (cameraPosition != null) {
+      if (isFiniteCameraPosition(cameraPosition)) {
         _cameraPosition = cameraPosition;
       }
       onCameraIdle?.call();
@@ -266,10 +270,7 @@ class MapLibreMapController extends ChangeNotifier {
 
     _maplibrePlatform.onMapMouseMovePlatform.add((payload) {
       for (final fun in List.of(onMapMouseMove)) {
-        fun(
-          payload["point"],
-          payload["latLng"],
-        );
+        fun(payload["point"], payload["latLng"]);
       }
     });
 
@@ -336,7 +337,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// Callbacks to receive drag events for features (geojson layer) placed on this map.
   final onFeatureDrag = <OnFeatureDragCallback>[];
 
-  /// Callbacks to receive mouse events(enter,move,leave) on web for features (geojson layer) placed on this map.
+  /// Callbacks for mouse enter, move and leave over features of a style layer.
+  ///
+  /// Web only: the list exists on every platform and compiles fine, but Android
+  /// and iOS have no pointer to hover with, so nothing is ever added to it there.
+  /// Use [onFeatureTapped] for those.
   final onFeatureHover = <OnFeatureHoverCallback>[];
 
   /// Callbacks to receive mouse move events over the map.
@@ -369,8 +374,28 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Returns the most recent camera position reported by the platform side.
   /// Will be null, if [MapLibreMap.trackCameraPosition] is false.
+  ///
+  /// Never holds a camera with NaN or infinite components; those readings are
+  /// dropped. For a guaranteed fresh reading rather than the last reported one,
+  /// use [queryCameraPosition], which round-trips to the platform.
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
+
+  /// Whether every component of [position] is a finite number.
+  ///
+  /// iOS derives the zoom from the map view's size, so a camera event arriving
+  /// before the first layout can carry a non-finite zoom. Caching one would
+  /// leave [cameraPosition] poisoned until the next event, which on an
+  /// untouched map never comes, so such readings are dropped.
+  @visibleForTesting
+  static bool isFiniteCameraPosition(CameraPosition? position) {
+    if (position == null) return false;
+    return position.zoom.isFinite &&
+        position.bearing.isFinite &&
+        position.tilt.isFinite &&
+        position.target.latitude.isFinite &&
+        position.target.longitude.isFinite;
+  }
 
   final MapLibrePlatform _maplibrePlatform;
 
@@ -439,7 +464,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [promoteId] can be used on web to promote an id from properties to be the
   /// id of the feature. This is useful because by default maplibre-gl-js does not
-  /// support string ids
+  /// support string ids. On Android and iOS the parameter is ignored: there
+  /// features must carry a top-level `id` member in the GeoJSON itself.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -496,25 +522,24 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Sets the state of a feature.
   ///
-  /// Features are identified by their `id` attribute, which can be set using
-  /// the `promoteId` option at the time of creation of the source.
+  /// Feature state is a set of key-value pairs attached to one feature and read
+  /// back from the style with the `["feature-state", ...]` expression, so many
+  /// features can be restyled without re-feeding the source data.
   ///
-  /// A feature's state is a set of user-defined key-value pairs that can be
-  /// dynamically updated and used for styling with data-driven properties.
-  ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature. Must be an integer or a string
   ///   that can be cast to an integer.
   /// [state] A set of key-value pairs representing the state. Values should be
   ///   valid JSON types.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
-  /// Note: This method requires features to have an ID. For GeoJSON sources,
-  /// use the `promoteId` option when adding the source to promote a property
-  /// to be the feature's ID.
+  /// Features must carry an id. On web, [addGeoJsonSource]'s `promoteId` can
+  /// promote a property into one; Android has no `promoteId`, so there the
+  /// GeoJSON itself must contain a top-level `id`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -537,15 +562,18 @@ class MapLibreMapController extends ChangeNotifier {
   /// If only [sourceId] is specified, removes all states for all features in
   /// that source. If [featureId] is also specified, removes all state keys for
   /// that feature. If [stateKey] is also specified, removes only that key from
-  /// the feature's state.
+  /// the feature's state. A [stateKey] without a [featureId] is rejected on
+  /// Android, whose SDK can only drop one key from one feature or reset the
+  /// whole source; the plugin reports that rather than resetting everything.
   ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] (Optional) The unique ID of the feature.
   /// [stateKey] (Optional) The key in the feature state to remove.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -565,12 +593,13 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Gets the state of a feature.
   ///
-  /// **Note**: This feature is currently only available on web.
-  /// On Android and iOS, this method will throw an [UnimplementedError].
+  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
+  /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature.
-  /// [sourceLayer] (Optional) For vector tile sources, the source layer name.
+  /// [sourceLayer] Required for vector sources on every platform; GeoJSON
+  ///   sources ignore it.
   ///
   /// Returns a map containing the feature's state, or null if the feature
   /// doesn't exist or has no state.
@@ -890,6 +919,74 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a color relief layer to the map with the given properties
+  ///
+  /// The layer colors the terrain by elevation and needs a raster dem source.
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  Future<void> addColorReliefLayer(
+    String sourceId,
+    String layerId,
+    ColorReliefLayerProperties properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _maplibrePlatform.addColorReliefLayer(
+      sourceId,
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
+  /// Add a background layer to the map with the given properties
+  ///
+  /// The layer paints the whole map with a color or a pattern and has no
+  /// source.
+  ///
+  /// Consider using [addLayer] for an unified layer api.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id.
+  /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
+  /// visible.
+  /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
+  /// visible.
+  ///
+  /// Known issue: with the style's own background layer still in place,
+  /// changing this one's properties afterwards can stop it drawing. Remove the
+  /// style's background layer first, or set the properties you want when you
+  /// add this one. See https://github.com/maplibre/maplibre-native/issues/4502.
+  Future<void> addBackgroundLayer(
+    String layerId,
+    BackgroundLayerProperties properties, {
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  }) async {
+    await _maplibrePlatform.addBackgroundLayer(
+      layerId,
+      properties.toJson(),
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+    );
+  }
+
   /// Add a heatmap layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.
@@ -936,6 +1033,48 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Pitches the camera without giving up the active tracking mode, for a
+  /// navigation-style view that keeps following the user while tilted.
+  ///
+  /// [tilt] is the pitch in degrees, from 0 (straight down) to 60, the maximum
+  /// both native SDKs allow. [duration] animates the change; each platform
+  /// picks its own default when it is omitted.
+  ///
+  /// Use this rather than [animateCamera], [easeCamera] or [moveCamera], which are
+  /// not tracking-aware: on Android they end tracking outright, so the map stops
+  /// following the user and [MapLibreMap.onCameraTrackingChanged] reports
+  /// [MyLocationTrackingMode.none].
+  ///
+  /// A tracking mode other than [MyLocationTrackingMode.none] must already be
+  /// active, otherwise this throws a [PlatformException].
+  ///
+  /// **Platform support**: Android and iOS. Web throws an [UnsupportedError],
+  /// since maplibre-gl-js has no location component; a pitch set *before* tracking
+  /// starts does survive there.
+  ///
+  /// Completes with true once the pitch animation has run, or false if the platform
+  /// cancelled it, which happens when another tracking-camera animation supersedes
+  /// it or the tracking mode is still transitioning.
+  Future<bool> setTrackingCameraOptions({
+    required double tilt,
+    Duration? duration,
+  }) async {
+    if (tilt.isNaN || tilt < 0 || tilt > 60) {
+      throw ArgumentError.value(
+        tilt,
+        'tilt',
+        'must be between 0 and 60 degrees',
+      );
+    }
+    if (duration != null && duration.isNegative) {
+      throw ArgumentError.value(duration, 'duration', 'must not be negative');
+    }
+    return _maplibrePlatform.setTrackingCameraOptions(
+      tilt: tilt,
+      duration: duration,
+    );
+  }
+
   /// Updates the language of the map labels to match the device's language.
   ///
   /// The returned [Future] completes after the change has been made on the
@@ -960,6 +1099,26 @@ class MapLibreMapController extends ChangeNotifier {
     bool animated = false,
   ]) async {
     return _maplibrePlatform.updateContentInsets(insets, animated);
+  }
+
+  /// Sets the map's viewport padding, in logical pixels, optionally animating
+  /// the change. Padding shifts the map's center / vanishing point, which is
+  /// useful for keeping content centered behind overlays such as a bottom
+  /// sheet or a side panel.
+  ///
+  /// This is a convenience wrapper around [updateContentInsets]; the named
+  /// edges map directly to an [EdgeInsets].
+  Future<void> setPadding({
+    double left = 0,
+    double top = 0,
+    double right = 0,
+    double bottom = 0,
+    bool animated = false,
+  }) {
+    return updateContentInsets(
+      EdgeInsets.only(left: left, top: top, right: right, bottom: bottom),
+      animated,
+    );
   }
 
   /// Updates the language of the map labels to match the specified language.
@@ -1016,6 +1175,30 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   Future<void> forceOnlineMode() async {
     return _maplibrePlatform.forceOnlineMode();
+  }
+
+  /// Pauses map rendering. Call [resumeMap] to resume.
+  ///
+  /// Useful for pausing maps that are not visible (e.g. on an inactive tab) to
+  /// save GPU/CPU resources. The pause survives backgrounding: a map paused via
+  /// this call stays paused when the host activity returns to the foreground
+  /// until [resumeMap] is called.
+  ///
+  /// Platform behavior:
+  /// - **Android**: stops the MapView render loop.
+  /// - **iOS**: drops the preferred frame rate to 0 while paused and restores
+  ///   it on [resumeMap].
+  /// - **Web**: no-op.
+  Future<void> pauseMap() async {
+    return _maplibrePlatform.pauseMap();
+  }
+
+  /// Resumes map rendering after [pauseMap].
+  ///
+  /// On platforms where [pauseMap] is a no-op this is also a no-op. See
+  /// [pauseMap] for platform behavior details.
+  Future<void> resumeMap() async {
+    return _maplibrePlatform.resumeMap();
   }
 
   /// Eases the camera to a new position with an optional duration.
@@ -1332,9 +1515,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the Line has no geometry set.
   List<LatLng> getLineLatLngs(Line line) {
     if (line.options.geometry == null) {
-      throw ArgumentError(
-        "Line geometry is null. Cannot determine position.",
-      );
+      throw ArgumentError("Line geometry is null. Cannot determine position.");
     }
 
     return line.options.geometry!;
@@ -1598,15 +1779,17 @@ class MapLibreMapController extends ChangeNotifier {
   /// An [Exception] is thrown if the Fill has no geometry set.
   List<List<LatLng>> getFillLatLngs(Fill fill) {
     if (fill.options.geometry == null) {
-      throw ArgumentError(
-        "Fill geometry is null. Cannot determine position.",
-      );
+      throw ArgumentError("Fill geometry is null. Cannot determine position.");
     }
 
     return fill.options.geometry!;
   }
 
   /// Query rendered (i.e. visible) features at a point in screen coordinates
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1616,6 +1799,14 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Query rendered (i.e. visible) features in a Rect in screen coordinates
+  ///
+  /// Unlike [queryRenderedFeatures], which takes the filter expression itself,
+  /// [filter] is that expression encoded as a JSON string, for example
+  /// `'["==", "type", "park"]'`.
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
@@ -1634,6 +1825,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// regardless of whether they are currently rendered by the current style.
   ///
   /// Note: On web, this will probably only work for GeoJson source, not for vector tiles
+  ///
+  /// On iOS this throws a [PlatformException] with code
+  /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
+  /// as GeoJSON, rather than answering with a list that is silently short.
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
@@ -1643,6 +1838,71 @@ class MapLibreMapController extends ChangeNotifier {
       sourceId,
       sourceLayerId,
       filter,
+    );
+  }
+
+  /// The zoom at which a cluster splits into its children, for a "tap a cluster
+  /// to zoom to where it splits" gesture.
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature, which
+  /// [onFeatureTapped] and [queryRenderedFeatures] hand you as a [num], so
+  /// read it as `(properties['cluster_id'] as num).toInt()`.
+  ///
+  /// ```dart
+  /// final zoom = await controller.getClusterExpansionZoom(
+  ///   'events',
+  ///   (properties['cluster_id'] as num).toInt(),
+  /// );
+  /// await controller.animateCamera(CameraUpdate.newLatLngZoom(center, zoom + 0.5));
+  /// ```
+  ///
+  /// For a source that is not clustered, or a [clusterId] that is not one of
+  /// its current clusters, this answers 0 on every platform.
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    return _maplibrePlatform.getClusterExpansionZoom(sourceId, clusterId);
+  }
+
+  /// The immediate children of a cluster, one zoom level in, as GeoJSON
+  /// features.
+  ///
+  /// A child may itself be a cluster, and may be the cluster passed in when the
+  /// next zoom level is not the one where it splits, see
+  /// [getClusterExpansionZoom].
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature.
+  ///
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
+  Future<List<Map<String, dynamic>>> getClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    return _maplibrePlatform.getClusterChildren(sourceId, clusterId);
+  }
+
+  /// The original points belonging to a cluster, as GeoJSON features.
+  ///
+  /// Paginated: [limit] is how many to return, [offset] how many to skip. To
+  /// read a whole cluster at once, pass its `point_count` as [limit].
+  ///
+  /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
+  /// the `cluster_id` property of the cluster feature.
+  ///
+  /// For a source that is not clustered, or an unknown [clusterId], this
+  /// answers an empty list on every platform.
+  Future<List<Map<String, dynamic>>> getClusterLeaves(
+    String sourceId,
+    int clusterId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    return _maplibrePlatform.getClusterLeaves(
+      sourceId,
+      clusterId,
+      limit: limit,
+      offset: offset,
     );
   }
 
@@ -1659,6 +1919,17 @@ class MapLibreMapController extends ChangeNotifier {
   /// Return last latlng, nullable
   Future<LatLng?> requestMyLocationLatLng() async {
     return _maplibrePlatform.requestMyLocationLatLng();
+  }
+
+  /// Pushes an app-provided location into the map's user-location component.
+  ///
+  /// Requires the map to be created with
+  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  /// The accuracy ring, the tracking modes and
+  /// [MapLibreMap.onUserLocationUpdated] keep working, and no location
+  /// permission is needed. Works on Android, iOS and web.
+  Future<void> updateManualLocation(ManualLocationUpdate update) {
+    return _maplibrePlatform.setManualLocation(update);
   }
 
   /// This method returns the boundaries of the region currently displayed in the map.
@@ -1851,8 +2122,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Setting [belowLayerId] adds the new layer below the given id.
   /// If [enableInteraction] is set the layer is considered for touch or drag
-  /// events this has no effect for [RasterLayerProperties] and
-  /// [HillshadeLayerProperties].
+  /// events this has no effect for [RasterLayerProperties],
+  /// [HillshadeLayerProperties] and [ColorReliefLayerProperties].
   /// [sourceLayer] is used to selected a specific source layer from Vector
   /// source.
   /// [minzoom] is the minimum (inclusive) zoom level at which the layer is
@@ -1861,7 +2132,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [filter] determines which features should be rendered in the layer.
   /// Filters are written as [expressions].
-  /// [filter] is not supported by RasterLayer and HillshadeLayer.
+  /// [filter] is not supported by RasterLayer, HillshadeLayer and
+  /// ColorReliefLayer.
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   Future<void> addLayer(
@@ -1969,9 +2241,98 @@ class MapLibreMapController extends ChangeNotifier {
         minzoom: minzoom,
         maxzoom: maxzoom,
       );
+    } else if (properties is ColorReliefLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("ColorReliefLayer does not support filter");
+      }
+      await addColorReliefLayer(
+        sourceId,
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
+    } else if (properties is BackgroundLayerProperties) {
+      if (filter != null) {
+        throw UnimplementedError("BackgroundLayer does not support filter");
+      }
+      await addBackgroundLayer(
+        layerId,
+        properties,
+        belowLayerId: belowLayerId,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+      );
     } else {
       throw UnimplementedError("Unknown layer type $properties");
     }
+  }
+
+  /// Sets the style's `sky` root object, which draws the sky and the
+  /// atmosphere above the horizon.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement the sky
+  /// yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setSky(SkyProperties sky) async {
+    await _maplibrePlatform.setSky(sky);
+  }
+
+  /// Sets the style's `terrain` root object, which renders the map in 3D from
+  /// the elevation of a raster dem source. A null [terrain] removes it.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement 3D terrain
+  /// yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setTerrain(TerrainProperties? terrain) async {
+    await _maplibrePlatform.setTerrain(terrain);
+  }
+
+  /// Sets the style's `projection` root object.
+  ///
+  /// [type] is either one of "mercator", "globe" and "vertical-perspective",
+  /// or an expression interpolating between them by zoom.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native only renders the mercator
+  /// projection.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setProjection(Object type) async {
+    await _maplibrePlatform.setProjection(type);
+  }
+
+  /// Sets the style's `light` root object, which lights extruded geometries.
+  ///
+  /// **Platform support**: all platforms. On Android and iOS the values must
+  /// be constants; only web also accepts expressions.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setLight(LightProperties light) async {
+    await _maplibrePlatform.setLight(light);
+  }
+
+  /// Sets property [name] of the style's global state, which the
+  /// [Expressions.globalState] expression reads, so any number of layers can
+  /// be restyled from a single switch.
+  ///
+  /// **Platform support**: web only. Android and iOS throw an
+  /// [UnsupportedError], since MapLibre Native does not implement global
+  /// state yet.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setGlobalStateProperty(String name, Object? value) async {
+    await _maplibrePlatform.setGlobalStateProperty(name, value);
   }
 
   Future<void> setLayerVisibility(String layerId, bool visible) async {
@@ -1989,6 +2350,40 @@ class MapLibreMapController extends ChangeNotifier {
     return (await _maplibrePlatform.getSourceIds())
         .whereType<String>()
         .toList();
+  }
+
+  /// Returns the properties of the layer with the given [layerId] as a
+  /// MapLibre style-spec map, or null if no such layer exists.
+  ///
+  /// The returned map mirrors a layer entry in a MapLibre style JSON: it
+  /// contains `id`, `type`, `source` (and `source-layer` when set), `minzoom`,
+  /// `maxzoom`, `filter`, and the `paint` and `layout` property objects keyed
+  /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
+  /// values are returned as JSON literals or expressions.
+  ///
+  /// **iOS**: only layers that came with the style are readable. iOS reads the
+  /// style as it was loaded, so a layer added at runtime through this API is
+  /// not in it and this answers null for it, where Android and web answer
+  /// normally. See
+  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
+  Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
+    return _maplibrePlatform.getLayerProperties(layerId);
+  }
+
+  /// Returns the properties of the source with the given [sourceId] as a
+  /// MapLibre style-spec map, or null if no such source exists.
+  ///
+  /// The returned map mirrors a source entry in a MapLibre style JSON: it
+  /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
+  /// `data`, `attribution`, `minzoom`, `maxzoom`).
+  ///
+  /// **iOS**: only sources that came with the style are readable. iOS reads the
+  /// style as it was loaded, so a source added at runtime through this API is
+  /// not in it and this answers null for it, where Android and web answer
+  /// normally. See
+  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
+  Future<Map<String, dynamic>?> getSourceProperties(String sourceId) {
+    return _maplibrePlatform.getSourceProperties(sourceId);
   }
 
   /// Returns the visibility of a layer.

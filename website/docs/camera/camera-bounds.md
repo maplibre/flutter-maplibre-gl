@@ -43,19 +43,8 @@ MapLibreMap(
 
 ## Fit camera to a bounding box
 
-To programmatically set the camera to show a region:
-
-```dart
-await controller.animateCamera(
-  CameraUpdate.newLatLngBounds(
-    LatLngBounds(
-      southwest: const LatLng(41.0, -5.5),
-      northeast: const LatLng(51.5, 9.5),
-    ),
-    left: 50, top: 50, right: 50, bottom: 50, // padding in px
-  ),
-);
-```
+Constraining the camera and moving it to a region are different jobs. For the
+one-off move, see [Fit a bounding box](camera-controls.md#fit-a-bounding-box).
 
 ## Platform notes
 

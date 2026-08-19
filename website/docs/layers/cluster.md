@@ -9,7 +9,13 @@ Clustering groups nearby points into a single bubble at low zoom levels. As user
   loading="lazy"
 ></iframe>
 
-200 random points around Paris. Clusters show a count and collapse/expand as you zoom.
+200 random points around Paris. Clusters show a count and collapse/expand as you zoom. Tap one to zoom to the level where it splits.
+
+!!! note "Add sources and layers after the style loads"
+    Every call below needs a loaded style. Run them from `onStyleLoadedCallback`,
+    not from `onMapCreated`, and run them there again after a style change: a new
+    style discards every source and layer you added. See
+    [Constraints and gotchas](../concepts/annotations-vs-layers.md#constraints-and-gotchas).
 
 ## How clustering works
 
@@ -95,7 +101,7 @@ await controller.addCircleLayer(
 | Property | Default | Description |
 |---|---|---|
 | `cluster` | false | Enable clustering |
-| `clusterMaxZoom` | 14 | Zoom at which clustering stops |
+| `clusterMaxZoom` | one less than `maxzoom` (17 by default) | Zoom at which clustering stops |
 | `clusterRadius` | 50 | Pixel radius to group points |
 
 ## Cluster feature properties
@@ -108,6 +114,66 @@ When clustering is enabled, cluster features have extra properties:
 | `point_count_abbreviated` | Abbreviated count: "142", "1.2k" |
 | `cluster_id` | Internal cluster ID |
 | `cluster` | Always `true` for cluster features |
+
+## Inspect a cluster
+
+Three calls read a cluster back from the source, all keyed on the `cluster_id` property of the cluster feature. They work on Android, iOS and web.
+
+```dart
+// Tap a cluster: zoom to exactly where it splits, instead of guessing zoom + 2.
+Future<void> onTap(math.Point<double> point, LatLng coordinates) async {
+  final features = await controller.queryRenderedFeatures(
+    point, ['cluster-circles'], null,
+  );
+  if (features.isEmpty) return;
+
+  final feature = features.first as Map;
+  final properties = feature['properties'] as Map?;
+  // A num: an int from the native channels, a double from the JS interop on web.
+  final clusterId = (properties?['cluster_id'] as num?)?.toInt();
+  if (clusterId == null) return;
+
+  final zoom = await controller.getClusterExpansionZoom('events', clusterId);
+  // Centre on the cluster rather than on the tap: on a large bubble the two
+  // are far enough apart to leave the split half off screen.
+  final coords = (feature['geometry'] as Map)['coordinates'] as List;
+  await controller.animateCamera(
+    CameraUpdate.newLatLngZoom(
+      LatLng((coords[1] as num).toDouble(), (coords[0] as num).toDouble()),
+      zoom.toDouble(),
+    ),
+  );
+}
+```
+
+Wiring that up needs one extra option. Layers are interactive by default, so a tap that lands on a cluster circle is reported as a feature tap, and `onMapClick` is not called at all: the handler above would never run.
+
+```dart
+MapLibreMap(
+  featureTapsTriggersMapClick: true, // otherwise cluster taps never reach onMapClick
+  onMapClick: onTap,
+  // ...
+)
+```
+
+```dart
+// The original points behind the bubble, paginated.
+final pointCount = (properties['point_count'] as num).toInt();
+final leaves = await controller.getClusterLeaves(
+  'events', clusterId, limit: pointCount,
+);
+
+// The next zoom level's clusters and points. A child may itself be a cluster.
+final children = await controller.getClusterChildren('events', clusterId);
+```
+
+| Method | Returns |
+|---|---|
+| `getClusterExpansionZoom(sourceId, clusterId)` | The zoom at which the cluster splits |
+| `getClusterLeaves(sourceId, clusterId, {limit, offset})` | The cluster's original points, as GeoJSON features |
+| `getClusterChildren(sourceId, clusterId)` | The cluster's immediate children, as GeoJSON features |
+
+For a GeoJSON source that is not clustered, or a `clusterId` that is not one of its current clusters, every platform answers 0 or an empty list. An unknown source id, or one that is not a GeoJSON source, raises a `PlatformException` instead.
 
 ## Filters for cluster vs. point layers
 
@@ -134,3 +200,6 @@ await controller.setGeoJsonSource('events', newFeatureCollection);
 - [`MapLibreMapController.addSource()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/addSource.html)
 - [`GeojsonSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/GeojsonSourceProperties-class.html)
 - [`Expressions.step`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/Expressions/step-constant.html)
+- [`MapLibreMapController.getClusterExpansionZoom()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterExpansionZoom.html)
+- [`MapLibreMapController.getClusterLeaves()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterLeaves.html)
+- [`MapLibreMapController.getClusterChildren()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getClusterChildren.html)

@@ -112,9 +112,7 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       _fill = await _controller!.addFill(
         FillOptions(
           geometry: [
-            _generatePolygon(
-              LatLng(center.latitude - 0.05, center.longitude),
-            ),
+            _generatePolygon(LatLng(center.latitude - 0.05, center.longitude)),
           ],
           fillColor: _fillColor,
           fillOpacity: _fillOpacity,
@@ -137,9 +135,9 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       setState(() {});
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding annotations: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding annotations: $e')));
       }
     }
   }
@@ -184,9 +182,9 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating symbol: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating symbol: $e')));
       }
     }
   }
@@ -206,9 +204,9 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating circle: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating circle: $e')));
       }
     }
   }
@@ -227,9 +225,9 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating fill: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating fill: $e')));
       }
     }
   }
@@ -249,9 +247,9 @@ class _AnnotationPropertiesBodyState extends State<_AnnotationPropertiesBody> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating line: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating line: $e')));
       }
     }
   }

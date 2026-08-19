@@ -101,10 +101,7 @@ class _DocFillLayerBodyState extends State<_DocFillLayerBody> {
               .map(
                 (f) => {
                   'type': 'Feature',
-                  'properties': {
-                    'name': f['name'],
-                    'color': f['color'],
-                  },
+                  'properties': {'name': f['name'], 'color': f['color']},
                   'geometry': {
                     'type': 'Polygon',
                     'coordinates': f['coordinates'],
