@@ -966,6 +966,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Known issue: with the style's own background layer still in place,
+  /// changing this one's properties afterwards can stop it drawing. Remove the
+  /// style's background layer first, or set the properties you want when you
+  /// add this one. See https://github.com/maplibre/maplibre-native/issues/4502.
   Future<void> addBackgroundLayer(
     String layerId,
     BackgroundLayerProperties properties, {

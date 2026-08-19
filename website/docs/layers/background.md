@@ -39,6 +39,12 @@ await controller.addBackgroundLayer(
 );
 ```
 
+!!! warning "Changing the properties later"
+    With the style's own background layer still in place, changing this layer's
+    properties afterwards can stop it drawing. Remove the style's background
+    layer first, or set the properties you want when you add this one.
+    Tracked upstream in [maplibre-native#4502](https://github.com/maplibre/maplibre-native/issues/4502).
+
 ## Pattern
 
 `backgroundPattern` tiles an image from the style sprite instead of a flat
