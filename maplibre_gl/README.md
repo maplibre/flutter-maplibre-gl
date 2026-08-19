@@ -28,11 +28,11 @@
 
 | **3D buildings** | **Clustering** | **Globe, on web** |
 |:---:|:---:|:---:|
-| ![Midtown Manhattan with the camera pitched and rotated](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/buildings-3d.webp) | ![GeoJSON points clustered with live counts](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/cluster.webp) | ![globe projection rendered by MapLibre GL JS](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/globe.webp) |
+| <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/buildings-3d.webp" width="270" alt="Midtown Manhattan with the camera pitched and rotated"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/cluster.webp" width="270" alt="GeoJSON points clustered with live counts"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/globe.webp" width="270" alt="globe projection rendered by MapLibre GL JS"> |
 
 | **Data-driven styling** | **Heatmaps** | **Annotations** |
 |:---:|:---:|:---:|
-| ![countries coloured and faded by their own properties](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/expressions.webp) | ![point density drawn on the GPU](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/heatmap.webp) | ![symbol markers with custom icons and labels](https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/annotations.webp) |
+| <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/expressions.webp" width="270" alt="countries coloured and faded by their own properties"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/heatmap.webp" width="270" alt="point density drawn on the GPU"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/annotations.webp" width="270" alt="symbol markers with custom icons and labels"> |
 
 All of these are live in the [demo](https://maplibre.org/flutter-maplibre-gl/demo/), and every [guide](https://maplibre.org/flutter-maplibre-gl/) embeds an interactive map you can pan and click.
 
