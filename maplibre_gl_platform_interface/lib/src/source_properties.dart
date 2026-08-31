@@ -795,7 +795,8 @@ class VideoSourceProperties implements SourceProperties {
 }
 
 class ImageSourceProperties implements SourceProperties {
-  /// URL that points to an image.
+  /// URL that points to an image. Optional: a source created without a url
+  /// starts empty and renders nothing until an image is set at runtime.
   ///
   /// Type: string
   final String? url;

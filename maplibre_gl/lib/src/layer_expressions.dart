@@ -21,13 +21,21 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const varExpression = "var";
 
-  /// Provides a literal array or object value.
+  /// Provides a literal array or object value, treating nested values as
+  /// literals themselves.
   /// - [Display and style rich text
   /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const literal = "literal";
+
+  /// Provides an array value, evaluating expressions in the elements of the
+  /// array.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  static const semiliteral = "semiliteral";
 
   /// Asserts that the input is an array (optionally with a specific item
   /// type and length). If, when the input expression is evaluated, it is
@@ -795,13 +803,13 @@ class Expressions {
   /// a separator string.
   ///
   /// Sdk Support:
-  ///   basic functionality with js (not on android, ios)
+  ///   basic functionality with js, android, ios
   static const split = "split";
 
   /// Returns a string formed by concatenating the elements of the input
   /// array, inserting a separator between each element.
   ///
   /// Sdk Support:
-  ///   basic functionality with js (not on android, ios)
+  ///   basic functionality with js, android, ios
   static const join = "join";
 }

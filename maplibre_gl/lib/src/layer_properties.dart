@@ -332,6 +332,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
+  ///   data-driven styling on no platform yet
   final dynamic iconRotationAlignment;
 
   /// Scales the original size of the icon by the provided factor. The new
@@ -860,6 +861,35 @@ class SymbolLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic textOptional;
 
+  /// The height above the anchor, in meters, at which the symbol is placed.
+  /// Use `symbol-height-anchor` to control what this height is measured
+  /// from.
+  ///
+  /// Type: number
+  ///   default: 0
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  ///   data-driven styling with js (not on android, ios)
+  final dynamic symbolHeightOffset;
+
+  /// Defines what `symbol-height-offset` is measured from.
+  ///
+  /// Type: enum
+  ///   default: ground
+  /// Options:
+  ///   "ground"
+  ///      `symbol-height-offset` is measured from the ground below the
+  ///      symbol, i.e. the terrain elevation at the symbol's location, or
+  ///      zero when terrain is not enabled.
+  ///   "absolute"
+  ///      `symbol-height-offset` is measured from sea level, ignoring the
+  ///      terrain elevation at the symbol's location.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic symbolHeightAnchor;
+
   /// Whether this layer is displayed.
   ///
   /// Type: enum
@@ -933,6 +963,8 @@ class SymbolLayerProperties implements LayerProperties {
     this.textOverlap,
     this.textIgnorePlacement,
     this.textOptional,
+    this.symbolHeightOffset,
+    this.symbolHeightAnchor,
     this.visibility,
   });
 
@@ -999,6 +1031,8 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: changes.textOverlap ?? textOverlap,
       textIgnorePlacement: changes.textIgnorePlacement ?? textIgnorePlacement,
       textOptional: changes.textOptional ?? textOptional,
+      symbolHeightOffset: changes.symbolHeightOffset ?? symbolHeightOffset,
+      symbolHeightAnchor: changes.symbolHeightAnchor ?? symbolHeightAnchor,
       visibility: changes.visibility ?? visibility,
     );
   }
@@ -1070,6 +1104,8 @@ class SymbolLayerProperties implements LayerProperties {
     addIfPresent('text-overlap', textOverlap);
     addIfPresent('text-ignore-placement', textIgnorePlacement);
     addIfPresent('text-optional', textOptional);
+    addIfPresent('symbol-height-offset', symbolHeightOffset);
+    addIfPresent('symbol-height-anchor', symbolHeightAnchor);
     addIfPresent('visibility', visibility);
     return json;
   }
@@ -1134,6 +1170,8 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: json['text-overlap'],
       textIgnorePlacement: json['text-ignore-placement'],
       textOptional: json['text-optional'],
+      symbolHeightOffset: json['symbol-height-offset'],
+      symbolHeightAnchor: json['symbol-height-anchor'],
       visibility: json['visibility'],
     );
   }
@@ -2036,7 +2074,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   minimum: 0
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with js, android, ios
   final dynamic fillExtrusionRoundedCornerDistance;
 
   const FillExtrusionLayerProperties({
