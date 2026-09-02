@@ -76,7 +76,7 @@ Then reference it by asset path:
 styleString: 'assets/my_style.json'
 ```
 
-This is how PMTiles styles work: the style JSON is local, but it references remote or bundled `.pmtiles` data.
+This is how PMTiles styles work: the style JSON is local, but it references remote or bundled `.pmtiles` data. Sprite and glyph URLs *inside* that JSON are fetched by the native engines, not by Flutter — see [Local sprites and glyphs](#local-sprites-and-glyphs).
 
 ### File on device
 
@@ -96,6 +96,69 @@ styleString: '{"version":8,"sources":{},"layers":[]}'
 ```
 
 Not recommended for production. Use a file.
+
+## Local sprites and glyphs
+
+`styleString: 'assets/my_style.json'` only loads the style document. The native
+engines still fetch `sprite` and `glyphs` themselves, and they cannot read
+Flutter's asset bundle. URLs such as `asset://sprites/sprite` or
+`asset://glyphs/{fontstack}/{range}.pbf` therefore fail.
+
+Copy those files to a directory on disk, then point the style at `file://`
+URLs. Android and iOS only; `file://` is not a web asset scheme.
+
+Declare the files in `pubspec.yaml`:
+
+```yaml
+flutter:
+  assets:
+    - assets/sprites/
+    - assets/glyphs/
+```
+
+Copy them once at startup (`path_provider`):
+
+```dart
+import 'dart:io';
+
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+
+Future<String> copyPrefixToCache(String prefix) async {
+  final cache = await getApplicationCacheDirectory();
+  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+  for (final asset in manifest.listAssets().where((a) => a.startsWith(prefix))) {
+    final data = await rootBundle.load(asset);
+    final out = File('${cache.path}/$asset');
+    await out.parent.create(recursive: true);
+    if (!await out.exists()) {
+      await out.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    }
+  }
+  return cache.path;
+}
+```
+
+Then set the style fields to the copied paths. `sprite` is a prefix: MapLibre
+loads `sprite.json`, `sprite.png`, and the `@2x` variants from it.
+
+```dart
+final cache = await copyPrefixToCache('assets/');
+final style = '''
+{
+  "version": 8,
+  "sprite": "file://$cache/assets/sprites/sprite",
+  "glyphs": "file://$cache/assets/glyphs/{fontstack}/{range}.pbf",
+  "sources": {},
+  "layers": []
+}
+''';
+```
+
+Pass that JSON through a file on disk (or, on Android, as a raw `styleString`).
+`{fontstack}` and `{range}` stay as placeholders; MapLibre fills them in.
 
 ## Switching style at runtime
 
