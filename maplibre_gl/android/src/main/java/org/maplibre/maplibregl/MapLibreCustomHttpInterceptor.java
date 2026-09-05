@@ -22,7 +22,7 @@ public class MapLibreCustomHttpInterceptor {
 
     for (Map.Entry<String, String> entry : headers.entrySet()) {
       CustomHeaders.put(entry.getKey(), entry.getValue());
-      Log.d(TAG, "Setting " + entry.getKey() + " to " + entry.getValue());
+      Log.d(TAG, "Setting custom header: " + entry.getKey());
     }
 
     for (String pattern : filter) {
