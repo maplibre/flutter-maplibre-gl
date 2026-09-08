@@ -23,15 +23,13 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 
-// Flutter is moving Kotlin compilation into AGP itself. From AGP 9 a plugin that
-// applies the Kotlin Gradle Plugin breaks the host app's build, and Flutter already
-// warns about it today (#905). Applying KGP only below AGP 9 keeps this plugin
-// working on both, without forcing the package minimum to Flutter 3.44, which the
-// unconditional migration would require. Drop the condition, and apply nothing,
-// once that floor is normal for us.
-def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
-if (agpMajor < 9) {
-    apply plugin: 'kotlin-android'
+// Who compiles our Kotlin depends on the app: from AGP 9 the Android Gradle plugin does, but
+// only where built-in Kotlin is on, and the Flutter template turns it off (#905, #1008, #1018).
+// Flutter 3.44 and later then apply KGP for us, though not always before this script runs. So
+// apply it only when no Kotlin extension exists yet, through pluginManager, which keeps Flutter's
+// scan for KGP-applying plugins from naming the package.
+if (project.extensions.findByName('kotlin') == null) {
+    project.pluginManager.apply('kotlin-android')
 }
 
 android {
@@ -72,8 +70,8 @@ android {
 }
 
 // Set through the Kotlin extension rather than android.kotlinOptions, which AGP 9
-// removes. The extension is present whether KGP was applied above or AGP provides
-// Kotlin itself.
+// removes. The extension is there either way: AGP registered it, or the block above
+// applied KGP because AGP had not.
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21

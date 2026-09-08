@@ -209,5 +209,6 @@ Future<void> main() async {
 | Flutter  | 3.29.0 |
 | Dart     | 3.7.0 |
 | Android  | API 21 (Android 5.0) |
+| JDK      | 21, to build the Android side |
 | iOS      | iOS 13 |
 | Web      | WebGL2, see [Requirements](#requirements) |
