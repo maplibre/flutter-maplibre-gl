@@ -1,3 +1,11 @@
+## Unreleased
+
+### Fixed
+* **Android**: 0.27.0 failed to configure with `Could not find method kotlin()` on AGP 9 whenever the app has `android.builtInKotlin=false`, which the Flutter template writes into every app created with 3.44 or later. The plugin took AGP 9 to mean AGP compiles Kotlin itself, but with that flag off nothing did, so the build only got through with `android.builtInKotlin=true` added by hand. The plugin now applies the Kotlin Gradle Plugin whenever AGP has not taken Kotlin over, so the workaround can be dropped (#1008).
+
+### Docs
+* The [minimum versions](https://maplibre.org/flutter-maplibre-gl/getting-started/#minimum-versions) table names the JDK requirement: the Android build targets Java 21, so JDK 17 fails with `invalid source release: 21` (#1018).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 The plugin has a **documentation site** now, at [**maplibre.org/flutter-maplibre-gl**](https://maplibre.org/flutter-maplibre-gl/): a guide for every part of the API, each with a live map you can pan and click.
