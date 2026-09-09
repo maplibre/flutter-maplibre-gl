@@ -640,7 +640,10 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> filter,
   ) async {
     // Web implementation: MapLibre GL JS doesn't have direct custom headers setting
-    print('setCustomHeaders called in web, headers: $headers, filter: $filter');
+    print(
+      'setCustomHeaders called in web, headers: ${headers.keys.toList()}, '
+      'filter: $filter',
+    );
     // For future implementation, we could use MapLibre GL JS HTTP configuration
     throw UnimplementedError();
   }
