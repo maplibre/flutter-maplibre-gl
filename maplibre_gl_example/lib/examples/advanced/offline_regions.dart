@@ -621,7 +621,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         // which carries the sidecars too. The DB is tens of MB, so this loads it
         // into memory once, fine for an example.
         final bytes = await File(exported).readAsBytes();
-        final savedPath = await FilePicker.saveFile(
+        final savedTo = await FilePicker.saveFile(
           dialogTitle: 'Save offline database',
           fileName: 'offline_regions_export.db',
           bytes: bytes,
@@ -630,7 +630,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              savedPath == null ? 'Save cancelled' : 'Saved to $savedPath',
+              savedTo == null ? 'Save cancelled' : 'Saved to $savedTo',
             ),
           ),
         );
@@ -661,7 +661,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       // back to `any` rather than risk hiding valid files behind a filter.
       type: FileType.any,
     );
-    final path = picked?.files.singleOrNull?.path;
+    final path = picked.singleOrNull?.path;
     if (path == null) return; // user cancelled
 
     try {
