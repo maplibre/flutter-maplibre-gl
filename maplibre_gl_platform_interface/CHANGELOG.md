@@ -1,3 +1,10 @@
+## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
+
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
+
+### Fixed
+* A `LatLng` decoded from a platform payload accepts a coordinate that arrives without a fractional part. iOS returns offline regions as JSON, where `60.0` is written `60`, which threw `type 'int' is not a subtype of type 'double'` (#241).
+
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)
 
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
