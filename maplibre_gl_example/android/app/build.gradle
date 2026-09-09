@@ -1,6 +1,7 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
+    // No Kotlin Gradle Plugin here, as of the Flutter 3.44 app template: AGP compiles Kotlin
+    // where built-in Kotlin is on, and Flutter applies KGP itself where it is off.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -34,10 +35,6 @@ android {
         targetCompatibility JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21.toString()
-    }
-
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -60,4 +57,11 @@ android {
 
 flutter {
     source '../..'
+}
+
+// The Java and Kotlin targets have to agree, and android.kotlinOptions is gone in AGP 9.
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    }
 }
