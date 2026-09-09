@@ -32,6 +32,12 @@ public class MapLibreCustomHeaders {
         queue.sync { _filterPatterns }
     }
 
+    // Whether there is anything to inject at all. Requests are only intercepted
+    // when there is.
+    public static func hasCustomHeaders() -> Bool {
+        queue.sync { !_customHeaders.isEmpty }
+    }
+
     // Returns headers and whether they should be applied, in a single lock acquisition.
     public static func headersIfApplicable(to url: String) -> (headers: [String: String], apply: Bool) {
         queue.sync {
