@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -82,6 +84,24 @@ void main() {
       expect(def.maxZoom, 15.0);
     });
 
+    test('fromMap handles integer bounds', () {
+      // iOS returns regions as a JSON string, and JSON cannot tell 60.0 apart
+      // from 60, so whole-degree coordinates arrive as int. See issue #241.
+      final map = <String, dynamic>{
+        'bounds': [
+          [60, -4.5],
+          [61, 9],
+        ],
+        'mapStyleUrl': 'https://example.com/style.json',
+        'minZoom': 5.0,
+        'maxZoom': 15.0,
+        'includeIdeographs': false,
+      };
+      final def = OfflineRegionDefinition.fromMap(map);
+      expect(def.bounds.southwest, const LatLng(60.0, -4.5));
+      expect(def.bounds.northeast, const LatLng(61.0, 9.0));
+    });
+
     test('toString', () {
       final def = OfflineRegionDefinition(
         bounds: bounds,
@@ -113,6 +133,22 @@ void main() {
       final region = OfflineRegion.fromMap(map);
       expect(region.id, 42);
       expect(region.definition.mapStyleUrl, 'https://example.com/style.json');
+      expect(region.metadata['name'], 'Test Region');
+    });
+
+    test('fromMap parses an iOS JSON payload with whole-number values', () {
+      // Exactly what MLNOfflineStorage's packs serialize to on iOS when the
+      // region happens to sit on whole degrees and zoom levels. See #241.
+      const iosJson =
+          '{"id":42,"metadata":{"name":"Test Region"},"definition":{"bounds":[[60,-4.5],[61,9]],"mapStyleUrl":"https://example.com/style.json","minZoom":0,"maxZoom":10}}';
+      final region = OfflineRegion.fromMap(
+        json.decode(iosJson) as Map<String, dynamic>,
+      );
+      expect(region.id, 42);
+      expect(region.definition.bounds.southwest, const LatLng(60.0, -4.5));
+      expect(region.definition.bounds.northeast, const LatLng(61.0, 9.0));
+      expect(region.definition.minZoom, 0.0);
+      expect(region.definition.maxZoom, 10.0);
       expect(region.metadata['name'], 'Test Region');
     });
 

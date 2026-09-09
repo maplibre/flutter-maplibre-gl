@@ -148,6 +148,16 @@ void main() {
       expect(LatLngBounds.fromList(null), isNull);
     });
 
+    test('fromList accepts ints for whole-degree coordinates', () {
+      // JSON has no way to tell 60.0 apart from 60. See issue #241.
+      final bounds = LatLngBounds.fromList([
+        [60, -4.5],
+        [61, 9],
+      ]);
+      expect(bounds!.southwest, const LatLng(60.0, -4.5));
+      expect(bounds.northeast, const LatLng(61.0, 9.0));
+    });
+
     test('contains returns true for point inside', () {
       final bounds = LatLngBounds(
         southwest: const LatLng(10.0, 20.0),

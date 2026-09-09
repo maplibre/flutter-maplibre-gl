@@ -41,7 +41,10 @@ class LatLng {
     return <double>[longitude, latitude];
   }
 
-  LatLng._fromJson(List<dynamic> json) : this(json[0], json[1]);
+  /// Values that cross a JSON boundary lose their `double` type when they
+  /// have no fractional part (60.0 is written as `60`), so accept any [num].
+  LatLng._fromJson(List<dynamic> json)
+    : this((json[0] as num).toDouble(), (json[1] as num).toDouble());
 
   @override
   String toString() => 'LatLng($latitude, $longitude)';
