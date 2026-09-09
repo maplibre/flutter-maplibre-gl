@@ -1,0 +1,39 @@
+// AGP and KGP come from the root script classpath, the way an app's root build.gradle provides
+// them. Parent-first class loading then makes the versions under test win over the pins in the
+// module's own buildscript block, which is what happens in a real app too.
+buildscript {
+    def agpVersion = project.hasProperty('agpVersion') ? project.agpVersion : '8.13.2'
+    def kgpVersion = project.hasProperty('kgpVersion') ? project.kgpVersion : '2.4.10'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agpVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kgpVersion"
+    }
+}
+
+// Configuring is not the whole check: 0.27.0 configured fine wherever built-in Kotlin was on, and
+// left the module with nothing to compile its Kotlin where it was off (#1008, #1018). So assert
+// which side ended up owning Kotlin, and that a Kotlin compile task exists at all.
+gradle.projectsEvaluated {
+    def module = project(':maplibre_gl')
+    def kgpApplied = module.pluginManager.hasPlugin('org.jetbrains.kotlin.android')
+    def owner = kgpApplied ? 'kgp' : (module.extensions.findByName('kotlin') != null ? 'agp' : 'none')
+    def compileTask = module.tasks.findByName('compileDebugKotlin')
+
+    println "gradle-compat: agp=${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION} " +
+        "builtInKotlin=${providers.gradleProperty('android.builtInKotlin').getOrElse('unset')} " +
+        "owner=${owner} compileDebugKotlin=${compileTask != null}"
+
+    def expected = project.findProperty('expectKotlinOwner')
+    if (expected != null && owner != expected) {
+        throw new GradleException("Kotlin compilation owner is '$owner', expected '$expected'")
+    }
+    if (compileTask == null) {
+        throw new GradleException("No compileDebugKotlin task: the module would ship no Kotlin classes")
+    }
+}

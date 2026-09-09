@@ -6,7 +6,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## Unreleased
 
 ### Fixed
-* **Android**: 0.27.0 failed to configure with `Could not find method kotlin()` on AGP 9 whenever the app has `android.builtInKotlin=false`, which the Flutter template writes into every app created with 3.44 or later. The plugin took AGP 9 to mean AGP compiles Kotlin itself, but with that flag off nothing did, so the build only got through with `android.builtInKotlin=true` added by hand. The plugin now applies the Kotlin Gradle Plugin whenever AGP has not taken Kotlin over, so the workaround can be dropped (#1008).
+* **Android**: 0.27.0 failed to configure with `Could not find method kotlin()` on AGP 9 whenever the app has `android.builtInKotlin=false`, which Flutter 3.44 and later write into new apps through the template and into existing ones through a migrator. The plugin took AGP 9 to mean AGP compiles Kotlin itself, but with that flag off nothing did, so the build only got through with `android.builtInKotlin=true` added by hand. The plugin now applies the Kotlin Gradle Plugin whenever AGP has not taken Kotlin over, so the workaround can be dropped (#1008).
+* **iOS**: `getListOfRegions`, `mergeOfflineRegions` and `downloadOfflineRegion` threw `type 'int' is not a subtype of type 'double'` for any region whose bounds sat on whole degrees, such as `LatLng(60.0, -4.5)` to `LatLng(61.0, 9.0)`. iOS returns regions as JSON, where `60.0` is written `60` and reads back as an `int`, so only regions with a fractional part in every coordinate could be listed. Coordinates and zoom levels now accept either form (#241).
 
 ### Docs
 * The [minimum versions](https://maplibre.org/flutter-maplibre-gl/getting-started/#minimum-versions) table names the JDK requirement: the Android build targets Java 21, so JDK 17 fails with `invalid source release: 21` (#1018).

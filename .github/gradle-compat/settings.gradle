@@ -1,0 +1,7 @@
+// Standalone Gradle build that configures only the plugin's android/ module, so CI can check who
+// compiles its Kotlin across AGP versions and built-in Kotlin settings without building an app.
+// See README.md in this directory.
+rootProject.name = 'gradle-compat'
+
+include ':maplibre_gl'
+project(':maplibre_gl').projectDir = file('../../maplibre_gl/android')
