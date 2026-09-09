@@ -205,8 +205,17 @@ MapLibreMap(
 
 Passing the JSON directly as `styleString` works too, see [Raw JSON string](#raw-json-string).
 
-!!! warning "`styleString` takes a path, not a `file://` URL"
-    `file://` belongs in the `sprite` and `glyphs` fields, which the native engines fetch themselves. The style document is resolved by the plugin instead: give it the absolute path. A `file://` prefix there is treated as a Flutter asset key on both platforms, and the map stays blank without throwing.
+!!! warning "What goes in `styleString`, and what does not"
+    `file://` belongs in `sprite` and `glyphs`, which the native engines fetch themselves. The style document is resolved by the plugin, and it takes exactly four forms:
+
+    | Where your style is | What to pass |
+    | ------------------- | ------------ |
+    | A file on disk | its absolute path: `'$cache/style.json'` |
+    | Your Flutter assets | its asset key: `'assets/my_style.json'` |
+    | Built in Dart | the JSON string itself |
+    | A server | its URL: `'https://example.com/style.json'` |
+
+    Anything else is read as an asset key, misses, and leaves the map blank without throwing. So `'file:///...'` and `'asset://...'` never work here: the plugin adds the `asset://` prefix itself, and writing it yourself only doubles it.
 
 ## Switching style at runtime
 
