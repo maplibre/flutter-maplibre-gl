@@ -114,7 +114,7 @@ flutter:
     # One entry per font stack directory: `assets/glyphs/` alone bundles nothing.
     - assets/glyphs/Noto Sans Regular/
     - assets/glyphs/Noto Sans Bold/
-    - assets/glyphs/Open Sans Regular,Arial Unicode MS Regular/
+    - assets/glyphs/Noto Sans Regular,Arial Unicode MS Regular/
 ```
 
 `sprite` in the style is a prefix, not a file: MapLibre appends the extension itself and picks one set based on the screen density, `sprite.json` and `sprite.png` at pixel ratio 1, `sprite@2x.json` and `sprite@2x.png` above it. Almost every device is above it, so ship both pairs:
@@ -136,29 +136,35 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Bump this whenever you ship different sprites or glyphs.
+const mapAssetsVersion = 1;
+
 Future<String> copyAssetPrefixesToCache(List<String> prefixes) async {
   final cache = await getApplicationCacheDirectory();
+  final stamp = File('${cache.path}/maplibre_assets.version');
+  if (stamp.existsSync() && stamp.readAsStringSync() == '$mapAssetsVersion') {
+    return cache.path;
+  }
   final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
   final assets = manifest.listAssets().where(
     (asset) => prefixes.any(asset.startsWith),
   );
   for (final asset in assets) {
     final data = await rootBundle.load(asset);
-    final bytes = data.buffer.asUint8List(
-      data.offsetInBytes,
-      data.lengthInBytes,
-    );
     final out = File('${cache.path}/$asset');
-    // Rewrite when missing or stale, so an app update ships the new files.
-    if (out.existsSync() && out.lengthSync() == bytes.length) continue;
     await out.parent.create(recursive: true);
-    await out.writeAsBytes(bytes);
+    await out.writeAsBytes(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    );
   }
+  await stamp.writeAsString('$mapAssetsVersion');
   return cache.path;
 }
 ```
 
 The copy keeps the asset paths, so `assets/sprites/sprite.png` lands in `<cache>/assets/sprites/sprite.png`.
+
+The stamp file keeps later launches cheap: when it matches, nothing is read out of the asset bundle at all. Bump `mapAssetsVersion` when you ship new sprites or glyphs, otherwise the app keeps serving the copies made by the previous version. The system may purge the cache directory at any time, which is harmless here because the copy runs again at the next launch; use `getApplicationSupportDirectory()` instead if you want the copies to survive regardless.
 
 ### Point the style at the copies
 
@@ -179,7 +185,7 @@ final style = '''
 ''';
 ```
 
-`{fontstack}` and `{range}` stay as placeholders; MapLibre fills them in per request. Font stack names containing spaces and commas, such as `Open Sans Regular,Arial Unicode MS Regular`, need no escaping: the engine percent-decodes `file://` paths before reading them.
+`{fontstack}` and `{range}` stay as placeholders; MapLibre fills them in per request. Font stack names containing spaces and commas, such as `Noto Sans Regular,Arial Unicode MS Regular`, need no escaping: the engine percent-decodes `file://` paths before reading them.
 
 Write that JSON next to the copied files and pass its absolute path to the map:
 
@@ -198,6 +204,18 @@ MapLibreMap(
 ```
 
 Passing the JSON directly as `styleString` works too, see [Raw JSON string](#raw-json-string).
+
+!!! warning "What goes in `styleString`, and what does not"
+    `file://` belongs in `sprite` and `glyphs`, which the native engines fetch themselves. The style document is resolved by the plugin, and it takes exactly four forms:
+
+    | Where your style is | What to pass |
+    | ------------------- | ------------ |
+    | A file on disk | its absolute path: `'$cache/style.json'` |
+    | Your Flutter assets | its asset key: `'assets/my_style.json'` |
+    | Built in Dart | the JSON string itself |
+    | A server | its URL: `'https://example.com/style.json'` |
+
+    Anything else is read as an asset key, misses, and leaves the map blank without throwing. So `'file:///...'` and `'asset://...'` never work here: the plugin adds the `asset://` prefix itself, and writing it yourself only doubles it.
 
 ## Switching style at runtime
 
