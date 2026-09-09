@@ -76,7 +76,7 @@ Then reference it by asset path:
 styleString: 'assets/my_style.json'
 ```
 
-This is how PMTiles styles work: the style JSON is local, but it references remote or bundled `.pmtiles` data.
+This is how PMTiles styles work: the style JSON is local, but it references remote or bundled `.pmtiles` data. Sprite and glyph URLs *inside* that JSON are fetched by the native engines, not by Flutter: see [Local sprites and glyphs](#local-sprites-and-glyphs).
 
 ### File on device
 
@@ -89,13 +89,115 @@ styleString: '/data/user/0/com.example.app/app_flutter/my_style.json'
 
 ### Raw JSON string
 
-On Android only, you can pass a raw JSON string:
+You can pass a raw JSON string on any platform:
 
 ```dart
 styleString: '{"version":8,"sources":{},"layers":[]}'
 ```
 
 Not recommended for production. Use a file.
+
+## Local sprites and glyphs
+
+`styleString: 'assets/my_style.json'` only loads the style document. The `sprite` and `glyphs` URLs *inside* it are fetched by the native engines, which resolve `asset://` against the platform's own asset root: the APK assets on Android, the app bundle root on iOS. Flutter's assets are not there, they live under `flutter_assets/` (inside `App.framework` on iOS), so `asset://sprites/sprite` and `asset://glyphs/{fontstack}/{range}.pbf` do not resolve.
+
+Copy those files to a directory on disk instead, then point the style at `file://` URLs. That works the same way on both platforms. Android and iOS only; `file://` is not a web asset scheme.
+
+### Bundle the files
+
+Sprites are a flat set of files, glyphs are one directory per font stack. Flutter asset directories are **not** recursive, so each glyph directory needs its own entry in `pubspec.yaml`:
+
+```yaml
+flutter:
+  assets:
+    - assets/sprites/
+    # One entry per font stack directory: `assets/glyphs/` alone bundles nothing.
+    - assets/glyphs/Noto Sans Regular/
+    - assets/glyphs/Noto Sans Bold/
+    - assets/glyphs/Open Sans Regular,Arial Unicode MS Regular/
+```
+
+`sprite` in the style is a prefix, not a file: MapLibre appends the extension itself and picks one set based on the screen density, `sprite.json` and `sprite.png` at pixel ratio 1, `sprite@2x.json` and `sprite@2x.png` above it. Almost every device is above it, so ship both pairs:
+
+```
+assets/sprites/sprite.json
+assets/sprites/sprite.png
+assets/sprites/sprite@2x.json
+assets/sprites/sprite@2x.png
+```
+
+### Copy them to disk at startup
+
+Add [`path_provider`](https://pub.dev/packages/path_provider) to your dependencies, then copy the asset prefixes you need into the cache directory:
+
+```dart
+import 'dart:io';
+
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+
+Future<String> copyAssetPrefixesToCache(List<String> prefixes) async {
+  final cache = await getApplicationCacheDirectory();
+  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+  final assets = manifest.listAssets().where(
+    (asset) => prefixes.any(asset.startsWith),
+  );
+  for (final asset in assets) {
+    final data = await rootBundle.load(asset);
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+    final out = File('${cache.path}/$asset');
+    // Rewrite when missing or stale, so an app update ships the new files.
+    if (out.existsSync() && out.lengthSync() == bytes.length) continue;
+    await out.parent.create(recursive: true);
+    await out.writeAsBytes(bytes);
+  }
+  return cache.path;
+}
+```
+
+The copy keeps the asset paths, so `assets/sprites/sprite.png` lands in `<cache>/assets/sprites/sprite.png`.
+
+### Point the style at the copies
+
+```dart
+final cache = await copyAssetPrefixesToCache([
+  'assets/sprites/',
+  'assets/glyphs/',
+]);
+
+final style = '''
+{
+  "version": 8,
+  "sprite": "file://$cache/assets/sprites/sprite",
+  "glyphs": "file://$cache/assets/glyphs/{fontstack}/{range}.pbf",
+  "sources": {},
+  "layers": []
+}
+''';
+```
+
+`{fontstack}` and `{range}` stay as placeholders; MapLibre fills them in per request. Font stack names containing spaces and commas, such as `Open Sans Regular,Arial Unicode MS Regular`, need no escaping: the engine percent-decodes `file://` paths before reading them.
+
+Write that JSON next to the copied files and pass its absolute path to the map:
+
+```dart
+final styleFile = File('$cache/style.json');
+await styleFile.writeAsString(style);
+
+MapLibreMap(
+  // Absolute path: a relative string is looked up as a Flutter asset instead.
+  styleString: styleFile.path,
+  initialCameraPosition: const CameraPosition(
+    target: LatLng(48.85, 2.35),
+    zoom: 12,
+  ),
+)
+```
+
+Passing the JSON directly as `styleString` works too, see [Raw JSON string](#raw-json-string).
 
 ## Switching style at runtime
 
