@@ -1,5 +1,16 @@
 # Migration Guide
 
+## Upgrading to 0.27.1
+
+A patch release: bug fixes only, no API changes, nothing to do beyond taking the new version.
+
+```yaml
+dependencies:
+  maplibre_gl: ^0.27.1
+```
+
+Android apps that worked around the 0.27.0 build failure, by setting `android.builtInKotlin=true` or applying the Kotlin plugin to `:maplibre_gl` from their root `build.gradle`, can drop that again (#1008).
+
 ## Upgrading to 0.27.0
 
 No breaking API changes, so nothing stops compiling. Two platforms do need action: Android apps need one code change, described under [Android: style content](#android-style-content), and web apps should delete two tags from `web/index.html`, described under [Web: remove the script and stylesheet tags](#web-remove-the-script-and-stylesheet-tags).
@@ -8,7 +19,7 @@ Update your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  maplibre_gl: ^0.27.0
+  maplibre_gl: ^0.27.1
 ```
 
 Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for the full list of changes. Minimum SDK versions are unchanged from 0.26.x; see [Minimum versions](getting-started.md#minimum-versions).
@@ -75,7 +86,9 @@ None of these need a code change, but they are the places where code that worked
 
 ### Android apps on AGP 9
 
-The plugin no longer applies the Kotlin Gradle Plugin when your app builds with Android Gradle Plugin 9 or later, which is what broke that build before. Apps on AGP 8 are unaffected and need no change.
+Nothing to do, on AGP 8 or AGP 9. The plugin applies the Kotlin Gradle Plugin only where nothing else compiles its Kotlin: on AGP 9 with built-in Kotlin enabled, AGP's own default, it applies nothing and AGP compiles it; where built-in Kotlin is disabled, which is what Flutter 3.44 and later write into `android/gradle.properties` as `android.builtInKotlin=false`, it applies KGP itself.
+
+0.27.0 got that wrong and failed to configure with `Could not find method kotlin()` on AGP 9 whenever built-in Kotlin was disabled. It is fixed in 0.27.1. If you worked around it by setting `android.builtInKotlin=true`, or by applying `kotlin-android` to the module from your root `android/build.gradle`, remove the workaround: on a multi-plugin app the flag puts every other KGP-applying plugin into a conflicting configuration.
 
 ## Upgrading from earlier 0.26 releases
 
@@ -87,6 +100,7 @@ What each release was about, most recent first. Full details live in the [CHANGE
 
 | Version | Highlights |
 |---------|------------|
+| [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.1) | Patch: fixes the Android build failure on Flutter 3.44 templates, an iOS crash on the custom-header path, and offline regions whose bounds sit on whole degrees. No API changes. |
 | [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.0) | Platform gaps closed (feature state on Android, cluster inspection, offline export/import), faster start-up with `preWarm()`, a newer web renderer, documentation site. No breaking API changes; see [Upgrading to 0.27.0](#upgrading-to-0270). |
 | [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.26.2) | Enforces the Flutter 3.29 minimum in the package constraints; fixes redundant map updates on rebuild and `doubleClickZoomEnabled` on Android and iOS. |
 | [0.26.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.26.1) | Android stability fixes after 0.26.0, including crashes on older hardware and disposal races. |

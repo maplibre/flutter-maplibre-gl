@@ -45,6 +45,7 @@ jobs:
               - 'scripts/**'
               - 'pubspec.yaml'
               - '.github/workflows/**'
+              - '.github/gradle-compat/**'
             docs:
               - 'website/**'
               - 'maplibre_gl_example/lib/examples/docs/**'
@@ -152,6 +153,67 @@ jobs:
     uses: ./.github/workflows/_build.yml
     with:
       platform: android
+
+  # Who compiles the Android module's Kotlin depends on the app: AGP itself, the Kotlin Gradle
+  # Plugin the module applies, or Flutter's fallback. The example app pins one AGP version, so it
+  # exercises exactly one of those, and 0.27.0 shipped a combination where none of them did
+  # (#1008, #1018). This configures the module standalone across the combinations and asserts
+  # which side ends up owning the compilation. Configuration only: seconds per leg, no Flutter SDK.
+  # See .github/gradle-compat/README.md.
+  android-gradle-compat:
+    name: "Android Gradle compat (AGP ${{ matrix.agp }}, built-in Kotlin ${{ matrix.built-in-kotlin }})"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Gradle 9.6 removed an internal API AGP 8 relies on, so AGP 8 pairs with 9.5 at the latest.
+          - agp: '8.13.2'
+            gradle: '9.5.1'
+            kgp: '2.4.10'
+            built-in-kotlin: 'none'
+            props: ''
+            owner: 'kgp'
+          # What the Flutter template and its migrator write from 3.44 on, and the versions from #1018.
+          - agp: '9.0.1'
+            gradle: '9.5.1'
+            kgp: '2.3.20'
+            built-in-kotlin: 'off'
+            props: '-Pandroid.builtInKotlin=false -Pandroid.newDsl=false'
+            owner: 'kgp'
+          # AGP 9 out of the box, compiling Kotlin itself.
+          - agp: '9.3.1'
+            gradle: '9.5.1'
+            kgp: '2.4.10'
+            built-in-kotlin: 'default'
+            props: ''
+            owner: 'agp'
+          # The AGP and Gradle pair dependabot is proposing for the example app.
+          - agp: '9.4.0'
+            gradle: '9.7.1'
+            kgp: '2.4.10'
+            built-in-kotlin: 'off'
+            props: '-Pandroid.builtInKotlin=false -Pandroid.newDsl=false'
+            owner: 'kgp'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ matrix.gradle }}
+      - name: Configure the Android module
+        working-directory: .github/gradle-compat
+        run: >
+          gradle :maplibre_gl:help
+          -PagpVersion=${{ matrix.agp }}
+          -PkgpVersion=${{ matrix.kgp }}
+          -PexpectKotlinOwner=${{ matrix.owner }}
+          ${{ matrix.props }}
 
   build-ios:
     name: "Build iOS package"

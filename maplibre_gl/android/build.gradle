@@ -2,7 +2,7 @@ group 'org.maplibre.maplibregl'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.4.0'
+    ext.kotlin_version = '2.4.10'
     repositories {
         google()
         mavenCentral()
@@ -26,8 +26,11 @@ apply plugin: 'com.android.library'
 // Who compiles our Kotlin depends on the app: from AGP 9 the Android Gradle plugin does, but
 // only where built-in Kotlin is on, and the Flutter template turns it off (#905, #1008, #1018).
 // Flutter 3.44 and later then apply KGP for us, though not always before this script runs. So
-// apply it only when no Kotlin extension exists yet, through pluginManager, which keeps Flutter's
-// scan for KGP-applying plugins from naming the package.
+// apply it only when no Kotlin extension exists yet. pluginManager is the same call as
+// `apply plugin:` at runtime, but Flutter's warning about KGP-applying plugins is a regex over
+// this file that matches only the `apply plugin:` form, so writing it this way keeps the package
+// out of a warning that is wrong wherever this branch does not run, and leaves Flutter's own
+// fallback free to apply KGP first.
 if (project.extensions.findByName('kotlin') == null) {
     project.pluginManager.apply('kotlin-android')
 }
@@ -64,14 +67,14 @@ android {
         // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
         implementation 'org.maplibre.gl:android-sdk-opengl:13.5.0'
         implementation 'com.squareup.okhttp3:okhttp:5.4.0'
-        implementation 'com.google.android.gms:play-services-base:18.10.0'
+        implementation 'com.google.android.gms:play-services-base:18.10.1'
         implementation 'com.google.android.gms:play-services-location:21.4.0'
     }
 }
 
-// Set through the Kotlin extension rather than android.kotlinOptions, which AGP 9
-// removes. The extension is there either way: AGP registered it, or the block above
-// applied KGP because AGP had not.
+// Set through the Kotlin extension rather than android.kotlinOptions, which AGP 9 removes. The
+// extension is there whichever way Kotlin arrived: AGP registered it, Flutter applied KGP before
+// this script ran, or the block above applied KGP because neither had.
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21

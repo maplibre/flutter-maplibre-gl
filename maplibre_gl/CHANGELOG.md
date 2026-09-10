@@ -1,9 +1,15 @@
-## Unreleased
+## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
-* **Android**: 0.27.0 failed to configure with `Could not find method kotlin()` on AGP 9 whenever the app has `android.builtInKotlin=false`, which the Flutter template writes into every app created with 3.44 or later. The plugin took AGP 9 to mean AGP compiles Kotlin itself, but with that flag off nothing did, so the build only got through with `android.builtInKotlin=true` added by hand. The plugin now applies the Kotlin Gradle Plugin whenever AGP has not taken Kotlin over, so the workaround can be dropped (#1008).
+* **Android**: apps built with Flutter 3.44 or later no longer fail with `Could not find method kotlin()`. Those apps carry `android.builtInKotlin=false`, and the plugin took AGP 9 to mean AGP compiles Kotlin itself, so nothing did. The plugin now applies the Kotlin Gradle Plugin whenever AGP has not taken Kotlin over, and the `android.builtInKotlin=true` workaround can be removed (#1008).
+* **iOS**: fixed random `EXC_BAD_ACCESS` crashes with a map on screen, introduced in 0.26.2 alongside custom headers. Every request got its own `URLSession`, and a tile cancelled at the moment it completed was released twice from two threads. Intercepted requests now share one session with a synchronized teardown, and apps that never set custom headers skip the interception altogether (#1009).
+* **iOS**: a redirected tile, style or sprite is fetched once instead of twice, and `setOfflineMaxConcurrentRequests` now also limits requests that carry custom headers (#1009).
+* **iOS**: `getListOfRegions`, `mergeOfflineRegions` and `downloadOfflineRegion` no longer throw `type 'int' is not a subtype of type 'double'` for a region whose bounds sit on whole degrees. iOS returns regions as JSON, where `60.0` is written `60`, so only regions with a fraction in every coordinate could be read (#241).
+* **Android, Web**: `setCustomHeaders` logs header names instead of header values. An API key or `Authorization` header sent to a tile provider was written to Logcat and the browser console in plain text, in release builds too (#1015).
 
 ### Docs
+* A guide on [local sprites and glyphs](https://maplibre.org/flutter-maplibre-gl/concepts/styles/#local-sprites-and-glyphs). A style loaded from Flutter assets cannot point `sprite` and `glyphs` at `asset://`, because the native engines fetch those themselves; copy the files to disk at startup and reference them with `file://` (#338).
+* `setStyle` accepts a raw JSON string on all three platforms. The API docs said Android only (#1026).
 * The [minimum versions](https://maplibre.org/flutter-maplibre-gl/getting-started/#minimum-versions) table names the JDK requirement: the Android build targets Java 21, so JDK 17 fails with `invalid source release: 21` (#1018).
 
 ## [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.2...v0.27.0)

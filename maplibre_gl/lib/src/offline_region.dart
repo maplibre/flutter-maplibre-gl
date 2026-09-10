@@ -36,17 +36,23 @@ class OfflineRegionDefinition {
       bounds: _latLngBoundsFromList(map['bounds']),
       mapStyleUrl: map['mapStyleUrl'],
       // small integers may deserialize to Int
-      minZoom: map['minZoom'].toDouble(),
-      maxZoom: map['maxZoom'].toDouble(),
+      minZoom: (map['minZoom'] as num).toDouble(),
+      maxZoom: (map['maxZoom'] as num).toDouble(),
       includeIdeographs: map['includeIdeographs'] ?? false,
     );
   }
 
   static LatLngBounds _latLngBoundsFromList(List<dynamic> json) {
+    // The iOS side hands these back as a JSON string, and JSON has no way to
+    // tell 60.0 apart from 60: whole-degree coordinates arrive here as int.
     return LatLngBounds(
-      southwest: LatLng(json[0][0], json[0][1]),
-      northeast: LatLng(json[1][0], json[1][1]),
+      southwest: _latLngFromList(json[0]),
+      northeast: _latLngFromList(json[1]),
     );
+  }
+
+  static LatLng _latLngFromList(List<dynamic> json) {
+    return LatLng((json[0] as num).toDouble(), (json[1] as num).toDouble());
   }
 }
 
@@ -64,8 +70,10 @@ class OfflineRegion {
 
   factory OfflineRegion.fromMap(Map<String, dynamic> json) {
     return OfflineRegion(
-      id: json['id'],
-      definition: OfflineRegionDefinition.fromMap(json['definition']),
+      id: (json['id'] as num).toInt(),
+      definition: OfflineRegionDefinition.fromMap(
+        Map<String, dynamic>.from(json['definition'] as Map),
+      ),
       // Offline databases created by external tools (e.g. maplibre-native's
       // offline.cpp) may have no metadata, in which case the native layer
       // returns null. Default to an empty map instead of throwing.
