@@ -3,7 +3,7 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ### Added
-* `MapLibrePlatform.setFlingPhysics` carries the pan inertia settings to the platform implementations. Out-of-tree implementations of `MapLibrePlatform` have to add the method.
+* `MapLibrePlatform.setFlingPhysics` carries the pan inertia settings to the platform implementations. Out-of-tree implementations of `MapLibrePlatform` have to add the method (#1032).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
