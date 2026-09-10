@@ -551,6 +551,17 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setFlingPhysics({
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  }) async {
+    // No-op on web. maplibre-gl-js keeps the equivalent knobs on the drag-pan
+    // handler (`deceleration`, `maxSpeed`), which this wrapper does not expose;
+    // wiring them is a separate change rather than a partial mapping here.
+  }
+
+  @override
   Future<void> forceOnlineMode() async {
     // Web implementation: Force online mode
     // In web, we can ensure network requests are enabled

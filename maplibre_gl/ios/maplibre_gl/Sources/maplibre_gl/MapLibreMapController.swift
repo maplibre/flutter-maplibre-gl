@@ -547,6 +547,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
             result(nil)
+        case "map#setFlingPhysics":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            // iOS exposes a single deceleration rate instead of Android's base
+            // time and velocity threshold, so the request is mapped onto the
+            // three documented rates rather than reproduced exactly.
+            if let enabled = arguments["enabled"] as? Bool, !enabled {
+                mapView.decelerationRate = MLNMapViewDecelerationRateImmediate
+            } else if let baseTimeMs = arguments["baseTimeMs"] as? Int {
+                mapView.decelerationRate = baseTimeMs < 150
+                    ? MLNMapViewDecelerationRateFast
+                    : MLNMapViewDecelerationRateNormal
+            }
+            result(nil)
         case "map#forceOnlineMode":
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources

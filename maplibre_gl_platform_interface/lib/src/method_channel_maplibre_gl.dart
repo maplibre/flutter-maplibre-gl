@@ -299,6 +299,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setFlingPhysics({
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  }) async {
+    await _channel.invokeMethod('map#setFlingPhysics', <String, dynamic>{
+      if (baseTime != null) 'baseTimeMs': baseTime.inMilliseconds,
+      if (threshold != null) 'threshold': threshold,
+      if (enabled != null) 'enabled': enabled,
+    });
+  }
+
+  @override
   Future<void> forceOnlineMode() async {
     await _channel.invokeMethod('map#forceOnlineMode');
   }

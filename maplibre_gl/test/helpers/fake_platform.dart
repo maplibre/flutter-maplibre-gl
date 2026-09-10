@@ -146,6 +146,21 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Future<void> setMaximumFps(int fps) async {}
 
   @override
+  Future<void> setFlingPhysics({
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  }) async {
+    calls.add(
+      PlatformCall(
+        'setFlingPhysics',
+        [],
+        {'baseTime': baseTime, 'threshold': threshold, 'enabled': enabled},
+      ),
+    );
+  }
+
+  @override
   Future<void> forceOnlineMode() async {}
 
   @override

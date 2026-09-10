@@ -63,6 +63,7 @@ import org.maplibre.android.maps.MapLibreMapOptions;
 import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.OnMapReadyCallback;
 import org.maplibre.android.maps.Style;
+import org.maplibre.android.maps.UiSettings;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
@@ -220,6 +221,10 @@ final class MapLibreMapController
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
+  // Fling inertia, or null for the SDK default. See map#setFlingPhysics.
+  private Integer flingBaseTimeMs = null;
+  private Long flingThreshold = null;
+  private Boolean flingEnabled = null;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
    * once per {@link MapView} instance. See the lifecycle observer section below.
@@ -521,6 +526,10 @@ final class MapLibreMapController
     if (attributionButtonColor != null) {
       mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
     }
+
+    // Re-apply fling physics: UiSettings belongs to the MapView, so a recreated
+    // view would otherwise fall back to the SDK defaults.
+    applyFlingPhysics();
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
@@ -1652,6 +1661,26 @@ final class MapLibreMapController
           if (mapView != null) {
             mapView.setMaximumFps(fps);
           }
+          result.success(null);
+          break;
+        }
+      case "map#setFlingPhysics":
+        {
+          // Held as fields: UiSettings lives on the MapView, so a recreated
+          // view has to be told again in onMapReady.
+          if (call.hasArgument("baseTimeMs")) {
+            flingBaseTimeMs = call.argument("baseTimeMs");
+          }
+          if (call.hasArgument("threshold")) {
+            // Dart sends a double while UiSettings takes a long: the value is a
+            // velocity in pixels per second, where a fraction carries no meaning.
+            final Number threshold = call.argument("threshold");
+            flingThreshold = threshold == null ? null : threshold.longValue();
+          }
+          if (call.hasArgument("enabled")) {
+            flingEnabled = call.argument("enabled");
+          }
+          applyFlingPhysics();
           result.success(null);
           break;
         }
@@ -3776,6 +3805,26 @@ final class MapLibreMapController
           CameraMode.NONE, CameraMode.TRACKING, CameraMode.TRACKING_COMPASS, CameraMode.TRACKING_GPS
         };
     locationComponent.setCameraMode(cameraModes[this.myLocationTrackingMode]);
+  }
+
+  /**
+   * Applies the fling inertia requested from Dart, if any. Values the caller never set are left
+   * alone, so the SDK defaults (150 ms base time, velocity threshold 1000) stay in place.
+   */
+  private void applyFlingPhysics() {
+    if (mapLibreMap == null) {
+      return;
+    }
+    final UiSettings uiSettings = mapLibreMap.getUiSettings();
+    if (flingBaseTimeMs != null) {
+      uiSettings.setFlingAnimationBaseTime(flingBaseTimeMs);
+    }
+    if (flingThreshold != null) {
+      uiSettings.setFlingThreshold(flingThreshold);
+    }
+    if (flingEnabled != null) {
+      uiSettings.setFlingVelocityAnimationEnabled(flingEnabled);
+    }
   }
 
   private void updateMyLocationRenderMode() {

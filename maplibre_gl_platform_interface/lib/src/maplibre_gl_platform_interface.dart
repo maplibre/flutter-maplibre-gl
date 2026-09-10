@@ -141,6 +141,22 @@ abstract class MapLibrePlatform {
   /// Sets the maximum frames per second for the map rendering.
   Future<void> setMaximumFps(int fps);
 
+  /// Tunes the inertia that follows a pan gesture.
+  ///
+  /// [baseTime] is added to the coast duration, and the coast distance is
+  /// proportional to it, so a smaller value shortens both. [threshold] is the
+  /// gesture velocity below which no coasting happens at all. [enabled] turns
+  /// coasting off entirely.
+  ///
+  /// Android maps these onto `UiSettings` one to one. iOS exposes a single
+  /// `decelerationRate`, so the values are approximated there, and the web
+  /// implementation is a no-op.
+  Future<void> setFlingPhysics({
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  });
+
   /// Forces the map to use online mode (disables offline mode).
   Future<void> forceOnlineMode();
 

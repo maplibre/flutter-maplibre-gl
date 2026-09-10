@@ -699,6 +699,49 @@ void main() {
     });
   });
 
+  group('Fling physics delegation', () {
+    test('setFlingPhysics passes every knob to the platform', () async {
+      await controller.setFlingPhysics(
+        baseTime: const Duration(milliseconds: 110),
+        threshold: 1200,
+        enabled: true,
+      );
+
+      final call = platform.callsFor('setFlingPhysics').single;
+      expect(call.namedArgs['baseTime'], const Duration(milliseconds: 110));
+      expect(call.namedArgs['threshold'], 1200.0);
+      expect(call.namedArgs['enabled'], isTrue);
+    });
+
+    test('setFlingPhysics leaves an omitted knob null', () async {
+      // Null means "keep the SDK default", so a partial call must not
+      // invent values for the knobs the caller left out.
+      await controller.setFlingPhysics(threshold: 0);
+
+      final call = platform.callsFor('setFlingPhysics').single;
+      expect(call.namedArgs['baseTime'], isNull);
+      expect(call.namedArgs['threshold'], 0.0);
+      expect(call.namedArgs['enabled'], isNull);
+    });
+
+    test('setFlingPhysics rejects negative values', () async {
+      expect(
+        () => controller.setFlingPhysics(
+          baseTime: const Duration(milliseconds: -1),
+        ),
+        throwsArgumentError,
+      );
+      for (final threshold in <double>[-1, double.nan]) {
+        expect(
+          () => controller.setFlingPhysics(threshold: threshold),
+          throwsArgumentError,
+          reason: 'threshold $threshold should be rejected',
+        );
+      }
+      expect(platform.wasCalled('setFlingPhysics'), isFalse);
+    });
+  });
+
   group('Padding', () {
     test(
       'setPadding maps named edges to EdgeInsets via updateContentInsets',
