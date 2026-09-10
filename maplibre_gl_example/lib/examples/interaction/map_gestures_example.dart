@@ -39,6 +39,9 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
   bool _isMoving = false;
   String _lastGesture = 'None';
 
+  // Pan inertia preset in effect; set through the controller, not a map option.
+  String _inertia = 'default';
+
   void _onMapCreated(MapLibreMapController controller) {
     _controller = controller;
     controller.addListener(_onMapChanged);
@@ -88,6 +91,24 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
 
   Future<void> _updateDoubleClickZoom(bool enabled) async {
     setState(() => _doubleClickToZoomEnabled = enabled);
+  }
+
+  /// Applies a pan inertia preset. A smaller base time shortens the coast that
+  /// follows a swipe; a higher threshold keeps a short drag from drifting.
+  Future<void> _setInertia(
+    String label, {
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  }) async {
+    await _controller?.setFlingPhysics(
+      baseTime: baseTime,
+      threshold: threshold,
+      enabled: enabled,
+    );
+    if (mounted) {
+      setState(() => _inertia = label);
+    }
   }
 
   Future<void> _enableAllGestures() async {
@@ -189,6 +210,39 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
               value: _doubleClickToZoomEnabled,
               onChanged: _updateDoubleClickZoom,
               contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+        ControlGroup(
+          title: 'Pan Inertia: $_inertia',
+          children: [
+            ExampleButton(
+              label: 'Default',
+              icon: Icons.restart_alt,
+              onPressed:
+                  () => _setInertia(
+                    'default',
+                    baseTime: const Duration(milliseconds: 150),
+                    threshold: 1000,
+                    enabled: true,
+                  ),
+            ),
+            ExampleButton(
+              label: 'Short',
+              icon: Icons.compress,
+              onPressed:
+                  () => _setInertia(
+                    'short',
+                    baseTime: const Duration(milliseconds: 110),
+                    threshold: 1200,
+                    enabled: true,
+                  ),
+            ),
+            ExampleButton(
+              label: 'Off',
+              icon: Icons.block,
+              onPressed: () => _setInertia('off', enabled: false),
+              style: ExampleButtonStyle.destructive,
             ),
           ],
         ),

@@ -1,5 +1,10 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## [Unreleased]
+
+### Added
+* `setFlingPhysics` is implemented as a no-op: maplibre-gl-js keeps the equivalent knobs on the drag-pan handler, which this wrapper does not expose yet.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

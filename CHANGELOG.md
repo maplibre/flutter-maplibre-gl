@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [Unreleased]
+
+### Added
+* `MapLibreMapController.setFlingPhysics` tunes the inertia that follows a pan gesture: a base time that sets how long the map coasts after the finger leaves the screen, a velocity threshold below which it does not coast at all, and a switch that turns coasting off. Both native SDKs expose this and neither was reachable from Dart, so an app could only disable the whole gesture. **Android** maps the values onto `UiSettings` one to one; **iOS** has a single `decelerationRate` and approximates them; **Web** is a no-op. Omitting a value leaves the SDK default in place, so existing apps are unaffected.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

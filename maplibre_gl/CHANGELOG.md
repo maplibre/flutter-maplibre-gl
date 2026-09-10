@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Added
+* `MapLibreMapController.setFlingPhysics` tunes the inertia that follows a pan gesture (base time, velocity threshold, on/off). Android maps the values onto `UiSettings` one to one, iOS approximates them with its single `decelerationRate`, and web is a no-op. Omitting a value leaves the SDK default in place.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

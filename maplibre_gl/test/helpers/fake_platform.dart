@@ -150,7 +150,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Duration? baseTime,
     double? threshold,
     bool? enabled,
-  }) async {}
+  }) async {
+    calls.add(
+      PlatformCall(
+        'setFlingPhysics',
+        [],
+        {'baseTime': baseTime, 'threshold': threshold, 'enabled': enabled},
+      ),
+    );
+  }
 
   @override
   Future<void> forceOnlineMode() async {}
