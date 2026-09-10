@@ -1166,6 +1166,38 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setMaximumFps(fps);
   }
 
+  /// Tunes the inertia that follows a pan gesture.
+  ///
+  /// [baseTime] is added to the coast duration and the coast distance is
+  /// proportional to it, so a smaller value shortens both — the map stops
+  /// sooner after the finger leaves the screen. [threshold] is the gesture
+  /// velocity below which no coasting happens at all, which keeps the map from
+  /// drifting after a short drag. [enabled] turns coasting off entirely.
+  ///
+  /// Android maps these onto `UiSettings` one to one (defaults: 150 ms and
+  /// 1000). iOS exposes a single `decelerationRate`, so the values are
+  /// approximated there, and the web implementation is a no-op.
+  ///
+  /// The returned [Future] completes after the change has been made on the
+  /// platform side.
+  Future<void> setFlingPhysics({
+    Duration? baseTime,
+    double? threshold,
+    bool? enabled,
+  }) async {
+    if (baseTime != null && baseTime.isNegative) {
+      throw ArgumentError.value(baseTime, 'baseTime', 'must not be negative');
+    }
+    if (threshold != null && (threshold.isNaN || threshold < 0)) {
+      throw ArgumentError.value(threshold, 'threshold', 'must not be negative');
+    }
+    return _maplibrePlatform.setFlingPhysics(
+      baseTime: baseTime,
+      threshold: threshold,
+      enabled: enabled,
+    );
+  }
+
   /// Forces the map to use online mode, disabling any offline functionality.
   ///
   /// This is useful for testing or when you want to ensure the map always
