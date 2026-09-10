@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Docs
+* How to load a local [`.mbtiles` file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS: copy it out of Flutter assets and point a raster or vector source at `mbtiles://` plus the absolute path (#318).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

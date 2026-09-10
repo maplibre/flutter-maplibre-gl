@@ -127,6 +127,7 @@ nav:
       - Data-Driven Expressions: advanced/expressions.md
       - Globe, Terrain and Sky: advanced/globe-terrain-sky.md
       - PMTiles: advanced/pmtiles.md
+      - MBTiles: advanced/mbtiles.md
       - Offline Regions: advanced/offline-regions.md
       - Map Language: advanced/map-language.md
       - Snapshot: advanced/snapshot.md
