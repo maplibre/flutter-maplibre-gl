@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
-import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
+import 'package:sharemap_maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 /// A call record for verifying interactions with [FakeMapLibrePlatform].
 class PlatformCall {

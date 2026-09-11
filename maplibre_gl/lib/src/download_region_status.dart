@@ -1,4 +1,4 @@
-part of '../maplibre_gl.dart';
+part of '../sharemap_maplibre_gl.dart';
 
 abstract class DownloadRegionStatus {}
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:sharemap_maplibre_gl/maplibre_gl.dart';
 
 void main() {
   runApp(const _ExampleApp());
@@ -30,7 +30,7 @@ class _ExampleHomePageState extends State<_ExampleHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('maplibre_gl minimal example')),
+      appBar: AppBar(title: const Text('sharemap_maplibre_gl example')),
       body: MapLibreMap(
         // ignore: avoid_redundant_argument_values --- EXAMPLE ---
         styleString: 'https://demotiles.maplibre.org/style.json',

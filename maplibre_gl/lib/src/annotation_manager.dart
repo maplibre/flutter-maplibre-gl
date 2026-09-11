@@ -1,4 +1,4 @@
-part of '../maplibre_gl.dart';
+part of '../sharemap_maplibre_gl.dart';
 
 /// Manages a homogeneous set of [Annotation]s (e.g. symbols, lines, fills) by
 /// owning their backing style source(s)/layer(s) and performing efficient

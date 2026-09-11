@@ -1,3 +1,13 @@
+## 0.26.2+sharemap.2
+
+* Fixed the iOS CocoaPods and Swift Package identities after the Dart package
+  was renamed to `sharemap_maplibre_gl`.
+
+## 0.26.2+sharemap.1
+
+* Renamed package to `sharemap_maplibre_gl`.
+* Updated dependencies to `sharemap_maplibre_gl_platform_interface: ^0.26.2+sharemap.1` and `sharemap_maplibre_gl_web: ^0.26.2+sharemap.1`.
+
 ## [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.26.1...v0.26.2)
 
 > **Note:** This release enforces a minimum Flutter version of **3.29**, which was already required in practice since 0.26.0 but not reflected in the package constraints (#823).
