@@ -203,7 +203,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: ${{ matrix.gradle }}
       - name: Configure the Android module
