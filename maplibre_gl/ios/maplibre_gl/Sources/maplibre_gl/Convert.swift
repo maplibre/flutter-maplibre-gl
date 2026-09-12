@@ -43,6 +43,9 @@ class Convert {
         if let tiltGesturesEnabled = options["tiltGesturesEnabled"] as? Bool {
             delegate.setTiltGesturesEnabled(tiltGesturesEnabled: tiltGesturesEnabled)
         }
+        if let hapticFeedbackEnabled = options["hapticFeedbackEnabled"] as? Bool {
+            delegate.setHapticFeedbackEnabled(hapticFeedbackEnabled: hapticFeedbackEnabled)
+        }
         if let trackCameraPosition = options["trackCameraPosition"] as? Bool {
             delegate.setTrackCameraPosition(trackCameraPosition: trackCameraPosition)
         }

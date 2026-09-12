@@ -27,6 +27,7 @@ class MapLibreMap extends StatefulWidget {
     this.scrollGesturesEnabled = true,
     this.zoomGesturesEnabled = true,
     this.tiltGesturesEnabled = true,
+    this.hapticFeedbackEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
     this.featureTapsTriggersMapClick = false,
@@ -195,6 +196,15 @@ class MapLibreMap extends StatefulWidget {
 
   /// True if the map view should respond to tilt gestures.
   final bool tiltGesturesEnabled;
+
+  /// Whether the device plays a light haptic tap when a rotate gesture
+  /// brings the map's bearing to due north. Defaults to `true`, the native
+  /// SDK default. Set to `false` for apps where the user rotates the map
+  /// constantly, such as chart plotters, and the tap becomes noise.
+  ///
+  /// **Available only on iOS. Has no effect on Android or Web**, which play
+  /// no haptic on rotation.
+  final bool hapticFeedbackEnabled;
 
   /// Set to true to forcefully disable/enable if map should respond to double
   /// click to zoom.
@@ -599,6 +609,7 @@ class MapLibreMapOptions {
     required this.tiltGesturesEnabled,
     required this.zoomGesturesEnabled,
     required this.doubleClickZoomEnabled,
+    this.hapticFeedbackEnabled,
     this.trackCameraPosition,
     this.myLocationEnabled,
     this.myLocationTrackingMode,
@@ -636,6 +647,7 @@ class MapLibreMapOptions {
         zoomGesturesEnabled: map.zoomGesturesEnabled,
         doubleClickZoomEnabled:
             map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+        hapticFeedbackEnabled: map.hapticFeedbackEnabled,
         myLocationEnabled: map.myLocationEnabled,
         myLocationTrackingMode: map.myLocationTrackingMode,
         myLocationRenderMode: map.myLocationRenderMode,
@@ -672,6 +684,8 @@ class MapLibreMapOptions {
   final bool zoomGesturesEnabled;
 
   final bool doubleClickZoomEnabled;
+
+  final bool? hapticFeedbackEnabled;
 
   final bool? trackCameraPosition;
 
@@ -748,6 +762,7 @@ class MapLibreMapOptions {
     addIfNonNull('tiltGesturesEnabled', tiltGesturesEnabled);
     addIfNonNull('zoomGesturesEnabled', zoomGesturesEnabled);
     addIfNonNull('doubleClickZoomEnabled', doubleClickZoomEnabled);
+    addIfNonNull('hapticFeedbackEnabled', hapticFeedbackEnabled);
 
     addIfNonNull('trackCameraPosition', trackCameraPosition);
     addIfNonNull('myLocationEnabled', myLocationEnabled);
