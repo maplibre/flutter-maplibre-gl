@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* **iOS**: `MapLibreMap.hapticFeedbackEnabled` turns off the light haptic tap the native SDK plays when a rotate gesture brings the bearing to due north. It defaults to `true`, the SDK's own default, so nothing changes unless you set it. Android and web play no haptic on rotation and ignore it (#1033).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
