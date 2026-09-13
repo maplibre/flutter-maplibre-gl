@@ -202,6 +202,29 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
 Future<void> clearAmbientCache() =>
     _globalChannel.invokeMethod('clearAmbientCache');
 
+/// Caps the ambient cache, the tiles and style resources the map keeps on
+/// disk from ordinary browsing, at [bytes]. The native default is 50 MB.
+/// Pass `0` to disable ambient caching altogether.
+///
+/// Offline regions do not count towards this limit and are never evicted by
+/// it. Call this before the first map is created: the SDK documents the
+/// limit as something to set before a map and its style have loaded. If the
+/// cache is already larger than [bytes], the SDK trims it on the spot, which
+/// can take a moment on a large database.
+///
+/// Android and iOS only; throws [UnsupportedError] on web, which has no
+/// ambient cache.
+Future<void> setMaximumAmbientCacheSize(int bytes) {
+  assert(bytes >= 0, 'bytes must be >= 0 (got $bytes)');
+  if (kIsWeb) {
+    throw UnsupportedError('The ambient cache is not available on web.');
+  }
+  return _globalChannel.invokeMethod(
+    'setMaximumAmbientCacheSize',
+    <String, dynamic>{'bytes': bytes},
+  );
+}
+
 /// Resets the entire offline database: deletes every offline region and
 /// clears the ambient cache. Use with care — offline regions cannot be
 /// recovered afterwards.

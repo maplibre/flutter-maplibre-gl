@@ -5,7 +5,10 @@
     <application
         android:label="MapLibre Example"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:usesCleartextTraffic="true">
+        <!-- Cleartext is for integration_test/ambient_cache_size_test.dart,
+             which serves tiles over plain HTTP from a server inside the app. -->
         <activity
             android:name="io.flutter.embedding.android.FlutterActivity"
             android:exported="true"

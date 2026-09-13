@@ -145,6 +145,20 @@ class OfflineManagerUtils {
         }
     }
 
+    static func setMaximumAmbientCacheSize(result: @escaping FlutterResult, bytes: UInt64) {
+        MLNOfflineStorage.shared.setMaximumAmbientCacheSize(UInt(bytes)) { error in
+            if let error = error {
+                result(FlutterError(
+                    code: "SetMaximumAmbientCacheSizeError",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+            } else {
+                result(nil)
+            }
+        }
+    }
+
     static func resetOfflineDatabase(result: @escaping FlutterResult) {
         // Any tracked in-progress downloads are invalidated by the reset.
         for (_, pack) in activePacks {

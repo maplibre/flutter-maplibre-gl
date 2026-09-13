@@ -220,6 +220,24 @@ empty metadata map and a stable, derived ID.
 !!! note "Style assets"
     The offline download includes tiles, fonts, and sprites needed by the style URL. If you later change the style URL, previously downloaded regions may not display correctly.
 
+### Limit the ambient cache
+
+The same database also holds the *ambient cache*: the tiles, fonts and sprites
+the map keeps from ordinary browsing, so a recently viewed area still renders
+through a short loss of connectivity. The native SDKs cap it at 50 MB. To pick
+a different cap, call `setMaximumAmbientCacheSize` with a size in bytes before
+the first map is created:
+
+```dart
+// Keep at most 20 MB of browsed tiles on disk.
+await setMaximumAmbientCacheSize(20 * 1024 * 1024);
+```
+
+Offline regions do not count towards the limit and are never evicted by it.
+Passing `0` disables ambient caching. If the cache is already over the new
+limit, the SDK trims it immediately, which can take a moment on a large
+database. Not available on web, which has no ambient cache.
+
 ## Key APIs
 
 | Function | Description |
@@ -231,3 +249,4 @@ empty metadata map and a stable, derived ID.
 | `mergeOfflineRegions(path)` | Import regions from an external database file |
 | `exportOfflineDatabase(destPath)` | Copy the whole offline database to a shareable file |
 | `getOfflineDatabasePath()` | Absolute path of the live offline database file |
+| `setMaximumAmbientCacheSize(bytes)` | Cap the ambient cache; offline regions are not counted |

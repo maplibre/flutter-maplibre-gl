@@ -1,3 +1,8 @@
+## Unreleased
+
+### Added
+* **Android, iOS**: `setMaximumAmbientCacheSize(bytes)` caps the ambient cache, the tiles and style resources the map keeps from ordinary browsing. The native default is 50 MB and was not adjustable from Dart. Offline regions do not count towards the limit and are never evicted by it; `0` disables the cache. Call it before the first map is created. Covered by an integration test in the example app that serves tiles from an in-process HTTP server and watches the database file stay within the limit (#198).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

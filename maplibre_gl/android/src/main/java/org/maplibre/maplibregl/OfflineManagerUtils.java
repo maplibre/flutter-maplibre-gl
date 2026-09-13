@@ -96,6 +96,24 @@ abstract class OfflineManagerUtils {
             });
   }
 
+  static void setMaximumAmbientCacheSize(
+      MethodChannel.Result result, Context context, long bytes) {
+    OfflineManager.Companion.getInstance(context)
+        .setMaximumAmbientCacheSize(
+            bytes,
+            new OfflineManager.FileSourceCallback() {
+              @Override
+              public void onSuccess() {
+                result.success(null);
+              }
+
+              @Override
+              public void onError(@NonNull String message) {
+                result.error("SetMaximumAmbientCacheSizeError", message, null);
+              }
+            });
+  }
+
   static void resetOfflineDatabase(MethodChannel.Result result, Context context) {
     // Any tracked in-progress downloads are invalidated by the reset.
     for (ActiveDownload ad : activeDownloads.values()) {
