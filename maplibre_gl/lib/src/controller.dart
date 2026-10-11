@@ -1256,17 +1256,6 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.editGeoJsonUrl(id, url);
   }
 
-  /// Sets a filter for a layer.
-  ///
-  /// The [layerId] specifies the layer identifier, and [filter] contains the
-  /// filter expression as a JSON string.
-  ///
-  /// The returned [Future] completes with true if the filter was successfully
-  /// applied, false otherwise.
-  Future<bool> setLayerFilter(String layerId, String filter) async {
-    return _maplibrePlatform.setLayerFilter(layerId, filter);
-  }
-
   /// Gets the current map style as JSON string.
   ///
   /// The returned [Future] completes with the style JSON string if successful,
@@ -2057,12 +2046,37 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.removeLayer(layerId);
   }
 
-  Future<void> setFilter(String layerId, dynamic filter) {
-    return _maplibrePlatform.setFilter(layerId, filter);
+  /// Sets the filter of the layer [layerId], so it only draws the features
+  /// that match.
+  ///
+  /// [filter] is a style spec filter expression as a list, for example
+  /// `['==', ['get', 'type'], 'park']`, the same shape on every platform.
+  /// The same expression encoded as a JSON string is accepted too.
+  ///
+  /// Throws a [PlatformException] on Android and iOS if the layer does not
+  /// exist or its type cannot be filtered, and on Android also if the style
+  /// has not finished loading.
+  Future<void> setLayerFilter(String layerId, dynamic filter) {
+    return _maplibrePlatform.setFilter(
+      layerId,
+      filter is String ? jsonDecode(filter) : filter,
+    );
   }
 
-  Future<dynamic> getFilter(String layerId) {
+  /// Returns the filter of the layer [layerId] as a style spec expression,
+  /// or null if the layer has none.
+  Future<dynamic> getLayerFilter(String layerId) {
     return _maplibrePlatform.getFilter(layerId);
+  }
+
+  @Deprecated('Use setLayerFilter instead, which takes the same arguments')
+  Future<void> setFilter(String layerId, dynamic filter) {
+    return setLayerFilter(layerId, filter);
+  }
+
+  @Deprecated('Use getLayerFilter instead, which takes the same arguments')
+  Future<dynamic> getFilter(String layerId) {
+    return getLayerFilter(layerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)

@@ -1,3 +1,14 @@
+## Unreleased
+
+### Actions needed
+* `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws a `PlatformException` when the filter cannot be applied instead of answering `false`. Code that read the result needs a `try`/`catch` instead. Calls that only `await` it keep compiling, and a filter passed as a JSON string is still accepted (#1055).
+
+### Changed
+* `setLayerFilter` and `getLayerFilter` are the methods for layer filters, named like `setLayerProperties` and `getLayerProperties`. `setFilter` and `getFilter` did the same job under a second name and are deprecated aliases now. `setLayerFilter` takes the expression as a list, the same shape on every platform (#1055).
+
+### Fixed
+* **Android, iOS, Web**: `setLayerFilter` works on every filterable layer type on every platform. On Android it skipped circle, heatmap and fill-extrusion layers and answered `false`, on iOS it never completed when the style was not available, and on web it threw `UnimplementedError` (#1055).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

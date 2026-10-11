@@ -618,10 +618,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    // Web implementation: MapLibre GL JS doesn't have direct layer filter setting
-    print('setLayerFilter called in web, layerId: $layerId, filter: $filter');
-    // For future implementation, we could use MapLibre GL JS layer filter methods
-    throw UnimplementedError();
+    if (_map.getLayer(layerId) == null) return false;
+    try {
+      await setFilter(layerId, jsonDecode(filter));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
