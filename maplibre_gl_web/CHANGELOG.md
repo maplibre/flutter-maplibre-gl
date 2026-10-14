@@ -1,5 +1,10 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Fixed
+* `removeFeatureState` with a `stateKey` removes only that key. It dropped the key and cleared the feature's whole state.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
