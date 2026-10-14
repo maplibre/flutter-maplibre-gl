@@ -788,7 +788,9 @@ class MapLibreMapController extends MapLibrePlatform
               'coordinates': feature.geometry.coordinates,
             },
             'properties': feature.properties,
-            'source': feature.source,
+            // maplibre-gl-js leaves `source` unset on these features, so name
+            // the source that was queried.
+            'source': sourceId,
           },
         )
         .toList();
