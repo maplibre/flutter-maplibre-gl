@@ -919,7 +919,11 @@ class MapLibreMap extends Camera {
     String layerId,
     dynamic filter, [
     StyleSetterOptions? options,
-  ]) => MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
+  ]) => MapLibreMap.fromJsObject(
+    // jsify turns a Dart list into a JS array, nested lists included, and
+    // keeps null, which removes the filter.
+    jsObject.setFilter(layerId, (filter as Object?).jsify()),
+  );
 
   ///  Returns the filter applied to the specified style layer.
   ///

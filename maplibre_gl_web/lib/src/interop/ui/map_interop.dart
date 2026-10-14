@@ -769,7 +769,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
   external MapLibreMapJsImpl setFilter(
     String layerId,
-    JSAny filter, [
+    JSAny? filter, [
     StyleSetterOptionsJsImpl? options,
   ]);
 
