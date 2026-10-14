@@ -460,44 +460,33 @@ void main() {
       );
     });
 
-    testWidgets('an unknown cluster id has no children and no leaves', (
+    testWidgets('an unknown cluster id is CLUSTER_NOT_FOUND for every call', (
       tester,
     ) async {
       final controller = await _pumpMapWithCluster(tester);
       await _waitForCluster(tester, controller);
 
-      // As documented on the controller: nothing found is an empty list, not
-      // an error.
-      expect(
-        await pumpUntil(
-          tester,
-          controller.getClusterChildren(_clusterSourceId, _unknownClusterId),
-          'getClusterChildren for an unknown id',
-        ),
-        isEmpty,
-      );
-      expect(
-        await pumpUntil(
-          tester,
-          controller.getClusterLeaves(_clusterSourceId, _unknownClusterId),
-          'getClusterLeaves for an unknown id',
-        ),
-        isEmpty,
-      );
-    });
-
-    testWidgets('an unknown cluster id expands at zoom 0', (tester) async {
-      final controller = await _pumpMapWithCluster(tester);
-      await _waitForCluster(tester, controller);
-
-      // The controller documents 0 for an id that is not a current cluster,
-      // "on every platform".
-      final zoom = await pumpUntil(
+      // A stale id is an error rather than 0 or an empty list: 0 is a valid
+      // zoom, and an empty list looks like a cluster with nothing in it. On
+      // Android and iOS this call used to crash the app.
+      await expectPlatformError(
         tester,
         controller.getClusterExpansionZoom(_clusterSourceId, _unknownClusterId),
         'getClusterExpansionZoom for an unknown id',
+        code: 'CLUSTER_NOT_FOUND',
       );
-      expect(zoom, 0);
+      await expectPlatformError(
+        tester,
+        controller.getClusterChildren(_clusterSourceId, _unknownClusterId),
+        'getClusterChildren for an unknown id',
+        code: 'CLUSTER_NOT_FOUND',
+      );
+      await expectPlatformError(
+        tester,
+        controller.getClusterLeaves(_clusterSourceId, _unknownClusterId),
+        'getClusterLeaves for an unknown id',
+        code: 'CLUSTER_NOT_FOUND',
+      );
     });
   });
 
