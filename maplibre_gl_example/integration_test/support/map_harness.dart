@@ -132,6 +132,31 @@ Future<T> pumpUntil<T>(
   String label, {
   Duration timeout = const Duration(seconds: 40),
 }) async {
+  // A caller already pumping (for example a pumpUntilValue reader that wraps
+  // its own call) keeps frames going; pumping again here would run two
+  // tester.pump calls at once, which flutter_test rejects.
+  if (_pumping) {
+    return future.timeout(
+      timeout,
+      onTimeout: () => fail('Timed out waiting for $label'),
+    );
+  }
+  _pumping = true;
+  try {
+    return await _pumpUntil(future, tester, label, timeout);
+  } finally {
+    _pumping = false;
+  }
+}
+
+bool _pumping = false;
+
+Future<T> _pumpUntil<T>(
+  Future<T> future,
+  WidgetTester tester,
+  String label,
+  Duration timeout,
+) async {
   final deadline = DateTime.now().add(timeout);
   var done = false;
   Object? error;
