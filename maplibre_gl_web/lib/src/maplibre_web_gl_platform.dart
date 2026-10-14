@@ -1550,7 +1550,32 @@ class MapLibreMapController extends MapLibrePlatform
         message: "Layer '$layerId' not found.",
       );
     }
-    _map.setFilter(layerId, filter);
+    // GL JS reports an invalid filter through an error event instead of
+    // throwing, so listen for it while the filter is set.
+    String? error;
+    final listener =
+        ((JSObject event) {
+          final message =
+              event
+                  .getProperty<JSObject?>('error'.toJS)
+                  ?.getProperty<JSString?>('message'.toJS)
+                  ?.toDart;
+          // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+          error ??= message?.replaceFirst(RegExp(r'^layers\.[^:]*: '), '');
+        }).toJS;
+    final map = _map.jsObject as JSObject;
+    map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
+    try {
+      _map.setFilter(layerId, filter);
+    } finally {
+      map.callMethod<JSAny?>('off'.toJS, 'error'.toJS, listener);
+    }
+    if (error != null) {
+      throw PlatformException(
+        code: 'invalidExpression',
+        message: 'Invalid filter: $error',
+      );
+    }
   }
 
   @override

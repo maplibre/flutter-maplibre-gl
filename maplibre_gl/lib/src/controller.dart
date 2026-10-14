@@ -2052,8 +2052,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// same expression as a JSON string. Pass null to remove it.
   ///
   /// Throws a [PlatformException] if the layer is missing or cannot be
-  /// filtered. An invalid expression throws on Android and iOS, while web only
-  /// logs it to the console.
+  /// filtered, or if [filter] is invalid. The message says why.
   Future<void> setLayerFilter(String layerId, dynamic filter) async {
     await _maplibrePlatform.setFilter(
       layerId,

@@ -40,6 +40,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
+import org.maplibre.android.log.Logger;
+import org.maplibre.android.log.LoggerDefinition;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -101,6 +103,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1216,6 +1219,98 @@ final class MapLibreMapController
       return primitive.getAsDouble();
     }
     return primitive.getAsString();
+  }
+
+  private static boolean isFilterable(Layer layer) {
+    return layer instanceof CircleLayer
+        || layer instanceof FillExtrusionLayer
+        || layer instanceof FillLayer
+        || layer instanceof HeatmapLayer
+        || layer instanceof LineLayer
+        || layer instanceof SymbolLayer;
+  }
+
+  private static void setLayerFilter(Layer layer, Expression filter) {
+    if (layer instanceof CircleLayer) {
+      ((CircleLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillExtrusionLayer) {
+      ((FillExtrusionLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillLayer) {
+      ((FillLayer) layer).setFilter(filter);
+    } else if (layer instanceof HeatmapLayer) {
+      ((HeatmapLayer) layer).setFilter(filter);
+    } else if (layer instanceof LineLayer) {
+      ((LineLayer) layer).setFilter(filter);
+    } else if (layer instanceof SymbolLayer) {
+      ((SymbolLayer) layer).setFilter(filter);
+    }
+  }
+
+  private static final String FILTER_ERROR_PREFIX = "Error setting filter: ";
+
+  /**
+   * Runs {@code action} and returns why the engine rejected a filter meanwhile, or null. The engine
+   * does not throw for an invalid filter: it logs the reason and keeps the old filter. So the SDK
+   * logger is swapped for one that records that log, also when the app silenced logging.
+   */
+  private static String captureFilterError(Runnable action) {
+    LoggerDefinition previous;
+    int previousLevel;
+    Field loggerField;
+    Field levelField;
+    try {
+      loggerField = Logger.class.getDeclaredField("logger");
+      levelField = Logger.class.getDeclaredField("logLevel");
+      loggerField.setAccessible(true);
+      levelField.setAccessible(true);
+      previous = (LoggerDefinition) loggerField.get(null);
+      previousLevel = levelField.getInt(null);
+    } catch (ReflectiveOperationException e) {
+      action.run();
+      return null;
+    }
+
+    String[] error = {null};
+    Logger.setLoggerDefinition(
+        new ForwardingLogger(previous) {
+          @Override
+          public void e(String tag, String msg) {
+            if (error[0] == null && msg != null && msg.startsWith(FILTER_ERROR_PREFIX)) {
+              error[0] = msg.substring(FILTER_ERROR_PREFIX.length());
+            }
+            if (previousLevel <= Logger.ERROR) {
+              super.e(tag, msg);
+            }
+          }
+        });
+    Logger.setVerbosity(Math.min(previousLevel, Logger.ERROR));
+    try {
+      action.run();
+    } finally {
+      Logger.setLoggerDefinition(previous);
+      Logger.setVerbosity(previousLevel);
+    }
+    return error[0];
+  }
+
+  /** A logger that passes every message on to {@code target}. */
+  private static class ForwardingLogger implements LoggerDefinition {
+    private final LoggerDefinition target;
+
+    ForwardingLogger(LoggerDefinition target) {
+      this.target = target;
+    }
+
+    @Override public void v(String tag, String msg) { target.v(tag, msg); }
+    @Override public void v(String tag, String msg, Throwable tr) { target.v(tag, msg, tr); }
+    @Override public void d(String tag, String msg) { target.d(tag, msg); }
+    @Override public void d(String tag, String msg, Throwable tr) { target.d(tag, msg, tr); }
+    @Override public void i(String tag, String msg) { target.i(tag, msg); }
+    @Override public void i(String tag, String msg, Throwable tr) { target.i(tag, msg, tr); }
+    @Override public void w(String tag, String msg) { target.w(tag, msg); }
+    @Override public void w(String tag, String msg, Throwable tr) { target.w(tag, msg, tr); }
+    @Override public void e(String tag, String msg) { target.e(tag, msg); }
+    @Override public void e(String tag, String msg, Throwable tr) { target.e(tag, msg, tr); }
   }
 
   /**
@@ -2921,32 +3016,7 @@ final class MapLibreMapController
             break;
           }
 
-          Expression expression;
-          try {
-            expression = parseFilter(filter);
-          } catch (RuntimeException e) {
-            result.error("invalidExpression", e.getMessage(), null);
-            break;
-          }
-          // The SDK takes no null filter, so a null filter becomes the
-          // always-true one, which is what an unfiltered layer has.
-          if (expression == null) {
-            expression = Expression.literal(true);
-          }
-
-          if (layer instanceof CircleLayer) {
-            ((CircleLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillExtrusionLayer) {
-            ((FillExtrusionLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillLayer) {
-            ((FillLayer) layer).setFilter(expression);
-          } else if (layer instanceof HeatmapLayer) {
-            ((HeatmapLayer) layer).setFilter(expression);
-          } else if (layer instanceof LineLayer) {
-            ((LineLayer) layer).setFilter(expression);
-          } else if (layer instanceof SymbolLayer) {
-            ((SymbolLayer) layer).setFilter(expression);
-          } else {
+          if (!isFilterable(layer)) {
             result.error(
                 "invalidLayerType",
                 String.format("Layer '%s' does not support filtering.", layerId),
@@ -2954,6 +3024,22 @@ final class MapLibreMapController
             break;
           }
 
+          Expression parsed;
+          try {
+            parsed = parseFilter(filter);
+          } catch (RuntimeException e) {
+            result.error("invalidExpression", "Invalid filter: " + e.getMessage(), null);
+            break;
+          }
+          // The SDK takes no null filter, so a null filter becomes the
+          // always-true one, which is what an unfiltered layer has.
+          final Expression expression = parsed != null ? parsed : Expression.literal(true);
+
+          String error = captureFilterError(() -> setLayerFilter(layer, expression));
+          if (error != null) {
+            result.error("invalidExpression", "Invalid filter: " + error, null);
+            break;
+          }
           result.success(null);
           break;
         }
@@ -2974,14 +3060,7 @@ final class MapLibreMapController
             break;
           }
 
-          boolean filterable =
-              layer instanceof CircleLayer
-                  || layer instanceof FillExtrusionLayer
-                  || layer instanceof FillLayer
-                  || layer instanceof HeatmapLayer
-                  || layer instanceof LineLayer
-                  || layer instanceof SymbolLayer;
-          if (!filterable) {
+          if (!isFilterable(layer)) {
             result.error(
                     "invalidLayerType",
                     String.format("Layer '%s' does not support filtering.", layerId),

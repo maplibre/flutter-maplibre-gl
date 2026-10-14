@@ -2267,8 +2267,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 // A null filter removes the current one.
                 layer.predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
             }
-            if exception != nil {
-                return .failure(MethodCallError.invalidExpression)
+            if let exception = exception {
+                let reason = (exception.reason ?? "rejected by the map")
+                    .replacingOccurrences(of: "Invalid filter value: ", with: "")
+                return .failure(MethodCallError.invalidFilter(reason: reason))
             }
             return .success(())
         } catch {

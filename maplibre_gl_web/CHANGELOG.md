@@ -3,7 +3,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Fixed
-* `setFilter` accepts `null` to remove a filter and throws `layerNotFound` for a missing layer. `getFilter` returns `null` for a layer without a filter and keeps nested expressions intact (#1055).
+* `setFilter` accepts `null` to remove a filter, and throws `layerNotFound` for a missing layer and `invalidExpression` for an invalid filter. `getFilter` returns `null` for a layer without a filter and keeps nested expressions intact (#1055).
 * `setLayerFilter` applies the filter instead of throwing `UnimplementedError` (#1055).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'dart:math';
 import 'dart:ui' as ui;
