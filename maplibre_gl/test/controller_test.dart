@@ -456,6 +456,13 @@ void main() {
       expect(calls.first.positionalArgs[1], isNull);
     });
 
+    test('setLayerFilter fails its future on malformed JSON', () async {
+      final future = controller.setLayerFilter('layer-1', '["==", ');
+
+      await expectLater(future, throwsFormatException);
+      expect(platform.callsFor('setFilter'), isEmpty);
+    });
+
     test('getLayerFilter delegates to getFilter', () async {
       await controller.getLayerFilter('layer-1');
 

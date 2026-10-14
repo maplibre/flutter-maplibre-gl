@@ -2055,10 +2055,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// to remove the filter.
   ///
   /// Throws a [PlatformException] on Android and iOS if the layer does not
-  /// exist or its type cannot be filtered, and on Android also if the style
-  /// has not finished loading.
-  Future<void> setLayerFilter(String layerId, dynamic filter) {
-    return _maplibrePlatform.setFilter(
+  /// exist, its type cannot be filtered or the expression is invalid, and on
+  /// Android also if the style has not finished loading. Throws a
+  /// [FormatException] if [filter] is a string that is not valid JSON.
+  Future<void> setLayerFilter(String layerId, dynamic filter) async {
+    await _maplibrePlatform.setFilter(
       layerId,
       filter is String ? jsonDecode(filter) : filter,
     );

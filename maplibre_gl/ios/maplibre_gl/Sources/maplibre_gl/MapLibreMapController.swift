@@ -1331,9 +1331,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let filter = arguments["filter"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let filter = arguments["filter"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId' or 'filter'.",
+                        details: nil
+                    )
+                )
+                return
+            }
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
                 result(MethodCallError.layerNotFound(
                    layerId: layerId
@@ -1550,8 +1560,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
 
         case "style#getFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId'.",
+                        details: nil
+                    )
+                )
+                return
+            }
 
             guard let style = mapView.style else {
                 result(MethodCallError.styleNotFound.flutterError)

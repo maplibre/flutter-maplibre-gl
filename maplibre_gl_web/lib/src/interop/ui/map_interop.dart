@@ -777,7 +777,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  external JSArray? getFilter(String layerId);
+  external JSAny? getFilter(String layerId);
 
   ///  Sets the value of a paint property in the specified style layer.
   ///

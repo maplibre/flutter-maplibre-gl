@@ -2854,10 +2854,20 @@ final class MapLibreMapController
           String filter = call.argument("filter");
 
           Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            result.error("layerNotFound", "Layer '" + layerId + "' not found.", null);
+            break;
+          }
 
+          Expression expression;
+          try {
+            expression = parseFilter(filter);
+          } catch (RuntimeException e) {
+            result.error("invalidExpression", e.getMessage(), null);
+            break;
+          }
           // The SDK takes no null filter, so a null filter becomes the
           // always-true one, which is what an unfiltered layer has.
-          Expression expression = parseFilter(filter);
           if (expression == null) {
             expression = Expression.literal(true);
           }
@@ -2897,6 +2907,10 @@ final class MapLibreMapController
           Map<String, Object> reply = new HashMap<>();
           String layerId = call.argument("layerId");
           Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            result.error("layerNotFound", "Layer '" + layerId + "' not found.", null);
+            break;
+          }
 
           Expression filter;
           if (layer instanceof CircleLayer) {
@@ -2922,7 +2936,16 @@ final class MapLibreMapController
           // An unfiltered layer has no filter or the always-true one that
           // style#setFilter sets when a filter is removed.
           boolean unfiltered = filter == null || filter.equals(Expression.literal(true));
-          reply.put("filter", unfiltered ? null : filter.toString());
+          if (unfiltered) {
+            reply.put("filter", null);
+          } else {
+            // Gson escapes string literals, which Expression.toString does not.
+            Object value =
+                filter instanceof Expression.ExpressionLiteral
+                    ? ((Expression.ExpressionLiteral) filter).toValue()
+                    : filter.toArray();
+            reply.put("filter", new Gson().toJson(value));
+          }
           result.success(reply);
           break;
         }
