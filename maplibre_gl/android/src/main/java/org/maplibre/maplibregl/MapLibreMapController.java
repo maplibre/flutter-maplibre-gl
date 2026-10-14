@@ -2855,9 +2855,12 @@ final class MapLibreMapController
 
           Layer layer = style.getLayer(layerId);
 
-          JsonParser parser = new JsonParser();
-          JsonElement jsonElement = parser.parse(filter);
-          Expression expression = Expression.Converter.convert(jsonElement);
+          // The SDK takes no null filter, so a null filter becomes the
+          // always-true one, which is what an unfiltered layer has.
+          Expression expression = parseFilter(filter);
+          if (expression == null) {
+            expression = Expression.literal(true);
+          }
 
           if (layer instanceof CircleLayer) {
             ((CircleLayer) layer).setFilter(expression);
@@ -2916,7 +2919,10 @@ final class MapLibreMapController
             break;
           }
 
-          reply.put("filter", filter.toString());
+          // An unfiltered layer has no filter or the always-true one that
+          // style#setFilter sets when a filter is removed.
+          boolean unfiltered = filter == null || filter.equals(Expression.literal(true));
+          reply.put("filter", unfiltered ? null : filter.toString());
           result.success(reply);
           break;
         }

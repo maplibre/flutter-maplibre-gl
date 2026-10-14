@@ -4,6 +4,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ### Fixed
 * `setLayerFilter` applies the filter through `setFilter` instead of throwing `UnimplementedError`. It returns `false` if the layer does not exist or the string is not valid JSON (#1055).
+* `getFilter` returns `null` for a layer without a filter instead of an empty list, and converts nested expressions to Dart lists (#1055).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

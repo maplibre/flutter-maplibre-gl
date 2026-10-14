@@ -2051,7 +2051,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [filter] is a style spec filter expression as a list, for example
   /// `['==', ['get', 'type'], 'park']`, the same shape on every platform.
-  /// The same expression encoded as a JSON string is accepted too.
+  /// The same expression encoded as a JSON string is accepted too. Pass null
+  /// to remove the filter.
   ///
   /// Throws a [PlatformException] on Android and iOS if the layer does not
   /// exist or its type cannot be filtered, and on Android also if the style

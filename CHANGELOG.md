@@ -13,6 +13,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Fixed
 * **Android, iOS, Web**: `setLayerFilter` works on every filterable layer type on every platform. On Android it skipped circle, heatmap and fill-extrusion layers and answered `false`, on iOS it never completed when the style was not available, and on web it threw `UnimplementedError` (#1055).
+* **Android, iOS, Web**: `setLayerFilter(layerId, null)` removes the layer's filter. Android and iOS answered success and kept the old one. `getLayerFilter` answers `null` for a layer without a filter, where Android failed with a `NullPointerException`, iOS sent an empty string that could not be decoded, and web returned an empty list. On iOS it also reports a missing layer instead of never completing, and web returns nested expressions as Dart lists (#1055).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

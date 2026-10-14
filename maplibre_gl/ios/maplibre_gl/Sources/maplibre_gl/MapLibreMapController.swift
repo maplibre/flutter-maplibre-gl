@@ -1553,16 +1553,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["layerId"] as? String else { return }
 
-            guard let style = mapView.style else { return }
-            guard let layer = style.layer(withIdentifier: layerId) else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
 
-            var currentLayerFilter : String = ""
+            // A layer without a filter answers null, not an empty string.
+            var currentLayerFilter: NSObject = NSNull()
             if let vectorLayer = layer as? MLNVectorStyleLayer {
                 if let layerFilter = vectorLayer.predicate {
 
                     let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
-                        currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
+                       let json = String(data: data, encoding: String.Encoding.utf8) {
+                        currentLayerFilter = json as NSObject
                     }
                 }
             } else {
@@ -1573,7 +1581,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             var reply = [String: NSObject]()
-            reply["filter"] = currentLayerFilter as NSObject
+            reply["filter"] = currentLayerFilter
             result(reply)
 
         case "style#setStyle":
@@ -2221,10 +2229,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 with: filter.data(using: .utf8)!,
                 options: .fragmentsAllowed
             )
-            if filter is NSNull {
-                return .success(())
-            }
-            let predicate = NSPredicate(mglJSONObject: filter)
+            // A null filter removes the current one.
+            let predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
             if let layer = layer as? MLNVectorStyleLayer {
                 layer.predicate = predicate
             } else {

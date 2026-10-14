@@ -925,9 +925,9 @@ class MapLibreMap extends Camera {
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  List<dynamic> getFilter(String layerId) {
-    final filter = jsObject.getFilter(layerId);
-    return filter != null ? filter.toDart : [];
+  List<dynamic>? getFilter(String layerId) {
+    // dartify converts the nested expression arrays too, which toDart does not.
+    return jsObject.getFilter(layerId).dartify() as List<dynamic>?;
   }
 
   ///  Sets the value of a paint property in the specified style layer.

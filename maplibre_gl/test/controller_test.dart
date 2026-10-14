@@ -448,6 +448,14 @@ void main() {
       ]);
     });
 
+    test('setLayerFilter passes null through to remove the filter', () async {
+      await controller.setLayerFilter('layer-1', null);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
     test('getLayerFilter delegates to getFilter', () async {
       await controller.getLayerFilter('layer-1');
 
