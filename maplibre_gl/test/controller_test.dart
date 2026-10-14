@@ -463,6 +463,15 @@ void main() {
       expect(platform.callsFor('setFilter'), isEmpty);
     });
 
+    test('removeLayerFilter sends a null filter', () async {
+      await controller.removeLayerFilter('layer-1');
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
     test('getLayerFilter delegates to getFilter', () async {
       await controller.getLayerFilter('layer-1');
 

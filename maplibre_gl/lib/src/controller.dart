@@ -2051,8 +2051,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [filter] is a style spec filter expression as a list, for example
   /// `['==', ['get', 'type'], 'park']`, the same shape on every platform.
-  /// The same expression encoded as a JSON string is accepted too. Pass null
-  /// to remove the filter.
+  /// The same expression encoded as a JSON string is accepted too. Pass null,
+  /// or call [removeLayerFilter], to remove the filter.
   ///
   /// Throws a [PlatformException] on Android and iOS if the layer does not
   /// exist, its type cannot be filtered or the expression is invalid, and on
@@ -2069,6 +2069,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// or null if the layer has none.
   Future<dynamic> getLayerFilter(String layerId) {
     return _maplibrePlatform.getFilter(layerId);
+  }
+
+  /// Removes the filter of the layer [layerId], so it draws every feature of
+  /// its source again. Same as `setLayerFilter(layerId, null)`.
+  Future<void> removeLayerFilter(String layerId) {
+    return setLayerFilter(layerId, null);
   }
 
   @Deprecated('Use setLayerFilter instead, which takes the same arguments')

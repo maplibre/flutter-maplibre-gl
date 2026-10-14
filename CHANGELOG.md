@@ -8,6 +8,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws a `PlatformException` when the filter cannot be applied instead of answering `false`. Code that read the result needs a `try`/`catch` instead. Calls that only `await` it keep compiling, and a filter passed as a JSON string is still accepted (#1055).
 
+### Added
+* `removeLayerFilter(layerId)` removes a layer's filter, so it draws every feature of its source again. It completes the `setLayerFilter` and `getLayerFilter` set; passing `null` to `setLayerFilter` does the same (#1055).
+
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, named like `setLayerProperties` and `getLayerProperties`. `setFilter` and `getFilter` did the same job under a second name and are deprecated aliases now. `setLayerFilter` takes the expression as a list, the same shape on every platform (#1055).
 
