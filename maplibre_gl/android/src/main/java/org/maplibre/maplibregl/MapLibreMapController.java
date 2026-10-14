@@ -841,6 +841,22 @@ final class MapLibreMapController
     return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
   }
 
+  // Whether the source currently holds a cluster with this id.
+  //
+  // For an id it does not hold, MapLibre Native throws "No cluster with the
+  // specified id." on the render thread, where nothing here can catch it, and
+  // the app dies. Ids go stale as the data or the viewport changes, so an app
+  // can pass one without doing anything wrong. Looking the id up first lets the
+  // cluster calls answer as they document instead: 0, or no features. Only
+  // loaded tiles are searched, which holds for any id the app just read off a
+  // feature on screen.
+  private static boolean hasCluster(GeoJsonSource source, long clusterId) {
+    final List<Feature> clusters =
+        source.querySourceFeatures(
+            Expression.eq(Expression.get("cluster_id"), Expression.literal(clusterId)));
+    return clusters != null && !clusters.isEmpty();
+  }
+
   // Serializes features for the channel as JSON strings, so nested properties
   // survive intact. Shared by every call that answers with features:
   // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
@@ -2018,6 +2034,10 @@ final class MapLibreMapController
           if (source == null) {
             break;
           }
+          if (!hasCluster(source, clusterId.longValue())) {
+            result.success(0);
+            break;
+          }
           result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
           break;
         }
@@ -2033,6 +2053,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterChildren", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            result.success(featuresReply((List<Feature>) null));
             break;
           }
           result.success(
@@ -2055,6 +2079,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterLeaves", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            result.success(featuresReply((List<Feature>) null));
             break;
           }
           result.success(
