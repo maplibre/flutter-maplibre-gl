@@ -816,47 +816,58 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
-  /// Runs a cluster query, answering null if maplibre-gl-js rejects.
+  /// Runs a cluster query for [clusterId], replying CLUSTER_NOT_FOUND unless
+  /// [sourceId] currently holds that cluster.
   ///
-  /// It rejects when the source is not clustered or the id is not one of its
-  /// current clusters. For the two calls that answer with features that is the
-  /// same thing as finding none, so they report an empty list; a zoom has no
-  /// such neutral value and [getClusterExpansionZoom] reports the rejection.
+  /// maplibre-gl-js rejects an id that decodes to no cluster, but an id that
+  /// decodes to a cluster at another zoom level answers with that cluster's
+  /// data, so a rejection alone does not catch every stale id. Looking the id
+  /// up in the source first does, and matches Android and iOS, which have to
+  /// look it up to avoid a crash. Only loaded tiles are searched, which holds
+  /// for any id the app just read off a feature on screen.
   ///
   /// Only the JS call runs inside the guard. Decoding happens after this
   /// returns, so a bug there throws on its own rather than being reported as a
   /// clustering mistake.
-  Future<T?> _clusterQuery<T extends JSAny>(Future<T> Function() call) async {
-    try {
-      return await call();
-    } catch (_) {
-      return null;
+  Future<T> _clusterQuery<T extends JSAny>(
+    String sourceId,
+    int clusterId,
+    Future<T> Function() call,
+  ) async {
+    final clusters = _map.querySourceFeatures(sourceId, {
+      'filter': [
+        '==',
+        ['get', 'cluster_id'],
+        clusterId,
+      ],
+    });
+    if (clusters.isNotEmpty) {
+      try {
+        return await call();
+      } catch (_) {
+        // Rejected: the id went stale between the lookup and the query.
+      }
     }
+    throw PlatformException(
+      code: 'CLUSTER_NOT_FOUND',
+      message:
+          "Cluster '$clusterId' is not one of the current clusters of source "
+          "'$sourceId'. Cluster ids are reassigned as the data or the "
+          'viewport changes, so read the id from a freshly queried feature.',
+    );
   }
 
-  /// Decodes a cluster query result, treating a rejected query as no features.
-  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject>? features) =>
-      features == null ? const [] : features.toDart.map(dartifyMap).toList();
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject> features) =>
+      features.toDart.map(dartifyMap).toList();
 
   @override
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
     final zoom = await _clusterQuery(
+      sourceId,
+      clusterId,
       () => source.getClusterExpansionZoom(clusterId),
     );
-    // Not 0: that is a valid zoom, so a caller could not tell a cluster that
-    // splits at zoom 0 from one that was never found, and the documented
-    // cluster-tap pattern would animate the camera out to the whole world on a
-    // stale cluster_id (ids are reassigned as the viewport changes).
-    if (zoom == null) {
-      throw PlatformException(
-        code: 'CLUSTER_NOT_FOUND',
-        message:
-            "Cluster '$clusterId' is not one of the current clusters of source "
-            "'$sourceId'. Cluster ids are reassigned as the data or the "
-            'viewport changes, so read the id from a freshly queried feature.',
-      );
-    }
     return zoom.toDartDouble.round();
   }
 
@@ -867,7 +878,11 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final source = _clusterSource(sourceId, 'getClusterChildren');
     return _clusterFeatures(
-      await _clusterQuery(() => source.getClusterChildren(clusterId)),
+      await _clusterQuery(
+        sourceId,
+        clusterId,
+        () => source.getClusterChildren(clusterId),
+      ),
     );
   }
 
@@ -881,6 +896,8 @@ class MapLibreMapController extends MapLibrePlatform
     final source = _clusterSource(sourceId, 'getClusterLeaves');
     return _clusterFeatures(
       await _clusterQuery(
+        sourceId,
+        clusterId,
         () => source.getClusterLeaves(clusterId, limit, offset),
       ),
     );

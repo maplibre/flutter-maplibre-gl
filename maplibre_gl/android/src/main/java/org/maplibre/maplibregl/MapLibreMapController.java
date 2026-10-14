@@ -847,14 +847,25 @@ final class MapLibreMapController
   // specified id." on the render thread, where nothing here can catch it, and
   // the app dies. Ids go stale as the data or the viewport changes, so an app
   // can pass one without doing anything wrong. Looking the id up first lets the
-  // cluster calls answer as they document instead: 0, or no features. Only
-  // loaded tiles are searched, which holds for any id the app just read off a
-  // feature on screen.
+  // cluster calls reply CLUSTER_NOT_FOUND instead. Only loaded tiles are
+  // searched, which holds for any id the app just read off a feature on screen.
   private static boolean hasCluster(GeoJsonSource source, long clusterId) {
     final List<Feature> clusters =
         source.querySourceFeatures(
             Expression.eq(Expression.get("cluster_id"), Expression.literal(clusterId)));
     return clusters != null && !clusters.isEmpty();
+  }
+
+  private static void clusterNotFound(MethodChannel.Result result, String sourceId, long clusterId) {
+    result.error(
+        "CLUSTER_NOT_FOUND",
+        "Cluster '"
+            + clusterId
+            + "' is not one of the current clusters of source '"
+            + sourceId
+            + "'. Cluster ids are reassigned as the data or the viewport changes, so read the"
+            + " id from a freshly queried feature.",
+        null);
   }
 
   // Serializes features for the channel as JSON strings, so nested properties
@@ -2035,7 +2046,7 @@ final class MapLibreMapController
             break;
           }
           if (!hasCluster(source, clusterId.longValue())) {
-            result.success(0);
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
@@ -2056,7 +2067,7 @@ final class MapLibreMapController
             break;
           }
           if (!hasCluster(source, clusterId.longValue())) {
-            result.success(featuresReply((List<Feature>) null));
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(
@@ -2082,7 +2093,7 @@ final class MapLibreMapController
             break;
           }
           if (!hasCluster(source, clusterId.longValue())) {
-            result.success(featuresReply((List<Feature>) null));
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(

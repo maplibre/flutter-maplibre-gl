@@ -1857,8 +1857,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// await controller.animateCamera(CameraUpdate.newLatLngZoom(center, zoom + 0.5));
   /// ```
   ///
-  /// For a source that is not clustered, or a [clusterId] that is not one of
-  /// its current clusters, this answers 0 on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` when the
+  /// source holds no cluster with [clusterId], which includes a source that is
+  /// not clustered. Cluster ids are reassigned as the data or the viewport
+  /// changes, so read the id from a feature you just queried or tapped.
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     return _maplibrePlatform.getClusterExpansionZoom(sourceId, clusterId);
   }
@@ -1873,8 +1875,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// For a source that is not clustered, or an unknown [clusterId], this
-  /// answers an empty list on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` when the
+  /// source holds no cluster with [clusterId], which includes a source that is
+  /// not clustered. Cluster ids are reassigned as the data or the viewport
+  /// changes, so read the id from a feature you just queried or tapped.
   Future<List<Map<String, dynamic>>> getClusterChildren(
     String sourceId,
     int clusterId,
@@ -1890,8 +1894,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// For a source that is not clustered, or an unknown [clusterId], this
-  /// answers an empty list on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` when the
+  /// source holds no cluster with [clusterId], which includes a source that is
+  /// not clustered. Cluster ids are reassigned as the data or the viewport
+  /// changes, so read the id from a feature you just queried or tapped.
   Future<List<Map<String, dynamic>>> getClusterLeaves(
     String sourceId,
     int clusterId, {

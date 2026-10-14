@@ -1,11 +1,8 @@
 ## Unreleased
 
 ### Fixed
-## Unreleased
-
-### Fixed
 * **Web**: `querySourceFeatures` applies its `filter`, and returns properties and coordinates as Dart maps and lists. The filter was ignored, and reading a feature's `properties` as a `Map` threw a `TypeError`.
-* **Android, iOS**: `getClusterChildren`, `getClusterLeaves` and `getClusterExpansionZoom` no longer crash the app for a cluster id the source does not hold, for example one read before the data or the viewport changed. They answer an empty list, or 0, as documented.
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw a `PlatformException` with code `CLUSTER_NOT_FOUND` for a cluster id the source does not hold, for example one read before the data or the viewport changed, on Android, iOS and web. On Android and iOS such an id crashed the app; on web it gave an empty list, or a zoom that belonged to no cluster.
 
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
