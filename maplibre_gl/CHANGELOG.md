@@ -1,18 +1,21 @@
 ## Unreleased
 
 ### Actions needed
-* `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws a `PlatformException` when the filter cannot be applied instead of answering `false`. Code that read the result needs a `try`/`catch` instead. Calls that only `await` it keep compiling, and a filter passed as a JSON string is still accepted (#1055).
+* `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
 
 ### Added
-* `removeLayerFilter(layerId)` removes a layer's filter, so it draws every feature of its source again. It completes the `setLayerFilter` and `getLayerFilter` set; passing `null` to `setLayerFilter` does the same (#1055).
+* `removeLayerFilter(layerId)` removes a layer's filter (#1055).
 
 ### Changed
-* `setLayerFilter` and `getLayerFilter` are the methods for layer filters, named like `setLayerProperties` and `getLayerProperties`. `setFilter` and `getFilter` did the same job under a second name and are deprecated aliases now. `setLayerFilter` takes the expression as a list, the same shape on every platform (#1055).
+* `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
 
 ### Fixed
-* **Android, iOS, Web**: `setLayerFilter` works on every filterable layer type on every platform. On Android it skipped circle, heatmap and fill-extrusion layers and answered `false`, on iOS it never completed when the style was not available, and on web it threw `UnimplementedError` (#1055).
-* **Android, iOS, Web**: `setLayerFilter(layerId, null)` removes the layer's filter. Android and iOS answered success and kept the old one, and web threw a `TypeError`. `getLayerFilter` answers `null` for a layer without a filter, where Android failed with a `NullPointerException`, iOS sent an empty string that could not be decoded, and web returned an empty list. On iOS it also reports a missing layer instead of never completing, and web returns nested expressions as Dart lists (#1055).
-* **Android, iOS**: `setLayerFilter` and `getLayerFilter` fail with the same error codes on both platforms: `layerNotFound` for a missing layer, where Android said `INVALID LAYER TYPE`, and `invalidExpression` for a filter Android cannot parse, where it sent a generic error with a Java stack trace. Android also reads back filters whose strings contain quotes, which came back as JSON Dart could not decode (#1055).
+* Layer filters now behave the same on Android, iOS and web (#1055):
+  * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
+  * `null` removes a filter. Before, it was ignored or threw.
+  * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
+  * A missing layer throws `layerNotFound`. An invalid filter throws `invalidExpression` on Android and iOS, where it used to crash the app.
+  * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

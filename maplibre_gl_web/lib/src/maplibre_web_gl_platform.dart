@@ -1543,6 +1543,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
+    // GL JS only logs a missing layer, so report it as Android and iOS do.
+    if (_map.getLayer(layerId) == null) {
+      throw PlatformException(
+        code: 'layerNotFound',
+        message: "Layer '$layerId' not found.",
+      );
+    }
     _map.setFilter(layerId, filter);
   }
 

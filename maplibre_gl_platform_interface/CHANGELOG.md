@@ -1,7 +1,7 @@
 ## Unreleased
 
 ### Deprecated
-* `MapLibrePlatform.setLayerFilter` is deprecated in favor of `setFilter`, which `MapLibreMapController.setLayerFilter` now calls on every platform (#1055).
+* `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

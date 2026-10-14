@@ -37,6 +37,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
 import org.maplibre.android.camera.CameraPosition;
@@ -100,6 +101,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1161,9 +1163,69 @@ final class MapLibreMapController
   }
 
   private Expression parseFilter(String filter) {
-    JsonParser parser = new JsonParser();
-    JsonElement filterJsonElement = parser.parse(filter);
-    return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
+    JsonElement json = new JsonParser().parse(filter);
+    if (json.isJsonNull()) {
+      return null;
+    }
+    boolean isExpression =
+        json.isJsonArray()
+            && json.getAsJsonArray().size() > 0
+            && json.getAsJsonArray().get(0).isJsonPrimitive()
+            && json.getAsJsonArray().get(0).getAsJsonPrimitive().isString();
+    boolean isBoolean = json.isJsonPrimitive() && json.getAsJsonPrimitive().isBoolean();
+    if (!isExpression && !isBoolean) {
+      throw new IllegalArgumentException("A filter is an expression array or a boolean.");
+    }
+    // Hand the engine the JSON as plain values. Expression.Converter would
+    // turn every number into a float, so an id like 123456789 became 123456792.
+    Object value = jsonToValue(json);
+    final Object[] array = value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
+    return new Expression("literal") {
+      @NonNull
+      @Override
+      public Object[] toArray() {
+        return array;
+      }
+    };
+  }
+
+  private static Object jsonToValue(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      Object[] values = new Object[array.size()];
+      for (int i = 0; i < values.length; i++) {
+        values[i] = jsonToValue(array.get(i));
+      }
+      return values;
+    }
+    if (json.isJsonObject()) {
+      Map<String, Object> values = new HashMap<>();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        values.put(entry.getKey(), jsonToValue(entry.getValue()));
+      }
+      return values;
+    }
+    if (json.isJsonNull()) {
+      return null;
+    }
+    JsonPrimitive primitive = json.getAsJsonPrimitive();
+    if (primitive.isBoolean()) {
+      return primitive.getAsBoolean();
+    }
+    if (primitive.isNumber()) {
+      return primitive.getAsDouble();
+    }
+    return primitive.getAsString();
+  }
+
+  /**
+   * The filter of {@code layer} as the engine holds it, or null without one. Layer.getFilter
+   * rounds numbers to floats, so this calls the native getter it wraps.
+   */
+  private static JsonElement getRawFilter(Layer layer) throws ReflectiveOperationException {
+    Method nativeGetFilter = Layer.class.getDeclaredMethod("nativeGetFilter");
+    nativeGetFilter.setAccessible(true);
+    return (JsonElement) nativeGetFilter.invoke(layer);
   }
 
   private boolean addRasterLayer(
@@ -2886,7 +2948,7 @@ final class MapLibreMapController
             ((SymbolLayer) layer).setFilter(expression);
           } else {
             result.error(
-                "INVALID LAYER TYPE",
+                "invalidLayerType",
                 String.format("Layer '%s' does not support filtering.", layerId),
                 null);
             break;
@@ -2912,40 +2974,37 @@ final class MapLibreMapController
             break;
           }
 
-          Expression filter;
-          if (layer instanceof CircleLayer) {
-            filter = ((CircleLayer) layer).getFilter();
-          } else if (layer instanceof FillExtrusionLayer) {
-            filter = ((FillExtrusionLayer) layer).getFilter();
-          } else if (layer instanceof FillLayer) {
-            filter = ((FillLayer) layer).getFilter();
-          } else if (layer instanceof HeatmapLayer) {
-            filter = ((HeatmapLayer) layer).getFilter();
-          } else if (layer instanceof LineLayer) {
-            filter = ((LineLayer) layer).getFilter();
-          } else if (layer instanceof SymbolLayer) {
-            filter = ((SymbolLayer) layer).getFilter();
-          } else {
+          boolean filterable =
+              layer instanceof CircleLayer
+                  || layer instanceof FillExtrusionLayer
+                  || layer instanceof FillLayer
+                  || layer instanceof HeatmapLayer
+                  || layer instanceof LineLayer
+                  || layer instanceof SymbolLayer;
+          if (!filterable) {
             result.error(
-                    "INVALID LAYER TYPE",
+                    "invalidLayerType",
                     String.format("Layer '%s' does not support filtering.", layerId),
                     null);
             break;
           }
 
+          JsonElement filter;
+          try {
+            filter = getRawFilter(layer);
+          } catch (ReflectiveOperationException e) {
+            result.error("error", "Could not read the filter: " + e, null);
+            break;
+          }
           // An unfiltered layer has no filter or the always-true one that
           // style#setFilter sets when a filter is removed.
-          boolean unfiltered = filter == null || filter.equals(Expression.literal(true));
-          if (unfiltered) {
-            reply.put("filter", null);
-          } else {
-            // Gson escapes string literals, which Expression.toString does not.
-            Object value =
-                filter instanceof Expression.ExpressionLiteral
-                    ? ((Expression.ExpressionLiteral) filter).toValue()
-                    : filter.toArray();
-            reply.put("filter", new Gson().toJson(value));
-          }
+          boolean unfiltered =
+              filter == null
+                  || filter.isJsonNull()
+                  || (filter.isJsonPrimitive()
+                      && filter.getAsJsonPrimitive().isBoolean()
+                      && filter.getAsBoolean());
+          reply.put("filter", unfiltered ? null : new Gson().toJson(filter));
           result.success(reply);
           break;
         }

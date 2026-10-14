@@ -2046,18 +2046,14 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.removeLayer(layerId);
   }
 
-  /// Sets the filter of the layer [layerId], so it only draws the features
-  /// that match.
+  /// Shows only the features of the layer [layerId] that match [filter].
   ///
-  /// [filter] is a style spec filter expression as a list, for example
-  /// `['==', ['get', 'type'], 'park']`, the same shape on every platform.
-  /// The same expression encoded as a JSON string is accepted too. Pass null,
-  /// or call [removeLayerFilter], to remove the filter.
+  /// [filter] is an expression like `['==', ['get', 'type'], 'park']`, or the
+  /// same expression as a JSON string. Pass null to remove it.
   ///
-  /// Throws a [PlatformException] on Android and iOS if the layer does not
-  /// exist, its type cannot be filtered or the expression is invalid, and on
-  /// Android also if the style has not finished loading. Throws a
-  /// [FormatException] if [filter] is a string that is not valid JSON.
+  /// Throws a [PlatformException] if the layer is missing or cannot be
+  /// filtered. An invalid expression throws on Android and iOS, while web only
+  /// logs it to the console.
   Future<void> setLayerFilter(String layerId, dynamic filter) async {
     await _maplibrePlatform.setFilter(
       layerId,
@@ -2065,14 +2061,12 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
-  /// Returns the filter of the layer [layerId] as a style spec expression,
-  /// or null if the layer has none.
+  /// Returns the filter of the layer [layerId], or null if it has none.
   Future<dynamic> getLayerFilter(String layerId) {
     return _maplibrePlatform.getFilter(layerId);
   }
 
-  /// Removes the filter of the layer [layerId], so it draws every feature of
-  /// its source again. Same as `setLayerFilter(layerId, null)`.
+  /// Removes the filter of the layer [layerId], so it shows all its features.
   Future<void> removeLayerFilter(String layerId) {
     return setLayerFilter(layerId, null);
   }

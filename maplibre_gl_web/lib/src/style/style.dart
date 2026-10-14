@@ -101,7 +101,11 @@ class Style extends JsObjectWrapper<StyleJsImpl> {
       jsObject.setLayerZoomRange(layerId);
 
   setFilter(String layerId, dynamic filter, StyleSetterOptions options) =>
-      jsObject.setFilter(layerId, filter, options.jsObject);
+      jsObject.setFilter(
+        layerId,
+        (filter as Object?).jsify(),
+        options.jsObject,
+      );
 
   ///  Get a layer's filter object
   ///  @param {string} layer the layer to inspect
