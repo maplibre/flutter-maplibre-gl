@@ -519,15 +519,13 @@ void main() {
     expect(controller.fillManager!.enableInteraction, isFalse);
 
     // A type left out of the order cannot be used.
-    await expectLater(
-      pumpUntil(
-        tester,
-        controller.addLine(
-          const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
-        ),
-        'addLine without a line manager',
+    await expectFails(
+      tester,
+      controller.addLine(
+        const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
       ),
-      throwsA(isA<Exception>()),
+      'addLine without a line manager',
+      isA<Exception>(),
     );
 
     // The managers that exist still work.

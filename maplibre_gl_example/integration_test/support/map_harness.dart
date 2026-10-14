@@ -231,3 +231,21 @@ Future<PlatformException> expectPlatformError(
   }
   fail('$label: expected a PlatformException, the call succeeded');
 }
+
+/// Expects [future] to fail with an error matching [matcher], pumping frames
+/// while it runs. Use it instead of `expectLater(pumpUntil(...), throwsA(...))`:
+/// expectLater is a guarded test API and conflicts with the pumping inside.
+Future<void> expectFails(
+  WidgetTester tester,
+  Future<Object?> future,
+  String label,
+  Matcher matcher,
+) async {
+  try {
+    await pumpUntil(tester, future, label);
+  } on Object catch (e) {
+    expect(e, matcher, reason: label);
+    return;
+  }
+  fail('$label: expected an error, the call succeeded');
+}
