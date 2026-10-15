@@ -308,16 +308,76 @@ void main() {
       );
       _expectMoveResult(result, 'animateCamera');
 
-      // animateCamera only promises the animation has started, so poll.
-      final camera = await pumpUntilValue(
-        tester,
-        () => _queryCamera(tester, controller),
-        (camera) => _isNear(camera, target),
-        'camera at animateCamera target',
-      );
+      // Android and web complete once the camera arrived, so it is already
+      // on target. iOS answers null and promises nothing, so poll there.
+      final camera =
+          testPlatform == TestPlatform.ios
+              ? await pumpUntilValue(
+                tester,
+                () => _queryCamera(tester, controller),
+                (camera) => _isNear(camera, target),
+                'camera at animateCamera target',
+              )
+              : await _queryCamera(tester, controller);
+      _expectLatLng(camera.target, target.target, 0.05, 'animated target');
+      expect(camera.zoom, closeTo(5, 0.05));
       expect(camera.bearing, closeTo(20, 0.5));
       expect(camera.tilt, closeTo(15, 0.5));
     });
+
+    // iOS completes animateCamera with null and does not report a cancel.
+    final skipIos = testPlatform == TestPlatform.ios;
+
+    testWidgets(
+      'an animateCamera cut short by another completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        const target = CameraPosition(target: LatLng(10, 10), zoom: 4);
+
+        final first = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        final second = controller.animateCamera(
+          CameraUpdate.newCameraPosition(target),
+          duration: const Duration(milliseconds: 300),
+        );
+
+        expect(
+          await pumpUntil(tester, first, 'interrupted animateCamera'),
+          isFalse,
+        );
+        expect(await pumpUntil(tester, second, 'second animateCamera'), isTrue);
+        final camera = await _queryCamera(tester, controller);
+        expect(_isNear(camera, target), isTrue, reason: '$camera');
+      },
+      skip: skipIos,
+    );
+
+    testWidgets(
+      'an animateCamera cut short by moveCamera completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await pumpUntil(
+          tester,
+          controller.moveCamera(CameraUpdate.newLatLng(const LatLng(-5, -5))),
+          'moveCamera',
+        );
+
+        expect(
+          await pumpUntil(tester, animation, 'interrupted animateCamera'),
+          isFalse,
+        );
+      },
+      skip: skipIos,
+    );
 
     testWidgets('easeCamera completes once the camera is on target', (
       tester,

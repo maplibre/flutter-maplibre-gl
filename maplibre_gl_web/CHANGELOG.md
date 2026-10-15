@@ -11,6 +11,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects; drop any filtering or conversion you did on the result (#1064).
 * `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
+* `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
@@ -29,6 +30,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `setGeoJsonSource` with a Feature or a bare geometry sets that data instead of emptying the source (#1073).
 * `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+* The attribution button stays at `attributionButtonPosition` when another map option changes, instead of jumping back to the bottom right (#1089).
+* Removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

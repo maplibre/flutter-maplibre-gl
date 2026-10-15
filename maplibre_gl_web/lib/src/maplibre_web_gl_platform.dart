@@ -54,8 +54,9 @@ class MapLibreMapController extends MapLibrePlatform
   String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
 
-  /// Completes the [easeCamera] call whose animation is still running.
-  Completer<bool>? _pendingEase;
+  /// Completes the [animateCamera] or [easeCamera] call whose animation is
+  /// still running.
+  Completer<bool>? _pendingCameraAnimation;
 
   @override
   Widget buildView(
@@ -72,9 +73,8 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
-    // The map goes away mid-animation: answer the waiting easeCamera call.
-    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
-    _pendingEase = null;
+    // The map goes away mid-animation: answer the waiting camera call.
+    _cancelCameraAnimation();
     _removeManualPuck();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
@@ -193,7 +193,12 @@ class MapLibreMapController extends MapLibrePlatform
     _initResizeObserver();
 
     final options = _creationParams['options'] ?? {};
-    Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
+    Convert.interpretMapLibreMapOptions(
+      options,
+      this,
+      ignoreStyle: true,
+      initial: true,
+    );
   }
 
   /// Says why the map will stay blank when WebGL is the reason.
@@ -398,24 +403,74 @@ class MapLibreMapController extends MapLibrePlatform
     final pitch = cameraOptions.pitch;
     final zoom = cameraOptions.zoom;
 
-    _map.flyTo({
-      if (around != null) 'around': around.jsObject,
-      if (bearing != null) 'bearing': bearing,
-      if (center != null) 'center': center.jsObject,
-      if (pitch != null) 'pitch': pitch,
-      if (zoom != null) 'zoom': zoom,
-      if (duration != null) 'duration': duration.inMilliseconds,
-    });
-
-    return true;
+    // true once the camera is on target, false if something cuts it short,
+    // as on Android.
+    return _runCameraAnimation(
+      () => _map.flyTo({
+        if (around != null) 'around': around.jsObject,
+        if (bearing != null) 'bearing': bearing,
+        if (center != null) 'center': center.jsObject,
+        if (pitch != null) 'pitch': pitch,
+        if (zoom != null) 'zoom': zoom,
+        if (duration != null) 'duration': duration.inMilliseconds,
+      }),
+    );
   }
 
   @override
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
+    _cancelCameraAnimation();
     _map.jumpTo(cameraOptions);
     return true;
   }
+
+  /// Starts the camera animation [start] begins and completes when it ends:
+  /// true once the camera arrived, false when another camera call, a
+  /// gesture or [dispose] stops it first.
+  Future<bool> _runCameraAnimation(void Function() start) {
+    // An animation still running is cut short by this one, which Android
+    // reports as a cancel. Stopping it first also fires its moveend now,
+    // before the listener below exists, so that moveend cannot complete this
+    // call.
+    _cancelCameraAnimation();
+    _map.stop();
+
+    final arrival = Completer<bool>();
+    _pendingCameraAnimation = arrival;
+    late final Subscription subscription;
+    subscription = _map.on('moveend', (_) {
+      subscription.unsubscribe();
+      // maplibre-gl-js ends an animation the same way whether it ran its
+      // course or a gesture stopped it. Only in the second case is a gesture
+      // handler active while the moveend fires.
+      if (!arrival.isCompleted) arrival.complete(!_isGestureActive());
+      if (identical(_pendingCameraAnimation, arrival)) {
+        _pendingCameraAnimation = null;
+      }
+    });
+
+    start();
+    return arrival.future;
+  }
+
+  /// Completes the camera animation still running, if any, with false. Call
+  /// it before anything that moves the camera, since maplibre-gl-js stops a
+  /// running animation on every camera change.
+  void _cancelCameraAnimation() {
+    final pending = _pendingCameraAnimation;
+    _pendingCameraAnimation = null;
+    if (pending != null && !pending.isCompleted) pending.complete(false);
+  }
+
+  /// Whether the user is panning, zooming or rotating the map right now.
+  bool _isGestureActive() =>
+      _map.dragPan.isActive() ||
+      _map.scrollZoom.isActive() ||
+      _map.boxZoom.isActive() ||
+      _map.dragRotate.isActive() ||
+      _map.doubleClickZoom.isActive() ||
+      _map.touchZoomRotate.isActive();
 
   @override
   Future<void> updateMyLocationTrackingMode(
@@ -606,33 +661,18 @@ class MapLibreMapController extends MapLibrePlatform
     final zoom = cameraOptions.zoom;
     final easing = resolveEasing(interpolation);
 
-    // An ease still running is cut short by this one, which Android reports
-    // as a cancel. Stopping it first also fires its moveend now, before the
-    // listener below exists, so that moveend cannot complete this call.
-    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
-    _map.stop();
-
-    final arrival = Completer<bool>();
-    _pendingEase = arrival;
-    late final Subscription subscription;
-    subscription = _map.on('moveend', (_) {
-      subscription.unsubscribe();
-      if (!arrival.isCompleted) arrival.complete(true);
-      if (identical(_pendingEase, arrival)) _pendingEase = null;
-    });
-
-    _map.easeTo({
-      if (around != null) 'around': around.jsObject,
-      if (bearing != null) 'bearing': bearing,
-      if (center != null) 'center': center.jsObject,
-      if (pitch != null) 'pitch': pitch,
-      if (zoom != null) 'zoom': zoom,
-      if (duration != null) 'duration': duration.inMilliseconds,
-      if (easing != null) 'easing': easing,
-    });
-
     // true once the camera is on target, as on Android and iOS.
-    return arrival.future;
+    return _runCameraAnimation(
+      () => _map.easeTo({
+        if (around != null) 'around': around.jsObject,
+        if (bearing != null) 'bearing': bearing,
+        if (center != null) 'center': center.jsObject,
+        if (pitch != null) 'pitch': pitch,
+        if (zoom != null) 'zoom': zoom,
+        if (duration != null) 'duration': duration.inMilliseconds,
+        if (easing != null) 'easing': easing,
+      }),
+    );
   }
 
   @override
@@ -1563,12 +1603,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
     //remove old mouseenter callbacks to avoid multicalling
-    for (final layerId in _interactiveFeatureLayerIds) {
-      _map.off('mouseenter', layerId, _handleLayerMouseMove);
-      _map.off('mousemove', layerId, _handleLayerMouseMove);
-      _map.off('mouseleave', layerId, _handleLayerMouseMove);
-      if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
-    }
+    _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
     _interactiveFeatureLayerIds.clear();
 
     final sanitizedStyle = await _sanitizeStyleObject(styleObject);
@@ -1644,7 +1679,11 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> removeLayer(String imageLayerId) async {
     _ensureLayerExists(imageLayerId);
-    _interactiveFeatureLayerIds.remove(imageLayerId);
+    // A layer added again under this id attaches its own listeners, so these
+    // must go with it or each hover and drag callback runs once per add.
+    if (_interactiveFeatureLayerIds.remove(imageLayerId)) {
+      _detachLayerInteraction(imageLayerId);
+    }
     _map.removeLayer(imageLayerId);
   }
 
@@ -1811,6 +1850,7 @@ class MapLibreMapController extends MapLibrePlatform
     required double east,
     required int padding,
   }) async {
+    _cancelCameraAnimation();
     _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)), {
       'padding': padding,
     });
@@ -2161,6 +2201,16 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  /// Removes the listeners [_addLayer] attached for an interactive layer.
+  /// [Evented.off] finds the JS function [Evented.on] made from the same
+  /// event type, layer id and tear-off, so the arguments must match exactly.
+  void _detachLayerInteraction(String layerId) {
+    _map.off('mouseenter', layerId, _handleLayerMouseMove);
+    _map.off('mousemove', layerId, _handleLayerMouseMove);
+    _map.off('mouseleave', layerId, _handleLayerMouseMove);
+    if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
+  }
+
   void _handleLayerMouseMove(Event e, String layerId) {
     // Normalize feature ids to String to avoid type mismatch (ids can be int, String, etc.)
     final currentHoveredFeatures =
@@ -2334,6 +2384,7 @@ class MapLibreMapController extends MapLibrePlatform
     // movestart it did not cause, so padding a map for a bottom sheet would
     // otherwise stop it following the user and report a tracking dismissal.
     // Flagging the move the way the control flags its own keeps the lock.
+    _cancelCameraAnimation();
     _map.easeTo(
       {
         'padding': {
