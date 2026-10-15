@@ -102,7 +102,6 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
       _tiltGesturesEnabled = true;
       _zoomGesturesEnabled = true;
       _doubleClickToZoomEnabled = true;
-      _hapticFeedbackEnabled = true;
     });
   }
 
@@ -113,7 +112,6 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
       _tiltGesturesEnabled = false;
       _zoomGesturesEnabled = false;
       _doubleClickToZoomEnabled = false;
-      _hapticFeedbackEnabled = false;
     });
   }
 

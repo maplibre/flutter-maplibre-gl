@@ -197,13 +197,11 @@ class MapLibreMap extends StatefulWidget {
   /// True if the map view should respond to tilt gestures.
   final bool tiltGesturesEnabled;
 
-  /// Whether the device plays a light haptic tap when a rotate gesture
-  /// brings the map's bearing to due north. Defaults to `true`, the native
-  /// SDK default. Set to `false` for apps where the user rotates the map
-  /// constantly, such as chart plotters, and the tap becomes noise.
+  /// True if the device gives a light vibration when the user rotates the map
+  /// back to north. Defaults to `true`.
   ///
-  /// **Available only on iOS. Has no effect on Android or Web**, which play
-  /// no haptic on rotation.
+  /// **Available only on iOS. Has no effect on Android or Web**, which have
+  /// no such option.
   final bool hapticFeedbackEnabled;
 
   /// Set to true to forcefully disable/enable if map should respond to double
