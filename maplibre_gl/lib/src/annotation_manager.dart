@@ -263,17 +263,28 @@ class FillManager extends AnnotationManager<Fill> {
   FillManager(super.controller, {super.enableInteraction = true})
     : super(selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1);
 
+  // A fill without its own outline color takes the fill color, which is the
+  // style spec default. A bare `get` would read null for it, and
+  // maplibre-gl-js then drops every feature of the source: on web a fill with
+  // no fillOutlineColor was neither drawn nor queryable.
+  static const List<Object> _outlineColor = [
+    'coalesce',
+    [Expressions.get, 'fillOutlineColor'],
+    [Expressions.get, 'fillColor'],
+    '#000000',
+  ];
+
   @override
   List<LayerProperties> get allLayerProperties => const [
     FillLayerProperties(
       fillOpacity: [Expressions.get, 'fillOpacity'],
       fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+      fillOutlineColor: _outlineColor,
     ),
     FillLayerProperties(
       fillOpacity: [Expressions.get, 'fillOpacity'],
       fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+      fillOutlineColor: _outlineColor,
       fillPattern: [Expressions.get, 'fillPattern'],
     ),
   ];

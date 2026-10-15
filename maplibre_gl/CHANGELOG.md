@@ -1,3 +1,8 @@
+## Unreleased
+
+### Fixed
+* **Web**: a fill annotation without a `fillOutlineColor` is drawn and can be queried. maplibre-gl-js dropped every fill of the manager when one had no outline color, so `addFill` with only a `fillColor` showed nothing. The outline now falls back to the fill color on every platform, which is the style spec default.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
