@@ -29,6 +29,7 @@ class MapLibreMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.panInertia = PanInertia.normal,
     this.featureTapsTriggersMapClick = false,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
@@ -192,6 +193,13 @@ class MapLibreMap extends StatefulWidget {
 
   /// True if the map view should respond to zoom gestures.
   final bool zoomGesturesEnabled;
+
+  /// How long the map keeps gliding after the user drags it and lets go while
+  /// it is still moving. Defaults to [PanInertia.normal].
+  ///
+  /// On iOS the same setting also applies to the glide after a pinch or a
+  /// rotation.
+  final PanInertia panInertia;
 
   /// True if the map view should respond to tilt gestures.
   final bool tiltGesturesEnabled;
@@ -599,6 +607,7 @@ class MapLibreMapOptions {
     required this.tiltGesturesEnabled,
     required this.zoomGesturesEnabled,
     required this.doubleClickZoomEnabled,
+    this.panInertia,
     this.trackCameraPosition,
     this.myLocationEnabled,
     this.myLocationTrackingMode,
@@ -636,6 +645,7 @@ class MapLibreMapOptions {
         zoomGesturesEnabled: map.zoomGesturesEnabled,
         doubleClickZoomEnabled:
             map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+        panInertia: map.panInertia,
         myLocationEnabled: map.myLocationEnabled,
         myLocationTrackingMode: map.myLocationTrackingMode,
         myLocationRenderMode: map.myLocationRenderMode,
@@ -672,6 +682,8 @@ class MapLibreMapOptions {
   final bool zoomGesturesEnabled;
 
   final bool doubleClickZoomEnabled;
+
+  final PanInertia? panInertia;
 
   final bool? trackCameraPosition;
 
@@ -719,6 +731,7 @@ class MapLibreMapOptions {
     'tiltGesturesEnabled',
     'zoomGesturesEnabled',
     'doubleClickZoomEnabled',
+    'panInertia',
   };
 
   Map<String, dynamic> toMap() {
@@ -748,6 +761,7 @@ class MapLibreMapOptions {
     addIfNonNull('tiltGesturesEnabled', tiltGesturesEnabled);
     addIfNonNull('zoomGesturesEnabled', zoomGesturesEnabled);
     addIfNonNull('doubleClickZoomEnabled', doubleClickZoomEnabled);
+    addIfNonNull('panInertia', panInertia?.index);
 
     addIfNonNull('trackCameraPosition', trackCameraPosition);
     addIfNonNull('myLocationEnabled', myLocationEnabled);

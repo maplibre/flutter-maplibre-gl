@@ -569,19 +569,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
             result(nil)
-        case "map#setFlingPhysics":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            // iOS exposes a single deceleration rate instead of Android's base
-            // time and velocity threshold, so the request is mapped onto the
-            // three documented rates rather than reproduced exactly.
-            if let enabled = arguments["enabled"] as? Bool, !enabled {
-                mapView.decelerationRate = MLNMapViewDecelerationRateImmediate
-            } else if let baseTimeMs = arguments["baseTimeMs"] as? Int {
-                mapView.decelerationRate = baseTimeMs < 150
-                    ? MLNMapViewDecelerationRateFast
-                    : MLNMapViewDecelerationRateNormal
-            }
-            result(nil)
         case "map#forceOnlineMode":
             // Force online mode by ensuring network requests are enabled
             // In MapLibre GL iOS, this is typically handled by the style and data sources
@@ -3002,6 +2989,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     func setScrollGesturesEnabled(scrollGesturesEnabled: Bool) {
         mapView.allowsScrolling = scrollGesturesEnabled
         scrollingEnabled = scrollGesturesEnabled
+    }
+
+    /// Maps the Dart `PanInertia` index onto `decelerationRate`. The SDK glides
+    /// for `rate` seconds over `velocity * rate / 4` points, and skips gestures
+    /// slower than 100 pt/s:
+    /// - none (0): `.immediate` (0), no glide.
+    /// - short (1): half of `.normal`, so about half the time and distance.
+    ///   `.fast` (0.99) is not used: it glides almost exactly like `.normal`.
+    /// - normal (2): `.normal` (0.998), the SDK default.
+    /// The same rate also drives the glide after a pinch or a rotation.
+    func setPanInertia(panInertia: Int) {
+        switch panInertia {
+        case 0:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.immediate.rawValue
+        case 1:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue / 2
+        default:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue
+        }
     }
 
     func setTiltGesturesEnabled(tiltGesturesEnabled: Bool) {

@@ -229,10 +229,9 @@ final class MapLibreMapController
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
-  // Fling inertia, or null for the SDK default. See map#setFlingPhysics.
-  private Integer flingBaseTimeMs = null;
-  private Long flingThreshold = null;
-  private Boolean flingEnabled = null;
+  // Index of the Dart PanInertia value, or null to leave the SDK fling
+  // settings alone. Only set through the panInertia map option.
+  private Integer panInertia = null;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
    * once per {@link MapView} instance. See the lifecycle observer section below.
@@ -539,9 +538,8 @@ final class MapLibreMapController
       mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
     }
 
-    // Re-apply fling physics: UiSettings belongs to the MapView, so a recreated
-    // view would otherwise fall back to the SDK defaults.
-    applyFlingPhysics();
+    // Re-apply the pan inertia for the same reason: it lives on UiSettings.
+    applyPanInertia();
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
@@ -2093,26 +2091,6 @@ final class MapLibreMapController
           if (mapView != null) {
             mapView.setMaximumFps(fps);
           }
-          result.success(null);
-          break;
-        }
-      case "map#setFlingPhysics":
-        {
-          // Held as fields: UiSettings lives on the MapView, so a recreated
-          // view has to be told again in onMapReady.
-          if (call.hasArgument("baseTimeMs")) {
-            flingBaseTimeMs = call.argument("baseTimeMs");
-          }
-          if (call.hasArgument("threshold")) {
-            // Dart sends a double while UiSettings takes a long: the value is a
-            // velocity in pixels per second, where a fraction carries no meaning.
-            final Number threshold = call.argument("threshold");
-            flingThreshold = threshold == null ? null : threshold.longValue();
-          }
-          if (call.hasArgument("enabled")) {
-            flingEnabled = call.argument("enabled");
-          }
-          applyFlingPhysics();
           result.success(null);
           break;
         }
@@ -4031,6 +4009,35 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setPanInertia(int panInertia) {
+    this.panInertia = panInertia;
+    applyPanInertia();
+  }
+
+  /**
+   * Applies {@link #panInertia} to the fling that follows a pan. The SDK glides for {@code
+   * velocity / 10.5 + baseTime} ms (dp/s, untilted map) and skips flings slower than the
+   * threshold:
+   *
+   * <ul>
+   *   <li>none (0): fling animation off.
+   *   <li>short (1): base time 0 ms, threshold 1000 dp/s, about half the glide of normal at a
+   *       typical 2000 dp/s.
+   *   <li>normal (2): SDK defaults, base time 150 ms and threshold 1000 dp/s.
+   * </ul>
+   */
+  private void applyPanInertia() {
+    if (panInertia == null || mapLibreMap == null) {
+      return;
+    }
+    final UiSettings uiSettings = mapLibreMap.getUiSettings();
+    uiSettings.setFlingVelocityAnimationEnabled(panInertia != 0);
+    uiSettings.setFlingAnimationBaseTime(
+        panInertia == 1 ? 0 : MapLibreConstants.ANIMATION_DURATION_FLING_BASE);
+    uiSettings.setFlingThreshold(MapLibreConstants.VELOCITY_THRESHOLD_IGNORE_FLING);
+  }
+
+  @Override
   public void setTiltGesturesEnabled(boolean tiltGesturesEnabled) {
     mapLibreMap.getUiSettings().setTiltGesturesEnabled(tiltGesturesEnabled);
   }
@@ -4278,26 +4285,6 @@ final class MapLibreMapController
           CameraMode.NONE, CameraMode.TRACKING, CameraMode.TRACKING_COMPASS, CameraMode.TRACKING_GPS
         };
     locationComponent.setCameraMode(cameraModes[this.myLocationTrackingMode]);
-  }
-
-  /**
-   * Applies the fling inertia requested from Dart, if any. Values the caller never set are left
-   * alone, so the SDK defaults (150 ms base time, velocity threshold 1000) stay in place.
-   */
-  private void applyFlingPhysics() {
-    if (mapLibreMap == null) {
-      return;
-    }
-    final UiSettings uiSettings = mapLibreMap.getUiSettings();
-    if (flingBaseTimeMs != null) {
-      uiSettings.setFlingAnimationBaseTime(flingBaseTimeMs);
-    }
-    if (flingThreshold != null) {
-      uiSettings.setFlingThreshold(flingThreshold);
-    }
-    if (flingEnabled != null) {
-      uiSettings.setFlingVelocityAnimationEnabled(flingEnabled);
-    }
   }
 
   private void updateMyLocationRenderMode() {

@@ -49,6 +49,10 @@ class Convert {
         tiltGesturesEnabled: options['tiltGesturesEnabled'],
         zoomGesturesEnabled: options['zoomGesturesEnabled'],
         doubleClickZoomEnabled: options['doubleClickZoomEnabled'],
+        panInertia:
+            options['panInertia'] is int
+                ? PanInertia.values[options['panInertia']]
+                : PanInertia.normal,
       );
     }
 

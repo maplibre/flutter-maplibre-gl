@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+
 import '../../page.dart';
 import '../../shared/shared.dart';
 
@@ -34,13 +35,11 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
   bool _tiltGesturesEnabled = true;
   bool _zoomGesturesEnabled = true;
   bool _doubleClickToZoomEnabled = true;
+  PanInertia _panInertia = PanInertia.normal;
 
   // Movement State
   bool _isMoving = false;
   String _lastGesture = 'None';
-
-  // Pan inertia preset in effect; set through the controller, not a map option.
-  String _inertia = 'default';
 
   void _onMapCreated(MapLibreMapController controller) {
     _controller = controller;
@@ -93,24 +92,6 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
     setState(() => _doubleClickToZoomEnabled = enabled);
   }
 
-  /// Applies a pan inertia preset. A smaller base time shortens the coast that
-  /// follows a swipe; a higher threshold keeps a short drag from drifting.
-  Future<void> _setInertia(
-    String label, {
-    Duration? baseTime,
-    double? threshold,
-    bool? enabled,
-  }) async {
-    await _controller?.setFlingPhysics(
-      baseTime: baseTime,
-      threshold: threshold,
-      enabled: enabled,
-    );
-    if (mounted) {
-      setState(() => _inertia = label);
-    }
-  }
-
   Future<void> _enableAllGestures() async {
     setState(() {
       _rotateGesturesEnabled = true;
@@ -147,6 +128,7 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
         tiltGesturesEnabled: _tiltGesturesEnabled,
         zoomGesturesEnabled: _zoomGesturesEnabled,
         doubleClickZoomEnabled: _doubleClickToZoomEnabled,
+        panInertia: _panInertia,
       ),
       controls: [
         InfoCard(
@@ -214,35 +196,17 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
           ],
         ),
         ControlGroup(
-          title: 'Pan Inertia: $_inertia',
+          title: 'Pan Inertia',
           children: [
-            ExampleButton(
-              label: 'Default',
-              icon: Icons.restart_alt,
-              onPressed:
-                  () => _setInertia(
-                    'default',
-                    baseTime: const Duration(milliseconds: 150),
-                    threshold: 1000,
-                    enabled: true,
-                  ),
-            ),
-            ExampleButton(
-              label: 'Short',
-              icon: Icons.compress,
-              onPressed:
-                  () => _setInertia(
-                    'short',
-                    baseTime: const Duration(milliseconds: 110),
-                    threshold: 1200,
-                    enabled: true,
-                  ),
-            ),
-            ExampleButton(
-              label: 'Off',
-              icon: Icons.block,
-              onPressed: () => _setInertia('off', enabled: false),
-              style: ExampleButtonStyle.destructive,
+            ExampleSegmentedButton<PanInertia>(
+              segments: const [
+                ExampleSegment(value: PanInertia.none, label: 'None'),
+                ExampleSegment(value: PanInertia.short, label: 'Short'),
+                ExampleSegment(value: PanInertia.normal, label: 'Normal'),
+              ],
+              selected: _panInertia,
+              onSelectionChanged:
+                  (value) => setState(() => _panInertia = value),
             ),
           ],
         ),
