@@ -1,7 +1,7 @@
 ## Unreleased
 
 ### Fixed
-* Calls that left their `Future` pending forever now complete or throw:
+* Calls that left their `Future` pending forever now complete or throw (#1067):
   * **Android**: `setCameraBounds` completes once the camera starts moving. Its `padding` is now in logical pixels, as on iOS and web; it was in physical pixels.
   * **Android, iOS**: `takeSnapshot` works for a style set as JSON. Android never answered, iOS failed with `unsupported URL`.
   * **iOS**: `addImageLayer` completes.
