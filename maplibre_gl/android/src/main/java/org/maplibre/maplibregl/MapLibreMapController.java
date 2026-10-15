@@ -255,7 +255,8 @@ final class MapLibreMapController
   // The draggable feature under the finger that came down, until the drag starts or the finger
   // lifts.
   private Feature dragCandidate;
-  // From the start of a drag until the last finger lifts: the map gets none of the gesture.
+  // From the start of a drag until the last finger lifts or a second finger comes down: the map
+  // gets none of the gesture.
   private boolean dragOwnsGesture;
   private MapSnapshotter activeSnapshotter;
 
@@ -4350,6 +4351,13 @@ final class MapLibreMapController
     } else if (event.getPointerCount() > 1 && !dragOwnsGesture) {
       // A second finger before the drag started: a pinch, the map's to handle.
       forgetDragCandidate();
+    } else if (action == MotionEvent.ACTION_POINTER_DOWN && dragOwnsGesture) {
+      // A second finger during a drag ends it, and the map takes over the gesture so it can pinch.
+      if (draggedFeature != null) {
+        endDragAtLastPosition();
+      }
+      dragOwnsGesture = false;
+      handGestureToMap(view, event);
     }
 
     final boolean ownedBefore = dragOwnsGesture;
@@ -4363,7 +4371,7 @@ final class MapLibreMapController
       cancel.recycle();
     }
 
-    // Once a drag has started the gesture is the drag's until the last finger lifts. Before that,
+    // Once a drag has started the gesture is the drag's until it ends. Before that,
     // within the touch slop, a touch on a draggable feature may still be a tap: the map gets the
     // down and the up, not the tremble in between.
     final boolean consumed =
@@ -4373,6 +4381,34 @@ final class MapLibreMapController
       forgetDragCandidate();
     }
     return consumed;
+  }
+
+  // The map got a cancel when the drag started, so it needs a fresh down for the finger that was
+  // dragging. The second finger's own down (this event) then reaches the map as usual.
+  private static void handGestureToMap(View view, MotionEvent event) {
+    final int kept = event.getActionIndex() == 0 ? 1 : 0;
+    final MotionEvent.PointerProperties[] properties = {new MotionEvent.PointerProperties()};
+    final MotionEvent.PointerCoords[] coords = {new MotionEvent.PointerCoords()};
+    event.getPointerProperties(kept, properties[0]);
+    event.getPointerCoords(kept, coords[0]);
+    final MotionEvent down =
+        MotionEvent.obtain(
+            event.getEventTime(),
+            event.getEventTime(),
+            MotionEvent.ACTION_DOWN,
+            1,
+            properties,
+            coords,
+            event.getMetaState(),
+            event.getButtonState(),
+            event.getXPrecision(),
+            event.getYPrecision(),
+            event.getDeviceId(),
+            event.getEdgeFlags(),
+            event.getSource(),
+            event.getFlags());
+    view.onTouchEvent(down);
+    down.recycle();
   }
 
   // The feature is looked up where the finger came down, where the user aimed: the move detector
@@ -4429,12 +4465,10 @@ final class MapLibreMapController
   boolean onMove(MoveGestureDetector detector) {
     if (draggedFeature != null) {
       if (detector.getPointersCount() > 1) {
-        // A second finger ends the drag. Report the end where the feature was last dragged to:
-        // the focal point is now the midpoint of the two fingers. Without this the listeners
-        // never saw an "end", and onMoveEnd threw on the cleared feature.
-        invokeFeatureDrag(
-            mapLibreMap.getProjection().toScreenLocation(dragPrevious), dragPrevious, "end");
-        stopDragging();
+        // A second finger ends the drag (onDragTouch normally ends it first, on the finger's
+        // down). Without this the listeners never saw an "end", and onMoveEnd threw on the
+        // cleared feature.
+        endDragAtLastPosition();
         return true;
       }
       PointF pointf = detector.getFocalPoint();
@@ -4444,9 +4478,17 @@ final class MapLibreMapController
     return true;
   }
 
+  // Ends the drag where the feature was last dragged to, with a zero delta: with a second finger
+  // down the focal point is the midpoint of the two fingers, not where the feature is.
+  private void endDragAtLastPosition() {
+    invokeFeatureDrag(
+        mapLibreMap.getProjection().toScreenLocation(dragPrevious), dragPrevious, "end");
+    stopDragging();
+  }
+
   void onMoveEnd(MoveGestureDetector detector) {
     if (draggedFeature == null) {
-      // the drag already ended in onMove, when a second finger came down
+      // the drag already ended when a second finger came down
       return;
     }
     PointF pointf = detector.getFocalPoint();
