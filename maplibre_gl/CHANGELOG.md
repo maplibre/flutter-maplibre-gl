@@ -1,8 +1,10 @@
 ## Unreleased
 
+### Actions needed
+* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters; a filter that compares the id with a string like `"2"` must compare with the number (#1073).
+
 ### Fixed
-* **Android**: a GeoJSON feature with a numeric `id` keeps it as a number. `querySourceFeatures`, `queryRenderedFeatures`, `getClusterChildren` and `getClusterLeaves` returned `"id": 2` as the string `"2"`, and `["==", ["id"], 2]` filters did not match, because the data went through a Java parser that stores every id as text. GeoJSON now reaches the engine as raw JSON, and a feature without an id no longer comes back with `"id": ""`. A filter written as `["==", ["id"], "2"]` to work around this no longer matches; compare with the number. The SDK still reports ids as text, so a string id that looks like a number, such as `"2"`, comes back as a number on Android (#1073).
-* **Android, Web**: GeoJSON source data can be a FeatureCollection, a single Feature or a bare geometry on every platform, as on iOS. Android skipped a bare geometry with only a log warning, and on web `setGeoJsonSource` with a single Feature or a geometry emptied the source (#1073).
+* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
