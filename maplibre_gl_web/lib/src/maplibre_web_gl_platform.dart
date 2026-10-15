@@ -618,10 +618,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    // Web implementation: MapLibre GL JS doesn't have direct layer filter setting
-    print('setLayerFilter called in web, layerId: $layerId, filter: $filter');
-    // For future implementation, we could use MapLibre GL JS layer filter methods
-    throw UnimplementedError();
+    if (_map.getLayer(layerId) == null) return false;
+    try {
+      await setFilter(layerId, jsonDecode(filter));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -788,7 +791,9 @@ class MapLibreMapController extends MapLibrePlatform
               'coordinates': feature.geometry.coordinates,
             },
             'properties': feature.properties,
-            'source': feature.source,
+            // maplibre-gl-js leaves `source` unset on these features, so name
+            // the source that was queried.
+            'source': sourceId,
           },
         )
         .toList();
@@ -814,47 +819,51 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
-  /// Runs a cluster query, answering null if maplibre-gl-js rejects.
-  ///
-  /// It rejects when the source is not clustered or the id is not one of its
-  /// current clusters. For the two calls that answer with features that is the
-  /// same thing as finding none, so they report an empty list; a zoom has no
-  /// such neutral value and [getClusterExpansionZoom] reports the rejection.
+  /// Runs a cluster query, throwing CLUSTER_NOT_FOUND unless [sourceId]
+  /// currently holds the cluster [clusterId] in its loaded tiles.
   ///
   /// Only the JS call runs inside the guard. Decoding happens after this
   /// returns, so a bug there throws on its own rather than being reported as a
   /// clustering mistake.
-  Future<T?> _clusterQuery<T extends JSAny>(Future<T> Function() call) async {
-    try {
-      return await call();
-    } catch (_) {
-      return null;
+  Future<T> _clusterQuery<T extends JSAny>(
+    String sourceId,
+    int clusterId,
+    Future<T> Function() call,
+  ) async {
+    final clusters = _map.querySourceFeatures(sourceId, {
+      'filter': [
+        '==',
+        ['get', 'cluster_id'],
+        clusterId,
+      ],
+    });
+    if (clusters.isNotEmpty) {
+      try {
+        return await call();
+      } catch (_) {
+        // Rejected: the id went stale between the lookup and the query.
+      }
     }
+    throw PlatformException(
+      code: 'CLUSTER_NOT_FOUND',
+      message:
+          "Cluster '$clusterId' is not one of the current clusters of source "
+          "'$sourceId'. Cluster ids are reassigned as the data or the "
+          'viewport changes, so read the id from a freshly queried feature.',
+    );
   }
 
-  /// Decodes a cluster query result, treating a rejected query as no features.
-  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject>? features) =>
-      features == null ? const [] : features.toDart.map(dartifyMap).toList();
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject> features) =>
+      features.toDart.map(dartifyMap).toList();
 
   @override
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
     final zoom = await _clusterQuery(
+      sourceId,
+      clusterId,
       () => source.getClusterExpansionZoom(clusterId),
     );
-    // Not 0: that is a valid zoom, so a caller could not tell a cluster that
-    // splits at zoom 0 from one that was never found, and the documented
-    // cluster-tap pattern would animate the camera out to the whole world on a
-    // stale cluster_id (ids are reassigned as the viewport changes).
-    if (zoom == null) {
-      throw PlatformException(
-        code: 'CLUSTER_NOT_FOUND',
-        message:
-            "Cluster '$clusterId' is not one of the current clusters of source "
-            "'$sourceId'. Cluster ids are reassigned as the data or the "
-            'viewport changes, so read the id from a freshly queried feature.',
-      );
-    }
     return zoom.toDartDouble.round();
   }
 
@@ -865,7 +874,11 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final source = _clusterSource(sourceId, 'getClusterChildren');
     return _clusterFeatures(
-      await _clusterQuery(() => source.getClusterChildren(clusterId)),
+      await _clusterQuery(
+        sourceId,
+        clusterId,
+        () => source.getClusterChildren(clusterId),
+      ),
     );
   }
 
@@ -879,6 +892,8 @@ class MapLibreMapController extends MapLibrePlatform
     final source = _clusterSource(sourceId, 'getClusterLeaves');
     return _clusterFeatures(
       await _clusterQuery(
+        sourceId,
+        clusterId,
         () => source.getClusterLeaves(clusterId, limit, offset),
       ),
     );
@@ -1582,7 +1597,34 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
-    _map.setFilter(layerId, filter);
+    _checkFilterable(layerId);
+    // GL JS reports an invalid filter through an error event instead of
+    // throwing, so listen for it while the filter is set.
+    String? error;
+    final listener =
+        ((JSObject event) {
+          final message =
+              event
+                  .getProperty<JSObject?>('error'.toJS)
+                  ?.getProperty<JSString?>('message'.toJS)
+                  ?.toDart;
+          // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+          error ??= message?.replaceFirst(RegExp(r'^layers\.[^:]*: '), '');
+        }).toJS;
+    final map = _map.jsObject as JSObject;
+    map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
+    try {
+      _map.setFilter(layerId, filter);
+    } finally {
+      map.callMethod<JSAny?>('off'.toJS, 'error'.toJS, listener);
+    }
+    if (error != null) {
+      throw PlatformException(
+        code: 'INVALID_EXPRESSION',
+        message: 'Invalid filter: $error',
+        details: error,
+      );
+    }
   }
 
   @override
@@ -2297,7 +2339,40 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future getFilter(String layerId) async {
+    _checkFilterable(layerId);
     return _map.getFilter(layerId);
+  }
+
+  /// The layer types Android and iOS can filter.
+  static const _filterableLayerTypes = {
+    'circle',
+    'fill',
+    'fill-extrusion',
+    'heatmap',
+    'line',
+    'symbol',
+  };
+
+  /// Throws the errors Android and iOS give for a layer that is missing or
+  /// cannot be filtered. GL JS only logs the first and accepts the second.
+  void _checkFilterable(String layerId) {
+    final layer = _map.getLayer(layerId);
+    if (layer == null) {
+      throw PlatformException(
+        code: 'LAYER_NOT_FOUND_ERROR',
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
+      );
+    }
+    final type =
+        (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+    if (!_filterableLayerTypes.contains(type)) {
+      throw PlatformException(
+        code: 'INVALID_LAYER_TYPE',
+        message: 'Invalid layer type',
+        details: "Layer '$layerId' does not support filtering.",
+      );
+    }
   }
 
   @override

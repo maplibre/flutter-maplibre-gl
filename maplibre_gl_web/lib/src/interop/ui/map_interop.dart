@@ -769,7 +769,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
   external MapLibreMapJsImpl setFilter(
     String layerId,
-    JSAny filter, [
+    JSAny? filter, [
     StyleSetterOptionsJsImpl? options,
   ]);
 
@@ -777,7 +777,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  external JSArray? getFilter(String layerId);
+  external JSAny? getFilter(String layerId);
 
   ///  Sets the value of a paint property in the specified style layer.
   ///

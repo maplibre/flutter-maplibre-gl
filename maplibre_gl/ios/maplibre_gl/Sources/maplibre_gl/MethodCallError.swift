@@ -5,6 +5,8 @@ enum MethodCallError: Error {
     case invalidLayerType(details: String)
     case invalidSourceType(details: String)
     case invalidExpression
+    /// A filter the engine rejected, with its reason.
+    case invalidFilter(reason: String)
     case sourceNotFound(sourceId: String)
     case layerNotFound(layerId: String)
     case styleNotFound
@@ -17,11 +19,11 @@ enum MethodCallError: Error {
         case .genericError:
             return "genericError"
         case .invalidLayerType:
-            return "invalidLayerType"
+            return "INVALID_LAYER_TYPE"
         case .invalidSourceType:
             return "invalidSourceType"
-        case .invalidExpression:
-            return "invalidExpression"
+        case .invalidExpression, .invalidFilter:
+            return "INVALID_EXPRESSION"
         case .sourceNotFound:
             return "sourceNotFound"
         case .layerNotFound:
@@ -48,6 +50,8 @@ enum MethodCallError: Error {
             return "Invalid source type"
         case .invalidExpression:
             return "Invalid expression"
+        case let .invalidFilter(reason):
+            return "Invalid filter: \(reason)"
         case .sourceNotFound:
             return "Source not found"
         case .layerNotFound:
@@ -73,6 +77,8 @@ enum MethodCallError: Error {
             return details
         case .invalidExpression:
             return "Could not parse expression."
+        case let .invalidFilter(reason):
+            return reason
         case let .sourceNotFound(sourceId):
             return "Source with id \(sourceId) not found."
         case let .layerNotFound(layerId):
