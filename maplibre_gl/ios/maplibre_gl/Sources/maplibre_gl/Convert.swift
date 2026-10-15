@@ -235,8 +235,19 @@ class Convert {
             return camera
         case "tiltTo":
             guard let tilt = cameraUpdate[1] as? CGFloat else { return nil }
+            // The zoom comes from the altitude together with the pitch, so the
+            // same altitude at another pitch is another zoom level. Read the zoom
+            // first and work the altitude out again for the new pitch, so tilting
+            // keeps the zoom as on Android and web.
+            let zoom = getZoom(mapView: mapView)
             let camera = mapView.camera
             camera.pitch = tilt
+            camera.altitude = MLNAltitudeForZoomLevel(
+                zoom,
+                camera.pitch,
+                camera.centerCoordinate.latitude,
+                mapView.frame.size
+            )
             return camera
         default:
             print("\(type) not implemented!")
