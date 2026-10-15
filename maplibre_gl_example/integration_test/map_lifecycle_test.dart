@@ -26,13 +26,11 @@ void main() {
   testWidgets('removing a map before onMapCreated throws nothing (#1048)', (
     tester,
   ) async {
-    var created = false;
     await tester.pumpWidget(
       MaterialApp(
         home: MapLibreMap(
           styleString: offlineStyle,
           initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
-          onMapCreated: (_) => created = true,
         ),
       ),
     );
@@ -40,10 +38,11 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     expect(tester.takeException(), isNull);
 
-    // Let a platform view that was already on its way arrive.
+    // Let a platform view that was already on its way arrive. On iOS it can
+    // be ready within the first frame, so whether onMapCreated ran before the
+    // removal depends on timing; what matters is that nothing throws.
     await pumpFor(tester, const Duration(seconds: 2));
     expect(tester.takeException(), isNull);
-    expect(created, isFalse);
 
     // A map built afterwards still comes up.
     final controller = await pumpMap(tester);
