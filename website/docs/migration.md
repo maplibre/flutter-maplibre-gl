@@ -1,5 +1,94 @@
 # Migration Guide
 
+## Upgrading to 0.28.0
+
+0.28.0 makes Android, iOS and web behave the same: the same error codes, the same results for the same calls, the same gestures. Most apps compile unchanged, but `setLayerFilter` changes its return type, and code that catches platform errors or relied on a platform quirk needs a look.
+
+Update your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  maplibre_gl: ^0.28.0
+```
+
+Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for the full list of changes.
+
+### Minimum versions
+
+The declared Android `minSdkVersion` is now 23 (Android 6.0). MapLibre Android already required it, so an app that built with 0.27 builds with 0.28 too. Flutter, Dart and iOS minimums are unchanged; see [Minimum versions](getting-started.md#minimum-versions).
+
+### Layer filters
+
+`setLayerFilter` returns `Future<void>` instead of `Future<bool>` and throws on failure instead of returning `false`. It also takes the filter as an expression list, like `setFilter`, besides the JSON string it took before:
+
+```dart
+// Before
+final ok = await controller.setLayerFilter('pois', filterJson);
+if (!ok) showError();
+
+// After
+try {
+  await controller.setLayerFilter('pois', filter);
+} on PlatformException catch (e) {
+  showError(e.code); // LAYER_NOT_FOUND_ERROR, INVALID_LAYER_TYPE or INVALID_EXPRESSION
+}
+```
+
+`setFilter` and `getFilter` still work as deprecated aliases of `setLayerFilter` and `getLayerFilter`. `setLayerFilter(id, null)` and the new `removeLayerFilter(id)` remove a filter, and `getLayerFilter` returns `null` for a layer without one.
+
+### Error codes
+
+Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. On iOS they are renamed:
+
+| Before (iOS) | 0.28.0 |
+|---|---|
+| `layerNotFound` | `LAYER_NOT_FOUND_ERROR` |
+| `invalidExpression` | `INVALID_EXPRESSION` |
+| `invalidLayerType` | `INVALID_LAYER_TYPE` |
+| `sourceAlreadyExists`, `duplicateSource` | `SOURCE_ALREADY_EXISTS` |
+| `layerAlreadyExists`, `duplicateLayer` | `LAYER_ALREADY_EXISTS` |
+
+Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
+
+* `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
+* Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` (Android ignored it, web failed with a generic error).
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
+* `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
+* `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
+
+### Feature drag and hit testing
+
+Dragging annotations and draggable features works the same on every platform:
+
+* A drag starts only after the finger or mouse moves a little. A tap or click on a draggable feature is a plain tap with no drag events, and the `start` event has a zero delta. On Android a drag no longer fires `onMapLongClick`.
+* A second finger during a drag ends it with an `end` event and lets the map pinch. To keep dragging, the user starts a new drag.
+* On Android and iOS, taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins. Android used about 3 pixels and iOS the exact point, so small features are easier to hit, and a tap next to a feature can now select it. Only draggable features start a drag.
+
+If your app relied on a drag starting at touch down, or on tapping exactly next to a feature without selecting it, check those flows.
+
+### Web: browsers without WebGL2
+
+The default MapLibre GL JS is now 6.14.0, which throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
+
+### Behaviour changes
+
+None of these need a code change, but they are the places where code that worked before starts behaving differently.
+
+* **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
+* **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
+* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
+* **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
+* **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` completes when the camera arrives instead of when it starts.
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer where it is instead of moving it on top.
+* Fill annotations without a `fillOutlineColor` get an outline in their fill color on Android and iOS, where it used to be transparent.
+* **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
+
+### New options
+
+* `MapLibreMap.panInertia` sets how long the map glides after a pan: `none`, `short` or `normal`. The default, `normal`, keeps the current behavior.
+* `MapLibreMap.hapticFeedbackEnabled` turns off the vibration iOS plays when the user rotates the map back to north.
+* `setMaximumAmbientCacheSize(bytes)` sets the size limit of the ambient tile cache on Android and iOS.
+
 ## Upgrading to 0.27.1
 
 A patch release: bug fixes only, no API changes, nothing to do beyond taking the new version.
@@ -100,6 +189,7 @@ What each release was about, most recent first. Full details live in the [CHANGE
 
 | Version | Highlights |
 |---------|------------|
+| [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.28.0) | Behavioral parity across Android, iOS and web: shared error codes, layer filters, camera updates, queries and feature drag. Newer MapLibre on every platform. Breaking: `setLayerFilter` returns `Future<void>` and iOS error codes are renamed; see [Upgrading to 0.28.0](#upgrading-to-0280). |
 | [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.1) | Patch: fixes the Android build failure on Flutter 3.44 templates, an iOS crash on the custom-header path, and offline regions whose bounds sit on whole degrees. No API changes. |
 | [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.0) | Platform gaps closed (feature state on Android, cluster inspection, offline export/import), faster start-up with `preWarm()`, a newer web renderer, documentation site. No breaking API changes; see [Upgrading to 0.27.0](#upgrading-to-0270). |
 | [0.26.2](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.26.2) | Enforces the Flutter 3.29 minimum in the package constraints; fixes redundant map updates on rebuild and `doubleClickZoomEnabled` on Android and iOS. |
