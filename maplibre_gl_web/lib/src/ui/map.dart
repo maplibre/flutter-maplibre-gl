@@ -1087,7 +1087,7 @@ class MapLibreMap extends Camera {
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
   removeFeatureState(dynamic target, [String? key]) =>
-      jsObject.removeFeatureState(target);
+      jsObject.removeFeatureState(target, key);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be
