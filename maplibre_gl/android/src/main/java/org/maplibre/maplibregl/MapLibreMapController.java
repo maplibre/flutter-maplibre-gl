@@ -3460,6 +3460,45 @@ final class MapLibreMapController
           break;
 
         }
+        case "layer#setZoomRange":
+        {
+          // Checked here because MapLibre takes any range, and iOS and web
+          // reject the same values.
+          final Object minzoomArgument = call.argument("minzoom");
+          final Object maxzoomArgument = call.argument("maxzoom");
+          if (!(minzoomArgument instanceof Number) || !(maxzoomArgument instanceof Number)) {
+            result.error(
+                "INVALID_ARGUMENT", "setLayerZoomRange requires 'minzoom' and 'maxzoom'.", null);
+            break;
+          }
+          final double minzoom = ((Number) minzoomArgument).doubleValue();
+          final double maxzoom = ((Number) maxzoomArgument).doubleValue();
+          if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
+                    + "with minzoom not above maxzoom.",
+                null);
+            break;
+          }
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final String layerId = call.argument("layerId");
+          final Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
+          layer.setMinZoom((float) minzoom);
+          layer.setMaxZoom((float) maxzoom);
+          result.success(null);
+          break;
+        }
         case "layer#getVisibility":
         {
           if (style == null || !style.isFullyLoaded()) {
