@@ -311,14 +311,16 @@ void main() {
 
       final moves = <String, Future<bool?> Function()>{
         'moveCamera': () => controller.moveCamera(update),
-        'animateCamera': () => controller.animateCamera(
-          update,
-          duration: const Duration(milliseconds: 400),
-        ),
-        'easeCamera': () => controller.easeCamera(
-          update,
-          duration: const Duration(milliseconds: 400),
-        ),
+        'animateCamera':
+            () => controller.animateCamera(
+              update,
+              duration: const Duration(milliseconds: 400),
+            ),
+        'easeCamera':
+            () => controller.easeCamera(
+              update,
+              duration: const Duration(milliseconds: 400),
+            ),
       };
       for (final entry in moves.entries) {
         final label = entry.key;
@@ -548,16 +550,17 @@ void main() {
     ) async {
       final controller = await pumpMap(
         tester,
-        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
-          styleString: offlineStyle,
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(0, 0),
-            zoom: 3,
-          ),
-          trackCameraPosition: true,
-          onMapCreated: onMapCreated,
-          onStyleLoadedCallback: onStyleLoaded,
-        ),
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 3,
+              ),
+              trackCameraPosition: true,
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
       );
 
       await pumpUntil(
@@ -600,18 +603,19 @@ void main() {
       var idles = 0;
       final controller = await pumpMap(
         tester,
-        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
-          styleString: offlineStyle,
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(0, 0),
-            zoom: 3,
-          ),
-          trackCameraPosition: true,
-          onCameraMove: moves.add,
-          onCameraIdle: () => idles++,
-          onMapCreated: onMapCreated,
-          onStyleLoadedCallback: onStyleLoaded,
-        ),
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 3,
+              ),
+              trackCameraPosition: true,
+              onCameraMove: moves.add,
+              onCameraIdle: () => idles++,
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
       );
 
       // Let any startup camera events drain before counting.
@@ -874,16 +878,17 @@ void main() {
     testWidgets('minMaxZoomPreference clamps camera moves', (tester) async {
       final controller = await pumpMap(
         tester,
-        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
-          styleString: offlineStyle,
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(0, 0),
-            zoom: 3,
-          ),
-          minMaxZoomPreference: const MinMaxZoomPreference(2, 6),
-          onMapCreated: onMapCreated,
-          onStyleLoadedCallback: onStyleLoaded,
-        ),
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 3,
+              ),
+              minMaxZoomPreference: const MinMaxZoomPreference(2, 6),
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
       );
 
       await pumpUntil(
@@ -912,16 +917,17 @@ void main() {
       );
       final controller = await pumpMap(
         tester,
-        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
-          styleString: offlineStyle,
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(0, 0),
-            zoom: 5,
-          ),
-          cameraTargetBounds: CameraTargetBounds(bounds),
-          onMapCreated: onMapCreated,
-          onStyleLoadedCallback: onStyleLoaded,
-        ),
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 5,
+              ),
+              cameraTargetBounds: CameraTargetBounds(bounds),
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
       );
 
       await pumpUntil(
