@@ -27,7 +27,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'support/map_harness.dart';
 
 /// Size of the map box the harness pumps, in logical pixels.
-const double _mapSize = 400;
+const double _mapSize = 300;
 
 /// Equatorial circumference used by both native SDKs and maplibre-gl-js.
 const double _earthCircumference = 40075016.686;
@@ -116,8 +116,8 @@ void main() {
       final unpadded = await _queryCamera(tester, controller);
       _expectLatLng(unpadded.target, const LatLng(0, 0), 0.05, 'target');
 
-      // 50 logical pixels on each side leaves 300 of the 400 for the bounds,
-      // so the fitted zoom drops by log2(400 / 300).
+      // 50 logical pixels on each side leaves 200 of the 300 for the bounds,
+      // so the fitted zoom drops by log2(300 / 200).
       await pumpUntil(
         tester,
         controller.moveCamera(
@@ -135,7 +135,7 @@ void main() {
       _expectLatLng(padded.target, const LatLng(0, 0), 0.05, 'target');
       expect(
         unpadded.zoom - padded.zoom,
-        closeTo(log(400 / 300) / ln2, 0.1),
+        closeTo(log(_mapSize / (_mapSize - 100)) / ln2, 0.1),
         reason:
             'padding is in logical pixels '
             '(unpadded ${unpadded.zoom}, padded ${padded.zoom})',
@@ -490,7 +490,7 @@ void main() {
         'getVisibleRegion',
       );
 
-      // 400 logical pixels at zoom 3 span 400 / 4096 of the world. The region
+      // The map's logical width at zoom 3 spans width / 4096 of the world. The region
       // is geographic, so pixel density does not enter here.
       final expectedSpan = _mapSize / _worldSize(3) * 360;
       final lngSpan = region.northeast.longitude - region.southwest.longitude;
@@ -622,7 +622,6 @@ void main() {
       tester,
     ) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
 
       Future<double> metersPerPixel(double latitude) => pumpUntil(
         tester,
@@ -631,7 +630,8 @@ void main() {
       );
 
       final equator = await metersPerPixel(0);
-      final expected = _earthCircumference / _worldSize(3) / scale;
+      // Per logical pixel on every platform, unlike toScreenLocation.
+      final expected = _earthCircumference / _worldSize(3);
       expect(equator, closeTo(expected, expected * 0.02));
 
       // cos(60) = 0.5.
@@ -693,8 +693,9 @@ void main() {
         reason: '$region',
       );
       expect(region.contains(const LatLng(10, 10)), isTrue, reason: '$region');
-      // Fitted, not merely contained: 20 degrees in 360 logical pixels.
-      final fitZoom = log(360 * 360 / (20 * 512)) / ln2;
+      // Fitted, not merely contained: 20 degrees in the map minus 20 logical
+      // pixels of padding on each side.
+      final fitZoom = log((_mapSize - 40) * 360 / (20 * 512)) / ln2;
       expect(camera.zoom, closeTo(fitZoom, 0.4));
     });
 

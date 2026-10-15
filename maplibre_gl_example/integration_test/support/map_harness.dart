@@ -74,7 +74,9 @@ Future<MapLibreMapController> pumpMap(
     target: LatLng(0, 0),
     zoom: 3,
   ),
-  Size size = const Size(400, 400),
+  // Small enough to fit a phone in portrait: a 360 dp wide emulator would
+  // clamp a wider box and every screen-space expectation would drift.
+  Size size = const Size(300, 300),
   MapLibreMap Function(
     MapCreatedCallback onMapCreated,
     OnStyleLoadedCallback onStyleLoaded,
