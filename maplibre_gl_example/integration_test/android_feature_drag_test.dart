@@ -119,6 +119,52 @@ void main() {
     );
   });
 
+  testWidgets('a second finger ends the drag and the map pinches', (
+    tester,
+  ) async {
+    if (!_onAndroid) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final first = _Finger(tester);
+    await first.down(map.circleOnScreen);
+    for (var i = 0; i < 5; i++) {
+      await first.moveBy(const Offset(10, 0));
+    }
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
+    final second = _Finger(tester);
+    await second.down(map.circleOnScreen + const Offset(0, 150));
+    for (var i = 0; i < 10; i++) {
+      await first.moveBy(const Offset(0, -5));
+      await second.moveBy(const Offset(0, 5));
+    }
+    await second.up();
+    await first.up();
+    await _settle(tester);
+
+    // One end, where the single finger last dragged the feature to, and
+    // nothing after it.
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    expect(types.last, DragEventType.end);
+    final end = map.drags.last;
+    expect(end.delta, const LatLng(0, 0));
+    expect(end.current, map.drags[map.drags.length - 2].current);
+    // The rest of the gesture is the map's: it pinches.
+    expect(
+      await pumpUntil(
+        tester,
+        map.controller.getVisibleRegion(),
+        'getVisibleRegion after',
+      ),
+      isNot(before),
+    );
+  });
+
   testWidgets('a drag longer than a long press does not long-press the map', (
     tester,
   ) async {
