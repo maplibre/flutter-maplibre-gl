@@ -3012,15 +3012,16 @@ final class MapLibreMapController
 
           Layer layer = style.getLayer(layerId);
           if (layer == null) {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer '" + layerId + "' not found.", null);
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
           if (!isFilterable(layer)) {
             result.error(
                 "INVALID_LAYER_TYPE",
-                String.format("Layer '%s' does not support filtering.", layerId),
-                null);
+                "Invalid layer type",
+                String.format("Layer '%s' does not support filtering.", layerId));
             break;
           }
 
@@ -3028,7 +3029,7 @@ final class MapLibreMapController
           try {
             parsed = parseFilter(filter);
           } catch (RuntimeException e) {
-            result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), null);
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
             break;
           }
           // The SDK takes no null filter, so a null filter becomes the
@@ -3037,7 +3038,7 @@ final class MapLibreMapController
 
           String error = captureFilterError(() -> setLayerFilter(layer, expression));
           if (error != null) {
-            result.error("INVALID_EXPRESSION", "Invalid filter: " + error, null);
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
             break;
           }
           result.success(null);
@@ -3056,15 +3057,16 @@ final class MapLibreMapController
           String layerId = call.argument("layerId");
           Layer layer = style.getLayer(layerId);
           if (layer == null) {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer '" + layerId + "' not found.", null);
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
           if (!isFilterable(layer)) {
             result.error(
                     "INVALID_LAYER_TYPE",
-                    String.format("Layer '%s' does not support filtering.", layerId),
-                    null);
+                    "Invalid layer type",
+                    String.format("Layer '%s' does not support filtering.", layerId));
             break;
           }
 

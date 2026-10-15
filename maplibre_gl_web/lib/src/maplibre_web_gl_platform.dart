@@ -1547,7 +1547,8 @@ class MapLibreMapController extends MapLibrePlatform
     if (_map.getLayer(layerId) == null) {
       throw PlatformException(
         code: 'LAYER_NOT_FOUND_ERROR',
-        message: "Layer '$layerId' not found.",
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
       );
     }
     // GL JS reports an invalid filter through an error event instead of
@@ -1574,6 +1575,7 @@ class MapLibreMapController extends MapLibrePlatform
       throw PlatformException(
         code: 'INVALID_EXPRESSION',
         message: 'Invalid filter: $error',
+        details: error,
       );
     }
   }
