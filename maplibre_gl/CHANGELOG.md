@@ -1,3 +1,18 @@
+## Unreleased
+
+### Actions needed
+* **Android, Web**: `removeLayer` and `setLayerVisibility` throw a `PlatformException` with code `layerNotFound` for a layer id the style does not have, as iOS already did. They used to do nothing and complete normally. Wrap calls that can target a missing layer in a `try`/`catch`, or check `getLayerIds()` first.
+* **Android, Web**: adding a source or a layer under an id the style already holds throws a `PlatformException` with code `sourceAlreadyExists` or `layerAlreadyExists`, as iOS already did, and leaves the original untouched. This holds for every add method. Android used to keep the first source and report success, and failed a duplicate layer with a generic error code; web threw a raw JavaScript error for a source and accepted a duplicate layer silently, attaching its hover listeners a second time. To replace a source's data, call `setGeoJsonSource` or remove the source first.
+* **iOS**: `addImageSource`, `addImageLayer` and `addImageLayerBelow` report a duplicate id with `sourceAlreadyExists` and `layerAlreadyExists`, like every other add method, instead of `duplicateSource` and `duplicateLayer`. A `catch` matching the old codes needs the new ones.
+
+### Changed
+* **Web**: `setLayerProperties` on a layer the style does not have throws a `PlatformException` with code `LAYER_NOT_FOUND_ERROR`, like Android and iOS. It used to print a warning for each property and complete normally.
+
+### Fixed
+* **Android, iOS**: `getLayerVisibility` is implemented. It threw a `MissingPluginException`; it now answers `true` or `false`, or `null` for a layer the style does not have.
+* **Web**: `getLayerVisibility` answers `null` for a layer the style does not have, as documented, instead of `true`.
+* **Android, iOS**: the `LAYER_NOT_FOUND_ERROR` message reads "Layer X not found" instead of "Layer Xnot found".
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

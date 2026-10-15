@@ -882,8 +882,8 @@ final class MapLibreMapController
       return;
     }
 
-    // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes
+    // The channel call already answered sourceAlreadyExists for this case. The
+    // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(sourceName) != null) {
       return;
     }
@@ -1337,6 +1337,51 @@ final class MapLibreMapController
     return null;
   }
 
+  /**
+   * Answers sourceAlreadyExists or layerAlreadyExists, as iOS and web do, for every call that
+   * adds a source or layer under an id the style already holds. The SDK would otherwise throw
+   * (reaching Dart with a generic code) or, for sources, the add was skipped and reported as a
+   * success. Either way the original stays untouched.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectDuplicateStyleId(MethodCall call, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      return false;
+    }
+    final String method = call.method;
+    String layerId = null;
+    String sourceId = null;
+    if (method.endsWith("Layer#add")) {
+      layerId = call.argument("layerId");
+    } else if (method.equals("style#addLayer") || method.equals("style#addLayerBelow")) {
+      layerId = call.argument("imageLayerId");
+    } else if (method.equals("style#addSource") || method.equals("source#addGeoJson")) {
+      sourceId = call.argument("sourceId");
+    } else if (method.equals("style#addImageSource")) {
+      sourceId = call.argument("imageSourceId");
+    }
+    if (layerId != null && style.getLayer(layerId) != null) {
+      result.error(
+          "layerAlreadyExists",
+          "Layer already exists",
+          "Layer with id " + layerId + " already exists.");
+      return true;
+    }
+    if (sourceId != null && style.getSource(sourceId) != null) {
+      result.error(
+          "sourceAlreadyExists",
+          "Source already exists",
+          "Source with id " + sourceId + " already exists.");
+      return true;
+    }
+    return false;
+  }
+
+  private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
+    result.error("layerNotFound", "Layer not found", "Layer with id " + layerId + " not found.");
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
@@ -1398,6 +1443,9 @@ final class MapLibreMapController
   }
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
+    if (rejectDuplicateStyleId(call, result)) {
+      return;
+    }
     switch (call.method) {
       case "map#updateMyLocationTrackingMode":
         {
@@ -2184,7 +2232,7 @@ final class MapLibreMapController
             layer.setProperties(properties);
             result.success(null);
           } else {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + " not found", null);
           }
 
           break;
@@ -2372,16 +2420,6 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
-          // Nearly every published style already has a layer called "background", the
-          // natural id to reach for here. Report the clash the way iOS does instead of
-          // letting the SDK throw a CannotAddLayerException.
-          if (style != null && style.isFullyLoaded() && style.getLayer(layerId) != null) {
-            result.error(
-                "layerAlreadyExists",
-                "Layer already exists",
-                "Layer with id " + layerId + " already exists.");
-            break;
-          }
           if (!addBackgroundLayer(
               layerId,
               minzoom != null ? minzoom.floatValue() : null,
@@ -2815,6 +2853,10 @@ final class MapLibreMapController
             break;
           }
           String layerId = call.argument("layerId");
+          if (style.getLayer(layerId) == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
           style.removeLayer(layerId);
           interactiveFeatureLayerIds.remove(layerId);
 
@@ -2933,14 +2975,33 @@ final class MapLibreMapController
           boolean visible = call.argument("visible");
 
           Layer layer = style.getLayer(layerId);
-
-          if (layer != null) {
-            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
           }
 
+          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
           result.success(null);
           break;
 
+        }
+        case "layer#getVisibility":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          Layer layer = style.getLayer((String) call.argument("layerId"));
+          if (layer == null) {
+            // Documented contract: null tells the caller there is no such layer.
+            result.success(null);
+            break;
+          }
+          result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
+          break;
         }
         case "map#querySourceFeatures":
         {

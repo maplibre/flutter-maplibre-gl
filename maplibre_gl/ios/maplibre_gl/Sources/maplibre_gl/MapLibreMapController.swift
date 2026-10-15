@@ -841,7 +841,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
                 result(FlutterError(
                     code: "LAYER_NOT_FOUND_ERROR",
-                    message: "Layer " + layerId + "not found",
+                    message: "Layer " + layerId + " not found",
                     details: ""
                 ))
                 return
@@ -1132,6 +1132,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "style#addImageSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
+            if mapView.style?.source(withIdentifier: imageSourceId) != nil {
+                result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
+                return
+            }
             guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
             guard let data = bytes.data as? Data else { return }
             guard let image = UIImage(data: data) else { return }
@@ -1155,16 +1159,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     longitude: coordinates[1][1]
                 )
             )
-
-            // Check for duplicateSource error
-            if mapView.style?.source(withIdentifier: imageSourceId) != nil {
-                result(FlutterError(
-                    code: "duplicateSource",
-                    message: "Source with imageSourceId \(imageSourceId) already exists",
-                    details: "Can't add duplicate source with imageSourceId: \(imageSourceId)"
-                ))
-                return
-            }
 
             let source = MLNImageSource(
                 identifier: imageSourceId,
@@ -1224,13 +1218,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
-            // Check for duplicateLayer error
-            if (mapView.style?.layer(withIdentifier: imageLayerId)) != nil {
-                result(FlutterError(
-                    code: "duplicateLayer",
-                    message: "Layer already exists",
-                    details: "Can't add duplicate layer with imageLayerId: \(imageLayerId)"
-                ))
+            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
                 return
             }
             // Check for noSuchSource error
@@ -1262,13 +1251,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
-            // Check for duplicateLayer error
-            if (mapView.style?.layer(withIdentifier: imageLayerId)) != nil {
-                result(FlutterError(
-                    code: "duplicateLayer",
-                    message: "Layer already exists",
-                    details: "Can't add duplicate layer with imageLayerId: \(imageLayerId)"
-                ))
+            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
                 return
             }
             // Check for noSuchSource error
@@ -1460,6 +1444,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             layer.isVisible = visible
             result(nil)
+
+        case "layer#getVisibility":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "getLayerVisibility needs a 'layerId' string.",
+                    details: nil
+                ))
+                return
+            }
+            // Documented contract: null tells the caller there is no such layer.
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                result(nil)
+                return
+            }
+            result(layer.isVisible)
 
         case "map#querySourceFeatures":
             guard let arguments = methodCall.arguments as? [String: Any],
@@ -1979,11 +1981,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard let style = mapView.style else {
             return .failure(.styleNotFound)
         }
-        guard let source = style.source(withIdentifier: sourceId) else {
-            return .failure(.sourceNotFound(sourceId: sourceId))
-        }
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
+        }
+        guard let source = style.source(withIdentifier: sourceId) else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
         }
         return .success((style, source))
     }
