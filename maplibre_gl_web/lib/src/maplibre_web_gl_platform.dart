@@ -1568,12 +1568,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
     //remove old mouseenter callbacks to avoid multicalling
-    for (final layerId in _interactiveFeatureLayerIds) {
-      _map.off('mouseenter', layerId, _handleLayerMouseMove);
-      _map.off('mousemove', layerId, _handleLayerMouseMove);
-      _map.off('mouseleave', layerId, _handleLayerMouseMove);
-      if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
-    }
+    _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
     _interactiveFeatureLayerIds.clear();
 
     final sanitizedStyle = await _sanitizeStyleObject(styleObject);
@@ -1649,7 +1644,11 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> removeLayer(String imageLayerId) async {
     _ensureLayerExists(imageLayerId);
-    _interactiveFeatureLayerIds.remove(imageLayerId);
+    // A layer added again under this id attaches its own listeners, so these
+    // must go with it or each hover and drag callback runs once per add.
+    if (_interactiveFeatureLayerIds.remove(imageLayerId)) {
+      _detachLayerInteraction(imageLayerId);
+    }
     _map.removeLayer(imageLayerId);
   }
 
@@ -2164,6 +2163,16 @@ class MapLibreMapController extends MapLibrePlatform
       _map.on('mouseleave', layerId, _handleLayerMouseMove);
       if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
     }
+  }
+
+  /// Removes the listeners [_addLayer] attached for an interactive layer.
+  /// [Evented.off] finds the JS function [Evented.on] made from the same
+  /// event type, layer id and tear-off, so the arguments must match exactly.
+  void _detachLayerInteraction(String layerId) {
+    _map.off('mouseenter', layerId, _handleLayerMouseMove);
+    _map.off('mousemove', layerId, _handleLayerMouseMove);
+    _map.off('mouseleave', layerId, _handleLayerMouseMove);
+    if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
   }
 
   void _handleLayerMouseMove(Event e, String layerId) {
