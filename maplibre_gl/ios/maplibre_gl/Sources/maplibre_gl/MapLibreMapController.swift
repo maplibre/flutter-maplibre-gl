@@ -29,6 +29,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
+    /// Whether the current style was set as JSON rather than by URL.
+    private var styleIsJSON = false
 
     // GPS pulse: start/stop location updates on a timer to save battery.
     private var locationPulseTimer: Timer?
@@ -122,6 +124,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        if let styleString = (args as? [String: Any])?["styleString"] as? String {
+            styleIsJSON = Self.styleStringIsJSON(styleString)
+        }
         self.registrar = registrar
 
         super.init()
@@ -2717,12 +2722,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     /// The style URL a snapshotter can load for the current style.
     ///
-    /// The snapshotter only takes a URL. A style set as JSON has none: the map
-    /// reports an empty URL, which the snapshotter rejects as unsupported. Such
-    /// a style is written to a temporary file and snapshotted from there.
+    /// The snapshotter only takes a URL. A style set as JSON has no real one,
+    /// and the snapshotter rejects what the map reports as unsupported. Such a
+    /// style is written to a temporary file and snapshotted from there.
     private func snapshotStyleURL() -> URL? {
-        if let url = mapView.styleURL, !url.absoluteString.isEmpty {
-            return url
+        if !styleIsJSON {
+            return mapView.styleURL
         }
         guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
             return nil
@@ -2781,7 +2786,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         interactiveFeatureLayerIds.removeAll()
         addedShapesByLayer.removeAll()
         
-        if Self.styleStringIsJSON(styleString) {
+        styleIsJSON = Self.styleStringIsJSON(styleString)
+        if styleIsJSON {
             mapView.styleJSON = styleString
         } else if let url = Self.styleStringAsURL(
             styleString,
