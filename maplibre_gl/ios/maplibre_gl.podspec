@@ -12,7 +12,8 @@ MapLibre GL Flutter plugin.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'MapLibre' => 'info@maplibre.org' }
   s.source           = { :path => '.' }
-  s.source_files = 'maplibre_gl/Sources/maplibre_gl/**/*'
+  s.source_files = 'maplibre_gl/Sources/maplibre_gl/**/*', 'maplibre_gl/Sources/maplibre_gl_objc/**/*'
+  s.public_header_files = 'maplibre_gl/Sources/maplibre_gl_objc/include/*.h'
   s.dependency 'Flutter'
   # When updating the dependency version,
   # make sure to also update the version in Package.swift.
