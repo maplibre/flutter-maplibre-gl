@@ -1572,7 +1572,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     if (error != null) {
       throw PlatformException(
-        code: 'invalidExpression',
+        code: 'INVALID_EXPRESSION',
         message: 'Invalid filter: $error',
       );
     }

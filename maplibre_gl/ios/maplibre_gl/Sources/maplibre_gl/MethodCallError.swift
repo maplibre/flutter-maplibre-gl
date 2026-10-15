@@ -19,11 +19,11 @@ enum MethodCallError: Error {
         case .genericError:
             return "genericError"
         case .invalidLayerType:
-            return "invalidLayerType"
+            return "INVALID_LAYER_TYPE"
         case .invalidSourceType:
             return "invalidSourceType"
         case .invalidExpression, .invalidFilter:
-            return "invalidExpression"
+            return "INVALID_EXPRESSION"
         case .sourceNotFound:
             return "sourceNotFound"
         case .layerNotFound:

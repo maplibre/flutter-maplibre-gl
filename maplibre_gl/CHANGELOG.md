@@ -2,6 +2,7 @@
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
+* **iOS**: style error codes now match Android and web: `layerNotFound` is `LAYER_NOT_FOUND_ERROR`, `invalidExpression` is `INVALID_EXPRESSION` and `invalidLayerType` is `INVALID_LAYER_TYPE`. Update any `catch` on the old codes (#1055).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -14,7 +15,7 @@
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
   * `null` removes a filter. Before, it was ignored or threw.
   * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
-  * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `invalidExpression` with the reason. Before, iOS crashed and Android and web ignored it.
+  * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `INVALID_EXPRESSION` with the reason. Before, iOS crashed and Android and web ignored it.
   * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
