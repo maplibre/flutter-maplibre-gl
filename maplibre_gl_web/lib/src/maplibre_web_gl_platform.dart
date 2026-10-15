@@ -816,15 +816,8 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
-  /// Runs a cluster query for [clusterId], replying CLUSTER_NOT_FOUND unless
-  /// [sourceId] currently holds that cluster.
-  ///
-  /// maplibre-gl-js rejects an id that decodes to no cluster, but an id that
-  /// decodes to a cluster at another zoom level answers with that cluster's
-  /// data, so a rejection alone does not catch every stale id. Looking the id
-  /// up in the source first does, and matches Android and iOS, which have to
-  /// look it up to avoid a crash. Only loaded tiles are searched, which holds
-  /// for any id the app just read off a feature on screen.
+  /// Runs a cluster query, throwing CLUSTER_NOT_FOUND unless [sourceId]
+  /// currently holds the cluster [clusterId] in its loaded tiles.
   ///
   /// Only the JS call runs inside the guard. Decoding happens after this
   /// returns, so a bug there throws on its own rather than being reported as a

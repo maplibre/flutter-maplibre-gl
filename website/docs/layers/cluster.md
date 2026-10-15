@@ -173,7 +173,7 @@ final children = await controller.getClusterChildren('events', clusterId);
 | `getClusterLeaves(sourceId, clusterId, {limit, offset})` | The cluster's original points, as GeoJSON features |
 | `getClusterChildren(sourceId, clusterId)` | The cluster's immediate children, as GeoJSON features |
 
-A `clusterId` that is not one of the source's current clusters raises a `PlatformException` with code `CLUSTER_NOT_FOUND`, and so does any id on a GeoJSON source that is not clustered. Cluster ids are reassigned as the data or the viewport changes, so read the id from a feature you just queried or tapped, as above. An unknown source id, or one that is not a GeoJSON source, raises a `PlatformException` too.
+A `clusterId` that is not one of the source's current clusters, or any id on a source that is not clustered, throws a `PlatformException` with code `CLUSTER_NOT_FOUND`. Cluster ids change with the data and the viewport, so use an id you just queried or tapped. An unknown source id, or one that is not a GeoJSON source, throws a `PlatformException` too.
 
 ## Filters for cluster vs. point layers
 
