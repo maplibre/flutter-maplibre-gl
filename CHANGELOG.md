@@ -50,6 +50,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
 * Fill annotations without a `fillOutlineColor` are drawn again on web, and get an outline in their fill color instead of a transparent one on Android and iOS (#1074).
+* **Web**: `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

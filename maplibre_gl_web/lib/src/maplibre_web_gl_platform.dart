@@ -687,7 +687,9 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> layerIds,
     List<Object>? filter,
   ) async {
-    if (!_map.isStyleLoaded()) {
+    // Not isStyleLoaded(): it is also false while tiles or a source update
+    // load, which would answer nothing for a map that is ready.
+    if (!_styleReady) {
       // Style is not loaded yet, return empty list
       print(
         'MapLibreMapController: queryRenderedFeatures, Style not loaded yet, returning empty list',
@@ -730,7 +732,9 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> layerIds,
     String? filter,
   ) async {
-    if (!_map.isStyleLoaded()) {
+    // Not isStyleLoaded(): it is also false while tiles or a source update
+    // load, which would answer nothing for a map that is ready.
+    if (!_styleReady) {
       // Style is not loaded yet, return empty list
       print(
         'MapLibreMapController: queryRenderedFeaturesInRect, Style not loaded yet, returning empty list',
@@ -781,8 +785,9 @@ class MapLibreMapController extends MapLibrePlatform
     // A source is resolved by id out of the style, so without a style there is
     // no source to query. Answering with an empty list would look like a
     // source that holds no features, which the caller cannot tell apart, so
-    // report it as Android and iOS do.
-    if (!_map.isStyleLoaded()) {
+    // report it as Android and iOS do. Not isStyleLoaded(): it is also false
+    // while tiles or a source update load.
+    if (!_styleReady) {
       throw PlatformException(
         code: 'STYLE_NOT_READY',
         message:
