@@ -18,6 +18,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
 * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
+* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -47,6 +48,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
 * **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
+* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

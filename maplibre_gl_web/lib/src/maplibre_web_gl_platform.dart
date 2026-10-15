@@ -1688,8 +1688,36 @@ class MapLibreMapController extends MapLibrePlatform
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
     return FeatureCollection(
-      features: [for (final f in geojson["features"] ?? []) _makeFeature(f)],
+      features: [
+        for (final f in _asFeatureCollection(geojson)["features"] as List)
+          _makeFeature(Map<String, dynamic>.from(f as Map)),
+      ],
     );
+  }
+
+  /// Wraps a single Feature or a bare geometry in a FeatureCollection, so any
+  /// GeoJSON object is accepted as source data, as on Android and iOS.
+  Map<String, dynamic> _asFeatureCollection(Map<String, dynamic> geojson) {
+    switch (geojson['type']) {
+      case 'FeatureCollection':
+        return {...geojson, 'features': geojson['features'] ?? const []};
+      case 'Feature':
+        return {
+          'type': 'FeatureCollection',
+          'features': [geojson],
+        };
+      default:
+        return {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': geojson,
+              'properties': <String, dynamic>{},
+            },
+          ],
+        };
+    }
   }
 
   @override

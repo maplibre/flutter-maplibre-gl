@@ -111,6 +111,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -251,7 +252,11 @@ final class MapLibreMapController
   private MapSnapshotter activeSnapshotter;
 
   private Set<String> interactiveFeatureLayerIds;
-  private Map<String, FeatureCollection> addedFeaturesByLayer;
+  // GeoJSON last fed to each source added through addGeoJsonSource, kept for
+  // setGeoJsonFeature. Holds the raw String until the first setFeature parses
+  // it into a FeatureCollection JsonObject, so plain data updates never pay a
+  // parse on the platform thread.
+  private Map<String, Object> addedFeaturesByLayer;
 
   private LatLngBounds bounds = null;
   Style.OnStyleLoaded onStyleLoadedCallback =
@@ -300,7 +305,7 @@ final class MapLibreMapController
     this.mapViewContainer = new FrameLayout(applicationContext);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
-    this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
+    this.addedFeaturesByLayer = new HashMap<String, Object>();
     this.density = context.getResources().getDisplayMetrics().density;
     this.lifecycleProvider = lifecycleProvider;
     if (dragEnabled) {
@@ -880,7 +885,7 @@ final class MapLibreMapController
     final List<String> featuresJson = new ArrayList<>();
     if (features != null) {
       for (Feature feature : features) {
-        featuresJson.add(feature.toJson());
+        featuresJson.add(featureJson(feature));
       }
     }
     final Map<String, Object> reply = new HashMap<>();
@@ -888,24 +893,52 @@ final class MapLibreMapController
     return reply;
   }
 
+  private static final Pattern INTEGER_ID = Pattern.compile("-?(0|[1-9][0-9]*)");
+  private static final Pattern DECIMAL_ID = Pattern.compile("-?(0|[1-9][0-9]*)\\.[0-9]+");
+
+  // The SDK hands every feature id over as a String (the engine turns numbers
+  // into text, and a missing id into ""), so toJson writes "id":"2" where iOS
+  // and web answer 2. Ids that read as numbers go back as numbers and an empty
+  // id is dropped. The limit: a string id that looks like a number, such as
+  // "2", also comes back as a number on Android, as the SDK cannot tell them
+  // apart. A fractional id arrives in its shortest form, such as "1.5".
+  private static String featureJson(Feature feature) {
+    final String id = feature.id();
+    if (id == null) {
+      return feature.toJson();
+    }
+    String number = null;
+    if (INTEGER_ID.matcher(id).matches()) {
+      try {
+        number = Long.toString(Long.parseLong(id));
+      } catch (NumberFormatException e) {
+        // Beyond a long: left as a String rather than rounded.
+      }
+    } else if (DECIMAL_ID.matcher(id).matches()) {
+      final double value = Double.parseDouble(id);
+      if (!Double.isInfinite(value)) {
+        number = Double.toString(value);
+      }
+    }
+    if (number == null && !id.isEmpty()) {
+      return feature.toJson();
+    }
+    // Serialized once without the id, which then goes in as a bare number:
+    // query results can hold thousands of features and this runs on the
+    // platform thread, so no parse and reserialize round trip.
+    final String json =
+        Feature.fromGeometry(feature.geometry(), feature.properties(), null, feature.bbox())
+            .toJson();
+    if (number == null) {
+      return json;
+    }
+    return "{\"id\":" + number + "," + json.substring(1);
+  }
+
   // The cluster calls answer with a FeatureCollection, which is null when the
   // id matches nothing.
   private static Map<String, Object> featuresReply(FeatureCollection collection) {
     return featuresReply(collection == null ? null : collection.features());
-  }
-
-  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
-    JsonElement jsonElement = JsonParser.parseString(geojson);
-    String type = jsonElement.getAsJsonObject().get("type").getAsString();
-
-    if ("FeatureCollection".equals(type)) {
-      return FeatureCollection.fromJson(geojson);
-    } else if ("Feature".equals(type)) {
-      Feature feature = Feature.fromJson(geojson);
-      return FeatureCollection.fromFeatures(new Feature[]{ feature });
-    }
-
-    return null;
   }
 
   private void addGeoJsonSource(String sourceName, String source) {
@@ -921,18 +954,15 @@ final class MapLibreMapController
     }
 
     try {
-      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
-      if (featureCollection == null) {
-        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
-        return;
-      }
-
       // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
       // that silently discards icons registered via addImage() in the same render frame.
       // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
       GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
-      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
-      addedFeaturesByLayer.put(sourceName, featureCollection);
+      // The raw JSON goes to the engine, which parses it off the platform
+      // thread and keeps numeric ids numeric. A Java FeatureCollection would
+      // turn every id into a String, so ["id"] filters on numbers would miss.
+      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, source, options);
+      addedFeaturesByLayer.put(sourceName, source);
 
       style.addSource(geoJsonSource);
     } catch (Exception e) {
@@ -947,23 +977,58 @@ final class MapLibreMapController
     }
 
     try {
-      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
-      if (featureCollection == null) {
-        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
-        return;
-      }
-
       GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
       if (geoJsonSource == null) {
         Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
         return;
       }
 
-      addedFeaturesByLayer.put(sourceName, featureCollection);
-      geoJsonSource.setGeoJson(featureCollection);
+      // Raw JSON for the same reason as in addGeoJsonSource.
+      addedFeaturesByLayer.put(sourceName, geojson);
+      geoJsonSource.setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
     }
+  }
+
+  // The source data as a FeatureCollection JsonObject, parsed on first use and
+  // cached, or null when it is neither a FeatureCollection nor a Feature.
+  private JsonObject parsedSourceData(String sourceName) {
+    final Object stored = addedFeaturesByLayer.get(sourceName);
+    if (stored instanceof JsonObject) {
+      return (JsonObject) stored;
+    }
+    if (!(stored instanceof String)) {
+      return null;
+    }
+    final JsonElement element = JsonParser.parseString((String) stored);
+    if (!element.isJsonObject()) {
+      return null;
+    }
+    JsonObject data = element.getAsJsonObject();
+    final JsonElement type = data.get("type");
+    final String typeName = type != null && type.isJsonPrimitive() ? type.getAsString() : null;
+    if ("Feature".equals(typeName)) {
+      final JsonArray features = new JsonArray();
+      features.add(data);
+      data = new JsonObject();
+      data.addProperty("type", "FeatureCollection");
+      data.add("features", features);
+    } else if (!"FeatureCollection".equals(typeName) || !data.has("features")
+        || !data.get("features").isJsonArray()) {
+      return null;
+    }
+    addedFeaturesByLayer.put(sourceName, data);
+    return data;
+  }
+
+  // Compares ids by their text, so 2 and "2" match as they did before.
+  private static String featureIdKey(JsonElement feature) {
+    if (feature == null || !feature.isJsonObject()) {
+      return null;
+    }
+    final JsonElement id = feature.getAsJsonObject().get("id");
+    return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -973,24 +1038,29 @@ final class MapLibreMapController
     }
 
     try {
-      Feature feature = Feature.fromJson(geojsonFeature);
-      FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
       GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      if (geoJsonSource == null) {
+        return;
+      }
+      final JsonObject data = parsedSourceData(sourceName);
+      if (data == null) {
+        return;
+      }
 
-      if (featureCollection != null && geoJsonSource != null) {
-        final String featureId = feature.id();
-        final List<Feature> features = featureCollection.features();
-        
-        if (featureId != null && features != null) {
-          for (int i = 0; i < features.size(); i++) {
-            if (featureId.equals(features.get(i).id())) {
-              features.set(i, feature);
-              break;
-            }
-          }
+      // Merged as JSON rather than through the Java Feature, which would turn
+      // the ids of the whole source into Strings.
+      final JsonElement feature = JsonParser.parseString(geojsonFeature);
+      final String featureId = featureIdKey(feature);
+      if (featureId == null) {
+        return;
+      }
+      final JsonArray features = data.getAsJsonArray("features");
+      for (int i = 0; i < features.size(); i++) {
+        if (featureId.equals(featureIdKey(features.get(i)))) {
+          features.set(i, feature);
+          geoJsonSource.setGeoJson(data.toString());
+          break;
         }
-
-        geoJsonSource.setGeoJson(featureCollection);
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
