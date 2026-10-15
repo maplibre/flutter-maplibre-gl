@@ -467,39 +467,42 @@ void main() {
     expect((properties!['layout'] as Map)['visibility'], 'none');
   });
 
-  testWidgets('an unknown layer is layerNotFound, an unknown source a no-op', (
-    tester,
-  ) async {
-    final controller = await _pumpMapWithSource(tester);
-    final layersBefore = await _layerIds(tester, controller);
-    final sourcesBefore = await _sourceIds(tester, controller);
+  testWidgets(
+    'an unknown layer is LAYER_NOT_FOUND_ERROR, an unknown source a no-op',
+    (
+      tester,
+    ) async {
+      final controller = await _pumpMapWithSource(tester);
+      final layersBefore = await _layerIds(tester, controller);
+      final sourcesBefore = await _sourceIds(tester, controller);
 
-    // A layer call names one layer, so a missing one is reported, as for
-    // setLayerProperties. Removing a source stays idempotent.
-    await expectPlatformError(
-      tester,
-      controller.removeLayer('no-such-layer'),
-      'removeLayer unknown',
-      code: 'layerNotFound',
-    );
-    await expectPlatformError(
-      tester,
-      controller.setLayerVisibility('no-such-layer', false),
-      'setLayerVisibility unknown',
-      code: 'layerNotFound',
-    );
-    await pumpUntil(
-      tester,
-      controller.removeSource('no-such-source'),
-      'removeSource unknown',
-    );
+      // A layer call names one layer, so a missing one is reported, as for
+      // setLayerProperties. Removing a source stays idempotent.
+      await expectPlatformError(
+        tester,
+        controller.removeLayer('no-such-layer'),
+        'removeLayer unknown',
+        code: 'LAYER_NOT_FOUND_ERROR',
+      );
+      await expectPlatformError(
+        tester,
+        controller.setLayerVisibility('no-such-layer', false),
+        'setLayerVisibility unknown',
+        code: 'LAYER_NOT_FOUND_ERROR',
+      );
+      await pumpUntil(
+        tester,
+        controller.removeSource('no-such-source'),
+        'removeSource unknown',
+      );
 
-    expect(await _layerIds(tester, controller), layersBefore);
-    expect(
-      (await _sourceIds(tester, controller)).toSet(),
-      sourcesBefore.toSet(),
-    );
-  });
+      expect(await _layerIds(tester, controller), layersBefore);
+      expect(
+        (await _sourceIds(tester, controller)).toSet(),
+        sourcesBefore.toSet(),
+      );
+    },
+  );
 
   testWidgets('removing a source still used by a layer keeps both', (
     tester,
@@ -657,7 +660,7 @@ void main() {
         const LineLayerProperties(lineWidth: 2),
       ),
       'setLayerProperties unknown',
-      code: 'layerNotFound',
+      code: 'LAYER_NOT_FOUND_ERROR',
     );
   });
 }
