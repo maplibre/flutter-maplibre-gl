@@ -722,8 +722,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
   ///
-  /// Throws a [PlatformException] with code `layerNotFound` if the style has
-  /// no layer with [layerId].
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerProperties(
     String layerId,
     LayerProperties properties,
@@ -2099,8 +2099,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Removes a MapLibre style layer
   ///
-  /// Throws a [PlatformException] with code `layerNotFound` if the style has
-  /// no layer with [layerId].
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> removeLayer(String layerId) {
     return _maplibrePlatform.removeLayer(layerId);
   }
@@ -2388,8 +2388,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Shows or hides the layer with [layerId].
   ///
-  /// Throws a [PlatformException] with code `layerNotFound` if the style has
-  /// no layer with [layerId].
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }

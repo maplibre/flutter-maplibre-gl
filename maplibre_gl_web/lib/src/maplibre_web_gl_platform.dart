@@ -1537,13 +1537,13 @@ class MapLibreMapController extends MapLibrePlatform
     _map.removeLayer(imageLayerId);
   }
 
-  /// Throws `layerNotFound`, as Android and iOS do, for a layer the style does
+  /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a layer the style does
   /// not hold. maplibre-gl-js only fires an error event for most calls on an
   /// unknown layer, so without this the caller saw a silent success.
   void _ensureLayerExists(String layerId) {
     if (_map.getLayer(layerId) == null) {
       throw PlatformException(
-        code: 'layerNotFound',
+        code: 'LAYER_NOT_FOUND_ERROR',
         message: 'Layer not found',
         details: 'Layer with id $layerId not found.',
       );

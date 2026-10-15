@@ -3,11 +3,11 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Actions needed
-* `removeLayer` and `setLayerVisibility` throw a `PlatformException` with code `layerNotFound` for a layer id the style does not have, like Android and iOS. They used to do nothing and complete normally (#1068).
+* `removeLayer` and `setLayerVisibility` throw a `PlatformException` with code `LAYER_NOT_FOUND_ERROR` for a layer id the style does not have, like Android and iOS. They used to do nothing and complete normally (#1068).
 * Adding a source or a layer under an id the style already holds throws a `PlatformException` with code `sourceAlreadyExists` or `layerAlreadyExists`, like Android and iOS, and leaves the original untouched. A duplicate source used to throw a raw JavaScript error, and a duplicate layer was accepted silently, attaching its hover listeners a second time (#1068).
 
 ### Changed
-* `setLayerProperties` on a layer the style does not have throws a `PlatformException` with code `layerNotFound`, like Android and iOS. It used to print a warning for each property and complete normally (#1068).
+* `setLayerProperties` on a layer the style does not have throws a `PlatformException` with code `LAYER_NOT_FOUND_ERROR`, like Android and iOS. It used to print a warning for each property and complete normally (#1068).
 
 ### Fixed
 * `getLayerVisibility` answers `null` for a layer the style does not have, as documented, instead of `true` (#1068).

@@ -1379,7 +1379,7 @@ final class MapLibreMapController
   }
 
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
-    result.error("layerNotFound", "Layer not found", "Layer with id " + layerId + " not found.");
+    result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
   }
 
   @Override
