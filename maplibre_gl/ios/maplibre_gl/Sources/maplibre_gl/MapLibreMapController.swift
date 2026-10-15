@@ -604,18 +604,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(nil)
         case "camera#ease":
-            guard let arguments = methodCall.arguments as? [String: Any] else { 
-                result(false)
-                return 
-            }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { 
-                result(false)
-                return 
-            }
-            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { 
-                result(false)
-                return 
-            }
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            let arguments = parsed.arguments
+            let camera = parsed.camera
 
             let completion = {
                 result(true)
@@ -746,9 +737,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
             result(reply)
         case "map#toScreenLocation":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let latitude = arguments["latitude"] as? Double else { return }
-            guard let longitude = arguments["longitude"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let latitude = arguments["latitude"] as? Double,
+                  let longitude = arguments["longitude"] as? Double
+            else {
+                result(invalidArgumentError(
+                    "toScreenLocation requires 'latitude' and 'longitude' as numbers."
+                ))
+                return
+            }
             let latlng = CLLocationCoordinate2DMake(latitude, longitude)
             let returnVal = mapView.convert(latlng, toPointTo: mapView)
             var reply = [String: NSObject]()
@@ -756,8 +753,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["y"] = returnVal.y as NSObject
             result(reply)
         case "map#toScreenLocationBatch":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let data = arguments["coordinates"] as? FlutterStandardTypedData else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let data = arguments["coordinates"] as? FlutterStandardTypedData
+            else {
+                result(invalidArgumentError(
+                    "toScreenLocationBatch requires 'coordinates' as a Float64List."
+                ))
+                return
+            }
             let latLngs = data.data.withUnsafeBytes {
                 Array(
                     UnsafeBufferPointer(
@@ -777,16 +780,26 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 float64: Data(bytes: &reply, count: reply.count * 8)
             ))
         case "map#getMetersPerPixelAtLatitude":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let latitude = arguments["latitude"] as? Double
+            else {
+                result(invalidArgumentError(
+                    "getMetersPerPixelAtLatitude requires 'latitude' as a number."
+                ))
+                return
+            }
             var reply = [String: NSObject]()
-            guard let latitude = arguments["latitude"] as? Double else { return }
             let returnVal = mapView.metersPerPoint(atLatitude: latitude)
             reply["metersperpixel"] = returnVal as NSObject
             result(reply)
         case "map#toLatLng":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let x = arguments["x"] as? Double else { return }
-            guard let y = arguments["y"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let x = arguments["x"] as? Double,
+                  let y = arguments["y"] as? Double
+            else {
+                result(invalidArgumentError("toLatLng requires 'x' and 'y' as numbers."))
+                return
+            }
             let screenPoint = CGPoint(x: x, y: y)
             let coordinates: CLLocationCoordinate2D = mapView.convert(
                 screenPoint,
@@ -797,18 +810,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["longitude"] = coordinates.longitude as NSObject
             result(reply)
         case "camera#move":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-
-            if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
-                mapView.setCamera(camera, animated: false)
-            }
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            mapView.setCamera(parsed.camera, animated: false)
             result(nil)
         case "camera#animate":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { return }
-
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            let arguments = parsed.arguments
+            let cameraUpdate = parsed.cameraUpdate
+            let camera = parsed.camera
 
             let completion = {
                 result(nil)
@@ -2877,6 +2886,34 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 + "'clusterId', and getClusterLeaves also an int 'limit' and 'offset'.",
             details: nil
         )
+    }
+
+    private func invalidArgumentError(_ message: String) -> FlutterError {
+        return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
+    }
+
+    /// Reads the camera update of a `camera#move`, `camera#animate` or
+    /// `camera#ease` call. When it does not decode, or names an update this
+    /// side cannot apply, the call is answered with `INVALID_ARGUMENT` and
+    /// `nil` comes back: returning without a reply would leave the Dart future
+    /// pending for good.
+    private func parseCameraCall(
+        _ methodCall: FlutterMethodCall,
+        _ result: FlutterResult
+    ) -> (arguments: [String: Any], cameraUpdate: [Any], camera: MLNMapCamera)? {
+        guard let arguments = methodCall.arguments as? [String: Any],
+              let cameraUpdate = arguments["cameraUpdate"] as? [Any],
+              !cameraUpdate.isEmpty
+        else {
+            result(invalidArgumentError("\(methodCall.method) requires a 'cameraUpdate' list."))
+            return nil
+        }
+        guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView)
+        else {
+            result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
+            return nil
+        }
+        return (arguments, cameraUpdate, camera)
     }
 
     /// Serializes features for the channel as JSON strings, so nested
