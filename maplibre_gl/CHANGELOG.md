@@ -1,3 +1,12 @@
+## Unreleased
+
+### Fixed
+* Calls that left their `Future` pending forever now complete or throw:
+  * **Android**: `setCameraBounds` completes once the camera starts moving. Its `padding` is now in logical pixels, as on iOS and web; it was in physical pixels.
+  * **Android, iOS**: `takeSnapshot` works for a style set as JSON. Android never answered, iOS failed with `unsupported URL`.
+  * **iOS**: `addImageLayer` completes.
+  * **iOS**: `addImage` with bytes that are not an image throws `INVALID_IMAGE`, as on Android.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

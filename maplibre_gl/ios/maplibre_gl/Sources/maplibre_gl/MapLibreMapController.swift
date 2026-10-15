@@ -1115,13 +1115,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "style#addImage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let name = arguments["name"] as? String else { return }
-            // guard let length = arguments["length"] as? NSNumber else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let sdf = arguments["sdf"] as? Bool else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { return }
+            // Every exit replies: a channel call that never answers leaves the
+            // Dart future pending for good, with nothing to catch.
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let name = arguments["name"] as? String,
+                  let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+                  let sdf = arguments["sdf"] as? Bool
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "addImage requires a String 'name', image 'bytes' and a Bool 'sdf'.",
+                    details: nil
+                ))
+                return
+            }
+            guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+                result(FlutterError(
+                    code: "INVALID_IMAGE",
+                    message: "Failed to decode image bytes.",
+                    details: nil
+                ))
+                return
+            }
             if sdf {
                 mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
@@ -1254,6 +1269,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             mapView.style?.addLayer(layer)
+            result(nil)
         case "style#addLayerBelow":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
@@ -1602,7 +1618,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
               )
             }
         case "map#takeSnapshot":
-            guard let styleURL = mapView.styleURL else {
+            guard let styleURL = snapshotStyleURL() else {
                 result(FlutterError(
                     code: "STYLE_NOT_READY",
                     message: "Map style is not loaded",
@@ -2697,6 +2713,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         
         mapView.minimumZoomLevel = minZoom
         mapView.maximumZoomLevel = maxZoom
+    }
+
+    /// The style URL a snapshotter can load for the current style.
+    ///
+    /// The snapshotter only takes a URL. A style set as JSON has none: the map
+    /// reports an empty URL, which the snapshotter rejects as unsupported. Such
+    /// a style is written to a temporary file and snapshotted from there.
+    private func snapshotStyleURL() -> URL? {
+        if let url = mapView.styleURL, !url.absoluteString.isEmpty {
+            return url
+        }
+        guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
+            return nil
+        }
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("maplibre_gl_snapshot_style.json")
+        do {
+            try data.write(to: file, options: .atomic)
+        } catch {
+            return nil
+        }
+        return file
     }
 
     private static func styleStringIsJSON(_ styleString: String) -> Bool {

@@ -2836,9 +2836,11 @@ final class MapLibreMapController
                   .include(locationOne) // Northeast
                   .include(locationTwo) // Southwest
                   .build();
+          // Padding is in logical pixels, like every other camera input.
           mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-                  padding), 200);
-
+                  (int) (padding * density)), 200);
+          // Replies once the move is started, as iOS and web do.
+          result.success(null);
           break;
         }
       case "style#setFilter":
@@ -3083,11 +3085,18 @@ final class MapLibreMapController
           result.error("MAP_NOT_READY", "Map is not ready", null);
           break;
         }
-        String styleUrl = mapLibreMap.getStyle() != null ? mapLibreMap.getStyle().getUri() : null;
-        if (styleUrl == null) {
+        Style currentStyle = mapLibreMap.getStyle();
+        if (currentStyle == null) {
           result.error("STYLE_NOT_READY", "Map style is not loaded", null);
           break;
         }
+        // A style set as JSON has no URI, and a snapshotter given an empty one
+        // never calls back, so hand it the JSON instead.
+        String styleUrl = currentStyle.getUri();
+        Style.Builder snapshotStyle =
+            styleUrl == null || styleUrl.isEmpty()
+                ? new Style.Builder().fromJson(currentStyle.getJson())
+                : new Style.Builder().fromUri(styleUrl);
         Map<String, Object> snapshotArgs = (Map<String, Object>) call.arguments;
         Integer width = snapshotArgs != null ? (Integer) snapshotArgs.get("width") : null;
         Integer height = snapshotArgs != null ? (Integer) snapshotArgs.get("height") : null;
@@ -3096,7 +3105,7 @@ final class MapLibreMapController
         int snapshotHeight = height != null ? height : mapView.getHeight();
 
         MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
-                .withStyle(styleUrl)
+                .withStyleBuilder(snapshotStyle)
                 .withCameraPosition(mapLibreMap.getCameraPosition());
         if (activeSnapshotter != null) {
           activeSnapshotter.cancel();
