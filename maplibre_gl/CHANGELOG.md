@@ -22,6 +22,7 @@
   * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
   * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `INVALID_EXPRESSION` with the reason. Before, iOS crashed and Android and web ignored it.
   * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
+* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

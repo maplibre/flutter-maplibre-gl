@@ -478,8 +478,17 @@ class MapLibreMap extends Camera {
   ///  });
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
-  List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
-      jsObject.querySourceFeatures(sourceId, parameters).toDart;
+  List<Feature> querySourceFeatures(
+    String sourceId, [
+    Map<String, dynamic>? parameters,
+  ]) {
+    // The parameters have to cross into JS as a JS object: a Dart map reaches
+    // maplibre-gl-js as an opaque value, so its filter was silently dropped.
+    final jsParameters = parameters != null ? utils.jsify(parameters) : null;
+    return (jsObject.querySourceFeatures(sourceId, jsParameters).toDart as List)
+        .map((dynamic f) => Feature.fromJsObject(f))
+        .toList();
+  }
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
