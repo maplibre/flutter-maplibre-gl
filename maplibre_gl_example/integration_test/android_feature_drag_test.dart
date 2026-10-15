@@ -98,8 +98,7 @@ void main() {
 
     final first = _Finger(tester);
     await first.down(map.circleOnScreen);
-    // Inside the 300x300 map: a finger on its edge never reaches the view,
-    // and the first one would just go on dragging.
+    // Inside the 300x300 map: a finger on its edge never reaches the view.
     final second = _Finger(tester);
     await second.down(map.circleOnScreen + const Offset(0, 80));
     for (var i = 0; i < 10; i++) {
