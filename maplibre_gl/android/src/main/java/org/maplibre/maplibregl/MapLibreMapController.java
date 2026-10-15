@@ -4347,6 +4347,8 @@ final class MapLibreMapController
     final int action = event.getActionMasked();
     if (action == MotionEvent.ACTION_DOWN) {
       dragOwnsGesture = false;
+      // A stream that never got its up or cancel must not leave its candidate to this gesture.
+      forgetDragCandidate();
       rememberDragCandidate(new PointF(event.getX(), event.getY()));
     } else if (event.getPointerCount() > 1 && !dragOwnsGesture) {
       // A second finger before the drag started: a pinch, the map's to handle.
