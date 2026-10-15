@@ -66,7 +66,7 @@ internal interface MapLibreMapOptionsSink {
     fun setFeatureTapsTriggersMapClick(triggers: Boolean)
 
     /** Whether MapLibre fades symbols in and out as it places them; kept across style loads. */
-    fun setPlacementTransitionsEnabled(enabled: Boolean)
+    fun setSymbolPlacementTransitionsEnabled(enabled: Boolean)
 
     fun setUseHybridComposition(useHybridComposition: Boolean)
 }

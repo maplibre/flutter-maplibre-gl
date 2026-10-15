@@ -1359,7 +1359,7 @@ class MapLibreMapController extends MapLibrePlatform
   num? _placementFadeBeforeOff;
 
   @override
-  void setPlacementTransitionsEnabled(bool enabled) {
+  void setSymbolPlacementTransitionsEnabled(bool enabled) {
     if (enabled) {
       final previous = _placementFadeBeforeOff;
       if (previous == null) return;

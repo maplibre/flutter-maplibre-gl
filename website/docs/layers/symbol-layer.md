@@ -142,7 +142,7 @@ Best when your data updates every second or more often.
 ```dart
 MapLibreMap(
   styleString: myStyle,
-  placementTransitionsEnabled: false,
+  symbolPlacementTransitionsEnabled: false,
   // ...
 )
 ```
@@ -154,9 +154,9 @@ The base map's labels also stop fading while zooming and panning.
 Keeps the base map's fades.
 
 ```dart
-await controller.setPlacementTransitionsEnabled(false);
+await controller.setSymbolPlacementTransitionsEnabled(false);
 await controller.setGeoJsonSource('vehicles', data);
-await controller.setPlacementTransitionsEnabled(true);
+await controller.setSymbolPlacementTransitionsEnabled(true);
 ```
 
 !!! note "Android"

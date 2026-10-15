@@ -420,15 +420,15 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Turns MapLibre's placement transitions on or off now, without a widget
-  /// rebuild. See [MapLibreMap.placementTransitionsEnabled].
+  /// rebuild. See [MapLibreMap.symbolPlacementTransitionsEnabled].
   ///
   /// Sent on the same channel as source updates, so a call made before
   /// [setGeoJsonSource] reaches the platform before it: turning transitions
   /// off around an update places what changed in the frame it arrives, and
   /// turning them back on afterwards restores the fades and makes the map
   /// draw its final state.
-  Future<void> setPlacementTransitionsEnabled(bool enabled) =>
-      _updateMapOptions({'placementTransitionsEnabled': enabled});
+  Future<void> setSymbolPlacementTransitionsEnabled(bool enabled) =>
+      _updateMapOptions({'symbolPlacementTransitionsEnabled': enabled});
 
   /// Triggers a resize event for the map on web (ignored on Android or iOS).
   ///

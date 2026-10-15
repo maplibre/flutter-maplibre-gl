@@ -25,7 +25,7 @@ protocol MapLibreMapOptionsSink {
     func setAttributionButtonPosition(position: MLNOrnamentPosition)
     func setAttributionButtonColor(color: Int)
     func setFeatureTapsTriggersMapClick(triggers: Bool)
-    func setPlacementTransitionsEnabled(enabled: Bool)
+    func setSymbolPlacementTransitionsEnabled(enabled: Bool)
     func setLocationEngineProperties(
         enableHighAccuracy: Bool,
         distanceFilter: Double,

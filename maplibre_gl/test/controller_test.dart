@@ -26,14 +26,14 @@ void main() {
 
   group('Placement transitions', () {
     test(
-      'setPlacementTransitionsEnabled sends the option as an update',
+      'setSymbolPlacementTransitionsEnabled sends the option as an update',
       () async {
-        await controller.setPlacementTransitionsEnabled(false);
+        await controller.setSymbolPlacementTransitionsEnabled(false);
 
         final calls = platform.callsFor('updateMapOptions');
         expect(calls.length, 1);
         expect(calls.first.positionalArgs.first, {
-          'placementTransitionsEnabled': false,
+          'symbolPlacementTransitionsEnabled': false,
         });
       },
     );

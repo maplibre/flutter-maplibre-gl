@@ -21,7 +21,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
-  private boolean placementTransitionsEnabled = true;
+  private boolean symbolPlacementTransitionsEnabled = true;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private String styleString = "";
@@ -56,7 +56,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     controller.setMyLocationRenderMode(myLocationRenderMode);
     controller.setTrackCameraPosition(trackCameraPosition);
     controller.setLocationSource(locationSourceToken);
-    controller.setPlacementTransitionsEnabled(placementTransitionsEnabled);
+    controller.setSymbolPlacementTransitionsEnabled(symbolPlacementTransitionsEnabled);
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
@@ -285,8 +285,8 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
-  public void setPlacementTransitionsEnabled(boolean enabled) {
-    this.placementTransitionsEnabled = enabled;
+  public void setSymbolPlacementTransitionsEnabled(boolean enabled) {
+    this.symbolPlacementTransitionsEnabled = enabled;
   }
 
   @Override

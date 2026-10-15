@@ -1,5 +1,5 @@
-// Integration test for MapLibreMap.placementTransitionsEnabled and
-// MapLibreMapController.setPlacementTransitionsEnabled.
+// Integration test for MapLibreMap.symbolPlacementTransitionsEnabled and
+// MapLibreMapController.setSymbolPlacementTransitionsEnabled.
 //
 // Each platform switches a different thing (the style's transition options on
 // Android, MLNStyle.performsPlacementTransitions on iOS, the map's symbol fade
@@ -34,7 +34,7 @@ void main() {
             (onMapCreated, onStyleLoaded) => MapLibreMap(
               styleString: offlineStyle,
               initialCameraPosition: _camera,
-              placementTransitionsEnabled: false,
+              symbolPlacementTransitionsEnabled: false,
               onMapCreated: onMapCreated,
               onStyleLoadedCallback: onStyleLoaded,
             ),
@@ -57,7 +57,7 @@ void main() {
 
       await pumpUntil(
         tester,
-        controller.setPlacementTransitionsEnabled(false),
+        controller.setSymbolPlacementTransitionsEnabled(false),
         'transitions off',
       );
       await pumpUntil(
@@ -71,7 +71,7 @@ void main() {
 
       await pumpUntil(
         tester,
-        controller.setPlacementTransitionsEnabled(true),
+        controller.setSymbolPlacementTransitionsEnabled(true),
         'transitions on',
       );
       await _waitForSymbol(tester, controller, 3);
@@ -79,7 +79,7 @@ void main() {
       for (final enabled in [false, false, true, true]) {
         await pumpUntil(
           tester,
-          controller.setPlacementTransitionsEnabled(enabled),
+          controller.setSymbolPlacementTransitionsEnabled(enabled),
           'transitions $enabled',
         );
       }
@@ -95,7 +95,7 @@ void main() {
             (onMapCreated, onStyleLoaded) => MapLibreMap(
               styleString: offlineStyle,
               initialCameraPosition: _camera,
-              placementTransitionsEnabled: false,
+              symbolPlacementTransitionsEnabled: false,
               onMapCreated: onMapCreated,
               onStyleLoadedCallback: () {
                 styleLoads++;
@@ -120,7 +120,7 @@ void main() {
 
       await pumpUntil(
         tester,
-        controller.setPlacementTransitionsEnabled(true),
+        controller.setSymbolPlacementTransitionsEnabled(true),
         'transitions on after the style change',
       );
       await _waitForSymbol(tester, controller, 1);

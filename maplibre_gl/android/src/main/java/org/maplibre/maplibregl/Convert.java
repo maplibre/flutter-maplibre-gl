@@ -373,9 +373,9 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (featureTapsTriggersMapClick != null) {
       sink.setFeatureTapsTriggersMapClick(toBoolean(featureTapsTriggersMapClick));
     }
-    final Object placementTransitionsEnabled = data.get("placementTransitionsEnabled");
-    if (placementTransitionsEnabled != null) {
-      sink.setPlacementTransitionsEnabled(toBoolean(placementTransitionsEnabled));
+    final Object symbolPlacementTransitionsEnabled = data.get("symbolPlacementTransitionsEnabled");
+    if (symbolPlacementTransitionsEnabled != null) {
+      sink.setSymbolPlacementTransitionsEnabled(toBoolean(symbolPlacementTransitionsEnabled));
     }
   }
 }

@@ -230,7 +230,7 @@ final class MapLibreMapController
   private boolean featureTapsTriggersMapClick = false;
   // Whether MapLibre fades symbols as it places them. A style holds its own
   // transition options, so this is applied again on every style load.
-  private boolean placementTransitionsEnabled = true;
+  private boolean symbolPlacementTransitionsEnabled = true;
   // The style's own transition, saved when placement transitions are turned
   // off and written back when they are turned on again. Null while they are on.
   private TransitionOptions transitionBeforePlacementOff = null;
@@ -4294,8 +4294,8 @@ final class MapLibreMapController
   }
 
   @Override
-  public void setPlacementTransitionsEnabled(boolean enabled) {
-    this.placementTransitionsEnabled = enabled;
+  public void setSymbolPlacementTransitionsEnabled(boolean enabled) {
+    this.symbolPlacementTransitionsEnabled = enabled;
     if (style != null && style.isFullyLoaded()) {
       applyPlacementTransitions(style);
       // With transitions off nothing asks MapLibre for another frame once
@@ -4320,7 +4320,7 @@ final class MapLibreMapController
    * without a fade until the next style load.
    */
   private void applyPlacementTransitions(@NonNull Style style) {
-    if (!placementTransitionsEnabled) {
+    if (!symbolPlacementTransitionsEnabled) {
       if (transitionBeforePlacementOff != null) return; // already off
       final TransitionOptions current = style.getTransition();
       transitionBeforePlacementOff = current;

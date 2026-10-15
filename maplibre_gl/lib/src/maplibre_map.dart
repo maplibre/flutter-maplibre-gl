@@ -32,7 +32,7 @@ class MapLibreMap extends StatefulWidget {
     this.dragEnabled = true,
     this.panInertia = PanInertia.normal,
     this.featureTapsTriggersMapClick = false,
-    this.placementTransitionsEnabled = true,
+    this.symbolPlacementTransitionsEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
@@ -181,7 +181,7 @@ class MapLibreMap extends StatefulWidget {
   /// Applies to every symbol on the map, the style's own labels included, and
   /// is kept across style changes. On web it sets the map's symbol fade
   /// duration to 0 while off.
-  final bool placementTransitionsEnabled;
+  final bool symbolPlacementTransitionsEnabled;
 
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
@@ -653,7 +653,7 @@ class MapLibreMapOptions {
     this.foregroundLoadColor,
     this.translucentTextureSurface,
     this.featureTapsTriggersMapClick,
-    this.placementTransitionsEnabled,
+    this.symbolPlacementTransitionsEnabled,
   });
 
   MapLibreMapOptions.fromWidget(MapLibreMap map)
@@ -690,7 +690,8 @@ class MapLibreMapOptions {
         foregroundLoadColor: map.foregroundLoadColor,
         translucentTextureSurface: map.translucentTextureSurface,
         featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
-        placementTransitionsEnabled: map.placementTransitionsEnabled,
+        symbolPlacementTransitionsEnabled:
+            map.symbolPlacementTransitionsEnabled,
       );
 
   final bool? compassEnabled;
@@ -754,7 +755,7 @@ class MapLibreMapOptions {
 
   final bool? featureTapsTriggersMapClick;
 
-  final bool? placementTransitionsEnabled;
+  final bool? symbolPlacementTransitionsEnabled;
 
   final _gestureGroup = {
     'rotateGesturesEnabled',
@@ -824,7 +825,10 @@ class MapLibreMapOptions {
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
     addIfNonNull('featureTapsTriggersMapClick', featureTapsTriggersMapClick);
-    addIfNonNull('placementTransitionsEnabled', placementTransitionsEnabled);
+    addIfNonNull(
+      'symbolPlacementTransitionsEnabled',
+      symbolPlacementTransitionsEnabled,
+    );
     return optionsMap;
   }
 

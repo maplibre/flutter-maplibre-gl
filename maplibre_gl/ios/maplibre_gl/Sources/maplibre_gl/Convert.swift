@@ -107,8 +107,8 @@ class Convert {
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
-        if let placementTransitionsEnabled = options["placementTransitionsEnabled"] as? Bool {
-            delegate.setPlacementTransitionsEnabled(enabled: placementTransitionsEnabled)
+        if let enabled = options["symbolPlacementTransitionsEnabled"] as? Bool {
+            delegate.setSymbolPlacementTransitionsEnabled(enabled: enabled)
         }
         // iOS serializes as [enableHighAccuracy (0/1), distanceFilter, intervalMs, pulseWindowMs]
         if let locationEngineProperties = options["locationEngineProperties"] as? [Int],

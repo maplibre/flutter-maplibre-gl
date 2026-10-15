@@ -17,7 +17,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var featureTapsTriggersMapClick = false
     // Whether MapLibre fades symbols as it places them. A style holds its own
     // setting, so this is applied again on every style load.
-    private var placementTransitionsEnabled = true
+    private var symbolPlacementTransitionsEnabled = true
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
     private var mapReadyResult: FlutterResult?
@@ -2174,7 +2174,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      */
     func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
         isMapReady = true
-        style.performsPlacementTransitions = placementTransitionsEnabled
+        style.performsPlacementTransitions = symbolPlacementTransitionsEnabled
         updateMyLocationEnabled()
 
         // Before map#waitForMap replies and map#onStyleLoaded fires, so Dart
@@ -3281,8 +3281,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         featureTapsTriggersMapClick = triggers
     }
 
-    func setPlacementTransitionsEnabled(enabled: Bool) {
-        placementTransitionsEnabled = enabled
+    func setSymbolPlacementTransitionsEnabled(enabled: Bool) {
+        symbolPlacementTransitionsEnabled = enabled
         mapView.style?.performsPlacementTransitions = enabled
         // With transitions off nothing asks MapLibre for another frame once
         // placement is done, so data placed while they were off can stay

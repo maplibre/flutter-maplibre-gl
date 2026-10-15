@@ -27,7 +27,7 @@ enum _Mode {
   /// MapLibre's default: symbols fade in, and live data flickers.
   on,
 
-  /// `placementTransitionsEnabled: false` on the widget: no fade anywhere.
+  /// `symbolPlacementTransitionsEnabled: false` on the widget: no fade anywhere.
   off,
 
   /// Transitions off only around each source update.
@@ -147,9 +147,9 @@ class _LiveSymbolsBodyState extends State<_LiveSymbolsBody> {
       // The three calls share one channel, so they reach the map in order:
       // the new data is placed in the frame it arrives, then fades return
       // for the rest of the map.
-      await controller.setPlacementTransitionsEnabled(false);
+      await controller.setSymbolPlacementTransitionsEnabled(false);
       await controller.setGeoJsonSource(_sourceId, _vehicles());
-      await controller.setPlacementTransitionsEnabled(true);
+      await controller.setSymbolPlacementTransitionsEnabled(true);
     } else {
       await controller.setGeoJsonSource(_sourceId, _vehicles());
     }
@@ -163,7 +163,7 @@ class _LiveSymbolsBodyState extends State<_LiveSymbolsBody> {
         styleString: ExampleConstants.demoMapStyle,
         // Only the "Off" mode turns them off for the whole map. In the other
         // two the widget keeps the default and the controller does the rest.
-        placementTransitionsEnabled: _mode != _Mode.off,
+        symbolPlacementTransitionsEnabled: _mode != _Mode.off,
         onMapCreated: _onMapCreated,
         onStyleLoadedCallback: _onStyleLoaded,
       ),
@@ -219,11 +219,11 @@ class _LiveSymbolsBodyState extends State<_LiveSymbolsBody> {
                 'MapLibre default. Labels of the base map fade nicely, '
                     'the vehicles flicker on each update.',
               _Mode.off =>
-                'placementTransitionsEnabled: false. No flicker, but every '
+                'symbolPlacementTransitionsEnabled: false. No flicker, but every '
                     'label on the map, the base map included, pops in '
                     'without fading.',
               _Mode.offDuringUpdates =>
-                'setPlacementTransitionsEnabled(false) before each update '
+                'setSymbolPlacementTransitionsEnabled(false) before each update '
                     'and true after it. No flicker, and the base map keeps '
                     'its fades.',
             }),
