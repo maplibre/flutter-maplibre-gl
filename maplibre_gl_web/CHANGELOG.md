@@ -2,6 +2,9 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ## Unreleased
 
+### Actions needed
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of answering an empty list or a wrong zoom; catch it where you used to check for 0 or an empty list (#1065).
+
 ### Fixed
 * Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).
 * `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).

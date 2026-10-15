@@ -1418,6 +1418,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
                 // The SDK returns -1 for a cluster it cannot expand, whereas
                 // Android returns 0 for the same case. Report the Android value
@@ -1437,6 +1441,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 result(featuresReply(
                     source.children(of: clusterFeature(clusterId)),
                     methodName: "getClusterChildren"
@@ -1457,6 +1465,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let leaves = source.leaves(
                     of: clusterFeature(clusterId),
                     offset: UInt(max(0, offset)),
@@ -2595,6 +2607,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             ))
         }
         return .success(shapeSource)
+    }
+
+    /// Whether the source currently holds a cluster with this id.
+    ///
+    /// For an id it does not hold, MapLibre Native throws a C++ exception from
+    /// the cluster calls. Swift cannot catch it, so the app aborts. Ids go stale
+    /// as the data or the viewport changes, so an app can pass one without doing
+    /// anything wrong. Looking the id up first lets the cluster calls reply
+    /// CLUSTER_NOT_FOUND instead. Only loaded tiles are searched, which holds
+    /// for any id the app just read off a feature on screen.
+    private func hasCluster(_ source: MLNShapeSource, clusterId: Int) -> Bool {
+        let predicate = NSPredicate(format: "cluster_id == %@", NSNumber(value: clusterId))
+        return !source.features(matching: predicate).isEmpty
+    }
+
+    private func clusterNotFoundError(sourceId: String, clusterId: Int) -> FlutterError {
+        return FlutterError(
+            code: "CLUSTER_NOT_FOUND",
+            message: "Cluster '\(clusterId)' is not one of the current clusters of source "
+                + "'\(sourceId)'. Cluster ids are reassigned as the data or the viewport "
+                + "changes, so read the id from a freshly queried feature.",
+            details: nil
+        )
     }
 
     /// Builds the argument the SDK's cluster methods take.

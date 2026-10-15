@@ -13,6 +13,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `invalidLayerType` is now `INVALID_LAYER_TYPE`
   * `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
   * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of crashing the app on Android and iOS; catch it where you used to check for 0 or an empty list (#1065).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
