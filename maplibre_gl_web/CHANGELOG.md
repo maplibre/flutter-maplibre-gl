@@ -14,6 +14,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
 * `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
 * `easeCamera` completes when the camera arrives instead of when it starts (#1069).
+* `setGeoJsonSource` with a Feature or a bare geometry sets that data instead of emptying the source (#1073).
+* `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)

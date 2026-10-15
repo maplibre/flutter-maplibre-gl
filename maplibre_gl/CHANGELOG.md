@@ -13,6 +13,7 @@
 * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
 * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
+* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -39,6 +40,12 @@
 * **Android**: camera calls with `CameraUpdate.scrollBy` complete with `true` and animate (#1069).
 * **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
 * **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
+* **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
+* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
+* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
+* Fill annotations without a `fillOutlineColor` are drawn again on web, and get an outline in their fill color instead of a transparent one on Android and iOS (#1074).
+* **Web**: `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * **iOS**: `getStyle` returns the style JSON instead of `null` (#1070).
 * **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` and leaves the light unchanged (#1070).
 * **Web**: `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).

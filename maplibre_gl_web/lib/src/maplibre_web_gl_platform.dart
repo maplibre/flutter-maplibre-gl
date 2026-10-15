@@ -687,7 +687,9 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> layerIds,
     List<Object>? filter,
   ) async {
-    if (!_map.isStyleLoaded()) {
+    // Not isStyleLoaded(): it is also false while tiles or a source update
+    // load, which would answer nothing for a map that is ready.
+    if (!_styleReady) {
       // Style is not loaded yet, return empty list
       print(
         'MapLibreMapController: queryRenderedFeatures, Style not loaded yet, returning empty list',
@@ -730,7 +732,9 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> layerIds,
     String? filter,
   ) async {
-    if (!_map.isStyleLoaded()) {
+    // Not isStyleLoaded(): it is also false while tiles or a source update
+    // load, which would answer nothing for a map that is ready.
+    if (!_styleReady) {
       // Style is not loaded yet, return empty list
       print(
         'MapLibreMapController: queryRenderedFeaturesInRect, Style not loaded yet, returning empty list',
@@ -781,8 +785,9 @@ class MapLibreMapController extends MapLibrePlatform
     // A source is resolved by id out of the style, so without a style there is
     // no source to query. Answering with an empty list would look like a
     // source that holds no features, which the caller cannot tell apart, so
-    // report it as Android and iOS do.
-    if (!_map.isStyleLoaded()) {
+    // report it as Android and iOS do. Not isStyleLoaded(): it is also false
+    // while tiles or a source update load.
+    if (!_styleReady) {
       throw PlatformException(
         code: 'STYLE_NOT_READY',
         message:
@@ -1705,8 +1710,36 @@ class MapLibreMapController extends MapLibrePlatform
 
   FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
     return FeatureCollection(
-      features: [for (final f in geojson["features"] ?? []) _makeFeature(f)],
+      features: [
+        for (final f in _asFeatureCollection(geojson)["features"] as List)
+          _makeFeature(Map<String, dynamic>.from(f as Map)),
+      ],
     );
+  }
+
+  /// Wraps a single Feature or a bare geometry in a FeatureCollection, so any
+  /// GeoJSON object is accepted as source data, as on Android and iOS.
+  Map<String, dynamic> _asFeatureCollection(Map<String, dynamic> geojson) {
+    switch (geojson['type']) {
+      case 'FeatureCollection':
+        return {...geojson, 'features': geojson['features'] ?? const []};
+      case 'Feature':
+        return {
+          'type': 'FeatureCollection',
+          'features': [geojson],
+        };
+      default:
+        return {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': geojson,
+              'properties': <String, dynamic>{},
+            },
+          ],
+        };
+    }
   }
 
   @override
