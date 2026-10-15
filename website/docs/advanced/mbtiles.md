@@ -1,28 +1,29 @@
 # MBTiles
 
-MBTiles is a SQLite archive of map tiles (raster PNG/JPEG or vector MVT). MapLibre Native can read one from disk through the `mbtiles://` URL scheme, so you can ship a regional extract and show it with no tile server.
+An `.mbtiles` file is a SQLite archive of map tiles. MapLibre Native reads it from disk through the `mbtiles://` URL scheme, so you can ship a regional map with no tile server. Android and iOS only, see [Platform support](#platform-support).
 
-!!! warning "Android and iOS only"
-    `mbtiles://` is implemented by MapLibre Native. It is not available on web
-    (MapLibre GL JS has no SQLite reader). Guard this code with `if (!kIsWeb)`,
-    or convert the file to [PMTiles](pmtiles.md) if you also need web.
+## How it works
 
-This is not the [offline regions](offline-regions.md) API. Offline regions
-download tiles from a style URL into MapLibre's cache. An `.mbtiles` file is a
-single file you already have.
+The native engine opens the file itself, so it cannot read it from the Flutter asset bundle: `mbtiles://assets/map.mbtiles` fails with `unable to open database file`. Three steps:
 
-## The file has to be on disk
+1. Bundle the file as a Flutter asset.
+2. Copy it to a file on disk at startup.
+3. Point a source at `mbtiles://` plus the absolute path of that copy.
 
-The native engines open the SQLite file themselves. They cannot read the Flutter
-asset bundle, so `mbtiles://assets/map.mbtiles` fails with `unable to open
-database file`. Copy the file out of assets (or download it) and pass an
-**absolute** path.
+## Step 1: Bundle the file
+
+Add [`path_provider`](https://pub.dev/packages/path_provider) to your dependencies (it is not a dependency of `maplibre_gl`) and register the asset:
 
 ```yaml
+dependencies:
+  path_provider: ^2.1.5
+
 flutter:
   assets:
-    - assets/map.mbtiles
+    - assets/map_v1.mbtiles
 ```
+
+## Step 2: Copy it to disk
 
 ```dart
 import 'dart:io';
@@ -30,7 +31,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-Future<String> copyMbtilesToCache(String assetKey) async {
+Future<String> copyAssetToDisk(String assetKey) async {
   final cache = await getApplicationCacheDirectory();
   final out = File('${cache.path}/$assetKey');
   if (!out.existsSync()) {
@@ -44,116 +45,61 @@ Future<String> copyMbtilesToCache(String assetKey) async {
 }
 ```
 
-`mbtiles://` plus that absolute path is three slashes after the scheme:
-`mbtiles:///data/.../map.mbtiles`. Do not prefix `file://`.
+The copy is skipped when the file already exists, so later launches are fast. It also means an app update that ships new tiles under the same name keeps showing the old copy. Put a version in the file name (`map_v1.mbtiles`, then `map_v2.mbtiles`) and rename the asset whenever its content changes.
 
-The system may purge the cache directory. Use
-`getApplicationDocumentsDirectory()` if the copy should survive that.
+## Step 3: Add the source
 
-## Raster `.mbtiles`
-
-Add the source after the style has loaded (`onStyleLoadedCallback`):
+Add the source and a layer in `onStyleLoadedCallback`:
 
 ```dart
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-Future<void> addRasterMbtiles(MapLibreMapController controller) async {
-  if (kIsWeb) return;
+class MbtilesMap extends StatefulWidget {
+  const MbtilesMap({super.key});
 
-  final path = await copyMbtilesToCache('assets/map.mbtiles');
-  await controller.addSource(
-    'mbtiles',
-    RasterSourceProperties(
-      tiles: ['mbtiles://$path'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
-    ),
-  );
-  await controller.addRasterLayer(
-    'mbtiles',
-    'mbtiles-layer',
-    const RasterLayerProperties(),
-  );
+  @override
+  State<MbtilesMap> createState() => _MbtilesMapState();
+}
+
+class _MbtilesMapState extends State<MbtilesMap> {
+  MapLibreMapController? _controller;
+
+  Future<void> _onStyleLoaded() async {
+    final path = await copyAssetToDisk('assets/map_v1.mbtiles');
+    await _controller!.addSource(
+      'local-tiles',
+      RasterSourceProperties(
+        tiles: ['mbtiles://$path'],
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors',
+      ),
+    );
+    await _controller!.addRasterLayer(
+      'local-tiles',
+      'local-tiles-layer',
+      const RasterLayerProperties(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MapLibreMap(
+      initialCameraPosition: const CameraPosition(
+        target: LatLng(48.85, 2.35),
+        zoom: 10,
+      ),
+      onMapCreated: (controller) => _controller = controller,
+      onStyleLoadedCallback: _onStyleLoaded,
+    );
+  }
 }
 ```
 
-## Vector `.mbtiles`
+`path` is absolute, so the URL has three slashes after the scheme: `mbtiles:///data/.../map_v1.mbtiles`. Do not add `file://`.
 
-A vector archive is a `VectorSourceProperties` with `url`, not `tiles`. Layers
-still need `sourceLayer` (the name inside the archive, for example `building`
-or `water`):
+For a vector archive, use `VectorSourceProperties(url: 'mbtiles://$path')` instead, and pass `sourceLayer` (a layer name inside the archive, such as `water`) to `addFillLayer`, `addLineLayer` and the other layer methods.
 
-```dart
-Future<void> addVectorMbtiles(MapLibreMapController controller) async {
-  if (kIsWeb) return;
+## Platform support
 
-  final path = await copyMbtilesToCache('assets/map.mbtiles');
-  await controller.addSource(
-    'mbtiles',
-    VectorSourceProperties(
-      url: 'mbtiles://$path',
-      attribution: '© OpenStreetMap contributors',
-    ),
-  );
-  await controller.addFillLayer(
-    'mbtiles',
-    'water',
-    const FillLayerProperties(fillColor: '#a8d5e5'),
-    sourceLayer: 'water',
-  );
-}
-```
-
-## Style JSON
-
-You can also put the URL in a style document. Because the path is absolute and
-only known at runtime, load the JSON as a string, substitute the path, then
-pass the result as `styleString`:
-
-```dart
-Future<String> loadMbtilesStyle() async {
-  final path = await copyMbtilesToCache('assets/map.mbtiles');
-  var style = await rootBundle.loadString('assets/mbtiles_style.json');
-  return style.replaceAll('___MBTILES_URI___', 'mbtiles://$path');
-}
-```
-
-```json
-{
-  "version": 8,
-  "sources": {
-    "offline": {
-      "type": "raster",
-      "tiles": ["___MBTILES_URI___"],
-      "tileSize": 256
-    }
-  },
-  "layers": [
-    {
-      "id": "offline",
-      "type": "raster",
-      "source": "offline"
-    }
-  ]
-}
-```
-
-For a vector archive use `"type": "vector"` and `"url": "___MBTILES_URI___"`
-instead of `tiles`.
-
-## Large files
-
-Small extracts (a few MB) usually just work. Around tens of MB, set `minzoom`
-and `maxzoom` on the source to the range actually present in the file, or tiles
-can fail to appear when zooming. The same mismatch shows up as the map
-appearing at a different zoom than it disappears.
-
-## PMTiles instead
-
-If you also need web, or would rather not copy a SQLite file out of assets,
-convert the archive and follow the [PMTiles](pmtiles.md) guide:
-
-```
-pmtiles convert input.mbtiles output.pmtiles
-```
+`mbtiles://` is implemented by MapLibre Native, so it works on Android and iOS. MapLibre GL JS cannot read MBTiles, so on web convert the file with `pmtiles convert input.mbtiles output.pmtiles` and follow the [PMTiles](pmtiles.md) guide.
