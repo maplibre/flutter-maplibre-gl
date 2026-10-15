@@ -839,11 +839,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let properties = arguments["properties"] as? [String: Any] else { return }
 
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                result(FlutterError(
-                    code: "LAYER_NOT_FOUND_ERROR",
-                    message: "Layer " + layerId + " not found",
-                    details: ""
-                ))
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
                 return
             }
 

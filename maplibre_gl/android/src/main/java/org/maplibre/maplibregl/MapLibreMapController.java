@@ -2232,7 +2232,7 @@ final class MapLibreMapController
             layer.setProperties(properties);
             result.success(null);
           } else {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + " not found", null);
+            replyLayerNotFound(result, layerId);
           }
 
           break;

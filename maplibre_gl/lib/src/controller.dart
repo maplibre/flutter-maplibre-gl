@@ -722,8 +722,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
   ///
-  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
-  /// style has no layer with [layerId].
+  /// Throws a [PlatformException] with code `layerNotFound` if the style has
+  /// no layer with [layerId].
   Future<void> setLayerProperties(
     String layerId,
     LayerProperties properties,

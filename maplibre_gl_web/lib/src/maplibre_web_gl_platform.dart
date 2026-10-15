@@ -1761,13 +1761,7 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
   ) async {
-    if (_map.getLayer(layerId) == null) {
-      // Same code and message as Android and iOS.
-      throw PlatformException(
-        code: 'LAYER_NOT_FOUND_ERROR',
-        message: 'Layer $layerId not found',
-      );
-    }
+    _ensureLayerExists(layerId);
     for (final entry in properties.entries) {
       // Try paint property first (most common), then layout property
       try {
