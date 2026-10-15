@@ -48,6 +48,8 @@ abstract class MapLibreMapOptionsSink {
 
   void setFeatureTapsTriggersMapClick(bool triggers);
 
+  void setSymbolPlacementTransitionsEnabled(bool enabled);
+
   void setLocationSource(String token);
 
   void setLocationEngineProperties({

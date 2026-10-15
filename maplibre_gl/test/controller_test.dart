@@ -24,6 +24,21 @@ void main() {
     platform.reset();
   });
 
+  group('Placement transitions', () {
+    test(
+      'setSymbolPlacementTransitionsEnabled sends the option as an update',
+      () async {
+        await controller.setSymbolPlacementTransitionsEnabled(false);
+
+        final calls = platform.callsFor('updateMapOptions');
+        expect(calls.length, 1);
+        expect(calls.first.positionalArgs.first, {
+          'symbolPlacementTransitionsEnabled': false,
+        });
+      },
+    );
+  });
+
   group('Camera delegation', () {
     test('animateCamera delegates to platform', () async {
       final update = CameraUpdate.newLatLng(const LatLng(10, 20));

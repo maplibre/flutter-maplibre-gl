@@ -64,6 +64,12 @@ class MapLibreMap extends Camera {
 
   dynamic get painter => jsObject.painter;
 
+  /// How long symbols fade as they are placed, in milliseconds. 0 places
+  /// them on every frame without fading.
+  num get placementFadeDuration => jsObject.placementFadeDuration.toDartDouble;
+  set placementFadeDuration(num value) =>
+      jsObject.placementFadeDuration = value.toJS;
+
   ///  The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
   ///  Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
   ScrollZoomHandler get scrollZoom =>
