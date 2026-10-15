@@ -1452,8 +1452,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 ))
                 return
             }
+            // Without a style there is no layer to look up, and null would read
+            // as "no such layer", so report it as Android does.
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
             // Documented contract: null tells the caller there is no such layer.
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            guard let layer = style.layer(withIdentifier: layerId) else {
                 result(nil)
                 return
             }
