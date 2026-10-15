@@ -6,8 +6,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## Unreleased
 
 ### Fixed
-* **iOS**: `initialCameraPosition` is applied in full. The camera was set while the view had no size yet, which MapLibre dropped, so a map could open at zoom 0 with the initial bearing lost, and a style change reset the tilt to its initial value. The initial camera now waits for the view to be laid out, is in place before `onStyleLoadedCallback`, and never overrides a camera move the app makes (#1072).
-* **iOS**: `CameraUpdate.newLatLngZoom` lands on the requested zoom, and `CameraUpdate.newLatLng` keeps the current zoom. Both kept the altitude of the old latitude, so moving to another latitude changed the zoom (zoom 6 at latitude -15 came out as 5.95) (#1072).
+* **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
+* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
