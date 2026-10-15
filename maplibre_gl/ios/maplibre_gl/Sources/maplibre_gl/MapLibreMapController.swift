@@ -1056,6 +1056,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     details: nil
                 )
             }
+            // A Dart bool arrives as an NSNumber too; reject it like Android.
+            func lightNumber(_ value: Any) -> NSNumber? {
+                guard let number = value as? NSNumber,
+                      CFGetTypeID(number) != CFBooleanGetTypeID()
+                else { return nil }
+                return number
+            }
             let anchorValue = lightProperties["anchor"]
             let anchor = anchorValue as? String
             if anchorValue != nil, anchor == nil {
@@ -1066,7 +1073,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             var position: [Double]?
             if let positionValue = positionValue {
                 let elements = positionValue as? [Any] ?? []
-                let numbers = elements.compactMap { $0 as? NSNumber }
+                let numbers = elements.compactMap(lightNumber)
                 guard elements.count == 3, numbers.count == 3 else {
                     result(invalidLight("position", "three numbers, [radial, azimuthal, polar]"))
                     return
@@ -1080,7 +1087,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             let intensityValue = lightProperties["intensity"]
-            let intensity = (intensityValue as? NSNumber)?.doubleValue
+            let intensity = intensityValue.flatMap(lightNumber)?.doubleValue
             if intensityValue != nil, intensity == nil {
                 result(invalidLight("intensity", "a number"))
                 return
@@ -1162,17 +1169,40 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "style#addImage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let name = arguments["name"] as? String else { return }
-            // guard let length = arguments["length"] as? NSNumber else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let sdf = arguments["sdf"] as? Bool else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { return }
+            // Every exit replies: a channel call that never answers leaves the
+            // Dart future pending for good, with nothing to catch.
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let name = arguments["name"] as? String,
+                  let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+                  let sdf = arguments["sdf"] as? Bool
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "addImage requires a String 'name', image 'bytes' and a Bool 'sdf'.",
+                    details: nil
+                ))
+                return
+            }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+                result(FlutterError(
+                    code: "INVALID_IMAGE",
+                    message: "Failed to decode image bytes.",
+                    details: nil
+                ))
+                return
+            }
             if sdf {
-                mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
+                style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
-                mapView.style?.setImage(image, forName: name)
+                style.setImage(image, forName: name)
             }
             result(nil)
 

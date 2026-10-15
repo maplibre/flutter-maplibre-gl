@@ -1946,8 +1946,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Set [sdf] to true if the image you add is an SDF image.
   /// Returns after the image has successfully been added to the style.
   /// An image already added under [name] is replaced.
-  /// On Android and web, [bytes] that cannot be decoded as an image throw a
-  /// [PlatformException] with code `INVALID_IMAGE`.
+  /// [bytes] that cannot be decoded as an image throw a [PlatformException]
+  /// with code `INVALID_IMAGE`.
   /// Note: This can only be called after OnStyleLoadedCallback has been invoked and any added images will have to be re-added if a new style is loaded.
   ///
   /// Example: Adding an asset image and using it in a new symbol:
