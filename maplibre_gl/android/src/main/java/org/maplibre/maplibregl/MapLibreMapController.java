@@ -738,35 +738,27 @@ final class MapLibreMapController
     json.addProperty("type", type);
     String sourceId = null;
     String sourceLayer = null;
-    Expression filter = null;
     if (layer instanceof SymbolLayer) {
       sourceId = ((SymbolLayer) layer).getSourceId();
       sourceLayer = ((SymbolLayer) layer).getSourceLayer();
-      filter = ((SymbolLayer) layer).getFilter();
     } else if (layer instanceof CircleLayer) {
       sourceId = ((CircleLayer) layer).getSourceId();
       sourceLayer = ((CircleLayer) layer).getSourceLayer();
-      filter = ((CircleLayer) layer).getFilter();
     } else if (layer instanceof LineLayer) {
       sourceId = ((LineLayer) layer).getSourceId();
       sourceLayer = ((LineLayer) layer).getSourceLayer();
-      filter = ((LineLayer) layer).getFilter();
     } else if (layer instanceof FillLayer) {
       sourceId = ((FillLayer) layer).getSourceId();
       sourceLayer = ((FillLayer) layer).getSourceLayer();
-      filter = ((FillLayer) layer).getFilter();
     } else if (layer instanceof FillExtrusionLayer) {
       sourceId = ((FillExtrusionLayer) layer).getSourceId();
       sourceLayer = ((FillExtrusionLayer) layer).getSourceLayer();
-      filter = ((FillExtrusionLayer) layer).getFilter();
     } else if (layer instanceof HeatmapLayer) {
       sourceId = ((HeatmapLayer) layer).getSourceId();
       sourceLayer = ((HeatmapLayer) layer).getSourceLayer();
-      filter = ((HeatmapLayer) layer).getFilter();
     } else if (layer instanceof ColorReliefLayer) {
       sourceId = ((ColorReliefLayer) layer).getSourceId();
       sourceLayer = ((ColorReliefLayer) layer).getSourceLayer();
-      filter = ((ColorReliefLayer) layer).getFilter();
     } else if (layer instanceof RasterLayer) {
       sourceId = ((RasterLayer) layer).getSourceId();
     } else if (layer instanceof HillshadeLayer) {
@@ -786,11 +778,14 @@ final class MapLibreMapController
     if (layer.getMaxZoom() < 24) {
       json.addProperty("maxzoom", layer.getMaxZoom());
     }
-    if (filter != null) {
-      final JsonElement filterJson = LayerPropertyConverter.toStyleJson(filter);
-      if (filterJson != null) {
-        json.add("filter", filterJson);
+    // Read like getLayerFilter, so numbers keep their exact value.
+    try {
+      final JsonElement filter = getRawFilter(layer);
+      if (filter != null) {
+        json.add("filter", filter);
       }
+    } catch (ReflectiveOperationException e) {
+      // Leave the filter out rather than fail the whole read.
     }
     final JsonObject paint = new JsonObject();
     final JsonObject layout = new JsonObject();
@@ -1469,12 +1464,20 @@ final class MapLibreMapController
 
   /**
    * The filter of {@code layer} as the engine holds it, or null without one. Layer.getFilter
-   * rounds numbers to floats, so this calls the native getter it wraps.
+   * rounds numbers to floats, so this calls the native getter it wraps. The always-true filter
+   * that style#setFilter sets to remove a filter also counts as none.
    */
   private static JsonElement getRawFilter(Layer layer) throws ReflectiveOperationException {
     Method nativeGetFilter = Layer.class.getDeclaredMethod("nativeGetFilter");
     nativeGetFilter.setAccessible(true);
-    return (JsonElement) nativeGetFilter.invoke(layer);
+    JsonElement filter = (JsonElement) nativeGetFilter.invoke(layer);
+    boolean unfiltered =
+        filter == null
+            || filter.isJsonNull()
+            || (filter.isJsonPrimitive()
+                && filter.getAsJsonPrimitive().isBoolean()
+                && filter.getAsBoolean());
+    return unfiltered ? null : filter;
   }
 
   private boolean addRasterLayer(
@@ -3290,15 +3293,7 @@ final class MapLibreMapController
             result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
             break;
           }
-          // An unfiltered layer has no filter or the always-true one that
-          // style#setFilter sets when a filter is removed.
-          boolean unfiltered =
-              filter == null
-                  || filter.isJsonNull()
-                  || (filter.isJsonPrimitive()
-                      && filter.getAsJsonPrimitive().isBoolean()
-                      && filter.getAsBoolean());
-          reply.put("filter", unfiltered ? null : new Gson().toJson(filter));
+          reply.put("filter", filter == null ? null : new Gson().toJson(filter));
           result.success(reply);
           break;
         }
