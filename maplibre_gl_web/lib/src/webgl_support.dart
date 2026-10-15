@@ -32,11 +32,12 @@ bool _probeWebGlContext({required bool version2}) {
 /// map is fine or WebGL is not the reason.
 ///
 /// maplibre-gl-js 6 draws with WebGL2 and dropped the WebGL1 fallback that 5
-/// had. It also stopped throwing when it cannot get a context: it fires an
+/// had. 6.0 to 6.6 do not throw when they cannot get a context: they fire an
 /// `error` while the map is still inside its constructor, before this package
-/// could subscribe to anything, and then leaves the map without a renderer. So
-/// the renderer is read back afterwards instead, and [probe] tells the two
-/// causes apart, since only one of them has a way out.
+/// could subscribe to anything, and then leave the map without a renderer, so
+/// the renderer is read back afterwards. 6.7 and later throw instead, and then
+/// [hasRenderer] is false. Either way [probe] tells the two causes apart, since
+/// only one of them has a way out.
 String? webGlDiagnostic({
   required bool hasRenderer,
   required bool Function({required bool version2}) probe,

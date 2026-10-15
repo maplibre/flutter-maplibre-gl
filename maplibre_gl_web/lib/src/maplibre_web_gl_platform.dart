@@ -120,9 +120,10 @@ class MapLibreMapController extends MapLibrePlatform
 
     // Reported here rather than left to the caller: this future is not awaited
     // anywhere, so an error out of it would only ever be an unhandled one, and
-    // the map's own construction can throw. maplibre-gl-js 5 does exactly that
-    // when it cannot get any WebGL context, and it is the build the docs send a
-    // WebGL1 only browser to.
+    // the map's own construction can throw. maplibre-gl-js 6.7 and later throw
+    // a GPUInitializationError when they cannot get a WebGL2 context, and 5,
+    // the build the docs send a WebGL1 only browser to, throws when it cannot
+    // get any WebGL context.
     try {
       _map = MapLibreMap(
         MapOptions(
@@ -140,22 +141,29 @@ class MapLibreMapController extends MapLibrePlatform
         ),
       );
     } catch (error, stack) {
+      // Says whether WebGL is why, and what to do on a WebGL1 only browser.
+      _reportRendererDiagnostic(
+        () => webGlDiagnostic(
+          hasRenderer: false,
+          probe: canCreateWebGlContext,
+        ),
+      );
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
           stack: stack,
           library: 'maplibre_gl_web',
           context: ErrorDescription(
-            'while creating the map. A browser that provides no WebGL context '
-            'at all fails here, and so does a library build that cannot read '
-            'the style. The map stays empty',
+            'while creating the map. A browser without the WebGL context the '
+            'library needs fails here, and so does a library build that cannot '
+            'read the style. The map stays empty',
           ),
         ),
       );
       rethrow;
     }
     _mapCreated = true;
-    _reportMissingRenderer();
+    _reportRendererDiagnostic(() => mapRendererDiagnostic(_map));
     _mapSubscriptions.add(_map.on('style.load', _onStyleLoaded));
     _mapSubscriptions.add(_map.on('click', _onMapClick));
     // long click not available in web, so it is mapped to double click
@@ -188,19 +196,21 @@ class MapLibreMapController extends MapLibrePlatform
     Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
   }
 
-  /// Says why the map will stay blank when it came up without a renderer.
+  /// Says why the map will stay blank when WebGL is the reason.
   ///
-  /// Since maplibre-gl-js 6 that is what a browser without WebGL2 gets, and the
-  /// library only fires an `error` from inside its constructor, too early for
-  /// [MapLibreMap.on] to catch, so without this the map is just empty.
+  /// maplibre-gl-js 6.7 and later throw from their constructor without WebGL2.
+  /// 6.0 to 6.6, which an app can still load through [MapLibreJsSource], only
+  /// fire an `error` from inside the constructor, too early for
+  /// [MapLibreMap.on] to catch, and leave the map without a renderer, so
+  /// without this the map is just empty.
   ///
   /// Each distinct cause is reported once per session, through
   /// [FlutterError.reportError] rather than the silenceable [debugPrint]. Nothing
   /// here may throw: this runs in a future nobody awaits, so an error would turn a
   /// blank map into one that never finishes being created.
-  void _reportMissingRenderer() {
+  void _reportRendererDiagnostic(String? Function() diagnose) {
     try {
-      final diagnostic = mapRendererDiagnostic(_map);
+      final diagnostic = diagnose();
       if (diagnostic == null) return;
       if (!_reportedRendererDiagnostics.add(diagnostic)) return;
       FlutterError.reportError(
