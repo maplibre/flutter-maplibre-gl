@@ -8,6 +8,7 @@ protocol MapLibreMapOptionsSink {
     func setRotateGesturesEnabled(rotateGesturesEnabled: Bool)
     func setScrollGesturesEnabled(scrollGesturesEnabled: Bool)
     func setTiltGesturesEnabled(tiltGesturesEnabled: Bool)
+    func setHapticFeedbackEnabled(hapticFeedbackEnabled: Bool)
     func setTrackCameraPosition(trackCameraPosition: Bool)
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool)
     func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool)

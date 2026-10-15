@@ -135,4 +135,31 @@ void main() {
       expect(update, isEmpty);
     });
   });
+
+  group('MapLibreMap.hapticFeedbackEnabled', () {
+    test('defaults to true and is sent to the platform', () {
+      final options = MapLibreMapOptions.fromWidget(MapLibreMap());
+
+      expect(options.toMap()['hapticFeedbackEnabled'], isTrue);
+    });
+
+    test('false is sent to the platform', () {
+      final options = MapLibreMapOptions.fromWidget(
+        MapLibreMap(hapticFeedbackEnabled: false),
+      );
+
+      expect(options.toMap()['hapticFeedbackEnabled'], isFalse);
+    });
+
+    test('updatesMap reports a change and nothing else', () {
+      final before = MapLibreMapOptions.fromWidget(MapLibreMap());
+      final after = MapLibreMapOptions.fromWidget(
+        MapLibreMap(hapticFeedbackEnabled: false),
+      );
+
+      final diff = before.updatesMap(after);
+
+      expect(diff, {'hapticFeedbackEnabled': false});
+    });
+  });
 }

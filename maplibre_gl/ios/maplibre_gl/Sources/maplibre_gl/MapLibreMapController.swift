@@ -3061,6 +3061,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.allowsTilting = tiltGesturesEnabled
     }
 
+    func setHapticFeedbackEnabled(hapticFeedbackEnabled: Bool) {
+        // The SDK plays a light impact when a rotate gesture crosses due north.
+        mapView.isHapticFeedbackEnabled = hapticFeedbackEnabled
+    }
+
     func setTrackCameraPosition(trackCameraPosition: Bool) {
         self.trackCameraPosition = trackCameraPosition
     }

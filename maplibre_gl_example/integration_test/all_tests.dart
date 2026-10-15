@@ -16,6 +16,7 @@ import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
 import 'camera_test.dart' as camera;
 import 'geojson_query_test.dart' as geojson_query;
+import 'haptic_feedback_test.dart' as haptic_feedback;
 import 'pan_inertia_test.dart' as pan_inertia;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
@@ -26,6 +27,7 @@ void main() {
   annotations.main();
   camera.main();
   geojson_query.main();
+  haptic_feedback.main();
   pan_inertia.main();
   style_layers.main();
   style_misc.main();
