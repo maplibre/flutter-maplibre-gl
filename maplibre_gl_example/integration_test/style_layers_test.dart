@@ -657,7 +657,7 @@ void main() {
         const LineLayerProperties(lineWidth: 2),
       ),
       'setLayerProperties unknown',
-      code: 'LAYER_NOT_FOUND_ERROR',
+      code: 'layerNotFound',
     );
   });
 }
