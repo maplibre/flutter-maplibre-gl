@@ -104,19 +104,11 @@ void main() {
         unknownId--;
       }
 
-      await expectLater(
-        pumpUntil(
-          tester,
-          updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
-          'updateOfflineRegionMetadata with an unknown id',
-        ),
-        throwsA(
-          isA<PlatformException>().having(
-            (e) => e.code,
-            'code',
-            'UpdateMetadataError',
-          ),
-        ),
+      await expectPlatformError(
+        tester,
+        updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
+        'updateOfflineRegionMetadata with an unknown id',
+        code: 'UpdateMetadataError',
       );
     });
   });
