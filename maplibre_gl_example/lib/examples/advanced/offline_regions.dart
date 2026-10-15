@@ -202,6 +202,12 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
               style: ExampleButtonStyle.outlined,
             ),
             ExampleButton(
+              label: 'Limit ambient cache',
+              icon: Icons.storage_outlined,
+              onPressed: _handleLimitAmbientCache,
+              style: ExampleButtonStyle.outlined,
+            ),
+            ExampleButton(
               label: 'Reset database',
               icon: Icons.delete_forever_outlined,
               onPressed: _handleResetDatabase,
@@ -510,6 +516,64 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Clear ambient cache failed: $e')));
+    }
+  }
+
+  Future<void> _handleLimitAmbientCache() async {
+    final controller = TextEditingController(text: '50');
+    final megabytes = await showDialog<int>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Limit ambient cache'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Caps the tiles the map keeps from ordinary browsing. '
+                  'Offline regions are not counted and are never evicted. '
+                  'The SDK default is 50 MB; 0 disables the cache.\n\n'
+                  'If the cache is already larger, it is trimmed now. The SDK '
+                  'recommends setting this before the first map is shown.',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Limit',
+                    suffixText: 'MB',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed:
+                    () => Navigator.of(ctx).pop(int.tryParse(controller.text)),
+                child: const Text('Apply'),
+              ),
+            ],
+          ),
+    );
+    controller.dispose();
+    if (megabytes == null || megabytes < 0) return;
+
+    try {
+      await setMaximumAmbientCacheSize(megabytes * 1024 * 1024);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ambient cache limited to $megabytes MB')),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Limit ambient cache failed: $e')));
     }
   }
 

@@ -22,6 +22,7 @@
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
 * **iOS**: `MapLibreMap.hapticFeedbackEnabled` turns off the light vibration played when the user rotates the map back to north (#1036).
+* **Android, iOS**: `setMaximumAmbientCacheSize(bytes)` sets the size limit of the ambient tile cache; `0` turns it off (#1037).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
