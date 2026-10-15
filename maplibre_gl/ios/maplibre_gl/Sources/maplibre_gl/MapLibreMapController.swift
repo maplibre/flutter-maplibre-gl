@@ -1,5 +1,8 @@
 import Flutter
 import MapLibre
+#if canImport(maplibre_gl_objc)
+    import maplibre_gl_objc
+#endif
 
 class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, MapLibreMapOptionsSink,
     UIGestureRecognizerDelegate
@@ -1331,10 +1334,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let filter = arguments["filter"] as? String else { return }
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let filter = arguments["filter"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId' or 'filter'.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
                 result(MethodCallError.layerNotFound(
                    layerId: layerId
                 ).flutterError)
@@ -1401,6 +1418,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
                 // The SDK returns -1 for a cluster it cannot expand, whereas
                 // Android returns 0 for the same case. Report the Android value
@@ -1420,6 +1441,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 result(featuresReply(
                     source.children(of: clusterFeature(clusterId)),
                     methodName: "getClusterChildren"
@@ -1440,6 +1465,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let leaves = source.leaves(
                     of: clusterFeature(clusterId),
                     offset: UInt(max(0, offset)),
@@ -1550,19 +1579,37 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
 
         case "style#getFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId'.",
+                        details: nil
+                    )
+                )
+                return
+            }
 
-            guard let style = mapView.style else { return }
-            guard let layer = style.layer(withIdentifier: layerId) else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
 
-            var currentLayerFilter : String = ""
+            // A layer without a filter answers null, not an empty string.
+            var currentLayerFilter: NSObject = NSNull()
             if let vectorLayer = layer as? MLNVectorStyleLayer {
                 if let layerFilter = vectorLayer.predicate {
 
                     let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
-                        currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
+                       let json = String(data: data, encoding: String.Encoding.utf8) {
+                        currentLayerFilter = json as NSObject
                     }
                 }
             } else {
@@ -1573,7 +1620,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             var reply = [String: NSObject]()
-            reply["filter"] = currentLayerFilter as NSObject
+            reply["filter"] = currentLayerFilter
             result(reply)
 
         case "style#setStyle":
@@ -2221,16 +2268,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 with: filter.data(using: .utf8)!,
                 options: .fragmentsAllowed
             )
-            if filter is NSNull {
-                return .success(())
-            }
-            let predicate = NSPredicate(mglJSONObject: filter)
-            if let layer = layer as? MLNVectorStyleLayer {
-                layer.predicate = predicate
-            } else {
+            guard let layer = layer as? MLNVectorStyleLayer else {
                 return .failure(MethodCallError.invalidLayerType(
                     details: "Layer '\(layer.identifier)' does not support filtering."
                 ))
+            }
+            // MapLibre raises an Objective-C exception for an invalid filter,
+            // which would crash the app if it reached Swift.
+            let exception = MapLibreGLCatchException {
+                // A null filter removes the current one.
+                layer.predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
+            }
+            if let exception = exception {
+                let reason = (exception.reason ?? "rejected by the map")
+                    .replacingOccurrences(of: "Invalid filter value: ", with: "")
+                return .failure(MethodCallError.invalidFilter(reason: reason))
             }
             return .success(())
         } catch {
@@ -2555,6 +2607,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             ))
         }
         return .success(shapeSource)
+    }
+
+    /// Whether the source currently holds a cluster with this id.
+    ///
+    /// For an id it does not hold, MapLibre Native throws a C++ exception from
+    /// the cluster calls. Swift cannot catch it, so the app aborts. Ids go stale
+    /// as the data or the viewport changes, so an app can pass one without doing
+    /// anything wrong. Looking the id up first lets the cluster calls reply
+    /// CLUSTER_NOT_FOUND instead. Only loaded tiles are searched, which holds
+    /// for any id the app just read off a feature on screen.
+    private func hasCluster(_ source: MLNShapeSource, clusterId: Int) -> Bool {
+        let predicate = NSPredicate(format: "cluster_id == %@", NSNumber(value: clusterId))
+        return !source.features(matching: predicate).isEmpty
+    }
+
+    private func clusterNotFoundError(sourceId: String, clusterId: Int) -> FlutterError {
+        return FlutterError(
+            code: "CLUSTER_NOT_FOUND",
+            message: "Cluster '\(clusterId)' is not one of the current clusters of source "
+                + "'\(sourceId)'. Cluster ids are reassigned as the data or the viewport "
+                + "changes, so read the id from a freshly queried feature.",
+            details: nil
+        )
     }
 
     /// Builds the argument the SDK's cluster methods take.

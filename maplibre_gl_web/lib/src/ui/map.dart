@@ -478,8 +478,17 @@ class MapLibreMap extends Camera {
   ///  });
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
-  List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
-      jsObject.querySourceFeatures(sourceId, parameters).toDart;
+  List<Feature> querySourceFeatures(
+    String sourceId, [
+    Map<String, dynamic>? parameters,
+  ]) {
+    // The parameters have to cross into JS as a JS object: a Dart map reaches
+    // maplibre-gl-js as an opaque value, so its filter was silently dropped.
+    final jsParameters = parameters != null ? utils.jsify(parameters) : null;
+    return (jsObject.querySourceFeatures(sourceId, jsParameters).toDart as List)
+        .map((dynamic f) => Feature.fromJsObject(f))
+        .toList();
+  }
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
@@ -919,15 +928,20 @@ class MapLibreMap extends Camera {
     String layerId,
     dynamic filter, [
     StyleSetterOptions? options,
-  ]) => MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
+  ]) => MapLibreMap.fromJsObject(
+    // jsify turns a Dart list into a JS array, nested lists included, and
+    // keeps null, which removes the filter.
+    jsObject.setFilter(layerId, (filter as Object?).jsify()),
+  );
 
   ///  Returns the filter applied to the specified style layer.
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  List<dynamic> getFilter(String layerId) {
-    final filter = jsObject.getFilter(layerId);
-    return filter != null ? filter.toDart : [];
+  dynamic getFilter(String layerId) {
+    // dartify converts the nested expression arrays too, which toDart does
+    // not. A filter can also be a plain boolean, so the result stays dynamic.
+    return jsObject.getFilter(layerId).dartify();
   }
 
   ///  Sets the value of a paint property in the specified style layer.
