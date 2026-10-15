@@ -78,4 +78,64 @@ void main() {
     expect(tracker.move(p, at(p)), isNull);
     expect(tracker.up(p, at(p)), isNull);
   });
+
+  test('a release outside the map ends the drag once', () {
+    final tracker = FeatureDragTracker()..down('a', down);
+    const away = Point<double>(120, 100);
+    tracker.move(away, at(away));
+    const edge = Point<double>(140, 100);
+    tracker.move(edge, at(edge));
+
+    // No mouseup reaches the map: the window's ends the press.
+    final end = tracker.upOutside()!;
+    expect(end['eventType'], 'end');
+    expect(end['id'], 'a');
+    expect(end['point'], edge);
+    expect(end['origin'], at(away));
+    expect(end['current'], at(edge));
+    expect(end['delta'], const LatLng(0, 0));
+    expect(tracker.isPressed, isFalse);
+    expect(tracker.takeClickAfterDrag(), isFalse);
+
+    // Moves back over the map with the button up drag nothing.
+    expect(tracker.move(down, at(down)), isNull);
+    expect(tracker.upOutside(), isNull);
+    expect(tracker.up(down, at(down)), isNull);
+  });
+
+  test('a release outside the map before the threshold reports nothing', () {
+    final tracker = FeatureDragTracker()..down('a', down);
+    expect(tracker.upOutside(), isNull);
+    expect(tracker.isPressed, isFalse);
+    const past = Point<double>(120, 100);
+    expect(tracker.move(past, at(past)), isNull);
+  });
+
+  test('a new press after a lost release starts clean', () {
+    final tracker = FeatureDragTracker()..down('a', down);
+    const away = Point<double>(120, 100);
+    tracker.move(away, at(away));
+    // The release was lost: the next press ends the drag it left behind.
+    final end = tracker.pointerDown()!;
+    expect(end['eventType'], 'end');
+    expect(end['id'], 'a');
+    expect(tracker.isPressed, isFalse);
+
+    // A press on the map, not on a draggable feature: moves report nothing.
+    const later = Point<double>(200, 100);
+    expect(tracker.move(later, at(later)), isNull);
+    expect(tracker.pointerDown(), isNull);
+
+    // A press on another feature is a click until it passes the threshold,
+    // and its drag starts with its own origin and a zero delta.
+    tracker.down('b', later);
+    const nudge = Point<double>(201, 100);
+    expect(tracker.move(nudge, at(nudge)), isNull);
+    const past = Point<double>(205, 100);
+    final start = tracker.move(past, at(past))!;
+    expect(start['eventType'], 'start');
+    expect(start['id'], 'b');
+    expect(start['origin'], at(past));
+    expect(start['delta'], const LatLng(0, 0));
+  });
 }

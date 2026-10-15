@@ -101,6 +101,8 @@ void main() {
     expect(types, contains(DragEventType.drag));
     expect(types.last, DragEventType.end);
     expect(types.where((t) => t == DragEventType.start), hasLength(1));
+    // The release on the map ends the drag; the window does not end it again.
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
     expect(map.featureTaps, isEmpty);
     expect(map.clicks, isEmpty);
 
@@ -141,6 +143,47 @@ void main() {
     expect(map.drags, isEmpty);
     expect(map.featureTaps, hasLength(1));
   });
+
+  testWidgets('a release outside the map ends the drag', (tester) async {
+    if (!kIsWeb) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final mouse = _Mouse(map.canvas);
+    var at = map.circleOnCanvas;
+    mouse.down(at);
+    for (var i = 0; i < 5; i++) {
+      at += const Point<double>(2, 0);
+      mouse.move(at);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    // Released off the map: only the window sees the mouseup.
+    mouse.upOnWindow();
+    await _settle(tester);
+
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types.last, DragEventType.end);
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    expect(map.drags.last.delta, const LatLng(0, 0));
+    map.drags.clear();
+
+    // Back over the map with the button up: the feature stays put.
+    for (var i = 0; i < 5; i++) {
+      at += const Point<double>(2, 0);
+      mouse.hover(at);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await _settle(tester);
+    expect(map.drags, isEmpty);
+
+    // And the next press on it is a click again.
+    mouse.down(map.circleOnCanvas);
+    mouse.up(map.circleOnCanvas);
+    mouse.click(map.circleOnCanvas);
+    await _settle(tester);
+    expect(map.drags, isEmpty);
+    expect(map.featureTaps, hasLength(1));
+  });
 }
 
 /// Lets the drag and tap callbacks reach Dart.
@@ -161,6 +204,16 @@ class _Mouse {
   void up(Point<double> at) => _send('mouseup', at, buttons: 0);
 
   void click(Point<double> at) => _send('click', at, buttons: 0);
+
+  void hover(Point<double> at) => _send('mousemove', at, buttons: 0);
+
+  /// A release outside the map, which only the window sees.
+  void upOnWindow() => web.window.dispatchEvent(
+    web.MouseEvent(
+      'mouseup',
+      web.MouseEventInit(bubbles: true, cancelable: true, button: 0),
+    ),
+  );
 
   void _send(String type, Point<double> at, {required int buttons}) {
     final rect = canvas.getBoundingClientRect();

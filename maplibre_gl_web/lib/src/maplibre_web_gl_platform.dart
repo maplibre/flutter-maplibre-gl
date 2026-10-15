@@ -13,6 +13,11 @@ class MapLibreMapController extends MapLibrePlatform
   bool _mapCreated = false;
   final _featureDrag = FeatureDragTracker();
   bool _dragEnabled = true;
+
+  /// Listens on the window for the release of a press on a draggable feature,
+  /// while one is in progress: released outside the map, it never reaches the
+  /// map's own `mouseup`.
+  JSFunction? _windowMouseUp;
   bool _featureTapsTriggersMapClick = false;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
@@ -75,6 +80,7 @@ class MapLibreMapController extends MapLibrePlatform
       sub.unsubscribe();
     }
     _mapSubscriptions.clear();
+    _stopListeningForReleaseOutside();
     if (_mapCreated) {
       _map.clearMissingStyleImageHandler();
       _map.remove();
@@ -167,9 +173,9 @@ class MapLibreMapController extends MapLibrePlatform
     );
     if (missingStyleImages != null) _mapSubscriptions.add(missingStyleImages);
     if (_dragEnabled) {
-      _mapSubscriptions.add(
-        _map.on('mousedown', (_) => _featureDrag.pointerDown()),
-      );
+      // Registered before any layer's mousedown, so it runs first and a press
+      // on a draggable feature starts after the leftovers are cleared.
+      _mapSubscriptions.add(_map.on('mousedown', (_) => _endPress()));
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
     }
@@ -296,14 +302,45 @@ class MapLibreMapController extends MapLibrePlatform
       final id = e.features.first.id;
       // Nothing is reported yet: the press is a click until the pointer moves
       // past the drag threshold, as on Android and iOS.
-      if (id != null) _featureDrag.down(id, _eventPoint(e));
+      if (id != null) {
+        _featureDrag.down(id, _eventPoint(e));
+        _listenForReleaseOutside();
+      }
     }
   }
 
   void _onMouseUp(Event e) {
+    _stopListeningForReleaseOutside();
     final payload = _featureDrag.up(_eventPoint(e), _eventLatLng(e));
     if (payload != null) onFeatureDraggedPlatform(payload);
     _map.getCanvas().style.cursor = '';
+  }
+
+  /// Ends a press whose release did not reach the map: released outside it,
+  /// or lost altogether and found by the next press.
+  void _endPress() {
+    _stopListeningForReleaseOutside();
+    if (!_featureDrag.isPressed) {
+      _featureDrag.pointerDown();
+      return;
+    }
+    final payload = _featureDrag.upOutside();
+    _map.getCanvas().style.cursor = '';
+    if (payload != null) onFeatureDraggedPlatform(payload);
+  }
+
+  void _listenForReleaseOutside() {
+    if (_windowMouseUp != null) return;
+    final listener = ((web.Event _) => _endPress()).toJS;
+    _windowMouseUp = listener;
+    web.window.addEventListener('mouseup', listener);
+  }
+
+  void _stopListeningForReleaseOutside() {
+    final listener = _windowMouseUp;
+    if (listener == null) return;
+    _windowMouseUp = null;
+    web.window.removeEventListener('mouseup', listener);
   }
 
   void _onMouseMove(Event e) {

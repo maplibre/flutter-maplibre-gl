@@ -18,7 +18,8 @@ const double featureDragThreshold = 3;
 /// reports nothing. Once the pointer moves [threshold] or more away, [move]
 /// returns `start`, with origin and current at that point and a zero delta;
 /// later moves return `drag` with the movement since the previous event, and
-/// [up] returns `end`.
+/// [up] returns `end`. A press whose release never reaches the map ends with
+/// [upOutside], or at the latest with the next [pointerDown].
 class FeatureDragTracker {
   FeatureDragTracker({this.threshold = featureDragThreshold});
 
@@ -28,6 +29,7 @@ class FeatureDragTracker {
   Point<double>? _downPoint;
   LatLng? _origin;
   LatLng? _previous;
+  Point<double>? _previousPoint;
   bool _clickAfterDrag = false;
 
   /// Whether a press on a draggable feature is in progress, dragging or not.
@@ -65,6 +67,21 @@ class FeatureDragTracker {
     return payload;
   }
 
+  /// The pointer went up outside the map, where it reports no position. Ends
+  /// the press and returns the `end` payload when it was a drag, at the last
+  /// position reported, with a zero delta. No click follows a release outside
+  /// the map, so none is dropped.
+  Map<String, dynamic>? upOutside() {
+    final point = _previousPoint;
+    final latLng = _previous;
+    final payload =
+        isDragging && point != null && latLng != null
+            ? _payload(point, latLng, 'end')
+            : null;
+    _reset();
+    return payload;
+  }
+
   /// Whether a click that follows [up] belongs to the drag that just ended
   /// and should be dropped, as Android and iOS report no tap after a drag.
   /// Reading it clears it.
@@ -74,8 +91,10 @@ class FeatureDragTracker {
     return value;
   }
 
-  /// A new press anywhere on the map: a pending click after a drag is stale.
-  void pointerDown() => _clickAfterDrag = false;
+  /// A new press anywhere on the map: a pending click after a drag is stale,
+  /// and so is a press whose release was lost. Returns the `end` payload of
+  /// that press when it was a drag, as [upOutside] does.
+  Map<String, dynamic>? pointerDown() => upOutside();
 
   Map<String, dynamic> _payload(
     Point<double> point,
@@ -91,6 +110,7 @@ class FeatureDragTracker {
       'eventType': eventType,
     };
     _previous = current;
+    _previousPoint = point;
     return payload;
   }
 
@@ -99,6 +119,7 @@ class FeatureDragTracker {
     _downPoint = null;
     _origin = null;
     _previous = null;
+    _previousPoint = null;
     _clickAfterDrag = false;
   }
 }
