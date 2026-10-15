@@ -68,8 +68,12 @@ android {
         // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
         implementation 'org.maplibre.gl:android-sdk-opengl:13.7.1'
         implementation 'com.squareup.okhttp3:okhttp:5.4.0'
-        implementation 'com.google.android.gms:play-services-base:18.10.1'
-        implementation 'com.google.android.gms:play-services-location:21.4.0'
+        // Play Services location is optional: compiled against, not shipped, so apps without
+        // Google Play Services (F-Droid and other FOSS builds) stay free of it (#1014). An app
+        // that adds play-services-location gets the fused provider for high accuracy; without
+        // it, GmsLocationSupport falls back to MapLibreGPSLocationEngine.
+        compileOnly 'com.google.android.gms:play-services-base:18.10.1'
+        compileOnly 'com.google.android.gms:play-services-location:21.4.0'
     }
 }
 
