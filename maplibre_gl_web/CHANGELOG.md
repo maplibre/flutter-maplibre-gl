@@ -11,6 +11,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects; drop any filtering or conversion you did on the result (#1064).
 * `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load; a load whose style is already gone no longer reports an error (#992).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).

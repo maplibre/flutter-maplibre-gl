@@ -31,6 +31,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load; a load whose style is already gone no longer reports an error (#992).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
