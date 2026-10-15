@@ -21,6 +21,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var previousDragCoordinate: CLLocationCoordinate2D?
     private var originDragCoordinate: CLLocationCoordinate2D?
     private var dragFeature: MLNFeature?
+    /// The pan recognizer this controller adds for feature drags.
+    private var featureDragPan: UIPanGestureRecognizer?
+    /// Where the first finger of the current feature drag pan came down.
+    private var featureDragTouchDown: CGPoint?
 
     /// `initialCameraPosition` from the creation params, kept until the view has
     /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
@@ -223,6 +227,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             )
             pan.delegate = self
             mapView.addGestureRecognizer(pan)
+            featureDragPan = pan
         }
 
         if(!longPressRecognizerAdded) {
@@ -264,6 +269,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         _: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
     ) -> Bool {
+        return true
+    }
+
+    // The pan only begins after the finger has moved, so remember where the
+    // first finger came down to look up the feature there, like Android.
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldReceive touch: UITouch
+    ) -> Bool {
+        if gestureRecognizer === featureDragPan, gestureRecognizer.numberOfTouches == 0 {
+            featureDragTouchDown = touch.location(in: mapView)
+        }
         return true
     }
 
@@ -1997,14 +2014,36 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
+    private func endFeatureDrag(
+        _ point: CGPoint,
+        _ coordinate: CLLocationCoordinate2D
+    ) {
+        mapView.allowsScrolling = scrollingEnabled
+        invokeFeatureDrag(point, coordinate, "end")
+        dragFeature = nil
+        originDragCoordinate = nil
+        previousDragCoordinate = nil
+    }
+
     @IBAction func handleMapPan(sender: UIPanGestureRecognizer) {
         let began = sender.state == UIGestureRecognizer.State.began
-        let end = sender.state == UIGestureRecognizer.State.ended
+        // A drag the system cancels (a call, Control Center, the app leaving)
+        // ends too: otherwise the feature stays grabbed, scrolling stays off,
+        // and the next pan anywhere drags it. Only this controller's own pan:
+        // the map's, which this method also serves, is cancelled on purpose
+        // when a drag turns scrolling off.
+        let interrupted = sender === featureDragPan && [
+            UIGestureRecognizer.State.cancelled,
+            UIGestureRecognizer.State.failed,
+        ].contains(sender.state)
+        let end = sender.state == UIGestureRecognizer.State.ended || interrupted
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
         if dragFeature == nil, began, sender.numberOfTouches == 1 {
-            let result = firstFeatureOnLayers(at: point)
+            // Hit test where the finger came down, like Android: the pan begins
+            // only after the finger has moved, which can miss a small feature.
+            let result = firstFeatureOnLayers(at: featureDragTouchDown ?? point)
             if let feature = result.feature,
             let draggable = feature.attribute(forKey: "draggable") as? Bool,
             draggable {
@@ -2023,13 +2062,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
         }
+        // A second finger ends the drag, like on Android: one end where the
+        // single finger last was, then the map takes the gesture (pinch).
+        // Cancelling the drag pan sends one more call with dragFeature nil,
+        // so no drag or second end follows.
+        if !end, dragFeature != nil, sender.numberOfTouches > 1,
+           let previous = previousDragCoordinate
+        {
+            endFeatureDrag(mapView.convert(previous, toPointTo: mapView), previous)
+            featureDragPan?.isEnabled = false
+            featureDragPan?.isEnabled = true
+            return
+        }
+
         if end, dragFeature != nil {
-            mapView.allowsScrolling = true
-            let eventType = "end"
-            invokeFeatureDrag(point, coordinate, eventType)
-            dragFeature = nil
-            originDragCoordinate = nil
-            previousDragCoordinate = nil
+            endFeatureDrag(point, coordinate)
         }
 
         if !began, !end, dragFeature != nil {
@@ -2991,8 +3038,32 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         scrollingEnabled = scrollGesturesEnabled
     }
 
+    /// Maps the Dart `PanInertia` index onto `decelerationRate`. The SDK glides
+    /// for `rate` seconds over `velocity * rate / 4` points, and skips gestures
+    /// slower than 100 pt/s:
+    /// - none (0): `.immediate` (0), no glide.
+    /// - short (1): half of `.normal`, so about half the time and distance.
+    ///   `.fast` (0.99) is not used: it glides almost exactly like `.normal`.
+    /// - normal (2): `.normal` (0.998), the SDK default.
+    /// The same rate also drives the glide after a pinch or a rotation.
+    func setPanInertia(panInertia: Int) {
+        switch panInertia {
+        case 0:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.immediate.rawValue
+        case 1:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue / 2
+        default:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue
+        }
+    }
+
     func setTiltGesturesEnabled(tiltGesturesEnabled: Bool) {
         mapView.allowsTilting = tiltGesturesEnabled
+    }
+
+    func setHapticFeedbackEnabled(hapticFeedbackEnabled: Bool) {
+        // The SDK plays a light impact when a rotate gesture crosses due north.
+        mapView.isHapticFeedbackEnabled = hapticFeedbackEnabled
     }
 
     func setTrackCameraPosition(trackCameraPosition: Bool) {

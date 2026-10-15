@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:web/web.dart';
 
 import 'package:maplibre_gl_web/src/interop/interop.dart';
@@ -15,9 +17,20 @@ class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
 
   ///  Enables the "drag to pan" interaction.
   ///
+  ///  [linearity], [deceleration] and [maxSpeed] tune the inertia after the
+  ///  drag. Values left null keep the maplibre-gl-js defaults, and calling
+  ///  `enable()` again without them restores those defaults.
+  ///
   ///  @example
   ///  map.dragPan.enable();
-  enable() => jsObject.enable();
+  void enable({num? linearity, num? deceleration, num? maxSpeed}) {
+    final options = <String, Object>{
+      if (linearity != null) 'linearity': linearity,
+      if (deceleration != null) 'deceleration': deceleration,
+      if (maxSpeed != null) 'maxSpeed': maxSpeed,
+    };
+    jsObject.enable(options.jsify());
+  }
 
   ///  Disables the "drag to pan" interaction.
   ///

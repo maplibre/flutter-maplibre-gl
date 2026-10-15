@@ -43,6 +43,9 @@ class Convert {
         if let tiltGesturesEnabled = options["tiltGesturesEnabled"] as? Bool {
             delegate.setTiltGesturesEnabled(tiltGesturesEnabled: tiltGesturesEnabled)
         }
+        if let hapticFeedbackEnabled = options["hapticFeedbackEnabled"] as? Bool {
+            delegate.setHapticFeedbackEnabled(hapticFeedbackEnabled: hapticFeedbackEnabled)
+        }
         if let trackCameraPosition = options["trackCameraPosition"] as? Bool {
             delegate.setTrackCameraPosition(trackCameraPosition: trackCameraPosition)
         }
@@ -51,6 +54,9 @@ class Convert {
         }
         if let doubleClickZoomEnabled = options["doubleClickZoomEnabled"] as? Bool {
             delegate.setDoubleClickZoomEnabled(doubleClickZoomEnabled: doubleClickZoomEnabled)
+        }
+        if let panInertia = options["panInertia"] as? Int {
+            delegate.setPanInertia(panInertia: panInertia)
         }
         if let myLocationEnabled = options["myLocationEnabled"] as? Bool {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)

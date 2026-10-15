@@ -151,11 +151,12 @@ jobs:
         run: |
           "$CHROMEWEBDRIVER/chromedriver" --port=4444 &
       # all_tests.dart runs every file in one app, so the suite builds once.
-      # The web-only manual location test imports package:web and runs apart.
+      # The web-only tests import package:web and run apart.
       - name: Run integration tests
         run: |
           status=0
-          for target in all_tests.dart manual_location_web_test.dart; do
+          for target in all_tests.dart manual_location_web_test.dart \
+              feature_drag_web_test.dart; do
             flutter drive \
               --driver=test_driver/integration_test.dart \
               --target="integration_test/$target" \
