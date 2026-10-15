@@ -32,6 +32,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
+    /// Whether the current style was set as JSON rather than by URL.
+    private var styleIsJSON = false
 
     // GPS pulse: start/stop location updates on a timer to save battery.
     private var locationPulseTimer: Timer?
@@ -125,6 +127,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        if let styleString = (args as? [String: Any])?["styleString"] as? String {
+            styleIsJSON = Self.styleStringIsJSON(styleString)
+        }
         self.registrar = registrar
 
         super.init()
@@ -1118,17 +1123,40 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "style#addImage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let name = arguments["name"] as? String else { return }
-            // guard let length = arguments["length"] as? NSNumber else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let sdf = arguments["sdf"] as? Bool else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { return }
+            // Every exit replies: a channel call that never answers leaves the
+            // Dart future pending for good, with nothing to catch.
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let name = arguments["name"] as? String,
+                  let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+                  let sdf = arguments["sdf"] as? Bool
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "addImage requires a String 'name', image 'bytes' and a Bool 'sdf'.",
+                    details: nil
+                ))
+                return
+            }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+                result(FlutterError(
+                    code: "INVALID_IMAGE",
+                    message: "Failed to decode image bytes.",
+                    details: nil
+                ))
+                return
+            }
             if sdf {
-                mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
+                style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
-                mapView.style?.setImage(image, forName: name)
+                style.setImage(image, forName: name)
             }
             result(nil)
 
@@ -1257,6 +1285,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             mapView.style?.addLayer(layer)
+            result(nil)
         case "style#addLayerBelow":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
@@ -1649,7 +1678,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
               )
             }
         case "map#takeSnapshot":
-            guard let styleURL = mapView.styleURL else {
+            guard let styleURL = snapshotStyleURL() else {
                 result(FlutterError(
                     code: "STYLE_NOT_READY",
                     message: "Map style is not loaded",
@@ -1679,9 +1708,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let snapshotter = MLNMapSnapshotter(options: options)
             // Store strong reference before starting to avoid deallocation
             self.activeSnapshotter = snapshotter
+            // A JSON style was written to a temporary file just for this snapshot.
+            let temporaryStyleFile = styleIsJSON ? styleURL : nil
 
             snapshotter.start { [weak self] snapshot, error in
                 self?.activeSnapshotter = nil
+                if let temporaryStyleFile = temporaryStyleFile {
+                    try? FileManager.default.removeItem(at: temporaryStyleFile)
+                }
 
                 if let error = error {
                     result(FlutterError(
@@ -2774,6 +2808,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.maximumZoomLevel = maxZoom
     }
 
+    /// The style URL a snapshotter can load for the current style.
+    ///
+    /// The snapshotter only takes a URL. A style set as JSON has no real one,
+    /// and the snapshotter rejects what the map reports as unsupported. Such a
+    /// style is written to a temporary file and snapshotted from there. The
+    /// file name is unique so maps snapshotting at once do not overwrite each
+    /// other's style.
+    private func snapshotStyleURL() -> URL? {
+        if !styleIsJSON {
+            return mapView.styleURL
+        }
+        guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
+            return nil
+        }
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("maplibre_gl_snapshot_style_\(UUID().uuidString).json")
+        do {
+            try data.write(to: file, options: .atomic)
+        } catch {
+            return nil
+        }
+        return file
+    }
+
     private static func styleStringIsJSON(_ styleString: String) -> Bool {
         return styleString.hasPrefix("{") || styleString.hasPrefix("[")
     }
@@ -2818,7 +2876,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         interactiveFeatureLayerIds.removeAll()
         addedShapesByLayer.removeAll()
         
-        if Self.styleStringIsJSON(styleString) {
+        styleIsJSON = Self.styleStringIsJSON(styleString)
+        if styleIsJSON {
             mapView.styleJSON = styleString
         } else if let url = Self.styleStringAsURL(
             styleString,

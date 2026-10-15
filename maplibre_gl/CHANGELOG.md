@@ -9,6 +9,7 @@
   * `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
   * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of crashing the app on Android and iOS; catch it where you used to check for 0 or an empty list (#1065).
+* **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web; drop any scaling by the pixel ratio (#1067).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -25,6 +26,10 @@
   * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
 * **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
 * **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* **Android**: `setCameraBounds` completes instead of never returning (#1067).
+* **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
+* **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
+* **iOS**: `addImage` before the style has loaded throws `STYLE_NOT_READY` like Android instead of silently adding nothing (#1067).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
