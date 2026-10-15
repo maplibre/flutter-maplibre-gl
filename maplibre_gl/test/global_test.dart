@@ -301,7 +301,7 @@ void main() {
     });
 
     test('rejects a negative limit before touching the channel', () async {
-      expect(() => setMaximumAmbientCacheSize(-1), throwsAssertionError);
+      expect(() => setMaximumAmbientCacheSize(-1), throwsArgumentError);
       expect(methodCalls, isEmpty);
     });
   });
