@@ -113,6 +113,28 @@ void main() {
     });
   });
 
+  group('disposed before the platform view is created', () {
+    testWidgets('does not wire up the platform afterwards (#1048)', (
+      tester,
+    ) async {
+      MapLibreMapController? created;
+      await tester.pumpWidget(
+        MaterialApp(home: MapLibreMap(onMapCreated: (c) => created = c)),
+      );
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      expect(platform.wasCalled('initPlatform'), isFalse);
+
+      // The platform view shows up after the widget is gone.
+      platform.lastOnPlatformViewCreated!(0);
+      await tester.pump();
+
+      expect(platform.wasCalled('initPlatform'), isFalse);
+      expect(platform.onMapStyleLoadedPlatform.isEmpty, isTrue);
+      expect(platform.onCameraMovePlatform.isEmpty, isTrue);
+      expect(created, isNull);
+    });
+  });
+
   group('onStyleLoaded manager disposal', () {
     test('disposes old managers and re-creates them on style reload', () async {
       final controller = MapLibreMapController(

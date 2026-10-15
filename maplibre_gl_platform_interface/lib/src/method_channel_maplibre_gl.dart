@@ -1,7 +1,15 @@
 part of '../maplibre_gl_platform_interface.dart';
 
 class MapLibreMethodChannel extends MapLibrePlatform {
-  late MethodChannel _channel;
+  /// Set by [initPlatform]. A map widget can be disposed before its platform
+  /// view exists, so [dispose] has to cope with this never being set.
+  MethodChannel? _methodChannel;
+
+  MethodChannel get _channel =>
+      _methodChannel ??
+      (throw StateError(
+        'The map is not ready: its platform view has not been created yet.',
+      ));
 
   /// Backing field of `MapLibreMap.useHybridComposition`, which is the
   /// documented way to set this and explains what each value selects. Android
@@ -131,9 +139,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<void> initPlatform(int id) async {
-    _channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
-    _channel.setMethodCallHandler(_handleMethodCall);
-    await _channel.invokeMethod('map#waitForMap');
+    final channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
+    _methodChannel = channel;
+    channel.setMethodCallHandler(_handleMethodCall);
+    await channel.invokeMethod('map#waitForMap');
   }
 
   @override
@@ -1113,7 +1122,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   void dispose() {
-    _channel.setMethodCallHandler(null);
+    _methodChannel?.setMethodCallHandler(null);
     super.dispose();
   }
 

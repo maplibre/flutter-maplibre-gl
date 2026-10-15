@@ -58,6 +58,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   /// Whether [buildView] should automatically trigger [onPlatformViewCreated].
   bool triggerPlatformViewCreated = false;
 
+  /// The last onPlatformViewCreated callback passed to [buildView], so a test
+  /// can create the platform view later than the widget asked for it.
+  OnPlatformViewCreatedCallback? lastOnPlatformViewCreated;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -65,6 +69,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     lastCreationParams = creationParams;
+    lastOnPlatformViewCreated = onPlatformViewCreated;
     calls.add(PlatformCall('buildView', [creationParams]));
     if (triggerPlatformViewCreated) {
       onPlatformViewCreated(0);
