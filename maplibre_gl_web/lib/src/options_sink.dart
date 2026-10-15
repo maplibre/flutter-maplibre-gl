@@ -17,6 +17,7 @@ abstract class MapLibreMapOptionsSink {
     required bool tiltGesturesEnabled,
     required bool zoomGesturesEnabled,
     required bool doubleClickZoomEnabled,
+    PanInertia panInertia = PanInertia.normal,
   });
 
   void setTrackCameraPosition(bool trackCameraPosition);

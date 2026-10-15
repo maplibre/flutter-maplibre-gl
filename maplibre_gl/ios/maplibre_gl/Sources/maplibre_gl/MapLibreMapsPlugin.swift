@@ -136,6 +136,18 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                 OfflineManagerUtils.deleteRegion(result: result, id: id)
             case "clearAmbientCache":
                 OfflineManagerUtils.clearAmbientCache(result: result)
+            case "setMaximumAmbientCacheSize":
+                guard let arguments = methodCall.arguments as? [String: Any],
+                      let bytes = arguments["bytes"] as? UInt64
+                else {
+                    result(FlutterError(
+                        code: "SetMaximumAmbientCacheSizeError",
+                        message: "could not decode arguments",
+                        details: nil
+                    ))
+                    return
+                }
+                OfflineManagerUtils.setMaximumAmbientCacheSize(result: result, bytes: bytes)
             case "resetOfflineDatabase":
                 OfflineManagerUtils.resetOfflineDatabase(result: result)
             case "pauseOfflineRegionDownload":

@@ -1,5 +1,8 @@
 ## Unreleased
 
+### Added
+* `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
+
 ### Deprecated
 * `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
 

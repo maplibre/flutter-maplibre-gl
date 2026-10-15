@@ -30,6 +30,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
   private Integer attributionButtonColor = null;
+  private Integer panInertia = null;
 
   MapLibreMapController build(
       int id,
@@ -65,6 +66,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     if (null != attributionButtonColor) {
       controller.setAttributionButtonColor(attributionButtonColor);
+    }
+
+    if (null != panInertia) {
+      controller.setPanInertia(panInertia);
     }
 
     return controller;
@@ -127,6 +132,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setDoubleClickZoomEnabled(boolean doubleClickZoomEnabled) {
     options.doubleTapGesturesEnabled(doubleClickZoomEnabled);
+  }
+
+  @Override
+  public void setPanInertia(int panInertia) {
+    // MapLibreMapOptions has no fling settings: they live on UiSettings, which
+    // only exists once the map is ready, so forward to the controller in build().
+    this.panInertia = panInertia;
   }
 
   @Override

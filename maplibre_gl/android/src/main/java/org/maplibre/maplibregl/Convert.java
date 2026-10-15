@@ -291,6 +291,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (tiltGesturesEnabled != null) {
       sink.setTiltGesturesEnabled(toBoolean(tiltGesturesEnabled));
     }
+    final Object panInertia = data.get("panInertia");
+    if (panInertia != null) {
+      sink.setPanInertia(toInt(panInertia));
+    }
     final Object trackCameraPosition = data.get("trackCameraPosition");
     if (trackCameraPosition != null) {
       sink.setTrackCameraPosition(toBoolean(trackCameraPosition));

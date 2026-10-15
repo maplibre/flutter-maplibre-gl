@@ -11,18 +11,27 @@
 //
 // Each file still runs on its own as well. manual_location_web_test.dart is
 // not included: it imports package:web, which does not compile for Android
-// or iOS, so CI runs it on its own on web.
+// or iOS, so CI runs it on its own on web. ambient_cache_size_test.dart runs
+// first, so its database reset happens before any other map uses the store.
+import 'ambient_cache_size_test.dart' as ambient_cache_size;
+import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
 import 'camera_test.dart' as camera;
 import 'geojson_query_test.dart' as geojson_query;
+import 'haptic_feedback_test.dart' as haptic_feedback;
+import 'pan_inertia_test.dart' as pan_inertia;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
 
 void main() {
+  ambient_cache_size.main();
+  android_feature_drag.main();
   annotations.main();
   camera.main();
   geojson_query.main();
+  haptic_feedback.main();
+  pan_inertia.main();
   style_layers.main();
   style_misc.main();
   web_feature_state.main();
