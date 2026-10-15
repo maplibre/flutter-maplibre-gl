@@ -412,6 +412,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async => 1.0;
 
+  /// Runs at the end of [addGeoJsonSource], so a test can make it fail or
+  /// hold it back.
+  Future<void> Function(String sourceId)? onAddGeoJsonSource;
+
   @override
   Future<void> addGeoJsonSource(
     String sourceId,
@@ -425,6 +429,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
         {'promoteId': promoteId},
       ),
     );
+    await onAddGeoJsonSource?.call(sourceId);
   }
 
   @override

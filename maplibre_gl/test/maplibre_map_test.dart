@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -164,6 +167,102 @@ void main() {
       expect(controller.lineManager, isNot(same(oldLine)));
 
       controller.dispose();
+    });
+  });
+
+  group('onStyleLoaded when the style is gone (#992)', () {
+    MapLibreMapController createController(void Function() onStyleLoaded) {
+      final controller = MapLibreMapController(
+        maplibrePlatform: platform,
+        annotationOrder: AnnotationType.values,
+        annotationConsumeTapEvents: AnnotationType.values,
+        onStyleLoadedCallback: onStyleLoaded,
+      );
+      addTearDown(controller.dispose);
+      return controller;
+    }
+
+    for (final code in ['styleNotFound', 'STYLE_NOT_READY']) {
+      test(
+        'a $code error is not reported and the next load recovers',
+        () async {
+          var styleLoads = 0;
+          final controller = createController(() => styleLoads++);
+          final errors = <Object>[];
+
+          platform.onAddGeoJsonSource = (_) async {
+            throw PlatformException(code: code, message: 'Style not found');
+          };
+          await runZonedGuarded(() async {
+            platform.onMapStyleLoadedPlatform.call(null);
+            await pumpEventQueue();
+          }, (error, _) => errors.add(error));
+
+          expect(errors, isEmpty);
+          expect(styleLoads, 0);
+          expect(controller.fillManager?.isInitialized ?? false, isFalse);
+
+          // The style is there by the next load.
+          platform.onAddGeoJsonSource = null;
+          platform.onMapStyleLoadedPlatform.call(null);
+          await pumpEventQueue();
+
+          expect(styleLoads, 1);
+          expect(controller.fillManager!.isInitialized, isTrue);
+          expect(controller.symbolManager!.isInitialized, isTrue);
+        },
+      );
+    }
+
+    test('any other error is still reported', () async {
+      createController(() {});
+      final errors = <Object>[];
+
+      platform.onAddGeoJsonSource = (_) async {
+        throw PlatformException(code: 'SOURCE_ALREADY_EXISTS');
+      };
+      await runZonedGuarded(() async {
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+      }, (error, _) => errors.add(error));
+
+      expect(errors, [
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'SOURCE_ALREADY_EXISTS',
+        ),
+      ]);
+    });
+
+    test('a setup overtaken by a newer style load stops quietly', () async {
+      var styleLoads = 0;
+      final controller = createController(() => styleLoads++);
+      final errors = <Object>[];
+
+      // The first load's setup is held back until the style has been
+      // replaced, and then fails against the style that is gone.
+      final release = Completer<void>();
+      var first = true;
+      platform.onAddGeoJsonSource = (_) async {
+        if (!first) return;
+        first = false;
+        await release.future;
+        throw PlatformException(code: 'LAYER_NOT_FOUND_ERROR');
+      };
+      await runZonedGuarded(() async {
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        release.complete();
+        await pumpEventQueue();
+      }, (error, _) => errors.add(error));
+
+      expect(errors, isEmpty);
+      expect(styleLoads, 1);
+      expect(controller.fillManager!.isInitialized, isTrue);
+      expect(controller.symbolManager!.isInitialized, isTrue);
     });
   });
 
