@@ -2,7 +2,7 @@
 
 ### Actions needed
 * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
-* **Android, iOS, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`; on iOS they replace `sourceAlreadyExists`, `layerAlreadyExists`, `duplicateSource` and `duplicateLayer`, and on Android and web a duplicate used to be ignored or raise a generic error (#1068).
+* **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 
 ### Fixed
 * **Android, iOS**: `getLayerVisibility` is implemented instead of throwing `MissingPluginException` (#1068).
