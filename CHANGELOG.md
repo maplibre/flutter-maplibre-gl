@@ -6,9 +6,31 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## Unreleased
 
 ### Actions needed
+* `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
+* **iOS**: error codes are renamed to match Android and web. Update any `catch` on the old codes (#1055, #1068):
+  * `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
+  * `invalidExpression` is now `INVALID_EXPRESSION`
+  * `invalidLayerType` is now `INVALID_LAYER_TYPE`
+  * `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
+  * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of crashing the app on Android and iOS; catch it where you used to check for 0 or an empty list (#1065).
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web; drop any scaling by the pixel ratio (#1067).
 
+### Added
+* `removeLayerFilter(layerId)` removes a layer's filter (#1055).
+
+### Changed
+* `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
+
 ### Fixed
+* Layer filters now behave the same on Android, iOS and web (#1055):
+  * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
+  * `null` removes a filter. Before, it was ignored or threw.
+  * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
+  * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `INVALID_EXPRESSION` with the reason. Before, iOS crashed and Android and web ignored it.
+  * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
+* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
+* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * **Android**: `setCameraBounds` completes instead of never returning (#1067).
 * **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
 * **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
