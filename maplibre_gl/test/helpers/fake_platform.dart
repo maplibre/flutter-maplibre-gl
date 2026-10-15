@@ -643,6 +643,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    calls.add(PlatformCall('setLayerZoomRange', [layerId, minzoom, maxzoom]));
+  }
+
+  @override
   Future<bool?> getLayerVisibility(String layerId) async => true;
 
   @override

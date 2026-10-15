@@ -5,8 +5,8 @@
 // symbol, background, heatmap, fill-extrusion), the generic addLayer,
 // belowLayerId ordering, reading layers and sources back
 // (getLayerIds, getSourceIds, getLayerProperties, getSourceProperties),
-// setLayerProperties, layer visibility, and the edge cases around unknown and
-// duplicate ids.
+// setLayerProperties, layer visibility, setLayerZoomRange, and the edge cases
+// around unknown and duplicate ids.
 //
 // Each of these calls ends in the native style (MapLibre Native on Android and
 // iOS, maplibre-gl-js on web), and the three answer edge cases differently, so
@@ -337,6 +337,110 @@ void main() {
     expect(paint['line-width'], 3);
     expect(paint['line-opacity'], 0.5);
     expect((runtime['layout'] as Map)['line-cap'], 'round');
+  });
+
+  testWidgets('setLayerZoomRange round trips through getLayerProperties', (
+    tester,
+  ) async {
+    // A layer that came with the style, so every platform can read it back:
+    // iOS reads the live zoom range over the style as loaded.
+    final controller = await pumpMap(tester, styleString: _styleWithSource());
+
+    await pumpUntil(
+      tester,
+      controller.setLayerZoomRange('styled-circles', 5.5, 12),
+      'setLayerZoomRange 5.5 12',
+    );
+    final narrowed = await pumpUntil(
+      tester,
+      controller.getLayerProperties('styled-circles'),
+      'getLayerProperties narrowed',
+    );
+    expect(narrowed!['minzoom'], 5.5);
+    expect(narrowed['maxzoom'], 12);
+
+    // The spec defaults are left out on every platform, as for a layer that
+    // never set a range.
+    await pumpUntil(
+      tester,
+      controller.setLayerZoomRange('styled-circles', 0, 24),
+      'setLayerZoomRange 0 24',
+    );
+    final full = await pumpUntil(
+      tester,
+      controller.getLayerProperties('styled-circles'),
+      'getLayerProperties full',
+    );
+    expect(full, isNot(contains('minzoom')));
+    expect(full, isNot(contains('maxzoom')));
+  });
+
+  testWidgets('setLayerZoomRange applies to a layer added at runtime', (
+    tester,
+  ) async {
+    final controller = await _pumpMapWithSource(tester);
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        _sourceId,
+        'circle',
+        const CircleLayerProperties(circleRadius: 4),
+      ),
+      'addCircleLayer',
+    );
+    await pumpUntil(
+      tester,
+      controller.setLayerZoomRange('circle', 3, 9.5),
+      'setLayerZoomRange',
+    );
+    // iOS cannot read a runtime layer back (#985), so there only the call
+    // itself is checked.
+    if (testPlatform == TestPlatform.ios) return;
+
+    final properties = await pumpUntil(
+      tester,
+      controller.getLayerProperties('circle'),
+      'getLayerProperties',
+    );
+    expect(properties!['minzoom'], 3);
+    expect(properties['maxzoom'], 9.5);
+  });
+
+  testWidgets('setLayerZoomRange rejects an unknown layer and a bad range', (
+    tester,
+  ) async {
+    final controller = await pumpMap(tester, styleString: _styleWithSource());
+
+    await expectPlatformError(
+      tester,
+      controller.setLayerZoomRange('no-such-layer', 2, 10),
+      'setLayerZoomRange unknown',
+      code: 'LAYER_NOT_FOUND_ERROR',
+    );
+    for (final (minzoom, maxzoom) in [(10.0, 2.0), (-1.0, 10.0), (2.0, 25.0)]) {
+      await expectPlatformError(
+        tester,
+        controller.setLayerZoomRange('styled-circles', minzoom, maxzoom),
+        'setLayerZoomRange $minzoom $maxzoom',
+        code: 'INVALID_ARGUMENT',
+      );
+    }
+    // A bad range is checked before the layer is looked up.
+    await expectPlatformError(
+      tester,
+      controller.setLayerZoomRange('no-such-layer', 10, 2),
+      'setLayerZoomRange unknown, bad range',
+      code: 'INVALID_ARGUMENT',
+    );
+
+    // Nothing was applied.
+    final styled = await pumpUntil(
+      tester,
+      controller.getLayerProperties('styled-circles'),
+      'getLayerProperties styled-circles',
+    );
+    expect(styled!['minzoom'], 1);
+    expect(styled['maxzoom'], 15);
   });
 
   testWidgets('setLayerProperties round trips through getLayerProperties', (

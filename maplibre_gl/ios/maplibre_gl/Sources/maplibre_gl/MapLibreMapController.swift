@@ -1587,6 +1587,46 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             layer.isVisible = visible
             result(nil)
 
+        case "layer#setZoomRange":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let minzoom = arguments["minzoom"] as? Double,
+                  let maxzoom = arguments["maxzoom"] as? Double
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "setLayerZoomRange requires 'layerId', 'minzoom' and 'maxzoom'.",
+                    details: nil
+                ))
+                return
+            }
+            // Checked here because MapLibre takes any range, and Android and
+            // web reject the same values.
+            guard minzoom >= 0, maxzoom <= 24, minzoom <= maxzoom else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "Invalid zoom range [\(minzoom), \(maxzoom)]: both must be within 0 and 24, "
+                        + "with minzoom not above maxzoom.",
+                    details: nil
+                ))
+                return
+            }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
+            layer.minimumZoomLevel = Float(minzoom)
+            layer.maximumZoomLevel = Float(maxzoom)
+            result(nil)
+
         case "layer#getVisibility":
             guard let arguments = methodCall.arguments as? [String: Any],
                   let layerId = arguments["layerId"] as? String
@@ -1683,10 +1723,22 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let styleObject = currentStyleObject()
             var reply = [String: NSObject]()
             if let layers = styleObject?["layers"] as? [[String: Any]],
-               let layer = layers.first(where: { ($0["id"] as? String) == layerId }),
-               let json = jsonString(from: layer)
+               var layer = layers.first(where: { ($0["id"] as? String) == layerId })
             {
-                reply["properties"] = json as NSObject
+                // The serialized style is the style as loaded, so the zoom
+                // range is read from the live layer: setLayerZoomRange may
+                // have changed it since. Like Android, the spec defaults (0
+                // and 24) are left out. Going through the shortest Float text
+                // keeps 0.1 from reading back as 0.10000000149011612.
+                if let live = mapView.style?.layer(withIdentifier: layerId) {
+                    let minzoom = live.minimumZoomLevel
+                    let maxzoom = live.maximumZoomLevel
+                    layer["minzoom"] = minzoom > 0 ? Double(String(minzoom)) : nil
+                    layer["maxzoom"] = maxzoom < 24 ? Double(String(maxzoom)) : nil
+                }
+                if let json = jsonString(from: layer) {
+                    reply["properties"] = json as NSObject
+                }
             }
             result(reply)
 
@@ -3258,6 +3310,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setCompassViewMargins(x: Double, y: Double) {
         mapView.compassViewMargins = CGPoint(x: x, y: y)
+    }
+
+    func setAttributionEnabled(attributionEnabled: Bool) {
+        mapView.attributionButton.isHidden = !attributionEnabled
     }
 
     func setAttributionButtonMargins(x: Double, y: Double) {

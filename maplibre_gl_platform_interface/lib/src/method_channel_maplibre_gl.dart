@@ -1380,6 +1380,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    await _channel.invokeMethod('layer#setZoomRange', <String, dynamic>{
+      'layerId': layerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
+    });
+  }
+
+  @override
   Future<bool?> getLayerVisibility(String layerId) async {
     try {
       final result = await _channel.invokeMethod(
