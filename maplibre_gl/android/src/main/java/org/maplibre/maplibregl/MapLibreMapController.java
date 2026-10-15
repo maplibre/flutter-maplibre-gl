@@ -29,6 +29,7 @@ import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -1832,6 +1833,26 @@ final class MapLibreMapController
     return false;
   }
 
+  /**
+   * Reads the camera update of a camera#move, camera#animate or camera#ease call. When it does
+   * not decode, the call is answered with INVALID_ARGUMENT, as on iOS, and null comes back.
+   */
+  @Nullable
+  private CameraUpdate parseCameraUpdate(MethodCall call, MethodChannel.Result result) {
+    final Object data = call.argument("cameraUpdate");
+    try {
+      final CameraUpdate cameraUpdate = Convert.toCameraUpdate(data, mapLibreMap, density);
+      if (cameraUpdate != null) {
+        return cameraUpdate;
+      }
+    } catch (RuntimeException e) {
+      // A wrong type or a missing value surfaces as a ClassCastException,
+      // NullPointerException or IndexOutOfBoundsException from the converters.
+    }
+    result.error("INVALID_ARGUMENT", "Cannot interpret " + data + " as CameraUpdate.", null);
+    return null;
+  }
+
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
     result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
   }
@@ -2023,36 +2044,33 @@ final class MapLibreMapController
         }
       case "camera#move":
         {
-          final CameraUpdate cameraUpdate =
-              Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
-          if (cameraUpdate != null) {
-            // camera transformation not handled yet
-            mapLibreMap.moveCamera(
-                cameraUpdate,
-                new OnCameraMoveFinishedListener() {
-                  @Override
-                  public void onFinish() {
-                    super.onFinish();
-                    result.success(true);
-                  }
-
-                  @Override
-                  public void onCancel() {
-                    super.onCancel();
-                    result.success(false);
-                  }
-                });
-
-            // moveCamera(cameraUpdate);
-          } else {
-            result.success(false);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
           }
+          mapLibreMap.moveCamera(
+              cameraUpdate,
+              new OnCameraMoveFinishedListener() {
+                @Override
+                public void onFinish() {
+                  super.onFinish();
+                  result.success(true);
+                }
+
+                @Override
+                public void onCancel() {
+                  super.onCancel();
+                  result.success(false);
+                }
+              });
           break;
         }
       case "camera#animate":
         {
-          final CameraUpdate cameraUpdate =
-              Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
+          }
           final Integer duration = call.argument("duration");
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
@@ -2069,14 +2087,10 @@ final class MapLibreMapController
                   result.success(false);
                 }
               };
-          if (cameraUpdate != null && duration != null) {
-            // camera transformation not handled yet
+          if (duration != null) {
             mapLibreMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
-          } else if (cameraUpdate != null) {
-            // camera transformation not handled yet
-            mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
-            result.success(false);
+            mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
           }
           break;
         }
@@ -2168,7 +2182,10 @@ final class MapLibreMapController
         }
       case "camera#ease":
         {
-          final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
+          }
           final Integer duration = call.argument("duration");
           final String interpolationStr = call.argument("interpolation");
 
@@ -2195,12 +2212,10 @@ final class MapLibreMapController
                 }
               };
 
-          if (cameraUpdate != null && duration != null && duration > 0) {
+          if (duration != null && duration > 0) {
             mapLibreMap.easeCamera(cameraUpdate, duration, easingInterpolator, onCameraMoveFinishedListener);
-          } else if (cameraUpdate != null) {
-            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
-            result.success(false);
+            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           }
           break;
         }

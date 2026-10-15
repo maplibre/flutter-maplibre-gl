@@ -56,9 +56,7 @@ void main() {
       expect(camera.zoom, closeTo(3, 0.05));
     });
 
-    testWidgets('newLatLngZoom moves the target and sets zoom', (
-      tester,
-    ) async {
+    testWidgets('newLatLngZoom moves the target and sets zoom', (tester) async {
       final controller = await pumpMap(tester);
 
       await pumpUntil(
@@ -250,6 +248,186 @@ void main() {
       // Tilting must not undo the earlier rotation.
       expect(camera.bearing, closeTo(45, 0.5));
       _expectLatLng(camera.target, const LatLng(0, 0), 0.01, 'after tilt');
+    });
+
+    testWidgets('tiltTo keeps the zoom away from the equator', (tester) async {
+      // On iOS the zoom follows from the camera altitude, the pitch and the
+      // latitude together, so a tilt that kept the altitude moved the zoom
+      // there (#1060). Android and web keep it.
+      final controller = await pumpMap(
+        tester,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(45, 10),
+          zoom: 6,
+        ),
+      );
+
+      for (final tilt in [40.0, 20.0, 0.0]) {
+        await pumpUntil(
+          tester,
+          controller.moveCamera(CameraUpdate.tiltTo(tilt)),
+          'moveCamera tiltTo $tilt',
+        );
+        final camera = await _queryCamera(tester, controller);
+        expect(camera.tilt, closeTo(tilt, 0.5));
+        expect(camera.zoom, closeTo(6, 0.05), reason: 'zoom after tilt $tilt');
+        _expectLatLng(
+          camera.target,
+          const LatLng(45, 10),
+          0.01,
+          'after tilt $tilt',
+        );
+      }
+    });
+
+    testWidgets('newLatLngBounds puts the bounds in the middle of uneven '
+        'padding', (tester) async {
+      final controller = await pumpMap(tester);
+      final scale = _screenScale(tester);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(-10, -10),
+        northeast: const LatLng(10, 10),
+      );
+      // 60 on the left and 100 at the bottom leave a 240 x 200 area from
+      // (60, 0) to (300, 200), centered at (180, 100). These bounds are a
+      // little taller than wide in web mercator, so the height limits the
+      // fit: their north and south edges touch the top and the bottom of
+      // the area.
+      const areaLeft = 60.0;
+      const areaBottom = 200.0;
+      const areaCenterX = (areaLeft + _mapSize) / 2;
+      const areaCenterY = areaBottom / 2;
+      final update = CameraUpdate.newLatLngBounds(
+        bounds,
+        left: areaLeft,
+        bottom: _mapSize - areaBottom,
+      );
+
+      Future<Point<num>> screen(LatLng point, String label) => pumpUntil(
+        tester,
+        controller.toScreenLocation(point),
+        '$label toScreenLocation $point',
+      );
+
+      final moves = <String, Future<bool?> Function()>{
+        'moveCamera': () => controller.moveCamera(update),
+        'animateCamera':
+            () => controller.animateCamera(
+              update,
+              duration: const Duration(milliseconds: 400),
+            ),
+        'easeCamera':
+            () => controller.easeCamera(
+              update,
+              duration: const Duration(milliseconds: 400),
+            ),
+      };
+      for (final entry in moves.entries) {
+        final label = entry.key;
+        await pumpUntil(
+          tester,
+          controller.moveCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(0, 0), 3),
+          ),
+          '$label reset',
+        );
+        await pumpUntil(tester, entry.value(), label);
+
+        // Animated moves may complete when they start, so wait for the
+        // bounds center to settle in the middle of the padded area.
+        final center = await pumpUntilValue(
+          tester,
+          () => screen(const LatLng(0, 0), label),
+          (point) =>
+              (point.x / scale - areaCenterX).abs() < 3 &&
+              (point.y / scale - areaCenterY).abs() < 3,
+          '$label bounds center at ($areaCenterX, $areaCenterY)',
+        );
+        expect(center.x / scale, closeTo(areaCenterX, 3), reason: label);
+        expect(center.y / scale, closeTo(areaCenterY, 3), reason: label);
+
+        final north = await screen(const LatLng(10, 0), label);
+        final south = await screen(const LatLng(-10, 0), label);
+        expect(north.y / scale, closeTo(0, 3), reason: '$label north edge');
+        expect(
+          south.y / scale,
+          closeTo(areaBottom, 3),
+          reason: '$label south edge',
+        );
+
+        // The camera target stays the coordinate at the center of the view,
+        // here south-west of the bounds center.
+        final camera = await _queryCamera(tester, controller);
+        final viewCenter = await pumpUntil(
+          tester,
+          controller.toLatLng(
+            Point(_mapSize / 2 * scale, _mapSize / 2 * scale),
+          ),
+          '$label toLatLng view center',
+        );
+        _expectLatLng(camera.target, viewCenter, 0.05, '$label target');
+        expect(camera.target.latitude, lessThan(0), reason: label);
+        expect(camera.target.longitude, lessThan(0), reason: label);
+      }
+    });
+
+    testWidgets('newLatLngBounds padding does not outlive the move', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      final scale = _screenScale(tester);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(-10, -10),
+        northeast: const LatLng(10, 10),
+      );
+
+      await pumpUntil(
+        tester,
+        controller.moveCamera(
+          CameraUpdate.newLatLngBounds(
+            bounds,
+            left: 60,
+            top: 10,
+            right: 0,
+            bottom: 100,
+          ),
+        ),
+        'moveCamera newLatLngBounds with padding',
+      );
+
+      // A later move to a coordinate puts it at the center of the view. Had
+      // the bounds padding stayed on the map, it would land at the center of
+      // the padded area instead.
+      await pumpUntil(
+        tester,
+        controller.moveCamera(CameraUpdate.newLatLng(const LatLng(5, 5))),
+        'moveCamera newLatLng',
+      );
+      final camera = await _queryCamera(tester, controller);
+      _expectLatLng(camera.target, const LatLng(5, 5), 0.01, 'target');
+      final point = await pumpUntil(
+        tester,
+        controller.toScreenLocation(const LatLng(5, 5)),
+        'toScreenLocation target',
+      );
+      expect(point.x / scale, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.y / scale, closeTo(_mapSize / 2, 2), reason: '$point');
+
+      // A fit without padding centers the bounds in the whole view again.
+      await pumpUntil(
+        tester,
+        controller.moveCamera(CameraUpdate.newLatLngBounds(bounds)),
+        'moveCamera newLatLngBounds without padding',
+      );
+      final unpadded = await _queryCamera(tester, controller);
+      _expectLatLng(unpadded.target, const LatLng(0, 0), 0.05, 'fit target');
+      final center = await pumpUntil(
+        tester,
+        controller.toScreenLocation(const LatLng(0, 0)),
+        'toScreenLocation bounds center',
+      );
+      expect(center.x / scale, closeTo(_mapSize / 2, 2), reason: '$center');
+      expect(center.y / scale, closeTo(_mapSize / 2, 2), reason: '$center');
     });
 
     testWidgets('reports success for each update kind', (tester) async {
@@ -540,9 +718,7 @@ void main() {
 
       final center = await pumpUntil(
         tester,
-        controller.toLatLng(
-          Point(_mapSize / 2 * scale, _mapSize / 2 * scale),
-        ),
+        controller.toLatLng(Point(_mapSize / 2 * scale, _mapSize / 2 * scale)),
         'toLatLng',
       );
       _expectLatLng(center, const LatLng(15, 25), 0.05, 'view center');
