@@ -3344,9 +3344,20 @@ final class MapLibreMapController
           String layerId = call.argument("layerId");
           String belowLayerId = call.argument("belowLayerId");
           Layer layer = style.getLayer(layerId);
+          // Both layers are checked before anything moves: a missing anchor found
+          // after the removal would lose the layer.
           if (layer == null) {
             result.error(
-                "layerNotFound", "Layer with id " + layerId + " not found.", null);
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
+            break;
+          }
+          if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
+            break;
+          }
+          if (layerId.equals(belowLayerId)) {
+            result.success(null);
             break;
           }
           style.removeLayer(layer);

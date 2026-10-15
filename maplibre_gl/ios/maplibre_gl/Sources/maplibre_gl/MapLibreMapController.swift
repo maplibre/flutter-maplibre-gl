@@ -1416,27 +1416,45 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "style#moveLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            guard let style = mapView.style else {
-                result(MethodCallError.styleNotFound.flutterError)
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "moveLayer requires a String 'layerId'.",
+                    details: nil
+                ))
                 return
             }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            // Both layers are looked up before anything moves: a missing anchor
+            // found after the removal would lose the layer.
             guard let layer = style.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(
-                   layerId: layerId
-                ).flutterError)
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
+            var belowLayer: MLNStyleLayer?
+            if let belowLayerId = belowLayerId {
+                guard let found = style.layer(withIdentifier: belowLayerId) else {
+                    result(MethodCallError.layerNotFound(layerId: belowLayerId).flutterError)
+                    return
+                }
+                belowLayer = found
+            }
+            if belowLayerId == layerId {
+                result(nil)
                 return
             }
             style.removeLayer(layer)
-            if let belowLayerId = belowLayerId {
-                guard let belowLayer = style.layer(withIdentifier: belowLayerId) else {
-                    result(MethodCallError.layerNotFound(
-                       layerId: belowLayerId
-                    ).flutterError)
-                    return
-                }
+            if let belowLayer = belowLayer {
                 style.insertLayer(layer, below: belowLayer)
             } else {
                 style.addLayer(layer)

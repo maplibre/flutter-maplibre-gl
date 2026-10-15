@@ -2123,11 +2123,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// If [belowLayerId] is omitted, the layer is moved to the top of the
   /// layer stack, appearing above all other layers.
   ///
-  /// This is implemented as a single atomic operation on the native side
-  /// (the existing layer object is removed and re-inserted at the new
-  /// position without being recreated), so the layer's paint, layout,
-  /// filter and source binding are preserved and there is no visible
-  /// flicker.
+  /// The layer keeps its paint, layout, filter and source, and is not
+  /// recreated, so it does not flicker.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if
+  /// [layerId] or [belowLayerId] is not a layer of the style; the layers are
+  /// then left as they were.
   Future<void> moveLayer(String layerId, {String? belowLayerId}) {
     return _maplibrePlatform.moveLayer(layerId, belowLayerId: belowLayerId);
   }

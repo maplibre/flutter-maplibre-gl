@@ -156,9 +156,9 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
         const InfoCard(
           title: 'Drag to reorder layers',
           subtitle:
-              'Dragging calls moveLayer(), which removes and re-inserts the '
-              'existing native layer object in a single call — no flicker, '
-              'no lost paint/layout properties.',
+              'Dragging calls moveLayer(), which moves the existing layer '
+              'in a single call: no flicker, and its paint and layout '
+              'properties are kept.',
           icon: Icons.info_outline,
         ),
         const SizedBox(height: 8),

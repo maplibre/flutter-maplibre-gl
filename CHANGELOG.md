@@ -40,6 +40,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Web**: `SymbolLayerProperties.symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map. Android and iOS ignore them (#1084).
 * `Expressions.semiliteral` builds an array whose elements are expressions, for properties such as `textOffset`. MapLibre Android 13.7 and iOS 6.31 support it, though the style spec does not list them yet (#1084).
 * `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so a symbol whose data just changed no longer flickers (#1056).
+* `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#PR).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).

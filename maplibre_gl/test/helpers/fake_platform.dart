@@ -374,6 +374,9 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     calls.add(
       PlatformCall('moveLayer', [layerId], {'belowLayerId': belowLayerId}),
     );
+    layerStack.remove(layerId);
+    final below = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    layerStack.insert(below < 0 ? layerStack.length : below, layerId);
   }
 
   @override

@@ -1686,6 +1686,11 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    // maplibre-gl-js only fires an error event for a missing layer, so check
+    // both first and throw the same error as Android and iOS.
+    _ensureLayerExists(layerId);
+    if (belowLayerId != null) _ensureLayerExists(belowLayerId);
+    if (belowLayerId == layerId) return;
     _map.moveLayer(layerId, belowLayerId);
   }
 
