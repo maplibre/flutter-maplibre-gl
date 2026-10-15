@@ -6,9 +6,7 @@
         android:label="MapLibre Example"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:usesCleartextTraffic="true">
-        <!-- Cleartext is for integration_test/ambient_cache_size_test.dart,
-             which serves tiles over plain HTTP from a server inside the app. -->
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name="io.flutter.embedding.android.FlutterActivity"
             android:exported="true"
