@@ -2036,7 +2036,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
         if end, dragFeature != nil {
-            mapView.allowsScrolling = true
+            mapView.allowsScrolling = scrollingEnabled
             let eventType = "end"
             invokeFeatureDrag(point, coordinate, eventType)
             dragFeature = nil
