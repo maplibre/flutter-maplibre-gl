@@ -1587,11 +1587,8 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
-  /// Wraps a single Feature or a bare geometry in a FeatureCollection.
-  ///
-  /// Android and iOS take any GeoJSON object as source data. Reading
-  /// `features` straight off a Feature or a geometry found none, so
-  /// setGeoJsonSource emptied the source instead.
+  /// Wraps a single Feature or a bare geometry in a FeatureCollection, so any
+  /// GeoJSON object is accepted as source data, as on Android and iOS.
   Map<String, dynamic> _asFeatureCollection(Map<String, dynamic> geojson) {
     switch (geojson['type']) {
       case 'FeatureCollection':
