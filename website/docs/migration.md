@@ -88,6 +88,7 @@ None of these need a code change, but they are the places where code that worked
 * `MapLibreMap.panInertia` sets how long the map glides after a pan: `none`, `short` or `normal`. The default, `normal`, keeps the current behavior.
 * `MapLibreMap.hapticFeedbackEnabled` turns off the vibration iOS plays when the user rotates the map back to north.
 * `setMaximumAmbientCacheSize(bytes)` sets the size limit of the ambient tile cache on Android and iOS.
+* `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so symbols fed by data you update often no longer flicker. See [Symbols that update often](layers/symbol-layer.md#symbols-that-update-often).
 
 ## Upgrading to 0.27.1
 
