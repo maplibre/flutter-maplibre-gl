@@ -25,7 +25,7 @@
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
-* **Android**: to keep the fused location provider for high accuracy (`enableHighAccuracy: true` or `LocationPriority.highAccuracy`), add `com.google.android.gms:play-services-location:21.4.0` to your app's dependencies. Without it the plugin uses GPS through the platform location engine (#PR).
+* **Android**: to keep the fused location provider for high accuracy (`enableHighAccuracy: true` or `LocationPriority.highAccuracy`), add `com.google.android.gms:play-services-location:21.4.0` to your app's dependencies. Without it the plugin uses GPS through the platform location engine (#1091).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -40,7 +40,7 @@
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
-* **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin. Apps that add it get the fused provider for high accuracy as before (#PR).
+* **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin. Apps that add it get the fused provider for high accuracy as before (#1091).
 
 ### Fixed
 * Layer filters now behave the same on Android, iOS and web (#1055):
