@@ -51,6 +51,9 @@ class MapLibreMapController extends MapLibrePlatform
   String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
 
+  /// Completes the [easeCamera] call whose animation is still running.
+  Completer<bool>? _pendingEase;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -66,6 +69,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
+    // The map goes away mid-animation: answer the waiting easeCamera call.
+    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
+    _pendingEase = null;
     _removeManualPuck();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
@@ -582,6 +588,21 @@ class MapLibreMapController extends MapLibrePlatform
     final zoom = cameraOptions.zoom;
     final easing = resolveEasing(interpolation);
 
+    // An ease still running is cut short by this one, which Android reports
+    // as a cancel. Stopping it first also fires its moveend now, before the
+    // listener below exists, so that moveend cannot complete this call.
+    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
+    _map.stop();
+
+    final arrival = Completer<bool>();
+    _pendingEase = arrival;
+    late final Subscription subscription;
+    subscription = _map.on('moveend', (_) {
+      subscription.unsubscribe();
+      if (!arrival.isCompleted) arrival.complete(true);
+      if (identical(_pendingEase, arrival)) _pendingEase = null;
+    });
+
     _map.easeTo({
       if (around != null) 'around': around.jsObject,
       if (bearing != null) 'bearing': bearing,
@@ -592,7 +613,8 @@ class MapLibreMapController extends MapLibrePlatform
       if (easing != null) 'easing': easing,
     });
 
-    return true;
+    // true once the camera is on target, as on Android and iOS.
+    return arrival.future;
   }
 
   @override
@@ -618,10 +640,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    // Web implementation: MapLibre GL JS doesn't have direct layer filter setting
-    print('setLayerFilter called in web, layerId: $layerId, filter: $filter');
-    // For future implementation, we could use MapLibre GL JS layer filter methods
-    throw UnimplementedError();
+    if (_map.getLayer(layerId) == null) return false;
+    try {
+      await setFilter(layerId, jsonDecode(filter));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -788,7 +813,9 @@ class MapLibreMapController extends MapLibrePlatform
               'coordinates': feature.geometry.coordinates,
             },
             'properties': feature.properties,
-            'source': feature.source,
+            // maplibre-gl-js leaves `source` unset on these features, so name
+            // the source that was queried.
+            'source': sourceId,
           },
         )
         .toList();
@@ -814,47 +841,51 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
-  /// Runs a cluster query, answering null if maplibre-gl-js rejects.
-  ///
-  /// It rejects when the source is not clustered or the id is not one of its
-  /// current clusters. For the two calls that answer with features that is the
-  /// same thing as finding none, so they report an empty list; a zoom has no
-  /// such neutral value and [getClusterExpansionZoom] reports the rejection.
+  /// Runs a cluster query, throwing CLUSTER_NOT_FOUND unless [sourceId]
+  /// currently holds the cluster [clusterId] in its loaded tiles.
   ///
   /// Only the JS call runs inside the guard. Decoding happens after this
   /// returns, so a bug there throws on its own rather than being reported as a
   /// clustering mistake.
-  Future<T?> _clusterQuery<T extends JSAny>(Future<T> Function() call) async {
-    try {
-      return await call();
-    } catch (_) {
-      return null;
+  Future<T> _clusterQuery<T extends JSAny>(
+    String sourceId,
+    int clusterId,
+    Future<T> Function() call,
+  ) async {
+    final clusters = _map.querySourceFeatures(sourceId, {
+      'filter': [
+        '==',
+        ['get', 'cluster_id'],
+        clusterId,
+      ],
+    });
+    if (clusters.isNotEmpty) {
+      try {
+        return await call();
+      } catch (_) {
+        // Rejected: the id went stale between the lookup and the query.
+      }
     }
+    throw PlatformException(
+      code: 'CLUSTER_NOT_FOUND',
+      message:
+          "Cluster '$clusterId' is not one of the current clusters of source "
+          "'$sourceId'. Cluster ids are reassigned as the data or the "
+          'viewport changes, so read the id from a freshly queried feature.',
+    );
   }
 
-  /// Decodes a cluster query result, treating a rejected query as no features.
-  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject>? features) =>
-      features == null ? const [] : features.toDart.map(dartifyMap).toList();
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject> features) =>
+      features.toDart.map(dartifyMap).toList();
 
   @override
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     final source = _clusterSource(sourceId, 'getClusterExpansionZoom');
     final zoom = await _clusterQuery(
+      sourceId,
+      clusterId,
       () => source.getClusterExpansionZoom(clusterId),
     );
-    // Not 0: that is a valid zoom, so a caller could not tell a cluster that
-    // splits at zoom 0 from one that was never found, and the documented
-    // cluster-tap pattern would animate the camera out to the whole world on a
-    // stale cluster_id (ids are reassigned as the viewport changes).
-    if (zoom == null) {
-      throw PlatformException(
-        code: 'CLUSTER_NOT_FOUND',
-        message:
-            "Cluster '$clusterId' is not one of the current clusters of source "
-            "'$sourceId'. Cluster ids are reassigned as the data or the "
-            'viewport changes, so read the id from a freshly queried feature.',
-      );
-    }
     return zoom.toDartDouble.round();
   }
 
@@ -865,7 +896,11 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final source = _clusterSource(sourceId, 'getClusterChildren');
     return _clusterFeatures(
-      await _clusterQuery(() => source.getClusterChildren(clusterId)),
+      await _clusterQuery(
+        sourceId,
+        clusterId,
+        () => source.getClusterChildren(clusterId),
+      ),
     );
   }
 
@@ -879,6 +914,8 @@ class MapLibreMapController extends MapLibrePlatform
     final source = _clusterSource(sourceId, 'getClusterLeaves');
     return _clusterFeatures(
       await _clusterQuery(
+        sourceId,
+        clusterId,
         () => source.getClusterLeaves(clusterId, limit, offset),
       ),
     );
@@ -968,9 +1005,15 @@ class MapLibreMapController extends MapLibrePlatform
       });
       return;
     }
+    _styleReady = true;
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
+
+  /// Whether the current style has loaded, as reported to
+  /// onStyleLoadedCallback. Unlike `isStyleLoaded()`, it stays true while
+  /// sources and tiles load.
+  bool _styleReady = false;
 
   void _onMapResize() {
     Timer(Duration.zero, () {
@@ -1451,6 +1494,7 @@ class MapLibreMapController extends MapLibrePlatform
   /// ```
   @override
   Future<void> setStyle(dynamic styleObject) async {
+    _styleReady = false;
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _handleLayerMouseMove);
@@ -1532,15 +1576,77 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> removeLayer(String imageLayerId) async {
+    _ensureLayerExists(imageLayerId);
     _interactiveFeatureLayerIds.remove(imageLayerId);
-    if (_map.getLayer(imageLayerId) != null) {
-      _map.removeLayer(imageLayerId);
+    _map.removeLayer(imageLayerId);
+  }
+
+  /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
+  /// layer. maplibre-gl-js only fires an error event, which callers never see.
+  void _ensureLayerExists(String layerId) {
+    if (_map.getLayer(layerId) == null) {
+      throw PlatformException(
+        code: 'LAYER_NOT_FOUND_ERROR',
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
+      );
+    }
+  }
+
+  /// Throws `LAYER_ALREADY_EXISTS`, as Android and iOS do, for a layer id
+  /// already in use.
+  void _ensureNewLayerId(String layerId) {
+    if (_map.getLayer(layerId) != null) {
+      throw PlatformException(
+        code: 'LAYER_ALREADY_EXISTS',
+        message: 'Layer already exists',
+        details: 'Layer with id $layerId already exists.',
+      );
+    }
+  }
+
+  /// Throws `SOURCE_ALREADY_EXISTS`, as Android and iOS do, for a source id
+  /// already in use, instead of the raw JS error maplibre-gl-js throws.
+  void _ensureNewSourceId(String sourceId) {
+    if (_map.getSource(sourceId) != null) {
+      throw PlatformException(
+        code: 'SOURCE_ALREADY_EXISTS',
+        message: 'Source already exists',
+        details: 'Source with id $sourceId already exists.',
+      );
     }
   }
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
-    _map.setFilter(layerId, filter);
+    _checkFilterable(layerId);
+    // GL JS reports an invalid filter through an error event instead of
+    // throwing, so listen for it while the filter is set.
+    String? error;
+    final listener =
+        ((JSObject event) {
+          final message =
+              event
+                  .getProperty<JSObject?>('error'.toJS)
+                  ?.getProperty<JSString?>('message'.toJS)
+                  ?.toDart;
+          // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+          error ??= message?.replaceFirst(RegExp(r'^layers\.[^:]*: '), '');
+        }).toJS;
+    final map = _map.jsObject as JSObject;
+    map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
+    try {
+      _map.setFilter(layerId, filter);
+    } finally {
+      map.callMethod<JSAny?>('off'.toJS, 'error'.toJS, listener);
+    }
+    if (error != null) {
+      throw PlatformException(
+        code: 'INVALID_EXPRESSION',
+        message: 'Invalid filter: $error',
+        details: error,
+      );
+    }
   }
 
   @override
@@ -1549,6 +1655,8 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) async {
+    // Before the cache write below, so a rejected add keeps the original's data.
+    _ensureNewSourceId(sourceId);
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     _map.addSource(sourceId, <String, dynamic>{
@@ -1750,6 +1858,7 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
   ) async {
+    _ensureLayerExists(layerId);
     for (final entry in properties.entries) {
       // Try paint property first (most common), then layout property
       try {
@@ -1846,6 +1955,7 @@ class MapLibreMapController extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
+    _ensureNewLayerId(layerId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
     );
@@ -1953,6 +2063,9 @@ class MapLibreMapController extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
+    // Before anything else: a second add used to pass silently and attach the
+    // hover listeners to the existing layer once more.
+    _ensureNewLayerId(layerId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
     );
@@ -2083,6 +2196,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _ensureNewSourceId(sourceId);
     _map.addSource(sourceId, properties.toJson());
   }
 
@@ -2269,12 +2383,46 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
+    _ensureLayerExists(layerId);
     _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
   }
 
   @override
   Future getFilter(String layerId) async {
+    _checkFilterable(layerId);
     return _map.getFilter(layerId);
+  }
+
+  /// The layer types Android and iOS can filter.
+  static const _filterableLayerTypes = {
+    'circle',
+    'fill',
+    'fill-extrusion',
+    'heatmap',
+    'line',
+    'symbol',
+  };
+
+  /// Throws the errors Android and iOS give for a layer that is missing or
+  /// cannot be filtered. GL JS only logs the first and accepts the second.
+  void _checkFilterable(String layerId) {
+    final layer = _map.getLayer(layerId);
+    if (layer == null) {
+      throw PlatformException(
+        code: 'LAYER_NOT_FOUND_ERROR',
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
+      );
+    }
+    final type =
+        (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+    if (!_filterableLayerTypes.contains(type)) {
+      throw PlatformException(
+        code: 'INVALID_LAYER_TYPE',
+        message: 'Invalid layer type',
+        details: "Layer '$layerId' does not support filtering.",
+      );
+    }
   }
 
   @override
@@ -2335,6 +2483,16 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {
+    if (!_styleReady) {
+      // Same code and message as Android and iOS.
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
+    if (_map.getLayer(layerId) == null) return null;
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
     if (property is String) return property != 'none';

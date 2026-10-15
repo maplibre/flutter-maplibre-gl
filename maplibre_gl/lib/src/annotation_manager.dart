@@ -105,16 +105,39 @@ abstract class AnnotationManager<T extends Annotation> {
   }
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
+  ///
+  /// Each layer keeps its position in the style.
   Future<void> _rebuildLayers() async {
     if (controller.isDisposed) return;
 
-    for (var i = 0; i < allLayerProperties.length; i++) {
-      final layerId = _makeLayerId(i);
+    final ownIds = layerIds;
+    final styleIds = [
+      for (final id in await controller.getLayerIds())
+        if (id is String) id,
+    ];
+
+    // Re-add bottom to top, each below the first foreign layer that was above
+    // it, so own layers sharing that anchor keep their relative order too.
+    final ordered = [...ownIds]
+      ..sort((a, b) => styleIds.indexOf(a).compareTo(styleIds.indexOf(b)));
+    for (final layerId in ordered) {
+      final position = styleIds.indexOf(layerId);
+      String? belowLayerId;
+      if (position >= 0) {
+        for (final above in styleIds.skip(position + 1)) {
+          if (!ownIds.contains(above)) {
+            belowLayerId = above;
+            break;
+          }
+        }
+      }
+
       await controller.removeLayer(layerId);
       await controller.addLayer(
         layerId,
         layerId,
-        allLayerProperties[i],
+        allLayerProperties[ownIds.indexOf(layerId)],
+        belowLayerId: belowLayerId,
         enableInteraction: enableInteraction,
       );
     }

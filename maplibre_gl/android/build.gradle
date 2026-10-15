@@ -49,6 +49,7 @@ android {
         compileSdk 36
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        consumerProguardFiles 'consumer-rules.pro'
     }
     lintOptions {
         disable 'InvalidPackage'
