@@ -25,7 +25,6 @@ enum MethodCallError: Error {
         case .sourceNotFound:
             return "sourceNotFound"
         case .layerNotFound:
-            // The code Android and web use for a missing layer.
             return "LAYER_NOT_FOUND_ERROR"
         case .styleNotFound:
             return "styleNotFound"
