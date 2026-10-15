@@ -431,6 +431,14 @@ void main() {
       expect(calls.first.positionalArgs[1], false);
     });
 
+    test('setLayerZoomRange delegates to platform', () async {
+      await controller.setLayerZoomRange('layer-1', 5.5, 15);
+
+      final calls = platform.callsFor('setLayerZoomRange');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['layer-1', 5.5, 15.0]);
+    });
+
     test('setLayerFilter passes the expression to setFilter', () async {
       await controller.setLayerFilter('layer-1', [
         '==',
