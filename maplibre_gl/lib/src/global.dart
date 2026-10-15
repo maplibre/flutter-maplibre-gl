@@ -111,6 +111,10 @@ Future<String?> exportOfflineDatabase(String destinationPath) async {
   return copyOfflineDatabase(dbPath, destinationPath);
 }
 
+/// Lists the offline regions stored on the device.
+///
+/// On iOS the stored regions load asynchronously after launch; this waits for
+/// them, so a call made right at startup returns the same list as Android.
 Future<List<OfflineRegion>> getListOfRegions() async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
