@@ -1,5 +1,11 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Fixed
+* `CameraUpdate.zoomBy(amount, focus)` keeps the place under `focus` where it is on screen, as documented. It used to recenter the map on the focus instead.
+* `easeCamera` completes once the camera has arrived, as on Android and iOS, and with `false` when another `easeCamera` call cuts it short. It used to complete with `true` as soon as the animation started.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

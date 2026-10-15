@@ -51,10 +51,10 @@ await controller.moveCamera(
 | `CameraUpdate.zoomIn()` | Zoom in one level |
 | `CameraUpdate.zoomOut()` | Zoom out one level |
 | `CameraUpdate.zoomTo(double)` | Zoom to a specific level |
-| `CameraUpdate.zoomBy(double)` | Relative zoom change |
+| `CameraUpdate.zoomBy(double, [Offset])` | Relative zoom change; the place under the optional focus stays put |
 | `CameraUpdate.bearingTo(double)` | Rotate to a bearing |
 | `CameraUpdate.tiltTo(double)` | Set tilt angle |
-| `CameraUpdate.scrollBy(double, double)` | Pan by pixel offset |
+| `CameraUpdate.scrollBy(double, double)` | Pan by logical pixels; positive x moves the view east, positive y south |
 
 ## Fit a bounding box
 

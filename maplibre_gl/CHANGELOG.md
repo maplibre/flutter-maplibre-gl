@@ -1,3 +1,14 @@
+## Unreleased
+
+### Actions needed
+* **Android**: `CameraUpdate.scrollBy(x, y)` now pans the same way as on iOS and web: positive `x` moves the view east and positive `y` moves it south, by that many logical pixels. Android used to pan the opposite way, so code that flipped the signs for Android should stop doing so.
+
+### Fixed
+* **Android, iOS, Web**: `CameraUpdate.zoomBy(amount, focus)` keeps the place under `focus` where it is on screen, as documented. Every platform used to recenter the map on the focus instead.
+* **Android**: `moveCamera`, `animateCamera` and `easeCamera` with `CameraUpdate.scrollBy` complete with `true`, and the animated calls animate the pan. They used to jump straight to the new position and complete with `false`.
+* **iOS**: `CameraUpdate.scrollBy` keeps the zoom level when it pans north or south. It used to drift slightly, because the camera kept its altitude at the new latitude.
+* **Web**: `easeCamera` completes once the camera has arrived, as on Android and iOS, and with `false` when another `easeCamera` call cuts it short. It used to complete with `true` as soon as the animation started.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
