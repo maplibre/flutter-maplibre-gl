@@ -131,6 +131,46 @@ await controller.addSymbolLayer(
 );
 ```
 
+## Symbols that update often
+
+MapLibre recomputes which symbols to show at most every 300 ms and fades the result in. That looks good for the labels of a style, but a symbol layer fed by a GeoJSON source you update often, such as live vehicles, flickers: a symbol whose data just changed is drawn, hidden by the next placement, and faded back in.
+
+Turning placement transitions off places symbols on every frame, without fading, so updated symbols change in the frame their data arrives. The setting applies to every symbol on the map, the style's own labels included: MapLibre places all symbols together, so it cannot be set per layer.
+
+### Off for the whole map
+
+The simplest choice when the map is mostly your own live data:
+
+```dart
+MapLibreMap(
+  styleString: myStyle,
+  initialCameraPosition: const CameraPosition(target: LatLng(45.46, 9.19), zoom: 13),
+  placementTransitionsEnabled: false,
+  onMapCreated: (controller) => _controller = controller,
+  onStyleLoadedCallback: _addVehicleLayer,
+)
+```
+
+The cost: the labels of the base map also appear and disappear at once while the user zooms and pans.
+
+### Off only around an update
+
+To keep the fades of the base map, turn transitions off just for the update:
+
+```dart
+Future<void> _onVehiclesUpdate(List<Vehicle> vehicles) async {
+  await _controller.setPlacementTransitionsEnabled(false);
+  await _controller.setGeoJsonSource('vehicles', _toFeatureCollection(vehicles));
+  await _controller.setPlacementTransitionsEnabled(true);
+}
+```
+
+The three calls reach the map in this order, so the new data is placed in the frame it arrives and the fades come back afterwards. For updates every second or faster, turning them off for the whole map is simpler and gives the same result.
+
+On Android, a style that declares no `transition` cannot have it restored exactly: after the first off and on, its symbols stop fading until the style is loaded again. Declare a transition in the style, for example `"transition": {"duration": 300, "delay": 0}`, to keep the fades. iOS and web restore them in every case.
+
+The example app shows both approaches side by side in **Live Symbols (Placement Transitions)**.
+
 ## Key `SymbolLayerProperties` fields
 
 | Property | Description |
