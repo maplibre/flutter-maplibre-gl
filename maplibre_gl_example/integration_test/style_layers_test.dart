@@ -467,17 +467,26 @@ void main() {
     expect((properties!['layout'] as Map)['visibility'], 'none');
   });
 
-  testWidgets('removing an unknown layer or source is a no-op', (
+  testWidgets('an unknown layer is layerNotFound, an unknown source a no-op', (
     tester,
   ) async {
     final controller = await _pumpMapWithSource(tester);
     final layersBefore = await _layerIds(tester, controller);
     final sourcesBefore = await _sourceIds(tester, controller);
 
-    await pumpUntil(
+    // A layer call names one layer, so a missing one is reported, as for
+    // setLayerProperties. Removing a source stays idempotent.
+    await expectPlatformError(
       tester,
       controller.removeLayer('no-such-layer'),
       'removeLayer unknown',
+      code: 'layerNotFound',
+    );
+    await expectPlatformError(
+      tester,
+      controller.setLayerVisibility('no-such-layer', false),
+      'setLayerVisibility unknown',
+      code: 'layerNotFound',
     );
     await pumpUntil(
       tester,
@@ -536,6 +545,7 @@ void main() {
       tester,
       controller.addGeoJsonSource(_sourceId, pointCollection(count: 1)),
       'addGeoJsonSource duplicate',
+      code: 'sourceAlreadyExists',
     );
     await expectPlatformError(
       tester,
@@ -544,6 +554,7 @@ void main() {
         GeojsonSourceProperties(data: pointCollection(count: 1)),
       ),
       'addSource duplicate',
+      code: 'sourceAlreadyExists',
     );
 
     final ids = await _sourceIds(tester, controller);
@@ -572,6 +583,7 @@ void main() {
         const CircleLayerProperties(circleRadius: 9),
       ),
       'addCircleLayer duplicate',
+      code: 'layerAlreadyExists',
     );
     // Same id, different type: still a clash.
     await expectPlatformError(
@@ -582,6 +594,7 @@ void main() {
         const FillLayerProperties(fillOpacity: 0.5),
       ),
       'addFillLayer duplicate',
+      code: 'layerAlreadyExists',
     );
 
     final ids = await _layerIds(tester, controller);
