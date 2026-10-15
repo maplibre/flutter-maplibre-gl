@@ -50,6 +50,7 @@
 * **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` and leaves the light unchanged (#1070).
 * **Web**: `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
 * **Android**: `getLayerProperties` and `getSourceProperties` find layers and sources added at runtime instead of returning `null` (#1070).
+* **Web**: a click on a draggable feature no longer reports a drag; dragging starts after a small movement, like on Android and iOS (#PR).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

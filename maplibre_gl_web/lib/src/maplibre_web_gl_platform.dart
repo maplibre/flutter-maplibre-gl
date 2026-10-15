@@ -11,9 +11,7 @@ class MapLibreMapController extends MapLibrePlatform
   /// now that it loads maplibre-gl-js first, and [dispose] still runs after
   /// that: reading a `late` field that was never written throws.
   bool _mapCreated = false;
-  dynamic _draggedFeatureId;
-  LatLng? _dragOrigin;
-  LatLng? _dragPrevious;
+  final _featureDrag = FeatureDragTracker();
   bool _dragEnabled = true;
   bool _featureTapsTriggersMapClick = false;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
@@ -169,6 +167,9 @@ class MapLibreMapController extends MapLibrePlatform
     );
     if (missingStyleImages != null) _mapSubscriptions.add(missingStyleImages);
     if (_dragEnabled) {
+      _mapSubscriptions.add(
+        _map.on('mousedown', (_) => _featureDrag.pointerDown()),
+      );
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
     }
@@ -292,63 +293,33 @@ class MapLibreMapController extends MapLibrePlatform
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
       e.preventDefault();
-      _draggedFeatureId = e.features.first.id;
-      _map.getCanvas().style.cursor = 'grabbing';
-      final coords = e.lngLat;
-      _dragOrigin = LatLng(coords.lat as double, coords.lng as double);
-
-      if (_draggedFeatureId != null) {
-        final current = LatLng(
-          e.lngLat.lat.toDouble(),
-          e.lngLat.lng.toDouble(),
-        );
-        final payload = {
-          'id': _draggedFeatureId,
-          'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
-          'origin': _dragOrigin,
-          'current': current,
-          'delta': const LatLng(0, 0),
-          'eventType': 'start',
-        };
-        onFeatureDraggedPlatform(payload);
-      }
+      final id = e.features.first.id;
+      // Nothing is reported yet: the press is a click until the pointer moves
+      // past the drag threshold, as on Android and iOS.
+      if (id != null) _featureDrag.down(id, _eventPoint(e));
     }
   }
 
-  _onMouseUp(Event e) {
-    if (_draggedFeatureId != null) {
-      final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
-      final payload = {
-        'id': _draggedFeatureId,
-        'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
-        'origin': _dragOrigin,
-        'current': current,
-        'delta': current - (_dragPrevious ?? _dragOrigin!),
-        'eventType': 'end',
-      };
-      onFeatureDraggedPlatform(payload);
-    }
-    _draggedFeatureId = null;
-    _dragPrevious = null;
-    _dragOrigin = null;
+  void _onMouseUp(Event e) {
+    final payload = _featureDrag.up(_eventPoint(e), _eventLatLng(e));
+    if (payload != null) onFeatureDraggedPlatform(payload);
     _map.getCanvas().style.cursor = '';
   }
 
-  _onMouseMove(Event e) {
-    if (_draggedFeatureId != null) {
-      final current = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
-      final payload = {
-        'id': _draggedFeatureId,
-        'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
-        'origin': _dragOrigin,
-        'current': current,
-        'delta': current - (_dragPrevious ?? _dragOrigin!),
-        'eventType': 'drag',
-      };
-      _dragPrevious = current;
-      onFeatureDraggedPlatform(payload);
+  void _onMouseMove(Event e) {
+    final payload = _featureDrag.move(_eventPoint(e), _eventLatLng(e));
+    if (payload == null) return;
+    if (payload['eventType'] == 'start') {
+      _map.getCanvas().style.cursor = 'grabbing';
     }
+    onFeatureDraggedPlatform(payload);
   }
+
+  static Point<double> _eventPoint(Event e) =>
+      Point<double>(e.point.x.toDouble(), e.point.y.toDouble());
+
+  static LatLng _eventLatLng(Event e) =>
+      LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
 
   _onMapMouseMove(Event e) {
     // Simple mouse move event - just provides position
@@ -1057,6 +1028,8 @@ class MapLibreMapController extends MapLibrePlatform
   ///
   /// Both events include the click point and latLng.
   void _onMapClick(Event e) {
+    // The click that ends a drag is not a tap, as on Android and iOS.
+    if (_featureDrag.takeClickAfterDrag()) return;
     final geometry = jsify([
       [e.point.x, e.point.y],
       [e.point.x, e.point.y],
@@ -2135,7 +2108,7 @@ class MapLibreMapController extends MapLibrePlatform
         eventType = 'move';
       } else if (isCurrentlyHovered && !isPreviouslyHovered) {
         eventType = 'enter';
-        if (_draggedFeatureId == null) {
+        if (!_featureDrag.isDragging) {
           _map.getCanvas().style.cursor = 'pointer';
         }
       } else if (!isCurrentlyHovered && isPreviouslyHovered) {
@@ -2153,7 +2126,7 @@ class MapLibreMapController extends MapLibrePlatform
     final isAnyFeatureHovered = _hoveredFeatureIdsByLayer.values.any(
       (hoveredFeatures) => hoveredFeatures.isNotEmpty,
     );
-    if (isAnyFeatureHovered && _draggedFeatureId == null) {
+    if (isAnyFeatureHovered && !_featureDrag.isDragging) {
       _map.getCanvas().style.cursor = 'pointer';
     }
     if (!isAnyFeatureHovered) {
