@@ -1275,8 +1275,10 @@ final class MapLibreMapController
         new ForwardingLogger(previous) {
           @Override
           public void e(String tag, String msg) {
-            if (error[0] == null && msg != null && msg.startsWith(FILTER_ERROR_PREFIX)) {
-              error[0] = msg.substring(FILTER_ERROR_PREFIX.length());
+            // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
+            int start = msg == null ? -1 : msg.indexOf(FILTER_ERROR_PREFIX);
+            if (error[0] == null && start >= 0) {
+              error[0] = msg.substring(start + FILTER_ERROR_PREFIX.length());
             }
             if (previousLevel <= Logger.ERROR) {
               super.e(tag, msg);
@@ -3074,7 +3076,7 @@ final class MapLibreMapController
           try {
             filter = getRawFilter(layer);
           } catch (ReflectiveOperationException e) {
-            result.error("error", "Could not read the filter: " + e, null);
+            result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
             break;
           }
           // An unfiltered layer has no filter or the always-true one that

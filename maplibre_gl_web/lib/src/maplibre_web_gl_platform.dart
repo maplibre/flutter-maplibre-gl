@@ -1543,14 +1543,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
-    // GL JS only logs a missing layer, so report it as Android and iOS do.
-    if (_map.getLayer(layerId) == null) {
-      throw PlatformException(
-        code: 'LAYER_NOT_FOUND_ERROR',
-        message: 'Layer not found',
-        details: 'Layer with id $layerId not found.',
-      );
-    }
+    _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
     // throwing, so listen for it while the filter is set.
     String? error;
@@ -2283,7 +2276,40 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future getFilter(String layerId) async {
+    _checkFilterable(layerId);
     return _map.getFilter(layerId);
+  }
+
+  /// The layer types Android and iOS can filter.
+  static const _filterableLayerTypes = {
+    'circle',
+    'fill',
+    'fill-extrusion',
+    'heatmap',
+    'line',
+    'symbol',
+  };
+
+  /// Throws the errors Android and iOS give for a layer that is missing or
+  /// cannot be filtered. GL JS only logs the first and accepts the second.
+  void _checkFilterable(String layerId) {
+    final layer = _map.getLayer(layerId);
+    if (layer == null) {
+      throw PlatformException(
+        code: 'LAYER_NOT_FOUND_ERROR',
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
+      );
+    }
+    final type =
+        (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+    if (!_filterableLayerTypes.contains(type)) {
+      throw PlatformException(
+        code: 'INVALID_LAYER_TYPE',
+        message: 'Invalid layer type',
+        details: "Layer '$layerId' does not support filtering.",
+      );
+    }
   }
 
   @override
