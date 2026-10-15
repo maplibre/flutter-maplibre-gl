@@ -106,8 +106,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
   ///
-  /// Each layer goes back to the slot it had: a plain re-add would put it on
-  /// top of the style and break the annotationOrder stacking.
+  /// Each layer keeps its position in the style.
   Future<void> _rebuildLayers() async {
     if (controller.isDisposed) return;
 
