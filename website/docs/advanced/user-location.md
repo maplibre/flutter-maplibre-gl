@@ -65,6 +65,30 @@ MapLibreMap(
 )
 ```
 
+### Fused location provider on Android
+
+With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider when the app includes Play Services location, and GPS through the platform location manager when it does not. The plugin does not ship Play Services itself, so apps without Google services, such as F-Droid builds, stay free of it.
+
+To use the fused provider, add the dependency to your app:
+
+=== "Kotlin DSL"
+
+    ```kotlin title="android/app/build.gradle.kts"
+    dependencies {
+        implementation("com.google.android.gms:play-services-location:21.4.0")
+    }
+    ```
+
+=== "Groovy"
+
+    ```groovy title="android/app/build.gradle"
+    dependencies {
+        implementation 'com.google.android.gms:play-services-location:21.4.0'
+    }
+    ```
+
+21.4.0 is the version the plugin is built against. The fused provider is used only on devices with Google Play Services; on others, such as Huawei devices without them, the plugin falls back to GPS on its own. Other priorities use the platform location engine either way.
+
 ### Pulsed GPS on iOS
 
 Continuous GPS is expensive on a map that stays open for a long time. On iOS the engine can run in pulses instead: GPS is active for `pulseWindowMs`, then off until the next `intervalMs`, and the puck holds its last position in between.
