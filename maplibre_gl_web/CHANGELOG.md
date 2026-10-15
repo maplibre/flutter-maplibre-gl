@@ -14,7 +14,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
-* `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#PR).
+* `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 
 ### Added
 * `SymbolLayerProperties.symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
