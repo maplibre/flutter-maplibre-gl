@@ -21,6 +21,7 @@ import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
 import 'haptic_feedback_test.dart' as haptic_feedback;
 import 'pan_inertia_test.dart' as pan_inertia;
+import 'placement_transitions_test.dart' as placement_transitions;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
@@ -34,6 +35,7 @@ void main() {
   geojson_query.main();
   haptic_feedback.main();
   pan_inertia.main();
+  placement_transitions.main();
   style_layers.main();
   style_misc.main();
   web_feature_state.main();

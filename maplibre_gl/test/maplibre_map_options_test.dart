@@ -162,4 +162,22 @@ void main() {
       expect(diff, {'hapticFeedbackEnabled': false});
     });
   });
+
+  group('symbolPlacementTransitionsEnabled', () {
+    test('is sent on, the MapLibre default, unless set', () {
+      final options = MapLibreMapOptions.fromWidget(MapLibreMap());
+      expect(options.toMap()['symbolPlacementTransitionsEnabled'], isTrue);
+    });
+
+    test('is sent off when set off, and only as an update when it changed', () {
+      final on = MapLibreMapOptions.fromWidget(MapLibreMap());
+      final off = MapLibreMapOptions.fromWidget(
+        MapLibreMap(symbolPlacementTransitionsEnabled: false),
+      );
+
+      expect(off.toMap()['symbolPlacementTransitionsEnabled'], isFalse);
+      expect(on.updatesMap(off), {'symbolPlacementTransitionsEnabled': false});
+      expect(off.updatesMap(off), isEmpty);
+    });
+  });
 }

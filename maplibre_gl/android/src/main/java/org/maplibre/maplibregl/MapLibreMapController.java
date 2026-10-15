@@ -71,6 +71,7 @@ import org.maplibre.android.maps.UiSettings;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.TransitionOptions;
 import org.maplibre.android.style.layers.BackgroundLayer;
 import org.maplibre.android.style.layers.ColorReliefLayer;
 import org.maplibre.android.style.layers.FillExtrusionLayer;
@@ -227,6 +228,12 @@ final class MapLibreMapController
   private boolean disposed = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
+  // Whether MapLibre fades symbols as it places them. A style holds its own
+  // transition options, so this is applied again on every style load.
+  private boolean symbolPlacementTransitionsEnabled = true;
+  // The style's own transition, saved when placement transitions are turned
+  // off and written back when they are turned on again. Null while they are on.
+  private TransitionOptions transitionBeforePlacementOff = null;
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
@@ -277,6 +284,9 @@ final class MapLibreMapController
         @Override
         public void onStyleLoaded(@NonNull Style style) {
           MapLibreMapController.this.style = style;
+          // A new style brings its own transition, with placement transitions on.
+          transitionBeforePlacementOff = null;
+          applyPlacementTransitions(style);
 
           // Called unconditionally: updateMyLocationEnabled() checks myLocationEnabled
           // itself, and enableLocationComponent() checks the permission, so a map
@@ -4281,6 +4291,47 @@ final class MapLibreMapController
   @Override
   public void setFeatureTapsTriggersMapClick(boolean triggers) {
     this.featureTapsTriggersMapClick = triggers;
+  }
+
+  @Override
+  public void setSymbolPlacementTransitionsEnabled(boolean enabled) {
+    this.symbolPlacementTransitionsEnabled = enabled;
+    if (style != null && style.isFullyLoaded()) {
+      applyPlacementTransitions(style);
+      // With transitions off nothing asks MapLibre for another frame once
+      // placement is done (no fade is running), so data placed while they were
+      // off can stay undrawn until the map next moves. One frame now draws it.
+      mapLibreMap.triggerRepaint();
+    }
+  }
+
+  /**
+   * Turns MapLibre's placement transitions on or off for [style], keeping the style's own
+   * transition duration and delay.
+   *
+   * <p>With them on, placement runs at most every 300 ms and fades symbols in: a symbol whose data
+   * just changed can be drawn, hidden by the next placement and faded back in. With them off,
+   * placement runs every frame and symbols change in the frame their data arrives.
+   *
+   * <p>The style is left alone while they are on and were never turned off, since writing its
+   * transition back is not a no-op: a style that sets none reads back as 0 ms, and an explicit 0
+   * turns off the symbol fade that MapLibre otherwise runs for 300 ms. For the same reason, turning
+   * them back on for such a style restores its paint transitions exactly but leaves symbols
+   * without a fade until the next style load.
+   */
+  private void applyPlacementTransitions(@NonNull Style style) {
+    if (!symbolPlacementTransitionsEnabled) {
+      if (transitionBeforePlacementOff != null) return; // already off
+      final TransitionOptions current = style.getTransition();
+      transitionBeforePlacementOff = current;
+      style.setTransition(
+          new TransitionOptions(current.getDuration(), current.getDelay(), false));
+    } else {
+      final TransitionOptions saved = transitionBeforePlacementOff;
+      if (saved == null) return; // never turned off
+      transitionBeforePlacementOff = null;
+      style.setTransition(new TransitionOptions(saved.getDuration(), saved.getDelay(), true));
+    }
   }
 
   private void updateMyLocationEnabled() {

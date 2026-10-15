@@ -122,6 +122,11 @@ class Convert {
         options['featureTapsTriggersMapClick'],
       );
     }
+    if (options.containsKey('symbolPlacementTransitionsEnabled')) {
+      sink.setSymbolPlacementTransitionsEnabled(
+        options['symbolPlacementTransitionsEnabled'],
+      );
+    }
     if (options.containsKey('locationSource')) {
       sink.setLocationSource(options['locationSource'] as String);
     }
