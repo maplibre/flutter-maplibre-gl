@@ -548,7 +548,7 @@ void main() {
       tester,
       controller.addGeoJsonSource(_sourceId, pointCollection(count: 1)),
       'addGeoJsonSource duplicate',
-      code: 'sourceAlreadyExists',
+      code: 'SOURCE_ALREADY_EXISTS',
     );
     await expectPlatformError(
       tester,
@@ -557,7 +557,7 @@ void main() {
         GeojsonSourceProperties(data: pointCollection(count: 1)),
       ),
       'addSource duplicate',
-      code: 'sourceAlreadyExists',
+      code: 'SOURCE_ALREADY_EXISTS',
     );
 
     final ids = await _sourceIds(tester, controller);
@@ -586,7 +586,7 @@ void main() {
         const CircleLayerProperties(circleRadius: 9),
       ),
       'addCircleLayer duplicate',
-      code: 'layerAlreadyExists',
+      code: 'LAYER_ALREADY_EXISTS',
     );
     // Same id, different type: still a clash.
     await expectPlatformError(
@@ -597,7 +597,7 @@ void main() {
         const FillLayerProperties(fillOpacity: 0.5),
       ),
       'addFillLayer duplicate',
-      code: 'layerAlreadyExists',
+      code: 'LAYER_ALREADY_EXISTS',
     );
 
     final ids = await _layerIds(tester, controller);
