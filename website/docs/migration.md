@@ -68,7 +68,7 @@ If your app relied on a drag starting at touch down, or on tapping exactly next 
 
 ### Web: browsers without WebGL2
 
-The default MapLibre GL JS is now 6.14.0, which throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
+The MapLibre GL JS build the plugin now loads throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
 
 ### Behaviour changes
 
