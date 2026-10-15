@@ -2470,6 +2470,36 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    // maplibre-gl-js takes any range, so the values Android and iOS reject
+    // are rejected here too.
+    if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            'Invalid zoom range [$minzoom, $maxzoom]: both must be within 0 '
+            'and 24, with minzoom not above maxzoom.',
+      );
+    }
+    if (!_styleReady) {
+      // Same code and message as Android and iOS. maplibre-gl-js would throw
+      // its own error instead.
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
+    _ensureLayerExists(layerId);
+    _map.setLayerZoomRange(layerId, minzoom, maxzoom);
+  }
+
+  @override
   Future getFilter(String layerId) async {
     _checkFilterable(layerId);
     return _map.getFilter(layerId);
@@ -2528,7 +2558,15 @@ class MapLibreMapController extends MapLibrePlatform
     if (layers is! List) return null;
     for (final layer in layers) {
       if (layer is Map && layer['id'] == layerId) {
-        return _styleShaped(layer);
+        final shaped = _styleShaped(layer);
+        // Android and iOS leave out a zoom range at the spec defaults, which
+        // maplibre-gl-js serializes once set, by setLayerZoomRange or the
+        // style itself.
+        final minzoom = shaped['minzoom'];
+        if (minzoom is num && minzoom <= 0) shaped.remove('minzoom');
+        final maxzoom = shaped['maxzoom'];
+        if (maxzoom is num && maxzoom >= 24) shaped.remove('maxzoom');
+        return shaped;
       }
     }
     return null;
