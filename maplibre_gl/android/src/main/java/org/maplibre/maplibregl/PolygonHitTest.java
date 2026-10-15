@@ -15,7 +15,7 @@ import java.util.List;
  * polygonIntersectsMultiPolygon}), so a box inside a hole still finds the polygon through its outer
  * ring (#893). MapLibre GL JS, on web, counts all rings together and skips the hole; this check
  * does the same for taps and drags. iOS has the same math in PolygonHitTest.swift: keep them in
- * step.
+ * step. Remove both once maplibre/maplibre-native#4783 is fixed in the SDK we ship.
  *
  * <p>The math runs in Web Mercator world coordinates at the camera zoom. MapLibre tiles are 512 dp
  * wide, so one unit there is one dp on screen and ring edges compare directly with the touch
