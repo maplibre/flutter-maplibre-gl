@@ -1,5 +1,10 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Fixed
+* `setGeoJsonSource` with a single Feature or a bare geometry sets that data, as on Android and iOS. It emptied the source.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
