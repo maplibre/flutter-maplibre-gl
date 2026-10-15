@@ -2027,7 +2027,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
         if dragFeature == nil, began, sender.numberOfTouches == 1 {
-            let result = firstFeatureOnLayers(at: point)
+            // Hit test where the finger came down, like Android: the pan begins
+            // only after the finger has moved, which can miss a small feature.
+            let translation = sender.translation(in: mapView)
+            let touchDown = CGPoint(x: point.x - translation.x, y: point.y - translation.y)
+            let result = firstFeatureOnLayers(at: touchDown)
             if let feature = result.feature,
             let draggable = feature.attribute(forKey: "draggable") as? Bool,
             draggable {
