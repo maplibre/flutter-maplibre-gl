@@ -12,6 +12,7 @@
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web; drop any scaling by the pixel ratio (#1067).
 * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
 * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
+* **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -34,6 +35,10 @@
 * **iOS**: `addImage` before the style has loaded throws `STYLE_NOT_READY` like Android instead of silently adding nothing (#1067).
 * **Android, iOS**: `getLayerVisibility` is implemented instead of throwing `MissingPluginException` (#1068).
 * **Web**: `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
+* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
+* **Android**: camera calls with `CameraUpdate.scrollBy` complete with `true` and animate (#1069).
+* **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
+* **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

@@ -51,6 +51,9 @@ class MapLibreMapController extends MapLibrePlatform
   String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
 
+  /// Completes the [easeCamera] call whose animation is still running.
+  Completer<bool>? _pendingEase;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -66,6 +69,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void dispose() {
+    // The map goes away mid-animation: answer the waiting easeCamera call.
+    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
+    _pendingEase = null;
     _removeManualPuck();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
@@ -582,6 +588,21 @@ class MapLibreMapController extends MapLibrePlatform
     final zoom = cameraOptions.zoom;
     final easing = resolveEasing(interpolation);
 
+    // An ease still running is cut short by this one, which Android reports
+    // as a cancel. Stopping it first also fires its moveend now, before the
+    // listener below exists, so that moveend cannot complete this call.
+    if (_pendingEase?.isCompleted == false) _pendingEase!.complete(false);
+    _map.stop();
+
+    final arrival = Completer<bool>();
+    _pendingEase = arrival;
+    late final Subscription subscription;
+    subscription = _map.on('moveend', (_) {
+      subscription.unsubscribe();
+      if (!arrival.isCompleted) arrival.complete(true);
+      if (identical(_pendingEase, arrival)) _pendingEase = null;
+    });
+
     _map.easeTo({
       if (around != null) 'around': around.jsObject,
       if (bearing != null) 'bearing': bearing,
@@ -592,7 +613,8 @@ class MapLibreMapController extends MapLibrePlatform
       if (easing != null) 'easing': easing,
     });
 
-    return true;
+    // true once the camera is on target, as on Android and iOS.
+    return arrival.future;
   }
 
   @override

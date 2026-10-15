@@ -12,6 +12,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
 * `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
+* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
+* `easeCamera` completes when the camera arrives instead of when it starts (#1069).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
