@@ -3,8 +3,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Fixed
-* `querySourceFeatures` applies its `filter`, and returns properties and coordinates as Dart maps and lists. The filter was ignored, and reading a feature's `properties` as a `Map` threw a `TypeError`.
-* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw a `PlatformException` with code `CLUSTER_NOT_FOUND` for a cluster id the source does not hold. They answered an empty list, or a zoom that belonged to no cluster.
+* `querySourceFeatures` applies its `filter`, and returns properties and coordinates as Dart maps and lists. The filter was ignored, and reading a feature's `properties` as a `Map` threw a `TypeError` (#1064).
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw a `PlatformException` with code `CLUSTER_NOT_FOUND` for a cluster id the source does not hold. They answered an empty list, or a zoom that belonged to no cluster (#1065).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
