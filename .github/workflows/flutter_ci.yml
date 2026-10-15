@@ -150,19 +150,13 @@ jobs:
       - name: Start chromedriver
         run: |
           "$CHROMEWEBDRIVER/chromedriver" --port=4444 &
-      # flutter drive takes one target per run on web.
+      # all_tests.dart runs every file in one app, so the suite builds once.
       - name: Run integration tests
-        run: |
-          status=0
-          for target in integration_test/*_test.dart; do
-            echo "::group::$target"
-            flutter drive \
-              --driver=test_driver/integration_test.dart \
-              --target="$target" \
-              -d web-server --browser-name=chrome --headless || status=1
-            echo "::endgroup::"
-          done
-          exit $status
+        run: >
+          flutter drive
+          --driver=test_driver/integration_test.dart
+          --target=integration_test/all_tests.dart
+          -d web-server --browser-name=chrome --headless
 
   integration-android:
     name: "Integration tests (Android emulator)"
@@ -197,7 +191,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           disable-animations: true
           working-directory: maplibre_gl_example
-          script: flutter test integration_test -d emulator-5554
+          script: flutter test integration_test/all_tests.dart -d emulator-5554
 
   code-gen:
     name: "Generate code from templates"
