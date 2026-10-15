@@ -7,7 +7,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
-* **iOS**: style error codes now match Android and web: `layerNotFound` is `LAYER_NOT_FOUND_ERROR`, `invalidExpression` is `INVALID_EXPRESSION` and `invalidLayerType` is `INVALID_LAYER_TYPE`. Update any `catch` on the old codes (#1055).
+* **iOS**: error codes are renamed to match Android and web. Update any `catch` on the old codes (#1055, #1068):
+  * `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
+  * `invalidExpression` is now `INVALID_EXPRESSION`
+  * `invalidLayerType` is now `INVALID_LAYER_TYPE`
+  * `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
+  * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
