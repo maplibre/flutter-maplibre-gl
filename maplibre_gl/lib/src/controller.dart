@@ -335,6 +335,9 @@ class MapLibreMapController extends ChangeNotifier {
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
 
   /// Callbacks to receive drag events for features (geojson layer) placed on this map.
+  ///
+  /// On Android and iOS a second finger ends the drag with an `end` event and
+  /// the map takes over the gesture.
   final onFeatureDrag = <OnFeatureDragCallback>[];
 
   /// Callbacks for mouse enter, move and leave over features of a style layer.

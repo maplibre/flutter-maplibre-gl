@@ -19,6 +19,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
+* **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch, and Android no longer crashes on it; apps that expected the drag to continue with two fingers must start a new drag (#1044).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
