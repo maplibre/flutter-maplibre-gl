@@ -370,10 +370,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
       null;
 
   @override
-  Future<void> setFilter(String layerId, dynamic filter) async {}
+  Future<void> setFilter(String layerId, dynamic filter) async {
+    calls.add(PlatformCall('setFilter', [layerId, filter]));
+  }
 
   @override
-  Future<dynamic> getFilter(String layerId) async => null;
+  Future<dynamic> getFilter(String layerId) async {
+    calls.add(PlatformCall('getFilter', [layerId]));
+    return null;
+  }
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async => const Point(0, 0);

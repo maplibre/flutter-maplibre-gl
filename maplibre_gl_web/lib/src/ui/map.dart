@@ -928,15 +928,20 @@ class MapLibreMap extends Camera {
     String layerId,
     dynamic filter, [
     StyleSetterOptions? options,
-  ]) => MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
+  ]) => MapLibreMap.fromJsObject(
+    // jsify turns a Dart list into a JS array, nested lists included, and
+    // keeps null, which removes the filter.
+    jsObject.setFilter(layerId, (filter as Object?).jsify()),
+  );
 
   ///  Returns the filter applied to the specified style layer.
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  List<dynamic> getFilter(String layerId) {
-    final filter = jsObject.getFilter(layerId);
-    return filter != null ? filter.toDart : [];
+  dynamic getFilter(String layerId) {
+    // dartify converts the nested expression arrays too, which toDart does
+    // not. A filter can also be a plain boolean, so the result stays dynamic.
+    return jsObject.getFilter(layerId).dartify();
   }
 
   ///  Sets the value of a paint property in the specified style layer.
