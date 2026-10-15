@@ -3312,6 +3312,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.compassViewMargins = CGPoint(x: x, y: y)
     }
 
+    func setAttributionEnabled(attributionEnabled: Bool) {
+        mapView.attributionButton.isHidden = !attributionEnabled
+    }
+
     func setAttributionButtonMargins(x: Double, y: Double) {
         mapView.attributionButtonMargins = CGPoint(x: x, y: y)
     }
