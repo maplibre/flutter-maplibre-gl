@@ -1269,6 +1269,9 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Gets the current map style as JSON string.
   ///
+  /// On Android and iOS this is the style as it was loaded: layers and sources
+  /// added or changed at runtime are not in it. Web serializes the live style.
+  ///
   /// The returned [Future] completes with the style JSON string if successful,
   /// null otherwise.
   Future<String?> getStyle() async {
@@ -1942,6 +1945,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// This allows you to add an image to the currently displayed style once, and from there on refer to it e.g. in the [Symbol.iconImage] anytime you add a [Symbol] later on.
   /// Set [sdf] to true if the image you add is an SDF image.
   /// Returns after the image has successfully been added to the style.
+  /// An image already added under [name] is replaced.
+  /// On Android and web, [bytes] that cannot be decoded as an image throw a
+  /// [PlatformException] with code `INVALID_IMAGE`.
   /// Note: This can only be called after OnStyleLoadedCallback has been invoked and any added images will have to be re-added if a new style is loaded.
   ///
   /// Example: Adding an asset image and using it in a new symbol:
@@ -2313,7 +2319,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Sets the style's `light` root object, which lights extruded geometries.
   ///
   /// **Platform support**: all platforms. On Android and iOS the values must
-  /// be constants; only web also accepts expressions.
+  /// be constants; only web also accepts expressions. On Android and iOS a
+  /// value that is not a constant throws a [PlatformException] with code
+  /// `INVALID_ARGUMENT`, and none of the other fields is applied either.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -2361,6 +2369,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
   /// values are returned as JSON literals or expressions.
   ///
+  /// **Android**: the layer is read as it is now, so runtime changes show up.
+  /// Values come back the way MapLibre Native holds them: colors as
+  /// `rgba(...)` strings, and `layout` always carries `visibility`.
+  ///
   /// **iOS**: only layers that came with the style are readable. iOS reads the
   /// style as it was loaded, so a layer added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
@@ -2376,6 +2388,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned map mirrors a source entry in a MapLibre style JSON: it
   /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
   /// `data`, `attribution`, `minzoom`, `maxzoom`).
+  ///
+  /// **Android**: a source added at runtime reports only its `type`, and its
+  /// `url` (`data` for a geojson source loaded from a URL) and `attribution`
+  /// when set, since MapLibre Native exposes nothing else on it. A source that
+  /// came with the style reports its full entry from the style as loaded.
   ///
   /// **iOS**: only sources that came with the style are readable. iOS reads the
   /// style as it was loaded, so a source added at runtime through this API is

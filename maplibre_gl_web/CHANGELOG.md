@@ -1,5 +1,11 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Fixed
+* `addImage` with bytes that are not an image throws a `PlatformException` with code `INVALID_IMAGE`, as on Android, instead of a null-check error.
+* `addImage` with a name already in use replaces the image, as on Android and iOS. The old image was kept and the call only printed a message.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
