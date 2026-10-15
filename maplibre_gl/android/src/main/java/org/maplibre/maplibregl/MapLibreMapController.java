@@ -1712,9 +1712,10 @@ final class MapLibreMapController
    * Returns the interactive feature nearest to {@code point}, looking up to {@link
    * #FEATURE_HIT_TOLERANCE_DP} around it. Nearness is measured to what the feature draws: the
    * square around the point grows one dp at a time and the first feature it touches wins. When
-   * several features are reached at the same distance, the top-most layer wins.
+   * several features are reached at the same distance, the top-most layer wins. With {@code
+   * draggableOnly}, features that cannot be dragged are left out, so they never hide one that can.
    */
-  private Pair<Feature, String> firstFeatureOnLayers(PointF point) {
+  private Pair<Feature, String> firstFeatureOnLayers(PointF point, boolean draggableOnly) {
     if (style == null) return null;
     if (!style.isFullyLoaded()) {
         Log.d(TAG, "firstFeatureOnLayers: style not fully loaded yet");
@@ -1742,7 +1743,7 @@ final class MapLibreMapController
     int hits = 0;
     for (String id : layersInOrder) {
       List<Feature> features =
-          mapLibreMap.queryRenderedFeatures(hitRect(point, FEATURE_HIT_TOLERANCE_DP), id);
+          featuresIn(hitRect(point, FEATURE_HIT_TOLERANCE_DP), id, draggableOnly);
       if (!features.isEmpty()) {
         candidateLayers.add(id);
         hits += features.size();
@@ -1756,13 +1757,23 @@ final class MapLibreMapController
     for (int radiusDp = 1; radiusDp <= FEATURE_HIT_TOLERANCE_DP; radiusDp++) {
       RectF rect = hitRect(point, radiusDp);
       for (String id : candidateLayers) {
-        List<Feature> features = mapLibreMap.queryRenderedFeatures(rect, id);
+        List<Feature> features = featuresIn(rect, id, draggableOnly);
         if (!features.isEmpty()) {
           return new Pair<Feature, String>(features.get(0), id);
         }
       }
     }
     return null;
+  }
+
+  private List<Feature> featuresIn(RectF rect, String layerId, boolean draggableOnly) {
+    List<Feature> features = mapLibreMap.queryRenderedFeatures(rect, layerId);
+    if (!draggableOnly) return features;
+    List<Feature> draggable = new ArrayList<Feature>();
+    for (Feature feature : features) {
+      if (isDraggable(feature)) draggable.add(feature);
+    }
+    return draggable;
   }
 
   private RectF hitRect(PointF point, float radiusDp) {
@@ -3712,7 +3723,7 @@ final class MapLibreMapController
   @Override
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
-    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf);
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf, false);
     final Map<String, Object> arguments = new HashMap<>();
     arguments.put("x", pointf.x);
     arguments.put("y", pointf.y);
@@ -4488,7 +4499,7 @@ final class MapLibreMapController
   // The feature is looked up where the finger came down, where the user aimed: the move detector
   // only reports the gesture once the finger has left the touch slop.
   private void rememberDragCandidate(PointF point) {
-    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(point);
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(point, true);
     if (featureLayerPair != null
         && featureLayerPair.first != null
         && isDraggable(featureLayerPair.first)) {

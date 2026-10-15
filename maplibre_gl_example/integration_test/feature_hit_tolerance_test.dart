@@ -90,6 +90,28 @@ void main() {
     expect(map.drags.last.type, DragEventType.end);
     expect(map.drags.map((d) => d.id).toSet(), {circle.id});
   });
+
+  testWidgets('a closer feature that cannot be dragged does not hide one '
+      'that can', (tester) async {
+    if (!_onAndroid) return;
+    final map = await _pumpMap(tester);
+    final draggable = await map.addCircle(
+      const Offset(-_radius - 6, 0),
+      draggable: true,
+    );
+    await map.addCircle(const Offset(_radius + 3, 0));
+
+    final finger = _Finger(tester);
+    await finger.down(map.onScreen(Offset.zero));
+    for (var i = 0; i < 10; i++) {
+      await finger.moveBy(const Offset(0, 4));
+    }
+    await finger.up();
+    await _settle(tester);
+
+    expect(map.drags, isNotEmpty);
+    expect(map.drags.map((d) => d.id).toSet(), {draggable.id});
+  });
 }
 
 /// Lets the platform view answer over the method channel.

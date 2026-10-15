@@ -17,7 +17,7 @@
 * **Android**: a feature drag starts only after the finger moves a little, so a tap on a draggable feature is a tap, the drag no longer fires `onMapLongClick`, and the `start` event has a zero delta like on iOS. Check any code that relied on a drag starting at touch down (#1051).
 * **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch, and Android no longer crashes on it; apps that expected the drag to continue with two fingers must start a new drag (#1044).
 * **Web**: a feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS. Check any code that relied on a drag starting at mouse down (#1077).
-* **Android, iOS**: taps and drags find a feature up to 8 logical pixels from the finger and pick the nearest one. Before, Android looked about 3 pixels around the touch and iOS only at the exact point, so check apps that tell close features apart by tap.
+* **Android, iOS**: taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins; before, Android used about 3 logical pixels and iOS the exact point (#NNNN).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
