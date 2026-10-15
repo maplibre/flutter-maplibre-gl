@@ -95,7 +95,8 @@ await controller.setSky(
 The light source shades extruded geometries, so it changes how a fill extrusion
 layer looks. Unlike the three calls above it works on **all platforms**, with one
 difference: Android and iOS take constant values only, while web also accepts
-expressions.
+expressions. On Android and iOS a non-constant value throws a
+`PlatformException` with code `INVALID_ARGUMENT` and nothing is applied.
 
 ```dart
 await controller.setLight(

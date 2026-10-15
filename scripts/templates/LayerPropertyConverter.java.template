@@ -4,8 +4,14 @@
 package org.maplibre.maplibregl;
 
 import org.maplibre.android.style.expressions.Expression;
+import org.maplibre.android.style.layers.Layer;
+{{#layerTypes}}
+import org.maplibre.android.style.layers.{{typePascal}}Layer;
+{{/layerTypes}}
 import org.maplibre.android.style.layers.PropertyFactory;
 import org.maplibre.android.style.layers.PropertyValue;
+import org.maplibre.android.style.types.Formatted;
+import org.maplibre.android.style.types.FormattedSection;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +20,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import static org.maplibre.maplibregl.Convert.toMap;
@@ -145,6 +152,60 @@ class LayerPropertyConverter {
   }
 
 {{/layerTypes}}
+  // The style-spec type of a layer, or null for one that is not a style-spec
+  // layer type (a CustomLayer).
+  static String layerType(Layer layer) {
+{{#layerTypes}}
+    if (layer instanceof {{typePascal}}Layer) return "{{type}}";
+{{/layerTypes}}
+    return null;
+  }
+
+  // Reads the paint and layout properties a layer currently holds, keyed by
+  // their style-spec names. The runtime layer is read rather than the style
+  // JSON, which is the style as loaded and misses every runtime change.
+  // Properties that were never set read back as null and are left out, as in
+  // a style JSON.
+  static void readLayerProperties(Layer layer, JsonObject paint, JsonObject layout) {
+{{#layerTypes}}
+    if (layer instanceof {{typePascal}}Layer) {
+      final {{typePascal}}Layer typed = ({{typePascal}}Layer) layer;
+{{#paint_properties_android}}
+      putPropertyValue(paint, typed.get{{valueAsPascalCase}}());
+{{/paint_properties_android}}
+{{#layout_properties_android}}
+      putPropertyValue(layout, typed.get{{valueAsPascalCase}}());
+{{/layout_properties_android}}
+      return;
+    }
+{{/layerTypes}}
+  }
+
+  private static void putPropertyValue(JsonObject target, PropertyValue<?> property) {
+    if (property == null || property.value == null) return;
+    final JsonElement value = toStyleJson(property.value);
+    if (value != null) target.add(property.name, value);
+  }
+
+  // The SDK hands an expression back as a JsonArray, and a constant as its
+  // Java value (Float, String, arrays, Formatted for text-field).
+  static JsonElement toStyleJson(Object value) {
+    if (value instanceof JsonElement) return (JsonElement) value;
+    final Gson gson = new Gson();
+    if (value instanceof Expression) return gson.toJsonTree(((Expression) value).toArray());
+    if (value instanceof Formatted) {
+      final FormattedSection[] sections = ((Formatted) value).getFormattedSections();
+      if (sections.length == 1
+          && sections[0].getFontScale() == null
+          && sections[0].getFontStack() == null
+          && sections[0].getTextColor() == null) {
+        return new JsonPrimitive(sections[0].getText());
+      }
+      return gson.toJsonTree(((Formatted) value).toArray());
+    }
+    return gson.toJsonTree(value);
+  }
+
   private static boolean isNumber(JsonElement element) {
     return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
   }
