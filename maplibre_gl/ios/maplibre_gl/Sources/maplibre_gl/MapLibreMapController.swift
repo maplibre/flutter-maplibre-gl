@@ -2014,6 +2014,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
+    private func endFeatureDrag(
+        _ point: CGPoint,
+        _ coordinate: CLLocationCoordinate2D
+    ) {
+        mapView.allowsScrolling = scrollingEnabled
+        invokeFeatureDrag(point, coordinate, "end")
+        dragFeature = nil
+        originDragCoordinate = nil
+        previousDragCoordinate = nil
+    }
+
     @IBAction func handleMapPan(sender: UIPanGestureRecognizer) {
         let began = sender.state == UIGestureRecognizer.State.began
         // A drag the system cancels (a call, Control Center, the app leaving)
@@ -2051,13 +2062,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
         }
+        // A second finger ends the drag, like on Android: one end where the
+        // single finger last was, then the map takes the gesture (pinch).
+        // Cancelling the drag pan sends one more call with dragFeature nil,
+        // so no drag or second end follows.
+        if !end, dragFeature != nil, sender.numberOfTouches > 1,
+           let previous = previousDragCoordinate
+        {
+            endFeatureDrag(mapView.convert(previous, toPointTo: mapView), previous)
+            featureDragPan?.isEnabled = false
+            featureDragPan?.isEnabled = true
+            return
+        }
+
         if end, dragFeature != nil {
-            mapView.allowsScrolling = scrollingEnabled
-            let eventType = "end"
-            invokeFeatureDrag(point, coordinate, eventType)
-            dragFeature = nil
-            originDragCoordinate = nil
-            previousDragCoordinate = nil
+            endFeatureDrag(point, coordinate)
         }
 
         if !began, !end, dragFeature != nil {

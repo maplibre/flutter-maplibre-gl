@@ -98,6 +98,7 @@ void main() {
 
     final first = _Finger(tester);
     await first.down(map.circleOnScreen);
+    // Inside the 300x300 map: a finger on its edge never reaches the view.
     final second = _Finger(tester);
     await second.down(map.circleOnScreen + const Offset(0, 80));
     for (var i = 0; i < 10; i++) {
@@ -116,6 +117,55 @@ void main() {
         'getVisibleRegion after',
       ),
       isNot(before),
+    );
+  });
+
+  testWidgets('a second finger ends the drag and the map pinches', (
+    tester,
+  ) async {
+    if (!_onAndroid) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final first = _Finger(tester);
+    await first.down(map.circleOnScreen);
+    for (var i = 0; i < 5; i++) {
+      await first.moveBy(const Offset(10, 0));
+    }
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
+    // Inside the 300x300 map: a finger on its edge never reaches the view,
+    // and the first one would just go on dragging.
+    final second = _Finger(tester);
+    await second.down(map.circleOnScreen + const Offset(0, 80));
+    for (var i = 0; i < 10; i++) {
+      await first.moveBy(const Offset(0, -5));
+      await second.moveBy(const Offset(0, 5));
+    }
+    await second.up();
+    await first.up();
+    await _settle(tester);
+
+    // One end, where the single finger last dragged the feature to, and
+    // nothing after it.
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    expect(types.last, DragEventType.end);
+    final end = map.drags.last;
+    expect(end.delta, const LatLng(0, 0));
+    expect(end.current, map.drags[map.drags.length - 2].current);
+    // The rest of the gesture is the map's: the fingers spread, it zooms in.
+    final after = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion after',
+    );
+    expect(
+      after.northeast.latitude - after.southwest.latitude,
+      lessThan(before.northeast.latitude - before.southwest.latitude),
     );
   });
 
