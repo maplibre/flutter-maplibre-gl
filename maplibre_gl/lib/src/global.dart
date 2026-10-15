@@ -111,6 +111,10 @@ Future<String?> exportOfflineDatabase(String destinationPath) async {
   return copyOfflineDatabase(dbPath, destinationPath);
 }
 
+/// Lists the offline regions stored on the device.
+///
+/// On iOS the stored regions load asynchronously after launch; this waits for
+/// them, so a call made right at startup returns the same list as Android.
 Future<List<OfflineRegion>> getListOfRegions() async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
@@ -120,6 +124,11 @@ Future<List<OfflineRegion>> getListOfRegions() async {
   return regions.map(OfflineRegion.fromMap).toList();
 }
 
+/// Replaces the metadata of the offline region with the given [id] and returns
+/// the updated region.
+///
+/// Throws a [PlatformException] with code `UpdateMetadataError` when no region
+/// has that [id].
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
   Map<String, dynamic> metadata,

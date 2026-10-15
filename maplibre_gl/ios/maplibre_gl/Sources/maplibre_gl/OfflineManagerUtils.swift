@@ -28,13 +28,25 @@ class OfflineManagerUtils {
             metadata: metadata
         )
 
-        // Download region
-        let id = downloader.download()
-        // retain downloader by its generated id
-        activeDownloaders[id] = downloader
+        // The duplicate check in download() reads the stored packs, so wait for
+        // them: before they load it would miss an existing pack of the same area.
+        whenPacksLoaded {
+            // Download region
+            let id = downloader.download()
+            // retain downloader by its generated id
+            activeDownloaders[id] = downloader
+        }
     }
 
     static func mergeRegions(result: @escaping FlutterResult, path: String) {
+        // The snapshot below is only meaningful once the stored packs have loaded:
+        // taken earlier it is empty and every pack would be reported as imported.
+        whenPacksLoaded {
+            addContents(result: result, path: path)
+        }
+    }
+
+    private static func addContents(result: @escaping FlutterResult, path: String) {
         let url = URL(fileURLWithPath: path)
         // addContentsOfURL's completion hands back *all known* packs, not just the
         // ones imported from `url` (see MLNOfflineStorage.h). Snapshot the packs
@@ -88,7 +100,8 @@ class OfflineManagerUtils {
         // external DB or from Android). Mirror Android's metadataBytesToMap: try
         // to parse the context bytes as a JSON dict, fall back to empty dict.
         // Use a deterministic ID so the same pack always receives the same ID
-        // across sessions (pack.context is read-only, so we cannot persist it).
+        // across sessions without writing to its context; once the app sets
+        // metadata on it, updateRegionMetadata stores that ID in the context.
         guard let id = deterministicPackId(for: pack),
               let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
         let metadata: [String: Any]
@@ -98,21 +111,34 @@ class OfflineManagerUtils {
         } else {
             metadata = [:]
         }
-        let definition = OfflineRegionDefinition(
+        return OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: regionDefinition(for: tileRegion)
+        ).toDictionary()
+    }
+
+    private static func regionDefinition(
+        for tileRegion: MLNTilePyramidOfflineRegion
+    ) -> OfflineRegionDefinition {
+        return OfflineRegionDefinition(
             bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
             mapStyleUrl: tileRegion.styleURL,
             minZoom: tileRegion.minimumZoomLevel,
             maxZoom: tileRegion.maximumZoomLevel
         )
-        return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
     }
 
     static func regionsList(result: @escaping FlutterResult) {
-        let offlineStorage = MLNOfflineStorage.shared
-        guard let packs = offlineStorage.packs else {
-            result("[]")
-            return
+        // Right after launch `packs` is still nil while the store loads, and
+        // answering then reported no regions at all (#381).
+        whenPacksLoaded {
+            let packs = MLNOfflineStorage.shared.packs ?? []
+            listRegions(result: result, packs: packs)
         }
+    }
+
+    private static func listRegions(result: @escaping FlutterResult, packs: [MLNOfflinePack]) {
         let regionsArgs = packs.compactMap { pack in
             OfflineRegion.fromOfflinePack(pack)?.toDictionary()
         }
@@ -123,6 +149,71 @@ class OfflineManagerUtils {
             return
         }
         result(regionsArgsJsonString)
+    }
+
+    static func updateRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        whenPacksLoaded {
+            setRegionMetadata(result: result, id: id, metadata: metadata)
+        }
+    }
+
+    private static func setRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        // Error codes and messages mirror Android's updateRegionMetadata.
+        guard let pack = findPack(id: id),
+              let tileRegion = pack.region as? MLNTilePyramidOfflineRegion
+        else {
+            result(FlutterError(
+                code: "UpdateMetadataError",
+                message: "There is no region with given id to update.",
+                details: nil
+            ))
+            return
+        }
+        guard JSONSerialization.isValidJSONObject(metadata) else {
+            result(FlutterError(
+                code: "UpdateMetadataError",
+                message: "Metadata is not JSON serializable",
+                details: nil
+            ))
+            return
+        }
+        // The context keeps the shape it is created with at download time, so
+        // the region keeps its ID. A pack imported without a Flutter context
+        // gets the ID it was already listed under written into it.
+        let region = OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: regionDefinition(for: tileRegion)
+        )
+        pack.setContext(region.prepareContext()) { error in
+            if let error = error {
+                result(FlutterError(
+                    code: "UpdateMetadataError",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+                return
+            }
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: region.toDictionary()),
+                  let jsonString = String(data: jsonData, encoding: .utf8)
+            else {
+                result(FlutterError(
+                    code: "UpdateMetadataError",
+                    message: "Failed to serialize the updated region",
+                    details: nil
+                ))
+                return
+            }
+            result(jsonString)
+        }
     }
 
     static func setOfflineTileCountLimit(result: @escaping FlutterResult, maximumCount: UInt64) {
@@ -200,6 +291,12 @@ class OfflineManagerUtils {
     }
 
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded {
+            removeRegion(result: result, id: id)
+        }
+    }
+
+    private static func removeRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = MLNOfflineStorage.shared
         guard let pacs = offlineStorage.packs else {
             result(FlutterError(
@@ -257,6 +354,10 @@ class OfflineManagerUtils {
     // MARK: Pause / Resume
 
     static func pauseRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { pauseLoadedRegion(result: result, id: id) }
+    }
+
+    private static func pauseLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
             pack.suspend()
             result(nil)
@@ -270,6 +371,10 @@ class OfflineManagerUtils {
     }
 
     static func resumeRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { resumeLoadedRegion(result: result, id: id) }
+    }
+
+    private static func resumeLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
             pack.resume()
             result(nil)
@@ -285,6 +390,10 @@ class OfflineManagerUtils {
     // MARK: Region Status
 
     static func getRegionStatus(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { returnRegionStatus(result: result, id: id) }
+    }
+
+    private static func returnRegionStatus(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
             let progress = pack.progress
             let completedCount = progress.countOfResourcesCompleted
@@ -337,7 +446,30 @@ class OfflineManagerUtils {
 
     // MARK: Pack Lookup
 
-    /// Finds a pack by region ID, checking active packs first then falling back to storage
+    /// How long `whenPacksLoaded` waits for the stored packs before giving up.
+    private static let packsLoadTimeout: TimeInterval = 10
+
+    /// Runs `completion` on the main queue once `MLNOfflineStorage.shared.packs`
+    /// has loaded. The store loads its packs asynchronously, so right after
+    /// launch the property is still nil and every lookup would miss. Runs at
+    /// once when the packs are already there; otherwise waits for the KVO
+    /// change, and after `packsLoadTimeout` goes ahead with whatever is
+    /// available so a store that never loads cannot leave a call unanswered.
+    static func whenPacksLoaded(_ completion: @escaping () -> Void) {
+        let storage = MLNOfflineStorage.shared
+        if Thread.isMainThread, storage.packs != nil {
+            completion()
+            return
+        }
+        PacksLoadedObserver(
+            storage: storage,
+            timeout: packsLoadTimeout,
+            onLoaded: completion
+        ).start()
+    }
+
+    /// Finds a pack by region ID, checking active packs first then falling back to storage.
+    /// Call it from `whenPacksLoaded`, or a stored pack can be missed right after launch.
     private static func findPack(id: Int) -> MLNOfflinePack? {
         // Check active packs first (in-progress downloads)
         if let pack = activePacks[id] {
@@ -394,6 +526,60 @@ class OfflineManagerUtils {
         ].joined(separator: "|")
         // djb2: hash * 33 + byte, deterministic across sessions unlike hashValue.
         return key.utf8.reduce(5381) { (33 &* $0) &+ Int($1) }
+    }
+}
+
+/// One-shot KVO observer that waits for `MLNOfflineStorage.packs` to become
+/// non-nil, or for a timeout, whichever comes first. Retains itself until then
+/// and calls `onLoaded` exactly once, on the main queue.
+private final class PacksLoadedObserver: NSObject {
+    private let storage: MLNOfflineStorage
+    private let timeout: TimeInterval
+    private let onLoaded: () -> Void
+    private var finished = false
+    private var retainCycle: PacksLoadedObserver?
+
+    init(storage: MLNOfflineStorage, timeout: TimeInterval, onLoaded: @escaping () -> Void) {
+        self.storage = storage
+        self.timeout = timeout
+        self.onLoaded = onLoaded
+        super.init()
+        retainCycle = self
+    }
+
+    func start() {
+        // .initial reports the current value as soon as the observer is added,
+        // so packs that load between the caller's check and this call are not
+        // missed.
+        storage.addObserver(self, forKeyPath: "packs", options: [.initial, .new], context: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+            self?.finish()
+        }
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of _: Any?,
+        change _: [NSKeyValueChangeKey: Any]?,
+        context _: UnsafeMutableRawPointer?
+    ) {
+        guard keyPath == "packs" else { return }
+        // KVO can fire on any thread, and synchronously inside addObserver for
+        // .initial: hop to the main queue so `finished` is only touched there
+        // and the observer is never removed from within its own registration.
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.storage.packs != nil else { return }
+            self.finish()
+        }
+    }
+
+    private func finish() {
+        guard !finished else { return }
+        finished = true
+        storage.removeObserver(self, forKeyPath: "packs")
+        let callback = onLoaded
+        retainCycle = nil
+        callback()
     }
 }
 
