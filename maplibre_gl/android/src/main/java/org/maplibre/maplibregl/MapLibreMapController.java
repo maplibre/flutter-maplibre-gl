@@ -37,8 +37,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
+import org.maplibre.android.log.Logger;
+import org.maplibre.android.log.LoggerDefinition;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -100,6 +103,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -841,6 +846,33 @@ final class MapLibreMapController
     return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
   }
 
+  // Whether the source currently holds a cluster with this id.
+  //
+  // For an id it does not hold, MapLibre Native throws "No cluster with the
+  // specified id." on the render thread, where nothing here can catch it, and
+  // the app dies. Ids go stale as the data or the viewport changes, so an app
+  // can pass one without doing anything wrong. Looking the id up first lets the
+  // cluster calls reply CLUSTER_NOT_FOUND instead. Only loaded tiles are
+  // searched, which holds for any id the app just read off a feature on screen.
+  private static boolean hasCluster(GeoJsonSource source, long clusterId) {
+    final List<Feature> clusters =
+        source.querySourceFeatures(
+            Expression.eq(Expression.get("cluster_id"), Expression.literal(clusterId)));
+    return clusters != null && !clusters.isEmpty();
+  }
+
+  private static void clusterNotFound(MethodChannel.Result result, String sourceId, long clusterId) {
+    result.error(
+        "CLUSTER_NOT_FOUND",
+        "Cluster '"
+            + clusterId
+            + "' is not one of the current clusters of source '"
+            + sourceId
+            + "'. Cluster ids are reassigned as the data or the viewport changes, so read the"
+            + " id from a freshly queried feature.",
+        null);
+  }
+
   // Serializes features for the channel as JSON strings, so nested properties
   // survive intact. Shared by every call that answers with features:
   // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
@@ -882,8 +914,8 @@ final class MapLibreMapController
       return;
     }
 
-    // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes
+    // The channel call already answered SOURCE_ALREADY_EXISTS for this case. The
+    // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(sourceName) != null) {
       return;
     }
@@ -1161,9 +1193,163 @@ final class MapLibreMapController
   }
 
   private Expression parseFilter(String filter) {
-    JsonParser parser = new JsonParser();
-    JsonElement filterJsonElement = parser.parse(filter);
-    return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
+    JsonElement json = new JsonParser().parse(filter);
+    if (json.isJsonNull()) {
+      return null;
+    }
+    boolean isExpression =
+        json.isJsonArray()
+            && json.getAsJsonArray().size() > 0
+            && json.getAsJsonArray().get(0).isJsonPrimitive()
+            && json.getAsJsonArray().get(0).getAsJsonPrimitive().isString();
+    boolean isBoolean = json.isJsonPrimitive() && json.getAsJsonPrimitive().isBoolean();
+    if (!isExpression && !isBoolean) {
+      throw new IllegalArgumentException("A filter is an expression array or a boolean.");
+    }
+    // Hand the engine the JSON as plain values. Expression.Converter would
+    // turn every number into a float, so an id like 123456789 became 123456792.
+    Object value = jsonToValue(json);
+    final Object[] array = value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
+    return new Expression("literal") {
+      @NonNull
+      @Override
+      public Object[] toArray() {
+        return array;
+      }
+    };
+  }
+
+  private static Object jsonToValue(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      Object[] values = new Object[array.size()];
+      for (int i = 0; i < values.length; i++) {
+        values[i] = jsonToValue(array.get(i));
+      }
+      return values;
+    }
+    if (json.isJsonObject()) {
+      Map<String, Object> values = new HashMap<>();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        values.put(entry.getKey(), jsonToValue(entry.getValue()));
+      }
+      return values;
+    }
+    if (json.isJsonNull()) {
+      return null;
+    }
+    JsonPrimitive primitive = json.getAsJsonPrimitive();
+    if (primitive.isBoolean()) {
+      return primitive.getAsBoolean();
+    }
+    if (primitive.isNumber()) {
+      return primitive.getAsDouble();
+    }
+    return primitive.getAsString();
+  }
+
+  private static boolean isFilterable(Layer layer) {
+    return layer instanceof CircleLayer
+        || layer instanceof FillExtrusionLayer
+        || layer instanceof FillLayer
+        || layer instanceof HeatmapLayer
+        || layer instanceof LineLayer
+        || layer instanceof SymbolLayer;
+  }
+
+  private static void setLayerFilter(Layer layer, Expression filter) {
+    if (layer instanceof CircleLayer) {
+      ((CircleLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillExtrusionLayer) {
+      ((FillExtrusionLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillLayer) {
+      ((FillLayer) layer).setFilter(filter);
+    } else if (layer instanceof HeatmapLayer) {
+      ((HeatmapLayer) layer).setFilter(filter);
+    } else if (layer instanceof LineLayer) {
+      ((LineLayer) layer).setFilter(filter);
+    } else if (layer instanceof SymbolLayer) {
+      ((SymbolLayer) layer).setFilter(filter);
+    }
+  }
+
+  private static final String FILTER_ERROR_PREFIX = "Error setting filter: ";
+
+  /**
+   * Runs {@code action} and returns why the engine rejected a filter meanwhile, or null. The engine
+   * does not throw for an invalid filter: it logs the reason and keeps the old filter. So the SDK
+   * logger is swapped for one that records that log, also when the app silenced logging.
+   */
+  private static String captureFilterError(Runnable action) {
+    LoggerDefinition previous;
+    int previousLevel;
+    Field loggerField;
+    Field levelField;
+    try {
+      loggerField = Logger.class.getDeclaredField("logger");
+      levelField = Logger.class.getDeclaredField("logLevel");
+      loggerField.setAccessible(true);
+      levelField.setAccessible(true);
+      previous = (LoggerDefinition) loggerField.get(null);
+      previousLevel = levelField.getInt(null);
+    } catch (ReflectiveOperationException e) {
+      action.run();
+      return null;
+    }
+
+    String[] error = {null};
+    Logger.setLoggerDefinition(
+        new ForwardingLogger(previous) {
+          @Override
+          public void e(String tag, String msg) {
+            // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
+            int start = msg == null ? -1 : msg.indexOf(FILTER_ERROR_PREFIX);
+            if (error[0] == null && start >= 0) {
+              error[0] = msg.substring(start + FILTER_ERROR_PREFIX.length());
+            }
+            if (previousLevel <= Logger.ERROR) {
+              super.e(tag, msg);
+            }
+          }
+        });
+    Logger.setVerbosity(Math.min(previousLevel, Logger.ERROR));
+    try {
+      action.run();
+    } finally {
+      Logger.setLoggerDefinition(previous);
+      Logger.setVerbosity(previousLevel);
+    }
+    return error[0];
+  }
+
+  /** A logger that passes every message on to {@code target}. */
+  private static class ForwardingLogger implements LoggerDefinition {
+    private final LoggerDefinition target;
+
+    ForwardingLogger(LoggerDefinition target) {
+      this.target = target;
+    }
+
+    @Override public void v(String tag, String msg) { target.v(tag, msg); }
+    @Override public void v(String tag, String msg, Throwable tr) { target.v(tag, msg, tr); }
+    @Override public void d(String tag, String msg) { target.d(tag, msg); }
+    @Override public void d(String tag, String msg, Throwable tr) { target.d(tag, msg, tr); }
+    @Override public void i(String tag, String msg) { target.i(tag, msg); }
+    @Override public void i(String tag, String msg, Throwable tr) { target.i(tag, msg, tr); }
+    @Override public void w(String tag, String msg) { target.w(tag, msg); }
+    @Override public void w(String tag, String msg, Throwable tr) { target.w(tag, msg, tr); }
+    @Override public void e(String tag, String msg) { target.e(tag, msg); }
+    @Override public void e(String tag, String msg, Throwable tr) { target.e(tag, msg, tr); }
+  }
+
+  /**
+   * The filter of {@code layer} as the engine holds it, or null without one. Layer.getFilter
+   * rounds numbers to floats, so this calls the native getter it wraps.
+   */
+  private static JsonElement getRawFilter(Layer layer) throws ReflectiveOperationException {
+    Method nativeGetFilter = Layer.class.getDeclaredMethod("nativeGetFilter");
+    nativeGetFilter.setAccessible(true);
+    return (JsonElement) nativeGetFilter.invoke(layer);
   }
 
   private boolean addRasterLayer(
@@ -1337,6 +1523,51 @@ final class MapLibreMapController
     return null;
   }
 
+  /**
+   * Answers SOURCE_ALREADY_EXISTS or LAYER_ALREADY_EXISTS, as iOS and web do, for every call that
+   * adds a source or layer under an id the style already holds. The SDK would otherwise throw
+   * (reaching Dart with a generic code) or, for sources, the add was skipped and reported as a
+   * success. Either way the original stays untouched.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectDuplicateStyleId(MethodCall call, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      return false;
+    }
+    final String method = call.method;
+    String layerId = null;
+    String sourceId = null;
+    if (method.endsWith("Layer#add")) {
+      layerId = call.argument("layerId");
+    } else if (method.equals("style#addLayer") || method.equals("style#addLayerBelow")) {
+      layerId = call.argument("imageLayerId");
+    } else if (method.equals("style#addSource") || method.equals("source#addGeoJson")) {
+      sourceId = call.argument("sourceId");
+    } else if (method.equals("style#addImageSource")) {
+      sourceId = call.argument("imageSourceId");
+    }
+    if (layerId != null && style.getLayer(layerId) != null) {
+      result.error(
+          "LAYER_ALREADY_EXISTS",
+          "Layer already exists",
+          "Layer with id " + layerId + " already exists.");
+      return true;
+    }
+    if (sourceId != null && style.getSource(sourceId) != null) {
+      result.error(
+          "SOURCE_ALREADY_EXISTS",
+          "Source already exists",
+          "Source with id " + sourceId + " already exists.");
+      return true;
+    }
+    return false;
+  }
+
+  private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
+    result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
@@ -1398,6 +1629,9 @@ final class MapLibreMapController
   }
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
+    if (rejectDuplicateStyleId(call, result)) {
+      return;
+    }
     switch (call.method) {
       case "map#updateMyLocationTrackingMode":
         {
@@ -2018,6 +2252,10 @@ final class MapLibreMapController
           if (source == null) {
             break;
           }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
+            break;
+          }
           result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
           break;
         }
@@ -2033,6 +2271,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterChildren", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(
@@ -2055,6 +2297,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterLeaves", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(
@@ -2184,7 +2430,7 @@ final class MapLibreMapController
             layer.setProperties(properties);
             result.success(null);
           } else {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+            replyLayerNotFound(result, layerId);
           }
 
           break;
@@ -2372,16 +2618,6 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
-          // Nearly every published style already has a layer called "background", the
-          // natural id to reach for here. Report the clash the way iOS does instead of
-          // letting the SDK throw a CannotAddLayerException.
-          if (style != null && style.isFullyLoaded() && style.getLayer(layerId) != null) {
-            result.error(
-                "layerAlreadyExists",
-                "Layer already exists",
-                "Layer with id " + layerId + " already exists.");
-            break;
-          }
           if (!addBackgroundLayer(
               layerId,
               minzoom != null ? minzoom.floatValue() : null,
@@ -2815,6 +3051,10 @@ final class MapLibreMapController
             break;
           }
           String layerId = call.argument("layerId");
+          if (style.getLayer(layerId) == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
           style.removeLayer(layerId);
           interactiveFeatureLayerIds.remove(layerId);
 
@@ -2836,9 +3076,11 @@ final class MapLibreMapController
                   .include(locationOne) // Northeast
                   .include(locationTwo) // Southwest
                   .build();
+          // Padding is in logical pixels, like every other camera input.
           mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-                  padding), 200);
-
+                  (int) (padding * density)), 200);
+          // Replies once the move is started, as iOS and web do.
+          result.success(null);
           break;
         }
       case "style#setFilter":
@@ -2854,31 +3096,36 @@ final class MapLibreMapController
           String filter = call.argument("filter");
 
           Layer layer = style.getLayer(layerId);
-
-          JsonParser parser = new JsonParser();
-          JsonElement jsonElement = parser.parse(filter);
-          Expression expression = Expression.Converter.convert(jsonElement);
-
-          if (layer instanceof CircleLayer) {
-            ((CircleLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillExtrusionLayer) {
-            ((FillExtrusionLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillLayer) {
-            ((FillLayer) layer).setFilter(expression);
-          } else if (layer instanceof HeatmapLayer) {
-            ((HeatmapLayer) layer).setFilter(expression);
-          } else if (layer instanceof LineLayer) {
-            ((LineLayer) layer).setFilter(expression);
-          } else if (layer instanceof SymbolLayer) {
-            ((SymbolLayer) layer).setFilter(expression);
-          } else {
+          if (layer == null) {
             result.error(
-                "INVALID LAYER TYPE",
-                String.format("Layer '%s' does not support filtering.", layerId),
-                null);
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
+          if (!isFilterable(layer)) {
+            result.error(
+                "INVALID_LAYER_TYPE",
+                "Invalid layer type",
+                String.format("Layer '%s' does not support filtering.", layerId));
+            break;
+          }
+
+          Expression parsed;
+          try {
+            parsed = parseFilter(filter);
+          } catch (RuntimeException e) {
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
+            break;
+          }
+          // The SDK takes no null filter, so a null filter becomes the
+          // always-true one, which is what an unfiltered layer has.
+          final Expression expression = parsed != null ? parsed : Expression.literal(true);
+
+          String error = captureFilterError(() -> setLayerFilter(layer, expression));
+          if (error != null) {
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
+            break;
+          }
           result.success(null);
           break;
         }
@@ -2894,29 +3141,36 @@ final class MapLibreMapController
           Map<String, Object> reply = new HashMap<>();
           String layerId = call.argument("layerId");
           Layer layer = style.getLayer(layerId);
-
-          Expression filter;
-          if (layer instanceof CircleLayer) {
-            filter = ((CircleLayer) layer).getFilter();
-          } else if (layer instanceof FillExtrusionLayer) {
-            filter = ((FillExtrusionLayer) layer).getFilter();
-          } else if (layer instanceof FillLayer) {
-            filter = ((FillLayer) layer).getFilter();
-          } else if (layer instanceof HeatmapLayer) {
-            filter = ((HeatmapLayer) layer).getFilter();
-          } else if (layer instanceof LineLayer) {
-            filter = ((LineLayer) layer).getFilter();
-          } else if (layer instanceof SymbolLayer) {
-            filter = ((SymbolLayer) layer).getFilter();
-          } else {
+          if (layer == null) {
             result.error(
-                    "INVALID LAYER TYPE",
-                    String.format("Layer '%s' does not support filtering.", layerId),
-                    null);
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
-          reply.put("filter", filter.toString());
+          if (!isFilterable(layer)) {
+            result.error(
+                    "INVALID_LAYER_TYPE",
+                    "Invalid layer type",
+                    String.format("Layer '%s' does not support filtering.", layerId));
+            break;
+          }
+
+          JsonElement filter;
+          try {
+            filter = getRawFilter(layer);
+          } catch (ReflectiveOperationException e) {
+            result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
+            break;
+          }
+          // An unfiltered layer has no filter or the always-true one that
+          // style#setFilter sets when a filter is removed.
+          boolean unfiltered =
+              filter == null
+                  || filter.isJsonNull()
+                  || (filter.isJsonPrimitive()
+                      && filter.getAsJsonPrimitive().isBoolean()
+                      && filter.getAsBoolean());
+          reply.put("filter", unfiltered ? null : new Gson().toJson(filter));
           result.success(reply);
           break;
         }
@@ -2933,14 +3187,33 @@ final class MapLibreMapController
           boolean visible = call.argument("visible");
 
           Layer layer = style.getLayer(layerId);
-
-          if (layer != null) {
-            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
           }
 
+          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
           result.success(null);
           break;
 
+        }
+        case "layer#getVisibility":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          Layer layer = style.getLayer((String) call.argument("layerId"));
+          if (layer == null) {
+            // Documented contract: null tells the caller there is no such layer.
+            result.success(null);
+            break;
+          }
+          result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
+          break;
         }
         case "map#querySourceFeatures":
         {
@@ -3083,11 +3356,18 @@ final class MapLibreMapController
           result.error("MAP_NOT_READY", "Map is not ready", null);
           break;
         }
-        String styleUrl = mapLibreMap.getStyle() != null ? mapLibreMap.getStyle().getUri() : null;
-        if (styleUrl == null) {
+        Style currentStyle = mapLibreMap.getStyle();
+        if (currentStyle == null) {
           result.error("STYLE_NOT_READY", "Map style is not loaded", null);
           break;
         }
+        // A style set as JSON has no URI, and a snapshotter given an empty one
+        // never calls back, so hand it the JSON instead.
+        String styleUrl = currentStyle.getUri();
+        Style.Builder snapshotStyle =
+            styleUrl == null || styleUrl.isEmpty()
+                ? new Style.Builder().fromJson(currentStyle.getJson())
+                : new Style.Builder().fromUri(styleUrl);
         Map<String, Object> snapshotArgs = (Map<String, Object>) call.arguments;
         Integer width = snapshotArgs != null ? (Integer) snapshotArgs.get("width") : null;
         Integer height = snapshotArgs != null ? (Integer) snapshotArgs.get("height") : null;
@@ -3096,7 +3376,7 @@ final class MapLibreMapController
         int snapshotHeight = height != null ? height : mapView.getHeight();
 
         MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
-                .withStyle(styleUrl)
+                .withStyleBuilder(snapshotStyle)
                 .withCameraPosition(mapLibreMap.getCameraPosition());
         if (activeSnapshotter != null) {
           activeSnapshotter.cancel();

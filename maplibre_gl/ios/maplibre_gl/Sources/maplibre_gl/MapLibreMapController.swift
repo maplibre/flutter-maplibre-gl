@@ -1,5 +1,8 @@
 import Flutter
 import MapLibre
+#if canImport(maplibre_gl_objc)
+    import maplibre_gl_objc
+#endif
 
 class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, MapLibreMapOptionsSink,
     UIGestureRecognizerDelegate
@@ -42,6 +45,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
+    /// Whether the current style was set as JSON rather than by URL.
+    private var styleIsJSON = false
 
     // GPS pulse: start/stop location updates on a timer to save battery.
     private var locationPulseTimer: Timer?
@@ -135,6 +140,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        if let styleString = (args as? [String: Any])?["styleString"] as? String {
+            styleIsJSON = Self.styleStringIsJSON(styleString)
+        }
         self.registrar = registrar
 
         super.init()
@@ -853,11 +861,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let properties = arguments["properties"] as? [String: Any] else { return }
 
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                result(FlutterError(
-                    code: "LAYER_NOT_FOUND_ERROR",
-                    message: "Layer " + layerId + "not found",
-                    details: ""
-                ))
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
                 return
             }
 
@@ -1129,23 +1133,50 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
         case "style#addImage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let name = arguments["name"] as? String else { return }
-            // guard let length = arguments["length"] as? NSNumber else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let sdf = arguments["sdf"] as? Bool else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { return }
+            // Every exit replies: a channel call that never answers leaves the
+            // Dart future pending for good, with nothing to catch.
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let name = arguments["name"] as? String,
+                  let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+                  let sdf = arguments["sdf"] as? Bool
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "addImage requires a String 'name', image 'bytes' and a Bool 'sdf'.",
+                    details: nil
+                ))
+                return
+            }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+                result(FlutterError(
+                    code: "INVALID_IMAGE",
+                    message: "Failed to decode image bytes.",
+                    details: nil
+                ))
+                return
+            }
             if sdf {
-                mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
+                style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
-                mapView.style?.setImage(image, forName: name)
+                style.setImage(image, forName: name)
             }
             result(nil)
 
         case "style#addImageSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
+            if mapView.style?.source(withIdentifier: imageSourceId) != nil {
+                result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
+                return
+            }
             guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
             guard let data = bytes.data as? Data else { return }
             guard let image = UIImage(data: data) else { return }
@@ -1169,16 +1200,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     longitude: coordinates[1][1]
                 )
             )
-
-            // Check for duplicateSource error
-            if mapView.style?.source(withIdentifier: imageSourceId) != nil {
-                result(FlutterError(
-                    code: "duplicateSource",
-                    message: "Source with imageSourceId \(imageSourceId) already exists",
-                    details: "Can't add duplicate source with imageSourceId: \(imageSourceId)"
-                ))
-                return
-            }
 
             let source = MLNImageSource(
                 identifier: imageSourceId,
@@ -1238,13 +1259,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
-            // Check for duplicateLayer error
-            if (mapView.style?.layer(withIdentifier: imageLayerId)) != nil {
-                result(FlutterError(
-                    code: "duplicateLayer",
-                    message: "Layer already exists",
-                    details: "Can't add duplicate layer with imageLayerId: \(imageLayerId)"
-                ))
+            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
                 return
             }
             // Check for noSuchSource error
@@ -1268,6 +1284,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             mapView.style?.addLayer(layer)
+            result(nil)
         case "style#addLayerBelow":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
@@ -1276,13 +1293,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
-            // Check for duplicateLayer error
-            if (mapView.style?.layer(withIdentifier: imageLayerId)) != nil {
-                result(FlutterError(
-                    code: "duplicateLayer",
-                    message: "Layer already exists",
-                    details: "Can't add duplicate layer with imageLayerId: \(imageLayerId)"
-                ))
+            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
                 return
             }
             // Check for noSuchSource error
@@ -1345,10 +1357,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let filter = arguments["filter"] as? String else { return }
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let filter = arguments["filter"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId' or 'filter'.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
                 result(MethodCallError.layerNotFound(
                    layerId: layerId
                 ).flutterError)
@@ -1415,6 +1441,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
                 // The SDK returns -1 for a cluster it cannot expand, whereas
                 // Android returns 0 for the same case. Report the Android value
@@ -1434,6 +1464,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 result(featuresReply(
                     source.children(of: clusterFeature(clusterId)),
                     methodName: "getClusterChildren"
@@ -1454,6 +1488,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
             case let .failure(error): result(error.flutterError)
             case let .success(source):
+                guard hasCluster(source, clusterId: clusterId) else {
+                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                    return
+                }
                 let leaves = source.leaves(
                     of: clusterFeature(clusterId),
                     offset: UInt(max(0, offset)),
@@ -1474,6 +1512,34 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             layer.isVisible = visible
             result(nil)
+
+        case "layer#getVisibility":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "getLayerVisibility needs a 'layerId' string.",
+                    details: nil
+                ))
+                return
+            }
+            // Without a style there is no layer to look up, and null would read
+            // as "no such layer", so report it as Android does.
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            // Documented contract: null tells the caller there is no such layer.
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(nil)
+                return
+            }
+            result(layer.isVisible)
 
         case "map#querySourceFeatures":
             guard let arguments = methodCall.arguments as? [String: Any],
@@ -1564,19 +1630,37 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
 
         case "style#getFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId'.",
+                        details: nil
+                    )
+                )
+                return
+            }
 
-            guard let style = mapView.style else { return }
-            guard let layer = style.layer(withIdentifier: layerId) else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
 
-            var currentLayerFilter : String = ""
+            // A layer without a filter answers null, not an empty string.
+            var currentLayerFilter: NSObject = NSNull()
             if let vectorLayer = layer as? MLNVectorStyleLayer {
                 if let layerFilter = vectorLayer.predicate {
 
                     let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
-                        currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
+                       let json = String(data: data, encoding: String.Encoding.utf8) {
+                        currentLayerFilter = json as NSObject
                     }
                 }
             } else {
@@ -1587,7 +1671,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             var reply = [String: NSObject]()
-            reply["filter"] = currentLayerFilter as NSObject
+            reply["filter"] = currentLayerFilter
             result(reply)
 
         case "style#setStyle":
@@ -1616,7 +1700,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
               )
             }
         case "map#takeSnapshot":
-            guard let styleURL = mapView.styleURL else {
+            guard let styleURL = snapshotStyleURL() else {
                 result(FlutterError(
                     code: "STYLE_NOT_READY",
                     message: "Map style is not loaded",
@@ -1646,9 +1730,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let snapshotter = MLNMapSnapshotter(options: options)
             // Store strong reference before starting to avoid deallocation
             self.activeSnapshotter = snapshotter
+            // A JSON style was written to a temporary file just for this snapshot.
+            let temporaryStyleFile = styleIsJSON ? styleURL : nil
 
             snapshotter.start { [weak self] snapshot, error in
                 self?.activeSnapshotter = nil
+                if let temporaryStyleFile = temporaryStyleFile {
+                    try? FileManager.default.removeItem(at: temporaryStyleFile)
+                }
 
                 if let error = error {
                     result(FlutterError(
@@ -2003,11 +2092,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard let style = mapView.style else {
             return .failure(.styleNotFound)
         }
-        guard let source = style.source(withIdentifier: sourceId) else {
-            return .failure(.sourceNotFound(sourceId: sourceId))
-        }
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
+        }
+        guard let source = style.source(withIdentifier: sourceId) else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
         }
         return .success((style, source))
     }
@@ -2245,16 +2334,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 with: filter.data(using: .utf8)!,
                 options: .fragmentsAllowed
             )
-            if filter is NSNull {
-                return .success(())
-            }
-            let predicate = NSPredicate(mglJSONObject: filter)
-            if let layer = layer as? MLNVectorStyleLayer {
-                layer.predicate = predicate
-            } else {
+            guard let layer = layer as? MLNVectorStyleLayer else {
                 return .failure(MethodCallError.invalidLayerType(
                     details: "Layer '\(layer.identifier)' does not support filtering."
                 ))
+            }
+            // MapLibre raises an Objective-C exception for an invalid filter,
+            // which would crash the app if it reached Swift.
+            let exception = MapLibreGLCatchException {
+                // A null filter removes the current one.
+                layer.predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
+            }
+            if let exception = exception {
+                let reason = (exception.reason ?? "rejected by the map")
+                    .replacingOccurrences(of: "Invalid filter value: ", with: "")
+                return .failure(MethodCallError.invalidFilter(reason: reason))
             }
             return .success(())
         } catch {
@@ -2590,6 +2684,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return .success(shapeSource)
     }
 
+    /// Whether the source currently holds a cluster with this id.
+    ///
+    /// For an id it does not hold, MapLibre Native throws a C++ exception from
+    /// the cluster calls. Swift cannot catch it, so the app aborts. Ids go stale
+    /// as the data or the viewport changes, so an app can pass one without doing
+    /// anything wrong. Looking the id up first lets the cluster calls reply
+    /// CLUSTER_NOT_FOUND instead. Only loaded tiles are searched, which holds
+    /// for any id the app just read off a feature on screen.
+    private func hasCluster(_ source: MLNShapeSource, clusterId: Int) -> Bool {
+        let predicate = NSPredicate(format: "cluster_id == %@", NSNumber(value: clusterId))
+        return !source.features(matching: predicate).isEmpty
+    }
+
+    private func clusterNotFoundError(sourceId: String, clusterId: Int) -> FlutterError {
+        return FlutterError(
+            code: "CLUSTER_NOT_FOUND",
+            message: "Cluster '\(clusterId)' is not one of the current clusters of source "
+                + "'\(sourceId)'. Cluster ids are reassigned as the data or the viewport "
+                + "changes, so read the id from a freshly queried feature.",
+            details: nil
+        )
+    }
+
     /// Builds the argument the SDK's cluster methods take.
     ///
     /// They are declared as taking an `MLNPointFeatureCluster`, but everything
@@ -2732,6 +2849,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.maximumZoomLevel = maxZoom
     }
 
+    /// The style URL a snapshotter can load for the current style.
+    ///
+    /// The snapshotter only takes a URL. A style set as JSON has no real one,
+    /// and the snapshotter rejects what the map reports as unsupported. Such a
+    /// style is written to a temporary file and snapshotted from there. The
+    /// file name is unique so maps snapshotting at once do not overwrite each
+    /// other's style.
+    private func snapshotStyleURL() -> URL? {
+        if !styleIsJSON {
+            return mapView.styleURL
+        }
+        guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
+            return nil
+        }
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("maplibre_gl_snapshot_style_\(UUID().uuidString).json")
+        do {
+            try data.write(to: file, options: .atomic)
+        } catch {
+            return nil
+        }
+        return file
+    }
+
     private static func styleStringIsJSON(_ styleString: String) -> Bool {
         return styleString.hasPrefix("{") || styleString.hasPrefix("[")
     }
@@ -2776,7 +2917,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         interactiveFeatureLayerIds.removeAll()
         addedShapesByLayer.removeAll()
         
-        if Self.styleStringIsJSON(styleString) {
+        styleIsJSON = Self.styleStringIsJSON(styleString)
+        if styleIsJSON {
             mapView.styleJSON = styleString
         } else if let url = Self.styleStringAsURL(
             styleString,

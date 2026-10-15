@@ -176,22 +176,30 @@ class Convert {
             let camera = mapView.camera
             let mapPoint = mapView.convert(camera.centerCoordinate, toPointTo: mapView)
             let movedPoint = CGPoint(x: mapPoint.x + x, y: mapPoint.y + y)
-            camera.centerCoordinate = mapView.convert(movedPoint, toCoordinateFrom: mapView)
-            return camera
+            let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
+            return cameraLooking(at: center, zoom: getZoom(mapView: mapView), mapView: mapView)
         case "zoomBy":
             guard let zoomBy = cameraUpdate[1] as? Double else { return nil }
-            let camera = mapView.camera
-            let zoom = getZoom(mapView: mapView)
-            let altitude = getAltitude(zoom: zoom + zoomBy, mapView: mapView)
-            camera.altitude = altitude
+            let zoom = getZoom(mapView: mapView) + zoomBy
             if cameraUpdate.count == 2 {
+                let camera = mapView.camera
+                camera.altitude = getAltitude(zoom: zoom, mapView: mapView)
                 return camera
             } else {
                 guard let point = cameraUpdate[2] as? [CGFloat],
                       point.count == 2 else { return nil }
-                let movedPoint = CGPoint(x: point[0], y: point[1])
-                camera.centerCoordinate = mapView.convert(movedPoint, toCoordinateFrom: mapView)
-                return camera
+                // Keeps the point under the focus where it is on screen rather
+                // than recentring on it: the view center moves toward the focus
+                // by the share of the distance the zoom takes away.
+                let focus = CGPoint(x: point[0], y: point[1])
+                let centerPoint = mapView.convert(mapView.camera.centerCoordinate, toPointTo: mapView)
+                let scale = CGFloat(pow(2, -zoomBy))
+                let movedPoint = CGPoint(
+                    x: focus.x + (centerPoint.x - focus.x) * scale,
+                    y: focus.y + (centerPoint.y - focus.y) * scale
+                )
+                let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
+                return cameraLooking(at: center, zoom: zoom, mapView: mapView)
             }
         case "zoomIn":
             let camera = mapView.camera
