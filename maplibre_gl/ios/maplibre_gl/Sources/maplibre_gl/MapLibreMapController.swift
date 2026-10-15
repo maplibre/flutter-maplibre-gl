@@ -1931,7 +1931,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      *  around it. Nearness is measured to what the feature draws: the square around the point
      *  grows one point at a time and the first feature it touches wins. When several features
      *  are reached at the same distance, the top-most layer wins. With draggableOnly, features
-     *  that cannot be dragged are left out, so they never hide one that can.
+     *  that cannot be dragged are left out, so they never hide one that can. A touch inside a
+     *  polygon hole reaches the polygon only at its ring edges, see PolygonHitTest.
      */
     private func firstFeatureOnLayers(
         at: CGPoint,
@@ -1952,13 +1953,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             interactiveFeatureLayerIds.contains(layer.identifier)
         }
 
-        func hitRect(_ radius: CGFloat) -> CGRect {
-            CGRect(x: at.x - radius, y: at.y - radius, width: radius * 2, height: radius * 2)
-        }
-        func hits(in rect: CGRect, _ layerId: String) -> [MLNFeature] {
+        let holes = PolygonHitTest(
+            touch: mapView.convert(at, toCoordinateFrom: mapView),
+            zoom: mapView.zoomLevel
+        )
+        func hits(within radius: CGFloat, _ layerId: String) -> [MLNFeature] {
+            let rect = CGRect(x: at.x - radius, y: at.y - radius, width: radius * 2, height: radius * 2)
             let features = mapView.visibleFeatures(in: rect, styleLayerIdentifiers: [layerId])
-            guard draggableOnly else { return features }
-            return features.filter { ($0.attribute(forKey: "draggable") as? Bool) == true }
+            return features.filter { feature in
+                if draggableOnly, (feature.attribute(forKey: "draggable") as? Bool) != true {
+                    return false
+                }
+                return holes.keeps(feature, radius: Double(radius))
+            }
         }
         let tolerance = MapLibreMapController.featureHitTolerance
 
@@ -1967,7 +1974,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         var onlyHit: (feature: MLNFeature?, layerId: String?) = (nil, nil)
         var hitCount = 0
         for layer in clickableLayers.reversed() {
-            let features = hits(in: hitRect(tolerance), layer.identifier)
+            let features = hits(within: tolerance, layer.identifier)
             if let feature = features.first {
                 candidateLayers.append(layer.identifier)
                 hitCount += features.count
@@ -1980,7 +1987,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         for radius in stride(from: CGFloat(1), through: tolerance, by: 1) {
             for layerId in candidateLayers {
-                let features = hits(in: hitRect(radius), layerId)
+                let features = hits(within: radius, layerId)
                 if let feature = features.first {
                     return (feature, layerId)
                 }
