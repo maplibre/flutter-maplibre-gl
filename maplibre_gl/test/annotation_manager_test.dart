@@ -277,6 +277,40 @@ void main() {
 
       expect(controller.symbols, isEmpty);
     });
+
+    test('overlap setters keep the symbol layer in its slot', () async {
+      // Symbol sits between line and circle here, with a user layer on top.
+      final ordered = FakeMapLibrePlatform();
+      final c = MapLibreMapController(
+        maplibrePlatform: ordered,
+        initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+        annotationOrder: const [
+          AnnotationType.line,
+          AnnotationType.symbol,
+          AnnotationType.circle,
+        ],
+        annotationConsumeTapEvents: const [],
+      );
+      c.lineManager = LineManager(c);
+      await c.lineManager!.initialize();
+      c.symbolManager = SymbolManager(c);
+      await c.symbolManager!.initialize();
+      c.circleManager = CircleManager(c);
+      await c.circleManager!.initialize();
+      await c.addLayer('user', 'user', const FillLayerProperties());
+
+      final before = List.of(ordered.layerStack);
+      expect(before.last, 'user');
+
+      await c.setSymbolIconAllowOverlap(true);
+      await c.setSymbolIconIgnorePlacement(true);
+      await c.setSymbolTextAllowOverlap(true);
+      await c.setSymbolTextIgnorePlacement(true);
+
+      expect(ordered.layerStack, before);
+      final symbolAdds = ordered.callsFor('addSymbolLayer');
+      expect(symbolAdds.length, 5);
+    });
   });
 
   group('AnnotationManager initialization', () {

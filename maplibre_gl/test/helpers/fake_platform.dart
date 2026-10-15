@@ -24,6 +24,19 @@ class PlatformCall {
 class FakeMapLibrePlatform extends MapLibrePlatform {
   final calls = <PlatformCall>[];
 
+  /// Style layer ids, bottom to top, as added by the add*Layer methods.
+  /// Not cleared by [reset].
+  final layerStack = <String>[];
+
+  void _stackLayer(String layerId, String? belowLayerId) {
+    final index = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    if (index < 0) {
+      layerStack.add(layerId);
+    } else {
+      layerStack.insert(index, layerId);
+    }
+  }
+
   /// Clears recorded calls.
   void reset() => calls.clear();
 
@@ -353,10 +366,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<void> removeLayer(String layerId) async {
     calls.add(PlatformCall('removeLayer', [layerId]));
+    layerStack.remove(layerId);
   }
 
   @override
-  Future<List> getLayerIds() async => [];
+  Future<List> getLayerIds() async => List.of(layerStack);
 
   @override
   Future<List> getSourceIds() async => [];
@@ -476,6 +490,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addSymbolLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -491,6 +506,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addLineLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -514,6 +530,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addCircleLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -529,6 +546,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addFillLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override

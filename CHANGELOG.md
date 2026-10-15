@@ -44,6 +44,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: camera calls with `CameraUpdate.scrollBy` complete with `true` and animate (#1069).
 * **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
 * **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
