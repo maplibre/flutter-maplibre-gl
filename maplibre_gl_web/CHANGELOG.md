@@ -3,7 +3,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Fixed
-* `querySourceFeatures` applies its `filter`, and returns properties and coordinates as Dart maps and lists. The filter was ignored, and reading a feature's `properties` as a `Map` threw a `TypeError`.
+* `querySourceFeatures` applies its `filter`, and returns properties and coordinates as Dart maps and lists. The filter was ignored, and reading a feature's `properties` as a `Map` threw a `TypeError` (#1064).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
