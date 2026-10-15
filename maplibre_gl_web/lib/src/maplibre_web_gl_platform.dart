@@ -1349,6 +1349,31 @@ class MapLibreMapController extends MapLibrePlatform
     _featureTapsTriggersMapClick = triggers;
   }
 
+  /// The symbol fade the map had before placement transitions were turned
+  /// off, so turning them on again restores it. Null while they are on.
+  ///
+  /// maplibre-gl-js has no switch of its own: a fade of 0 is the same thing,
+  /// since placement then runs on every frame and symbols change at once,
+  /// as with placement transitions off on Android and iOS. The fade belongs
+  /// to the map, not the style, so it survives style changes.
+  num? _placementFadeBeforeOff;
+
+  @override
+  void setPlacementTransitionsEnabled(bool enabled) {
+    if (enabled) {
+      final previous = _placementFadeBeforeOff;
+      if (previous == null) return;
+      _placementFadeBeforeOff = null;
+      _map.placementFadeDuration = previous;
+    } else {
+      if (_placementFadeBeforeOff != null) return;
+      _placementFadeBeforeOff = _map.placementFadeDuration;
+      _map.placementFadeDuration = 0;
+    }
+    // Draws what was placed while the fade was off, as on Android and iOS.
+    _map.triggerRepaint();
+  }
+
   void _addScaleControl({ScaleControlPosition? position}) {
     _removeScaleControl();
 

@@ -173,14 +173,14 @@ class MapLibreMap extends StatefulWidget {
   ///
   /// With transitions on, MapLibre recomputes which symbols are shown at most
   /// once every 300 ms and fades the result in. A symbol whose data has just
-  /// changed — a feature added to a GeoJSON source, a label that changed — can
-  /// therefore be drawn at once, then hidden by the next placement and faded
-  /// back in: it flickers. With transitions off, placement runs on every
-  /// frame and symbols appear and disappear at once, the frame their data
-  /// arrives.
+  /// changed, such as a feature added to a GeoJSON source, can therefore be
+  /// drawn at once, then hidden by the next placement and faded back in: it
+  /// flickers. With transitions off, placement runs on every frame and
+  /// symbols appear and disappear at once, the frame their data arrives.
   ///
   /// Applies to every symbol on the map, the style's own labels included, and
-  /// is kept across style changes. Android and iOS; ignored on web.
+  /// is kept across style changes. On web it sets the map's symbol fade
+  /// duration to 0 while off.
   final bool placementTransitionsEnabled;
 
   /// Geographical bounding box for the camera target.

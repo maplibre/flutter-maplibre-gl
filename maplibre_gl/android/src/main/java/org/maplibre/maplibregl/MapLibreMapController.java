@@ -231,6 +231,9 @@ final class MapLibreMapController
   // Whether MapLibre fades symbols as it places them. A style holds its own
   // transition options, so this is applied again on every style load.
   private boolean placementTransitionsEnabled = true;
+  // The style's own transition, saved when placement transitions are turned
+  // off and written back when they are turned on again. Null while they are on.
+  private TransitionOptions transitionBeforePlacementOff = null;
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
@@ -281,6 +284,8 @@ final class MapLibreMapController
         @Override
         public void onStyleLoaded(@NonNull Style style) {
           MapLibreMapController.this.style = style;
+          // A new style brings its own transition, with placement transitions on.
+          transitionBeforePlacementOff = null;
           applyPlacementTransitions(style);
 
           // Called unconditionally: updateMyLocationEnabled() checks myLocationEnabled
@@ -4301,29 +4306,33 @@ final class MapLibreMapController
   }
 
   /**
-   * Turns MapLibre's placement transitions on or off for [style], keeping the
-   * style's own transition duration and delay.
+   * Turns MapLibre's placement transitions on or off for [style], keeping the style's own
+   * transition duration and delay.
    *
-   * <p>With them on, placement runs at most every 300 ms and fades symbols in:
-   * a symbol whose data just changed can be drawn, hidden by the next placement
-   * and faded back in. With them off, placement runs every frame and symbols
-   * change in the frame their data arrives.
+   * <p>With them on, placement runs at most every 300 ms and fades symbols in: a symbol whose data
+   * just changed can be drawn, hidden by the next placement and faded back in. With them off,
+   * placement runs every frame and symbols change in the frame their data arrives.
+   *
+   * <p>The style is left alone while they are on and were never turned off, since writing its
+   * transition back is not a no-op: a style that sets none reads back as 0 ms, and an explicit 0
+   * turns off the symbol fade that MapLibre otherwise runs for 300 ms. For the same reason, turning
+   * them back on for such a style restores its paint transitions exactly but leaves symbols
+   * without a fade until the next style load.
    */
   private void applyPlacementTransitions(@NonNull Style style) {
-    final TransitionOptions current = style.getTransition();
-    // A style that sets no transition reads back as 0 ms, and writing that 0
-    // back would turn every fade off for good: MapLibre's default stands in.
-    final long duration =
-        current == null || current.getDuration() <= 0
-            ? DEFAULT_TRANSITION_DURATION_MS
-            : current.getDuration();
-    style.setTransition(
-        new TransitionOptions(
-            duration, current == null ? 0 : current.getDelay(), placementTransitionsEnabled));
+    if (!placementTransitionsEnabled) {
+      if (transitionBeforePlacementOff != null) return; // already off
+      final TransitionOptions current = style.getTransition();
+      transitionBeforePlacementOff = current;
+      style.setTransition(
+          new TransitionOptions(current.getDuration(), current.getDelay(), false));
+    } else {
+      final TransitionOptions saved = transitionBeforePlacementOff;
+      if (saved == null) return; // never turned off
+      transitionBeforePlacementOff = null;
+      style.setTransition(new TransitionOptions(saved.getDuration(), saved.getDelay(), true));
+    }
   }
-
-  /** MapLibre's own transition duration, used when a style sets none. */
-  private static final long DEFAULT_TRANSITION_DURATION_MS = 300;
 
   private void updateMyLocationEnabled() {
     if (this.locationComponent == null && mapLibreMap.getStyle() != null && myLocationEnabled) {

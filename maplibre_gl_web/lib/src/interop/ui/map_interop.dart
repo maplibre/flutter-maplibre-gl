@@ -56,6 +56,14 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   external StyleJsImpl get style;
   external JSAny? get painter;
 
+  /// How long symbols fade as they are placed, in milliseconds. The library
+  /// only takes it as the `fadeDuration` map option, but reads this field on
+  /// every frame, so writing it changes the fade on a live map.
+  @JS('_fadeDuration')
+  external JSNumber get placementFadeDuration;
+  @JS('_fadeDuration')
+  external set placementFadeDuration(JSNumber value);
+
   ///  The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
   ///  Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
   external ScrollZoomHandlerJsImpl get scrollZoom;
