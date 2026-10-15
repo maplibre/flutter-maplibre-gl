@@ -37,7 +37,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
 import org.maplibre.android.camera.CameraPosition;
@@ -870,32 +869,38 @@ final class MapLibreMapController
   // and web answer 2. Ids that read as numbers go back as numbers and an empty
   // id is dropped. The limit: a string id that looks like a number, such as
   // "2", also comes back as a number on Android, as the SDK cannot tell them
-  // apart. A fractional id arrives with six decimals only.
+  // apart. A fractional id arrives in its shortest form, such as "1.5".
   private static String featureJson(Feature feature) {
     final String id = feature.id();
     if (id == null) {
       return feature.toJson();
     }
-    JsonPrimitive number = null;
+    String number = null;
     if (INTEGER_ID.matcher(id).matches()) {
       try {
-        number = new JsonPrimitive(Long.parseLong(id));
+        number = Long.toString(Long.parseLong(id));
       } catch (NumberFormatException e) {
         // Beyond a long: left as a String rather than rounded.
       }
     } else if (DECIMAL_ID.matcher(id).matches()) {
-      number = new JsonPrimitive(Double.parseDouble(id));
+      final double value = Double.parseDouble(id);
+      if (!Double.isInfinite(value)) {
+        number = Double.toString(value);
+      }
     }
     if (number == null && !id.isEmpty()) {
       return feature.toJson();
     }
-    final JsonObject json = JsonParser.parseString(feature.toJson()).getAsJsonObject();
+    // Serialized once without the id, which then goes in as a bare number:
+    // query results can hold thousands of features and this runs on the
+    // platform thread, so no parse and reserialize round trip.
+    final String json =
+        Feature.fromGeometry(feature.geometry(), feature.properties(), null, feature.bbox())
+            .toJson();
     if (number == null) {
-      json.remove("id");
-    } else {
-      json.add("id", number);
+      return json;
     }
-    return json.toString();
+    return "{\"id\":" + number + "," + json.substring(1);
   }
 
   // The cluster calls answer with a FeatureCollection, which is null when the
