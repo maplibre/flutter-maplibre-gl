@@ -2,7 +2,16 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ## Unreleased
 
+### Actions needed
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of answering an empty list or a wrong zoom; catch it where you used to check for 0 or an empty list (#1065).
+* `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
+* Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` (#1068).
+
 ### Fixed
+* Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).
+* `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
+* `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
 * `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
 * `easeCamera` completes when the camera arrives instead of when it starts (#1069).
 
