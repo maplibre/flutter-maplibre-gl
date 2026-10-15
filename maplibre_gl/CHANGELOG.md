@@ -7,6 +7,7 @@
 * **Android**: `setCameraBounds` completes instead of never returning (#1067).
 * **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
 * **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
+* **iOS**: `addImage` before the style has loaded throws `STYLE_NOT_READY` like Android instead of silently adding nothing (#1067).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

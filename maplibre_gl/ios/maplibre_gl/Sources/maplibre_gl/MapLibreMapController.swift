@@ -1134,6 +1134,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 ))
                 return
             }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
             guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
                 result(FlutterError(
                     code: "INVALID_IMAGE",
@@ -1143,9 +1151,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             if sdf {
-                mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
+                style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
-                mapView.style?.setImage(image, forName: name)
+                style.setImage(image, forName: name)
             }
             result(nil)
 
@@ -1653,9 +1661,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let snapshotter = MLNMapSnapshotter(options: options)
             // Store strong reference before starting to avoid deallocation
             self.activeSnapshotter = snapshotter
+            // A JSON style was written to a temporary file just for this snapshot.
+            let temporaryStyleFile = styleIsJSON ? styleURL : nil
 
             snapshotter.start { [weak self] snapshot, error in
                 self?.activeSnapshotter = nil
+                if let temporaryStyleFile = temporaryStyleFile {
+                    try? FileManager.default.removeItem(at: temporaryStyleFile)
+                }
 
                 if let error = error {
                     result(FlutterError(
@@ -2724,7 +2737,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     ///
     /// The snapshotter only takes a URL. A style set as JSON has no real one,
     /// and the snapshotter rejects what the map reports as unsupported. Such a
-    /// style is written to a temporary file and snapshotted from there.
+    /// style is written to a temporary file and snapshotted from there. The
+    /// file name is unique so maps snapshotting at once do not overwrite each
+    /// other's style.
     private func snapshotStyleURL() -> URL? {
         if !styleIsJSON {
             return mapView.styleURL
@@ -2733,7 +2748,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return nil
         }
         let file = FileManager.default.temporaryDirectory
-            .appendingPathComponent("maplibre_gl_snapshot_style.json")
+            .appendingPathComponent("maplibre_gl_snapshot_style_\(UUID().uuidString).json")
         do {
             try data.write(to: file, options: .atomic)
         } catch {
