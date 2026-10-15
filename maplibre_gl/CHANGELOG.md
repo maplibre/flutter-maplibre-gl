@@ -20,6 +20,7 @@
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
+* `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).

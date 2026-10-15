@@ -11,6 +11,7 @@ protocol MapLibreMapOptionsSink {
     func setTrackCameraPosition(trackCameraPosition: Bool)
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool)
     func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool)
+    func setPanInertia(panInertia: Int)
     func setMyLocationEnabled(myLocationEnabled: Bool)
     func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode)
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode)

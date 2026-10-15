@@ -3038,6 +3038,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         scrollingEnabled = scrollGesturesEnabled
     }
 
+    /// Maps the Dart `PanInertia` index onto `decelerationRate`. The SDK glides
+    /// for `rate` seconds over `velocity * rate / 4` points, and skips gestures
+    /// slower than 100 pt/s:
+    /// - none (0): `.immediate` (0), no glide.
+    /// - short (1): half of `.normal`, so about half the time and distance.
+    ///   `.fast` (0.99) is not used: it glides almost exactly like `.normal`.
+    /// - normal (2): `.normal` (0.998), the SDK default.
+    /// The same rate also drives the glide after a pinch or a rotation.
+    func setPanInertia(panInertia: Int) {
+        switch panInertia {
+        case 0:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.immediate.rawValue
+        case 1:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue / 2
+        default:
+            mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue
+        }
+    }
+
     func setTiltGesturesEnabled(tiltGesturesEnabled: Bool) {
         mapView.allowsTilting = tiltGesturesEnabled
     }

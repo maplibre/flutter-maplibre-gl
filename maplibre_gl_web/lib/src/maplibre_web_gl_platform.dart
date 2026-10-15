@@ -2178,6 +2178,7 @@ class MapLibreMapController extends MapLibrePlatform
     required bool tiltGesturesEnabled,
     required bool zoomGesturesEnabled,
     required bool doubleClickZoomEnabled,
+    PanInertia panInertia = PanInertia.normal,
   }) {
     if (rotateGesturesEnabled &&
         scrollGesturesEnabled &&
@@ -2189,7 +2190,21 @@ class MapLibreMapController extends MapLibrePlatform
     }
 
     if (scrollGesturesEnabled) {
-      _map.dragPan.enable();
+      // Pan inertia is an option of dragPan.enable(), so it is applied here.
+      // maplibre-gl-js glides for speed / (deceleration * linearity) s, with
+      // speed capped at maxSpeed px/s:
+      // - none: maxSpeed 0, no glide.
+      // - short: deceleration 5000, half the time and distance of normal.
+      // - normal: no options, the defaults (linearity 0.3, deceleration 2500,
+      //   maxSpeed 1400).
+      switch (panInertia) {
+        case PanInertia.none:
+          _map.dragPan.enable(maxSpeed: 0);
+        case PanInertia.short:
+          _map.dragPan.enable(deceleration: 5000);
+        case PanInertia.normal:
+          _map.dragPan.enable();
+      }
     } else {
       _map.dragPan.disable();
     }

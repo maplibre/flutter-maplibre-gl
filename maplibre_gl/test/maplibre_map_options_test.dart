@@ -79,4 +79,60 @@ void main() {
       expect(diff, isEmpty);
     });
   });
+
+  group('panInertia', () {
+    Map<String, dynamic> toMap(MapLibreMap map) =>
+        MapLibreMapOptions.fromWidget(map).toMap();
+
+    Map<String, dynamic> diff(MapLibreMap from, MapLibreMap to) =>
+        MapLibreMapOptions.fromWidget(
+          from,
+        ).updatesMap(MapLibreMapOptions.fromWidget(to));
+
+    test('defaults to normal', () {
+      expect(MapLibreMap().panInertia, PanInertia.normal);
+      expect(toMap(MapLibreMap())['panInertia'], PanInertia.normal.index);
+    });
+
+    test('sends the chosen level', () {
+      for (final inertia in PanInertia.values) {
+        expect(
+          toMap(MapLibreMap(panInertia: inertia))['panInertia'],
+          inertia.index,
+        );
+      }
+    });
+
+    test('a change is sent with the other gesture options', () {
+      // Web applies the inertia when it enables drag-pan, so it needs
+      // scrollGesturesEnabled in the same update.
+      final update = diff(
+        MapLibreMap(),
+        MapLibreMap(panInertia: PanInertia.short),
+      );
+
+      expect(update['panInertia'], PanInertia.short.index);
+      expect(update['scrollGesturesEnabled'], isTrue);
+      expect(update['rotateGesturesEnabled'], isTrue);
+    });
+
+    test('a gesture change resends the inertia', () {
+      final update = diff(
+        MapLibreMap(panInertia: PanInertia.none),
+        MapLibreMap(panInertia: PanInertia.none, scrollGesturesEnabled: false),
+      );
+
+      expect(update['scrollGesturesEnabled'], isFalse);
+      expect(update['panInertia'], PanInertia.none.index);
+    });
+
+    test('is not sent again when unchanged', () {
+      final update = diff(
+        MapLibreMap(panInertia: PanInertia.short),
+        MapLibreMap(panInertia: PanInertia.short),
+      );
+
+      expect(update, isEmpty);
+    });
+  });
 }

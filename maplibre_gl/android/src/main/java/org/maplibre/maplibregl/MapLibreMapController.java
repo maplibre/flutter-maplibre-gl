@@ -67,6 +67,7 @@ import org.maplibre.android.maps.MapLibreMapOptions;
 import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.OnMapReadyCallback;
 import org.maplibre.android.maps.Style;
+import org.maplibre.android.maps.UiSettings;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
@@ -229,6 +230,9 @@ final class MapLibreMapController
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
+  // Index of the Dart PanInertia value, or null to leave the SDK fling
+  // settings alone. Only set through the panInertia map option.
+  private Integer panInertia = null;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
    * once per {@link MapView} instance. See the lifecycle observer section below.
@@ -540,6 +544,9 @@ final class MapLibreMapController
     if (attributionButtonColor != null) {
       mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
     }
+
+    // Re-apply the pan inertia for the same reason: it lives on UiSettings.
+    applyPanInertia();
 
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
@@ -4004,6 +4011,35 @@ final class MapLibreMapController
   @Override
   public void setScrollGesturesEnabled(boolean scrollGesturesEnabled) {
     mapLibreMap.getUiSettings().setScrollGesturesEnabled(scrollGesturesEnabled);
+  }
+
+  @Override
+  public void setPanInertia(int panInertia) {
+    this.panInertia = panInertia;
+    applyPanInertia();
+  }
+
+  /**
+   * Applies {@link #panInertia} to the fling that follows a pan. The SDK glides for {@code
+   * velocity / 10.5 + baseTime} ms (dp/s, untilted map) and skips flings slower than the
+   * threshold:
+   *
+   * <ul>
+   *   <li>none (0): fling animation off.
+   *   <li>short (1): base time 0 ms, threshold 1000 dp/s, about half the glide of normal at a
+   *       typical 2000 dp/s.
+   *   <li>normal (2): SDK defaults, base time 150 ms and threshold 1000 dp/s.
+   * </ul>
+   */
+  private void applyPanInertia() {
+    if (panInertia == null || mapLibreMap == null) {
+      return;
+    }
+    final UiSettings uiSettings = mapLibreMap.getUiSettings();
+    uiSettings.setFlingVelocityAnimationEnabled(panInertia != 0);
+    uiSettings.setFlingAnimationBaseTime(
+        panInertia == 1 ? 0 : MapLibreConstants.ANIMATION_DURATION_FLING_BASE);
+    uiSettings.setFlingThreshold(MapLibreConstants.VELOCITY_THRESHOLD_IGNORE_FLING);
   }
 
   @Override

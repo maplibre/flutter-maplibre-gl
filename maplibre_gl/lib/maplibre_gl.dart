@@ -86,6 +86,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         MyLocationRenderMode,
         MyLocationTrackingMode,
         OnPlatformViewCreatedCallback,
+        PanInertia,
         PlatformLocationSource,
         RasterDemSourceProperties,
         RasterSourceProperties,
