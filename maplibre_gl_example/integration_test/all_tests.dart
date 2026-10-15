@@ -9,11 +9,12 @@
 //   flutter drive --driver=test_driver/integration_test.dart \
 //     --target=integration_test/all_tests.dart -d web-server
 //
-// Each file still runs on its own as well.
+// Each file still runs on its own as well. manual_location_web_test.dart is
+// not included: it imports package:web, which does not compile for Android
+// or iOS, so CI runs it on its own on web.
 import 'annotations_test.dart' as annotations;
 import 'camera_test.dart' as camera;
 import 'geojson_query_test.dart' as geojson_query;
-import 'manual_location_web_test.dart' as manual_location_web;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
@@ -22,7 +23,6 @@ void main() {
   annotations.main();
   camera.main();
   geojson_query.main();
-  manual_location_web.main();
   style_layers.main();
   style_misc.main();
   web_feature_state.main();
