@@ -6,12 +6,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## Unreleased
 
 ### Fixed
-* **iOS**: `getStyle` returns the style JSON. It always returned null before.
-* **Android, iOS**: `setLight` with a value that is not a constant, such as an expression, throws a `PlatformException` with code `INVALID_ARGUMENT` on iOS too, where it was silently ignored. On both platforms every field is now checked before any is applied, so a rejected call leaves the light unchanged; Android used to apply the fields before the bad one.
-* **Web**: `addImage` with bytes that are not an image throws a `PlatformException` with code `INVALID_IMAGE`, as on Android, instead of a null-check error.
-* **Web**: `addImage` with a name already in use replaces the image, as on Android and iOS. The old image was kept and the call only printed a message.
-* **Android**: `getLayerProperties` reads the layer as it is now, so layers added at runtime are found and properties set since the style loaded show up. It returned null for runtime layers and the loaded values for the others. Colors come back as `rgba(...)` strings.
-* **Android**: `getSourceProperties` finds sources added at runtime and reports their `type`, plus `url` and `attribution` when set. It returned null for them before.
+* **iOS**: `getStyle` returns the style JSON. It always returned null before (#1070).
+* **Android, iOS**: `setLight` with a value that is not a constant, such as an expression, throws a `PlatformException` with code `INVALID_ARGUMENT` on iOS too, where it was silently ignored. On both platforms every field is now checked before any is applied, so a rejected call leaves the light unchanged; Android used to apply the fields before the bad one (#1070).
+* **Web**: `addImage` with bytes that are not an image throws a `PlatformException` with code `INVALID_IMAGE`, as on Android, instead of a null-check error (#1070).
+* **Web**: `addImage` with a name already in use replaces the image, as on Android and iOS. The old image was kept and the call only printed a message (#1070).
+* **Android**: `getLayerProperties` reads the layer as it is now, so layers added at runtime are found and properties set since the style loaded show up. It returned null for runtime layers and the loaded values for the others. Colors come back as `rgba(...)` strings (#1070).
+* **Android**: `getSourceProperties` finds sources added at runtime and reports their `type`, plus `url` and `attribution` when set. It returned null for them before (#1070).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
