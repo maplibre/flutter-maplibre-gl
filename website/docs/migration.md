@@ -70,6 +70,28 @@ If your app relied on a drag starting at touch down, or on tapping exactly next 
 
 The MapLibre GL JS build the plugin now loads throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
 
+### Android: Play Services location
+
+The plugin no longer bundles Google Play Services location, so apps without Google services, such as F-Droid builds, can use it. Apps that turn on high accuracy (`enableHighAccuracy: true` or `LocationPriority.highAccuracy`) and want the fused provider back add it themselves:
+
+=== "Kotlin DSL"
+
+    ```kotlin title="android/app/build.gradle.kts"
+    dependencies {
+        implementation("com.google.android.gms:play-services-location:21.4.0")
+    }
+    ```
+
+=== "Groovy"
+
+    ```groovy title="android/app/build.gradle"
+    dependencies {
+        implementation 'com.google.android.gms:play-services-location:21.4.0'
+    }
+    ```
+
+Without it, high accuracy uses GPS through the platform location manager, which can take longer to get a first fix indoors. Apps on the default balanced accuracy see no change. See [Fused location provider on Android](advanced/user-location.md#fused-location-provider-on-android).
+
 ### Behaviour changes
 
 None of these need a code change, but they are the places where code that worked before starts behaving differently.
