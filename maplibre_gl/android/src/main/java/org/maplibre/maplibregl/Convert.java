@@ -6,6 +6,7 @@ package org.maplibre.maplibregl;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import org.maplibre.android.location.engine.LocationEngineRequest;
@@ -16,6 +17,7 @@ import org.maplibre.android.camera.CameraUpdateFactory;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMap;
+import org.maplibre.android.maps.Projection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,14 +64,40 @@ class Convert {
       case "newLatLngZoom":
         return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
       case "scrollBy":
-        maplibreMap.scrollBy(
-            toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
-        return null;
+        {
+          // Pans like maplibre-gl-js panBy: positive x moves the view east,
+          // positive y south. MapLibreMap.scrollBy drags the content the other
+          // way and moves the camera outside any CameraUpdate, so the caller
+          // had nothing to animate or report on.
+          final Projection projection = maplibreMap.getProjection();
+          final PointF center =
+              projection.toScreenLocation(maplibreMap.getCameraPosition().target);
+          center.offset(
+              toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
+          return CameraUpdateFactory.newLatLng(projection.fromScreenLocation(center));
+        }
       case "zoomBy":
         if (data.size() == 2) {
           return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
         } else {
-          return CameraUpdateFactory.zoomBy(toFloat(data.get(1)), toPoint(data.get(2), density));
+          // Keeps the point under the focus where it is on screen.
+          // CameraUpdateFactory.zoomBy(amount, point) recenters on the point.
+          final float amount = toFloat(data.get(1));
+          final List<?> focusData = toList(data.get(2));
+          final float focusX = toFractionalPixels(focusData.get(0), density);
+          final float focusY = toFractionalPixels(focusData.get(1), density);
+          final Projection projection = maplibreMap.getProjection();
+          final CameraPosition camera = maplibreMap.getCameraPosition();
+          final PointF center = projection.toScreenLocation(camera.target);
+          final float scale = (float) Math.pow(2, -amount);
+          final PointF target =
+              new PointF(
+                  focusX + (center.x - focusX) * scale, focusY + (center.y - focusY) * scale);
+          return CameraUpdateFactory.newCameraPosition(
+              new CameraPosition.Builder(camera)
+                  .target(projection.fromScreenLocation(target))
+                  .zoom(camera.zoom + amount)
+                  .build());
         }
       case "zoomIn":
         return CameraUpdateFactory.zoomIn();
