@@ -175,6 +175,41 @@ void main() {
           (_byId(features, 2)['geometry'] as Map)['coordinates'] as List;
       expect((coordinates[0] as num).toDouble(), closeTo(2.5, 0.05));
     });
+
+    testWidgets('queries answer while setGeoJsonSource is applied', (
+      tester,
+    ) async {
+      final controller = await _pumpMapWithRenderedPoints(tester);
+      final p1 = await _screen(tester, controller, _p1);
+      await _waitForRendered(tester, controller, p1, [_layerId]);
+
+      // Same places, new properties. The queries run while the update is
+      // still being applied: on web the map then reports its style as not
+      // loaded, which made them fail or answer nothing, while Android and iOS
+      // answered with the features.
+      final update = controller.setGeoJsonSource(_sourceId, {
+        'type': 'FeatureCollection',
+        'features': [
+          _point(1, _p1, {'n': 10}),
+          _point(2, _p2, {'n': 20}),
+          _point(3, _p3, {'n': 30}),
+        ],
+      });
+      final source = await pumpUntil(
+        tester,
+        controller.querySourceFeatures(_sourceId, null, null),
+        'querySourceFeatures',
+      );
+      final rendered = await pumpUntil(
+        tester,
+        controller.queryRenderedFeatures(p1, [_layerId], null),
+        'queryRenderedFeatures',
+      );
+      await pumpUntil(tester, update, 'setGeoJsonSource');
+
+      expect(_ids(source), isNotEmpty);
+      expect(_ids(rendered), contains(1));
+    });
   });
 
   group('queryRenderedFeatures', () {
