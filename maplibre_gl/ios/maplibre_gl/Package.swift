@@ -20,8 +20,11 @@ let package = Package(
         .target(
             name: "maplibre_gl",
             dependencies: [
+                "maplibre_gl_objc",
                 .product(name: "MapLibre", package: "maplibre-gl-native-distribution")
             ]
-        )
+        ),
+        // Catches the Objective-C exceptions MapLibre raises, which Swift cannot.
+        .target(name: "maplibre_gl_objc")
     ]
 )
