@@ -3,7 +3,7 @@
 // module's own buildscript block, which is what happens in a real app too.
 buildscript {
     def agpVersion = project.hasProperty('agpVersion') ? project.agpVersion : '8.13.2'
-    def kgpVersion = project.hasProperty('kgpVersion') ? project.kgpVersion : '2.4.10'
+    def kgpVersion = project.hasProperty('kgpVersion') ? project.kgpVersion : '2.4.21'
 
     repositories {
         google()

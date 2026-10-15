@@ -27,8 +27,10 @@ class MapLibreMap extends StatefulWidget {
     this.scrollGesturesEnabled = true,
     this.zoomGesturesEnabled = true,
     this.tiltGesturesEnabled = true,
+    this.hapticFeedbackEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.panInertia = PanInertia.normal,
     this.featureTapsTriggersMapClick = false,
     this.placementTransitionsEnabled = true,
     this.trackCameraPosition = false,
@@ -209,8 +211,22 @@ class MapLibreMap extends StatefulWidget {
   /// True if the map view should respond to zoom gestures.
   final bool zoomGesturesEnabled;
 
+  /// How long the map keeps gliding after the user drags it and lets go while
+  /// it is still moving. Defaults to [PanInertia.normal].
+  ///
+  /// On iOS the same setting also applies to the glide after a pinch or a
+  /// rotation.
+  final PanInertia panInertia;
+
   /// True if the map view should respond to tilt gestures.
   final bool tiltGesturesEnabled;
+
+  /// True if the device gives a light vibration when the user rotates the map
+  /// back to north. Defaults to `true`.
+  ///
+  /// **Available only on iOS. Has no effect on Android or Web**, which have
+  /// no such option.
+  final bool hapticFeedbackEnabled;
 
   /// Set to true to forcefully disable/enable if map should respond to double
   /// click to zoom.
@@ -615,6 +631,8 @@ class MapLibreMapOptions {
     required this.tiltGesturesEnabled,
     required this.zoomGesturesEnabled,
     required this.doubleClickZoomEnabled,
+    this.panInertia,
+    this.hapticFeedbackEnabled,
     this.trackCameraPosition,
     this.myLocationEnabled,
     this.myLocationTrackingMode,
@@ -653,6 +671,8 @@ class MapLibreMapOptions {
         zoomGesturesEnabled: map.zoomGesturesEnabled,
         doubleClickZoomEnabled:
             map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+        panInertia: map.panInertia,
+        hapticFeedbackEnabled: map.hapticFeedbackEnabled,
         myLocationEnabled: map.myLocationEnabled,
         myLocationTrackingMode: map.myLocationTrackingMode,
         myLocationRenderMode: map.myLocationRenderMode,
@@ -690,6 +710,9 @@ class MapLibreMapOptions {
   final bool zoomGesturesEnabled;
 
   final bool doubleClickZoomEnabled;
+
+  final PanInertia? panInertia;
+  final bool? hapticFeedbackEnabled;
 
   final bool? trackCameraPosition;
 
@@ -739,6 +762,7 @@ class MapLibreMapOptions {
     'tiltGesturesEnabled',
     'zoomGesturesEnabled',
     'doubleClickZoomEnabled',
+    'panInertia',
   };
 
   Map<String, dynamic> toMap() {
@@ -768,6 +792,8 @@ class MapLibreMapOptions {
     addIfNonNull('tiltGesturesEnabled', tiltGesturesEnabled);
     addIfNonNull('zoomGesturesEnabled', zoomGesturesEnabled);
     addIfNonNull('doubleClickZoomEnabled', doubleClickZoomEnabled);
+    addIfNonNull('panInertia', panInertia?.index);
+    addIfNonNull('hapticFeedbackEnabled', hapticFeedbackEnabled);
 
     addIfNonNull('trackCameraPosition', trackCameraPosition);
     addIfNonNull('myLocationEnabled', myLocationEnabled);

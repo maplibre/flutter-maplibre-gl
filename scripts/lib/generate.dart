@@ -356,6 +356,7 @@ Map<String, dynamic> buildStyleProperty(
     'docSplit':
         buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
+    'valueAsPascalCase': ReCase(key).pascalCase,
   };
 }
 

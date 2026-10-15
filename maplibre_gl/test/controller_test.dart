@@ -431,6 +431,85 @@ void main() {
       expect(calls.first.positionalArgs[1], false);
     });
 
+    test('setLayerFilter passes the expression to setFilter', () async {
+      await controller.setLayerFilter('layer-1', [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter decodes a filter given as JSON', () async {
+      await controller.setLayerFilter(
+        'layer-1',
+        '["==", ["get", "type"], "park"]',
+      );
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter passes null through to remove the filter', () async {
+      await controller.setLayerFilter('layer-1', null);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test('setLayerFilter fails its future on malformed JSON', () async {
+      final future = controller.setLayerFilter('layer-1', '["==", ');
+
+      await expectLater(future, throwsFormatException);
+      expect(platform.callsFor('setFilter'), isEmpty);
+    });
+
+    test('removeLayerFilter sends a null filter', () async {
+      await controller.removeLayerFilter('layer-1');
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test('getLayerFilter delegates to getFilter', () async {
+      await controller.getLayerFilter('layer-1');
+
+      final calls = platform.callsFor('getFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('deprecated setFilter and getFilter still work', () async {
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.setFilter('layer-1', ['has', 'name']);
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.getFilter('layer-1');
+
+      expect(platform.callsFor('setFilter').single.positionalArgs[1], [
+        'has',
+        'name',
+      ]);
+      expect(platform.callsFor('getFilter').length, 1);
+    });
+
     test('addImageLayer delegates to addLayer on platform', () async {
       await controller.addImageLayer('img-layer', 'img-source');
 

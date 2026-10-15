@@ -25,6 +25,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -37,8 +38,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
+import org.maplibre.android.log.Logger;
+import org.maplibre.android.log.LoggerDefinition;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -63,6 +67,7 @@ import org.maplibre.android.maps.MapLibreMapOptions;
 import org.maplibre.android.maps.MapView;
 import org.maplibre.android.maps.OnMapReadyCallback;
 import org.maplibre.android.maps.Style;
+import org.maplibre.android.maps.UiSettings;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
@@ -86,6 +91,8 @@ import org.maplibre.android.style.sources.CustomGeometrySource;
 import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
+import org.maplibre.android.style.sources.RasterDemSource;
+import org.maplibre.android.style.sources.RasterSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
@@ -101,12 +108,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -224,6 +234,9 @@ final class MapLibreMapController
   // Tint of the attribution (i) button, or null to leave the MapLibre SDK
   // default in place. Only set through the attributionButtonColor map option.
   private Integer attributionButtonColor = null;
+  // Index of the Dart PanInertia value, or null to leave the SDK fling
+  // settings alone. Only set through the panInertia map option.
+  private Integer panInertia = null;
   /**
    * Idempotency guards for {@link MapView} lifecycle dispatch, so each transition fires
    * once per {@link MapView} instance. See the lifecycle observer section below.
@@ -247,10 +260,20 @@ final class MapLibreMapController
 
   private LatLng dragOrigin;
   private LatLng dragPrevious;
+  // The draggable feature under the finger that came down, until the drag starts or the finger
+  // lifts.
+  private Feature dragCandidate;
+  // From the start of a drag until the last finger lifts or a second finger comes down: the map
+  // gets none of the gesture.
+  private boolean dragOwnsGesture;
   private MapSnapshotter activeSnapshotter;
 
   private Set<String> interactiveFeatureLayerIds;
-  private Map<String, FeatureCollection> addedFeaturesByLayer;
+  // GeoJSON last fed to each source added through addGeoJsonSource, kept for
+  // setGeoJsonFeature. Holds the raw String until the first setFeature parses
+  // it into a FeatureCollection JsonObject, so plain data updates never pay a
+  // parse on the platform thread.
+  private Map<String, Object> addedFeaturesByLayer;
 
   private LatLngBounds bounds = null;
   Style.OnStyleLoaded onStyleLoadedCallback =
@@ -300,11 +323,11 @@ final class MapLibreMapController
     this.mapViewContainer = new FrameLayout(applicationContext);
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
-    this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
+    this.addedFeaturesByLayer = new HashMap<String, Object>();
     this.density = context.getResources().getDisplayMetrics().density;
     this.lifecycleProvider = lifecycleProvider;
     if (dragEnabled) {
-      this.androidGesturesManager = new AndroidGesturesManager(this.mapView.getContext(), false);
+      this.androidGesturesManager = createDragGesturesManager(this.mapView.getContext());
     }
 
     mapViewContainer.addView(mapView);
@@ -486,7 +509,7 @@ final class MapLibreMapController
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
     if (dragEnabled) {
-      androidGesturesManager = new AndroidGesturesManager(mapView.getContext(), false);
+      androidGesturesManager = createDragGesturesManager(mapView.getContext());
     }
     mapViewContainer.addView(mapView);
     // NOTE: getMapAsync is intentionally NOT called here. The caller is responsible
@@ -527,6 +550,9 @@ final class MapLibreMapController
       mapLibreMap.getUiSettings().setAttributionTintColor(attributionButtonColor);
     }
 
+    // Re-apply the pan inertia for the same reason: it lives on UiSettings.
+    applyPanInertia();
+
     // Apply camera target bounds if set during initialization
     if (bounds != null) {
       mapLibreMap.setLatLngBoundsForCameraTarget(bounds);
@@ -553,9 +579,7 @@ final class MapLibreMapController
           new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-              androidGesturesManager.onTouchEvent(event);
-
-              return draggedFeature != null;
+              return onDragTouch(v, event);
             }
           });
     }
@@ -710,12 +734,92 @@ final class MapLibreMapController
   }
 
   // Returns a reply map carrying the layer's MapLibre style-spec JSON under
-  // "properties" (the layer entry from the serialized style: id/type/source/
-  // paint/layout/...), or an empty map if the layer is absent. Reading the
-  // serialized style avoids enumerating every typed getter and guarantees the
-  // result matches the style spec, like the iOS and web implementations.
+  // "properties" (id/type/source/source-layer/minzoom/maxzoom/filter/paint/
+  // layout), or an empty map if the layer is absent. The runtime layer is read,
+  // not style.getJson(): that is the style as loaded, so it misses layers added
+  // later and every property set since.
   private Map<String, Object> getLayerProperties(String layerId) {
     Map<String, Object> reply = new HashMap<>();
+    final Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      return reply;
+    }
+    final String type = LayerPropertyConverter.layerType(layer);
+    if (type == null) {
+      // Not a style-spec layer type (a CustomLayer): only the loaded style can
+      // describe it, if it came with it.
+      JsonObject loaded = findLoadedLayer(layerId);
+      if (loaded != null) {
+        reply.put("properties", loaded.toString());
+      }
+      return reply;
+    }
+
+    final JsonObject json = new JsonObject();
+    json.addProperty("id", layerId);
+    json.addProperty("type", type);
+    String sourceId = null;
+    String sourceLayer = null;
+    if (layer instanceof SymbolLayer) {
+      sourceId = ((SymbolLayer) layer).getSourceId();
+      sourceLayer = ((SymbolLayer) layer).getSourceLayer();
+    } else if (layer instanceof CircleLayer) {
+      sourceId = ((CircleLayer) layer).getSourceId();
+      sourceLayer = ((CircleLayer) layer).getSourceLayer();
+    } else if (layer instanceof LineLayer) {
+      sourceId = ((LineLayer) layer).getSourceId();
+      sourceLayer = ((LineLayer) layer).getSourceLayer();
+    } else if (layer instanceof FillLayer) {
+      sourceId = ((FillLayer) layer).getSourceId();
+      sourceLayer = ((FillLayer) layer).getSourceLayer();
+    } else if (layer instanceof FillExtrusionLayer) {
+      sourceId = ((FillExtrusionLayer) layer).getSourceId();
+      sourceLayer = ((FillExtrusionLayer) layer).getSourceLayer();
+    } else if (layer instanceof HeatmapLayer) {
+      sourceId = ((HeatmapLayer) layer).getSourceId();
+      sourceLayer = ((HeatmapLayer) layer).getSourceLayer();
+    } else if (layer instanceof ColorReliefLayer) {
+      sourceId = ((ColorReliefLayer) layer).getSourceId();
+      sourceLayer = ((ColorReliefLayer) layer).getSourceLayer();
+    } else if (layer instanceof RasterLayer) {
+      sourceId = ((RasterLayer) layer).getSourceId();
+    } else if (layer instanceof HillshadeLayer) {
+      sourceId = ((HillshadeLayer) layer).getSourceId();
+    }
+    if (sourceId != null && !sourceId.isEmpty()) {
+      json.addProperty("source", sourceId);
+    }
+    if (sourceLayer != null && !sourceLayer.isEmpty()) {
+      json.addProperty("source-layer", sourceLayer);
+    }
+    // The SDK reports the spec defaults (0 and 24) for an unset zoom range,
+    // which a style JSON leaves out.
+    if (layer.getMinZoom() > 0) {
+      json.addProperty("minzoom", layer.getMinZoom());
+    }
+    if (layer.getMaxZoom() < 24) {
+      json.addProperty("maxzoom", layer.getMaxZoom());
+    }
+    // Read like getLayerFilter, so numbers keep their exact value.
+    try {
+      final JsonElement filter = getRawFilter(layer);
+      if (filter != null) {
+        json.add("filter", filter);
+      }
+    } catch (ReflectiveOperationException e) {
+      // Leave the filter out rather than fail the whole read.
+    }
+    final JsonObject paint = new JsonObject();
+    final JsonObject layout = new JsonObject();
+    LayerPropertyConverter.readLayerProperties(layer, paint, layout);
+    json.add("paint", paint);
+    json.add("layout", layout);
+    reply.put("properties", json.toString());
+    return reply;
+  }
+
+  // The layer entry of the style as it was loaded, or null.
+  private JsonObject findLoadedLayer(String layerId) {
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonArray layers = styleJson.getAsJsonArray("layers");
     if (layers != null) {
@@ -723,24 +827,62 @@ final class MapLibreMapController
         JsonObject layer = element.getAsJsonObject();
         JsonElement id = layer.get("id");
         if (id != null && layerId.equals(id.getAsString())) {
-          reply.put("properties", layer.toString());
-          break;
+          return layer;
         }
       }
     }
-    return reply;
+    return null;
   }
 
-  // Same as getLayerProperties but for sources, which the style spec keys by id
-  // under the "sources" object rather than storing in an array.
+  // Same as getLayerProperties but for sources. A source that came with the
+  // style is read from the loaded style JSON, the only place holding all of
+  // its properties (data, tiles, ...). The SDK exposes little on a runtime
+  // source, so one added later reports its type, its url and its attribution.
   private Map<String, Object> getSourceProperties(String sourceId) {
     Map<String, Object> reply = new HashMap<>();
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      return reply;
+    }
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonObject sources = styleJson.getAsJsonObject("sources");
     if (sources != null && sources.has(sourceId)) {
       reply.put("properties", sources.getAsJsonObject(sourceId).toString());
+      return reply;
     }
+
+    final JsonObject json = new JsonObject();
+    if (source instanceof GeoJsonSource) {
+      json.addProperty("type", "geojson");
+      final String uri = ((GeoJsonSource) source).getUri();
+      if (uri != null && !uri.isEmpty()) {
+        json.addProperty("data", uri);
+      }
+    } else if (source instanceof VectorSource) {
+      json.addProperty("type", "vector");
+      putIfNotEmpty(json, "url", ((VectorSource) source).getUri());
+    } else if (source instanceof RasterDemSource) {
+      json.addProperty("type", "raster-dem");
+      putIfNotEmpty(json, "url", ((RasterDemSource) source).getUri());
+    } else if (source instanceof RasterSource) {
+      json.addProperty("type", "raster");
+      putIfNotEmpty(json, "url", ((RasterSource) source).getUri());
+    } else if (source instanceof ImageSource) {
+      json.addProperty("type", "image");
+      putIfNotEmpty(json, "url", ((ImageSource) source).getUri());
+    } else {
+      // Not a style-spec source type (a custom geometry source).
+      return reply;
+    }
+    putIfNotEmpty(json, "attribution", source.getAttribution());
+    reply.put("properties", json.toString());
     return reply;
+  }
+
+  private static void putIfNotEmpty(JsonObject json, String key, String value) {
+    if (value != null && !value.isEmpty()) {
+      json.addProperty(key, value);
+    }
   }
 
   // Resolves the source a feature-state call addresses, or replies with a
@@ -846,6 +988,33 @@ final class MapLibreMapController
     return Feature.fromGeometry(Point.fromLngLat(0, 0), properties);
   }
 
+  // Whether the source currently holds a cluster with this id.
+  //
+  // For an id it does not hold, MapLibre Native throws "No cluster with the
+  // specified id." on the render thread, where nothing here can catch it, and
+  // the app dies. Ids go stale as the data or the viewport changes, so an app
+  // can pass one without doing anything wrong. Looking the id up first lets the
+  // cluster calls reply CLUSTER_NOT_FOUND instead. Only loaded tiles are
+  // searched, which holds for any id the app just read off a feature on screen.
+  private static boolean hasCluster(GeoJsonSource source, long clusterId) {
+    final List<Feature> clusters =
+        source.querySourceFeatures(
+            Expression.eq(Expression.get("cluster_id"), Expression.literal(clusterId)));
+    return clusters != null && !clusters.isEmpty();
+  }
+
+  private static void clusterNotFound(MethodChannel.Result result, String sourceId, long clusterId) {
+    result.error(
+        "CLUSTER_NOT_FOUND",
+        "Cluster '"
+            + clusterId
+            + "' is not one of the current clusters of source '"
+            + sourceId
+            + "'. Cluster ids are reassigned as the data or the viewport changes, so read the"
+            + " id from a freshly queried feature.",
+        null);
+  }
+
   // Serializes features for the channel as JSON strings, so nested properties
   // survive intact. Shared by every call that answers with features:
   // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
@@ -853,12 +1022,54 @@ final class MapLibreMapController
     final List<String> featuresJson = new ArrayList<>();
     if (features != null) {
       for (Feature feature : features) {
-        featuresJson.add(feature.toJson());
+        featuresJson.add(featureJson(feature));
       }
     }
     final Map<String, Object> reply = new HashMap<>();
     reply.put("features", featuresJson);
     return reply;
+  }
+
+  private static final Pattern INTEGER_ID = Pattern.compile("-?(0|[1-9][0-9]*)");
+  private static final Pattern DECIMAL_ID = Pattern.compile("-?(0|[1-9][0-9]*)\\.[0-9]+");
+
+  // The SDK hands every feature id over as a String (the engine turns numbers
+  // into text, and a missing id into ""), so toJson writes "id":"2" where iOS
+  // and web answer 2. Ids that read as numbers go back as numbers and an empty
+  // id is dropped. The limit: a string id that looks like a number, such as
+  // "2", also comes back as a number on Android, as the SDK cannot tell them
+  // apart. A fractional id arrives in its shortest form, such as "1.5".
+  private static String featureJson(Feature feature) {
+    final String id = feature.id();
+    if (id == null) {
+      return feature.toJson();
+    }
+    String number = null;
+    if (INTEGER_ID.matcher(id).matches()) {
+      try {
+        number = Long.toString(Long.parseLong(id));
+      } catch (NumberFormatException e) {
+        // Beyond a long: left as a String rather than rounded.
+      }
+    } else if (DECIMAL_ID.matcher(id).matches()) {
+      final double value = Double.parseDouble(id);
+      if (!Double.isInfinite(value)) {
+        number = Double.toString(value);
+      }
+    }
+    if (number == null && !id.isEmpty()) {
+      return feature.toJson();
+    }
+    // Serialized once without the id, which then goes in as a bare number:
+    // query results can hold thousands of features and this runs on the
+    // platform thread, so no parse and reserialize round trip.
+    final String json =
+        Feature.fromGeometry(feature.geometry(), feature.properties(), null, feature.bbox())
+            .toJson();
+    if (number == null) {
+      return json;
+    }
+    return "{\"id\":" + number + "," + json.substring(1);
   }
 
   // The cluster calls answer with a FeatureCollection, which is null when the
@@ -867,45 +1078,28 @@ final class MapLibreMapController
     return featuresReply(collection == null ? null : collection.features());
   }
 
-  private FeatureCollection parseGeoJsonToFeatureCollection(String geojson) {
-    JsonElement jsonElement = JsonParser.parseString(geojson);
-    String type = jsonElement.getAsJsonObject().get("type").getAsString();
-
-    if ("FeatureCollection".equals(type)) {
-      return FeatureCollection.fromJson(geojson);
-    } else if ("Feature".equals(type)) {
-      Feature feature = Feature.fromJson(geojson);
-      return FeatureCollection.fromFeatures(new Feature[]{ feature });
-    }
-
-    return null;
-  }
-
   private void addGeoJsonSource(String sourceName, String source) {
     if (style == null || !style.isFullyLoaded()) {
       Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
       return;
     }
 
-    // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes
+    // The channel call already answered SOURCE_ALREADY_EXISTS for this case. The
+    // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(sourceName) != null) {
       return;
     }
 
     try {
-      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(source);
-      if (featureCollection == null) {
-        Log.w(TAG, "addGeoJsonSource: unsupported GeoJSON type, skipping");
-        return;
-      }
-
       // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
       // that silently discards icons registered via addImage() in the same render frame.
       // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
       GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
-      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, featureCollection, options);
-      addedFeaturesByLayer.put(sourceName, featureCollection);
+      // The raw JSON goes to the engine, which parses it off the platform
+      // thread and keeps numeric ids numeric. A Java FeatureCollection would
+      // turn every id into a String, so ["id"] filters on numbers would miss.
+      GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, source, options);
+      addedFeaturesByLayer.put(sourceName, source);
 
       style.addSource(geoJsonSource);
     } catch (Exception e) {
@@ -920,23 +1114,58 @@ final class MapLibreMapController
     }
 
     try {
-      FeatureCollection featureCollection = parseGeoJsonToFeatureCollection(geojson);
-      if (featureCollection == null) {
-        Log.w(TAG, "setGeoJsonSource: unsupported GeoJSON type, skipping update");
-        return;
-      }
-
       GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
       if (geoJsonSource == null) {
         Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
         return;
       }
 
-      addedFeaturesByLayer.put(sourceName, featureCollection);
-      geoJsonSource.setGeoJson(featureCollection);
+      // Raw JSON for the same reason as in addGeoJsonSource.
+      addedFeaturesByLayer.put(sourceName, geojson);
+      geoJsonSource.setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
     }
+  }
+
+  // The source data as a FeatureCollection JsonObject, parsed on first use and
+  // cached, or null when it is neither a FeatureCollection nor a Feature.
+  private JsonObject parsedSourceData(String sourceName) {
+    final Object stored = addedFeaturesByLayer.get(sourceName);
+    if (stored instanceof JsonObject) {
+      return (JsonObject) stored;
+    }
+    if (!(stored instanceof String)) {
+      return null;
+    }
+    final JsonElement element = JsonParser.parseString((String) stored);
+    if (!element.isJsonObject()) {
+      return null;
+    }
+    JsonObject data = element.getAsJsonObject();
+    final JsonElement type = data.get("type");
+    final String typeName = type != null && type.isJsonPrimitive() ? type.getAsString() : null;
+    if ("Feature".equals(typeName)) {
+      final JsonArray features = new JsonArray();
+      features.add(data);
+      data = new JsonObject();
+      data.addProperty("type", "FeatureCollection");
+      data.add("features", features);
+    } else if (!"FeatureCollection".equals(typeName) || !data.has("features")
+        || !data.get("features").isJsonArray()) {
+      return null;
+    }
+    addedFeaturesByLayer.put(sourceName, data);
+    return data;
+  }
+
+  // Compares ids by their text, so 2 and "2" match as they did before.
+  private static String featureIdKey(JsonElement feature) {
+    if (feature == null || !feature.isJsonObject()) {
+      return null;
+    }
+    final JsonElement id = feature.getAsJsonObject().get("id");
+    return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -946,24 +1175,29 @@ final class MapLibreMapController
     }
 
     try {
-      Feature feature = Feature.fromJson(geojsonFeature);
-      FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
       GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      if (geoJsonSource == null) {
+        return;
+      }
+      final JsonObject data = parsedSourceData(sourceName);
+      if (data == null) {
+        return;
+      }
 
-      if (featureCollection != null && geoJsonSource != null) {
-        final String featureId = feature.id();
-        final List<Feature> features = featureCollection.features();
-        
-        if (featureId != null && features != null) {
-          for (int i = 0; i < features.size(); i++) {
-            if (featureId.equals(features.get(i).id())) {
-              features.set(i, feature);
-              break;
-            }
-          }
+      // Merged as JSON rather than through the Java Feature, which would turn
+      // the ids of the whole source into Strings.
+      final JsonElement feature = JsonParser.parseString(geojsonFeature);
+      final String featureId = featureIdKey(feature);
+      if (featureId == null) {
+        return;
+      }
+      final JsonArray features = data.getAsJsonArray("features");
+      for (int i = 0; i < features.size(); i++) {
+        if (featureId.equals(featureIdKey(features.get(i)))) {
+          features.set(i, feature);
+          geoJsonSource.setGeoJson(data.toString());
+          break;
         }
-
-        geoJsonSource.setGeoJson(featureCollection);
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
@@ -1166,9 +1400,171 @@ final class MapLibreMapController
   }
 
   private Expression parseFilter(String filter) {
-    JsonParser parser = new JsonParser();
-    JsonElement filterJsonElement = parser.parse(filter);
-    return filterJsonElement.isJsonNull() ? null : Expression.Converter.convert(filterJsonElement);
+    JsonElement json = new JsonParser().parse(filter);
+    if (json.isJsonNull()) {
+      return null;
+    }
+    boolean isExpression =
+        json.isJsonArray()
+            && json.getAsJsonArray().size() > 0
+            && json.getAsJsonArray().get(0).isJsonPrimitive()
+            && json.getAsJsonArray().get(0).getAsJsonPrimitive().isString();
+    boolean isBoolean = json.isJsonPrimitive() && json.getAsJsonPrimitive().isBoolean();
+    if (!isExpression && !isBoolean) {
+      throw new IllegalArgumentException("A filter is an expression array or a boolean.");
+    }
+    // Hand the engine the JSON as plain values. Expression.Converter would
+    // turn every number into a float, so an id like 123456789 became 123456792.
+    Object value = jsonToValue(json);
+    final Object[] array = value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
+    return new Expression("literal") {
+      @NonNull
+      @Override
+      public Object[] toArray() {
+        return array;
+      }
+    };
+  }
+
+  private static Object jsonToValue(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      Object[] values = new Object[array.size()];
+      for (int i = 0; i < values.length; i++) {
+        values[i] = jsonToValue(array.get(i));
+      }
+      return values;
+    }
+    if (json.isJsonObject()) {
+      Map<String, Object> values = new HashMap<>();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        values.put(entry.getKey(), jsonToValue(entry.getValue()));
+      }
+      return values;
+    }
+    if (json.isJsonNull()) {
+      return null;
+    }
+    JsonPrimitive primitive = json.getAsJsonPrimitive();
+    if (primitive.isBoolean()) {
+      return primitive.getAsBoolean();
+    }
+    if (primitive.isNumber()) {
+      return primitive.getAsDouble();
+    }
+    return primitive.getAsString();
+  }
+
+  private static boolean isFilterable(Layer layer) {
+    return layer instanceof CircleLayer
+        || layer instanceof FillExtrusionLayer
+        || layer instanceof FillLayer
+        || layer instanceof HeatmapLayer
+        || layer instanceof LineLayer
+        || layer instanceof SymbolLayer;
+  }
+
+  private static void setLayerFilter(Layer layer, Expression filter) {
+    if (layer instanceof CircleLayer) {
+      ((CircleLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillExtrusionLayer) {
+      ((FillExtrusionLayer) layer).setFilter(filter);
+    } else if (layer instanceof FillLayer) {
+      ((FillLayer) layer).setFilter(filter);
+    } else if (layer instanceof HeatmapLayer) {
+      ((HeatmapLayer) layer).setFilter(filter);
+    } else if (layer instanceof LineLayer) {
+      ((LineLayer) layer).setFilter(filter);
+    } else if (layer instanceof SymbolLayer) {
+      ((SymbolLayer) layer).setFilter(filter);
+    }
+  }
+
+  private static final String FILTER_ERROR_PREFIX = "Error setting filter: ";
+
+  /**
+   * Runs {@code action} and returns why the engine rejected a filter meanwhile, or null. The engine
+   * does not throw for an invalid filter: it logs the reason and keeps the old filter. So the SDK
+   * logger is swapped for one that records that log, also when the app silenced logging.
+   */
+  private static String captureFilterError(Runnable action) {
+    LoggerDefinition previous;
+    int previousLevel;
+    Field loggerField;
+    Field levelField;
+    try {
+      loggerField = Logger.class.getDeclaredField("logger");
+      levelField = Logger.class.getDeclaredField("logLevel");
+      loggerField.setAccessible(true);
+      levelField.setAccessible(true);
+      previous = (LoggerDefinition) loggerField.get(null);
+      previousLevel = levelField.getInt(null);
+    } catch (ReflectiveOperationException e) {
+      action.run();
+      return null;
+    }
+
+    String[] error = {null};
+    Logger.setLoggerDefinition(
+        new ForwardingLogger(previous) {
+          @Override
+          public void e(String tag, String msg) {
+            // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
+            int start = msg == null ? -1 : msg.indexOf(FILTER_ERROR_PREFIX);
+            if (error[0] == null && start >= 0) {
+              error[0] = msg.substring(start + FILTER_ERROR_PREFIX.length());
+            }
+            if (previousLevel <= Logger.ERROR) {
+              super.e(tag, msg);
+            }
+          }
+        });
+    Logger.setVerbosity(Math.min(previousLevel, Logger.ERROR));
+    try {
+      action.run();
+    } finally {
+      Logger.setLoggerDefinition(previous);
+      Logger.setVerbosity(previousLevel);
+    }
+    return error[0];
+  }
+
+  /** A logger that passes every message on to {@code target}. */
+  private static class ForwardingLogger implements LoggerDefinition {
+    private final LoggerDefinition target;
+
+    ForwardingLogger(LoggerDefinition target) {
+      this.target = target;
+    }
+
+    @Override public void v(String tag, String msg) { target.v(tag, msg); }
+    @Override public void v(String tag, String msg, Throwable tr) { target.v(tag, msg, tr); }
+    @Override public void d(String tag, String msg) { target.d(tag, msg); }
+    @Override public void d(String tag, String msg, Throwable tr) { target.d(tag, msg, tr); }
+    @Override public void i(String tag, String msg) { target.i(tag, msg); }
+    @Override public void i(String tag, String msg, Throwable tr) { target.i(tag, msg, tr); }
+    @Override public void w(String tag, String msg) { target.w(tag, msg); }
+    @Override public void w(String tag, String msg, Throwable tr) { target.w(tag, msg, tr); }
+    @Override public void e(String tag, String msg) { target.e(tag, msg); }
+    @Override public void e(String tag, String msg, Throwable tr) { target.e(tag, msg, tr); }
+  }
+
+  /**
+   * The filter of {@code layer} as the engine holds it, or null without one. Layer.getFilter
+   * rounds numbers to floats, so this calls the native getter it wraps. The always-true filter
+   * that style#setFilter sets to remove a filter also counts as none.
+   */
+  private static JsonElement getRawFilter(Layer layer) throws ReflectiveOperationException {
+    Method nativeGetFilter = Layer.class.getDeclaredMethod("nativeGetFilter");
+    nativeGetFilter.setAccessible(true);
+    JsonElement filter = (JsonElement) nativeGetFilter.invoke(layer);
+    boolean unfiltered =
+        filter == null
+            || filter.isJsonNull()
+            || (filter.isJsonPrimitive()
+                && filter.getAsJsonPrimitive().isBoolean()
+                && filter.getAsBoolean());
+    return unfiltered ? null : filter;
   }
 
   private boolean addRasterLayer(
@@ -1311,7 +1707,20 @@ final class MapLibreMapController
     return true;
   }
 
-  private Pair<Feature, String> firstFeatureOnLayers(RectF in) {
+  /**
+   * Half the side, in dp, of the square around a touch where taps and drags look for a feature.
+   * iOS uses the same value in points.
+   */
+  private static final float FEATURE_HIT_TOLERANCE_DP = 8f;
+
+  /**
+   * Returns the interactive feature nearest to {@code point}, looking up to {@link
+   * #FEATURE_HIT_TOLERANCE_DP} around it. Nearness is measured to what the feature draws: the
+   * square around the point grows one dp at a time and the first feature it touches wins. When
+   * several features are reached at the same distance, the top-most layer wins. With {@code
+   * draggableOnly}, features that cannot be dragged are left out, so they never hide one that can.
+   */
+  private Pair<Feature, String> firstFeatureOnLayers(PointF point, boolean draggableOnly) {
     if (style == null) return null;
     if (!style.isFullyLoaded()) {
         Log.d(TAG, "firstFeatureOnLayers: style not fully loaded yet");
@@ -1332,14 +1741,94 @@ final class MapLibreMapController
       if (interactiveFeatureLayerIds.contains(id)) layersInOrder.add(id);
     }
     Collections.reverse(layersInOrder);
+
+    // One query over the whole area keeps only the layers with something in reach.
+    final List<String> candidateLayers = new ArrayList<String>();
+    Pair<Feature, String> onlyHit = null;
+    int hits = 0;
     for (String id : layersInOrder) {
-      List<Feature> features = mapLibreMap.queryRenderedFeatures(in, id);
+      List<Feature> features =
+          featuresIn(hitRect(point, FEATURE_HIT_TOLERANCE_DP), id, draggableOnly);
       if (!features.isEmpty()) {
-        return new Pair<Feature, String>(features.get(0), id);
+        candidateLayers.add(id);
+        hits += features.size();
+        onlyHit = new Pair<Feature, String>(features.get(0), id);
       }
     }
-    
+    if (hits <= 1) {
+      return onlyHit;
+    }
+
+    for (int radiusDp = 1; radiusDp <= FEATURE_HIT_TOLERANCE_DP; radiusDp++) {
+      RectF rect = hitRect(point, radiusDp);
+      for (String id : candidateLayers) {
+        List<Feature> features = featuresIn(rect, id, draggableOnly);
+        if (!features.isEmpty()) {
+          return new Pair<Feature, String>(features.get(0), id);
+        }
+      }
+    }
     return null;
+  }
+
+  private List<Feature> featuresIn(RectF rect, String layerId, boolean draggableOnly) {
+    List<Feature> features = mapLibreMap.queryRenderedFeatures(rect, layerId);
+    if (!draggableOnly) return features;
+    List<Feature> draggable = new ArrayList<Feature>();
+    for (Feature feature : features) {
+      if (isDraggable(feature)) draggable.add(feature);
+    }
+    return draggable;
+  }
+
+  private RectF hitRect(PointF point, float radiusDp) {
+    float radius = radiusDp * density;
+    return new RectF(point.x - radius, point.y - radius, point.x + radius, point.y + radius);
+  }
+
+  /**
+   * Answers SOURCE_ALREADY_EXISTS or LAYER_ALREADY_EXISTS, as iOS and web do, for every call that
+   * adds a source or layer under an id the style already holds. The SDK would otherwise throw
+   * (reaching Dart with a generic code) or, for sources, the add was skipped and reported as a
+   * success. Either way the original stays untouched.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectDuplicateStyleId(MethodCall call, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      return false;
+    }
+    final String method = call.method;
+    String layerId = null;
+    String sourceId = null;
+    if (method.endsWith("Layer#add")) {
+      layerId = call.argument("layerId");
+    } else if (method.equals("style#addLayer") || method.equals("style#addLayerBelow")) {
+      layerId = call.argument("imageLayerId");
+    } else if (method.equals("style#addSource") || method.equals("source#addGeoJson")) {
+      sourceId = call.argument("sourceId");
+    } else if (method.equals("style#addImageSource")) {
+      sourceId = call.argument("imageSourceId");
+    }
+    if (layerId != null && style.getLayer(layerId) != null) {
+      result.error(
+          "LAYER_ALREADY_EXISTS",
+          "Layer already exists",
+          "Layer with id " + layerId + " already exists.");
+      return true;
+    }
+    if (sourceId != null && style.getSource(sourceId) != null) {
+      result.error(
+          "SOURCE_ALREADY_EXISTS",
+          "Source already exists",
+          "Source with id " + sourceId + " already exists.");
+      return true;
+    }
+    return false;
+  }
+
+  private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
+    result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
   }
 
   @Override
@@ -1403,6 +1892,9 @@ final class MapLibreMapController
   }
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
+    if (rejectDuplicateStyleId(call, result)) {
+      return;
+    }
     switch (call.method) {
       case "map#updateMyLocationTrackingMode":
         {
@@ -2023,6 +2515,10 @@ final class MapLibreMapController
           if (source == null) {
             break;
           }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
+            break;
+          }
           result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
           break;
         }
@@ -2038,6 +2534,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterChildren", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(
@@ -2060,6 +2560,10 @@ final class MapLibreMapController
           final GeoJsonSource source =
               getClusterCapableSource(sourceId, "getClusterLeaves", result);
           if (source == null) {
+            break;
+          }
+          if (!hasCluster(source, clusterId.longValue())) {
+            clusterNotFound(result, sourceId, clusterId.longValue());
             break;
           }
           result.success(
@@ -2189,7 +2693,7 @@ final class MapLibreMapController
             layer.setProperties(properties);
             result.success(null);
           } else {
-            result.error("LAYER_NOT_FOUND_ERROR", "Layer " + layerId + "not found", null);
+            replyLayerNotFound(result, layerId);
           }
 
           break;
@@ -2377,16 +2881,6 @@ final class MapLibreMapController
           final Double maxzoom = call.argument("maxzoom");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
-          // Nearly every published style already has a layer called "background", the
-          // natural id to reach for here. Report the clash the way iOS does instead of
-          // letting the SDK throw a CannotAddLayerException.
-          if (style != null && style.isFullyLoaded() && style.getLayer(layerId) != null) {
-            result.error(
-                "layerAlreadyExists",
-                "Layer already exists",
-                "Layer with id " + layerId + " already exists.");
-            break;
-          }
           if (!addBackgroundLayer(
               layerId,
               minzoom != null ? minzoom.floatValue() : null,
@@ -2411,59 +2905,62 @@ final class MapLibreMapController
             break;
           }
           final Map<String, Object> lightProperties = call.argument("light");
-          final Light light = style.getLight();
           // Every LightProperties field is dynamic, so anything can arrive here. The
           // values are checked rather than cast: MapLibre Native takes constants only,
           // and an expression is a List, which would leave onMethodCall as a bare
-          // ClassCastException.
+          // ClassCastException. All fields are checked before any is applied, so a
+          // rejected call changes nothing.
           final String constantsOnly =
               " MapLibre Native takes constant light values only, not expressions.";
           final Object anchor = lightProperties.get("anchor");
-          if (anchor != null) {
-            if (!(anchor instanceof String)) {
-              result.error(
-                  "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
-              break;
-            }
-            light.setAnchor((String) anchor);
+          if (anchor != null && !(anchor instanceof String)) {
+            result.error(
+                "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+            break;
           }
           final Object position = lightProperties.get("position");
-          if (position != null) {
-            final List<?> values = position instanceof List ? (List<?>) position : null;
-            if (values == null
-                || values.size() != 3
-                || !(values.get(0) instanceof Number)
-                || !(values.get(1) instanceof Number)
-                || !(values.get(2) instanceof Number)) {
-              result.error(
-                  "INVALID_ARGUMENT",
-                  "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
-                      + " polar]."
-                      + constantsOnly,
-                  null);
-              break;
-            }
-            light.setPosition(
-                new Position(
-                    ((Number) values.get(0)).floatValue(),
-                    ((Number) values.get(1)).floatValue(),
-                    ((Number) values.get(2)).floatValue()));
+          final List<?> positionValues = position instanceof List ? (List<?>) position : null;
+          if (position != null
+              && (positionValues == null
+                  || positionValues.size() != 3
+                  || !(positionValues.get(0) instanceof Number)
+                  || !(positionValues.get(1) instanceof Number)
+                  || !(positionValues.get(2) instanceof Number))) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
+                    + " polar]."
+                    + constantsOnly,
+                null);
+            break;
           }
           final Object color = lightProperties.get("color");
-          if (color != null) {
-            if (!(color instanceof String)) {
-              result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
-              break;
-            }
-            light.setColor((String) color);
+          if (color != null && !(color instanceof String)) {
+            result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+            break;
           }
           final Object intensity = lightProperties.get("intensity");
+          if (intensity != null && !(intensity instanceof Number)) {
+            result.error(
+                "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+            break;
+          }
+
+          final Light light = style.getLight();
+          if (anchor != null) {
+            light.setAnchor((String) anchor);
+          }
+          if (positionValues != null) {
+            light.setPosition(
+                new Position(
+                    ((Number) positionValues.get(0)).floatValue(),
+                    ((Number) positionValues.get(1)).floatValue(),
+                    ((Number) positionValues.get(2)).floatValue()));
+          }
+          if (color != null) {
+            light.setColor((String) color);
+          }
           if (intensity != null) {
-            if (!(intensity instanceof Number)) {
-              result.error(
-                  "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
-              break;
-            }
             light.setIntensity(((Number) intensity).floatValue());
           }
           result.success(null);
@@ -2820,6 +3317,10 @@ final class MapLibreMapController
             break;
           }
           String layerId = call.argument("layerId");
+          if (style.getLayer(layerId) == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
           style.removeLayer(layerId);
           interactiveFeatureLayerIds.remove(layerId);
 
@@ -2841,9 +3342,11 @@ final class MapLibreMapController
                   .include(locationOne) // Northeast
                   .include(locationTwo) // Southwest
                   .build();
+          // Padding is in logical pixels, like every other camera input.
           mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-                  padding), 200);
-
+                  (int) (padding * density)), 200);
+          // Replies once the move is started, as iOS and web do.
+          result.success(null);
           break;
         }
       case "style#setFilter":
@@ -2859,31 +3362,36 @@ final class MapLibreMapController
           String filter = call.argument("filter");
 
           Layer layer = style.getLayer(layerId);
-
-          JsonParser parser = new JsonParser();
-          JsonElement jsonElement = parser.parse(filter);
-          Expression expression = Expression.Converter.convert(jsonElement);
-
-          if (layer instanceof CircleLayer) {
-            ((CircleLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillExtrusionLayer) {
-            ((FillExtrusionLayer) layer).setFilter(expression);
-          } else if (layer instanceof FillLayer) {
-            ((FillLayer) layer).setFilter(expression);
-          } else if (layer instanceof HeatmapLayer) {
-            ((HeatmapLayer) layer).setFilter(expression);
-          } else if (layer instanceof LineLayer) {
-            ((LineLayer) layer).setFilter(expression);
-          } else if (layer instanceof SymbolLayer) {
-            ((SymbolLayer) layer).setFilter(expression);
-          } else {
+          if (layer == null) {
             result.error(
-                "INVALID LAYER TYPE",
-                String.format("Layer '%s' does not support filtering.", layerId),
-                null);
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
+          if (!isFilterable(layer)) {
+            result.error(
+                "INVALID_LAYER_TYPE",
+                "Invalid layer type",
+                String.format("Layer '%s' does not support filtering.", layerId));
+            break;
+          }
+
+          Expression parsed;
+          try {
+            parsed = parseFilter(filter);
+          } catch (RuntimeException e) {
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
+            break;
+          }
+          // The SDK takes no null filter, so a null filter becomes the
+          // always-true one, which is what an unfiltered layer has.
+          final Expression expression = parsed != null ? parsed : Expression.literal(true);
+
+          String error = captureFilterError(() -> setLayerFilter(layer, expression));
+          if (error != null) {
+            result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
+            break;
+          }
           result.success(null);
           break;
         }
@@ -2899,29 +3407,28 @@ final class MapLibreMapController
           Map<String, Object> reply = new HashMap<>();
           String layerId = call.argument("layerId");
           Layer layer = style.getLayer(layerId);
-
-          Expression filter;
-          if (layer instanceof CircleLayer) {
-            filter = ((CircleLayer) layer).getFilter();
-          } else if (layer instanceof FillExtrusionLayer) {
-            filter = ((FillExtrusionLayer) layer).getFilter();
-          } else if (layer instanceof FillLayer) {
-            filter = ((FillLayer) layer).getFilter();
-          } else if (layer instanceof HeatmapLayer) {
-            filter = ((HeatmapLayer) layer).getFilter();
-          } else if (layer instanceof LineLayer) {
-            filter = ((LineLayer) layer).getFilter();
-          } else if (layer instanceof SymbolLayer) {
-            filter = ((SymbolLayer) layer).getFilter();
-          } else {
+          if (layer == null) {
             result.error(
-                    "INVALID LAYER TYPE",
-                    String.format("Layer '%s' does not support filtering.", layerId),
-                    null);
+                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
             break;
           }
 
-          reply.put("filter", filter.toString());
+          if (!isFilterable(layer)) {
+            result.error(
+                    "INVALID_LAYER_TYPE",
+                    "Invalid layer type",
+                    String.format("Layer '%s' does not support filtering.", layerId));
+            break;
+          }
+
+          JsonElement filter;
+          try {
+            filter = getRawFilter(layer);
+          } catch (ReflectiveOperationException e) {
+            result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
+            break;
+          }
+          reply.put("filter", filter == null ? null : new Gson().toJson(filter));
           result.success(reply);
           break;
         }
@@ -2938,14 +3445,33 @@ final class MapLibreMapController
           boolean visible = call.argument("visible");
 
           Layer layer = style.getLayer(layerId);
-
-          if (layer != null) {
-            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
           }
 
+          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
           result.success(null);
           break;
 
+        }
+        case "layer#getVisibility":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          Layer layer = style.getLayer((String) call.argument("layerId"));
+          if (layer == null) {
+            // Documented contract: null tells the caller there is no such layer.
+            result.success(null);
+            break;
+          }
+          result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
+          break;
         }
         case "map#querySourceFeatures":
         {
@@ -3088,11 +3614,18 @@ final class MapLibreMapController
           result.error("MAP_NOT_READY", "Map is not ready", null);
           break;
         }
-        String styleUrl = mapLibreMap.getStyle() != null ? mapLibreMap.getStyle().getUri() : null;
-        if (styleUrl == null) {
+        Style currentStyle = mapLibreMap.getStyle();
+        if (currentStyle == null) {
           result.error("STYLE_NOT_READY", "Map style is not loaded", null);
           break;
         }
+        // A style set as JSON has no URI, and a snapshotter given an empty one
+        // never calls back, so hand it the JSON instead.
+        String styleUrl = currentStyle.getUri();
+        Style.Builder snapshotStyle =
+            styleUrl == null || styleUrl.isEmpty()
+                ? new Style.Builder().fromJson(currentStyle.getJson())
+                : new Style.Builder().fromUri(styleUrl);
         Map<String, Object> snapshotArgs = (Map<String, Object>) call.arguments;
         Integer width = snapshotArgs != null ? (Integer) snapshotArgs.get("width") : null;
         Integer height = snapshotArgs != null ? (Integer) snapshotArgs.get("height") : null;
@@ -3101,7 +3634,7 @@ final class MapLibreMapController
         int snapshotHeight = height != null ? height : mapView.getHeight();
 
         MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
-                .withStyle(styleUrl)
+                .withStyleBuilder(snapshotStyle)
                 .withCameraPosition(mapLibreMap.getCameraPosition());
         if (activeSnapshotter != null) {
           activeSnapshotter.cancel();
@@ -3195,8 +3728,7 @@ final class MapLibreMapController
   @Override
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
-    RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf, false);
     final Map<String, Object> arguments = new HashMap<>();
     arguments.put("x", pointf.x);
     arguments.put("y", pointf.y);
@@ -3531,6 +4063,35 @@ final class MapLibreMapController
   @Override
   public void setScrollGesturesEnabled(boolean scrollGesturesEnabled) {
     mapLibreMap.getUiSettings().setScrollGesturesEnabled(scrollGesturesEnabled);
+  }
+
+  @Override
+  public void setPanInertia(int panInertia) {
+    this.panInertia = panInertia;
+    applyPanInertia();
+  }
+
+  /**
+   * Applies {@link #panInertia} to the fling that follows a pan. The SDK glides for {@code
+   * velocity / 10.5 + baseTime} ms (dp/s, untilted map) and skips flings slower than the
+   * threshold:
+   *
+   * <ul>
+   *   <li>none (0): fling animation off.
+   *   <li>short (1): base time 0 ms, threshold 1000 dp/s, about half the glide of normal at a
+   *       typical 2000 dp/s.
+   *   <li>normal (2): SDK defaults, base time 150 ms and threshold 1000 dp/s.
+   * </ul>
+   */
+  private void applyPanInertia() {
+    if (panInertia == null || mapLibreMap == null) {
+      return;
+    }
+    final UiSettings uiSettings = mapLibreMap.getUiSettings();
+    uiSettings.setFlingVelocityAnimationEnabled(panInertia != 0);
+    uiSettings.setFlingAnimationBaseTime(
+        panInertia == 1 ? 0 : MapLibreConstants.ANIMATION_DURATION_FLING_BASE);
+    uiSettings.setFlingThreshold(MapLibreConstants.VELOCITY_THRESHOLD_IGNORE_FLING);
   }
 
   @Override
@@ -3897,28 +4458,121 @@ final class MapLibreMapController
     return bitmap;
   }
 
-  boolean onMoveBegin(MoveGestureDetector detector) {
-    // onMoveBegin gets called even during a move - move end is also not called unless this function
-    // returns
-    // true at least once. To avoid redundant queries only check for feature if the previous event
-    // was ACTION_DOWN
-    if (detector.getPreviousEvent().getActionMasked() == MotionEvent.ACTION_DOWN
-        && detector.getPointersCount() == 1) {
-      PointF pointf = detector.getFocalPoint();
-      LatLng origin = mapLibreMap.getProjection().fromScreenLocation(pointf);
-      RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
-      Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(rectF);
-      if (featureLayerPair != null && featureLayerPair.first != null && startDragging(featureLayerPair.first, origin)) {
-        invokeFeatureDrag(pointf, "start");
-        return true;
+  // The gestures manager for feature drags. Without a move threshold any move, even one of zero
+  // pixels, turned a tap into a drag.
+  private static AndroidGesturesManager createDragGesturesManager(Context context) {
+    final AndroidGesturesManager manager = new AndroidGesturesManager(context, false);
+    manager
+        .getMoveGestureDetector()
+        .setMoveThreshold(ViewConfiguration.get(context).getScaledTouchSlop());
+    return manager;
+  }
+
+  private boolean onDragTouch(View view, MotionEvent event) {
+    final int action = event.getActionMasked();
+    if (action == MotionEvent.ACTION_DOWN) {
+      dragOwnsGesture = false;
+      // A stream that never got its up or cancel must not leave its candidate to this gesture.
+      forgetDragCandidate();
+      rememberDragCandidate(new PointF(event.getX(), event.getY()));
+    } else if (event.getPointerCount() > 1 && !dragOwnsGesture) {
+      // A second finger before the drag started: a pinch, the map's to handle.
+      forgetDragCandidate();
+    } else if (action == MotionEvent.ACTION_POINTER_DOWN && dragOwnsGesture) {
+      // A second finger during a drag ends it, and the map takes over the gesture so it can pinch.
+      if (draggedFeature != null) {
+        endDragAtLastPosition();
       }
+      dragOwnsGesture = false;
+      handGestureToMap(view, event);
     }
-    return false;
+
+    final boolean ownedBefore = dragOwnsGesture;
+    androidGesturesManager.onTouchEvent(event);
+    if (!ownedBefore && dragOwnsGesture) {
+      // The map saw the finger come down; without a cancel its long press fires in the middle of
+      // the drag, since it never sees the moves.
+      final MotionEvent cancel = MotionEvent.obtain(event);
+      cancel.setAction(MotionEvent.ACTION_CANCEL);
+      view.onTouchEvent(cancel);
+      cancel.recycle();
+    }
+
+    // Once a drag has started the gesture is the drag's until it ends. Before that,
+    // within the touch slop, a touch on a draggable feature may still be a tap: the map gets the
+    // down and the up, not the tremble in between.
+    final boolean consumed =
+        dragOwnsGesture || (dragCandidate != null && action == MotionEvent.ACTION_MOVE);
+    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+      dragOwnsGesture = false;
+      forgetDragCandidate();
+    }
+    return consumed;
+  }
+
+  // The map got a cancel when the drag started, so it needs a fresh down for the finger that was
+  // dragging. The second finger's own down (this event) then reaches the map as usual.
+  private static void handGestureToMap(View view, MotionEvent event) {
+    final int kept = event.getActionIndex() == 0 ? 1 : 0;
+    final MotionEvent.PointerProperties[] properties = {new MotionEvent.PointerProperties()};
+    final MotionEvent.PointerCoords[] coords = {new MotionEvent.PointerCoords()};
+    event.getPointerProperties(kept, properties[0]);
+    event.getPointerCoords(kept, coords[0]);
+    final MotionEvent down =
+        MotionEvent.obtain(
+            event.getEventTime(),
+            event.getEventTime(),
+            MotionEvent.ACTION_DOWN,
+            1,
+            properties,
+            coords,
+            event.getMetaState(),
+            event.getButtonState(),
+            event.getXPrecision(),
+            event.getYPrecision(),
+            event.getDeviceId(),
+            event.getEdgeFlags(),
+            event.getSource(),
+            event.getFlags());
+    view.onTouchEvent(down);
+    down.recycle();
+  }
+
+  // The feature is looked up where the finger came down, where the user aimed: the move detector
+  // only reports the gesture once the finger has left the touch slop.
+  private void rememberDragCandidate(PointF point) {
+    Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(point, true);
+    if (featureLayerPair != null
+        && featureLayerPair.first != null
+        && isDraggable(featureLayerPair.first)) {
+      dragCandidate = featureLayerPair.first;
+    }
+  }
+
+  private void forgetDragCandidate() {
+    dragCandidate = null;
+  }
+
+  boolean onMoveBegin(MoveGestureDetector detector) {
+    // Called on every move until it returns true; move end is not called unless it did.
+    if (dragCandidate == null || detector.getPointersCount() != 1) {
+      return false;
+    }
+    // Like iOS, the drag starts where the finger left the touch slop: origin and current are that
+    // point and the start event has a zero delta. The drag events after it carry the movement.
+    final PointF start = detector.getFocalPoint();
+    startDragging(dragCandidate, mapLibreMap.getProjection().fromScreenLocation(start));
+    forgetDragCandidate();
+    dragOwnsGesture = true;
+    invokeFeatureDrag(start, "start");
+    return true;
   }
 
   private void invokeFeatureDrag(PointF pointf, String eventType) {
-    LatLng current = mapLibreMap.getProjection().fromScreenLocation(pointf);
+    invokeFeatureDrag(pointf, mapLibreMap.getProjection().fromScreenLocation(pointf), eventType);
+  }
 
+  private void invokeFeatureDrag(PointF pointf, LatLng current, String eventType) {
     final Map<String, Object> arguments = new HashMap<>(9);
     arguments.put("id", draggedFeature.id());
     arguments.put("x", pointf.x);
@@ -3937,7 +4591,10 @@ final class MapLibreMapController
   boolean onMove(MoveGestureDetector detector) {
     if (draggedFeature != null) {
       if (detector.getPointersCount() > 1) {
-        stopDragging();
+        // A second finger ends the drag (onDragTouch normally ends it first, on the finger's
+        // down). Without this the listeners never saw an "end", and onMoveEnd threw on the
+        // cleared feature.
+        endDragAtLastPosition();
         return true;
       }
       PointF pointf = detector.getFocalPoint();
@@ -3947,18 +4604,32 @@ final class MapLibreMapController
     return true;
   }
 
+  // Ends the drag where the feature was last dragged to, with a zero delta: with a second finger
+  // down the focal point is the midpoint of the two fingers, not where the feature is.
+  private void endDragAtLastPosition() {
+    invokeFeatureDrag(
+        mapLibreMap.getProjection().toScreenLocation(dragPrevious), dragPrevious, "end");
+    stopDragging();
+  }
+
   void onMoveEnd(MoveGestureDetector detector) {
+    if (draggedFeature == null) {
+      // the drag already ended when a second finger came down
+      return;
+    }
     PointF pointf = detector.getFocalPoint();
     invokeFeatureDrag(pointf, "end");
     stopDragging();
   }
 
+  private static boolean isDraggable(@NonNull Feature feature) {
+    return feature.hasNonNullValueForProperty("draggable")
+        ? feature.getBooleanProperty("draggable")
+        : false;
+  }
+
   boolean startDragging(@NonNull Feature feature, @NonNull LatLng origin) {
-    final boolean draggable =
-        feature.hasNonNullValueForProperty("draggable")
-            ? feature.getBooleanProperty("draggable")
-            : false;
-    if (draggable) {
+    if (isDraggable(feature)) {
       draggedFeature = feature;
       dragPrevious = origin;
       dragOrigin = origin;

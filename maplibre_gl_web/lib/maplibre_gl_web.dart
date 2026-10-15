@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'dart:math';
 import 'dart:ui' as ui;
@@ -40,6 +41,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
 import 'package:maplibre_gl_web/src/webgl_support.dart';
 import 'package:maplibre_gl_web/src/camera_easing_math.dart';
+import 'package:maplibre_gl_web/src/feature_drag.dart';
 
 part 'src/convert.dart';
 

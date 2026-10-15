@@ -30,6 +30,9 @@ internal interface MapLibreMapOptionsSink {
 
     fun setDoubleClickZoomEnabled(doubleClickZoomEnabled: Boolean)
 
+    /** Index of the Dart `PanInertia` value: 0 none, 1 short, 2 normal. */
+    fun setPanInertia(panInertia: Int)
+
     fun setMyLocationEnabled(myLocationEnabled: Boolean)
 
     fun setMyLocationTrackingMode(myLocationTrackingMode: Int)
