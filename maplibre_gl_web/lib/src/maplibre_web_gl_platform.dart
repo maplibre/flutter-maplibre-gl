@@ -968,9 +968,15 @@ class MapLibreMapController extends MapLibrePlatform
       });
       return;
     }
+    _styleReady = true;
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
+
+  /// Whether the current style has loaded, as reported to
+  /// onStyleLoadedCallback. Unlike `isStyleLoaded()`, it stays true while
+  /// sources and tiles load.
+  bool _styleReady = false;
 
   void _onMapResize() {
     Timer(Duration.zero, () {
@@ -1451,6 +1457,7 @@ class MapLibreMapController extends MapLibrePlatform
   /// ```
   @override
   Future<void> setStyle(dynamic styleObject) async {
+    _styleReady = false;
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _handleLayerMouseMove);
@@ -2351,6 +2358,15 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {
+    if (!_styleReady) {
+      // Same code and message as Android and iOS.
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
     if (_map.getLayer(layerId) == null) return null;
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;

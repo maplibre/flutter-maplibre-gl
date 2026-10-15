@@ -2443,6 +2443,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the style
+  /// has loaded.
   Future<bool?> getLayerVisibility(String layerId) {
     return _maplibrePlatform.getLayerVisibility(layerId);
   }
