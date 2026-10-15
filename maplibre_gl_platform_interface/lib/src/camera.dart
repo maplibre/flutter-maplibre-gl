@@ -132,8 +132,7 @@ class CameraUpdate {
   /// For a camera with bearing 0.0 (pointing north), scrolling by 50,75 moves
   /// the camera's target to a geographical location that is 50 to the east and
   /// 75 to the south of the current location, measured in screen coordinates.
-  /// The distances are logical pixels on every platform, the same convention
-  /// as `panBy` in maplibre-gl-js.
+  /// The distances are in logical pixels on every platform.
   CameraUpdate.scrollBy(double dx, double dy)
     : this._(<dynamic>['scrollBy', dx, dy]);
 
