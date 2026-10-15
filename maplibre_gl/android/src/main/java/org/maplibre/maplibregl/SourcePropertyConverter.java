@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.maplibre.android.style.expressions.Expression;
-import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
 import org.maplibre.android.maps.Style;
@@ -163,8 +162,9 @@ class SourcePropertyConverter {
       } else {
         Gson gson = new Gson();
         String geojson = gson.toJson(data);
-        final FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-        return new GeoJsonSource(id, featureCollection, options);
+        // Raw JSON, so the engine keeps numeric feature ids numeric; a Java
+        // FeatureCollection would turn them into Strings.
+        return new GeoJsonSource(id, geojson, options);
       }
     }
     return null;
@@ -247,10 +247,8 @@ class SourcePropertyConverter {
   }
 
   static void addSource(String id, Map<String, Object> properties, Style style) {
-    // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes. Log so callers don't silently see
-    // "success" while the existing source is kept untouched — if an update
-    // is intended, the source should be removed and re-added explicitly.
+    // The controller answers SOURCE_ALREADY_EXISTS before calling this. The
+    // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(id) != null) {
       Log.w(TAG, "addSource: source with id '" + id + "' already exists, skipping");
       return;

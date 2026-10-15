@@ -144,6 +144,21 @@ await controller.addCircleLayer(
 
 Both layers use the same source but each shows a subset of features.
 
+To change, read or remove a filter later:
+
+```dart
+await controller.setLayerFilter(
+  'events-active',
+  ['==', ['get', 'status'], 'cancelled'],
+);
+
+final filter = await controller.getLayerFilter('events-active');
+
+await controller.removeLayerFilter('events-active');
+```
+
+`getLayerFilter` returns `null` when the layer has no filter.
+
 ## Removing a source
 
 ```dart
