@@ -15,6 +15,7 @@
 import 'annotations_test.dart' as annotations;
 import 'camera_test.dart' as camera;
 import 'geojson_query_test.dart' as geojson_query;
+import 'haptic_feedback_test.dart' as haptic_feedback;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
@@ -23,6 +24,7 @@ void main() {
   annotations.main();
   camera.main();
   geojson_query.main();
+  haptic_feedback.main();
   style_layers.main();
   style_misc.main();
   web_feature_state.main();
