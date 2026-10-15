@@ -174,6 +174,9 @@ abstract class MapLibrePlatform {
   Future<bool> editGeoJsonUrl(String id, String url);
 
   /// Sets a filter for a layer.
+  @Deprecated(
+    'Use setFilter instead. MapLibreMapController.setLayerFilter calls it',
+  )
   Future<bool> setLayerFilter(String layerId, String filter);
 
   /// Gets the current map style as JSON string.

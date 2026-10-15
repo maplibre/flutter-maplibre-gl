@@ -1,5 +1,8 @@
 import Flutter
 import MapLibre
+#if canImport(maplibre_gl_objc)
+    import maplibre_gl_objc
+#endif
 
 class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, MapLibreMapOptionsSink,
     UIGestureRecognizerDelegate
@@ -1331,10 +1334,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let filter = arguments["filter"] as? String else { return }
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let filter = arguments["filter"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId' or 'filter'.",
+                        details: nil
+                    )
+                )
+                return
+            }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
                 result(MethodCallError.layerNotFound(
                    layerId: layerId
                 ).flutterError)
@@ -1550,19 +1567,37 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
 
         case "style#getFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(
+                    FlutterError(
+                        code: "INVALID_ARGUMENT",
+                        message: "Missing or invalid 'layerId'.",
+                        details: nil
+                    )
+                )
+                return
+            }
 
-            guard let style = mapView.style else { return }
-            guard let layer = style.layer(withIdentifier: layerId) else { return }
+            guard let style = mapView.style else {
+                result(MethodCallError.styleNotFound.flutterError)
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
 
-            var currentLayerFilter : String = ""
+            // A layer without a filter answers null, not an empty string.
+            var currentLayerFilter: NSObject = NSNull()
             if let vectorLayer = layer as? MLNVectorStyleLayer {
                 if let layerFilter = vectorLayer.predicate {
 
                     let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: []) {
-                        currentLayerFilter = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
+                       let json = String(data: data, encoding: String.Encoding.utf8) {
+                        currentLayerFilter = json as NSObject
                     }
                 }
             } else {
@@ -1573,7 +1608,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             var reply = [String: NSObject]()
-            reply["filter"] = currentLayerFilter as NSObject
+            reply["filter"] = currentLayerFilter
             result(reply)
 
         case "style#setStyle":
@@ -2221,16 +2256,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 with: filter.data(using: .utf8)!,
                 options: .fragmentsAllowed
             )
-            if filter is NSNull {
-                return .success(())
-            }
-            let predicate = NSPredicate(mglJSONObject: filter)
-            if let layer = layer as? MLNVectorStyleLayer {
-                layer.predicate = predicate
-            } else {
+            guard let layer = layer as? MLNVectorStyleLayer else {
                 return .failure(MethodCallError.invalidLayerType(
                     details: "Layer '\(layer.identifier)' does not support filtering."
                 ))
+            }
+            // MapLibre raises an Objective-C exception for an invalid filter,
+            // which would crash the app if it reached Swift.
+            let exception = MapLibreGLCatchException {
+                // A null filter removes the current one.
+                layer.predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
+            }
+            if let exception = exception {
+                let reason = (exception.reason ?? "rejected by the map")
+                    .replacingOccurrences(of: "Invalid filter value: ", with: "")
+                return .failure(MethodCallError.invalidFilter(reason: reason))
             }
             return .success(())
         } catch {
