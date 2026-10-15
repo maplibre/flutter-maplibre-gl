@@ -23,6 +23,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var dragFeature: MLNFeature?
     /// The pan recognizer this controller adds for feature drags.
     private var featureDragPan: UIPanGestureRecognizer?
+    /// Where the first finger of the current feature drag pan came down.
+    private var featureDragTouchDown: CGPoint?
 
     /// `initialCameraPosition` from the creation params, kept until the view has
     /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
@@ -267,6 +269,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         _: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
     ) -> Bool {
+        return true
+    }
+
+    // The pan only begins after the finger has moved, so remember where the
+    // first finger came down to look up the feature there, like Android.
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldReceive touch: UITouch
+    ) -> Bool {
+        if gestureRecognizer === featureDragPan, gestureRecognizer.numberOfTouches == 0 {
+            featureDragTouchDown = touch.location(in: mapView)
+        }
         return true
     }
 
@@ -2018,9 +2032,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if dragFeature == nil, began, sender.numberOfTouches == 1 {
             // Hit test where the finger came down, like Android: the pan begins
             // only after the finger has moved, which can miss a small feature.
-            let translation = sender.translation(in: mapView)
-            let touchDown = CGPoint(x: point.x - translation.x, y: point.y - translation.y)
-            let result = firstFeatureOnLayers(at: touchDown)
+            let result = firstFeatureOnLayers(at: featureDragTouchDown ?? point)
             if let feature = result.feature,
             let draggable = feature.attribute(forKey: "draggable") as? Bool,
             draggable {
