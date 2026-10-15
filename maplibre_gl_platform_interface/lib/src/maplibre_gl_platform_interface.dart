@@ -462,6 +462,7 @@ abstract class MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   });
 
   Future<void> addSource(String sourceId, SourceProperties properties);

@@ -1048,6 +1048,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use.
@@ -1059,6 +1063,7 @@ class MapLibreMapController extends ChangeNotifier {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
@@ -1068,6 +1073,7 @@ class MapLibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
     );
   }
 
@@ -2257,6 +2263,8 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
+        enableInteraction: enableInteraction,
       );
     } else if (properties is LineLayerProperties) {
       await addLineLayer(
@@ -2329,6 +2337,7 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
       );
     } else if (properties is ColorReliefLayerProperties) {
       if (filter != null) {

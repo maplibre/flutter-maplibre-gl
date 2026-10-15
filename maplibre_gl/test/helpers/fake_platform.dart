@@ -567,7 +567,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(
-      PlatformCall('addFillExtrusionLayer', [sourceId, layerId, properties]),
+      PlatformCall(
+        'addFillExtrusionLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter, 'enableInteraction': enableInteraction},
+      ),
     );
   }
 
@@ -633,8 +637,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
-    calls.add(PlatformCall('addHeatmapLayer', [sourceId, layerId, properties]));
+    calls.add(
+      PlatformCall(
+        'addHeatmapLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter},
+      ),
+    );
   }
 
   @override
