@@ -469,6 +469,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
+  /// [sourceId] is already in use.
   Future<void> addGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson, {
@@ -637,6 +640,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addSymbolLayer(
     String sourceId,
     String layerId,
@@ -680,6 +686,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addLineLayer(
     String sourceId,
     String layerId,
@@ -712,6 +721,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerProperties(
     String layerId,
     LayerProperties properties,
@@ -741,6 +753,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addFillLayer(
     String sourceId,
     String layerId,
@@ -784,6 +799,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addFillExtrusionLayer(
     String sourceId,
     String layerId,
@@ -827,6 +845,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addCircleLayer(
     String sourceId,
     String layerId,
@@ -865,6 +886,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addRasterLayer(
     String sourceId,
     String layerId,
@@ -899,6 +923,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addHillshadeLayer(
     String sourceId,
     String layerId,
@@ -933,6 +960,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addColorReliefLayer(
     String sourceId,
     String layerId,
@@ -971,6 +1001,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// changing this one's properties afterwards can stop it drawing. Remove the
   /// style's background layer first, or set the properties you want when you
   /// add this one. See https://github.com/maplibre/maplibre-native/issues/4502.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addBackgroundLayer(
     String layerId,
     BackgroundLayerProperties properties, {
@@ -1001,6 +1034,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
@@ -1990,6 +2026,9 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
   /// Not implemented on web.
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
+  /// [imageSourceId] is already in use.
   Future<void> addImageSource(
     String imageSourceId,
     Uint8List bytes,
@@ -2018,6 +2057,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer to the map's style at render time.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addImageLayer(
     String layerId,
     String imageSourceId, {
@@ -2028,6 +2070,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addImageLayerBelow(
     String layerId,
     String sourceId,
@@ -2045,6 +2090,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Removes a MapLibre style layer
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> removeLayer(String layerId) {
     return _maplibrePlatform.removeLayer(layerId);
   }
@@ -2109,6 +2157,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Add a new source to the map
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if the
+  /// source id is already in use.
   Future<void> addSource(String sourceid, SourceProperties properties) async {
     return _maplibrePlatform.addSource(sourceid, properties);
   }
@@ -2353,6 +2404,10 @@ class MapLibreMapController extends ChangeNotifier {
     await _maplibrePlatform.setGlobalStateProperty(name, value);
   }
 
+  /// Shows or hides the layer with [layerId].
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
@@ -2406,6 +2461,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the style
+  /// has loaded.
   Future<bool?> getLayerVisibility(String layerId) {
     return _maplibrePlatform.getLayerVisibility(layerId);
   }

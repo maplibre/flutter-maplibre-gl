@@ -983,9 +983,15 @@ class MapLibreMapController extends MapLibrePlatform
       });
       return;
     }
+    _styleReady = true;
     _onMapResize();
     onMapStyleLoadedPlatform(null);
   }
+
+  /// Whether the current style has loaded, as reported to
+  /// onStyleLoadedCallback. Unlike `isStyleLoaded()`, it stays true while
+  /// sources and tiles load.
+  bool _styleReady = false;
 
   void _onMapResize() {
     Timer(Duration.zero, () {
@@ -1466,6 +1472,7 @@ class MapLibreMapController extends MapLibrePlatform
   /// ```
   @override
   Future<void> setStyle(dynamic styleObject) async {
+    _styleReady = false;
     //remove old mouseenter callbacks to avoid multicalling
     for (final layerId in _interactiveFeatureLayerIds) {
       _map.off('mouseenter', layerId, _handleLayerMouseMove);
@@ -1547,9 +1554,44 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> removeLayer(String imageLayerId) async {
+    _ensureLayerExists(imageLayerId);
     _interactiveFeatureLayerIds.remove(imageLayerId);
-    if (_map.getLayer(imageLayerId) != null) {
-      _map.removeLayer(imageLayerId);
+    _map.removeLayer(imageLayerId);
+  }
+
+  /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
+  /// layer. maplibre-gl-js only fires an error event, which callers never see.
+  void _ensureLayerExists(String layerId) {
+    if (_map.getLayer(layerId) == null) {
+      throw PlatformException(
+        code: 'LAYER_NOT_FOUND_ERROR',
+        message: 'Layer not found',
+        details: 'Layer with id $layerId not found.',
+      );
+    }
+  }
+
+  /// Throws `LAYER_ALREADY_EXISTS`, as Android and iOS do, for a layer id
+  /// already in use.
+  void _ensureNewLayerId(String layerId) {
+    if (_map.getLayer(layerId) != null) {
+      throw PlatformException(
+        code: 'LAYER_ALREADY_EXISTS',
+        message: 'Layer already exists',
+        details: 'Layer with id $layerId already exists.',
+      );
+    }
+  }
+
+  /// Throws `SOURCE_ALREADY_EXISTS`, as Android and iOS do, for a source id
+  /// already in use, instead of the raw JS error maplibre-gl-js throws.
+  void _ensureNewSourceId(String sourceId) {
+    if (_map.getSource(sourceId) != null) {
+      throw PlatformException(
+        code: 'SOURCE_ALREADY_EXISTS',
+        message: 'Source already exists',
+        details: 'Source with id $sourceId already exists.',
+      );
     }
   }
 
@@ -1591,6 +1633,8 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) async {
+    // Before the cache write below, so a rejected add keeps the original's data.
+    _ensureNewSourceId(sourceId);
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     _map.addSource(sourceId, <String, dynamic>{
@@ -1764,6 +1808,7 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
   ) async {
+    _ensureLayerExists(layerId);
     for (final entry in properties.entries) {
       // Try paint property first (most common), then layout property
       try {
@@ -1860,6 +1905,7 @@ class MapLibreMapController extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
+    _ensureNewLayerId(layerId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
     );
@@ -1967,6 +2013,9 @@ class MapLibreMapController extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
+    // Before anything else: a second add used to pass silently and attach the
+    // hover listeners to the existing layer once more.
+    _ensureNewLayerId(layerId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
     );
@@ -2097,6 +2146,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _ensureNewSourceId(sourceId);
     _map.addSource(sourceId, properties.toJson());
   }
 
@@ -2283,6 +2333,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
+    _ensureLayerExists(layerId);
     _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
   }
 
@@ -2382,6 +2433,16 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {
+    if (!_styleReady) {
+      // Same code and message as Android and iOS.
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
+    if (_map.getLayer(layerId) == null) return null;
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
     if (property is String) return property != 'none';

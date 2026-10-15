@@ -10,6 +10,8 @@
   * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of crashing the app on Android and iOS; catch it where you used to check for 0 or an empty list (#1065).
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web; drop any scaling by the pixel ratio (#1067).
+* **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
+* **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -30,6 +32,8 @@
 * **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
 * **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
 * **iOS**: `addImage` before the style has loaded throws `STYLE_NOT_READY` like Android instead of silently adding nothing (#1067).
+* **Android, iOS**: `getLayerVisibility` is implemented instead of throwing `MissingPluginException` (#1068).
+* **Web**: `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
