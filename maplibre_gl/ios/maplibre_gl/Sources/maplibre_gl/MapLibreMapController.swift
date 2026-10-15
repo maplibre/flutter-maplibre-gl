@@ -21,6 +21,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var previousDragCoordinate: CLLocationCoordinate2D?
     private var originDragCoordinate: CLLocationCoordinate2D?
     private var dragFeature: MLNFeature?
+    /// The pan recognizer this controller adds for feature drags.
+    private var featureDragPan: UIPanGestureRecognizer?
 
     /// `initialCameraPosition` from the creation params, kept until the view has
     /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
@@ -223,6 +225,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             )
             pan.delegate = self
             mapView.addGestureRecognizer(pan)
+            featureDragPan = pan
         }
 
         if(!longPressRecognizerAdded) {
@@ -1999,7 +2002,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     @IBAction func handleMapPan(sender: UIPanGestureRecognizer) {
         let began = sender.state == UIGestureRecognizer.State.began
-        let end = sender.state == UIGestureRecognizer.State.ended
+        // A drag the system cancels (a call, Control Center, the app leaving)
+        // ends too: otherwise the feature stays grabbed, scrolling stays off,
+        // and the next pan anywhere drags it. Only this controller's own pan:
+        // the map's, which this method also serves, is cancelled on purpose
+        // when a drag turns scrolling off.
+        let interrupted = sender === featureDragPan && [
+            UIGestureRecognizer.State.cancelled,
+            UIGestureRecognizer.State.failed,
+        ].contains(sender.state)
+        let end = sender.state == UIGestureRecognizer.State.ended || interrupted
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
@@ -2024,7 +2036,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
         if end, dragFeature != nil {
-            mapView.allowsScrolling = true
+            mapView.allowsScrolling = scrollingEnabled
             let eventType = "end"
             invokeFeatureDrag(point, coordinate, eventType)
             dragFeature = nil
