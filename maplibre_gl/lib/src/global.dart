@@ -124,6 +124,11 @@ Future<List<OfflineRegion>> getListOfRegions() async {
   return regions.map(OfflineRegion.fromMap).toList();
 }
 
+/// Replaces the metadata of the offline region with the given [id] and returns
+/// the updated region.
+///
+/// Throws a [PlatformException] with code `UpdateMetadataError` when no region
+/// has that [id].
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
   Map<String, dynamic> metadata,

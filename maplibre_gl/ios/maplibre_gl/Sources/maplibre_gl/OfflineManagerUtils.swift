@@ -100,7 +100,8 @@ class OfflineManagerUtils {
         // external DB or from Android). Mirror Android's metadataBytesToMap: try
         // to parse the context bytes as a JSON dict, fall back to empty dict.
         // Use a deterministic ID so the same pack always receives the same ID
-        // across sessions (pack.context is read-only, so we cannot persist it).
+        // across sessions without writing to its context; once the app sets
+        // metadata on it, updateRegionMetadata stores that ID in the context.
         guard let id = deterministicPackId(for: pack),
               let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
         let metadata: [String: Any]
@@ -110,13 +111,22 @@ class OfflineManagerUtils {
         } else {
             metadata = [:]
         }
-        let definition = OfflineRegionDefinition(
+        return OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: regionDefinition(for: tileRegion)
+        ).toDictionary()
+    }
+
+    private static func regionDefinition(
+        for tileRegion: MLNTilePyramidOfflineRegion
+    ) -> OfflineRegionDefinition {
+        return OfflineRegionDefinition(
             bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
             mapStyleUrl: tileRegion.styleURL,
             minZoom: tileRegion.minimumZoomLevel,
             maxZoom: tileRegion.maximumZoomLevel
         )
-        return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
     }
 
     static func regionsList(result: @escaping FlutterResult) {
@@ -139,6 +149,71 @@ class OfflineManagerUtils {
             return
         }
         result(regionsArgsJsonString)
+    }
+
+    static func updateRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        whenPacksLoaded {
+            setRegionMetadata(result: result, id: id, metadata: metadata)
+        }
+    }
+
+    private static func setRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        // Error codes and messages mirror Android's updateRegionMetadata.
+        guard let pack = findPack(id: id),
+              let tileRegion = pack.region as? MLNTilePyramidOfflineRegion
+        else {
+            result(FlutterError(
+                code: "UpdateMetadataError",
+                message: "There is no region with given id to update.",
+                details: nil
+            ))
+            return
+        }
+        guard JSONSerialization.isValidJSONObject(metadata) else {
+            result(FlutterError(
+                code: "UpdateMetadataError",
+                message: "Metadata is not JSON serializable",
+                details: nil
+            ))
+            return
+        }
+        // The context keeps the shape it is created with at download time, so
+        // the region keeps its ID. A pack imported without a Flutter context
+        // gets the ID it was already listed under written into it.
+        let region = OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: regionDefinition(for: tileRegion)
+        )
+        pack.setContext(region.prepareContext()) { error in
+            if let error = error {
+                result(FlutterError(
+                    code: "UpdateMetadataError",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+                return
+            }
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: region.toDictionary()),
+                  let jsonString = String(data: jsonData, encoding: .utf8)
+            else {
+                result(FlutterError(
+                    code: "UpdateMetadataError",
+                    message: "Failed to serialize the updated region",
+                    details: nil
+                ))
+                return
+            }
+            result(jsonString)
+        }
     }
 
     static func setOfflineTileCountLimit(result: @escaping FlutterResult, maximumCount: UInt64) {
