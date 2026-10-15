@@ -161,16 +161,12 @@ class Convert {
             )
         case "newLatLngBounds":
             guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
-            
-            if let padding = parseLatLngBoundsPadding(cameraUpdate) {
-                return mapView.cameraThatFitsCoordinateBounds(
-                    MLNCoordinateBounds.fromArray(bounds),
-                    edgePadding: padding
-                )
-            }
-            
-            return mapView.cameraThatFitsCoordinateBounds(MLNCoordinateBounds.fromArray(bounds))
-            
+            let padding = parseLatLngBoundsPadding(cameraUpdate) ?? .zero
+            let fit = mapView.cameraThatFitsCoordinateBounds(
+                MLNCoordinateBounds.fromArray(bounds),
+                edgePadding: padding
+            )
+            return cameraFitting(fit, padding: padding, mapView: mapView)
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             guard let zoom = cameraUpdate[2] as? Double else { return nil }
@@ -293,6 +289,65 @@ class Convert {
             altitude: altitude,
             pitch: camera.pitch,
             heading: camera.heading
+        )
+    }
+
+    /// `cameraThatFitsCoordinateBounds` sizes the zoom for the padded area but
+    /// centers the camera on the bounds, expecting the same padding to be
+    /// passed again when the camera is set. Passing it would keep it as the
+    /// map's camera insets after the move, so the center is shifted here
+    /// instead: the bounds land in the middle of the padded area while the
+    /// map's own content insets stay as they were, as on Android and web.
+    class func cameraFitting(
+        _ fit: MLNMapCamera,
+        padding: UIEdgeInsets,
+        mapView: MLNMapView
+    ) -> MLNMapCamera {
+        let size = mapView.frame.size
+        let zoom = MLNZoomLevelForAltitude(
+            fit.altitude,
+            fit.pitch,
+            fit.centerCoordinate.latitude,
+            size
+        )
+        guard zoom.isFinite else { return fit }
+        let center = offset(
+            fit.centerCoordinate,
+            zoom: zoom,
+            heading: fit.heading,
+            dx: Double(padding.right - padding.left) / 2,
+            dy: Double(padding.bottom - padding.top) / 2
+        )
+        return MLNMapCamera(
+            lookingAtCenter: center,
+            altitude: MLNAltitudeForZoomLevel(zoom, fit.pitch, center.latitude, size),
+            pitch: fit.pitch,
+            heading: fit.heading
+        )
+    }
+
+    /// The coordinate `dx` points right and `dy` points down on screen from
+    /// `center`, for a camera at `zoom` facing `heading`, in Web Mercator with
+    /// 512 point tiles. The pitch is left out, as maplibre-gl-js does when it
+    /// fits bounds. Android does the same sums.
+    class func offset(
+        _ center: CLLocationCoordinate2D,
+        zoom: Double,
+        heading: CLLocationDirection,
+        dx: Double,
+        dy: Double
+    ) -> CLLocationCoordinate2D {
+        let worldSize = 512 * pow(2, zoom)
+        let radians = heading * Double.pi / 180
+        let offsetX = dx * cos(radians) - dy * sin(radians)
+        let offsetY = dx * sin(radians) + dy * cos(radians)
+        let sinLatitude = sin(center.latitude * Double.pi / 180)
+        let x = (center.longitude + 180) / 360 * worldSize + offsetX
+        let y = (0.5 - log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Double.pi)) * worldSize
+            + offsetY
+        return CLLocationCoordinate2D(
+            latitude: atan(sinh(Double.pi * (1 - 2 * y / worldSize))) * 180 / Double.pi,
+            longitude: x / worldSize * 360 - 180
         )
     }
 

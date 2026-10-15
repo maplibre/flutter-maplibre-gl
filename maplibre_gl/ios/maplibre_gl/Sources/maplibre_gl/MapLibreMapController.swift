@@ -816,19 +816,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "camera#animate":
             guard let parsed = parseCameraCall(methodCall, result) else { return }
             let arguments = parsed.arguments
-            let cameraUpdate = parsed.cameraUpdate
             let camera = parsed.camera
 
             let completion = {
                 result(nil)
             }
 
+            // No edge padding here: a newLatLngBounds camera already has its
+            // center shifted for the bounds padding, and padding passed to the
+            // map view would stay on as camera insets after the move.
             if let duration = arguments["duration"] as? TimeInterval {
-                if let padding = Convert.parseLatLngBoundsPadding(cameraUpdate) {
-                    mapView.fly(to: camera, edgePadding: padding, withDuration: duration / 1000, completionHandler: completion)
-                } else {
-                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
-                }
+                mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()
@@ -2900,7 +2898,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private func parseCameraCall(
         _ methodCall: FlutterMethodCall,
         _ result: FlutterResult
-    ) -> (arguments: [String: Any], cameraUpdate: [Any], camera: MLNMapCamera)? {
+    ) -> (arguments: [String: Any], camera: MLNMapCamera)? {
         guard let arguments = methodCall.arguments as? [String: Any],
               let cameraUpdate = arguments["cameraUpdate"] as? [Any],
               !cameraUpdate.isEmpty
@@ -2913,7 +2911,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
             return nil
         }
-        return (arguments, cameraUpdate, camera)
+        return (arguments, camera)
     }
 
     /// Serializes features for the channel as JSON strings, so nested

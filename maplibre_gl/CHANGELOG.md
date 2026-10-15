@@ -27,6 +27,8 @@
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **iOS**: `CameraUpdate.tiltTo` keeps the zoom like on Android and web, instead of changing it along with the pitch (#1060).
 * **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read. Before, Android threw a generic `error` and iOS never completed or returned `false` (#1063).
+* **iOS**: `CameraUpdate.newLatLngBounds` with padding moves the center so the bounds sit in the middle of the padded area, as on Android and web, instead of only zooming out. This holds for `moveCamera`, `animateCamera` and `easeCamera` alike (#299).
+* **Android**: the padding of `CameraUpdate.newLatLngBounds` applies to that camera move only, as on iOS and web. It no longer replaces the padding set with `updateContentInsets`, so `cameraPosition.target` stays the center of that area and later fits keep inside it (#1047).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
