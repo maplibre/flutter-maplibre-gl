@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.maplibre.android.style.expressions.Expression;
-import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
 import org.maplibre.android.maps.Style;
@@ -163,8 +162,9 @@ class SourcePropertyConverter {
       } else {
         Gson gson = new Gson();
         String geojson = gson.toJson(data);
-        final FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-        return new GeoJsonSource(id, featureCollection, options);
+        // Raw JSON, so the engine keeps numeric feature ids numeric; a Java
+        // FeatureCollection would turn them into Strings.
+        return new GeoJsonSource(id, geojson, options);
       }
     }
     return null;
