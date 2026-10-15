@@ -1919,10 +1919,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return String(data: data, encoding: .utf8)
     }
 
+    /// Half the side, in points, of the square around a touch where taps and drags look for a
+    /// feature. Android uses the same value in dp.
+    private static let featureHitTolerance: CGFloat = 8
+
     /*
-     *  Scan layers from top to bottom and return the first matching feature
+     *  Return the interactive feature nearest to the point, looking up to featureHitTolerance
+     *  around it. Nearness is measured to what the feature draws: the square around the point
+     *  grows one point at a time and the first feature it touches wins. When several features
+     *  are reached at the same distance, the top-most layer wins. With draggableOnly, features
+     *  that cannot be dragged are left out, so they never hide one that can.
      */
-    private func firstFeatureOnLayers(at: CGPoint) -> (feature: MLNFeature?, layerId: String?) {
+    private func firstFeatureOnLayers(
+        at: CGPoint,
+        draggableOnly: Bool = false
+    ) -> (feature: MLNFeature?, layerId: String?) {
         guard let style = mapView.style else { 
             NSLog("MapLibreMapController - Map style is nil")
             return (nil, nil) 
@@ -1938,13 +1949,38 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             interactiveFeatureLayerIds.contains(layer.identifier)
         }
 
+        func hitRect(_ radius: CGFloat) -> CGRect {
+            CGRect(x: at.x - radius, y: at.y - radius, width: radius * 2, height: radius * 2)
+        }
+        func hits(in rect: CGRect, _ layerId: String) -> [MLNFeature] {
+            let features = mapView.visibleFeatures(in: rect, styleLayerIdentifiers: [layerId])
+            guard draggableOnly else { return features }
+            return features.filter { ($0.attribute(forKey: "draggable") as? Bool) == true }
+        }
+        let tolerance = MapLibreMapController.featureHitTolerance
+
+        // One query over the whole area keeps only the layers with something in reach.
+        var candidateLayers: [String] = []
+        var onlyHit: (feature: MLNFeature?, layerId: String?) = (nil, nil)
+        var hitCount = 0
         for layer in clickableLayers.reversed() {
-            let features = mapView.visibleFeatures(
-                at: at,
-                styleLayerIdentifiers: [layer.identifier]
-            )
+            let features = hits(in: hitRect(tolerance), layer.identifier)
             if let feature = features.first {
-                return (feature, layer.identifier)
+                candidateLayers.append(layer.identifier)
+                hitCount += features.count
+                onlyHit = (feature, layer.identifier)
+            }
+        }
+        if hitCount <= 1 {
+            return onlyHit
+        }
+
+        for radius in stride(from: CGFloat(1), through: tolerance, by: 1) {
+            for layerId in candidateLayers {
+                let features = hits(in: hitRect(radius), layerId)
+                if let feature = features.first {
+                    return (feature, layerId)
+                }
             }
         }
         return (nil, nil)
@@ -2043,7 +2079,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if dragFeature == nil, began, sender.numberOfTouches == 1 {
             // Hit test where the finger came down, like Android: the pan begins
             // only after the finger has moved, which can miss a small feature.
-            let result = firstFeatureOnLayers(at: featureDragTouchDown ?? point)
+            let result = firstFeatureOnLayers(at: featureDragTouchDown ?? point, draggableOnly: true)
             if let feature = result.feature,
             let draggable = feature.attribute(forKey: "draggable") as? Bool,
             draggable {
