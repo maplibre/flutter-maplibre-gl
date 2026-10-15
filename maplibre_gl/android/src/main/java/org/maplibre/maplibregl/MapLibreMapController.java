@@ -255,7 +255,6 @@ final class MapLibreMapController
   // The draggable feature under the finger that came down, until the drag starts or the finger
   // lifts.
   private Feature dragCandidate;
-  private LatLng dragCandidateOrigin;
   // From the start of a drag until the last finger lifts: the map gets none of the gesture.
   private boolean dragOwnsGesture;
   private MapSnapshotter activeSnapshotter;
@@ -318,11 +317,7 @@ final class MapLibreMapController
     this.density = context.getResources().getDisplayMetrics().density;
     this.lifecycleProvider = lifecycleProvider;
     if (dragEnabled) {
-      this.androidGesturesManager = new AndroidGesturesManager(this.mapView.getContext(), false);
-      // Without a threshold any move, even one of zero pixels, turned a tap into a drag.
-      this.androidGesturesManager
-          .getMoveGestureDetector()
-          .setMoveThreshold(ViewConfiguration.get(context).getScaledTouchSlop());
+      this.androidGesturesManager = createDragGesturesManager(this.mapView.getContext());
     }
 
     mapViewContainer.addView(mapView);
@@ -504,7 +499,7 @@ final class MapLibreMapController
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
     if (dragEnabled) {
-      androidGesturesManager = new AndroidGesturesManager(mapView.getContext(), false);
+      androidGesturesManager = createDragGesturesManager(mapView.getContext());
     }
     mapViewContainer.addView(mapView);
     // NOTE: getMapAsync is intentionally NOT called here. The caller is responsible
@@ -4337,6 +4332,16 @@ final class MapLibreMapController
     return bitmap;
   }
 
+  // The gestures manager for feature drags. Without a move threshold any move, even one of zero
+  // pixels, turned a tap into a drag.
+  private static AndroidGesturesManager createDragGesturesManager(Context context) {
+    final AndroidGesturesManager manager = new AndroidGesturesManager(context, false);
+    manager
+        .getMoveGestureDetector()
+        .setMoveThreshold(ViewConfiguration.get(context).getScaledTouchSlop());
+    return manager;
+  }
+
   private boolean onDragTouch(View view, MotionEvent event) {
     final int action = event.getActionMasked();
     if (action == MotionEvent.ACTION_DOWN) {
@@ -4379,13 +4384,11 @@ final class MapLibreMapController
         && featureLayerPair.first != null
         && isDraggable(featureLayerPair.first)) {
       dragCandidate = featureLayerPair.first;
-      dragCandidateOrigin = mapLibreMap.getProjection().fromScreenLocation(point);
     }
   }
 
   private void forgetDragCandidate() {
     dragCandidate = null;
-    dragCandidateOrigin = null;
   }
 
   boolean onMoveBegin(MoveGestureDetector detector) {
@@ -4393,10 +4396,13 @@ final class MapLibreMapController
     if (dragCandidate == null || detector.getPointersCount() != 1) {
       return false;
     }
-    startDragging(dragCandidate, dragCandidateOrigin);
+    // Like iOS, the drag starts where the finger left the touch slop: origin and current are that
+    // point and the start event has a zero delta. The drag events after it carry the movement.
+    final PointF start = detector.getFocalPoint();
+    startDragging(dragCandidate, mapLibreMap.getProjection().fromScreenLocation(start));
     forgetDragCandidate();
     dragOwnsGesture = true;
-    invokeFeatureDrag(detector.getFocalPoint(), "start");
+    invokeFeatureDrag(start, "start");
     return true;
   }
 
