@@ -1,3 +1,57 @@
+## Unreleased
+
+### Actions needed
+* `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
+* **iOS**: error codes are renamed to match Android and web. Update any `catch` on the old codes (#1055, #1068):
+  * `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
+  * `invalidExpression` is now `INVALID_EXPRESSION`
+  * `invalidLayerType` is now `INVALID_LAYER_TYPE`
+  * `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
+  * `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of crashing the app on Android and iOS; catch it where you used to check for 0 or an empty list (#1065).
+* **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web; drop any scaling by the pixel ratio (#1067).
+* **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
+* **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
+* **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
+* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
+
+### Added
+* `removeLayerFilter(layerId)` removes a layer's filter (#1055).
+
+### Changed
+* `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
+
+### Fixed
+* Layer filters now behave the same on Android, iOS and web (#1055):
+  * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
+  * `null` removes a filter. Before, it was ignored or threw.
+  * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
+  * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `INVALID_EXPRESSION` with the reason. Before, iOS crashed and Android and web ignored it.
+  * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
+* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
+* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* **Android**: `setCameraBounds` completes instead of never returning (#1067).
+* **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
+* **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
+* **iOS**: `addImage` before the style has loaded throws `STYLE_NOT_READY` like Android instead of silently adding nothing (#1067).
+* **Android, iOS**: `getLayerVisibility` is implemented instead of throwing `MissingPluginException` (#1068).
+* **Web**: `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
+* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
+* **Android**: camera calls with `CameraUpdate.scrollBy` complete with `true` and animate (#1069).
+* **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
+* **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
+* **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
+* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
+* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
+* Fill annotations without a `fillOutlineColor` are drawn again on web, and get an outline in their fill color instead of a transparent one on Android and iOS (#1074).
+* **Web**: `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
+* **iOS**: `getStyle` returns the style JSON instead of `null` (#1070).
+* **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` and leaves the light unchanged (#1070).
+* **Web**: `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+* **Android**: `getLayerProperties` and `getSourceProperties` find layers and sources added at runtime instead of returning `null` (#1070).
+* **Android**: a tap on a draggable feature no longer starts a drag, and a drag no longer triggers `onMapLongClick` (#1051).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

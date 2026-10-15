@@ -24,6 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
+import 'support/map_harness.dart' show offlineStyle;
+
 const _sourceId = 'probe';
 const _layerId = 'probe-fill';
 
@@ -87,7 +89,7 @@ Future<MapLibreMapController> _pumpMapWithSource(WidgetTester tester) async {
           width: 400,
           height: 400,
           child: MapLibreMap(
-            styleString: MapLibreStyles.demo,
+            styleString: offlineStyle,
             initialCameraPosition: const CameraPosition(
               target: LatLng(0, 0),
               zoom: 3,

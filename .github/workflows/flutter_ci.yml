@@ -125,6 +125,79 @@ jobs:
           run-bootstrap: true
       - run: melos run test:web --no-select
 
+  # Integration tests drive a real map, so they reach the Java, Swift and
+  # JavaScript code the unit tests only see through a mocked channel. Every
+  # test builds its map from an inline style, so no job needs the network.
+  # iOS is not run here yet: a simulator run costs a macOS runner per PR.
+  integration-web:
+    name: "Integration tests (web)"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: maplibre_gl_example
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      # The runner image ships a chromedriver that matches its Chrome.
+      - name: Start chromedriver
+        run: |
+          "$CHROMEWEBDRIVER/chromedriver" --port=4444 &
+      # all_tests.dart runs every file in one app, so the suite builds once.
+      # The web-only manual location test imports package:web and runs apart.
+      - name: Run integration tests
+        run: |
+          status=0
+          for target in all_tests.dart manual_location_web_test.dart; do
+            flutter drive \
+              --driver=test_driver/integration_test.dart \
+              --target="integration_test/$target" \
+              -d web-server --browser-name=chrome --headless || status=1
+          done
+          exit $status
+
+  integration-android:
+    name: "Integration tests (Android emulator)"
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          working-directory: maplibre_gl_example
+          script: flutter test integration_test/all_tests.dart -d emulator-5554
+
   code-gen:
     name: "Generate code from templates"
     needs: changes
