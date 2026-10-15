@@ -243,6 +243,29 @@ void main() {
       expect(args.containsKey('belowLayerId'), isFalse);
     });
 
+    test('moveLayer surfaces a platform error to the caller', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async =>
+                throw PlatformException(
+                  code: 'LAYER_NOT_FOUND_ERROR',
+                  message: 'Layer with id missing not found.',
+                ),
+          );
+
+      await expectLater(
+        platform.moveLayer('missing', belowLayerId: 'other-layer'),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'LAYER_NOT_FOUND_ERROR',
+          ),
+        ),
+      );
+    });
+
     test('setLayerVisibility sends correct method', () async {
       await platform.setLayerVisibility('my-layer', false);
 
