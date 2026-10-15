@@ -55,6 +55,9 @@ class Convert {
         if let doubleClickZoomEnabled = options["doubleClickZoomEnabled"] as? Bool {
             delegate.setDoubleClickZoomEnabled(doubleClickZoomEnabled: doubleClickZoomEnabled)
         }
+        if let panInertia = options["panInertia"] as? Int {
+            delegate.setPanInertia(panInertia: panInertia)
+        }
         if let myLocationEnabled = options["myLocationEnabled"] as? Bool {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
         }

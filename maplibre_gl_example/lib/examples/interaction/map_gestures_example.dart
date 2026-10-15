@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+
 import '../../page.dart';
 import '../../shared/shared.dart';
 
@@ -34,6 +35,7 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
   bool _tiltGesturesEnabled = true;
   bool _zoomGesturesEnabled = true;
   bool _doubleClickToZoomEnabled = true;
+  PanInertia _panInertia = PanInertia.normal;
   bool _hapticFeedbackEnabled = true;
 
   // Movement State
@@ -131,6 +133,7 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
         tiltGesturesEnabled: _tiltGesturesEnabled,
         zoomGesturesEnabled: _zoomGesturesEnabled,
         doubleClickZoomEnabled: _doubleClickToZoomEnabled,
+        panInertia: _panInertia,
         hapticFeedbackEnabled: _hapticFeedbackEnabled,
       ),
       controls: [
@@ -202,6 +205,21 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
               value: _hapticFeedbackEnabled,
               onChanged: _updateHapticFeedback,
               contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+        ControlGroup(
+          title: 'Pan Inertia',
+          children: [
+            ExampleSegmentedButton<PanInertia>(
+              segments: const [
+                ExampleSegment(value: PanInertia.none, label: 'None'),
+                ExampleSegment(value: PanInertia.short, label: 'Short'),
+                ExampleSegment(value: PanInertia.normal, label: 'Normal'),
+              ],
+              selected: _panInertia,
+              onSelectionChanged:
+                  (value) => setState(() => _panInertia = value),
             ),
           ],
         ),
