@@ -211,8 +211,20 @@ class Convert {
           );
         }
         final point = json[2];
+        final focusX = (point[0] as num).toDouble();
+        final focusY = (point[1] as num).toDouble();
+        // Keeps the point under the focus where it is on screen rather than
+        // recentring on it: the view center moves toward the focus by the
+        // share of the distance the zoom takes away.
+        final center = mapLibreMap.project(mapLibreMap.getCenter());
+        final scale = pow(2, -(zoom as num)).toDouble();
         return CameraOptions(
-          center: mapLibreMap.unproject(geo_point.Point(point[0], point[1])),
+          center: mapLibreMap.unproject(
+            geo_point.Point(
+              focusX + (center.x - focusX) * scale,
+              focusY + (center.y - focusY) * scale,
+            ),
+          ),
           zoom: mapLibreMap.getZoom() + zoom,
           pitch: mapLibreMap.getPitch(),
           bearing: mapLibreMap.getBearing(),
