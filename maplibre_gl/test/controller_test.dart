@@ -414,6 +414,54 @@ void main() {
       expect(platform.wasCalled('addCircleLayer'), isTrue);
     });
 
+    test('addLayer passes filter and enableInteraction for fill extrusion '
+        '(#360)', () async {
+      const filter = [
+        '>',
+        ['get', 'height'],
+        10,
+      ];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const FillExtrusionLayerProperties(fillExtrusionHeight: 20),
+        filter: filter,
+        enableInteraction: false,
+      );
+
+      final calls = platform.callsFor('addFillExtrusionLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+      expect(calls.first.namedArgs['enableInteraction'], isFalse);
+    });
+
+    test('addLayer passes filter for heatmap (#360)', () async {
+      const filter = ['==', 'kind', 'quake'];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
+    test('addHeatmapLayer passes filter', () async {
+      const filter = ['has', 'mag'];
+      await controller.addHeatmapLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
     test('removeLayer delegates to platform', () async {
       await controller.removeLayer('layer-1');
 

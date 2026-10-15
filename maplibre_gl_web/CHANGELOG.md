@@ -11,6 +11,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects; drop any filtering or conversion you did on the result (#1064).
 * `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load; a load whose style is already gone no longer reports an error (#1088).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
@@ -29,6 +30,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `setGeoJsonSource` with a Feature or a bare geometry sets that data instead of emptying the source (#1073).
 * `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
+* The built-in annotation setup no longer reports an unhandled `STYLE_NOT_READY` error when the style is not ready or is replaced while it runs; the next style load sets it up again (#1088).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

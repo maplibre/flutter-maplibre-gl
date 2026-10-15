@@ -31,6 +31,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load; a load whose style is already gone no longer reports an error (#1088).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -73,6 +74,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
+* **Android, iOS**: `addHeatmapLayer` applies `sourceLayer` instead of ignoring it (#1088).
+* Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
+* The built-in annotation setup no longer reports an unhandled `styleNotFound` or `STYLE_NOT_READY` error when the style is not ready or is replaced while it runs; the next style load sets it up again (#1088).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

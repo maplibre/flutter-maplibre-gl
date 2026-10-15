@@ -187,6 +187,20 @@ void main() {
       expect(methodCalls[0].method, 'heatmapLayer#add');
     });
 
+    test('addHeatmapLayer sends the filter and source layer', () async {
+      await platform.addHeatmapLayer(
+        'heat-source',
+        'heatmap-layer',
+        {'heatmap-radius': 30},
+        sourceLayer: 'quakes',
+        filter: ['has', 'mag'],
+      );
+
+      final args = methodCalls.single.arguments as Map;
+      expect(args['sourceLayer'], 'quakes');
+      expect(args['filter'], '["has","mag"]');
+    });
+
     test('addLayer sends correct method', () async {
       await platform.addLayer('image-layer', 'image-source', 5, 15);
 

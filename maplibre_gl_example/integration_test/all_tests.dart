@@ -20,6 +20,7 @@ import 'camera_test.dart' as camera;
 import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
 import 'haptic_feedback_test.dart' as haptic_feedback;
+import 'map_lifecycle_test.dart' as map_lifecycle;
 import 'pan_inertia_test.dart' as pan_inertia;
 import 'placement_transitions_test.dart' as placement_transitions;
 import 'style_layers_test.dart' as style_layers;
@@ -34,6 +35,7 @@ void main() {
   feature_hit_tolerance.main();
   geojson_query.main();
   haptic_feedback.main();
+  map_lifecycle.main();
   pan_inertia.main();
   placement_transitions.main();
   style_layers.main();

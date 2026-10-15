@@ -564,6 +564,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    // The widget was disposed before its platform view was created, and
+    // dispose() has already torn the platform down. Wiring it up now would
+    // leave a channel handler and controller listeners nobody ever removes.
+    if (_disposed) return;
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
