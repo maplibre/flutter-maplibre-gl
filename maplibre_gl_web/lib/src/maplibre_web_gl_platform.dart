@@ -50,6 +50,9 @@ class MapLibreMapController extends MapLibrePlatform
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
   AttributionControl? _attributionControl;
+  bool _attributionEnabled = true;
+  AttributionButtonPosition _attributionButtonPosition =
+      AttributionButtonPosition.bottomRight;
   ScaleControl? _scaleControl;
   String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
@@ -194,6 +197,9 @@ class MapLibreMapController extends MapLibrePlatform
 
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
+    // Options without attribution settings still get the control, at the
+    // default position.
+    if (_attributionControl == null) _updateAttributionButton();
   }
 
   /// Says why the map will stay blank when WebGL is the reason.
@@ -1276,9 +1282,14 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  void _updateAttributionButton(AttributionButtonPosition position) {
+  /// Puts the attribution control at [_attributionButtonPosition], or removes
+  /// it while [_attributionEnabled] is false.
+  void _updateAttributionButton() {
+    _removeAttributionButton();
+    if (!_attributionEnabled) return;
+
     String? positionString;
-    switch (position) {
+    switch (_attributionButtonPosition) {
       case AttributionButtonPosition.topRight:
         positionString = 'top-right';
       case AttributionButtonPosition.topLeft:
@@ -1289,7 +1300,6 @@ class MapLibreMapController extends MapLibrePlatform
         positionString = 'bottom-left';
     }
 
-    _removeAttributionButton();
     _attributionControl = AttributionControl(AttributionControlOptions());
     _map.addControl(_attributionControl, positionString);
   }
@@ -1423,8 +1433,20 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setAttributionEnabled(bool enabled) {
+    // Sent with every map creation, after the position has put the control.
+    if (enabled == _attributionEnabled &&
+        enabled == (_attributionControl != null)) {
+      return;
+    }
+    _attributionEnabled = enabled;
+    _updateAttributionButton();
+  }
+
+  @override
   void setAttributionButtonAlignment(AttributionButtonPosition position) {
-    _updateAttributionButton(position);
+    _attributionButtonPosition = position;
+    _updateAttributionButton();
   }
 
   @override

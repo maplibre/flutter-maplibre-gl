@@ -19,6 +19,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `SymbolLayerProperties.symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
 * `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so a symbol whose data just changed no longer flickers (#1056).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#PR).
+* `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#PR).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
@@ -30,6 +31,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `setGeoJsonSource` with a Feature or a bare geometry sets that data instead of emptying the source (#1073).
 * `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+* Changing another map option no longer moves the attribution control back to the bottom right (#PR).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

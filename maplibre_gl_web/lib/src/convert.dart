@@ -91,13 +91,16 @@ class Convert {
         options['compassViewMargins'][1],
       );
     }
+    // Only what the options carry is applied: an update without them keeps
+    // the attribution where it is, shown or hidden.
     if (options.containsKey('attributionButtonPosition')) {
       final position =
           AttributionButtonPosition
               .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
-    } else {
-      sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
+    }
+    if (options.containsKey('attributionEnabled')) {
+      sink.setAttributionEnabled(options['attributionEnabled']);
     }
     if (options.containsKey('attributionButtonMargins')) {
       sink.setAttributionButtonMargins(
