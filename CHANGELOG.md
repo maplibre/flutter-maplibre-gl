@@ -22,6 +22,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: a feature drag starts only after the finger moves a little, so a tap on a draggable feature is a tap, the drag no longer fires `onMapLongClick`, and the `start` event has a zero delta like on iOS. Check any code that relied on a drag starting at touch down (#1051).
 * **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch, and Android no longer crashes on it; apps that expected the drag to continue with two fingers must start a new drag (#1044).
 * **Web**: a feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS. Check any code that relied on a drag starting at mouse down (#1077).
+* **Android, iOS**: taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins; before, Android used about 3 logical pixels and iOS the exact point (#1079).
+* **Android**: `line-pattern` images are drawn at the size MapLibre GL JS uses, about 1.7x smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix (#1080).
+* **Web**: On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -31,6 +34,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
+* **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
+* **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
+* **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 
 ### Fixed
 * Layer filters now behave the same on Android, iOS and web (#1055):
