@@ -88,6 +88,8 @@ import org.maplibre.android.style.sources.CustomGeometrySource;
 import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
+import org.maplibre.android.style.sources.RasterDemSource;
+import org.maplibre.android.style.sources.RasterSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 import org.maplibre.geojson.Feature;
@@ -715,12 +717,92 @@ final class MapLibreMapController
   }
 
   // Returns a reply map carrying the layer's MapLibre style-spec JSON under
-  // "properties" (the layer entry from the serialized style: id/type/source/
-  // paint/layout/...), or an empty map if the layer is absent. Reading the
-  // serialized style avoids enumerating every typed getter and guarantees the
-  // result matches the style spec, like the iOS and web implementations.
+  // "properties" (id/type/source/source-layer/minzoom/maxzoom/filter/paint/
+  // layout), or an empty map if the layer is absent. The runtime layer is read,
+  // not style.getJson(): that is the style as loaded, so it misses layers added
+  // later and every property set since.
   private Map<String, Object> getLayerProperties(String layerId) {
     Map<String, Object> reply = new HashMap<>();
+    final Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      return reply;
+    }
+    final String type = LayerPropertyConverter.layerType(layer);
+    if (type == null) {
+      // Not a style-spec layer type (a CustomLayer): only the loaded style can
+      // describe it, if it came with it.
+      JsonObject loaded = findLoadedLayer(layerId);
+      if (loaded != null) {
+        reply.put("properties", loaded.toString());
+      }
+      return reply;
+    }
+
+    final JsonObject json = new JsonObject();
+    json.addProperty("id", layerId);
+    json.addProperty("type", type);
+    String sourceId = null;
+    String sourceLayer = null;
+    if (layer instanceof SymbolLayer) {
+      sourceId = ((SymbolLayer) layer).getSourceId();
+      sourceLayer = ((SymbolLayer) layer).getSourceLayer();
+    } else if (layer instanceof CircleLayer) {
+      sourceId = ((CircleLayer) layer).getSourceId();
+      sourceLayer = ((CircleLayer) layer).getSourceLayer();
+    } else if (layer instanceof LineLayer) {
+      sourceId = ((LineLayer) layer).getSourceId();
+      sourceLayer = ((LineLayer) layer).getSourceLayer();
+    } else if (layer instanceof FillLayer) {
+      sourceId = ((FillLayer) layer).getSourceId();
+      sourceLayer = ((FillLayer) layer).getSourceLayer();
+    } else if (layer instanceof FillExtrusionLayer) {
+      sourceId = ((FillExtrusionLayer) layer).getSourceId();
+      sourceLayer = ((FillExtrusionLayer) layer).getSourceLayer();
+    } else if (layer instanceof HeatmapLayer) {
+      sourceId = ((HeatmapLayer) layer).getSourceId();
+      sourceLayer = ((HeatmapLayer) layer).getSourceLayer();
+    } else if (layer instanceof ColorReliefLayer) {
+      sourceId = ((ColorReliefLayer) layer).getSourceId();
+      sourceLayer = ((ColorReliefLayer) layer).getSourceLayer();
+    } else if (layer instanceof RasterLayer) {
+      sourceId = ((RasterLayer) layer).getSourceId();
+    } else if (layer instanceof HillshadeLayer) {
+      sourceId = ((HillshadeLayer) layer).getSourceId();
+    }
+    if (sourceId != null && !sourceId.isEmpty()) {
+      json.addProperty("source", sourceId);
+    }
+    if (sourceLayer != null && !sourceLayer.isEmpty()) {
+      json.addProperty("source-layer", sourceLayer);
+    }
+    // The SDK reports the spec defaults (0 and 24) for an unset zoom range,
+    // which a style JSON leaves out.
+    if (layer.getMinZoom() > 0) {
+      json.addProperty("minzoom", layer.getMinZoom());
+    }
+    if (layer.getMaxZoom() < 24) {
+      json.addProperty("maxzoom", layer.getMaxZoom());
+    }
+    // Read like getLayerFilter, so numbers keep their exact value.
+    try {
+      final JsonElement filter = getRawFilter(layer);
+      if (filter != null) {
+        json.add("filter", filter);
+      }
+    } catch (ReflectiveOperationException e) {
+      // Leave the filter out rather than fail the whole read.
+    }
+    final JsonObject paint = new JsonObject();
+    final JsonObject layout = new JsonObject();
+    LayerPropertyConverter.readLayerProperties(layer, paint, layout);
+    json.add("paint", paint);
+    json.add("layout", layout);
+    reply.put("properties", json.toString());
+    return reply;
+  }
+
+  // The layer entry of the style as it was loaded, or null.
+  private JsonObject findLoadedLayer(String layerId) {
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonArray layers = styleJson.getAsJsonArray("layers");
     if (layers != null) {
@@ -728,24 +810,62 @@ final class MapLibreMapController
         JsonObject layer = element.getAsJsonObject();
         JsonElement id = layer.get("id");
         if (id != null && layerId.equals(id.getAsString())) {
-          reply.put("properties", layer.toString());
-          break;
+          return layer;
         }
       }
     }
-    return reply;
+    return null;
   }
 
-  // Same as getLayerProperties but for sources, which the style spec keys by id
-  // under the "sources" object rather than storing in an array.
+  // Same as getLayerProperties but for sources. A source that came with the
+  // style is read from the loaded style JSON, the only place holding all of
+  // its properties (data, tiles, ...). The SDK exposes little on a runtime
+  // source, so one added later reports its type, its url and its attribution.
   private Map<String, Object> getSourceProperties(String sourceId) {
     Map<String, Object> reply = new HashMap<>();
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      return reply;
+    }
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonObject sources = styleJson.getAsJsonObject("sources");
     if (sources != null && sources.has(sourceId)) {
       reply.put("properties", sources.getAsJsonObject(sourceId).toString());
+      return reply;
     }
+
+    final JsonObject json = new JsonObject();
+    if (source instanceof GeoJsonSource) {
+      json.addProperty("type", "geojson");
+      final String uri = ((GeoJsonSource) source).getUri();
+      if (uri != null && !uri.isEmpty()) {
+        json.addProperty("data", uri);
+      }
+    } else if (source instanceof VectorSource) {
+      json.addProperty("type", "vector");
+      putIfNotEmpty(json, "url", ((VectorSource) source).getUri());
+    } else if (source instanceof RasterDemSource) {
+      json.addProperty("type", "raster-dem");
+      putIfNotEmpty(json, "url", ((RasterDemSource) source).getUri());
+    } else if (source instanceof RasterSource) {
+      json.addProperty("type", "raster");
+      putIfNotEmpty(json, "url", ((RasterSource) source).getUri());
+    } else if (source instanceof ImageSource) {
+      json.addProperty("type", "image");
+      putIfNotEmpty(json, "url", ((ImageSource) source).getUri());
+    } else {
+      // Not a style-spec source type (a custom geometry source).
+      return reply;
+    }
+    putIfNotEmpty(json, "attribution", source.getAttribution());
+    reply.put("properties", json.toString());
     return reply;
+  }
+
+  private static void putIfNotEmpty(JsonObject json, String key, String value) {
+    if (value != null && !value.isEmpty()) {
+      json.addProperty(key, value);
+    }
   }
 
   // Resolves the source a feature-state call addresses, or replies with a
@@ -1414,12 +1534,20 @@ final class MapLibreMapController
 
   /**
    * The filter of {@code layer} as the engine holds it, or null without one. Layer.getFilter
-   * rounds numbers to floats, so this calls the native getter it wraps.
+   * rounds numbers to floats, so this calls the native getter it wraps. The always-true filter
+   * that style#setFilter sets to remove a filter also counts as none.
    */
   private static JsonElement getRawFilter(Layer layer) throws ReflectiveOperationException {
     Method nativeGetFilter = Layer.class.getDeclaredMethod("nativeGetFilter");
     nativeGetFilter.setAccessible(true);
-    return (JsonElement) nativeGetFilter.invoke(layer);
+    JsonElement filter = (JsonElement) nativeGetFilter.invoke(layer);
+    boolean unfiltered =
+        filter == null
+            || filter.isJsonNull()
+            || (filter.isJsonPrimitive()
+                && filter.getAsJsonPrimitive().isBoolean()
+                && filter.getAsBoolean());
+    return unfiltered ? null : filter;
   }
 
   private boolean addRasterLayer(
@@ -2712,59 +2840,62 @@ final class MapLibreMapController
             break;
           }
           final Map<String, Object> lightProperties = call.argument("light");
-          final Light light = style.getLight();
           // Every LightProperties field is dynamic, so anything can arrive here. The
           // values are checked rather than cast: MapLibre Native takes constants only,
           // and an expression is a List, which would leave onMethodCall as a bare
-          // ClassCastException.
+          // ClassCastException. All fields are checked before any is applied, so a
+          // rejected call changes nothing.
           final String constantsOnly =
               " MapLibre Native takes constant light values only, not expressions.";
           final Object anchor = lightProperties.get("anchor");
-          if (anchor != null) {
-            if (!(anchor instanceof String)) {
-              result.error(
-                  "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
-              break;
-            }
-            light.setAnchor((String) anchor);
+          if (anchor != null && !(anchor instanceof String)) {
+            result.error(
+                "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+            break;
           }
           final Object position = lightProperties.get("position");
-          if (position != null) {
-            final List<?> values = position instanceof List ? (List<?>) position : null;
-            if (values == null
-                || values.size() != 3
-                || !(values.get(0) instanceof Number)
-                || !(values.get(1) instanceof Number)
-                || !(values.get(2) instanceof Number)) {
-              result.error(
-                  "INVALID_ARGUMENT",
-                  "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
-                      + " polar]."
-                      + constantsOnly,
-                  null);
-              break;
-            }
-            light.setPosition(
-                new Position(
-                    ((Number) values.get(0)).floatValue(),
-                    ((Number) values.get(1)).floatValue(),
-                    ((Number) values.get(2)).floatValue()));
+          final List<?> positionValues = position instanceof List ? (List<?>) position : null;
+          if (position != null
+              && (positionValues == null
+                  || positionValues.size() != 3
+                  || !(positionValues.get(0) instanceof Number)
+                  || !(positionValues.get(1) instanceof Number)
+                  || !(positionValues.get(2) instanceof Number))) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
+                    + " polar]."
+                    + constantsOnly,
+                null);
+            break;
           }
           final Object color = lightProperties.get("color");
-          if (color != null) {
-            if (!(color instanceof String)) {
-              result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
-              break;
-            }
-            light.setColor((String) color);
+          if (color != null && !(color instanceof String)) {
+            result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+            break;
           }
           final Object intensity = lightProperties.get("intensity");
+          if (intensity != null && !(intensity instanceof Number)) {
+            result.error(
+                "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+            break;
+          }
+
+          final Light light = style.getLight();
+          if (anchor != null) {
+            light.setAnchor((String) anchor);
+          }
+          if (positionValues != null) {
+            light.setPosition(
+                new Position(
+                    ((Number) positionValues.get(0)).floatValue(),
+                    ((Number) positionValues.get(1)).floatValue(),
+                    ((Number) positionValues.get(2)).floatValue()));
+          }
+          if (color != null) {
+            light.setColor((String) color);
+          }
           if (intensity != null) {
-            if (!(intensity instanceof Number)) {
-              result.error(
-                  "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
-              break;
-            }
             light.setIntensity(((Number) intensity).floatValue());
           }
           result.success(null);
@@ -3232,15 +3363,7 @@ final class MapLibreMapController
             result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
             break;
           }
-          // An unfiltered layer has no filter or the always-true one that
-          // style#setFilter sets when a filter is removed.
-          boolean unfiltered =
-              filter == null
-                  || filter.isJsonNull()
-                  || (filter.isJsonPrimitive()
-                      && filter.getAsJsonPrimitive().isBoolean()
-                      && filter.getAsBoolean());
-          reply.put("filter", unfiltered ? null : new Gson().toJson(filter));
+          reply.put("filter", filter == null ? null : new Gson().toJson(filter));
           result.success(reply);
           break;
         }

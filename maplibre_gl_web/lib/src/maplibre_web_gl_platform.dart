@@ -962,20 +962,37 @@ class MapLibreMapController extends MapLibrePlatform
     Uint8List bytes, [
     bool sdf = false,
   ]) async {
-    final photo = decodeImage(bytes)!;
-    if (!_map.hasImage(name)) {
-      // Convert image to RGBA format with proper byte ordering
-      final rgbaBytes = photo.convert(numChannels: 4).getBytes();
-      final data = Uint8List.fromList(rgbaBytes);
-
-      await _map.addImage(
-        name,
-        {'width': photo.width, 'height': photo.height, 'data': data},
-        {'sdf': sdf, 'pixelRatio': 1},
+    // Same contract as Android: bytes that are not an image are a
+    // PlatformException, not a null-check error. decodeImage answers null for
+    // an unknown format and can throw on a truncated one.
+    final photo = () {
+      try {
+        return decodeImage(bytes);
+      } catch (_) {
+        return null;
+      }
+    }();
+    if (photo == null) {
+      throw PlatformException(
+        code: 'INVALID_IMAGE',
+        message: 'Failed to decode image bytes.',
       );
-    } else {
-      print('MapLibreMapController: Image already exists on map: $name');
     }
+    // Convert image to RGBA format with proper byte ordering
+    final rgbaBytes = photo.convert(numChannels: 4).getBytes();
+    final data = Uint8List.fromList(rgbaBytes);
+
+    // An existing name is replaced, as on Android and iOS. Remove and add
+    // rather than updateImage, which requires the same size and keeps the old
+    // sdf flag.
+    if (_map.hasImage(name)) {
+      _map.removeImage(name);
+    }
+    await _map.addImage(
+      name,
+      {'width': photo.width, 'height': photo.height, 'data': data},
+      {'sdf': sdf, 'pixelRatio': 1},
+    );
   }
 
   @override

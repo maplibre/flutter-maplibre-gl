@@ -703,9 +703,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["result"] = ret
             result(reply)
         case "map#getStyle":
-            var reply: [String: Bool] = [:]
-            reply["result"] = false
-            result(reply)
+            // Same reply shape as Android: the Dart side reads "json" only when
+            // "result" is true.
+            let json = mapView.styleJSON
+            if json.isEmpty {
+                result(["result": false])
+            } else {
+                result(["result": true, "json": json] as [String: Any])
+            }
         case "map#setCustomHeaders":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let headers = arguments["headers"] as? [String:String] else { return }
@@ -1057,11 +1062,60 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
 
+            // Every LightProperties field is dynamic, so anything can arrive here.
+            // MapLibre Native takes constants only: a value that is not one is
+            // rejected, as on Android, rather than skipped. All fields are
+            // checked before any is applied, so a rejected call changes nothing.
+            func invalidLight(_ field: String, _ expected: String) -> FlutterError {
+                return FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "Invalid '\(field)' in 'light'. Expected \(expected). MapLibre "
+                        + "Native takes constant light values only, not expressions.",
+                    details: nil
+                )
+            }
+            // A Dart bool arrives as an NSNumber too; reject it like Android.
+            func lightNumber(_ value: Any) -> NSNumber? {
+                guard let number = value as? NSNumber,
+                      CFGetTypeID(number) != CFBooleanGetTypeID()
+                else { return nil }
+                return number
+            }
+            let anchorValue = lightProperties["anchor"]
+            let anchor = anchorValue as? String
+            if anchorValue != nil, anchor == nil {
+                result(invalidLight("anchor", "a String"))
+                return
+            }
+            let positionValue = lightProperties["position"]
+            var position: [Double]?
+            if let positionValue = positionValue {
+                let elements = positionValue as? [Any] ?? []
+                let numbers = elements.compactMap(lightNumber)
+                guard elements.count == 3, numbers.count == 3 else {
+                    result(invalidLight("position", "three numbers, [radial, azimuthal, polar]"))
+                    return
+                }
+                position = numbers.map { $0.doubleValue }
+            }
+            let colorValue = lightProperties["color"]
+            let color = colorValue as? String
+            if colorValue != nil, color == nil {
+                result(invalidLight("color", "a String"))
+                return
+            }
+            let intensityValue = lightProperties["intensity"]
+            let intensity = intensityValue.flatMap(lightNumber)?.doubleValue
+            if intensityValue != nil, intensity == nil {
+                result(invalidLight("intensity", "a number"))
+                return
+            }
+
             let light = style.light
-            if let anchor = lightProperties["anchor"] as? String {
+            if let anchor = anchor {
                 light.anchor = NSExpression(forConstantValue: anchor)
             }
-            if let position = lightProperties["position"] as? [Double], position.count == 3 {
+            if let position = position {
                 light.position = NSExpression(forConstantValue: NSValue(
                     mlnSphericalPosition: MLNSphericalPositionMake(
                         CGFloat(position[0]),
@@ -1070,7 +1124,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     )
                 ))
             }
-            if let color = lightProperties["color"] as? String {
+            if let color = color {
                 if let parsed = UIColor(hexString: color) {
                     light.color = NSExpression(forConstantValue: parsed)
                 } else {
@@ -1083,7 +1137,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     light.color = NSExpression(mglJSONObject: ["to-color", color, "#000000"])
                 }
             }
-            if let intensity = lightProperties["intensity"] as? Double {
+            if let intensity = intensity {
                 light.intensity = NSExpression(forConstantValue: intensity)
             }
             style.light = light
