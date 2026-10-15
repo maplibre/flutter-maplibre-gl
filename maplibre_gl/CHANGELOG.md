@@ -16,6 +16,7 @@
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
 * **Android**: a feature drag starts only after the finger moves a little, so a tap on a draggable feature is a tap, the drag no longer fires `onMapLongClick`, and the `start` event has a zero delta like on iOS. Check any code that relied on a drag starting at touch down (#1051).
 * **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch, and Android no longer crashes on it; apps that expected the drag to continue with two fingers must start a new drag (#1044).
+* **Web**: a feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS. Check any code that relied on a drag starting at mouse down (#1077).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
