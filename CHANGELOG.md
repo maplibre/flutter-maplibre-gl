@@ -6,7 +6,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## Unreleased
 
 ### Fixed
-* **Web**: `removeFeatureState` with a `stateKey` removes only that key. It dropped the key and cleared the feature's whole state (#1066).
+* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
