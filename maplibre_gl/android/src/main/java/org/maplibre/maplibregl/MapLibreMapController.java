@@ -4263,6 +4263,11 @@ final class MapLibreMapController
   }
 
   @Override
+  public void setAttributionEnabled(boolean attributionEnabled) {
+    mapLibreMap.getUiSettings().setAttributionEnabled(attributionEnabled);
+  }
+
+  @Override
   public void setAttributionButtonGravity(int gravity) {
     switch (gravity) {
       case 0:
