@@ -12,6 +12,7 @@
 // Each file still runs on its own as well. manual_location_web_test.dart is
 // not included: it imports package:web, which does not compile for Android
 // or iOS, so CI runs it on its own on web.
+import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
 import 'camera_test.dart' as camera;
 import 'geojson_query_test.dart' as geojson_query;
@@ -21,6 +22,7 @@ import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
 
 void main() {
+  android_feature_drag.main();
   annotations.main();
   camera.main();
   geojson_query.main();
