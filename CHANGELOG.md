@@ -19,12 +19,18 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` instead of being ignored or failing with a generic error (#1068).
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web (positive `x` moves the view east); remove any Android-only sign flip (#1069).
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"` (#1073).
-* **Android**: a feature drag starts only after the finger moves a little, so a tap on a draggable feature is a tap, the drag no longer fires `onMapLongClick`, and the `start` event has a zero delta like on iOS. Check any code that relied on a drag starting at touch down (#1051).
-* **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch, and Android no longer crashes on it; apps that expected the drag to continue with two fingers must start a new drag (#1044).
+* **Android**: a feature drag starts only after the finger moves a little, like on iOS: a tap on a draggable feature stays a tap, it no longer fires `onMapLongClick`, and `start` has a zero delta (#1051).
+* **Android, iOS**: a second finger during a feature drag now ends the drag with an `end` event and lets the map pinch; apps that expected the drag to continue with two fingers must start a new drag (#1044).
 * **Web**: a feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS. Check any code that relied on a drag starting at mouse down (#1077).
 * **Android, iOS**: taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins; before, Android used about 3 logical pixels and iOS the exact point (#1079).
 * **Android**: `line-pattern` images are drawn at the size MapLibre GL JS uses, about 1.7x smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix (#1080).
-* **Web**: On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
+* **Web**: on a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
+* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects; drop any filtering or conversion you did on the result (#1064).
+* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* **Web**: `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
+* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
+* **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -48,8 +54,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
   * A missing layer throws `LAYER_NOT_FOUND_ERROR`, and an invalid filter throws `INVALID_EXPRESSION` with the reason. Before, iOS crashed and Android and web ignored it.
   * **Android**: large numbers in a filter, such as feature ids, keep their exact value instead of being rounded.
-* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
-* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
 * **Android**: `setCameraBounds` completes instead of never returning (#1067).
 * **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
 * **iOS**: `addImageLayer` completes, and `addImage` with bytes that are not an image throws `INVALID_IMAGE` instead of never returning (#1067).
@@ -59,12 +63,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
 * **Android**: camera calls with `CameraUpdate.scrollBy` complete with `true` and animate (#1069).
 * **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
-* **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
-* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
 * **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
-* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
-* Fill annotations without a `fillOutlineColor` are drawn again on web, and get an outline in their fill color instead of a transparent one on Android and iOS (#1074).
 * **Web**: `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
 * **iOS**: `getStyle` returns the style JSON instead of `null` (#1070).
 * **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` and leaves the light unchanged (#1070).
@@ -72,6 +72,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `getLayerProperties` and `getSourceProperties` find layers and sources added at runtime instead of returning `null` (#1070).
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
+* **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
