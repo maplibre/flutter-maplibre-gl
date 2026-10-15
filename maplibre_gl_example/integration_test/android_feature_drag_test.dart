@@ -8,25 +8,20 @@
 // Run on an Android device or emulator:
 //   flutter test integration_test/android_feature_drag_test.dart -d <device>
 //
-// The assertions only run on Android; elsewhere the tests are no-ops.
-import 'dart:async';
+// The assertions only run on Android; elsewhere the tests are no-ops so the
+// suite stays green everywhere.
 import 'dart:developer' show Timeline;
+import 'dart:math' show Point;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-// A blank style: no network, nothing on the map but the circle.
-const _style =
-    '{"version":8,"sources":{},"layers":[{"id":"background",'
-    '"type":"background","paint":{"background-color":"#ffffff"}}]}';
+import 'support/map_harness.dart';
 
 const _center = LatLng(0, 0);
 
-final bool _onAndroid =
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _onAndroid => testPlatform == TestPlatform.android;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +36,7 @@ void main() {
     await finger.down(map.circleOnScreen);
     await finger.moveBy(const Offset(1, 0));
     await finger.up();
-    await _settle();
+    await _settle(tester);
 
     expect(map.drags, isEmpty);
     expect(map.featureTaps, hasLength(1));
@@ -52,7 +47,11 @@ void main() {
   ) async {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
-    final before = await map.controller.getVisibleRegion();
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
 
     final finger = _Finger(tester);
     await finger.down(map.circleOnScreen);
@@ -60,13 +59,30 @@ void main() {
       await finger.moveBy(const Offset(2, 0));
     }
     await finger.up();
-    await _settle();
+    await _settle(tester);
 
-    expect(await map.controller.getVisibleRegion(), before);
-    expect(map.drags.first, DragEventType.start);
-    expect(map.drags, contains(DragEventType.drag));
-    expect(map.drags.last, DragEventType.end);
+    expect(
+      await pumpUntil(
+        tester,
+        map.controller.getVisibleRegion(),
+        'getVisibleRegion after',
+      ),
+      before,
+    );
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types, contains(DragEventType.drag));
+    expect(types.last, DragEventType.end);
     expect(map.featureTaps, isEmpty);
+
+    // As on iOS: the drag starts where the finger left the touch slop, with
+    // no movement of its own. The drag events after it carry the movement.
+    final start = map.drags.first;
+    expect(start.delta, const LatLng(0, 0));
+    expect(start.origin, start.current);
+    final end = map.drags.last;
+    expect(end.origin, start.origin);
+    expect(end.current.longitude, greaterThan(start.current.longitude));
   });
 
   testWidgets('two fingers down on a feature pinch the map, no drag', (
@@ -74,22 +90,33 @@ void main() {
   ) async {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
-    final before = await map.controller.getVisibleRegion();
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
 
     final first = _Finger(tester);
     await first.down(map.circleOnScreen);
     final second = _Finger(tester);
-    await second.down(map.circleOnScreen + const Offset(0, 150));
+    await second.down(map.circleOnScreen + const Offset(0, 80));
     for (var i = 0; i < 10; i++) {
-      await first.moveBy(const Offset(0, -10));
-      await second.moveBy(const Offset(0, 10));
+      await first.moveBy(const Offset(0, -5));
+      await second.moveBy(const Offset(0, 5));
     }
     await second.up();
     await first.up();
-    await _settle();
+    await _settle(tester);
 
     expect(map.drags, isEmpty);
-    expect(await map.controller.getVisibleRegion(), isNot(before));
+    expect(
+      await pumpUntil(
+        tester,
+        map.controller.getVisibleRegion(),
+        'getVisibleRegion after',
+      ),
+      isNot(before),
+    );
   });
 
   testWidgets('a drag longer than a long press does not long-press the map', (
@@ -105,17 +132,17 @@ void main() {
       await finger.moveBy(const Offset(4, 0), after: 50);
     }
     await finger.up();
-    await _settle();
+    await _settle(tester);
 
-    expect(map.drags.last, DragEventType.end);
+    expect(map.drags.last.type, DragEventType.end);
     expect(map.longClicks, isEmpty);
     expect(map.clicks, isEmpty);
   });
 }
 
-/// Waits for the platform view to answer over the method channel.
-Future<void> _settle() =>
-    Future<void>.delayed(const Duration(milliseconds: 500));
+/// Lets the platform view answer over the method channel.
+Future<void> _settle(WidgetTester tester) =>
+    pumpFor(tester, const Duration(milliseconds: 500));
 
 /// One finger whose events carry real timestamps.
 ///
@@ -133,12 +160,12 @@ class _Finger {
   Future<void> down(Offset at) async {
     _gesture = await tester.createGesture();
     await _gesture.down(at, timeStamp: _now);
-    await Future<void>.delayed(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 16));
   }
 
   Future<void> moveBy(Offset by, {int after = 16}) async {
     await _gesture.moveBy(by, timeStamp: _now);
-    await Future<void>.delayed(Duration(milliseconds: after));
+    await tester.pump(Duration(milliseconds: after));
   }
 
   Future<void> up() async {
@@ -146,8 +173,17 @@ class _Finger {
   }
 }
 
+class _Drag {
+  _Drag(this.type, this.origin, this.current, this.delta);
+
+  final DragEventType type;
+  final LatLng origin;
+  final LatLng current;
+  final LatLng delta;
+}
+
 class _MapProbe {
-  final drags = <DragEventType>[];
+  final drags = <_Drag>[];
   final featureTaps = <String>[];
   final clicks = <LatLng>[];
   final longClicks = <LatLng>[];
@@ -157,47 +193,59 @@ class _MapProbe {
 
 Future<_MapProbe> _pumpMapWithDraggableCircle(WidgetTester tester) async {
   final probe = _MapProbe();
-  final created = Completer<MapLibreMapController>();
-  final styled = Completer<void>();
 
-  await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: MapLibreMap(
-          styleString: _style,
-          initialCameraPosition: const CameraPosition(
-            target: _center,
-            zoom: 10,
-          ),
-          onMapCreated: created.complete,
-          onStyleLoadedCallback: styled.complete,
-          onMapClick: (_, latLng) => probe.clicks.add(latLng),
-          onMapLongClick: (_, latLng) => probe.longClicks.add(latLng),
-        ),
-      ),
-    ),
-  );
-
-  final controller = probe.controller = await created.future;
-  await styled.future;
+  final controller =
+      probe.controller = await pumpMap(
+        tester,
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: _center,
+                zoom: 10,
+              ),
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+              onMapClick: (_, latLng) => probe.clicks.add(latLng),
+              onMapLongClick: (_, latLng) => probe.longClicks.add(latLng),
+            ),
+      );
   controller.onFeatureDrag.add(
     (point, origin, current, delta, id, annotation, eventType) =>
-        probe.drags.add(eventType),
+        probe.drags.add(_Drag(eventType, origin, current, delta)),
   );
   controller.onFeatureTapped.add(
     (point, latLng, id, layerId, annotation) => probe.featureTaps.add(id),
   );
-  await controller.addCircle(
-    const CircleOptions(
-      geometry: _center,
-      circleRadius: 30,
-      circleColor: '#e53935',
-      draggable: true,
+  final circle = await pumpUntil(
+    tester,
+    controller.addCircle(
+      const CircleOptions(
+        geometry: _center,
+        circleRadius: 30,
+        circleColor: '#e53935',
+        draggable: true,
+      ),
     ),
+    'addCircle',
   );
-  // Let the circle render: the feature query only sees what is drawn.
-  await Future<void>.delayed(const Duration(seconds: 1));
-  await tester.pump();
+
+  // The feature query behind a drag only sees what is drawn.
+  final screen = await pumpUntil(
+    tester,
+    controller.toScreenLocation(_center),
+    'toScreenLocation',
+  );
+  final point = Point<double>(screen.x.toDouble(), screen.y.toDouble());
+  final layerId = controller.circleManager!.layerIds.first;
+  await pumpUntilValue(
+    tester,
+    () => controller.queryRenderedFeatures(point, [layerId], null),
+    (features) => features.cast<Map>().any(
+      (f) => (f['properties'] as Map?)?['id'].toString() == circle.id,
+    ),
+    'circle rendered',
+  );
 
   probe.circleOnScreen = tester.getCenter(find.byType(MapLibreMap));
   return probe;
