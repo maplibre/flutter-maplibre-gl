@@ -22,7 +22,20 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var originDragCoordinate: CLLocationCoordinate2D?
     private var dragFeature: MLNFeature?
 
-    private var initialTilt: CGFloat?
+    /// `initialCameraPosition` from the creation params, kept until the view has
+    /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
+    /// MLNMapView takes for "no change" and drops, so the map stays at zoom 0.
+    private var pendingInitialCamera: [String: Any]?
+    /// Dart calls that read the camera or the projection. While the initial
+    /// camera waits for a size they wait too, or they would report zoom 0.
+    private static let cameraReadingMethods: Set<String> = [
+        "map#queryCameraPosition",
+        "map#getVisibleRegion",
+        "map#toScreenLocation",
+        "map#toScreenLocationBatch",
+        "map#getMetersPerPixelAtLatitude",
+        "map#toLatLng",
+    ]
     private var trackCameraPosition = false
     private var myLocationEnabled = false
     private var manualLocationSource = false
@@ -173,18 +186,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let self = self, let args = args as? [String: Any] else { return }
 
             Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
-            if let initialCameraPosition = args["initialCameraPosition"] as? [String: Any],
-               let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: self.mapView),
-               let zoom = initialCameraPosition["zoom"] as? Double
-            {
-                self.mapView.setCenter(
-                    camera.centerCoordinate,
-                    zoomLevel: zoom,
-                    direction: camera.heading,
-                    animated: false
-                )
-                self.initialTilt = camera.pitch
-            }
+            self.applyInitialCameraIfNeeded()
+        }
+        // Set before anything can run, so no Dart call or delegate callback can
+        // see the map without it and no later apply can undo an app move.
+        if let args = args as? [String: Any] {
+            pendingInitialCamera = args["initialCameraPosition"] as? [String: Any]
         }
         if mapView.frame.size.equalTo(.zero) {
             DispatchQueue.main.async(execute: applyArgs)
@@ -266,12 +273,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // unproject runs on a 0×0 viewport → NaN → mbgl::LatLng throws
         // std::domain_error → SIGABRT. Defer the whole call until the frame is
         // real. (issue #819, onMethodCall path — not covered by the init-only fix)
-        if mapView.frame.size.equalTo(.zero), methodCall.method.hasPrefix("camera#") {
+        if mapView.frame.size.equalTo(.zero),
+           methodCall.method.hasPrefix("camera#")
+           || (pendingInitialCamera != nil
+               && Self.cameraReadingMethods.contains(methodCall.method))
+        {
             DispatchQueue.main.async { [weak self] in
                 self?.onMethodCall(methodCall: methodCall, result: result)
             }
             return
         }
+        // Before any app call: a camera move from Dart must land on top of the
+        // initial camera, never under it.
+        applyInitialCameraIfNeeded()
         switch methodCall.method {
         case "map#waitForMap":
             if isMapReady {
@@ -1797,6 +1811,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
+    /// Applies `initialCameraPosition` once, as soon as the view has a size.
+    /// The altitude is computed for the real size, so zoom, bearing and tilt
+    /// all land; on a 0x0 view the same call would be silently dropped.
+    private func applyInitialCameraIfNeeded() {
+        guard let initialCameraPosition = pendingInitialCamera,
+              !mapView.frame.size.equalTo(.zero) else { return }
+        pendingInitialCamera = nil
+        if let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView) {
+            mapView.setCamera(camera, animated: false)
+        }
+    }
+
     private func getCamera() -> MLNMapCamera? {
         return trackCameraPosition ? mapView.camera : nil
     }
@@ -2010,11 +2036,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         isMapReady = true
         updateMyLocationEnabled()
 
-        if let initialTilt = initialTilt {
-            let camera = mapView.camera
-            camera.pitch = initialTilt
-            mapView.setCamera(camera, animated: false)
-        }
+        // Before map#waitForMap replies and map#onStyleLoaded fires, so Dart
+        // sees initialCameraPosition there.
+        applyInitialCameraIfNeeded()
 
         addedShapesByLayer.removeAll()
         interactiveFeatureLayerIds.removeAll()
@@ -2551,6 +2575,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             details: "Source '\(sourceId)' does not support type '\(type)'."
         ))
 
+    }
+
+    func mapViewWillStartRenderingFrame(_: MLNMapView) {
+        guard pendingInitialCamera != nil else { return }
+        // A frame is drawn once the view has a size. Apply outside the render
+        // callback; a Dart call that gets there first applies it and this is a no-op.
+        DispatchQueue.main.async { [weak self] in
+            self?.applyInitialCameraIfNeeded()
+        }
     }
 
     func mapViewDidBecomeIdle(_: MLNMapView) {

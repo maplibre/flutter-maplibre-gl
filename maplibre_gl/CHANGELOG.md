@@ -40,6 +40,8 @@
 * **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
 * **Web**: `easeCamera` completes when the camera arrives instead of when it starts (#1069).
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
+* **iOS**: `initialCameraPosition` is applied in full instead of sometimes opening at zoom 0 (#1072).
+* **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

@@ -145,9 +145,11 @@ class Convert {
             return MLNMapCamera.fromDict(cameraPosition, mapView: mapView)
         case "newLatLng":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
-            let camera = mapView.camera
-            camera.centerCoordinate = CLLocationCoordinate2D.fromArray(coordinate)
-            return camera
+            return cameraLooking(
+                at: CLLocationCoordinate2D.fromArray(coordinate),
+                zoom: getZoom(mapView: mapView),
+                mapView: mapView
+            )
         case "newLatLngBounds":
             guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
             
@@ -163,14 +165,10 @@ class Convert {
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             guard let zoom = cameraUpdate[2] as? Double else { return nil }
-            let camera = mapView.camera
-            camera.centerCoordinate = CLLocationCoordinate2D.fromArray(coordinate)
-            let altitude = getAltitude(zoom: zoom, mapView: mapView)
-            return MLNMapCamera(
-                lookingAtCenter: camera.centerCoordinate,
-                altitude: altitude,
-                pitch: camera.pitch,
-                heading: camera.heading
+            return cameraLooking(
+                at: CLLocationCoordinate2D.fromArray(coordinate),
+                zoom: zoom,
+                mapView: mapView
             )
         case "scrollBy":
             guard let x = cameraUpdate[1] as? CGFloat else { return nil }
