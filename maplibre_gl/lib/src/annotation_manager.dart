@@ -105,16 +105,39 @@ abstract class AnnotationManager<T extends Annotation> {
   }
 
   /// Rebuilds all backing style layers (e.g. after overlap settings changed).
+  ///
+  /// Each layer keeps its position in the style.
   Future<void> _rebuildLayers() async {
     if (controller.isDisposed) return;
 
-    for (var i = 0; i < allLayerProperties.length; i++) {
-      final layerId = _makeLayerId(i);
+    final ownIds = layerIds;
+    final styleIds = [
+      for (final id in await controller.getLayerIds())
+        if (id is String) id,
+    ];
+
+    // Re-add bottom to top, each below the first foreign layer that was above
+    // it, so own layers sharing that anchor keep their relative order too.
+    final ordered = [...ownIds]
+      ..sort((a, b) => styleIds.indexOf(a).compareTo(styleIds.indexOf(b)));
+    for (final layerId in ordered) {
+      final position = styleIds.indexOf(layerId);
+      String? belowLayerId;
+      if (position >= 0) {
+        for (final above in styleIds.skip(position + 1)) {
+          if (!ownIds.contains(above)) {
+            belowLayerId = above;
+            break;
+          }
+        }
+      }
+
       await controller.removeLayer(layerId);
       await controller.addLayer(
         layerId,
         layerId,
-        allLayerProperties[i],
+        allLayerProperties[ownIds.indexOf(layerId)],
+        belowLayerId: belowLayerId,
         enableInteraction: enableInteraction,
       );
     }
@@ -263,17 +286,28 @@ class FillManager extends AnnotationManager<Fill> {
   FillManager(super.controller, {super.enableInteraction = true})
     : super(selectLayer: (fill) => fill.options.fillPattern == null ? 0 : 1);
 
+  // A fill without its own outline color takes the fill color, which is the
+  // style spec default. A bare `get` would read null for it, and
+  // maplibre-gl-js then drops every feature of the source: on web a fill with
+  // no fillOutlineColor was neither drawn nor queryable.
+  static const List<Object> _outlineColor = [
+    'coalesce',
+    [Expressions.get, 'fillOutlineColor'],
+    [Expressions.get, 'fillColor'],
+    '#000000',
+  ];
+
   @override
   List<LayerProperties> get allLayerProperties => const [
     FillLayerProperties(
       fillOpacity: [Expressions.get, 'fillOpacity'],
       fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+      fillOutlineColor: _outlineColor,
     ),
     FillLayerProperties(
       fillOpacity: [Expressions.get, 'fillOpacity'],
       fillColor: [Expressions.get, 'fillColor'],
-      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+      fillOutlineColor: _outlineColor,
       fillPattern: [Expressions.get, 'fillPattern'],
     ),
   ];
