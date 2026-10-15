@@ -1537,9 +1537,8 @@ class MapLibreMapController extends MapLibrePlatform
     _map.removeLayer(imageLayerId);
   }
 
-  /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a layer the style does
-  /// not hold. maplibre-gl-js only fires an error event for most calls on an
-  /// unknown layer, so without this the caller saw a silent success.
+  /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
+  /// layer. maplibre-gl-js only fires an error event, which callers never see.
   void _ensureLayerExists(String layerId) {
     if (_map.getLayer(layerId) == null) {
       throw PlatformException(
@@ -1550,25 +1549,24 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  /// Throws `layerAlreadyExists`, as Android and iOS do, before a layer is
-  /// added under an id the style already holds. The original stays untouched.
+  /// Throws `LAYER_ALREADY_EXISTS`, as Android and iOS do, for a layer id
+  /// already in use.
   void _ensureNewLayerId(String layerId) {
     if (_map.getLayer(layerId) != null) {
       throw PlatformException(
-        code: 'layerAlreadyExists',
+        code: 'LAYER_ALREADY_EXISTS',
         message: 'Layer already exists',
         details: 'Layer with id $layerId already exists.',
       );
     }
   }
 
-  /// Throws `sourceAlreadyExists`, as Android and iOS do, before a source is
-  /// added under an id the style already holds. maplibre-gl-js would throw a
-  /// raw JS Error instead, which is no PlatformException.
+  /// Throws `SOURCE_ALREADY_EXISTS`, as Android and iOS do, for a source id
+  /// already in use, instead of the raw JS error maplibre-gl-js throws.
   void _ensureNewSourceId(String sourceId) {
     if (_map.getSource(sourceId) != null) {
       throw PlatformException(
-        code: 'sourceAlreadyExists',
+        code: 'SOURCE_ALREADY_EXISTS',
         message: 'Source already exists',
         details: 'Source with id $sourceId already exists.',
       );

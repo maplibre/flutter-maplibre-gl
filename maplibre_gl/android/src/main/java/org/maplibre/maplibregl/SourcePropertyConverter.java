@@ -247,7 +247,7 @@ class SourcePropertyConverter {
   }
 
   static void addSource(String id, Map<String, Object> properties, Style style) {
-    // The controller answers sourceAlreadyExists before calling this. The
+    // The controller answers SOURCE_ALREADY_EXISTS before calling this. The
     // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(id) != null) {
       Log.w(TAG, "addSource: source with id '" + id + "' already exists, skipping");

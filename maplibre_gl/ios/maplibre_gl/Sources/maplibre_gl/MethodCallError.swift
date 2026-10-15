@@ -29,9 +29,9 @@ enum MethodCallError: Error {
         case .styleNotFound:
             return "styleNotFound"
         case .sourceAlreadyExists:
-            return "sourceAlreadyExists"
+            return "SOURCE_ALREADY_EXISTS"
         case .layerAlreadyExists:
-            return "layerAlreadyExists"
+            return "LAYER_ALREADY_EXISTS"
         case .geojsonParseError:
             return "parseError"
 

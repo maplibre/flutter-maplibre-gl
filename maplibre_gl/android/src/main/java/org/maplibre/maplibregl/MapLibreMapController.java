@@ -882,7 +882,7 @@ final class MapLibreMapController
       return;
     }
 
-    // The channel call already answered sourceAlreadyExists for this case. The
+    // The channel call already answered SOURCE_ALREADY_EXISTS for this case. The
     // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(sourceName) != null) {
       return;
@@ -1338,7 +1338,7 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers sourceAlreadyExists or layerAlreadyExists, as iOS and web do, for every call that
+   * Answers SOURCE_ALREADY_EXISTS or LAYER_ALREADY_EXISTS, as iOS and web do, for every call that
    * adds a source or layer under an id the style already holds. The SDK would otherwise throw
    * (reaching Dart with a generic code) or, for sources, the add was skipped and reported as a
    * success. Either way the original stays untouched.
@@ -1363,14 +1363,14 @@ final class MapLibreMapController
     }
     if (layerId != null && style.getLayer(layerId) != null) {
       result.error(
-          "layerAlreadyExists",
+          "LAYER_ALREADY_EXISTS",
           "Layer already exists",
           "Layer with id " + layerId + " already exists.");
       return true;
     }
     if (sourceId != null && style.getSource(sourceId) != null) {
       result.error(
-          "sourceAlreadyExists",
+          "SOURCE_ALREADY_EXISTS",
           "Source already exists",
           "Source with id " + sourceId + " already exists.");
       return true;

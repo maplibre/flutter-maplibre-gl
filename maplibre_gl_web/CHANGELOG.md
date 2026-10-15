@@ -4,7 +4,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ### Actions needed
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
-* Adding a source or layer with an id already in use throws `sourceAlreadyExists` or `layerAlreadyExists` (#1068).
+* Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` (#1068).
 
 ### Fixed
 * `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
