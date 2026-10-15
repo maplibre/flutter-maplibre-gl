@@ -1,3 +1,8 @@
+## Unreleased
+
+### Fixed
+* **Android, iOS, Web**: `setSymbolIconAllowOverlap`, `setSymbolIconIgnorePlacement`, `setSymbolTextAllowOverlap` and `setSymbolTextIgnorePlacement` keep the symbol layer where it was. They used to re-add it on top of every other layer, so symbols drew above the annotation types that `annotationOrder` puts higher and above layers the app added itself.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
