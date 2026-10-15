@@ -1919,8 +1919,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return String(data: data, encoding: .utf8)
     }
 
+    /// Half the side, in points, of the square around a touch where taps and drags look for a
+    /// feature. Android uses the same value in dp.
+    private static let featureHitTolerance: CGFloat = 8
+
     /*
-     *  Scan layers from top to bottom and return the first matching feature
+     *  Return the interactive feature nearest to the point, looking up to featureHitTolerance
+     *  around it. Nearness is measured to what the feature draws: the square around the point
+     *  grows one point at a time and the first feature it touches wins. When several features
+     *  are reached at the same distance, the top-most layer wins.
      */
     private func firstFeatureOnLayers(at: CGPoint) -> (feature: MLNFeature?, layerId: String?) {
         guard let style = mapView.style else { 
@@ -1938,13 +1945,39 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             interactiveFeatureLayerIds.contains(layer.identifier)
         }
 
+        func hitRect(_ radius: CGFloat) -> CGRect {
+            CGRect(x: at.x - radius, y: at.y - radius, width: radius * 2, height: radius * 2)
+        }
+        let tolerance = MapLibreMapController.featureHitTolerance
+
+        // One query over the whole area keeps only the layers with something in reach.
+        var candidateLayers: [String] = []
+        var onlyHit: (feature: MLNFeature?, layerId: String?) = (nil, nil)
+        var hits = 0
         for layer in clickableLayers.reversed() {
             let features = mapView.visibleFeatures(
-                at: at,
+                in: hitRect(tolerance),
                 styleLayerIdentifiers: [layer.identifier]
             )
             if let feature = features.first {
-                return (feature, layer.identifier)
+                candidateLayers.append(layer.identifier)
+                hits += features.count
+                onlyHit = (feature, layer.identifier)
+            }
+        }
+        if hits <= 1 {
+            return onlyHit
+        }
+
+        for radius in stride(from: CGFloat(1), through: tolerance, by: 1) {
+            for layerId in candidateLayers {
+                let features = mapView.visibleFeatures(
+                    in: hitRect(radius),
+                    styleLayerIdentifiers: [layerId]
+                )
+                if let feature = features.first {
+                    return (feature, layerId)
+                }
             }
         }
         return (nil, nil)
