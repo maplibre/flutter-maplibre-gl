@@ -3012,7 +3012,7 @@ final class MapLibreMapController
 
           Layer layer = style.getLayer(layerId);
           if (layer == null) {
-            result.error("layerNotFound", "Layer '" + layerId + "' not found.", null);
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer '" + layerId + "' not found.", null);
             break;
           }
 
@@ -3056,7 +3056,7 @@ final class MapLibreMapController
           String layerId = call.argument("layerId");
           Layer layer = style.getLayer(layerId);
           if (layer == null) {
-            result.error("layerNotFound", "Layer '" + layerId + "' not found.", null);
+            result.error("LAYER_NOT_FOUND_ERROR", "Layer '" + layerId + "' not found.", null);
             break;
           }
 

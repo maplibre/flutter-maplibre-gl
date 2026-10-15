@@ -27,7 +27,7 @@ enum MethodCallError: Error {
         case .sourceNotFound:
             return "sourceNotFound"
         case .layerNotFound:
-            return "layerNotFound"
+            return "LAYER_NOT_FOUND_ERROR"
         case .styleNotFound:
             return "styleNotFound"
         case .sourceAlreadyExists:

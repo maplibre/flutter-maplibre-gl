@@ -1546,7 +1546,7 @@ class MapLibreMapController extends MapLibrePlatform
     // GL JS only logs a missing layer, so report it as Android and iOS do.
     if (_map.getLayer(layerId) == null) {
       throw PlatformException(
-        code: 'layerNotFound',
+        code: 'LAYER_NOT_FOUND_ERROR',
         message: "Layer '$layerId' not found.",
       );
     }
