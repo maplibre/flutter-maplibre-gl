@@ -196,12 +196,7 @@ class MapLibreMapController extends MapLibrePlatform
     _initResizeObserver();
 
     final options = _creationParams['options'] ?? {};
-    Convert.interpretMapLibreMapOptions(
-      options,
-      this,
-      ignoreStyle: true,
-      initial: true,
-    );
+    Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
   }
 
   /// Says why the map will stay blank when WebGL is the reason.

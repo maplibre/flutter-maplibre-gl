@@ -1,6 +1,5 @@
-// Integration tests on web that drive or read the map's DOM: hover listeners
-// of a layer removed and added again, and the attribution control kept where
-// the app put it across option updates.
+// Integration tests on web that drive the map's DOM: hover listeners of a
+// layer removed and added again.
 //
 // Flutter's synthesized pointers do not reach the map's DOM element, so the
 // tests dispatch mouse events on the map canvas, as a mouse would.
@@ -17,7 +16,6 @@
 import 'dart:math' show Point;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -102,53 +100,6 @@ void main() {
     await _settle(tester);
     expect(taps, hasLength(1));
   });
-
-  testWidgets('the attribution stays put when another option changes', (
-    tester,
-  ) async {
-    if (!kIsWeb) return;
-    late MapCreatedCallback created;
-    late OnStyleLoadedCallback styleLoaded;
-    MapLibreMap buildMap({required bool compassEnabled}) => MapLibreMap(
-      styleString: offlineStyle,
-      initialCameraPosition: const CameraPosition(target: _center, zoom: 3),
-      attributionButtonPosition: AttributionButtonPosition.topLeft,
-      compassEnabled: compassEnabled,
-      onMapCreated: created,
-      onStyleLoadedCallback: styleLoaded,
-    );
-
-    await pumpMap(
-      tester,
-      builder: (onMapCreated, onStyleLoaded) {
-        created = onMapCreated;
-        styleLoaded = onStyleLoaded;
-        return buildMap(compassEnabled: true);
-      },
-    );
-    expect(_attributionIn('top-left'), isTrue, reason: 'at creation');
-
-    // The same tree as the harness pumps, so the map widget is updated in
-    // place and only the changed option reaches the platform.
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: 300,
-              height: 300,
-              child: buildMap(compassEnabled: false),
-            ),
-          ),
-        ),
-      ),
-    );
-    await _settle(tester);
-
-    expect(_attributionIn('top-left'), isTrue, reason: 'after the update');
-    expect(_attributionIn('bottom-right'), isFalse, reason: 'after the update');
-  });
 }
 
 /// Adds the interactive circle layer over [_sourceId] and returns where the
@@ -189,15 +140,7 @@ web.HTMLCanvasElement _canvas() {
   return canvas! as web.HTMLCanvasElement;
 }
 
-/// Whether the attribution control sits in the [corner] container, such as
-/// `top-left`.
-bool _attributionIn(String corner) =>
-    web.document.querySelector(
-      '.maplibregl-ctrl-$corner .maplibregl-ctrl-attrib',
-    ) !=
-    null;
-
-/// Lets the hover and tap callbacks and option updates reach their target.
+/// Lets the hover and tap callbacks reach their target.
 Future<void> _settle(WidgetTester tester) =>
     pumpFor(tester, const Duration(milliseconds: 300));
 

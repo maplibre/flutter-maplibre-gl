@@ -5,15 +5,10 @@ class Convert {
   ///
   /// [ignoreStyle] if true, will not apply styleString changes.
   /// This is useful when the style is handled separately (like MapLibreMap initialization).
-  ///
-  /// [initial] is true for the options the map is created with. Defaults for
-  /// absent keys apply only then: an update carries just the keys that
-  /// changed, so a missing key there means "unchanged".
   static void interpretMapLibreMapOptions(
     Map<String, dynamic> options,
     MapLibreMapOptionsSink sink, {
     bool ignoreStyle = false,
-    bool initial = false,
   }) {
     if (options.containsKey('cameraTargetBounds')) {
       final bounds = options['cameraTargetBounds'][0];
@@ -101,9 +96,7 @@ class Convert {
           AttributionButtonPosition
               .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
-    } else if (initial) {
-      // The map is created without maplibre-gl-js's own attribution control,
-      // so one is added here even when the app sets no position.
+    } else {
       sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
