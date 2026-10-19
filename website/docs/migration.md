@@ -102,7 +102,7 @@ None of these need a code change, but they are the places where code that worked
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
-* **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` completes when the camera arrives instead of when it starts.
+* **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer where it is instead of moving it on top.
 * Fill annotations without a `fillOutlineColor` get an outline in their fill color on Android and iOS, where it used to be transparent.
 * **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.

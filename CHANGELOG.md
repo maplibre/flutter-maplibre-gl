@@ -32,6 +32,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android**: add `com.google.android.gms:play-services-location` 21.0.0 or later to keep the fused provider for high accuracy; without it the plugin uses GPS only, which may not get a fix indoors (#1091).
+* **Web**: `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -81,6 +82,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `UpdateMetadataError` for an unknown id like Android (#1087).
 * **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list, and the other offline calls no longer miss a stored region then (#1087).
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
+* **Web**: removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
+* **Web**: removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
