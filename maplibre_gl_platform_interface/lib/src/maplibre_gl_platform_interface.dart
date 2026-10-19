@@ -491,6 +491,14 @@ abstract class MapLibrePlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
+  /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
+  /// which the layer with [layerId] is drawn.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  );
+
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
   Future<bool?> getLayerVisibility(String layerId);

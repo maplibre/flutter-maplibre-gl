@@ -2450,6 +2450,29 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
+  /// Sets the zoom range in which the layer with [layerId] is drawn: from
+  /// [minzoom] (inclusive) up to [maxzoom] (exclusive), the layer's `minzoom`
+  /// and `maxzoom` in the style spec.
+  ///
+  /// Both values must be within 0 and 24, with [minzoom] not above [maxzoom].
+  /// Pass 0 and 24 to draw the layer at every zoom.
+  ///
+  /// Throws a [PlatformException] with code:
+  /// * `INVALID_ARGUMENT` if the range is outside 0 to 24 or [minzoom] is
+  ///   above [maxzoom]. Nothing is changed.
+  /// * `STYLE_NOT_READY` if the style has not loaded yet.
+  /// * `LAYER_NOT_FOUND_ERROR` if the style has no layer with [layerId].
+  ///
+  /// The new range is reported by [getLayerProperties] as `minzoom` and
+  /// `maxzoom`, which are left out when they are 0 and 24.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    return _maplibrePlatform.setLayerZoomRange(layerId, minzoom, maxzoom);
+  }
+
   Future<List> getLayerIds() {
     return _maplibrePlatform.getLayerIds();
   }
@@ -2478,7 +2501,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// **iOS**: only layers that came with the style are readable. iOS reads the
   /// style as it was loaded, so a layer added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
-  /// normally. See
+  /// normally. For layers that came with the style, the zoom range is read
+  /// live, so it follows [setLayerZoomRange], while the other properties read
+  /// as loaded. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);

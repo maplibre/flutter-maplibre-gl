@@ -276,6 +276,17 @@ void main() {
       expect(args['visible'], false);
     });
 
+    test('setLayerZoomRange sends correct method', () async {
+      await platform.setLayerZoomRange('my-layer', 5.5, 15);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'layer#setZoomRange');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerId'], 'my-layer');
+      expect(args['minzoom'], 5.5);
+      expect(args['maxzoom'], 15.0);
+    });
+
     test('getLayerVisibility returns result', () async {
       final result = await platform.getLayerVisibility('my-layer');
 

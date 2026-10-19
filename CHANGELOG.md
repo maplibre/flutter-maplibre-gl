@@ -42,6 +42,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `Expressions.semiliteral` builds an array whose elements are expressions, for properties such as `textOffset`. MapLibre Android 13.7 and iOS 6.31 support it, though the style spec does not list them yet (#1084).
 * `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so a symbol whose data just changed no longer flickers (#1056).
 * `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
+* `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
+* `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
@@ -78,6 +80,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
 * **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `UpdateMetadataError` for an unknown id like Android (#1087).
 * **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list, and the other offline calls no longer miss a stored region then (#1087).
+* **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
