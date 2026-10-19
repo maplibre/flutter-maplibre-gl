@@ -479,7 +479,12 @@ final class MapLibreMapController
    * <p>State preserved across recreation:
    * <ul>
    *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
-   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}).</li>
+   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}). MapLibre keeps
+   *       the camera and its {@code UiSettings} there, so UI flags changed via
+   *       {@code map#update} after construction come back with it: compass, logo and
+   *       attribution visibility, gravity and margins, and the gesture toggles. The
+   *       attribution tint is not in it and the pan inertia only partly, so
+   *       {@link #onMapReady} re-applies both.</li>
    *   <li>Construction-time {@link MapLibreMapOptions} (UI flags, gestures, etc.).</li>
    *   <li>Controller fields like {@link #trackCameraPosition}, {@link #myLocationEnabled},
    *       {@link #myLocationTrackingMode}, {@link #myLocationRenderMode}, {@link #bounds}.</li>
@@ -491,8 +496,9 @@ final class MapLibreMapController
    *   <li>Sources / layers / images added at runtime via the method channel.</li>
    *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
    *       initial style).</li>
-   *   <li>Runtime tweaks to UI flags applied via {@code map#update} after
-   *       construction (compass, attribution, content insets, etc.).</li>
+   *   <li>Runtime tweaks applied via {@code map#update} after construction that
+   *       MapLibre does not keep in its state bundle, such as the min/max zoom
+   *       preference.</li>
    *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
    * </ul>
    */
@@ -3376,6 +3382,43 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "style#moveLayer":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          String layerId = call.argument("layerId");
+          String belowLayerId = call.argument("belowLayerId");
+          Layer layer = style.getLayer(layerId);
+          // Both layers are checked before anything moves: a missing anchor found
+          // after the removal would lose the layer.
+          if (layer == null) {
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
+            break;
+          }
+          if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
+            break;
+          }
+          if (layerId.equals(belowLayerId)) {
+            result.success(null);
+            break;
+          }
+          style.removeLayer(layer);
+          if (belowLayerId != null) {
+            style.addLayerBelow(layer, belowLayerId);
+          } else {
+            style.addLayer(layer);
+          }
+          result.success(null);
+          break;
+        }
       case "map#setCameraBounds":
         {
           double west = call.argument("west");
@@ -3503,6 +3546,45 @@ final class MapLibreMapController
           result.success(null);
           break;
 
+        }
+        case "layer#setZoomRange":
+        {
+          // Checked here because MapLibre takes any range, and iOS and web
+          // reject the same values.
+          final Object minzoomArgument = call.argument("minzoom");
+          final Object maxzoomArgument = call.argument("maxzoom");
+          if (!(minzoomArgument instanceof Number) || !(maxzoomArgument instanceof Number)) {
+            result.error(
+                "INVALID_ARGUMENT", "setLayerZoomRange requires 'minzoom' and 'maxzoom'.", null);
+            break;
+          }
+          final double minzoom = ((Number) minzoomArgument).doubleValue();
+          final double maxzoom = ((Number) maxzoomArgument).doubleValue();
+          if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
+                    + "with minzoom not above maxzoom.",
+                null);
+            break;
+          }
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final String layerId = call.argument("layerId");
+          final Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
+          layer.setMinZoom((float) minzoom);
+          layer.setMaxZoom((float) maxzoom);
+          result.success(null);
+          break;
         }
         case "layer#getVisibility":
         {
@@ -4265,6 +4347,11 @@ final class MapLibreMapController
         mapLibreMap.getUiSettings().setCompassMargins(0, 0, x, y);
         break;
     }
+  }
+
+  @Override
+  public void setAttributionEnabled(boolean attributionEnabled) {
+    mapLibreMap.getUiSettings().setAttributionEnabled(attributionEnabled);
   }
 
   @Override

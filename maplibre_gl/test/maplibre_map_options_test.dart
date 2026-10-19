@@ -180,4 +180,23 @@ void main() {
       expect(off.updatesMap(off), isEmpty);
     });
   });
+
+  group('attributionEnabled', () {
+    test('is sent on unless set', () {
+      final options = MapLibreMapOptions.fromWidget(MapLibreMap());
+      expect(options.toMap()['attributionEnabled'], isTrue);
+    });
+
+    test('is sent off when set off, and only as an update when it changed', () {
+      final on = MapLibreMapOptions.fromWidget(MapLibreMap());
+      final off = MapLibreMapOptions.fromWidget(
+        MapLibreMap(attributionEnabled: false),
+      );
+
+      expect(off.toMap()['attributionEnabled'], isFalse);
+      expect(on.updatesMap(off), {'attributionEnabled': false});
+      expect(off.updatesMap(on), {'attributionEnabled': true});
+      expect(off.updatesMap(off), isEmpty);
+    });
+  });
 }

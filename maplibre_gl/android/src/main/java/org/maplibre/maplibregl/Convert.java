@@ -412,6 +412,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
       final Point point = toPoint(compassViewMarginsData, metrics.density);
       sink.setCompassViewMargins(point.x, point.y);
     }
+    final Object attributionEnabled = data.get("attributionEnabled");
+    if (attributionEnabled != null) {
+      sink.setAttributionEnabled(toBoolean(attributionEnabled));
+    }
     final Object attributionButtonGravity = data.get("attributionButtonPosition");
     if (attributionButtonGravity != null) {
       sink.setAttributionButtonGravity(toInt(attributionButtonGravity));
