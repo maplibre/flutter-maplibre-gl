@@ -495,8 +495,6 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
   /// another camera call or a gesture.
-  /// Note: on iOS it always completes with null: when the animation ends if a
-  /// [duration] is given, right away otherwise.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -1310,8 +1308,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking
   /// without velocity discontinuities. This is ideal for following moving objects.
   ///
-  /// The returned [Future] completes with true if the animation finished successfully,
-  /// or false if it was cancelled.
+  /// The returned [Future] completes when the animation ends, with true if the
+  /// camera arrived and false if the movement was canceled, for example by
+  /// another camera call or a gesture.
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
