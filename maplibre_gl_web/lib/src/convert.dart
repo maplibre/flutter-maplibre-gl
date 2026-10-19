@@ -172,12 +172,16 @@ class Convert {
         final top = json[3];
         final right = json[4];
         final bottom = json[5];
+        // cameraForBounds fits at bearing 0 unless told otherwise, so pass the
+        // current one to keep it, as Android and iOS do. The result carries no
+        // pitch, so the move keeps the current pitch too.
         final camera = mapLibreMap.cameraForBounds(
           LngLatBounds(
             LngLat(bounds[0][1], bounds[0][0]),
             LngLat(bounds[1][1], bounds[1][0]),
           ),
           {
+            'bearing': mapLibreMap.getBearing(),
             'padding': {
               'top': top,
               'bottom': bottom,
