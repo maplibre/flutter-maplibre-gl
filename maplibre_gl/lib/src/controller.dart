@@ -2485,8 +2485,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// **iOS**: only layers that came with the style are readable. iOS reads the
   /// style as it was loaded, so a layer added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
-  /// normally. For those layers the zoom range is read live, so it follows
-  /// [setLayerZoomRange], while the other properties read as loaded. See
+  /// normally. For layers that came with the style, the zoom range is read
+  /// live, so it follows [setLayerZoomRange], while the other properties read
+  /// as loaded. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);
