@@ -710,7 +710,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  external MapLibreMapJsImpl moveLayer(String id, String beforeId);
+  external MapLibreMapJsImpl moveLayer(String id, [String? beforeId]);
 
   ///  Removes the layer with the given ID from the map's style.
   ///

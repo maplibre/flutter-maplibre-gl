@@ -762,6 +762,18 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    try {
+      return await _channel.invokeMethod('style#moveLayer', <String, Object>{
+        'layerId': layerId,
+        if (belowLayerId != null) 'belowLayerId': belowLayerId,
+      });
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     try {
       return await _channel.invokeMethod('style#setFilter', <String, Object>{
@@ -1388,6 +1400,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
       'visible': visible,
+    });
+  }
+
+  @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    await _channel.invokeMethod('layer#setZoomRange', <String, dynamic>{
+      'layerId': layerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
     });
   }
 

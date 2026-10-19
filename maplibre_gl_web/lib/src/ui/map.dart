@@ -865,7 +865,7 @@ class MapLibreMap extends Camera {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  MapLibreMap moveLayer(String id, String beforeId) =>
+  MapLibreMap moveLayer(String id, [String? beforeId]) =>
       MapLibreMap.fromJsObject(jsObject.moveLayer(id, beforeId));
 
   ///  Removes the layer with the given ID from the map's style.

@@ -604,18 +604,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(nil)
         case "camera#ease":
-            guard let arguments = methodCall.arguments as? [String: Any] else { 
-                result(false)
-                return 
-            }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { 
-                result(false)
-                return 
-            }
-            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { 
-                result(false)
-                return 
-            }
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            let arguments = parsed.arguments
+            let camera = parsed.camera
 
             let completion = {
                 result(true)
@@ -623,7 +614,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
-                
+
                 // Create timing function based on interpolation parameter
                 var timingFunction: CAMediaTimingFunction?
                 if let interpolationStr = arguments["interpolation"] as? String {
@@ -643,7 +634,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 } else {
                     timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                 }
-                
+
                 mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
@@ -746,9 +737,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
             result(reply)
         case "map#toScreenLocation":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let latitude = arguments["latitude"] as? Double else { return }
-            guard let longitude = arguments["longitude"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let latitude = arguments["latitude"] as? Double,
+                  let longitude = arguments["longitude"] as? Double
+            else {
+                result(invalidArgumentError(
+                    "toScreenLocation requires 'latitude' and 'longitude' as numbers."
+                ))
+                return
+            }
             let latlng = CLLocationCoordinate2DMake(latitude, longitude)
             let returnVal = mapView.convert(latlng, toPointTo: mapView)
             var reply = [String: NSObject]()
@@ -756,8 +753,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["y"] = returnVal.y as NSObject
             result(reply)
         case "map#toScreenLocationBatch":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let data = arguments["coordinates"] as? FlutterStandardTypedData else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let data = arguments["coordinates"] as? FlutterStandardTypedData
+            else {
+                result(invalidArgumentError(
+                    "toScreenLocationBatch requires 'coordinates' as a Float64List."
+                ))
+                return
+            }
             let latLngs = data.data.withUnsafeBytes {
                 Array(
                     UnsafeBufferPointer(
@@ -777,16 +780,26 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 float64: Data(bytes: &reply, count: reply.count * 8)
             ))
         case "map#getMetersPerPixelAtLatitude":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let latitude = arguments["latitude"] as? Double
+            else {
+                result(invalidArgumentError(
+                    "getMetersPerPixelAtLatitude requires 'latitude' as a number."
+                ))
+                return
+            }
             var reply = [String: NSObject]()
-            guard let latitude = arguments["latitude"] as? Double else { return }
             let returnVal = mapView.metersPerPoint(atLatitude: latitude)
             reply["metersperpixel"] = returnVal as NSObject
             result(reply)
         case "map#toLatLng":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let x = arguments["x"] as? Double else { return }
-            guard let y = arguments["y"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let x = arguments["x"] as? Double,
+                  let y = arguments["y"] as? Double
+            else {
+                result(invalidArgumentError("toLatLng requires 'x' and 'y' as numbers."))
+                return
+            }
             let screenPoint = CGPoint(x: x, y: y)
             let coordinates: CLLocationCoordinate2D = mapView.convert(
                 screenPoint,
@@ -797,29 +810,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             reply["longitude"] = coordinates.longitude as NSObject
             result(reply)
         case "camera#move":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-
-            if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
-                mapView.setCamera(camera, animated: false)
-            }
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            mapView.setCamera(parsed.camera, animated: false)
             result(nil)
         case "camera#animate":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
-            guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) else { return }
-
+            guard let parsed = parseCameraCall(methodCall, result) else { return }
+            let arguments = parsed.arguments
+            let camera = parsed.camera
 
             let completion = {
                 result(nil)
             }
 
+            // No edge padding here: a newLatLngBounds camera already has its
+            // center shifted for the bounds padding, and padding passed to the
+            // map view would stay on as camera insets after the move.
             if let duration = arguments["duration"] as? TimeInterval {
-                if let padding = Convert.parseLatLngBoundsPadding(cameraUpdate) {
-                    mapView.fly(to: camera, edgePadding: padding, withDuration: duration / 1000, completionHandler: completion)
-                } else {
-                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
-                }
+                mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
             } else {
                 mapView.setCamera(camera, animated: true)
                 completion()
@@ -1419,6 +1426,52 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             mapView.style?.removeLayer(layer)
             result(nil)
 
+        case "style#moveLayer":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "moveLayer requires a String 'layerId'.",
+                    details: nil
+                ))
+                return
+            }
+            let belowLayerId = arguments["belowLayerId"] as? String
+            guard styleIsReady, let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            // Both layers are looked up before anything moves: a missing anchor
+            // found after the removal would lose the layer.
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
+            var belowLayer: MLNStyleLayer?
+            if let belowLayerId = belowLayerId {
+                guard let found = style.layer(withIdentifier: belowLayerId) else {
+                    result(MethodCallError.layerNotFound(layerId: belowLayerId).flutterError)
+                    return
+                }
+                belowLayer = found
+            }
+            if belowLayerId == layerId {
+                result(nil)
+                return
+            }
+            style.removeLayer(layer)
+            if let belowLayer = belowLayer {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            result(nil)
+
         case "map#setCameraBounds":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let west = arguments["west"] as? Double else { return }
@@ -1591,6 +1644,46 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             layer.isVisible = visible
             result(nil)
 
+        case "layer#setZoomRange":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String,
+                  let minzoom = arguments["minzoom"] as? Double,
+                  let maxzoom = arguments["maxzoom"] as? Double
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "setLayerZoomRange requires 'layerId', 'minzoom' and 'maxzoom'.",
+                    details: nil
+                ))
+                return
+            }
+            // Checked here because MapLibre takes any range, and Android and
+            // web reject the same values.
+            guard minzoom >= 0, maxzoom <= 24, minzoom <= maxzoom else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "Invalid zoom range [\(minzoom), \(maxzoom)]: both must be within 0 and 24, "
+                        + "with minzoom not above maxzoom.",
+                    details: nil
+                ))
+                return
+            }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            guard let layer = style.layer(withIdentifier: layerId) else {
+                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                return
+            }
+            layer.minimumZoomLevel = Float(minzoom)
+            layer.maximumZoomLevel = Float(maxzoom)
+            result(nil)
+
         case "layer#getVisibility":
             guard let arguments = methodCall.arguments as? [String: Any],
                   let layerId = arguments["layerId"] as? String
@@ -1687,10 +1780,22 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let styleObject = currentStyleObject()
             var reply = [String: NSObject]()
             if let layers = styleObject?["layers"] as? [[String: Any]],
-               let layer = layers.first(where: { ($0["id"] as? String) == layerId }),
-               let json = jsonString(from: layer)
+               var layer = layers.first(where: { ($0["id"] as? String) == layerId })
             {
-                reply["properties"] = json as NSObject
+                // The serialized style is the style as loaded, so the zoom
+                // range is read from the live layer: setLayerZoomRange may
+                // have changed it since. Like Android, the spec defaults (0
+                // and 24) are left out. Going through the shortest Float text
+                // keeps 0.1 from reading back as 0.10000000149011612.
+                if let live = mapView.style?.layer(withIdentifier: layerId) {
+                    let minzoom = live.minimumZoomLevel
+                    let maxzoom = live.maximumZoomLevel
+                    layer["minzoom"] = minzoom > 0 ? Double(String(minzoom)) : nil
+                    layer["maxzoom"] = maxzoom < 24 ? Double(String(maxzoom)) : nil
+                }
+                if let json = jsonString(from: layer) {
+                    reply["properties"] = json as NSObject
+                }
             }
             result(reply)
 
@@ -1943,12 +2048,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     ) -> (feature: MLNFeature?, layerId: String?) {
         guard let style = mapView.style else { 
             NSLog("MapLibreMapController - Map style is nil")
-            return (nil, nil) 
+            return (nil, nil)
         }
-        
-        guard styleIsReady else { 
+
+        guard styleIsReady else {
             NSLog("MapLibreMapController - Map style is not ready yet")
-            return (nil, nil) 
+            return (nil, nil)
         }
 
         // get layers in order (interactiveFeatureLayerIds is unordered)
@@ -2893,6 +2998,34 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
     }
 
+    private func invalidArgumentError(_ message: String) -> FlutterError {
+        return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
+    }
+
+    /// Reads the camera update of a `camera#move`, `camera#animate` or
+    /// `camera#ease` call. When it does not decode, or names an update this
+    /// side cannot apply, the call is answered with `INVALID_ARGUMENT` and
+    /// `nil` comes back: returning without a reply would leave the Dart future
+    /// pending for good.
+    private func parseCameraCall(
+        _ methodCall: FlutterMethodCall,
+        _ result: FlutterResult
+    ) -> (arguments: [String: Any], camera: MLNMapCamera)? {
+        guard let arguments = methodCall.arguments as? [String: Any],
+              let cameraUpdate = arguments["cameraUpdate"] as? [Any],
+              !cameraUpdate.isEmpty
+        else {
+            result(invalidArgumentError("\(methodCall.method) requires a 'cameraUpdate' list."))
+            return nil
+        }
+        guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView)
+        else {
+            result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
+            return nil
+        }
+        return (arguments, camera)
+    }
+
     /// Serializes features for the channel as JSON strings, so nested
     /// properties survive intact. Shared by every call that answers with
     /// features.
@@ -2999,7 +3132,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Use MapLibre defaults (0 for min, 22 for max) when unbounded (nil)
         let minZoom = min ?? 0.0
         let maxZoom = max ?? 22.0
-        
+
         mapView.minimumZoomLevel = minZoom
         mapView.maximumZoomLevel = maxZoom
     }
@@ -3272,6 +3405,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func setCompassViewMargins(x: Double, y: Double) {
         mapView.compassViewMargins = CGPoint(x: x, y: y)
+    }
+
+    func setAttributionEnabled(attributionEnabled: Bool) {
+        mapView.attributionButton.isHidden = !attributionEnabled
     }
 
     func setAttributionButtonMargins(x: Double, y: Double) {

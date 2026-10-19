@@ -105,7 +105,8 @@ class CameraUpdate {
   /// geographical bounding box is centered in the map view at the greatest
   /// possible zoom level. A non-zero [left], [top], [right] and [bottom] padding
   /// insets the bounding box from the map view's edges.
-  /// The camera's new tilt and bearing will both be 0.0.
+  /// The camera keeps its current bearing and tilt, and the bounding box is
+  /// fitted as seen at that bearing.
   CameraUpdate.newLatLngBounds(
     LatLngBounds bounds, {
     double left = 0,

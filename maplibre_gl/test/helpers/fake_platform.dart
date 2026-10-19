@@ -375,6 +375,16 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    calls.add(
+      PlatformCall('moveLayer', [layerId], {'belowLayerId': belowLayerId}),
+    );
+    layerStack.remove(layerId);
+    final below = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    layerStack.insert(below < 0 ? layerStack.length : below, layerId);
+  }
+
+  @override
   Future<List> getLayerIds() async => List.of(layerStack);
 
   @override
@@ -661,6 +671,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     calls.add(PlatformCall('setLayerVisibility', [layerId, visible]));
+  }
+
+  @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    calls.add(PlatformCall('setLayerZoomRange', [layerId, minzoom, maxzoom]));
   }
 
   @override
