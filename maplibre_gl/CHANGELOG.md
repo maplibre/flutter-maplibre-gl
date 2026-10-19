@@ -88,6 +88,7 @@
 * **Android, iOS**: `addHeatmapLayer` applies `sourceLayer` instead of ignoring it (#1088).
 * Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
 * The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
+* **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

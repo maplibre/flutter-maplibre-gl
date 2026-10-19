@@ -1738,6 +1738,8 @@ final class MapLibreMapController
    * square around the point grows one dp at a time and the first feature it touches wins. When
    * several features are reached at the same distance, the top-most layer wins. With {@code
    * draggableOnly}, features that cannot be dragged are left out, so they never hide one that can.
+   * A touch inside a polygon hole reaches the polygon only at its ring edges, see {@link
+   * PolygonHitTest}.
    */
   private Pair<Feature, String> firstFeatureOnLayers(PointF point, boolean draggableOnly) {
     if (style == null) return null;
@@ -1761,13 +1763,18 @@ final class MapLibreMapController
     }
     Collections.reverse(layersInOrder);
 
+    final LatLng touch = mapLibreMap.getProjection().fromScreenLocation(point);
+    final PolygonHitTest holes =
+        new PolygonHitTest(
+            touch.getLongitude(), touch.getLatitude(), mapLibreMap.getCameraPosition().zoom);
+
     // One query over the whole area keeps only the layers with something in reach.
     final List<String> candidateLayers = new ArrayList<String>();
     Pair<Feature, String> onlyHit = null;
     int hits = 0;
     for (String id : layersInOrder) {
       List<Feature> features =
-          featuresIn(hitRect(point, FEATURE_HIT_TOLERANCE_DP), id, draggableOnly);
+          featuresIn(point, FEATURE_HIT_TOLERANCE_DP, id, draggableOnly, holes);
       if (!features.isEmpty()) {
         candidateLayers.add(id);
         hits += features.size();
@@ -1779,9 +1786,8 @@ final class MapLibreMapController
     }
 
     for (int radiusDp = 1; radiusDp <= FEATURE_HIT_TOLERANCE_DP; radiusDp++) {
-      RectF rect = hitRect(point, radiusDp);
       for (String id : candidateLayers) {
-        List<Feature> features = featuresIn(rect, id, draggableOnly);
+        List<Feature> features = featuresIn(point, radiusDp, id, draggableOnly, holes);
         if (!features.isEmpty()) {
           return new Pair<Feature, String>(features.get(0), id);
         }
@@ -1790,14 +1796,19 @@ final class MapLibreMapController
     return null;
   }
 
-  private List<Feature> featuresIn(RectF rect, String layerId, boolean draggableOnly) {
-    List<Feature> features = mapLibreMap.queryRenderedFeatures(rect, layerId);
-    if (!draggableOnly) return features;
-    List<Feature> draggable = new ArrayList<Feature>();
+  private List<Feature> featuresIn(
+      PointF point,
+      float radiusDp,
+      String layerId,
+      boolean draggableOnly,
+      PolygonHitTest holes) {
+    List<Feature> features = mapLibreMap.queryRenderedFeatures(hitRect(point, radiusDp), layerId);
+    List<Feature> hits = new ArrayList<Feature>();
     for (Feature feature : features) {
-      if (isDraggable(feature)) draggable.add(feature);
+      if (draggableOnly && !isDraggable(feature)) continue;
+      if (holes.keeps(feature, radiusDp)) hits.add(feature);
     }
-    return draggable;
+    return hits;
   }
 
   private RectF hitRect(PointF point, float radiusDp) {

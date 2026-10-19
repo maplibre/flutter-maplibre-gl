@@ -1876,6 +1876,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// On Android and iOS a polygon is also returned for a point inside one of
+  /// its holes, as MapLibre Native reports it, while taps and drags ignore
+  /// it; on web the holes are left out.
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1893,6 +1897,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// On Android and iOS a polygon is also returned for a box inside one of
+  /// its holes, as MapLibre Native reports it, while taps and drags ignore
+  /// it; on web the holes are left out.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
