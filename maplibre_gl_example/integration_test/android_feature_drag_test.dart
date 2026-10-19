@@ -90,11 +90,6 @@ void main() {
   ) async {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
-    final before = await pumpUntil(
-      tester,
-      map.controller.getVisibleRegion(),
-      'getVisibleRegion before',
-    );
 
     final first = _Finger(tester);
     await first.down(map.circleOnScreen);
@@ -106,18 +101,9 @@ void main() {
       await second.moveBy(const Offset(0, 5));
     }
     await second.up();
-    await first.up();
-    await _settle(tester);
+    await _expectFingerPansTheMap(tester, map, first);
 
     expect(map.drags, isEmpty);
-    expect(
-      await pumpUntil(
-        tester,
-        map.controller.getVisibleRegion(),
-        'getVisibleRegion after',
-      ),
-      isNot(before),
-    );
   });
 
   testWidgets('a second finger ends the drag and the map pinches', (
@@ -131,11 +117,6 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await first.moveBy(const Offset(10, 0));
     }
-    final before = await pumpUntil(
-      tester,
-      map.controller.getVisibleRegion(),
-      'getVisibleRegion before',
-    );
     // Inside the 300x300 map: a finger on its edge never reaches the view,
     // and the first one would just go on dragging.
     final second = _Finger(tester);
@@ -145,11 +126,10 @@ void main() {
       await second.moveBy(const Offset(0, 5));
     }
     await second.up();
-    await first.up();
-    await _settle(tester);
+    await _expectFingerPansTheMap(tester, map, first);
 
     // One end, where the single finger last dragged the feature to, and
-    // nothing after it.
+    // nothing after it, although the finger kept moving.
     final types = map.drags.map((d) => d.type).toList();
     expect(types.first, DragEventType.start);
     expect(types.where((t) => t == DragEventType.end), hasLength(1));
@@ -157,16 +137,6 @@ void main() {
     final end = map.drags.last;
     expect(end.delta, const LatLng(0, 0));
     expect(end.current, map.drags[map.drags.length - 2].current);
-    // The rest of the gesture is the map's: the fingers spread, it zooms in.
-    final after = await pumpUntil(
-      tester,
-      map.controller.getVisibleRegion(),
-      'getVisibleRegion after',
-    );
-    expect(
-      after.northeast.latitude - after.southwest.latitude,
-      lessThan(before.northeast.latitude - before.southwest.latitude),
-    );
   });
 
   testWidgets('a drag longer than a long press does not long-press the map', (
@@ -193,6 +163,43 @@ void main() {
 /// Lets the platform view answer over the method channel.
 Future<void> _settle(WidgetTester tester) =>
     pumpFor(tester, const Duration(milliseconds: 500));
+
+/// Checks that the gesture [finger] is part of belongs to the map: once the
+/// other finger has lifted, moving [finger] to the left pans the map east.
+///
+/// A pinch would be the natural check, but the two fingers of a test move in
+/// turns, one event each, and MapLibre's scale detector rarely reads that as a
+/// pinch: the zoom stays put or even goes the wrong way, whoever owns the
+/// gesture. A one-finger pan is read the same way every time, so it is what
+/// tells whether the map, and not the drag, has the gesture. Real pinches are
+/// checked by hand.
+Future<void> _expectFingerPansTheMap(
+  WidgetTester tester,
+  _MapProbe map,
+  _Finger finger,
+) async {
+  final before = await pumpUntil(
+    tester,
+    map.controller.getVisibleRegion(),
+    'getVisibleRegion before the pan',
+  );
+  for (var i = 0; i < 8; i++) {
+    await finger.moveBy(const Offset(-10, 0));
+  }
+  await finger.up();
+  await _settle(tester);
+  final after = await pumpUntil(
+    tester,
+    map.controller.getVisibleRegion(),
+    'getVisibleRegion after the pan',
+  );
+  // Dragging to the left moves the view east.
+  expect(
+    after.northeast.longitude,
+    greaterThan(before.northeast.longitude),
+    reason: 'the remaining finger pans the map',
+  );
+}
 
 /// One finger whose events carry real timestamps.
 ///
