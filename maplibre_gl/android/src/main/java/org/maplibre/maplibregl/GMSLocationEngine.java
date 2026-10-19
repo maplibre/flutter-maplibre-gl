@@ -88,12 +88,30 @@ public class GMSLocationEngine implements LocationEngineImpl<LocationCallback> {
     }
 
     /**
+     * Throws a {@link LinkageError} when the app resolves play-services-location older than 21.0.0.
+     * FusedLocationProviderClient became an interface in 21.0.0, and LocationRequest.Builder came
+     * with it, so on an older version the calls in this class would fail on the first location
+     * request. Building a request here runs the same Builder calls the engine makes later.
+     */
+    static void checkApiCompatible() {
+        if (!FusedLocationProviderClient.class.isInterface()) {
+            throw new IncompatibleClassChangeError("FusedLocationProviderClient is not an interface");
+        }
+        createGoogleLocationRequest(
+                new LocationEngineRequest.Builder(1000L)
+                        .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
+                        .setMaxWaitTime(2000L)
+                        .build()
+        );
+    }
+
+    /**
      * Converts a MapLibre {@link LocationEngineRequest} to a Google Play Services {@link LocationRequest}.
      *
      * @param engineRequest The MapLibre location request.
      * @return The Google Play Services location request.
      */
-    private LocationRequest createGoogleLocationRequest(@NonNull LocationEngineRequest engineRequest) {
+    private static LocationRequest createGoogleLocationRequest(@NonNull LocationEngineRequest engineRequest) {
         LocationRequest.Builder builder = new LocationRequest.Builder(
                 mapPriority(engineRequest.getPriority()),
                 engineRequest.getInterval()
@@ -118,7 +136,7 @@ public class GMSLocationEngine implements LocationEngineImpl<LocationCallback> {
      * @param enginePriority The priority from {@link LocationEngineRequest}.
      * @return The corresponding priority for {@link LocationRequest}.
      */
-    private int mapPriority(int enginePriority) {
+    private static int mapPriority(int enginePriority) {
         switch (enginePriority) {
             case LocationEngineRequest.PRIORITY_HIGH_ACCURACY:
                 return Priority.PRIORITY_HIGH_ACCURACY;
