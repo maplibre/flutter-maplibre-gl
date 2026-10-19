@@ -67,6 +67,8 @@
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
+* **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `UpdateMetadataError` for an unknown id like Android (#1087).
+* **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list, and the other offline calls no longer miss a stored region then (#1087).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
