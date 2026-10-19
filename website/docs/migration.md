@@ -70,29 +70,15 @@ If your app relied on a drag starting at touch down, or on tapping exactly next 
 
 The MapLibre GL JS build the plugin now loads throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
 
-### Android: Play Services location
+### Android: building without Google Play Services
 
-The plugin no longer bundles Google Play Services location, so apps without Google services, such as F-Droid builds, can use it. Apps that turn on high accuracy (`enableHighAccuracy: true` or `LocationPriority.highAccuracy`) and want the fused provider back add it themselves:
+Nothing changes for apps that use Google Play Services. F-Droid and other FOSS builds can now leave it out with one line in `android/gradle.properties`:
 
-=== "Kotlin DSL"
+```properties title="android/gradle.properties"
+maplibre_gl.playServicesLocation=false
+```
 
-    ```kotlin title="android/app/build.gradle.kts"
-    dependencies {
-        implementation("com.google.android.gms:play-services-location:21.4.0")
-    }
-    ```
-
-=== "Groovy"
-
-    ```groovy title="android/app/build.gradle"
-    dependencies {
-        implementation 'com.google.android.gms:play-services-location:21.4.0'
-    }
-    ```
-
-The plugin requires play-services-location 21.0.0 or later; adding 21.4.0 makes Gradle pick it over older versions pulled in by other plugins.
-
-Without it, high accuracy uses GPS only, with no Wi-Fi or cell positioning, so indoors there may be no fix at all. Apps on the default balanced accuracy see no change. See [Fused location provider on Android](advanced/user-location.md#fused-location-provider-on-android).
+See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services).
 
 ### Behaviour changes
 

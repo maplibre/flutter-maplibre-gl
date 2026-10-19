@@ -67,29 +67,17 @@ MapLibreMap(
 
 ### Fused location provider on Android
 
-With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider when the app includes Play Services location, and GPS through the platform location manager when it does not. The plugin does not ship Play Services itself, so apps without Google services, such as F-Droid builds, stay free of it.
+With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider, which combines GPS with Wi-Fi and cell positioning. On devices without Google Play Services, such as Huawei devices without them, it uses the platform location manager instead: Android's own fused provider on Android 12 and later, GPS only before. Other priorities use the platform location engine either way.
 
-Without the fused provider, high accuracy uses GPS only, with no Wi-Fi or cell positioning, so indoors there may be no fix at all.
+### Building without Google Play Services
 
-To use the fused provider, add the dependency to your app:
+F-Droid and other FOSS builds cannot include Google Play Services. Add this line to your app's `android/gradle.properties`:
 
-=== "Kotlin DSL"
+```properties title="android/gradle.properties"
+maplibre_gl.playServicesLocation=false
+```
 
-    ```kotlin title="android/app/build.gradle.kts"
-    dependencies {
-        implementation("com.google.android.gms:play-services-location:21.4.0")
-    }
-    ```
-
-=== "Groovy"
-
-    ```groovy title="android/app/build.gradle"
-    dependencies {
-        implementation 'com.google.android.gms:play-services-location:21.4.0'
-    }
-    ```
-
-The plugin requires play-services-location 21.0.0 or later; adding 21.4.0 makes Gradle pick it over older versions pulled in by other plugins. With an older version the plugin logs a warning and uses GPS. The fused provider is used only on devices with Google Play Services; on others, such as Huawei devices without them, the plugin falls back to GPS on its own. Other priorities use the platform location engine either way.
+The plugin then neither depends on Play Services location nor compiles the code that uses it, so nothing from Google is downloaded or ends up in the APK. High accuracy uses the platform location manager as described above. On Android 11 and earlier that means GPS only, so indoors there may be no fix at all.
 
 ### Pulsed GPS on iOS
 

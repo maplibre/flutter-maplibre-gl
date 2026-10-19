@@ -23,6 +23,10 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 
+// Read from the app's android/gradle.properties (or -P on the command line).
+def useGooglePlayServicesLocation =
+        project.findProperty('maplibre_gl.playServicesLocation')?.toString()?.trim() != 'false'
+
 // Who compiles our Kotlin depends on the app: from AGP 9 the Android Gradle plugin does, but
 // only where built-in Kotlin is on, and the Flutter template turns it off (#905, #1008, #1018).
 // Flutter 3.44 and later then apply KGP for us, though not always before this script runs. So
@@ -51,6 +55,13 @@ android {
         multiDexEnabled true
         consumerProguardFiles 'consumer-rules.pro'
     }
+    sourceSets {
+        main {
+            if (useGooglePlayServicesLocation) {
+                java.srcDirs += 'src/gms/java'
+            }
+        }
+    }
     lintOptions {
         disable 'InvalidPackage'
     }
@@ -68,12 +79,14 @@ android {
         // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
         implementation 'org.maplibre.gl:android-sdk-opengl:13.7.1'
         implementation 'com.squareup.okhttp3:okhttp:5.4.0'
-        // Play Services location is optional: compiled against, not shipped, so apps without
-        // Google Play Services (F-Droid and other FOSS builds) stay free of it (#1014). An app
-        // that adds play-services-location gets the fused provider for high accuracy; without
-        // it, GmsLocationSupport falls back to MapLibreGPSLocationEngine.
-        compileOnly 'com.google.android.gms:play-services-base:18.10.1'
-        compileOnly 'com.google.android.gms:play-services-location:21.4.0'
+        // Google Play Services location gives high accuracy the fused provider. FOSS builds, such
+        // as F-Droid, set maplibre_gl.playServicesLocation=false in the app's gradle.properties:
+        // then nothing from Google is downloaded or compiled, and high accuracy uses the platform
+        // LocationManager (#1014).
+        if (useGooglePlayServicesLocation) {
+            implementation 'com.google.android.gms:play-services-base:18.10.1'
+            implementation 'com.google.android.gms:play-services-location:21.4.0'
+        }
     }
 }
 
