@@ -1,5 +1,5 @@
 // Integration tests on web that drive the map's DOM: hover listeners of a
-// layer removed and added again.
+// layer removed and added again, and the leave of a hovered layer removed.
 //
 // Flutter's synthesized pointers do not reach the map's DOM element, so the
 // tests dispatch mouse events on the map canvas, as a mouse would.
@@ -27,6 +27,22 @@ const _center = LatLng(0, 0);
 const _sourceId = 'hover-source';
 const _layerId = 'hover-layer';
 
+/// One feature at [_center], with an id so hover events report it.
+final _onePoint = <String, dynamic>{
+  'type': 'FeatureCollection',
+  'features': [
+    {
+      'type': 'Feature',
+      'id': 1,
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [_center.longitude, _center.latitude],
+      },
+      'properties': <String, dynamic>{},
+    },
+  ],
+};
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -49,20 +65,7 @@ void main() {
 
     await pumpUntil(
       tester,
-      controller.addGeoJsonSource(_sourceId, {
-        'type': 'FeatureCollection',
-        'features': [
-          {
-            'type': 'Feature',
-            'id': 1,
-            'geometry': {
-              'type': 'Point',
-              'coordinates': [_center.longitude, _center.latitude],
-            },
-            'properties': <String, dynamic>{},
-          },
-        ],
-      }),
+      controller.addGeoJsonSource(_sourceId, _onePoint),
       'addGeoJsonSource',
     );
     final onCanvas = await _addCircleLayer(tester, controller);
@@ -99,6 +102,38 @@ void main() {
     mouse.click(onCanvas);
     await _settle(tester);
     expect(taps, hasLength(1));
+  });
+
+  testWidgets('removing a hovered layer reports a leave', (tester) async {
+    if (!kIsWeb) return;
+    final controller = await pumpMap(
+      tester,
+      initialCameraPosition: const CameraPosition(target: _center, zoom: 10),
+    );
+    final hovers = <HoverEventType>[];
+    controller.onFeatureHover.add(
+      (point, latLng, id, annotation, eventType) => hovers.add(eventType),
+    );
+    await pumpUntil(
+      tester,
+      controller.addGeoJsonSource(_sourceId, _onePoint),
+      'addGeoJsonSource',
+    );
+    final onCanvas = await _addCircleLayer(tester, controller);
+    final canvas = _canvas();
+
+    _Mouse(canvas).hover(onCanvas);
+    await _settle(tester);
+    expect(hovers, contains(HoverEventType.enter));
+    expect(hovers, isNot(contains(HoverEventType.leave)));
+    expect(canvas.style.cursor, 'pointer');
+
+    // The pointer stays on the circle, but the layer under it goes.
+    await pumpUntil(tester, controller.removeLayer(_layerId), 'removeLayer');
+    await _settle(tester);
+    expect(hovers.last, HoverEventType.leave);
+    expect(hovers.where((t) => t == HoverEventType.leave), hasLength(1));
+    expect(canvas.style.cursor, isEmpty);
   });
 }
 

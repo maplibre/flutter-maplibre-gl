@@ -21,6 +21,10 @@ class MapLibreMapController extends MapLibrePlatform
   bool _featureTapsTriggersMapClick = false;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
+
+  /// Where the pointer was at the last hover event, for the leave events a
+  /// removed layer can no longer fire itself.
+  ({Point<double> point, LatLng latLng})? _lastHoverPosition;
   Set<String>? _assetManifest;
   Future<Set<String>>? _assetManifestRead;
 
@@ -1642,6 +1646,8 @@ class MapLibreMapController extends MapLibrePlatform
     //remove old mouseenter callbacks to avoid multicalling
     _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
     _interactiveFeatureLayerIds.clear();
+    // The new style drops every layer, hovered features included.
+    _hoveredFeatureIdsByLayer.keys.toList().forEach(_dropLayerHover);
 
     final sanitizedStyle = await _sanitizeStyleObject(styleObject);
     _map.setStyle(sanitizedStyle, {'diff': false});
@@ -1720,6 +1726,7 @@ class MapLibreMapController extends MapLibrePlatform
     // must go with it or each hover and drag callback runs once per add.
     if (_interactiveFeatureLayerIds.remove(imageLayerId)) {
       _detachLayerInteraction(imageLayerId);
+      _dropLayerHover(imageLayerId);
     }
     _map.removeLayer(imageLayerId);
   }
@@ -2248,6 +2255,31 @@ class MapLibreMapController extends MapLibrePlatform
     if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
   }
 
+  /// Forgets the features of [layerId] under the pointer. A removed layer
+  /// fires no mouseleave, so each one still hovered gets its leave here, and
+  /// the pointer cursor goes once nothing else is hovered.
+  void _dropLayerHover(String layerId) {
+    final hovered = _hoveredFeatureIdsByLayer.remove(layerId);
+    if (hovered == null || hovered.isEmpty) return;
+    final at = _lastHoverPosition;
+    if (at != null) {
+      for (final feature in hovered) {
+        onFeatureHoverPlatform({
+          'id': feature,
+          'point': at.point,
+          'latLng': at.latLng,
+          'eventType': 'leave',
+        });
+      }
+    }
+    final isAnyFeatureHovered = _hoveredFeatureIdsByLayer.values.any(
+      (hoveredFeatures) => hoveredFeatures.isNotEmpty,
+    );
+    if (!isAnyFeatureHovered) {
+      _map.getCanvas().style.cursor = '';
+    }
+  }
+
   void _handleLayerMouseMove(Event e, String layerId) {
     // Normalize feature ids to String to avoid type mismatch (ids can be int, String, etc.)
     final currentHoveredFeatures =
@@ -2258,6 +2290,9 @@ class MapLibreMapController extends MapLibrePlatform
       ...lastHoveredFeatures,
     };
     _hoveredFeatureIdsByLayer[layerId] = currentHoveredFeatures;
+    final point = Point<double>(e.point.x.toDouble(), e.point.y.toDouble());
+    final latLng = LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble());
+    _lastHoverPosition = (point: point, latLng: latLng);
 
     for (final feature in features) {
       final isCurrentlyHovered = currentHoveredFeatures.contains(feature);
@@ -2276,8 +2311,8 @@ class MapLibreMapController extends MapLibrePlatform
 
       onFeatureHoverPlatform({
         'id': feature,
-        'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
-        'latLng': LatLng(e.lngLat.lat.toDouble(), e.lngLat.lng.toDouble()),
+        'point': point,
+        'latLng': latLng,
         'eventType': eventType,
       });
     }
