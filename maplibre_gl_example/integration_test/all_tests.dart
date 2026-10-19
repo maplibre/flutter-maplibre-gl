@@ -16,10 +16,12 @@
 import 'ambient_cache_size_test.dart' as ambient_cache_size;
 import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
+import 'attribution_test.dart' as attribution;
 import 'camera_test.dart' as camera;
 import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
 import 'haptic_feedback_test.dart' as haptic_feedback;
+import 'offline_region_metadata_test.dart' as offline_region_metadata;
 import 'pan_inertia_test.dart' as pan_inertia;
 import 'placement_transitions_test.dart' as placement_transitions;
 import 'style_layers_test.dart' as style_layers;
@@ -30,10 +32,12 @@ void main() {
   ambient_cache_size.main();
   android_feature_drag.main();
   annotations.main();
+  attribution.main();
   camera.main();
   feature_hit_tolerance.main();
   geojson_query.main();
   haptic_feedback.main();
+  offline_region_metadata.main();
   pan_inertia.main();
   placement_transitions.main();
   style_layers.main();

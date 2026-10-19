@@ -1,8 +1,6 @@
 package org.maplibre.maplibregl
 
 import android.content.Context
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import org.maplibre.android.location.LocationComponent
 import org.maplibre.android.location.engine.LocationEngine
 import org.maplibre.android.location.engine.LocationEngineDefault.getDefaultLocationEngine
@@ -13,24 +11,12 @@ class LocationEngineFactory {
 
     private var locationEngineRequest: LocationEngineRequest? = null
 
-    private fun isGooglePlayServicesAvailable(context: Context): Boolean {
-        return try {
-            val availability = GoogleApiAvailability.getInstance()
-            availability.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
-        } catch (e: Exception) {
-            // GMS classes not available (e.g., HMS-only device)
-            false
-        }
-    }
-
     fun getLocationEngine(context: Context): LocationEngine {
         if (locationEngineRequest?.priority == LocationEngineRequest.PRIORITY_HIGH_ACCURACY) {
-            val locationEngineImpl = if (isGooglePlayServicesAvailable(context)) {
-                GMSLocationEngine(context)
-            } else {
-                MapLibreGPSLocationEngine(context)
-            }
-            return LocationEngineProxy(locationEngineImpl)
+            // The fused provider when the app ships play-services-location and the device has
+            // Google Play Services, GPS through the platform LocationManager otherwise.
+            return GmsLocationSupport.createFusedLocationEngine(context)
+                ?: LocationEngineProxy(MapLibreGPSLocationEngine(context))
         }
         return getDefaultLocationEngine(context)
     }

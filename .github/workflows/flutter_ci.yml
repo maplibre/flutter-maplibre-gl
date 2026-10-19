@@ -156,7 +156,8 @@ jobs:
         run: |
           status=0
           for target in all_tests.dart manual_location_web_test.dart \
-              feature_drag_web_test.dart web_map_dom_test.dart; do
+              feature_drag_web_test.dart web_map_dom_test.dart \
+              attribution_web_test.dart; do
             flutter drive \
               --driver=test_driver/integration_test.dart \
               --target="integration_test/$target" \

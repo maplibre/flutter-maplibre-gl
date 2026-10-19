@@ -54,6 +54,9 @@ class MapLibreMapController extends MapLibrePlatform
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
   AttributionControl? _attributionControl;
+  bool _attributionEnabled = true;
+  AttributionButtonPosition _attributionButtonPosition =
+      AttributionButtonPosition.bottomRight;
   ScaleControl? _scaleControl;
   String? _scaleControlPosition;
   Timer? lastResizeObserverTimer;
@@ -201,6 +204,9 @@ class MapLibreMapController extends MapLibrePlatform
 
     final options = _creationParams['options'] ?? {};
     Convert.interpretMapLibreMapOptions(options, this, ignoreStyle: true);
+    // Options without attribution settings still get the control, at the
+    // default position.
+    if (_attributionControl == null) _updateAttributionButton();
   }
 
   /// Says why the map will stay blank when WebGL is the reason.
@@ -1357,9 +1363,14 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  void _updateAttributionButton(AttributionButtonPosition position) {
+  /// Puts the attribution control at [_attributionButtonPosition], or removes
+  /// it while [_attributionEnabled] is false.
+  void _updateAttributionButton() {
+    _removeAttributionButton();
+    if (!_attributionEnabled) return;
+
     String? positionString;
-    switch (position) {
+    switch (_attributionButtonPosition) {
       case AttributionButtonPosition.topRight:
         positionString = 'top-right';
       case AttributionButtonPosition.topLeft:
@@ -1370,7 +1381,6 @@ class MapLibreMapController extends MapLibrePlatform
         positionString = 'bottom-left';
     }
 
-    _removeAttributionButton();
     _attributionControl = AttributionControl(AttributionControlOptions());
     _map.addControl(_attributionControl, positionString);
   }
@@ -1504,8 +1514,18 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  void setAttributionEnabled(bool enabled) {
+    // Sent with every map creation, before the position. The control is put
+    // by the position, or by the creation code when the options carry none.
+    if (enabled == _attributionEnabled) return;
+    _attributionEnabled = enabled;
+    _updateAttributionButton();
+  }
+
+  @override
   void setAttributionButtonAlignment(AttributionButtonPosition position) {
-    _updateAttributionButton(position);
+    _attributionButtonPosition = position;
+    _updateAttributionButton();
   }
 
   @override
@@ -1765,6 +1785,16 @@ class MapLibreMapController extends MapLibrePlatform
         details: 'Source with id $sourceId already exists.',
       );
     }
+  }
+
+  @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    // maplibre-gl-js only fires an error event for a missing layer, so check
+    // both first and throw the same error as Android and iOS.
+    _ensureLayerExists(layerId);
+    if (belowLayerId != null) _ensureLayerExists(belowLayerId);
+    if (belowLayerId == layerId) return;
+    _map.moveLayer(layerId, belowLayerId);
   }
 
   @override
@@ -2593,6 +2623,36 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    // maplibre-gl-js takes any range, so the values Android and iOS reject
+    // are rejected here too.
+    if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            'Invalid zoom range [$minzoom, $maxzoom]: both must be within 0 '
+            'and 24, with minzoom not above maxzoom.',
+      );
+    }
+    if (!_styleReady) {
+      // Same code and message as Android and iOS. maplibre-gl-js would throw
+      // its own error instead.
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
+    _ensureLayerExists(layerId);
+    _map.setLayerZoomRange(layerId, minzoom, maxzoom);
+  }
+
+  @override
   Future getFilter(String layerId) async {
     _checkFilterable(layerId);
     return _map.getFilter(layerId);
@@ -2651,7 +2711,15 @@ class MapLibreMapController extends MapLibrePlatform
     if (layers is! List) return null;
     for (final layer in layers) {
       if (layer is Map && layer['id'] == layerId) {
-        return _styleShaped(layer);
+        final shaped = _styleShaped(layer);
+        // Android and iOS leave out a zoom range at the spec defaults, which
+        // maplibre-gl-js serializes once set, by setLayerZoomRange or the
+        // style itself.
+        final minzoom = shaped['minzoom'];
+        if (minzoom is num && minzoom <= 0) shaped.remove('minzoom');
+        final maxzoom = shaped['maxzoom'];
+        if (maxzoom is num && maxzoom >= 24) shaped.remove('maxzoom');
+        return shaped;
       }
     }
     return null;

@@ -68,10 +68,11 @@ class OfflinePackDownloader {
         // pack (addPack does not deduplicate). Remove any existing pack covering the
         // same region first, so a re-download replaces it rather than piling up.
         //
-        // Note: existingPack reads MLNOfflineStorage.shared.packs, which may be nil
-        // or stale until reloadPacks completes (e.g. right after launch). If the
-        // duplicate isn't loaded yet the dedup simply no-ops and a fresh pack is
-        // created, the same behavior as before this feature, never a crash.
+        // Note: existingPack reads MLNOfflineStorage.shared.packs, which is nil
+        // until the store has loaded (e.g. right after launch). The caller runs
+        // this from OfflineManagerUtils.whenPacksLoaded so the packs are there;
+        // if they never load before its timeout the dedup simply no-ops and a
+        // fresh pack is created, never a crash.
         let duplicate = existingPack(matching: tilePyramidRegion, in: storage)
 
         // A replacement keeps the ID the Dart side already knows. Apps pair their own

@@ -289,6 +289,13 @@ abstract class MapLibrePlatform {
 
   Future<void> removeLayer(String imageLayerId);
 
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  Future<void> moveLayer(String layerId, {String? belowLayerId});
+
   Future<List> getLayerIds();
 
   Future<List> getSourceIds();
@@ -483,6 +490,14 @@ abstract class MapLibrePlatform {
   Future<void> setGlobalStateProperty(String name, Object? value);
 
   Future<void> setLayerVisibility(String layerId, bool visible);
+
+  /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
+  /// which the layer with [layerId] is drawn.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  );
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.

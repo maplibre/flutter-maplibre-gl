@@ -422,6 +422,24 @@ void main() {
       expect(calls.first.positionalArgs.first, 'layer-1');
     });
 
+    test('moveLayer delegates to platform', () async {
+      await controller.moveLayer('layer-1', belowLayerId: 'layer-2');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], 'layer-2');
+    });
+
+    test('moveLayer delegates to platform without belowLayerId', () async {
+      await controller.moveLayer('layer-1');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], isNull);
+    });
+
     test('setLayerVisibility delegates to platform', () async {
       await controller.setLayerVisibility('layer-1', false);
 
@@ -429,6 +447,14 @@ void main() {
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], 'layer-1');
       expect(calls.first.positionalArgs[1], false);
+    });
+
+    test('setLayerZoomRange delegates to platform', () async {
+      await controller.setLayerZoomRange('layer-1', 5.5, 15);
+
+      final calls = platform.callsFor('setLayerZoomRange');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['layer-1', 5.5, 15.0]);
     });
 
     test('setLayerFilter passes the expression to setFilter', () async {

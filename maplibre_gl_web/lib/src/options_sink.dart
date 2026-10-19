@@ -36,6 +36,8 @@ abstract class MapLibreMapOptionsSink {
 
   void setCompassViewMargins(int x, int y);
 
+  void setAttributionEnabled(bool enabled);
+
   void setAttributionButtonAlignment(AttributionButtonPosition position);
 
   void setAttributionButtonMargins(int x, int y);
