@@ -8,8 +8,8 @@ import '../../shared/shared.dart';
 
 /// Example demonstrating the [MapLibreMapController.moveLayer] API by
 /// letting the user drag-reorder a stack of overlapping, semi-transparent
-/// circle layers. Reordering is implemented as a single atomic native
-/// operation, so it does not flicker or lose any paint/layout properties.
+/// circle layers. The moved layer is not recreated, so it keeps its paint,
+/// layout, filter and source.
 class MoveLayerExample extends ExamplePage {
   const MoveLayerExample({super.key})
     : super(
@@ -157,8 +157,8 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
           title: 'Drag to reorder layers',
           subtitle:
               'Dragging calls moveLayer(), which moves the existing layer '
-              'in a single call: no flicker, and its paint and layout '
-              'properties are kept.',
+              'without recreating it: its paint, layout, filter and source '
+              'are kept.',
           icon: Icons.info_outline,
         ),
         const SizedBox(height: 8),

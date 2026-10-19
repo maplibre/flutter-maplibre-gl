@@ -2124,7 +2124,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// layer stack, appearing above all other layers.
   ///
   /// The layer keeps its paint, layout, filter and source, and is not
-  /// recreated, so it does not flicker.
+  /// recreated.
   ///
   /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if
   /// [layerId] or [belowLayerId] is not a layer of the style; the layers are
