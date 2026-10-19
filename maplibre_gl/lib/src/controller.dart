@@ -269,9 +269,22 @@ class MapLibreMapController extends ChangeNotifier {
         // says nothing the app can act on: the next style load disposes the
         // half-built managers and sets them up again. Anything else is real.
         final superseded = styleLoad != _styleLoadCount;
-        if (!superseded && !_isStyleNotReady(error)) rethrow;
+        if (superseded) return;
+        if (!_isStyleNotReady(error)) rethrow;
+        // Nothing retries until the next style load, so this load skips
+        // onStyleLoadedCallback. Say so in debug builds.
+        if (kDebugMode) {
+          debugPrint(
+            'MapLibre: annotation setup skipped, the style is not ready '
+            '(${error.code}). The next style load sets it up again and calls '
+            'onStyleLoadedCallback.',
+          );
+        }
         return;
       }
+      // The last manager's initialize() may have been the await that a newer
+      // style load overtook; that load calls onStyleLoadedCallback itself.
+      if (styleLoad != _styleLoadCount) return;
       onStyleLoadedCallback?.call();
     });
 

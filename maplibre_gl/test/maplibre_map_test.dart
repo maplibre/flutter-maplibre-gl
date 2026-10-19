@@ -190,6 +190,11 @@ void main() {
           final controller = createController(() => styleLoads++);
           final errors = <Object>[];
 
+          final logs = <String?>[];
+          final previousDebugPrint = debugPrint;
+          debugPrint = (message, {wrapWidth}) => logs.add(message);
+          addTearDown(() => debugPrint = previousDebugPrint);
+
           platform.onAddGeoJsonSource = (_) async {
             throw PlatformException(code: code, message: 'Style not found');
           };
@@ -197,8 +202,10 @@ void main() {
             platform.onMapStyleLoadedPlatform.call(null);
             await pumpEventQueue();
           }, (error, _) => errors.add(error));
+          debugPrint = previousDebugPrint;
 
           expect(errors, isEmpty);
+          expect(logs, [contains(code)]);
           expect(styleLoads, 0);
           expect(controller.fillManager?.isInitialized ?? false, isFalse);
 
@@ -263,6 +270,38 @@ void main() {
       expect(styleLoads, 1);
       expect(controller.fillManager!.isInitialized, isTrue);
       expect(controller.symbolManager!.isInitialized, isTrue);
+    });
+
+    test('a setup that succeeds after being overtaken does not call back for '
+        'the old style', () async {
+      var styleLoads = 0;
+      final controller = MapLibreMapController(
+        maplibrePlatform: platform,
+        // One manager, so the held call is inside the last initialize().
+        annotationOrder: const [AnnotationType.fill],
+        annotationConsumeTapEvents: const [AnnotationType.fill],
+        onStyleLoadedCallback: () => styleLoads++,
+      );
+      addTearDown(controller.dispose);
+
+      final release = Completer<void>();
+      var first = true;
+      platform.onAddGeoJsonSource = (_) async {
+        if (!first) return;
+        first = false;
+        await release.future;
+      };
+      platform.onMapStyleLoadedPlatform.call(null);
+      await pumpEventQueue();
+      platform.onMapStyleLoadedPlatform.call(null);
+      await pumpEventQueue();
+      expect(styleLoads, 1);
+
+      release.complete();
+      await pumpEventQueue();
+
+      expect(styleLoads, 1);
+      expect(controller.fillManager!.isInitialized, isTrue);
     });
   });
 
