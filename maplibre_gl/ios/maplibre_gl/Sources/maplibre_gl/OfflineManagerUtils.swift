@@ -449,23 +449,52 @@ class OfflineManagerUtils {
     /// How long `whenPacksLoaded` waits for the stored packs before giving up.
     private static let packsLoadTimeout: TimeInterval = 10
 
+    /// Calls waiting in `whenPacksLoaded`, oldest first. Only touched on the
+    /// main queue.
+    private static var pendingUntilPacksLoaded: [() -> Void] = []
+
+    /// The one observer waiting for the packs while calls are queued.
+    private static var packsLoadedObserver: PacksLoadedObserver?
+
     /// Runs `completion` on the main queue once `MLNOfflineStorage.shared.packs`
     /// has loaded. The store loads its packs asynchronously, so right after
     /// launch the property is still nil and every lookup would miss. Runs at
-    /// once when the packs are already there; otherwise waits for the KVO
-    /// change, and after `packsLoadTimeout` goes ahead with whatever is
-    /// available so a store that never loads cannot leave a call unanswered.
+    /// once when the packs are already there and no earlier call is waiting;
+    /// otherwise queues it behind the earlier ones. A single observer waits for
+    /// the KVO change and then runs the queue in the order the calls were made,
+    /// like Android answers them, since separate KVO observers are not
+    /// notified in a guaranteed order. After `packsLoadTimeout` the queue runs
+    /// with whatever is available, so a store that never loads cannot leave a
+    /// call unanswered.
     static func whenPacksLoaded(_ completion: @escaping () -> Void) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { whenPacksLoaded(completion) }
+            return
+        }
         let storage = MLNOfflineStorage.shared
-        if Thread.isMainThread, storage.packs != nil {
+        // Even with the packs loaded, wait behind calls that are still queued:
+        // running now would answer this call before them.
+        if pendingUntilPacksLoaded.isEmpty, storage.packs != nil {
             completion()
             return
         }
-        PacksLoadedObserver(
-            storage: storage,
-            timeout: packsLoadTimeout,
-            onLoaded: completion
-        ).start()
+        pendingUntilPacksLoaded.append(completion)
+        guard packsLoadedObserver == nil else { return }
+        let observer = PacksLoadedObserver(storage: storage, timeout: packsLoadTimeout) {
+            packsLoadedObserver = nil
+            runPendingUntilPacksLoaded()
+        }
+        packsLoadedObserver = observer
+        observer.start()
+    }
+
+    /// Runs the queued calls in FIFO order. Takes them one at a time, so a call
+    /// that queues another one while it runs lands behind those still waiting.
+    private static func runPendingUntilPacksLoaded() {
+        while !pendingUntilPacksLoaded.isEmpty {
+            let next = pendingUntilPacksLoaded.removeFirst()
+            next()
+        }
     }
 
     /// Finds a pack by region ID, checking active packs first then falling back to storage.
@@ -530,21 +559,20 @@ class OfflineManagerUtils {
 }
 
 /// One-shot KVO observer that waits for `MLNOfflineStorage.packs` to become
-/// non-nil, or for a timeout, whichever comes first. Retains itself until then
-/// and calls `onLoaded` exactly once, on the main queue.
+/// non-nil, or for a timeout, whichever comes first, and then calls `onLoaded`
+/// exactly once, on the main queue. `OfflineManagerUtils` keeps it alive while
+/// it waits.
 private final class PacksLoadedObserver: NSObject {
     private let storage: MLNOfflineStorage
     private let timeout: TimeInterval
     private let onLoaded: () -> Void
     private var finished = false
-    private var retainCycle: PacksLoadedObserver?
 
     init(storage: MLNOfflineStorage, timeout: TimeInterval, onLoaded: @escaping () -> Void) {
         self.storage = storage
         self.timeout = timeout
         self.onLoaded = onLoaded
         super.init()
-        retainCycle = self
     }
 
     func start() {
@@ -577,9 +605,7 @@ private final class PacksLoadedObserver: NSObject {
         guard !finished else { return }
         finished = true
         storage.removeObserver(self, forKeyPath: "packs")
-        let callback = onLoaded
-        retainCycle = nil
-        callback()
+        onLoaded()
     }
 }
 
