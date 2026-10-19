@@ -60,6 +60,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, so a fix still arrives indoors (#1102).
 
 ### Fixed
+* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#1103).
 * Layer filters now behave the same on Android, iOS and web (#1055):
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
   * `null` removes a filter. Before, it was ignored or threw.
