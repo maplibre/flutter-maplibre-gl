@@ -52,6 +52,7 @@ import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
+import 'examples/layers/move_layer_example.dart';
 
 // Advanced examples
 import 'examples/advanced/globe_terrain_sky.dart';
@@ -230,6 +231,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const EditStyleLayerAnimatedExample(),
   const LiveSymbolsExample(),
   const EditStyleLayerDraggableExample(),
+  const MoveLayerExample(),
 
   // Advanced
   const MapLanguageExample(),

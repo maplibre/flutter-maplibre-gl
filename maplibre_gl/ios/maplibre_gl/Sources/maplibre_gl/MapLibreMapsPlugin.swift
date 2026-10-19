@@ -110,6 +110,24 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
             case "getListOfRegions":
                 // Note: this does not download anything from internet, it only fetches data drom database
                 OfflineManagerUtils.regionsList(result: result)
+            case "updateOfflineRegionMetadata":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let id = args["id"] as? Int
+                else {
+                    result(FlutterError(
+                        code: "UpdateMetadataError",
+                        message: "could not decode arguments",
+                        details: nil
+                    ))
+                    return
+                }
+                // Android stores "{}" when no metadata is passed.
+                let metadata = args["metadata"] as? [String: Any] ?? [:]
+                OfflineManagerUtils.updateRegionMetadata(
+                    result: result,
+                    id: id,
+                    metadata: metadata
+                )
             case "mergeOfflineRegions":
                 guard let args = methodCall.arguments as? [String: Any],
                       let path = args["path"] as? String

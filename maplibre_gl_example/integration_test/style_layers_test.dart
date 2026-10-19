@@ -806,6 +806,59 @@ void main() {
     );
   });
 
+  testWidgets('moveLayer reorders layers and keeps them on errors', (
+    tester,
+  ) async {
+    final controller = await _pumpMapWithSource(tester);
+    for (final id in ['a', 'b', 'c']) {
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          id,
+          const CircleLayerProperties(circleRadius: 4),
+        ),
+        'addCircleLayer $id',
+      );
+    }
+
+    await pumpUntil(
+      tester,
+      controller.moveLayer('c', belowLayerId: 'a'),
+      'move c below a',
+    );
+    var ids = await _layerIds(tester, controller);
+    expect(ids.indexOf('c'), lessThan(ids.indexOf('a')));
+    expect(ids.indexOf('a'), lessThan(ids.indexOf('b')));
+
+    await pumpUntil(tester, controller.moveLayer('c'), 'move c to the top');
+    ids = await _layerIds(tester, controller);
+    expect(ids.last, 'c');
+
+    // A layer cannot go below itself: the call succeeds and nothing moves.
+    await pumpUntil(
+      tester,
+      controller.moveLayer('a', belowLayerId: 'a'),
+      'move a below itself',
+    );
+    expect(await _layerIds(tester, controller), ids);
+
+    // A missing anchor fails before anything moves, so the layer stays.
+    await expectPlatformError(
+      tester,
+      controller.moveLayer('a', belowLayerId: 'no-such-layer'),
+      'move below unknown',
+      code: 'LAYER_NOT_FOUND_ERROR',
+    );
+    await expectPlatformError(
+      tester,
+      controller.moveLayer('no-such-layer'),
+      'move unknown',
+      code: 'LAYER_NOT_FOUND_ERROR',
+    );
+    expect(await _layerIds(tester, controller), ids);
+  });
+
   testWidgets('setLayerProperties on an unknown layer fails', (tester) async {
     final controller = await pumpMap(tester);
 

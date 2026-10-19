@@ -422,6 +422,24 @@ void main() {
       expect(calls.first.positionalArgs.first, 'layer-1');
     });
 
+    test('moveLayer delegates to platform', () async {
+      await controller.moveLayer('layer-1', belowLayerId: 'layer-2');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], 'layer-2');
+    });
+
+    test('moveLayer delegates to platform without belowLayerId', () async {
+      await controller.moveLayer('layer-1');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], isNull);
+    });
+
     test('setLayerVisibility delegates to platform', () async {
       await controller.setLayerVisibility('layer-1', false);
 

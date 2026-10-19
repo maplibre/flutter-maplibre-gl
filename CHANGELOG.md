@@ -31,6 +31,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
+* **Android**: add `com.google.android.gms:play-services-location` 21.0.0 or later to keep the fused provider for high accuracy; without it the plugin uses GPS only, which may not get a fix indoors (#1091).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -40,6 +41,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Web**: `SymbolLayerProperties.symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map. Android and iOS ignore them (#1084).
 * `Expressions.semiliteral` builds an array whose elements are expressions, for properties such as `textOffset`. MapLibre Android 13.7 and iOS 6.31 support it, though the style spec does not list them yet (#1084).
 * `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so a symbol whose data just changed no longer flickers (#1056).
+* `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
 
@@ -48,6 +50,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
+* **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin (#1091).
 
 ### Fixed
 * Layer filters now behave the same on Android, iOS and web (#1055):
@@ -75,6 +78,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
+* **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `UpdateMetadataError` for an unknown id like Android (#1087).
+* **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list, and the other offline calls no longer miss a stored region then (#1087).
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 
 ### Docs
