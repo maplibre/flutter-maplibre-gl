@@ -8,12 +8,6 @@ class TouchZoomRotateHandler
   ///  @returns {boolean} `true` if the "pinch to rotate and zoom" interaction is enabled.
   bool isEnabled() => jsObject.isEnabled();
 
-  ///  Returns a Boolean indicating whether a two finger zoom or rotate is in
-  ///  progress.
-  ///
-  ///  @returns {boolean} `true` if the interaction is active.
-  bool isActive() => jsObject.isActive();
-
   ///  Enables the "pinch to rotate and zoom" interaction.
   ///
   ///  @param {Object} [options]

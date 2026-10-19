@@ -17,12 +17,6 @@ extension TouchZoomRotateHandlerJsImplExtension
   ///  @returns {boolean} `true` if the "pinch to rotate and zoom" interaction is enabled.
   external bool isEnabled();
 
-  ///  Returns a Boolean indicating whether a two finger zoom or rotate is in
-  ///  progress.
-  ///
-  ///  @returns {boolean} `true` if the interaction is active.
-  external bool isActive();
-
   ///  Enables the "pinch to rotate and zoom" interaction.
   ///
   ///  @param {Object} [options]

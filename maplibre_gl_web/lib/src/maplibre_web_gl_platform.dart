@@ -58,6 +58,9 @@ class MapLibreMapController extends MapLibrePlatform
   /// still running.
   Completer<bool>? _pendingCameraAnimation;
 
+  /// Numbers each [_runCameraAnimation] call, to tell its events apart.
+  int _cameraAnimationCount = 0;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -406,14 +409,14 @@ class MapLibreMapController extends MapLibrePlatform
     // true once the camera is on target, false if something cuts it short,
     // as on Android.
     return _runCameraAnimation(
-      () => _map.flyTo({
+      (eventData) => _map.flyTo({
         if (around != null) 'around': around.jsObject,
         if (bearing != null) 'bearing': bearing,
         if (center != null) 'center': center.jsObject,
         if (pitch != null) 'pitch': pitch,
         if (zoom != null) 'zoom': zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
-      }),
+      }, eventData),
     );
   }
 
@@ -426,33 +429,81 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   /// Starts the camera animation [start] begins and completes when it ends:
-  /// true once the camera arrived, false when another camera call, a
-  /// gesture or [dispose] stops it first.
-  Future<bool> _runCameraAnimation(void Function() start) {
+  /// true once the camera arrived, false when anything else stops it first,
+  /// as on Android. [start] must pass the event data it gets to
+  /// `easeTo` or `flyTo`.
+  Future<bool> _runCameraAnimation(
+    void Function(Map<String, Object> eventData) start,
+  ) {
     // An animation still running is cut short by this one, which Android
     // reports as a cancel. Stopping it first also fires its moveend now,
-    // before the listener below exists, so that moveend cannot complete this
+    // before the listeners below exist, so that moveend cannot complete this
     // call.
     _cancelCameraAnimation();
     _map.stop();
 
+    final id = ++_cameraAnimationCount;
+    // maplibre-gl-js copies the event data onto every move and moveend this
+    // animation fires, which tells them apart from the moveend that
+    // setMinZoom, setMaxZoom or a gesture fire while it keeps running.
+    bool isThisAnimation(Event e) =>
+        (e.jsObject as JSObject)
+            .getProperty<JSNumber?>(_cameraAnimationKey.toJS)
+            ?.toDartInt ==
+        id;
+
+    // maplibre-gl-js ends an animation with the same moveend whether it ran
+    // its course or something stopped it (Camera._stop runs _afterEase in
+    // both cases), and many interruptions leave no handler active: the
+    // keyboard, double click and NavigationControl start an easeTo of their
+    // own, and the handler manager calls stop(true) before any of them. What
+    // differs is when it fires. On arrival, Camera._renderFrameCallback
+    // applies the last frame, which fires a move, and calls stop() right
+    // away; with no duration, Camera._ease does the same synchronously. An
+    // interruption runs later: from an input event, a timer, a geolocation
+    // update or a call of the app, all in a task of their own, or from a
+    // move listener registered before the one below, which runs before it
+    // flags the frame. So the moveend reports arrival only when this
+    // animation's move ran in the same synchronous stretch, which a
+    // microtask closes.
+    var onLastFrame = false;
     final arrival = Completer<bool>();
     _pendingCameraAnimation = arrival;
-    late final Subscription subscription;
-    subscription = _map.on('moveend', (_) {
-      subscription.unsubscribe();
-      // maplibre-gl-js ends an animation the same way whether it ran its
-      // course or a gesture stopped it. Only in the second case is a gesture
-      // handler active while the moveend fires.
-      if (!arrival.isCompleted) arrival.complete(!_isGestureActive());
+    late final Subscription moves;
+    late final Subscription end;
+    void detach() {
+      moves.unsubscribe();
+      end.unsubscribe();
       if (identical(_pendingCameraAnimation, arrival)) {
         _pendingCameraAnimation = null;
       }
+    }
+
+    moves = _map.on('move', (Event e) {
+      if (!isThisAnimation(e)) return;
+      onLastFrame = true;
+      scheduleMicrotask(() => onLastFrame = false);
+    });
+    end = _map.on('moveend', (Event e) {
+      if (!isThisAnimation(e)) return;
+      detach();
+      if (!arrival.isCompleted) arrival.complete(onLastFrame);
     });
 
-    start();
+    try {
+      start({_cameraAnimationKey: id});
+    } catch (_) {
+      // No moveend is coming: drop the listeners and the pending call, so
+      // the next camera call does not answer this one.
+      detach();
+      if (!arrival.isCompleted) arrival.complete(false);
+      rethrow;
+    }
     return arrival.future;
   }
+
+  /// The event data key [_runCameraAnimation] marks its events with.
+  static const _cameraAnimationKey = 'flutterMapLibreCameraAnimation';
 
   /// Completes the camera animation still running, if any, with false. Call
   /// it before anything that moves the camera, since maplibre-gl-js stops a
@@ -462,15 +513,6 @@ class MapLibreMapController extends MapLibrePlatform
     _pendingCameraAnimation = null;
     if (pending != null && !pending.isCompleted) pending.complete(false);
   }
-
-  /// Whether the user is panning, zooming or rotating the map right now.
-  bool _isGestureActive() =>
-      _map.dragPan.isActive() ||
-      _map.scrollZoom.isActive() ||
-      _map.boxZoom.isActive() ||
-      _map.dragRotate.isActive() ||
-      _map.doubleClickZoom.isActive() ||
-      _map.touchZoomRotate.isActive();
 
   @override
   Future<void> updateMyLocationTrackingMode(
@@ -663,7 +705,7 @@ class MapLibreMapController extends MapLibrePlatform
 
     // true once the camera is on target, as on Android and iOS.
     return _runCameraAnimation(
-      () => _map.easeTo({
+      (eventData) => _map.easeTo({
         if (around != null) 'around': around.jsObject,
         if (bearing != null) 'bearing': bearing,
         if (center != null) 'center': center.jsObject,
@@ -671,7 +713,7 @@ class MapLibreMapController extends MapLibrePlatform
         if (zoom != null) 'zoom': zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
         if (easing != null) 'easing': easing,
-      }),
+      }, eventData),
     );
   }
 
