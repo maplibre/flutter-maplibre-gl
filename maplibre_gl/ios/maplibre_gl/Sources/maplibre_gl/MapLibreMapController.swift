@@ -117,14 +117,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let styleString = args["styleString"] as? String
         {
             if Self.styleStringIsJSON(styleString) {
-                return MLNMapView(frame: frame, styleJSON: styleString)
+                return LocationPuckMapView(frame: frame, styleJSON: styleString)
             }
 
             if let url = Self.styleStringAsURL(
                 styleString,
                 registrar: registrar
             ) {
-                return MLNMapView(frame: frame, styleURL: url)
+                return LocationPuckMapView(frame: frame, styleURL: url)
             }
         }
 
@@ -136,7 +136,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             """
         )
         // https://github.com/maplibre/maplibre-native/issues/709
-        return MLNMapView(frame: frame)
+        return LocationPuckMapView(frame: frame)
     }
 
     init(
@@ -167,6 +167,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             .setMethodCallHandler { [weak self] in self?.onMethodCall(methodCall: $0, result: $1) }
 
         mapView.delegate = self
+        (mapView as? LocationPuckMapView)?.onTintColorDidChange = { [weak self] in
+            self?.applyLocationPuckTint()
+        }
 
         let singleTap = UITapGestureRecognizer(
             target: self,

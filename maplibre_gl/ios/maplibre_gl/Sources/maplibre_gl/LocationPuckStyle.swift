@@ -8,7 +8,7 @@ import UIKit
 /// `mapView(styleForDefaultUserLocationAnnotationView:)`, but takes the
 /// accuracy circle from its own tint color, and only recolors itself when that
 /// tint is set. So the controller hands MapLibre `annotationViewStyle` and also
-/// sets `viewTintColor` on the puck view after the SDK redraws it.
+/// sets `viewTintColor` on the puck view after the SDK redraws or retints it.
 struct LocationPuckStyle: Equatable {
     var fillColor: UIColor?
     var bearingColor: UIColor?
@@ -67,5 +67,18 @@ struct LocationPuckStyle: Equatable {
         }
         guard accuracyCircleEnabled else { return .clear }
         return accuracyColor ?? defaultTint
+    }
+}
+
+/// The map view the plugin creates. MLNMapView hands its own tint to the puck
+/// view whenever its tint changes, for example when a sheet dims the window,
+/// which undoes the accuracy circle color. This reports those changes so the
+/// controller can apply the puck tint again.
+final class LocationPuckMapView: MLNMapView {
+    var onTintColorDidChange: (() -> Void)?
+
+    override func tintColorDidChange() {
+        super.tintColorDidChange()
+        onTintColorDidChange?()
     }
 }
