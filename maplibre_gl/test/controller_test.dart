@@ -878,16 +878,19 @@ void main() {
         platform.onAddGeoJsonSource = null;
       });
 
-      test('a call that fails because the map is gone is not an error', () async {
-        // The native side unregisters the channel on dispose, so the pending
-        // call fails with MissingPluginException. An unhandled error here
-        // fails the test.
-        controller.dispose();
-        release.completeError(MissingPluginException('map disposed'));
-        await pumpEventQueue();
+      test(
+        'a call that fails because the map is gone is not an error',
+        () async {
+          // The native side unregisters the channel on dispose, so the pending
+          // call fails with MissingPluginException. An unhandled error here
+          // fails the test.
+          controller.dispose();
+          release.completeError(MissingPluginException('map disposed'));
+          await pumpEventQueue();
 
-        expect(styleLoadedCalls, 0);
-      });
+          expect(styleLoadedCalls, 0);
+        },
+      );
 
       test('nothing more is sent once the pending call returns', () async {
         controller.dispose();
