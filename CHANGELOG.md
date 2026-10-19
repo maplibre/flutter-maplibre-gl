@@ -32,9 +32,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **iOS**: `CameraUpdate.tiltTo` keeps the zoom like on Android and web, instead of changing it along with the pitch (#1090).
-* **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read. Before, Android threw a generic `error` and iOS never completed or returned `false` (#1090).
+* **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read (#1090).
 * **iOS**: `CameraUpdate.newLatLngBounds` with padding moves the center so the bounds sit in the middle of the padded area, as on Android and web, instead of only zooming out. This holds for `moveCamera`, `animateCamera` and `easeCamera` alike (#1090).
-* **Android**: the padding of `CameraUpdate.newLatLngBounds` applies to that camera move only, as on iOS and web. It no longer replaces the padding set with `updateContentInsets`, so `cameraPosition.target` stays the center of that area and later fits keep inside it (#1090).
+* **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
+* **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -77,7 +78,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
-* **iOS**: `moveCamera`, `animateCamera`, `toScreenLocation`, `toScreenLocationBatch`, `toLatLng` and `getMetersPerPixelAtLatitude` throw `INVALID_ARGUMENT` for arguments they cannot read instead of never completing (#1090).
+* **iOS**: `toScreenLocation`, `toScreenLocationBatch`, `toLatLng` and `getMetersPerPixelAtLatitude` throw `INVALID_ARGUMENT` for arguments they cannot read instead of never completing (#1090).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
