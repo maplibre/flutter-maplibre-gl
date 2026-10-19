@@ -226,6 +226,8 @@ final class MapLibreMapController
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private LocationPuckStyle myLocationStyle = LocationPuckStyle.DEFAULT;
+  /** Id prefix of the layers the MapLibre location component adds to the style. */
+  private static final String LOCATION_COMPONENT_LAYER_PREFIX = "mapbox-location-";
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
@@ -702,6 +704,22 @@ final class MapLibreMapController
     return null;
   }
 
+  /**
+   * The topmost style layer that is not one of the location component's own layers. applyStyle
+   * removes those layers before adding them back above this one, so pointing it at one of them
+   * fails with "Could not find layer". Before the component has added its layers, or when they
+   * are not on top, this is the last layer of the style.
+   */
+  String getTopLayerBelowLocationComponent(Style style) {
+    if (style == null || !style.isFullyLoaded()) return null;
+    final List<Layer> layers = style.getLayers();
+    for (int i = layers.size() - 1; i >= 0; i--) {
+      final String id = layers.get(i).getId();
+      if (!id.startsWith(LOCATION_COMPONENT_LAYER_PREFIX)) return id;
+    }
+    return null;
+  }
+
   /// only update if the last layer is not the mapbox-location-bearing-layer
   boolean locationComponentRequiresUpdate() {
     final String lastLayerId = getLastLayerOnStyle(style);
@@ -714,7 +732,7 @@ final class MapLibreMapController
     optionsBuilder.trackingGesturesManagement(true);
     myLocationStyle.applyTo(optionsBuilder);
 
-    final String lastLayerId = getLastLayerOnStyle(style);
+    final String lastLayerId = getTopLayerBelowLocationComponent(style);
     if (lastLayerId != null) {
       optionsBuilder.layerAbove(lastLayerId);
     }
