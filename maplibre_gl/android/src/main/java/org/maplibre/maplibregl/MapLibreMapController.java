@@ -1929,6 +1929,7 @@ final class MapLibreMapController
           mapViewResumed = false;
           stopListeningForLocationUpdates();
         }
+        stopLocationComponentWhileUserPaused();
         result.success(null);
         break;
       case "map#resume":
@@ -1940,6 +1941,9 @@ final class MapLibreMapController
             && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
           mapView.onResume();
           mapViewResumed = true;
+          if (locationComponent != null && mapViewStarted) {
+            locationComponent.onStart();
+          }
           if (myLocationEnabled) {
             startListeningForLocationUpdates();
           }
@@ -4095,6 +4099,8 @@ final class MapLibreMapController
     }
     mapView.onStart();
     mapViewStarted = true;
+    // MapView.onStart starts the location component's engine again.
+    stopLocationComponentWhileUserPaused();
   }
 
   @Override
@@ -4512,6 +4518,18 @@ final class MapLibreMapController
 
     if (locationComponent != null) {
       locationComponent.setLocationComponentEnabled(myLocationEnabled);
+    }
+    stopLocationComponentWhileUserPaused();
+  }
+
+  /**
+   * The location component runs its own location engine from MapView.onStart to onStop, so
+   * pausing the MapView alone leaves the GPS on. While Dart has paused the map, stop the
+   * component as the activity's onStop would; map#resume starts it again (#1094).
+   */
+  private void stopLocationComponentWhileUserPaused() {
+    if (userPaused && locationComponent != null) {
+      locationComponent.onStop();
     }
   }
 
