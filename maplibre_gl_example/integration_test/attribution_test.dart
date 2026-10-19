@@ -5,6 +5,8 @@
 // web. Whether a button is drawn cannot be read back through the plugin, so
 // this checks what can be: the option is accepted at creation and as an
 // update on every platform, together with a position, without an error.
+// On web the control is in the DOM, and attribution_web_test.dart checks it
+// there.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
