@@ -1177,14 +1177,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let layerId = arguments["layerId"] as? String else { return }
             guard let properties = arguments["properties"] as? [String: Any] else { return }
             let belowLayerId = arguments["belowLayerId"] as? String
+            let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
+            let filter = arguments["filter"] as? String
             let addResult = addHeatmapLayer(
                 sourceId: sourceId,
                 layerId: layerId,
                 belowLayerId: belowLayerId,
+                sourceLayerIdentifier: sourceLayer,
                 minimumZoomLevel: minzoom,
                 maximumZoomLevel: maxzoom,
+                filter: filter,
                 properties: properties
             )
             switch addResult {
@@ -2709,8 +2713,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         sourceId: String,
         layerId: String,
         belowLayerId: String?,
+        sourceLayerIdentifier: String?,
         minimumZoomLevel: Double?,
         maximumZoomLevel: Double?,
+        filter: String?,
         properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         switch validateBeforeLayerAdd(sourceId: sourceId, layerId: layerId) {
@@ -2722,11 +2728,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 heatmapLayer: layer,
                 properties: properties
             )
+            if let sourceLayerIdentifier = sourceLayerIdentifier {
+                layer.sourceLayerIdentifier = sourceLayerIdentifier
+            }
             if let minimumZoomLevel = minimumZoomLevel {
                 layer.minimumZoomLevel = Float(minimumZoomLevel)
             }
             if let maximumZoomLevel = maximumZoomLevel {
                 layer.maximumZoomLevel = Float(maximumZoomLevel)
+            }
+            if let filter = filter {
+                if case let .failure(error) = setFilter(layer, filter) {
+                    return .failure(error)
+                }
             }
             if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
                 style.insertLayer(layer, below: belowLayer)

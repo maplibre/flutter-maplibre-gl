@@ -2163,6 +2163,7 @@ class MapLibreMapController extends MapLibrePlatform
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     return _addLayer(
       sourceId,
@@ -2173,6 +2174,7 @@ class MapLibreMapController extends MapLibrePlatform
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
       enableInteraction: false,
     );
   }

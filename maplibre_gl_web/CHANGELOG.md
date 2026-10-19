@@ -13,6 +13,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
 * `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 * `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
@@ -35,6 +36,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * Changing another map option no longer moves the attribution control back to the bottom right (#1092).
 * Removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
 * Removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

@@ -1694,6 +1694,7 @@ final class MapLibreMapController
   private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
+      String sourceLayer,
       Float minZoom,
       Float maxZoom,
       String belowLayerId,
@@ -1705,11 +1706,17 @@ final class MapLibreMapController
     }
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
+    if (sourceLayer != null) {
+      layer.setSourceLayer(sourceLayer);
+    }
     if (minZoom != null) {
       layer.setMinZoom(minZoom);
     }
     if (maxZoom != null) {
       layer.setMaxZoom(maxZoom);
+    }
+    if (filter != null) {
+      layer.setFilter(filter);
     }
     if (belowLayerId != null) {
       style.addLayerBelow(layer, belowLayerId);
@@ -3026,18 +3033,24 @@ final class MapLibreMapController
           final String sourceId = call.argument("sourceId");
           final String layerId = call.argument("layerId");
           final String belowLayerId = call.argument("belowLayerId");
+          final String sourceLayer = call.argument("sourceLayer");
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
+          final String filter = call.argument("filter");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
+
+          Expression filterExpression = parseFilter(filter);
+
           if (!addHeatmapLayer(
               layerId,
               sourceId,
+              sourceLayer,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null)) {
+              filterExpression)) {
             result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
             break;
           }

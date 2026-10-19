@@ -207,6 +207,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
+      final styleLoad = ++_styleLoadCount;
       // Dispose old managers before re-creating them for the new style.
       // This prevents stale in-flight method channel calls from racing
       // with a new style that has cleared the native Style reference.
@@ -228,35 +229,62 @@ class MapLibreMapController extends ChangeNotifier {
       symbolManager = null;
 
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (final type in annotationOrder.toSet()) {
-        final enableInteraction = interactionEnabled.contains(type);
-        switch (type) {
-          case AnnotationType.fill:
-            fillManager = FillManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await fillManager!.initialize();
-          case AnnotationType.line:
-            lineManager = LineManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await lineManager!.initialize();
-          case AnnotationType.circle:
-            circleManager = CircleManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await circleManager!.initialize();
-          case AnnotationType.symbol:
-            symbolManager = SymbolManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await symbolManager!.initialize();
+      try {
+        for (final type in annotationOrder.toSet()) {
+          // A newer style load took over while this one was awaiting, and it
+          // sets the managers up for its own style.
+          if (styleLoad != _styleLoadCount) return;
+          final enableInteraction = interactionEnabled.contains(type);
+          switch (type) {
+            case AnnotationType.fill:
+              fillManager = FillManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await fillManager!.initialize();
+            case AnnotationType.line:
+              lineManager = LineManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await lineManager!.initialize();
+            case AnnotationType.circle:
+              circleManager = CircleManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await circleManager!.initialize();
+            case AnnotationType.symbol:
+              symbolManager = SymbolManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await symbolManager!.initialize();
+          }
         }
+      } on PlatformException catch (error) {
+        // Nobody awaits this listener, so whatever it throws is an unhandled
+        // error. When the style this run was set up for is gone, because it
+        // was replaced or the native map does not hold it (yet), that error
+        // says nothing the app can act on: the next style load disposes the
+        // half-built managers and sets them up again. Anything else is real.
+        final superseded = styleLoad != _styleLoadCount;
+        if (superseded) return;
+        if (!_isStyleNotReady(error)) rethrow;
+        // Nothing retries until the next style load, so this load skips
+        // onStyleLoadedCallback. Say so in debug builds.
+        if (kDebugMode) {
+          debugPrint(
+            'MapLibre: annotation setup skipped, the style is not ready '
+            '(${error.code}). The next style load sets it up again and calls '
+            'onStyleLoadedCallback.',
+          );
+        }
+        return;
       }
+      // The last manager's initialize() may have been the await that a newer
+      // style load overtook; that load calls onStyleLoadedCallback itself.
+      if (styleLoad != _styleLoadCount) return;
       onStyleLoadedCallback?.call();
     });
 
@@ -299,6 +327,15 @@ class MapLibreMapController extends ChangeNotifier {
         symbolManager?.byId(formattedId) ??
         circleManager?.byId(formattedId);
   }
+
+  /// Counts style loads, so the annotation manager setup for one style can
+  /// tell that a newer style load has taken over.
+  int _styleLoadCount = 0;
+
+  /// The errors Android, iOS and web answer with when a call needs a style
+  /// that the native map does not hold at that moment.
+  static bool _isStyleNotReady(PlatformException error) =>
+      error.code == 'STYLE_NOT_READY' || error.code == 'styleNotFound';
 
   FillManager? fillManager;
   LineManager? lineManager;
@@ -1049,6 +1086,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use.
@@ -1060,6 +1101,7 @@ class MapLibreMapController extends ChangeNotifier {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
@@ -1069,6 +1111,7 @@ class MapLibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
     );
   }
 
@@ -2274,6 +2317,8 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
+        enableInteraction: enableInteraction,
       );
     } else if (properties is LineLayerProperties) {
       await addLineLayer(
@@ -2346,6 +2391,7 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
       );
     } else if (properties is ColorReliefLayerProperties) {
       if (filter != null) {

@@ -2,8 +2,8 @@
 //
 // Covers adding and removing sources (addSource, addGeoJsonSource,
 // removeSource), every layer type that works offline (fill, line, circle,
-// symbol, background, heatmap, fill-extrusion), the generic addLayer,
-// belowLayerId ordering, reading layers and sources back
+// symbol, background, heatmap, fill-extrusion), the generic addLayer and the
+// filter it carries, belowLayerId ordering, reading layers and sources back
 // (getLayerIds, getSourceIds, getLayerProperties, getSourceProperties),
 // setLayerProperties, layer visibility, setLayerZoomRange, and the edge cases
 // around unknown and duplicate ids.
@@ -234,6 +234,54 @@ void main() {
     // they were added.
     final positions = [for (final id in layers.keys) ids.indexOf(id)];
     expect(positions, orderedEquals([...positions]..sort()));
+  });
+
+  testWidgets('addLayer applies the filter of fill extrusion and heatmap '
+      'layers (#360)', (tester) async {
+    final controller = await _pumpMapWithSource(tester);
+
+    const filter = [
+      '==',
+      ['get', 'n'],
+      2,
+    ];
+    const layers = <String, LayerProperties>{
+      'f-extrusion': FillExtrusionLayerProperties(fillExtrusionHeight: 100),
+      'f-heatmap': HeatmapLayerProperties(heatmapRadius: 20),
+    };
+    for (final entry in layers.entries) {
+      await pumpUntil(
+        tester,
+        controller.addLayer(_sourceId, entry.key, entry.value, filter: filter),
+        'addLayer ${entry.key}',
+      );
+      final applied = await pumpUntil(
+        tester,
+        controller.getLayerFilter(entry.key),
+        'getLayerFilter ${entry.key}',
+      );
+      expect(applied, filter, reason: '${entry.key} should keep its filter');
+    }
+
+    // addHeatmapLayer takes the filter directly as well.
+    await pumpUntil(
+      tester,
+      controller.addHeatmapLayer(
+        _sourceId,
+        'direct-heatmap',
+        const HeatmapLayerProperties(heatmapRadius: 20),
+        filter: filter,
+      ),
+      'addHeatmapLayer',
+    );
+    expect(
+      await pumpUntil(
+        tester,
+        controller.getLayerFilter('direct-heatmap'),
+        'getLayerFilter direct-heatmap',
+      ),
+      filter,
+    );
   });
 
   testWidgets('belowLayerId inserts the layer under its anchor', (

@@ -131,6 +131,12 @@ class MapLibreMap extends StatefulWidget {
 
   /// Called when the map style has been successfully loaded and the annotation managers have been enabled.
   /// Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called.
+  ///
+  /// When a newer style load starts before the annotation managers are set up
+  /// for the current one, only the newer load calls it. When the native map
+  /// answers the setup with a style-not-ready error, the callback is skipped
+  /// for that load (a debug build logs it) and the next style load sets the
+  /// managers up and calls it.
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
@@ -578,6 +584,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    // The widget was disposed before its platform view was created, and
+    // dispose() has already torn the platform down. Wiring it up now would
+    // leave a channel handler and controller listeners nobody ever removes.
+    if (_disposed) return;
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,

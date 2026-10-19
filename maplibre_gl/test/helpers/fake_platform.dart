@@ -58,6 +58,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   /// Whether [buildView] should automatically trigger [onPlatformViewCreated].
   bool triggerPlatformViewCreated = false;
 
+  /// The last onPlatformViewCreated callback passed to [buildView], so a test
+  /// can create the platform view later than the widget asked for it.
+  OnPlatformViewCreatedCallback? lastOnPlatformViewCreated;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -65,6 +69,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     lastCreationParams = creationParams;
+    lastOnPlatformViewCreated = onPlatformViewCreated;
     calls.add(PlatformCall('buildView', [creationParams]));
     if (triggerPlatformViewCreated) {
       onPlatformViewCreated(0);
@@ -417,6 +422,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async => 1.0;
 
+  /// Runs at the end of [addGeoJsonSource], so a test can make it fail or
+  /// hold it back.
+  Future<void> Function(String sourceId)? onAddGeoJsonSource;
+
   @override
   Future<void> addGeoJsonSource(
     String sourceId,
@@ -430,6 +439,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
         {'promoteId': promoteId},
       ),
     );
+    await onAddGeoJsonSource?.call(sourceId);
   }
 
   @override
@@ -572,7 +582,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(
-      PlatformCall('addFillExtrusionLayer', [sourceId, layerId, properties]),
+      PlatformCall(
+        'addFillExtrusionLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter, 'enableInteraction': enableInteraction},
+      ),
     );
   }
 
@@ -638,8 +652,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
-    calls.add(PlatformCall('addHeatmapLayer', [sourceId, layerId, properties]));
+    calls.add(
+      PlatformCall(
+        'addHeatmapLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter},
+      ),
+    );
   }
 
   @override

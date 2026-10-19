@@ -38,6 +38,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `CameraUpdate.newLatLngBounds` with padding moves the center so the bounds sit in the middle of the padded area, as on Android and web, instead of only zooming out. This holds for `moveCamera`, `animateCamera` and `easeCamera` alike (#1090).
 * **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
 * **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -90,6 +91,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Web**: removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
 * **Web**: removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
 * **Android, iOS**: `toScreenLocation`, `toScreenLocationBatch`, `toLatLng` and `getMetersPerPixelAtLatitude` throw `INVALID_ARGUMENT` for arguments they cannot read, instead of never completing on iOS or failing with a generic error on Android (#1090).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
+* **Android, iOS**: `addHeatmapLayer` applies `sourceLayer` instead of ignoring it (#1088).
+* Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
+* The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
