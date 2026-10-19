@@ -50,6 +50,7 @@ class MapLibreMapController extends MapLibrePlatform
   int _manualTrackingMode = 0;
   ManualLocationPuck? _manualPuck;
   ManualLocationUpdate? _lastManualFix;
+  LocationPuckStyler? _locationPuckStyler;
 
   String? _navigationControlPosition;
   NavigationControl? _navigationControl;
@@ -1568,6 +1569,13 @@ class MapLibreMapController extends MapLibrePlatform
       _removeGeolocateControl();
       _removeManualPuck();
     }
+  }
+
+  @override
+  void setMyLocationStyle(Map<String, dynamic> style) {
+    // Plain CSS on the map container, so it styles the puck whichever source
+    // draws it, and whether it exists yet or not.
+    (_locationPuckStyler ??= LocationPuckStyler(_mapElement)).apply(style);
   }
 
   @override

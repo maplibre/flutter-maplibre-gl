@@ -225,6 +225,7 @@ final class MapLibreMapController
   private boolean manualLocationSource = false;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
+  private LocationPuckStyle myLocationStyle = LocationPuckStyle.DEFAULT;
   private LocationEngineFactory myLocationEngineFactory = new LocationEngineFactory();
   private boolean disposed = false;
   private boolean dragEnabled = true;
@@ -711,6 +712,7 @@ final class MapLibreMapController
     final LocationComponentOptions.Builder optionsBuilder =
         LocationComponentOptions.builder(context);
     optionsBuilder.trackingGesturesManagement(true);
+    myLocationStyle.applyTo(optionsBuilder);
 
     final String lastLayerId = getLastLayerOnStyle(style);
     if (lastLayerId != null) {
@@ -4293,6 +4295,16 @@ final class MapLibreMapController
     this.myLocationTrackingMode = myLocationTrackingMode;
     if (mapLibreMap != null && locationComponent != null) {
       updateMyLocationTrackingMode();
+    }
+  }
+
+  @Override
+  public void setMyLocationStyle(@NonNull LocationPuckStyle puckStyle) {
+    myLocationStyle = puckStyle;
+    if (locationComponent != null && locationComponent.isLocationComponentActivated()) {
+      // Restyle in place: buildLocationComponentOptions reads the new colors and
+      // keeps the puck above the topmost layer, as when a layer is added.
+      locationComponent.applyStyle(buildLocationComponentOptions(style));
     }
   }
 

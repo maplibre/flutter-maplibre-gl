@@ -84,6 +84,7 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         MapLibrePlatform,
         MinMaxZoomPreference,
         MyLocationRenderMode,
+        MyLocationStyle,
         MyLocationTrackingMode,
         OnPlatformViewCreatedCallback,
         PanInertia,

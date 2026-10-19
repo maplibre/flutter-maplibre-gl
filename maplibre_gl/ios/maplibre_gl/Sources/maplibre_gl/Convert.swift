@@ -71,6 +71,9 @@ class Convert {
         {
             delegate.setMyLocationRenderMode(myLocationRenderMode: renderMode)
         }
+        if let myLocationStyle = options["myLocationStyle"] as? [String: Any] {
+            delegate.setMyLocationStyle(style: LocationPuckStyle(json: myLocationStyle))
+        }
         if let logoEnabled = options["logoEnabled"] as? Bool {
             delegate.setLogoEnabled(logoEnabled: logoEnabled)
         }
