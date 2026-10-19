@@ -679,6 +679,14 @@ void main() {
     ids = await _layerIds(tester, controller);
     expect(ids.last, 'c');
 
+    // A layer cannot go below itself: the call succeeds and nothing moves.
+    await pumpUntil(
+      tester,
+      controller.moveLayer('a', belowLayerId: 'a'),
+      'move a below itself',
+    );
+    expect(await _layerIds(tester, controller), ids);
+
     // A missing anchor fails before anything moves, so the layer stays.
     await expectPlatformError(
       tester,
