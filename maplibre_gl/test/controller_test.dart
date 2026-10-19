@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter/widgets.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -850,6 +852,54 @@ void main() {
       controller.dispose();
 
       expect(controller.isDisposed, isTrue);
+    });
+
+    group('while the style load sets up annotations', () {
+      late int styleLoadedCalls;
+      late Completer<void> release;
+
+      setUp(() async {
+        styleLoadedCalls = 0;
+        // A platform of its own: the controller from the outer setUp would
+        // answer the style load too.
+        platform = FakeMapLibrePlatform();
+        controller = MapLibreMapController(
+          maplibrePlatform: platform,
+          initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+          annotationOrder: AnnotationType.values,
+          annotationConsumeTapEvents: AnnotationType.values,
+          onStyleLoadedCallback: () => styleLoadedCalls++,
+        );
+        release = Completer<void>();
+        platform.onAddGeoJsonSource = (_) => release.future;
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        platform.reset();
+        platform.onAddGeoJsonSource = null;
+      });
+
+      test(
+        'a call that fails because the map is gone is not an error',
+        () async {
+          // The native side unregisters the channel on dispose, so the pending
+          // call fails with MissingPluginException. An unhandled error here
+          // fails the test.
+          controller.dispose();
+          release.completeError(MissingPluginException('map disposed'));
+          await pumpEventQueue();
+
+          expect(styleLoadedCalls, 0);
+        },
+      );
+
+      test('nothing more is sent once the pending call returns', () async {
+        controller.dispose();
+        release.complete();
+        await pumpEventQueue();
+
+        expect(platform.calls, isEmpty);
+        expect(styleLoadedCalls, 0);
+      });
     });
   });
 

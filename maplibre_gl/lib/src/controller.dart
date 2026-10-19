@@ -232,8 +232,8 @@ class MapLibreMapController extends ChangeNotifier {
       try {
         for (final type in annotationOrder.toSet()) {
           // A newer style load took over while this one was awaiting, and it
-          // sets the managers up for its own style.
-          if (styleLoad != _styleLoadCount) return;
+          // sets the managers up for its own style. Or the map is gone.
+          if (styleLoad != _styleLoadCount || isDisposed) return;
           final enableInteraction = interactionEnabled.contains(type);
           switch (type) {
             case AnnotationType.fill:
@@ -262,14 +262,20 @@ class MapLibreMapController extends ChangeNotifier {
               await symbolManager!.initialize();
           }
         }
+      } on MissingPluginException {
+        // Disposing the map unregisters its channel on the native side, so a
+        // call still on its way fails like this. Nothing is left to set up.
+        if (isDisposed) return;
+        rethrow;
       } on PlatformException catch (error) {
         // Nobody awaits this listener, so whatever it throws is an unhandled
         // error. When the style this run was set up for is gone, because it
-        // was replaced or the native map does not hold it (yet), that error
-        // says nothing the app can act on: the next style load disposes the
-        // half-built managers and sets them up again. Anything else is real.
+        // was replaced or the native map does not hold it (yet), or the map
+        // itself is gone, that error says nothing the app can act on: the
+        // next style load disposes the half-built managers and sets them up
+        // again. Anything else is real.
         final superseded = styleLoad != _styleLoadCount;
-        if (superseded) return;
+        if (superseded || isDisposed) return;
         if (!_isStyleNotReady(error)) rethrow;
         // Nothing retries until the next style load, so this load skips
         // onStyleLoadedCallback. Say so in debug builds.
@@ -284,7 +290,7 @@ class MapLibreMapController extends ChangeNotifier {
       }
       // The last manager's initialize() may have been the await that a newer
       // style load overtook; that load calls onStyleLoadedCallback itself.
-      if (styleLoad != _styleLoadCount) return;
+      if (styleLoad != _styleLoadCount || isDisposed) return;
       onStyleLoadedCallback?.call();
     });
 
