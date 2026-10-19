@@ -379,6 +379,52 @@ void main() {
       skip: skipIos,
     );
 
+    // Android rejects a zero duration and gives no promise for a move that
+    // goes nowhere, so these run on web only.
+    final skipNonWeb = testPlatform != TestPlatform.web;
+
+    testWidgets(
+      'an animateCamera with a zero duration completes with true',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        const target = CameraPosition(target: LatLng(12, -8), zoom: 4);
+
+        final result = await pumpUntil(
+          tester,
+          controller.animateCamera(
+            CameraUpdate.newCameraPosition(target),
+            duration: Duration.zero,
+          ),
+          'animateCamera with a zero duration',
+        );
+
+        expect(result, isTrue);
+        final camera = await _queryCamera(tester, controller);
+        expect(_isNear(camera, target), isTrue, reason: '$camera');
+      },
+      skip: skipNonWeb,
+    );
+
+    testWidgets(
+      'an animateCamera to where the camera already is completes with true',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        final here = await _queryCamera(tester, controller);
+
+        final result = await pumpUntil(
+          tester,
+          controller.animateCamera(
+            CameraUpdate.newCameraPosition(here),
+            duration: const Duration(milliseconds: 300),
+          ),
+          'animateCamera to the current camera',
+        );
+
+        expect(result, isTrue);
+      },
+      skip: skipNonWeb,
+    );
+
     testWidgets('easeCamera completes once the camera is on target', (
       tester,
     ) async {
