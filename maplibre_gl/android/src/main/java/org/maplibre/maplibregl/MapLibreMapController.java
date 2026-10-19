@@ -1927,6 +1927,7 @@ final class MapLibreMapController
         if (!disposed && mapView != null && mapViewResumed) {
           mapView.onPause();
           mapViewResumed = false;
+          stopListeningForLocationUpdates();
         }
         result.success(null);
         break;
@@ -1939,6 +1940,9 @@ final class MapLibreMapController
             && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
           mapView.onResume();
           mapViewResumed = true;
+          if (myLocationEnabled) {
+            startListeningForLocationUpdates();
+          }
         }
         result.success(null);
         break;
@@ -4131,6 +4135,10 @@ final class MapLibreMapController
     }
     mapView.onPause();
     mapViewResumed = false;
+    // The location component stops its own updates with the MapView, but not the listener that
+    // forwards positions to Dart: without this the GPS stays on in the background (#1094).
+    // onResume starts it again.
+    stopListeningForLocationUpdates();
   }
 
   @Override

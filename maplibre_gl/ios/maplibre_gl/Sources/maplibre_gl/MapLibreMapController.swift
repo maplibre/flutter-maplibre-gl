@@ -260,10 +260,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     @objc private func appDidEnterBackground() {
         isBackgroundPaused = true
         mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+        // Location updates stop in the background as on Android (#1094), whether
+        // or not the app has a location background mode for other reasons. The
+        // user-location annotation stays at its last position.
+        if myLocationEnabled && !manualLocationSource {
+            locationPulseTimer?.invalidate()
+            locationPulseTimer = nil
+            locationPulseWindowTimer?.invalidate()
+            locationPulseWindowTimer = nil
+            setLocationUpdatesActive(false)
+        }
     }
 
     @objc private func appWillEnterForeground() {
         isBackgroundPaused = false
+        if myLocationEnabled && !manualLocationSource {
+            restartLocationPulseIfNeeded()
+        }
         guard !pausedByDart else { return }
         mapView.preferredFramesPerSecond = userFps
     }
