@@ -1434,11 +1434,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setAttributionEnabled(bool enabled) {
-    // Sent with every map creation, after the position has put the control.
-    if (enabled == _attributionEnabled &&
-        enabled == (_attributionControl != null)) {
-      return;
-    }
+    // Sent with every map creation, before the position. The control is put
+    // by the position, or by the creation code when the options carry none.
+    if (enabled == _attributionEnabled) return;
     _attributionEnabled = enabled;
     _updateAttributionButton();
   }

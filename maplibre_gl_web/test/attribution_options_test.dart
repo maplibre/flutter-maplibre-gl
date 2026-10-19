@@ -29,7 +29,9 @@ void main() {
       'attributionEnabled': false,
       'attributionButtonPosition': AttributionButtonPosition.topLeft.index,
     }, sink);
-    expect(sink.calls, ['position topLeft', 'enabled false']);
+    // Enabled first: a map created hidden does not add the control and then
+    // remove it.
+    expect(sink.calls, ['enabled false', 'position topLeft']);
   });
 
   test('an update without attribution settings leaves them alone', () {
