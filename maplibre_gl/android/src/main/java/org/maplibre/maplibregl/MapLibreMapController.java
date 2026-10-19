@@ -478,7 +478,12 @@ final class MapLibreMapController
    * <p>State preserved across recreation:
    * <ul>
    *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
-   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}).</li>
+   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}). MapLibre keeps
+   *       the camera and its {@code UiSettings} there, so UI flags changed via
+   *       {@code map#update} after construction come back with it: compass, logo and
+   *       attribution visibility, gravity and margins, and the gesture toggles. The
+   *       attribution tint is not in it and the pan inertia only partly, so
+   *       {@link #onMapReady} re-applies both.</li>
    *   <li>Construction-time {@link MapLibreMapOptions} (UI flags, gestures, etc.).</li>
    *   <li>Controller fields like {@link #trackCameraPosition}, {@link #myLocationEnabled},
    *       {@link #myLocationTrackingMode}, {@link #myLocationRenderMode}, {@link #bounds}.</li>
@@ -490,8 +495,9 @@ final class MapLibreMapController
    *   <li>Sources / layers / images added at runtime via the method channel.</li>
    *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
    *       initial style).</li>
-   *   <li>Runtime tweaks to UI flags applied via {@code map#update} after
-   *       construction (compass, attribution, content insets, etc.).</li>
+   *   <li>Runtime tweaks applied via {@code map#update} after construction that
+   *       MapLibre does not keep in its state bundle, such as the min/max zoom
+   *       preference.</li>
    *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
    * </ul>
    */
