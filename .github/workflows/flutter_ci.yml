@@ -76,8 +76,10 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
+      # Only reports: format-all also rewrites the files, which would make the
+      # codegen check below fail on the same diff.
       - name: Check formatting
-        run: melos run format-all
+        run: melos exec -- dart format --output=none --set-exit-if-changed .
       - name: Static code analysis
         if: ${{ !cancelled() }}
         run: melos run analyze-all
@@ -185,34 +187,13 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      # A booted emulator snapshot is cached, so later runs skip the cold boot.
-      - name: Cache the emulator
-        uses: actions/cache@v6
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-34-google_apis-x86_64
-      - name: Create the emulator snapshot
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated the emulator snapshot."
       - name: Run integration tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           disable-animations: true
           working-directory: maplibre_gl_example
           script: flutter test integration_test/all_tests.dart -d emulator-5554
