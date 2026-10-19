@@ -60,7 +60,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin (#1091).
 
 ### Fixed
-* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#PR).
+* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#1103).
 * Layer filters now behave the same on Android, iOS and web (#1055):
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
   * `null` removes a filter. Before, it was ignored or threw.
