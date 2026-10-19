@@ -1086,11 +1086,7 @@ void main() {
         timeout: const Duration(seconds: 10),
       );
       expect(error, isA<PlatformException>());
-      // Android does not check these arguments yet, so the converter throws
-      // and the channel answers with its generic 'error' code.
-      if (testPlatform == TestPlatform.ios) {
-        expect((error! as PlatformException).code, 'INVALID_ARGUMENT');
-      }
+      expect((error! as PlatformException).code, 'INVALID_ARGUMENT');
     }, skip: testPlatform == TestPlatform.web);
   });
 }
