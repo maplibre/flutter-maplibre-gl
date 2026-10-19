@@ -1,5 +1,8 @@
 ## Unreleased
 
+### Actions needed
+* `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
+
 ### Added
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
 
