@@ -21,6 +21,7 @@
 //     --target=integration_test/style_layers_test.dart -d chrome
 import 'dart:convert';
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -441,6 +442,57 @@ void main() {
     );
     expect(styled!['minzoom'], 1);
     expect(styled['maxzoom'], 15);
+  });
+
+  testWidgets('setLayerZoomRange rejects a bad range before the style loads', (
+    tester,
+  ) async {
+    // onMapCreated runs before onStyleLoadedCallback, so calls made from it
+    // reach a platform whose style is usually still loading. A valid range
+    // sent alongside answers STYLE_NOT_READY then, or LAYER_NOT_FOUND_ERROR
+    // when the style was already in; the bad range must fail the same way
+    // either way.
+    late Future<Object?> badRange;
+    late Future<Object?> validRange;
+    Future<Object?> errorOf(Future<void> call) =>
+        call.then<Object?>((_) => null, onError: (Object e) => e);
+
+    await pumpMap(
+      tester,
+      builder:
+          (onMapCreated, onStyleLoaded) => MapLibreMap(
+            styleString: offlineStyle,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(0, 0),
+              zoom: 3,
+            ),
+            onMapCreated: (controller) {
+              badRange = errorOf(controller.setLayerZoomRange('x', 10, 2));
+              validRange = errorOf(controller.setLayerZoomRange('x', 2, 10));
+              onMapCreated(controller);
+            },
+            onStyleLoadedCallback: onStyleLoaded,
+          ),
+    );
+
+    final bad = await pumpUntil(tester, badRange, 'bad range');
+    expect(
+      bad,
+      isA<PlatformException>().having(
+        (e) => e.code,
+        'code',
+        'INVALID_ARGUMENT',
+      ),
+    );
+    final valid = await pumpUntil(tester, validRange, 'valid range');
+    expect(
+      valid,
+      isA<PlatformException>().having(
+        (e) => e.code,
+        'code',
+        anyOf('STYLE_NOT_READY', 'LAYER_NOT_FOUND_ERROR'),
+      ),
+    );
   });
 
   testWidgets('setLayerProperties round trips through getLayerProperties', (
