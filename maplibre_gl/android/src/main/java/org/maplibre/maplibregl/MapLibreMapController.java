@@ -4502,7 +4502,9 @@ final class MapLibreMapController
       enableLocationComponent(mapLibreMap.getStyle());
     }
 
-    if (myLocationEnabled) {
+    // Only while the MapView is resumed: paused from Dart or by the activity, onResume and
+    // map#resume start the listener when the map comes back (#1094).
+    if (myLocationEnabled && mapViewResumed) {
       startListeningForLocationUpdates();
     } else {
       stopListeningForLocationUpdates();
