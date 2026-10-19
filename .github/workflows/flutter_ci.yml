@@ -289,16 +289,15 @@ jobs:
       platform: ios
 
   # On main, build web in release mode and upload it so the docs deploy can
-  # reuse it (no second web build). Elsewhere integration-web already builds
-  # the web app, so this job is skipped.
+  # reuse it (no second web build). On PRs/other branches, a plain web build:
+  # the only release (dart2js) web compile a PR sees, since integration-web
+  # runs a debug build.
   # Also runs for docs-only changes on main, because the Pages bundle needs a
   # fresh web demo to ship alongside the rebuilt docs.
   build-web:
     name: "Build web"
     needs: changes
-    if: |
-      github.ref == 'refs/heads/main' &&
-      (needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true')
+    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: web
