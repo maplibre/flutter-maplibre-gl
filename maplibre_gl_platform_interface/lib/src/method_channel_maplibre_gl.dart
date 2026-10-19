@@ -1,7 +1,15 @@
 part of '../maplibre_gl_platform_interface.dart';
 
 class MapLibreMethodChannel extends MapLibrePlatform {
-  late MethodChannel _channel;
+  /// Set by [initPlatform]. A map widget can be disposed before its platform
+  /// view exists, so [dispose] has to cope with this never being set.
+  MethodChannel? _methodChannel;
+
+  MethodChannel get _channel =>
+      _methodChannel ??
+      (throw StateError(
+        'The map is not ready: its platform view has not been created yet.',
+      ));
 
   /// Backing field of `MapLibreMap.useHybridComposition`, which is the
   /// documented way to set this and explains what each value selects. Android
@@ -131,9 +139,10 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   Future<void> initPlatform(int id) async {
-    _channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
-    _channel.setMethodCallHandler(_handleMethodCall);
-    await _channel.invokeMethod('map#waitForMap');
+    final channel = MethodChannel('plugins.flutter.io/maplibre_gl_$id');
+    _methodChannel = channel;
+    channel.setMethodCallHandler(_handleMethodCall);
+    await channel.invokeMethod('map#waitForMap');
   }
 
   @override
@@ -753,6 +762,18 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    try {
+      return await _channel.invokeMethod('style#moveLayer', <String, Object>{
+        'layerId': layerId,
+        if (belowLayerId != null) 'belowLayerId': belowLayerId,
+      });
+    } on PlatformException catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     try {
       return await _channel.invokeMethod('style#setFilter', <String, Object>{
@@ -1113,7 +1134,7 @@ class MapLibreMethodChannel extends MapLibrePlatform {
 
   @override
   void dispose() {
-    _channel.setMethodCallHandler(null);
+    _methodChannel?.setMethodCallHandler(null);
     super.dispose();
   }
 
@@ -1235,13 +1256,16 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     await _channel.invokeMethod('heatmapLayer#add', <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
+      'sourceLayer': sourceLayer,
       'minzoom': minzoom,
       'maxzoom': maxzoom,
+      'filter': jsonEncode(filter),
       'properties': properties,
     });
   }
@@ -1376,6 +1400,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
     await _channel.invokeMethod('layer#setVisibility', <String, dynamic>{
       'layerId': layerId,
       'visible': visible,
+    });
+  }
+
+  @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    await _channel.invokeMethod('layer#setZoomRange', <String, dynamic>{
+      'layerId': layerId,
+      'minzoom': minzoom,
+      'maxzoom': maxzoom,
     });
   }
 

@@ -207,6 +207,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
+      final styleLoad = ++_styleLoadCount;
       // Dispose old managers before re-creating them for the new style.
       // This prevents stale in-flight method channel calls from racing
       // with a new style that has cleared the native Style reference.
@@ -228,35 +229,62 @@ class MapLibreMapController extends ChangeNotifier {
       symbolManager = null;
 
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (final type in annotationOrder.toSet()) {
-        final enableInteraction = interactionEnabled.contains(type);
-        switch (type) {
-          case AnnotationType.fill:
-            fillManager = FillManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await fillManager!.initialize();
-          case AnnotationType.line:
-            lineManager = LineManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await lineManager!.initialize();
-          case AnnotationType.circle:
-            circleManager = CircleManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await circleManager!.initialize();
-          case AnnotationType.symbol:
-            symbolManager = SymbolManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await symbolManager!.initialize();
+      try {
+        for (final type in annotationOrder.toSet()) {
+          // A newer style load took over while this one was awaiting, and it
+          // sets the managers up for its own style.
+          if (styleLoad != _styleLoadCount) return;
+          final enableInteraction = interactionEnabled.contains(type);
+          switch (type) {
+            case AnnotationType.fill:
+              fillManager = FillManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await fillManager!.initialize();
+            case AnnotationType.line:
+              lineManager = LineManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await lineManager!.initialize();
+            case AnnotationType.circle:
+              circleManager = CircleManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await circleManager!.initialize();
+            case AnnotationType.symbol:
+              symbolManager = SymbolManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await symbolManager!.initialize();
+          }
         }
+      } on PlatformException catch (error) {
+        // Nobody awaits this listener, so whatever it throws is an unhandled
+        // error. When the style this run was set up for is gone, because it
+        // was replaced or the native map does not hold it (yet), that error
+        // says nothing the app can act on: the next style load disposes the
+        // half-built managers and sets them up again. Anything else is real.
+        final superseded = styleLoad != _styleLoadCount;
+        if (superseded) return;
+        if (!_isStyleNotReady(error)) rethrow;
+        // Nothing retries until the next style load, so this load skips
+        // onStyleLoadedCallback. Say so in debug builds.
+        if (kDebugMode) {
+          debugPrint(
+            'MapLibre: annotation setup skipped, the style is not ready '
+            '(${error.code}). The next style load sets it up again and calls '
+            'onStyleLoadedCallback.',
+          );
+        }
+        return;
       }
+      // The last manager's initialize() may have been the await that a newer
+      // style load overtook; that load calls onStyleLoadedCallback itself.
+      if (styleLoad != _styleLoadCount) return;
       onStyleLoadedCallback?.call();
     });
 
@@ -299,6 +327,15 @@ class MapLibreMapController extends ChangeNotifier {
         symbolManager?.byId(formattedId) ??
         circleManager?.byId(formattedId);
   }
+
+  /// Counts style loads, so the annotation manager setup for one style can
+  /// tell that a newer style load has taken over.
+  int _styleLoadCount = 0;
+
+  /// The errors Android, iOS and web answer with when a call needs a style
+  /// that the native map does not hold at that moment.
+  static bool _isStyleNotReady(PlatformException error) =>
+      error.code == 'STYLE_NOT_READY' || error.code == 'styleNotFound';
 
   FillManager? fillManager;
   LineManager? lineManager;
@@ -449,10 +486,11 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [duration] is the amount of time, that the transition animation should take.
   ///
-  /// The returned [Future] completes after the change has been started on the
-  /// platform side.
-  /// It returns true if the camera was successfully moved and false if the movement was canceled.
-  /// Note: this currently always returns immediately with a value of null on iOS
+  /// The returned [Future] completes when the animation ends, with true if the
+  /// camera arrived and false if the movement was canceled, for example by
+  /// another camera call or a gesture.
+  /// Note: on iOS it always completes with null: when the animation ends if a
+  /// [duration] is given, right away otherwise.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -1048,6 +1086,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use.
@@ -1059,6 +1101,7 @@ class MapLibreMapController extends ChangeNotifier {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
@@ -1068,6 +1111,7 @@ class MapLibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
     );
   }
 
@@ -2125,6 +2169,22 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.removeLayer(layerId);
   }
 
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  ///
+  /// The layer keeps its paint, layout, filter and source, and is not
+  /// recreated.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if
+  /// [layerId] or [belowLayerId] is not a layer of the style; the layers are
+  /// then left as they were.
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) {
+    return _maplibrePlatform.moveLayer(layerId, belowLayerId: belowLayerId);
+  }
+
   /// Shows only the features of the layer [layerId] that match [filter].
   ///
   /// [filter] is an expression like `['==', ['get', 'type'], 'park']`, or the
@@ -2265,6 +2325,8 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
+        enableInteraction: enableInteraction,
       );
     } else if (properties is LineLayerProperties) {
       await addLineLayer(
@@ -2337,6 +2399,7 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
       );
     } else if (properties is ColorReliefLayerProperties) {
       if (filter != null) {
@@ -2442,6 +2505,29 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
+  /// Sets the zoom range in which the layer with [layerId] is drawn: from
+  /// [minzoom] (inclusive) up to [maxzoom] (exclusive), the layer's `minzoom`
+  /// and `maxzoom` in the style spec.
+  ///
+  /// Both values must be within 0 and 24, with [minzoom] not above [maxzoom].
+  /// Pass 0 and 24 to draw the layer at every zoom.
+  ///
+  /// Throws a [PlatformException] with code:
+  /// * `INVALID_ARGUMENT` if the range is outside 0 to 24 or [minzoom] is
+  ///   above [maxzoom]. Nothing is changed.
+  /// * `STYLE_NOT_READY` if the style has not loaded yet.
+  /// * `LAYER_NOT_FOUND_ERROR` if the style has no layer with [layerId].
+  ///
+  /// The new range is reported by [getLayerProperties] as `minzoom` and
+  /// `maxzoom`, which are left out when they are 0 and 24.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    return _maplibrePlatform.setLayerZoomRange(layerId, minzoom, maxzoom);
+  }
+
   Future<List> getLayerIds() {
     return _maplibrePlatform.getLayerIds();
   }
@@ -2470,7 +2556,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// **iOS**: only layers that came with the style are readable. iOS reads the
   /// style as it was loaded, so a layer added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
-  /// normally. See
+  /// normally. For layers that came with the style, the zoom range is read
+  /// live, so it follows [setLayerZoomRange], while the other properties read
+  /// as loaded. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);

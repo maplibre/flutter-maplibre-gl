@@ -20,6 +20,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   bool _isInitializing = false;
   bool _isInitialized = false;
+  bool _disposed = false;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
 
@@ -69,7 +70,10 @@ abstract class AnnotationManager<T extends Annotation> {
 
   @mustCallSuper
   Future<void> initialize() async {
-    if (_isInitializing || _isInitialized || controller.isDisposed) {
+    if (_isInitializing ||
+        _isInitialized ||
+        _disposed ||
+        controller.isDisposed) {
       return;
     }
 
@@ -85,12 +89,16 @@ abstract class AnnotationManager<T extends Annotation> {
           buildFeatureCollection([]),
           promoteId: "id",
         );
+        // Disposed while awaiting (a newer style load took over): stop adding
+        // to a style this manager no longer belongs to.
+        if (_disposed) return;
         await controller.addLayer(
           layerId,
           layerId,
           allLayerProperties[i],
           enableInteraction: enableInteraction,
         );
+        if (_disposed) return;
       }
 
       controller.onFeatureDrag.remove(_dragCb); // safe even if not present
@@ -211,6 +219,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Fully dispose resources (layers & sources). Manager is unusable after.
   Future<void> dispose() async {
+    _disposed = true;
     if (controller.isDisposed) return;
     _idToAnnotation.clear();
     controller.onFeatureDrag.remove(_dragCb);

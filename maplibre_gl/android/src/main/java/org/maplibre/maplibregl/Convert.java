@@ -55,12 +55,14 @@ class Convert {
       case "newLatLng":
         return CameraUpdateFactory.newLatLng(toLatLng(data.get(1)));
       case "newLatLngBounds":
-        return CameraUpdateFactory.newLatLngBounds(
+        return toBoundsCameraUpdate(
+            maplibreMap,
             toLatLngBounds(data.get(1)),
-            toPixels(data.get(2), density),
-            toPixels(data.get(3), density),
-            toPixels(data.get(4), density),
-            toPixels(data.get(5), density));
+            toDouble(data.get(2)),
+            toDouble(data.get(3)),
+            toDouble(data.get(4)),
+            toDouble(data.get(5)),
+            density);
       case "newLatLngZoom":
         return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
       case "scrollBy":
@@ -112,6 +114,73 @@ class Convert {
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
     }
+  }
+
+  /**
+   * Fits the bounds inside the map padding plus the given padding (in logical pixels), with the
+   * bounds in the middle of the padded area, as maplibre-gl-js fitBounds and iOS do.
+   *
+   * <p>CameraUpdateFactory.newLatLngBounds puts the padding in the camera position it moves to, so
+   * it stays on as the map padding after the move and every later camera target is the center of
+   * the padded area (#1047). Here the center is shifted instead, and the camera position carries
+   * no padding, so the map keeps its own.
+   */
+  private static CameraUpdate toBoundsCameraUpdate(
+      MapLibreMap maplibreMap,
+      LatLngBounds bounds,
+      double left,
+      double top,
+      double right,
+      double bottom,
+      float density) {
+    final double[] mapPadding = maplibreMap.getCameraPosition().padding;
+    final double[] padding = {left, top, right, bottom};
+    final int[] fitPadding = new int[4];
+    for (int i = 0; i < 4; i++) {
+      final double mapSide = mapPadding != null && mapPadding.length == 4 ? mapPadding[i] : 0;
+      fitPadding[i] = (int) (padding[i] * density + mapSide);
+    }
+    final CameraPosition fit = maplibreMap.getCameraForLatLngBounds(bounds, fitPadding);
+    if (fit == null || fit.target == null) {
+      // No camera came back to shift, for instance while the map has no size
+      // yet. Let the SDK fit the bounds when the move runs, as before: the
+      // bounds still land in the padded area, but the padding stays on as the
+      // map padding after the move.
+      return CameraUpdateFactory.newLatLngBounds(
+          bounds,
+          (int) (left * density),
+          (int) (top * density),
+          (int) (right * density),
+          (int) (bottom * density));
+    }
+    return CameraUpdateFactory.newCameraPosition(
+        new CameraPosition.Builder()
+            .target(
+                offset(fit.target, fit.zoom, fit.bearing, (right - left) / 2, (bottom - top) / 2))
+            .zoom(fit.zoom)
+            .bearing(fit.bearing)
+            .tilt(fit.tilt)
+            .build());
+  }
+
+  /**
+   * The coordinate dx logical pixels right and dy down on screen from center, for a camera at zoom
+   * facing bearing, in Web Mercator with 512 pixel tiles. The tilt is left out, as maplibre-gl-js
+   * does when it fits bounds. The longitude is wrapped into [-180, 180). iOS does the same sums.
+   */
+  static LatLng offset(LatLng center, double zoom, double bearing, double dx, double dy) {
+    final double worldSize = 512 * Math.pow(2, zoom);
+    final double radians = Math.toRadians(bearing);
+    final double offsetX = dx * Math.cos(radians) - dy * Math.sin(radians);
+    final double offsetY = dx * Math.sin(radians) + dy * Math.cos(radians);
+    final double sinLatitude = Math.sin(Math.toRadians(center.getLatitude()));
+    final double x = (center.getLongitude() + 180) / 360 * worldSize + offsetX;
+    final double y =
+        (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * worldSize
+            + offsetY;
+    final double longitude = ((x / worldSize * 360) % 360 + 360) % 360 - 180;
+    return new LatLng(
+        Math.toDegrees(Math.atan(Math.sinh(Math.PI * (1 - 2 * y / worldSize)))), longitude);
   }
 
   static double toDouble(Object o) {
@@ -342,6 +411,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
       final List compassViewMarginsData = toList(compassViewMargins);
       final Point point = toPoint(compassViewMarginsData, metrics.density);
       sink.setCompassViewMargins(point.x, point.y);
+    }
+    final Object attributionEnabled = data.get("attributionEnabled");
+    if (attributionEnabled != null) {
+      sink.setAttributionEnabled(toBoolean(attributionEnabled));
     }
     final Object attributionButtonGravity = data.get("attributionButtonPosition");
     if (attributionButtonGravity != null) {

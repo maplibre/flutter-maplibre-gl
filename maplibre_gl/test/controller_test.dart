@@ -414,12 +414,78 @@ void main() {
       expect(platform.wasCalled('addCircleLayer'), isTrue);
     });
 
+    test('addLayer passes filter and enableInteraction for fill extrusion '
+        '(#360)', () async {
+      const filter = [
+        '>',
+        ['get', 'height'],
+        10,
+      ];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const FillExtrusionLayerProperties(fillExtrusionHeight: 20),
+        filter: filter,
+        enableInteraction: false,
+      );
+
+      final calls = platform.callsFor('addFillExtrusionLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+      expect(calls.first.namedArgs['enableInteraction'], isFalse);
+    });
+
+    test('addLayer passes filter for heatmap (#360)', () async {
+      const filter = ['==', 'kind', 'quake'];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
+    test('addHeatmapLayer passes filter', () async {
+      const filter = ['has', 'mag'];
+      await controller.addHeatmapLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
     test('removeLayer delegates to platform', () async {
       await controller.removeLayer('layer-1');
 
       final calls = platform.callsFor('removeLayer');
       expect(calls.length, 1);
       expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('moveLayer delegates to platform', () async {
+      await controller.moveLayer('layer-1', belowLayerId: 'layer-2');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], 'layer-2');
+    });
+
+    test('moveLayer delegates to platform without belowLayerId', () async {
+      await controller.moveLayer('layer-1');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], isNull);
     });
 
     test('setLayerVisibility delegates to platform', () async {
@@ -429,6 +495,14 @@ void main() {
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], 'layer-1');
       expect(calls.first.positionalArgs[1], false);
+    });
+
+    test('setLayerZoomRange delegates to platform', () async {
+      await controller.setLayerZoomRange('layer-1', 5.5, 15);
+
+      final calls = platform.callsFor('setLayerZoomRange');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['layer-1', 5.5, 15.0]);
     });
 
     test('setLayerFilter passes the expression to setFilter', () async {

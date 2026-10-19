@@ -42,6 +42,7 @@ class MapLibreMap extends StatefulWidget {
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
+    this.attributionEnabled = true,
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
     this.attributionButtonColor,
@@ -130,6 +131,12 @@ class MapLibreMap extends StatefulWidget {
 
   /// Called when the map style has been successfully loaded and the annotation managers have been enabled.
   /// Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called.
+  ///
+  /// When a newer style load starts before the annotation managers are set up
+  /// for the current one, only the newer load calls it. When the native map
+  /// answers the setup with a style-not-ready error, the callback is skipped
+  /// for that load (a debug build logs it) and the next style load sets the
+  /// managers up and calls it.
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
@@ -289,6 +296,19 @@ class MapLibreMap extends StatefulWidget {
 
   /// Set the layout margins for the Compass
   final Point? compassViewMargins;
+
+  /// True if the attribution (i) button should be shown on the map.
+  /// Defaults to true.
+  ///
+  /// It can be changed while the map is shown. On web it is the attribution
+  /// control, which comes back at [attributionButtonPosition] when shown
+  /// again.
+  ///
+  /// Most map data and tile licenses, OpenStreetMap's included, require the
+  /// attribution to stay visible. An app that hides the button must show the
+  /// attribution of its sources somewhere else, for example in its own
+  /// overlay or about screen.
+  final bool attributionEnabled;
 
   /// Set the position for the MapLibre Attribution Button
   /// When set to null, the default value of the underlying MapLibre libraries is used,
@@ -564,6 +584,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    // The widget was disposed before its platform view was created, and
+    // dispose() has already torn the platform down. Wiring it up now would
+    // leave a channel handler and controller listeners nobody ever removes.
+    if (_disposed) return;
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
@@ -642,6 +666,7 @@ class MapLibreMapOptions {
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
+    this.attributionEnabled,
     this.attributionButtonPosition,
     this.attributionButtonMargins,
     this.attributionButtonColor,
@@ -681,6 +706,7 @@ class MapLibreMapOptions {
         logoViewMargins: map.logoViewMargins,
         compassViewPosition: map.compassViewPosition,
         compassViewMargins: map.compassViewMargins,
+        attributionEnabled: map.attributionEnabled,
         attributionButtonPosition: map.attributionButtonPosition,
         attributionButtonMargins: map.attributionButtonMargins,
         attributionButtonColor: map.attributionButtonColor,
@@ -732,6 +758,8 @@ class MapLibreMapOptions {
   final CompassViewPosition? compassViewPosition;
 
   final Point? compassViewMargins;
+
+  final bool? attributionEnabled;
 
   final AttributionButtonPosition? attributionButtonPosition;
 
@@ -805,6 +833,7 @@ class MapLibreMapOptions {
     addIfNonNull('logoViewMargins', pointToArray(logoViewMargins));
     addIfNonNull('compassViewPosition', compassViewPosition?.index);
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
+    addIfNonNull('attributionEnabled', attributionEnabled);
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
       'attributionButtonMargins',

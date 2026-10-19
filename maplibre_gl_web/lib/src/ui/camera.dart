@@ -570,7 +570,7 @@ class Camera extends Evented {
   ///  @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
   ///  @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
   ///  @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
-  MapLibreMap flyTo(dynamic options, [String? eventData]) {
+  MapLibreMap flyTo(dynamic options, [dynamic eventData]) {
     JSAny optionsJs;
     if (options is CameraOptions) {
       optionsJs = options.jsObject as JSAny;
@@ -579,7 +579,13 @@ class Camera extends Evented {
     } else {
       optionsJs = options as JSAny;
     }
-    return MapLibreMap.fromJsObject(jsObject.flyTo(optionsJs));
+    // Passed on like in [easeTo], omitted when there is none.
+    final eventDataJs = utils.jsify(eventData);
+    return MapLibreMap.fromJsObject(
+      eventDataJs == null
+          ? jsObject.flyTo(optionsJs)
+          : jsObject.flyTo(optionsJs, eventDataJs),
+    );
   }
 
   bool isEasing() => jsObject.isEasing();

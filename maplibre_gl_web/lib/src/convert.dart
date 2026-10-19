@@ -91,13 +91,17 @@ class Convert {
         options['compassViewMargins'][1],
       );
     }
+    // Only what the options carry is applied: an update without them keeps
+    // the attribution where it is, shown or hidden. Enabled goes first, so a
+    // map created hidden never adds the control only to remove it again.
+    if (options.containsKey('attributionEnabled')) {
+      sink.setAttributionEnabled(options['attributionEnabled']);
+    }
     if (options.containsKey('attributionButtonPosition')) {
       final position =
           AttributionButtonPosition
               .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
-    } else {
-      sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
       sink.setAttributionButtonMargins(
@@ -172,12 +176,16 @@ class Convert {
         final top = json[3];
         final right = json[4];
         final bottom = json[5];
+        // cameraForBounds fits at bearing 0 unless told otherwise, so pass the
+        // current one to keep it, as Android and iOS do. The result carries no
+        // pitch, so the move keeps the current pitch too.
         final camera = mapLibreMap.cameraForBounds(
           LngLatBounds(
             LngLat(bounds[0][1], bounds[0][0]),
             LngLat(bounds[1][1], bounds[1][0]),
           ),
           {
+            'bearing': mapLibreMap.getBearing(),
             'padding': {
               'top': top,
               'bottom': bottom,

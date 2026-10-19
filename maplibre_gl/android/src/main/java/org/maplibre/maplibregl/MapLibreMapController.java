@@ -29,6 +29,7 @@ import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -478,7 +479,12 @@ final class MapLibreMapController
    * <p>State preserved across recreation:
    * <ul>
    *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
-   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}).</li>
+   *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}). MapLibre keeps
+   *       the camera and its {@code UiSettings} there, so UI flags changed via
+   *       {@code map#update} after construction come back with it: compass, logo and
+   *       attribution visibility, gravity and margins, and the gesture toggles. The
+   *       attribution tint is not in it and the pan inertia only partly, so
+   *       {@link #onMapReady} re-applies both.</li>
    *   <li>Construction-time {@link MapLibreMapOptions} (UI flags, gestures, etc.).</li>
    *   <li>Controller fields like {@link #trackCameraPosition}, {@link #myLocationEnabled},
    *       {@link #myLocationTrackingMode}, {@link #myLocationRenderMode}, {@link #bounds}.</li>
@@ -490,8 +496,9 @@ final class MapLibreMapController
    *   <li>Sources / layers / images added at runtime via the method channel.</li>
    *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
    *       initial style).</li>
-   *   <li>Runtime tweaks to UI flags applied via {@code map#update} after
-   *       construction (compass, attribution, content insets, etc.).</li>
+   *   <li>Runtime tweaks applied via {@code map#update} after construction that
+   *       MapLibre does not keep in its state bundle, such as the min/max zoom
+   *       preference.</li>
    *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
    * </ul>
    */
@@ -1687,6 +1694,7 @@ final class MapLibreMapController
   private boolean addHeatmapLayer(
       String layerName,
       String sourceName,
+      String sourceLayer,
       Float minZoom,
       Float maxZoom,
       String belowLayerId,
@@ -1698,11 +1706,17 @@ final class MapLibreMapController
     }
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
+    if (sourceLayer != null) {
+      layer.setSourceLayer(sourceLayer);
+    }
     if (minZoom != null) {
       layer.setMinZoom(minZoom);
     }
     if (maxZoom != null) {
       layer.setMaxZoom(maxZoom);
+    }
+    if (filter != null) {
+      layer.setFilter(filter);
     }
     if (belowLayerId != null) {
       style.addLayerBelow(layer, belowLayerId);
@@ -1843,6 +1857,40 @@ final class MapLibreMapController
     return false;
   }
 
+  /** The argument [key] of [call] as a double, or null when it is missing or not a number. */
+  private static Double numberArgument(MethodCall call, String key) {
+    final Object value = call.argument(key);
+    return value instanceof Number ? ((Number) value).doubleValue() : null;
+  }
+
+  /**
+   * Answers INVALID_ARGUMENT, as iOS does, for a call whose arguments cannot be read, instead of
+   * letting a cast fail and reach Dart as a generic error.
+   */
+  private static void invalidArgument(MethodChannel.Result result, String message) {
+    result.error("INVALID_ARGUMENT", message, null);
+  }
+
+  /**
+   * Reads the camera update of a camera#move, camera#animate or camera#ease call. When it does
+   * not decode, the call is answered with INVALID_ARGUMENT, as on iOS, and null comes back.
+   */
+  @Nullable
+  private CameraUpdate parseCameraUpdate(MethodCall call, MethodChannel.Result result) {
+    final Object data = call.argument("cameraUpdate");
+    try {
+      final CameraUpdate cameraUpdate = Convert.toCameraUpdate(data, mapLibreMap, density);
+      if (cameraUpdate != null) {
+        return cameraUpdate;
+      }
+    } catch (RuntimeException e) {
+      // A wrong type or a missing value surfaces as a ClassCastException,
+      // NullPointerException or IndexOutOfBoundsException from the converters.
+    }
+    result.error("INVALID_ARGUMENT", "Cannot interpret " + data + " as CameraUpdate.", null);
+    return null;
+  }
+
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
     result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
   }
@@ -1980,12 +2028,16 @@ final class MapLibreMapController
         }
       case "map#toScreenLocation":
         {
+          final Double latitude = numberArgument(call, "latitude");
+          final Double longitude = numberArgument(call, "longitude");
+          if (latitude == null || longitude == null) {
+            invalidArgument(
+                result, "toScreenLocation requires 'latitude' and 'longitude' as numbers.");
+            break;
+          }
           Map<String, Object> reply = new HashMap<>();
           PointF pointf =
-              mapLibreMap
-                  .getProjection()
-                  .toScreenLocation(
-                      new LatLng(call.argument("latitude"), call.argument("longitude")));
+              mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
           reply.put("x", pointf.x);
           reply.put("y", pointf.y);
           result.success(reply);
@@ -1993,7 +2045,13 @@ final class MapLibreMapController
         }
       case "map#toScreenLocationBatch":
         {
-          double[] param = (double[]) call.argument("coordinates");
+          final Object coordinates = call.argument("coordinates");
+          if (!(coordinates instanceof double[])) {
+            invalidArgument(
+                result, "toScreenLocationBatch requires 'coordinates' as a Float64List.");
+            break;
+          }
+          double[] param = (double[]) coordinates;
           double[] reply = new double[param.length];
 
           for (int i = 0; i < param.length; i += 2) {
@@ -2008,14 +2066,17 @@ final class MapLibreMapController
         }
       case "map#toLatLng":
         {
+          final Double x = numberArgument(call, "x");
+          final Double y = numberArgument(call, "y");
+          if (x == null || y == null) {
+            invalidArgument(result, "toLatLng requires 'x' and 'y' as numbers.");
+            break;
+          }
           Map<String, Object> reply = new HashMap<>();
           LatLng latlng =
               mapLibreMap
                   .getProjection()
-                  .fromScreenLocation(
-                      new PointF(
-                          ((Double) call.argument("x")).floatValue(),
-                          ((Double) call.argument("y")).floatValue()));
+                  .fromScreenLocation(new PointF(x.floatValue(), y.floatValue()));
           reply.put("latitude", latlng.getLatitude());
           reply.put("longitude", latlng.getLongitude());
           result.success(reply);
@@ -2023,47 +2084,46 @@ final class MapLibreMapController
         }
       case "map#getMetersPerPixelAtLatitude":
         {
+          final Double latitude = numberArgument(call, "latitude");
+          if (latitude == null) {
+            invalidArgument(result, "getMetersPerPixelAtLatitude requires 'latitude' as a number.");
+            break;
+          }
           Map<String, Object> reply = new HashMap<>();
-          Double retVal =
-              mapLibreMap
-                  .getProjection()
-                  .getMetersPerPixelAtLatitude((Double) call.argument("latitude"));
+          Double retVal = mapLibreMap.getProjection().getMetersPerPixelAtLatitude(latitude);
           reply.put("metersperpixel", retVal);
           result.success(reply);
           break;
         }
       case "camera#move":
         {
-          final CameraUpdate cameraUpdate =
-              Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
-          if (cameraUpdate != null) {
-            // camera transformation not handled yet
-            mapLibreMap.moveCamera(
-                cameraUpdate,
-                new OnCameraMoveFinishedListener() {
-                  @Override
-                  public void onFinish() {
-                    super.onFinish();
-                    result.success(true);
-                  }
-
-                  @Override
-                  public void onCancel() {
-                    super.onCancel();
-                    result.success(false);
-                  }
-                });
-
-            // moveCamera(cameraUpdate);
-          } else {
-            result.success(false);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
           }
+          mapLibreMap.moveCamera(
+              cameraUpdate,
+              new OnCameraMoveFinishedListener() {
+                @Override
+                public void onFinish() {
+                  super.onFinish();
+                  result.success(true);
+                }
+
+                @Override
+                public void onCancel() {
+                  super.onCancel();
+                  result.success(false);
+                }
+              });
           break;
         }
       case "camera#animate":
         {
-          final CameraUpdate cameraUpdate =
-              Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
+          }
           final Integer duration = call.argument("duration");
 
           final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
@@ -2080,14 +2140,10 @@ final class MapLibreMapController
                   result.success(false);
                 }
               };
-          if (cameraUpdate != null && duration != null) {
-            // camera transformation not handled yet
+          if (duration != null) {
             mapLibreMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
-          } else if (cameraUpdate != null) {
-            // camera transformation not handled yet
-            mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
-            result.success(false);
+            mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
           }
           break;
         }
@@ -2179,7 +2235,10 @@ final class MapLibreMapController
         }
       case "camera#ease":
         {
-          final CameraUpdate cameraUpdate = Convert.toCameraUpdate(call.argument("cameraUpdate"), mapLibreMap, density);
+          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
+          if (cameraUpdate == null) {
+            break;
+          }
           final Integer duration = call.argument("duration");
           final String interpolationStr = call.argument("interpolation");
 
@@ -2206,12 +2265,10 @@ final class MapLibreMapController
                 }
               };
 
-          if (cameraUpdate != null && duration != null && duration > 0) {
+          if (duration != null && duration > 0) {
             mapLibreMap.easeCamera(cameraUpdate, duration, easingInterpolator, onCameraMoveFinishedListener);
-          } else if (cameraUpdate != null) {
-            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           } else {
-            result.success(false);
+            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
           }
           break;
         }
@@ -2987,18 +3044,24 @@ final class MapLibreMapController
           final String sourceId = call.argument("sourceId");
           final String layerId = call.argument("layerId");
           final String belowLayerId = call.argument("belowLayerId");
+          final String sourceLayer = call.argument("sourceLayer");
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
+          final String filter = call.argument("filter");
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
+
+          Expression filterExpression = parseFilter(filter);
+
           if (!addHeatmapLayer(
               layerId,
               sourceId,
+              sourceLayer,
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
               properties,
-              null)) {
+              filterExpression)) {
             result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
             break;
           }
@@ -3343,6 +3406,43 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "style#moveLayer":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          String layerId = call.argument("layerId");
+          String belowLayerId = call.argument("belowLayerId");
+          Layer layer = style.getLayer(layerId);
+          // Both layers are checked before anything moves: a missing anchor found
+          // after the removal would lose the layer.
+          if (layer == null) {
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
+            break;
+          }
+          if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
+            result.error(
+                "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
+            break;
+          }
+          if (layerId.equals(belowLayerId)) {
+            result.success(null);
+            break;
+          }
+          style.removeLayer(layer);
+          if (belowLayerId != null) {
+            style.addLayerBelow(layer, belowLayerId);
+          } else {
+            style.addLayer(layer);
+          }
+          result.success(null);
+          break;
+        }
       case "map#setCameraBounds":
         {
           double west = call.argument("west");
@@ -3470,6 +3570,45 @@ final class MapLibreMapController
           result.success(null);
           break;
 
+        }
+        case "layer#setZoomRange":
+        {
+          // Checked here because MapLibre takes any range, and iOS and web
+          // reject the same values.
+          final Object minzoomArgument = call.argument("minzoom");
+          final Object maxzoomArgument = call.argument("maxzoom");
+          if (!(minzoomArgument instanceof Number) || !(maxzoomArgument instanceof Number)) {
+            result.error(
+                "INVALID_ARGUMENT", "setLayerZoomRange requires 'minzoom' and 'maxzoom'.", null);
+            break;
+          }
+          final double minzoom = ((Number) minzoomArgument).doubleValue();
+          final double maxzoom = ((Number) maxzoomArgument).doubleValue();
+          if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
+                    + "with minzoom not above maxzoom.",
+                null);
+            break;
+          }
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          final String layerId = call.argument("layerId");
+          final Layer layer = style.getLayer(layerId);
+          if (layer == null) {
+            replyLayerNotFound(result, layerId);
+            break;
+          }
+          layer.setMinZoom((float) minzoom);
+          layer.setMaxZoom((float) maxzoom);
+          result.success(null);
+          break;
         }
         case "layer#getVisibility":
         {
@@ -4232,6 +4371,11 @@ final class MapLibreMapController
         mapLibreMap.getUiSettings().setCompassMargins(0, 0, x, y);
         break;
     }
+  }
+
+  @Override
+  public void setAttributionEnabled(boolean attributionEnabled) {
+    mapLibreMap.getUiSettings().setAttributionEnabled(attributionEnabled);
   }
 
   @Override

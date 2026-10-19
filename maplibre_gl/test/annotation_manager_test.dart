@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -434,6 +435,27 @@ void main() {
       }
 
       expect(controller.onFeatureDrag.length, initial);
+    });
+
+    test('a manager disposed while initializing stops there', () async {
+      final callbacks = controller.onFeatureDrag.length;
+      final manager = FillManager(controller);
+
+      final release = Completer<void>();
+      platform.onAddGeoJsonSource = (_) => release.future;
+      final initializing = manager.initialize();
+      await pumpEventQueue();
+
+      platform.onAddGeoJsonSource = null;
+      await manager.dispose();
+      release.complete();
+      await initializing;
+
+      // Only the first source went out, before the dispose.
+      expect(platform.callsFor('addGeoJsonSource'), hasLength(1));
+      expect(platform.wasCalled('addFillLayer'), isFalse);
+      expect(controller.onFeatureDrag.length, callbacks);
+      expect(manager.isInitialized, isFalse);
     });
 
     test(
