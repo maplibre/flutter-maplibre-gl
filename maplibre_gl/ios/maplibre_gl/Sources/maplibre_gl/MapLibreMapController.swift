@@ -1427,7 +1427,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             let belowLayerId = arguments["belowLayerId"] as? String
-            guard let style = mapView.style else {
+            guard styleIsReady, let style = mapView.style else {
                 result(FlutterError(
                     code: "STYLE_NOT_READY",
                     message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
