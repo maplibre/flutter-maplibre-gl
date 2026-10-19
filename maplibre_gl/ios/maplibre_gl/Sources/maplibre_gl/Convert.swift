@@ -329,7 +329,8 @@ class Convert {
     /// The coordinate `dx` points right and `dy` points down on screen from
     /// `center`, for a camera at `zoom` facing `heading`, in Web Mercator with
     /// 512 point tiles. The pitch is left out, as maplibre-gl-js does when it
-    /// fits bounds. Android does the same sums.
+    /// fits bounds. The longitude is wrapped into [-180, 180). Android does
+    /// the same sums.
     class func offset(
         _ center: CLLocationCoordinate2D,
         zoom: Double,
@@ -345,9 +346,10 @@ class Convert {
         let x = (center.longitude + 180) / 360 * worldSize + offsetX
         let y = (0.5 - log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Double.pi)) * worldSize
             + offsetY
+        let longitude = (x / worldSize * 360).truncatingRemainder(dividingBy: 360)
         return CLLocationCoordinate2D(
             latitude: atan(sinh(Double.pi * (1 - 2 * y / worldSize))) * 180 / Double.pi,
-            longitude: x / worldSize * 360 - 180
+            longitude: (longitude < 0 ? longitude + 360 : longitude) - 180
         )
     }
 
