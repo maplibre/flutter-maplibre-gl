@@ -118,6 +118,9 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
     final controller = _controller;
     if (controller == null) return;
 
+    // Reorder the list right away so the drop does not snap back, and put
+    // the previous order back if the native move fails.
+    final previousOrder = List<String>.of(_layerOrder);
     late final String movedId;
     setState(() {
       if (newIndex > oldIndex) newIndex -= 1;
@@ -125,10 +128,22 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
       _layerOrder.insert(newIndex, movedId);
     });
 
-    await controller.moveLayer(
-      movedId,
-      belowLayerId: newIndex > 0 ? _layerOrder[newIndex - 1] : null,
-    );
+    try {
+      await controller.moveLayer(
+        movedId,
+        belowLayerId: newIndex > 0 ? _layerOrder[newIndex - 1] : null,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _layerOrder
+          ..clear()
+          ..addAll(previousOrder);
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Move layer failed: $e')));
+    }
   }
 
   _DemoLayer _layerFor(String id) => _demoLayers.firstWhere((l) => l.id == id);
