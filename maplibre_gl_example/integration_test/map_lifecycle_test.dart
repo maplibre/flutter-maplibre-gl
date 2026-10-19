@@ -7,6 +7,9 @@
 // Whether the platform view exists by the time the widget goes away depends on
 // the native view factory, so only a live map can exercise it.
 //
+// The logic of #1048 is covered by the unit tests in maplibre_gl/test; this
+// test only checks that nothing throws on a live map.
+//
 // Run on Android or iOS:
 //   flutter test integration_test/map_lifecycle_test.dart -d <device id>
 //
