@@ -5,8 +5,9 @@
 // target, getVisibleRegion, toScreenLocation / toScreenLocationBatch /
 // toLatLng, getMetersPerPixelAtLatitude, setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
-// controller's cached cameraPosition and the onCameraMove / onCameraIdle
-// callbacks.
+// controller's cached cameraPosition, the onCameraMove / onCameraIdle
+// callbacks and the INVALID_ARGUMENT answer to calls Android and iOS cannot
+// read.
 //
 // Each platform turns a CameraUpdate into its own SDK camera and does its own
 // projection math (density conversion on Android, altitude-based zoom on iOS,
@@ -20,6 +21,9 @@
 //     --target=integration_test/camera_test.dart -d chrome
 import 'dart:math';
 
+import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
+import 'package:flutter/services.dart' show MethodChannel, PlatformException;
+import 'package:flutter/widgets.dart' show AndroidViewSurface, EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -428,6 +432,91 @@ void main() {
       );
       expect(center.x / scale, closeTo(_mapSize / 2, 2), reason: '$center');
       expect(center.y / scale, closeTo(_mapSize / 2, 2), reason: '$center');
+    });
+
+    testWidgets('newLatLngBounds keeps the bearing and centers the bounds '
+        'in the padding', (tester) async {
+      final controller = await pumpMap(tester);
+      final scale = _screenScale(tester);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(-10, -10),
+        northeast: const LatLng(10, 10),
+      );
+      await pumpUntil(
+        tester,
+        controller.moveCamera(
+          CameraUpdate.newCameraPosition(
+            const CameraPosition(target: LatLng(0, 0), zoom: 3, bearing: 30),
+          ),
+        ),
+        'moveCamera bearing 30',
+      );
+
+      // 60 on the left and 100 at the bottom leave an area centered at
+      // (180, 100). The bounds are fitted as seen at bearing 30, and the
+      // shift for the padding is on screen, so their center still lands in
+      // the middle of the area.
+      await pumpUntil(
+        tester,
+        controller.moveCamera(
+          CameraUpdate.newLatLngBounds(bounds, left: 60, bottom: 100),
+        ),
+        'moveCamera newLatLngBounds with padding',
+      );
+
+      final camera = await _queryCamera(tester, controller);
+      expect(camera.bearing, closeTo(30, 0.5), reason: 'bearing');
+      final center = await pumpUntil(
+        tester,
+        controller.toScreenLocation(const LatLng(0, 0)),
+        'toScreenLocation bounds center',
+      );
+      expect(center.x / scale, closeTo(180, 3), reason: '$center');
+      expect(center.y / scale, closeTo(100, 3), reason: '$center');
+    });
+
+    testWidgets('newLatLngBounds padding adds to the content insets', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      final scale = _screenScale(tester);
+      final bounds = LatLngBounds(
+        southwest: const LatLng(-10, -10),
+        northeast: const LatLng(10, 10),
+      );
+      await pumpUntil(
+        tester,
+        controller.updateContentInsets(
+          const EdgeInsets.only(top: 40, right: 20),
+        ),
+        'updateContentInsets',
+      );
+
+      // The insets and the padding together leave a 220 x 200 area from
+      // (60, 40) to (280, 240), centered at (170, 140). The bounds are a
+      // little taller than wide in web mercator, so the height limits the
+      // fit: their north and south edges touch the top and the bottom of
+      // the area.
+      await pumpUntil(
+        tester,
+        controller.moveCamera(
+          CameraUpdate.newLatLngBounds(bounds, left: 60, bottom: 60),
+        ),
+        'moveCamera newLatLngBounds with padding',
+      );
+
+      Future<Point<num>> screen(LatLng point) => pumpUntil(
+        tester,
+        controller.toScreenLocation(point),
+        'toScreenLocation $point',
+      );
+      final center = await screen(const LatLng(0, 0));
+      expect(center.x / scale, closeTo(170, 3), reason: '$center');
+      expect(center.y / scale, closeTo(140, 3), reason: '$center');
+      final north = await screen(const LatLng(10, 0));
+      final south = await screen(const LatLng(-10, 0));
+      expect(north.y / scale, closeTo(40, 3), reason: 'north edge $north');
+      expect(south.y / scale, closeTo(240, 3), reason: 'south edge $south');
     });
 
     testWidgets('reports success for each update kind', (tester) async {
@@ -957,7 +1046,83 @@ void main() {
       );
     });
   });
+
+  // Calls the controller cannot produce, sent straight over the map's
+  // channel. They must fail with INVALID_ARGUMENT rather than never complete.
+  group('invalid arguments', () {
+    testWidgets('camera#move with an unknown update', (tester) async {
+      await pumpMap(tester);
+      final error = await pumpUntil(
+        tester,
+        _errorOf(
+          _mapChannel(tester).invokeMethod('camera#move', <String, dynamic>{
+            'cameraUpdate': <dynamic>['bogus'],
+          }),
+        ),
+        'camera#move bogus',
+        timeout: const Duration(seconds: 10),
+      );
+      expect(
+        error,
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'INVALID_ARGUMENT',
+        ),
+      );
+    }, skip: testPlatform == TestPlatform.web);
+
+    testWidgets('map#toLatLng without numbers', (tester) async {
+      await pumpMap(tester);
+      final error = await pumpUntil(
+        tester,
+        _errorOf(
+          _mapChannel(tester).invokeMethod('map#toLatLng', <String, dynamic>{
+            'x': 'left',
+            'y': null,
+          }),
+        ),
+        'map#toLatLng malformed',
+        timeout: const Duration(seconds: 10),
+      );
+      expect(error, isA<PlatformException>());
+      // Android does not check these arguments yet, so the converter throws
+      // and the channel answers with its generic 'error' code.
+      if (testPlatform == TestPlatform.ios) {
+        expect((error! as PlatformException).code, 'INVALID_ARGUMENT');
+      }
+    }, skip: testPlatform == TestPlatform.web);
+  });
 }
+
+/// The method channel of the map pumped by [pumpMap], for calls the
+/// controller cannot send.
+MethodChannel _mapChannel(WidgetTester tester) {
+  final int id;
+  if (testPlatform == TestPlatform.ios) {
+    id =
+        tester.allRenderObjects
+            .whereType<RenderUiKitView>()
+            .single
+            .viewController
+            .id;
+  } else {
+    final surfaces = find.byType(AndroidViewSurface);
+    id =
+        surfaces.evaluate().isNotEmpty
+            ? tester.widget<AndroidViewSurface>(surfaces).controller.viewId
+            : tester.allRenderObjects
+                .whereType<RenderAndroidView>()
+                .single
+                .controller
+                .viewId;
+  }
+  return MethodChannel('plugins.flutter.io/maplibre_gl_$id');
+}
+
+/// Completes with the error [call] fails with, or null if it succeeds.
+Future<Object?> _errorOf(Future<Object?> call) =>
+    call.then<Object?>((_) => null, onError: (Object error) => error);
 
 /// Reads the live camera, failing if the platform has none.
 Future<CameraPosition> _queryCamera(
