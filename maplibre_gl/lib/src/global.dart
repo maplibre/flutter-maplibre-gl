@@ -127,6 +127,12 @@ Future<List<OfflineRegion>> getListOfRegions() async {
 /// Replaces the metadata of the offline region with the given [id] and returns
 /// the updated region.
 ///
+/// [metadata] must be JSON-encodable: strings, numbers, booleans, null, and
+/// lists and maps of those, with string keys. Other values, such as a
+/// `Uint8List`, fail on iOS with `UpdateMetadataError`, while Android stores
+/// them in whatever form its JSON encoder gives them (a `Uint8List` comes
+/// back as a list of numbers).
+///
 /// Throws a [PlatformException] with code `UpdateMetadataError` when no region
 /// has that [id].
 Future<OfflineRegion> updateOfflineRegionMetadata(
