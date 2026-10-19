@@ -251,6 +251,16 @@ class OfflineManagerUtils {
     }
 
     static func resetOfflineDatabase(result: @escaping FlutterResult) {
+        // The reload below waits for the next KVO change of `packs`. Before the
+        // stored packs have loaded, that change could be the first load rather
+        // than the reload, answering Dart while the stale packs are still
+        // listed. Waiting also keeps the reset behind calls queued before it.
+        whenPacksLoaded {
+            resetLoadedOfflineDatabase(result: result)
+        }
+    }
+
+    private static func resetLoadedOfflineDatabase(result: @escaping FlutterResult) {
         // Any tracked in-progress downloads are invalidated by the reset.
         for (_, pack) in activePacks {
             pack.suspend()
