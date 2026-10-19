@@ -33,7 +33,7 @@
 * **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
 * **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
-* **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#PR).
+* **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#1105).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -90,7 +90,7 @@
 * Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
 * The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
-* **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background, and `resumeMap()` resumes `onUserLocationUpdated` (#PR).
+* **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background, and `resumeMap()` resumes `onUserLocationUpdated` (#1105).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
