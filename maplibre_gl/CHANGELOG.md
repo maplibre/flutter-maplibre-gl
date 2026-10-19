@@ -33,7 +33,7 @@
 * **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
 * **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
-* **Android, iOS**: location updates stop while the app is in the background, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#PR).
+* **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#PR).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
