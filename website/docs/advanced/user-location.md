@@ -69,6 +69,8 @@ MapLibreMap(
 
 With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider when the app includes Play Services location, and GPS through the platform location manager when it does not. The plugin does not ship Play Services itself, so apps without Google services, such as F-Droid builds, stay free of it.
 
+Without the fused provider, high accuracy uses GPS only, with no Wi-Fi or cell positioning, so indoors there may be no fix at all.
+
 To use the fused provider, add the dependency to your app:
 
 === "Kotlin DSL"
@@ -87,7 +89,7 @@ To use the fused provider, add the dependency to your app:
     }
     ```
 
-21.4.0 is the version the plugin is built against. The fused provider is used only on devices with Google Play Services; on others, such as Huawei devices without them, the plugin falls back to GPS on its own. Other priorities use the platform location engine either way.
+The plugin requires play-services-location 21.0.0 or later; adding 21.4.0 makes Gradle pick it over older versions pulled in by other plugins. With an older version the plugin logs a warning and uses GPS. The fused provider is used only on devices with Google Play Services; on others, such as Huawei devices without them, the plugin falls back to GPS on its own. Other priorities use the platform location engine either way.
 
 ### Pulsed GPS on iOS
 

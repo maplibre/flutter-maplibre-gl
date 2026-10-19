@@ -90,7 +90,9 @@ The plugin no longer bundles Google Play Services location, so apps without Goog
     }
     ```
 
-Without it, high accuracy uses GPS through the platform location manager, which can take longer to get a first fix indoors. Apps on the default balanced accuracy see no change. See [Fused location provider on Android](advanced/user-location.md#fused-location-provider-on-android).
+The plugin requires play-services-location 21.0.0 or later; adding 21.4.0 makes Gradle pick it over older versions pulled in by other plugins.
+
+Without it, high accuracy uses GPS only, with no Wi-Fi or cell positioning, so indoors there may be no fix at all. Apps on the default balanced accuracy see no change. See [Fused location provider on Android](advanced/user-location.md#fused-location-provider-on-android).
 
 ### Behaviour changes
 
