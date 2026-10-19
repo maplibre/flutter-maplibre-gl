@@ -27,6 +27,11 @@
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android**: add `com.google.android.gms:play-services-location` 21.0.0 or later to keep the fused provider for high accuracy; without it the plugin uses GPS only, which may not get a fix indoors (#1091).
 * **Web**: `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
+* **iOS**: `CameraUpdate.tiltTo` keeps the zoom like on Android and web, instead of changing it along with the pitch (#1090).
+* **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read (#1090).
+* **iOS**: `CameraUpdate.newLatLngBounds` with padding moves the center so the bounds sit in the middle of the padded area, as on Android and web, instead of only zooming out. This holds for `moveCamera`, `animateCamera` and `easeCamera` alike (#1090).
+* **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
+* **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -77,6 +82,7 @@
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 * **Web**: removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
 * **Web**: removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
+* **Android, iOS**: `toScreenLocation`, `toScreenLocationBatch`, `toLatLng` and `getMetersPerPixelAtLatitude` throw `INVALID_ARGUMENT` for arguments they cannot read, instead of never completing on iOS or failing with a generic error on Android (#1090).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
