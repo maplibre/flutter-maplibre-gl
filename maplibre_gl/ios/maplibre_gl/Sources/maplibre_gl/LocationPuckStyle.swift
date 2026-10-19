@@ -49,6 +49,12 @@ struct LocationPuckStyle: Equatable {
     /// for the missing ones, and that tint is the accuracy circle color then.
     func annotationViewStyle(defaultTint: UIColor) -> MLNUserLocationAnnotationViewStyle {
         let style = MLNUserLocationAnnotationViewStyle()
+        if #available(iOS 14, *) {
+            // The style object starts at 0.15, but the puck uses 0.25 when no
+            // delegate answers. Implementing the delegate must not change the
+            // look, so keep the SDK's own value.
+            style.approximateHaloOpacity = 0.25
+        }
         guard !isDefault else { return style }
         style.puckFillColor = fillColor ?? defaultTint
         style.puckArrowFillColor = bearingColor ?? defaultTint

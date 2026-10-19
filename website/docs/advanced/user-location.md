@@ -60,7 +60,7 @@ The style can change while the map is shown, and setting it back to `null` resto
 Each platform draws the puck a little differently, so a few fields land on different parts:
 
 * **Android**: `bearingColor` is the bearing chevron of `MyLocationRenderMode.compass`, and `fillColor` also colors the navigation arrow of `MyLocationRenderMode.gps`. The pulse is off by default, so `pulseColor` alone shows nothing: set `pulseEnabled: true` too. The dot still turns grey when no fix has arrived for a while.
-* **iOS**: `bearingColor` is the arrow drawn in `MyLocationTrackingMode.trackingGps`, and `fillColor` also colors the heading arrow of `MyLocationRenderMode.compass`. The pulse is on by default but only drawn while the accuracy is 10 metres or better. While the user only grants an approximate location, iOS draws a wider halo in `accuracyColor` instead, and keeps it when `accuracyCircleEnabled` is `false`.
+* **iOS**: `bearingColor` is the arrow drawn in `MyLocationTrackingMode.trackingGps`, and `fillColor` also colors the heading arrow of `MyLocationRenderMode.compass`. The pulse is on by default but only drawn while the accuracy is 10 meters or better. While the user only grants an approximate location, iOS draws a wider halo in `accuracyColor` instead, and keeps it when `accuracyCircleEnabled` is `false`.
 * **Web**: `bearingColor` is the arrow of the puck drawn for a `ManualLocationSource`; the browser geolocation puck shows no direction. The pulse is on by default.
 
 The accuracy circle keeps each platform's own translucency, about 15% opacity on Android, 10% on iOS and 20% on web, so it never hides the map below.
