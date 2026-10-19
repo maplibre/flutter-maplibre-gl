@@ -142,7 +142,16 @@ class Convert {
     }
     final CameraPosition fit = maplibreMap.getCameraForLatLngBounds(bounds, fitPadding);
     if (fit == null || fit.target == null) {
-      return null;
+      // No camera came back to shift, for instance while the map has no size
+      // yet. Let the SDK fit the bounds when the move runs, as before: the
+      // bounds still land in the padded area, but the padding stays on as the
+      // map padding after the move.
+      return CameraUpdateFactory.newLatLngBounds(
+          bounds,
+          (int) (left * density),
+          (int) (top * density),
+          (int) (right * density),
+          (int) (bottom * density));
     }
     return CameraUpdateFactory.newCameraPosition(
         new CameraPosition.Builder()
@@ -157,7 +166,7 @@ class Convert {
   /**
    * The coordinate dx logical pixels right and dy down on screen from center, for a camera at zoom
    * facing bearing, in Web Mercator with 512 pixel tiles. The tilt is left out, as maplibre-gl-js
-   * does when it fits bounds. iOS does the same sums.
+   * does when it fits bounds. The longitude is wrapped into [-180, 180). iOS does the same sums.
    */
   static LatLng offset(LatLng center, double zoom, double bearing, double dx, double dy) {
     final double worldSize = 512 * Math.pow(2, zoom);
@@ -169,9 +178,9 @@ class Convert {
     final double y =
         (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * worldSize
             + offsetY;
+    final double longitude = ((x / worldSize * 360) % 360 + 360) % 360 - 180;
     return new LatLng(
-        Math.toDegrees(Math.atan(Math.sinh(Math.PI * (1 - 2 * y / worldSize)))),
-        x / worldSize * 360 - 180);
+        Math.toDegrees(Math.atan(Math.sinh(Math.PI * (1 - 2 * y / worldSize)))), longitude);
   }
 
   static double toDouble(Object o) {
