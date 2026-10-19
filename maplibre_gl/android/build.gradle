@@ -58,7 +58,7 @@ android {
     sourceSets {
         main {
             if (useGooglePlayServicesLocation) {
-                java.srcDirs += 'src/gms/java'
+                java.srcDir 'src/gms/java'
             }
         }
     }

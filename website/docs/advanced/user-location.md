@@ -67,7 +67,7 @@ MapLibreMap(
 
 ### Fused location provider on Android
 
-With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider, which combines GPS with Wi-Fi and cell positioning. On devices without Google Play Services, such as Huawei devices without them, it uses the platform location manager instead: Android's own fused provider on Android 12 and later, GPS only before. Other priorities use the platform location engine either way.
+With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider, which combines GPS with Wi-Fi and cell positioning. On devices without Google Play Services, such as Huawei devices without them, it uses the platform location manager instead: Android's own fused provider on Android 12 and later, GPS only before. Android's fused provider adds Wi-Fi and cell positioning only where the device has a network location provider, such as the vendor's or microG; without one it is GPS only too. Other priorities use the platform location engine either way.
 
 ### Building without Google Play Services
 
@@ -77,7 +77,7 @@ F-Droid and other FOSS builds cannot include Google Play Services. Add this line
 maplibre_gl.playServicesLocation=false
 ```
 
-The plugin then neither depends on Play Services location nor compiles the code that uses it, so nothing from Google is downloaded or ends up in the APK. High accuracy uses the platform location manager as described above. On Android 11 and earlier that means GPS only, so indoors there may be no fix at all.
+The plugin then neither depends on Play Services location nor compiles the code that uses it, so nothing from Google is downloaded or ends up in the APK. High accuracy uses the platform location manager as described above. Where that means GPS only (Android 11 and earlier, or no network location provider), indoors there may be no fix at all.
 
 ### Pulsed GPS on iOS
 

@@ -106,8 +106,9 @@ public class MapLibreGPSLocationEngine implements LocationEngineImpl<LocationLis
             return LocationManager.PASSIVE_PROVIDER;
         }
         // Android 12 and later have a fused provider of their own, open source and without
-        // Google Play Services: it adds Wi-Fi and cell positioning to GPS, so a fix still
-        // arrives indoors. Builds without play-services-location rely on it (#1014).
+        // Google Play Services: it combines GPS with the network provider, so it can get a
+        // fix indoors where the device has one (vendor services or microG). Builds without
+        // play-services-location rely on it (#1014).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
                 && locationManager.hasProvider(LocationManager.FUSED_PROVIDER)) {
             return LocationManager.FUSED_PROVIDER;
