@@ -1461,6 +1461,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             layer.isVisible = visible
             result(nil)
 
+        case "layer#setVisibilityBatch":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let layerIds = arguments["layerIds"] as? [String] else { return }
+            guard let visible = arguments["visible"] as? Bool else { return }
+            guard let style = mapView.style else {
+                result(FlutterError(
+                    code: "STYLE_NOT_READY",
+                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    details: nil
+                ))
+                return
+            }
+            for layerId in layerIds {
+                style.layer(withIdentifier: layerId)?.isVisible = visible
+            }
+            result(nil)
+
         case "map#querySourceFeatures":
             guard let arguments = methodCall.arguments as? [String: Any],
                   let sourceId = arguments["sourceId"] as? String

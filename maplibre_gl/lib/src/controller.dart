@@ -2339,6 +2339,13 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
+  /// Sets visibility for many layers in one platform call.
+  ///
+  /// Missing layer ids are skipped by the native implementations.
+  Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
+    return _maplibrePlatform.setLayersVisibility(layerIds, visible);
+  }
+
   Future<List> getLayerIds() {
     return _maplibrePlatform.getLayerIds();
   }

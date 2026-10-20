@@ -620,6 +620,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
+    calls.add(PlatformCall('setLayersVisibility', [layerIds, visible]));
+  }
+
+  @override
   Future<bool?> getLayerVisibility(String layerId) async => true;
 
   @override

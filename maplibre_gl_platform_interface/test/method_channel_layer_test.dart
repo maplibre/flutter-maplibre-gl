@@ -233,6 +233,16 @@ void main() {
       expect(args['visible'], false);
     });
 
+    test('setLayersVisibility sends one batch method', () async {
+      await platform.setLayersVisibility(['layer-a', 'layer-b'], false);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'layer#setVisibilityBatch');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerIds'], ['layer-a', 'layer-b']);
+      expect(args['visible'], false);
+    });
+
     test('getLayerVisibility returns result', () async {
       final result = await platform.getLayerVisibility('my-layer');
 

@@ -16,6 +16,8 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
@@ -2942,6 +2944,44 @@ final class MapLibreMapController
           break;
 
         }
+        case "layer#setVisibilityBatch":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          Object layerIdsArg = call.argument("layerIds");
+          boolean visible = Boolean.TRUE.equals(call.argument("visible"));
+          if (layerIdsArg instanceof List) {
+            String visibilityValue = visible ? Property.VISIBLE : Property.NONE;
+            for (Object layerIdObj : (List<?>) layerIdsArg) {
+              if (!(layerIdObj instanceof String)) {
+                continue;
+              }
+              Layer layer = style.getLayer((String) layerIdObj);
+              if (layer == null) {
+                continue;
+              }
+              layer.setProperties(PropertyFactory.visibility(visibilityValue));
+            }
+          }
+
+          // Showing layers again (radar → map) returns immediately, as before.
+          // Hiding waits until a frame that includes the new visibility has been
+          // presented. setProperties only requests a repaint; if the caller queues
+          // a zoom in the same turn, that zoom is folded into the next frame and
+          // the TextureView keeps the previous full-map image until the heavy
+          // tile parse finishes.
+          if (visible || mapView == null || mapLibreMap == null) {
+            result.success(null);
+            break;
+          }
+          awaitVisibilityFrame(result);
+          break;
+        }
         case "map#querySourceFeatures":
         {
           List<Feature> features;
@@ -3929,6 +3969,74 @@ final class MapLibreMapController
     draggedFeature = null;
     dragOrigin = null;
     dragPrevious = null;
+  }
+
+  /**
+   * Completes {@code result} after a frame rendered with the latest style, or
+   * after a short timeout so a stalled renderer cannot block the channel.
+   * The first callback can be a frame that started before the visibility
+   * update, so the second finished frame is the one that is waited for.
+   */
+  private void awaitVisibilityFrame(final MethodChannel.Result result) {
+    final boolean[] completed = new boolean[] {false};
+    final int[] frames = new int[] {0};
+    final Handler handler = new Handler(Looper.getMainLooper());
+    final MapView.OnDidFinishRenderingFrameListener[] listenerRef =
+        new MapView.OnDidFinishRenderingFrameListener[1];
+
+    final Runnable timeout = new Runnable() {
+      @Override
+      public void run() {
+        finishVisibilityFrameWait(completed, listenerRef, result);
+      }
+    };
+
+    listenerRef[0] = new MapView.OnDidFinishRenderingFrameListener() {
+      @Override
+      public void onDidFinishRenderingFrame(
+          boolean fully, double frameEncodingTime, double frameRenderingTime) {
+        handler.post(new Runnable() {
+          @Override
+          public void run() {
+            if (completed[0] || disposed) {
+              return;
+            }
+            frames[0] += 1;
+            if (frames[0] < 2) {
+              if (mapLibreMap != null) {
+                mapLibreMap.triggerRepaint();
+              }
+              return;
+            }
+            handler.removeCallbacks(timeout);
+            finishVisibilityFrameWait(completed, listenerRef, result);
+          }
+        });
+      }
+    };
+
+    mapView.addOnDidFinishRenderingFrameListener(listenerRef[0]);
+    handler.postDelayed(timeout, 250);
+    mapLibreMap.triggerRepaint();
+  }
+
+  private void finishVisibilityFrameWait(
+      boolean[] completed,
+      MapView.OnDidFinishRenderingFrameListener[] listenerRef,
+      MethodChannel.Result result) {
+    if (completed[0]) {
+      return;
+    }
+    completed[0] = true;
+    MapView.OnDidFinishRenderingFrameListener listener = listenerRef[0];
+    if (listener != null && mapView != null) {
+      mapView.removeOnDidFinishRenderingFrameListener(listener);
+    }
+    try {
+      result.success(null);
+    } catch (IllegalStateException ignored) {
+      // Reply already sent, or the platform channel was torn down.
+    }
   }
 
   /** Simple Listener to listen for the status of camera movements. */

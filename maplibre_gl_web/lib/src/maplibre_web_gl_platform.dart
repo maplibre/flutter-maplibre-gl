@@ -2245,6 +2245,13 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
+    for (final layerId in layerIds) {
+      await setLayerVisibility(layerId, visible);
+    }
+  }
+
+  @override
   Future getFilter(String layerId) async {
     return _map.getFilter(layerId);
   }

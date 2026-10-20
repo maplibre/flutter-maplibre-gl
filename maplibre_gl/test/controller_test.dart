@@ -416,6 +416,15 @@ void main() {
       expect(calls.first.positionalArgs[1], false);
     });
 
+    test('setLayersVisibility delegates to platform', () async {
+      await controller.setLayersVisibility(['layer-1', 'layer-2'], false);
+
+      final calls = platform.callsFor('setLayersVisibility');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], ['layer-1', 'layer-2']);
+      expect(calls.first.positionalArgs[1], false);
+    });
+
     test('addImageLayer delegates to addLayer on platform', () async {
       await controller.addImageLayer('img-layer', 'img-source');
 
