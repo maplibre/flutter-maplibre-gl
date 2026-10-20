@@ -2634,8 +2634,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
+    // Every id is checked before any layer changes, so an unknown id leaves
+    // the style as it was, as on Android and iOS.
+    layerIds.forEach(_ensureLayerExists);
+    final visibility = visible ? 'visible' : 'none';
     for (final layerId in layerIds) {
-      await setLayerVisibility(layerId, visible);
+      _map.setLayoutProperty(layerId, 'visibility', visibility);
     }
   }
 
