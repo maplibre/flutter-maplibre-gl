@@ -79,6 +79,17 @@ maplibre_gl.playServicesLocation=false
 
 The plugin then neither depends on Play Services location nor compiles the code that uses it, so nothing from Google is downloaded or ends up in the APK. High accuracy uses the platform location manager as described above. Where that means GPS only (Android 11 and earlier, or no network location provider), indoors there may be no fix at all.
 
+#### F-Droid
+
+F-Droid also scans the source of your dependencies, and its scanner matches the Play Services lines in the plugin's `build.gradle` even though the property turns them off. With the property set, those lines and the plugin's `src/gms` folder are unused, so the build recipe can remove them after `flutter pub get` and before the scan, for example in `prebuild`:
+
+```bash
+sed -i -e '/com\.google\.android\.gms/d' "$PUB_CACHE"/hosted/pub.dev/maplibre_gl-*/android/build.gradle
+rm -rf "$PUB_CACHE"/hosted/pub.dev/maplibre_gl-*/android/src/gms
+```
+
+`PUB_CACHE` is the pub cache the recipe uses for `flutter pub get`. The app still builds the same way, and the F-Droid scanner then finds no Play Services in the source or in the APK.
+
 ### Pulsed GPS on iOS
 
 Continuous GPS is expensive on a map that stays open for a long time. On iOS the engine can run in pulses instead: GPS is active for `pulseWindowMs`, then off until the next `intervalMs`, and the puck holds its last position in between.

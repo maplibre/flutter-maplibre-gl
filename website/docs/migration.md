@@ -78,7 +78,7 @@ Nothing changes for apps that use Google Play Services. F-Droid and other FOSS b
 maplibre_gl.playServicesLocation=false
 ```
 
-See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services).
+See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services). F-Droid builds also need a short `prebuild` step, described in [F-Droid](advanced/user-location.md#f-droid).
 
 ### Behaviour changes
 
