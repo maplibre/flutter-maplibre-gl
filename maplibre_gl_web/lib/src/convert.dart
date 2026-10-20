@@ -70,6 +70,11 @@ class Convert {
     if (options.containsKey('myLocationRenderMode')) {
       sink.setMyLocationRenderMode(options['myLocationRenderMode']);
     }
+    if (options['myLocationStyle'] is Map) {
+      sink.setMyLocationStyle(
+        Map<String, dynamic>.from(options['myLocationStyle'] as Map),
+      );
+    }
     if (options.containsKey('logoViewPosition')) {
       final position = LogoViewPosition.values[options['logoViewPosition']];
       sink.setLogoViewAlignment(position);

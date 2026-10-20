@@ -24,6 +24,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean symbolPlacementTransitionsEnabled = true;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
+  private LocationPuckStyle myLocationStyle = LocationPuckStyle.DEFAULT;
   private String styleString = "";
   private LatLngBounds bounds = null;
   private LocationEngineRequest locationEngineRequest = null;
@@ -54,6 +55,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     controller.setMyLocationEnabled(myLocationEnabled);
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
+    controller.setMyLocationStyle(myLocationStyle);
     controller.setTrackCameraPosition(trackCameraPosition);
     controller.setLocationSource(locationSourceToken);
     controller.setSymbolPlacementTransitionsEnabled(symbolPlacementTransitionsEnabled);
@@ -156,6 +158,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setMyLocationRenderMode(int myLocationRenderMode) {
     this.myLocationRenderMode = myLocationRenderMode;
+  }
+
+  @Override
+  public void setMyLocationStyle(@NonNull LocationPuckStyle style) {
+    this.myLocationStyle = style;
   }
 
   @Override

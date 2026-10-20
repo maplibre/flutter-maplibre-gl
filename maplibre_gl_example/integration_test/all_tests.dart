@@ -22,6 +22,7 @@ import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
 import 'haptic_feedback_test.dart' as haptic_feedback;
 import 'map_lifecycle_test.dart' as map_lifecycle;
+import 'my_location_style_test.dart' as my_location_style;
 import 'offline_region_metadata_test.dart' as offline_region_metadata;
 import 'pan_inertia_test.dart' as pan_inertia;
 import 'placement_transitions_test.dart' as placement_transitions;
@@ -40,6 +41,7 @@ void main() {
   geojson_query.main();
   haptic_feedback.main();
   map_lifecycle.main();
+  my_location_style.main();
   offline_region_metadata.main();
   pan_inertia.main();
   placement_transitions.main();

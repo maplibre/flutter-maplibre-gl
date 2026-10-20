@@ -67,6 +67,25 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
   // ring (see the note in the UI / the `RenderMode.GPS` branch in the SDK).
   MyLocationRenderMode _renderMode = MyLocationRenderMode.normal;
 
+  // Puck colors, applied through `MapLibreMap.myLocationStyle`.
+  String _puckStyle = 'Default';
+  static const _puckStyles = <String, MyLocationStyle?>{
+    'Default': null,
+    'Branded': MyLocationStyle(
+      fillColor: Color(0xFFE53935),
+      bearingColor: Color(0xFF6A1B9A),
+      accuracyColor: Color(0xFFE53935),
+      pulseEnabled: true,
+      pulseColor: Color(0xFFFF8F00),
+    ),
+    'High contrast': MyLocationStyle(
+      fillColor: Color(0xFF000000),
+      bearingColor: Color(0xFF000000),
+      accuracyCircleEnabled: false,
+      pulseEnabled: false,
+    ),
+  };
+
   UserLocation? _lastUpdate;
 
   @override
@@ -285,6 +304,7 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
         myLocationEnabled: true,
         myLocationTrackingMode: _trackingMode,
         myLocationRenderMode: _renderMode,
+        myLocationStyle: _puckStyles[_puckStyle],
         initialCameraPosition: const CameraPosition(target: _center, zoom: 15),
         trackCameraPosition: true,
       ),
@@ -357,6 +377,22 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
             ],
           ),
         ],
+        const SizedBox(height: 8),
+        ControlGroup(
+          title: 'Puck style',
+          vertical: false,
+          children: [
+            for (final name in _puckStyles.keys)
+              ChoiceChip(
+                label: Text(name),
+                selected: _puckStyle == name,
+                onSelected:
+                    hasController
+                        ? (_) => setState(() => _puckStyle = name)
+                        : null,
+              ),
+          ],
+        ),
         const SizedBox(height: 8),
         ControlGroup(
           title: 'Horizontal accuracy (ring)',

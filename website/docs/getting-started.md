@@ -60,7 +60,7 @@ If you want to show the user's location on the map, add location permissions to 
 </manifest>
 ```
 
-The plugin does not include Google Play Services. For the fused location provider in high accuracy mode, add `com.google.android.gms:play-services-location` to your app, as shown in [User Location](advanced/user-location.md#fused-location-provider-on-android).
+For F-Droid and other builds without Google Play Services, set `maplibre_gl.playServicesLocation=false` in `android/gradle.properties`, as shown in [User Location](advanced/user-location.md#building-without-google-play-services).
 
 ## iOS
 
