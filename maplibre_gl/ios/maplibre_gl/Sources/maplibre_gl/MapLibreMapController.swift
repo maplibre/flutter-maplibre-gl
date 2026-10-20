@@ -268,10 +268,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     @objc private func appDidEnterBackground() {
         isBackgroundPaused = true
         mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+        // Location updates stop in the background as on Android (#1094), whether
+        // or not the app has a location background mode for other reasons. The
+        // user-location annotation stays at its last position.
+        if myLocationEnabled && !manualLocationSource {
+            stopLocationUpdates()
+        }
     }
 
     @objc private func appWillEnterForeground() {
         isBackgroundPaused = false
+        // MLNMapView starts Core Location again on foreground. This restarts the
+        // pulse, or stops the updates again for a map paused from Dart.
+        if myLocationEnabled && !manualLocationSource {
+            restartLocationPulseIfNeeded()
+        }
         guard !pausedByDart else { return }
         mapView.preferredFramesPerSecond = userFps
     }
@@ -604,11 +615,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#pause":
             pausedByDart = true
             mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+            // As on Android, a paused map stops location updates too.
+            if myLocationEnabled && !manualLocationSource {
+                stopLocationUpdates()
+            }
             result(nil)
         case "map#resume":
             pausedByDart = false
             if !isBackgroundPaused {
                 mapView.preferredFramesPerSecond = userFps
+                if myLocationEnabled && !manualLocationSource {
+                    restartLocationPulseIfNeeded()
+                }
             }
             result(nil)
         case "camera#ease":
@@ -1983,13 +2001,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if myLocationEnabled {
             restartLocationPulseIfNeeded()
         } else {
-            locationPulseTimer?.invalidate()
-            locationPulseTimer = nil
-            locationPulseWindowTimer?.invalidate()
-            locationPulseWindowTimer = nil
-            setLocationUpdatesActive(false)
+            stopLocationUpdates()
             mapView.showsUserLocation = false
         }
+    }
+
+    /// Stops the pulse timers and Core Location, keeping the user-location annotation.
+    private func stopLocationUpdates() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+        setLocationUpdatesActive(false)
     }
 
     /// Start or stop Core Location updates without toggling the user-location annotation.
@@ -3383,6 +3406,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // ManualLocationManager implements start/stopUpdatingLocation as no-ops,
         // so the pulse timers would only burn cycles.
         guard !manualLocationSource else { return }
+
+        // Paused from Dart or in the background: the puck stays at its last
+        // position and Core Location stays off until map#resume or the
+        // foreground handler calls this again (#1094).
+        guard !pausedByDart && !isBackgroundPaused else {
+            setLocationUpdatesActive(false)
+            return
+        }
 
         guard locationUpdateIntervalMs > 0 else {
             setLocationUpdatesActive(true)

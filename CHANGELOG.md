@@ -31,7 +31,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
-* **Android**: add `com.google.android.gms:play-services-location` 21.0.0 or later to keep the fused provider for high accuracy; without it the plugin uses GPS only, which may not get a fix indoors (#1091).
 * **Web**: `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 * **iOS**: `CameraUpdate.tiltTo` keeps the zoom like on Android and web, instead of changing it along with the pitch (#1090).
 * **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read (#1090).
@@ -39,6 +38,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `CameraUpdate.newLatLngBounds` padding applies to that move only and no longer replaces the padding set with `updateContentInsets` (#1090).
 * **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
+* **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#1105).
+* **Android, iOS**: `pauseMap()` also stops location updates, so `onUserLocationUpdated` does not fire until `resumeMap()` (#1105).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -51,6 +52,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
+* **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 
 ### Changed
@@ -58,9 +60,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
-* **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin (#1091).
+* **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 
 ### Fixed
+* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#1103).
 * Layer filters now behave the same on Android, iOS and web (#1055):
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
   * `null` removes a filter. Before, it was ignored or threw.
@@ -97,6 +100,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
 * The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
+* **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background (#1105).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
