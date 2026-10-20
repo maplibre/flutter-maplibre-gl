@@ -2514,9 +2514,16 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
-  /// Sets visibility for many layers in one platform call.
+  /// Shows or hides every layer in [layerIds] with one platform call.
   ///
-  /// Missing layer ids are skipped by the native implementations.
+  /// All the changes are applied in the same UI turn, so they show up together
+  /// in the next frame instead of layer by layer, which helps when toggling a
+  /// whole group of layers such as a basemap. Repeated ids are harmless and an
+  /// empty list does nothing.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR`, naming
+  /// the first missing id, if the style has no layer for one of [layerIds].
+  /// Every id is checked first, so in that case no layer is changed.
   Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
     return _maplibrePlatform.setLayersVisibility(layerIds, visible);
   }

@@ -492,11 +492,12 @@ abstract class MapLibrePlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
-  /// Sets visibility for many layers in one platform call.
+  /// Shows or hides every layer in [layerIds] with one platform call, all in
+  /// the same UI turn so the changes render together.
   ///
-  /// Missing layer ids are skipped. Prefer this over repeated
-  /// [setLayerVisibility] calls when toggling a whole basemap: on Android each
-  /// single call takes the map lock and can wait out a render frame.
+  /// Every id is checked before any layer changes: if one is missing, this
+  /// throws `LAYER_NOT_FOUND_ERROR` naming the first missing id and changes
+  /// nothing. An empty list does nothing.
   Future<void> setLayersVisibility(List<String> layerIds, bool visible);
 
   /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
