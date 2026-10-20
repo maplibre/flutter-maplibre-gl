@@ -1671,19 +1671,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(nil)
 
         case "layer#setVisibilityBatch":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerIds = arguments["layerIds"] as? [String] else { return }
-            guard let visible = arguments["visible"] as? Bool else { return }
-            guard let style = mapView.style else {
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerIds = arguments["layerIds"] as? [String],
+                  let visible = arguments["visible"] as? Bool
+            else {
                 result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                    code: "INVALID_ARGUMENT",
+                    message: "setLayersVisibility requires 'layerIds' and 'visible'.",
                     details: nil
                 ))
                 return
             }
+            // Every id is checked before any layer changes, so an unknown id
+            // leaves the style as it was, as on Android and web. Without a
+            // style no layer is found, as for layer#setVisibility.
+            var layers: [MLNStyleLayer] = []
             for layerId in layerIds {
-                style.layer(withIdentifier: layerId)?.isVisible = visible
+                guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                    result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+                    return
+                }
+                layers.append(layer)
+            }
+            for layer in layers {
+                layer.isVisible = visible
             }
             result(nil)
 
