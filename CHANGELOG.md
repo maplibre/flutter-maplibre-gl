@@ -31,7 +31,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top; reorder layers yourself if you relied on that (#1071).
 * **iOS**: `CameraUpdate.newLatLngZoom` and `newLatLng` keep the requested zoom when the latitude changes (#1072).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
-* **Android**: add `com.google.android.gms:play-services-location` 21.0.0 or later to keep the fused provider for high accuracy; without it the plugin uses GPS only, which may not get a fix indoors (#1091).
 * **Web**: `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 * **iOS**: `CameraUpdate.tiltTo` keeps the zoom like on Android and web, instead of changing it along with the pitch (#1090).
 * **Android, iOS**: `moveCamera`, `animateCamera` and `easeCamera` throw `INVALID_ARGUMENT` for a camera update they cannot read (#1090).
@@ -51,13 +50,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
+* **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
-* **Android**: Google Play Services location is no longer bundled, so apps without Google services, such as F-Droid builds, can use the plugin (#1091).
+* **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#1103).
