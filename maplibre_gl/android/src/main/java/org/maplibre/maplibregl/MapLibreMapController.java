@@ -4030,6 +4030,14 @@ final class MapLibreMapController
       return;
     }
 
+    // MapView.onDestroy tears the map down without ending a running camera animation, so the
+    // animateCamera or easeCamera call waiting for it would never complete. Cancelling it first
+    // answers that call with false, as on iOS and web; onDestroy below drops the camera events the
+    // cancel queues.
+    if (mapLibreMap != null && mapViewCreated) {
+      mapLibreMap.cancelTransitions();
+    }
+
     if (locationComponent != null) {
       locationComponent.setLocationComponentEnabled(false);
     }
