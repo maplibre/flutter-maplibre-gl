@@ -89,16 +89,16 @@ abstract class AnnotationManager<T extends Annotation> {
           buildFeatureCollection([]),
           promoteId: "id",
         );
-        // Disposed while awaiting (a newer style load took over): stop adding
-        // to a style this manager no longer belongs to.
-        if (_disposed) return;
+        // Disposed while awaiting (a newer style load took over, or the map
+        // is gone): stop adding to a style this manager no longer belongs to.
+        if (_disposed || controller.isDisposed) return;
         await controller.addLayer(
           layerId,
           layerId,
           allLayerProperties[i],
           enableInteraction: enableInteraction,
         );
-        if (_disposed) return;
+        if (_disposed || controller.isDisposed) return;
       }
 
       controller.onFeatureDrag.remove(_dragCb); // safe even if not present
