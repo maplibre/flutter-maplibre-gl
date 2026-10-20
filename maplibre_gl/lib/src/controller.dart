@@ -507,7 +507,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with true once the camera has moved, on
   /// every platform. A move is instant, so unlike [animateCamera] nothing can
-  /// cut it short.
+  /// cut it short. On Android and iOS an update that cannot be read fails
+  /// with a [PlatformException] with code `INVALID_ARGUMENT`.
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     return _maplibrePlatform.moveCamera(cameraUpdate);
   }
