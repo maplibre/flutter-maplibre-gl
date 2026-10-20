@@ -27,18 +27,23 @@ class MapLibreMap extends StatefulWidget {
     this.scrollGesturesEnabled = true,
     this.zoomGesturesEnabled = true,
     this.tiltGesturesEnabled = true,
+    this.hapticFeedbackEnabled = true,
     this.doubleClickZoomEnabled,
     this.dragEnabled = true,
+    this.panInertia = PanInertia.normal,
     this.featureTapsTriggersMapClick = false,
+    this.symbolPlacementTransitionsEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
     this.myLocationRenderMode = MyLocationRenderMode.normal,
+    this.myLocationStyle,
     this.logoEnabled = false,
     this.logoViewPosition,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
+    this.attributionEnabled = true,
     this.attributionButtonPosition = AttributionButtonPosition.bottomRight,
     this.attributionButtonMargins,
     this.attributionButtonColor,
@@ -127,6 +132,12 @@ class MapLibreMap extends StatefulWidget {
 
   /// Called when the map style has been successfully loaded and the annotation managers have been enabled.
   /// Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called.
+  ///
+  /// When a newer style load starts before the annotation managers are set up
+  /// for the current one, only the newer load calls it. When the native map
+  /// answers the setup with a style-not-ready error, the callback is skipped
+  /// for that load (a debug build logs it) and the next style load sets the
+  /// managers up and calls it.
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
@@ -165,6 +176,21 @@ class MapLibreMap extends StatefulWidget {
   /// If `false`, only the feature tap event fires, and `onMapClick` is not called.
   final bool featureTapsTriggersMapClick;
 
+  /// Whether MapLibre fades labels and symbols in and out as it places them.
+  /// Defaults to `true`, MapLibre's own default.
+  ///
+  /// With transitions on, MapLibre recomputes which symbols are shown at most
+  /// once every 300 ms and fades the result in. A symbol whose data has just
+  /// changed, such as a feature added to a GeoJSON source, can therefore be
+  /// drawn at once, then hidden by the next placement and faded back in: it
+  /// flickers. With transitions off, placement runs on every frame and
+  /// symbols appear and disappear at once, the frame their data arrives.
+  ///
+  /// Applies to every symbol on the map, the style's own labels included, and
+  /// is kept across style changes. On web it sets the map's symbol fade
+  /// duration to 0 while off.
+  final bool symbolPlacementTransitionsEnabled;
+
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
 
@@ -193,8 +219,22 @@ class MapLibreMap extends StatefulWidget {
   /// True if the map view should respond to zoom gestures.
   final bool zoomGesturesEnabled;
 
+  /// How long the map keeps gliding after the user drags it and lets go while
+  /// it is still moving. Defaults to [PanInertia.normal].
+  ///
+  /// On iOS the same setting also applies to the glide after a pinch or a
+  /// rotation.
+  final PanInertia panInertia;
+
   /// True if the map view should respond to tilt gestures.
   final bool tiltGesturesEnabled;
+
+  /// True if the device gives a light vibration when the user rotates the map
+  /// back to north. Defaults to `true`.
+  ///
+  /// **Available only on iOS. Has no effect on Android or Web**, which have
+  /// no such option.
+  final bool hapticFeedbackEnabled;
 
   /// Set to true to forcefully disable/enable if map should respond to double
   /// click to zoom.
@@ -242,6 +282,14 @@ class MapLibreMap extends StatefulWidget {
   /// If this is set to a value other than [MyLocationRenderMode.normal], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
 
+  /// The colors of the user-location puck. Null keeps the platform's own
+  /// look. It can be changed while the map is shown, and setting it back to
+  /// null restores the default look.
+  ///
+  /// See [MyLocationStyle] for what each color applies to on Android, iOS and
+  /// web.
+  final MyLocationStyle? myLocationStyle;
+
   /// True if the MapLibre logo should be shown on the map.
   /// Defaults to false.
   final bool logoEnabled;
@@ -257,6 +305,19 @@ class MapLibreMap extends StatefulWidget {
 
   /// Set the layout margins for the Compass
   final Point? compassViewMargins;
+
+  /// True if the attribution (i) button should be shown on the map.
+  /// Defaults to true.
+  ///
+  /// It can be changed while the map is shown. On web it is the attribution
+  /// control, which comes back at [attributionButtonPosition] when shown
+  /// again.
+  ///
+  /// Most map data and tile licenses, OpenStreetMap's included, require the
+  /// attribution to stay visible. An app that hides the button must show the
+  /// attribution of its sources somewhere else, for example in its own
+  /// overlay or about screen.
+  final bool attributionEnabled;
 
   /// Set the position for the MapLibre Attribution Button
   /// When set to null, the default value of the underlying MapLibre libraries is used,
@@ -532,6 +593,10 @@ class _MapLibreMapState extends State<MapLibreMap> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    // The widget was disposed before its platform view was created, and
+    // dispose() has already torn the platform down. Wiring it up now would
+    // leave a channel handler and controller listeners nobody ever removes.
+    if (_disposed) return;
     final controller = MapLibreMapController(
       maplibrePlatform: _maplibrePlatform,
       initialCameraPosition: widget.initialCameraPosition,
@@ -599,15 +664,19 @@ class MapLibreMapOptions {
     required this.tiltGesturesEnabled,
     required this.zoomGesturesEnabled,
     required this.doubleClickZoomEnabled,
+    this.panInertia,
+    this.hapticFeedbackEnabled,
     this.trackCameraPosition,
     this.myLocationEnabled,
     this.myLocationTrackingMode,
     this.myLocationRenderMode,
+    this.myLocationStyle,
     this.logoEnabled,
     this.logoViewPosition,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
+    this.attributionEnabled,
     this.attributionButtonPosition,
     this.attributionButtonMargins,
     this.attributionButtonColor,
@@ -619,6 +688,7 @@ class MapLibreMapOptions {
     this.foregroundLoadColor,
     this.translucentTextureSurface,
     this.featureTapsTriggersMapClick,
+    this.symbolPlacementTransitionsEnabled,
   });
 
   MapLibreMapOptions.fromWidget(MapLibreMap map)
@@ -636,14 +706,18 @@ class MapLibreMapOptions {
         zoomGesturesEnabled: map.zoomGesturesEnabled,
         doubleClickZoomEnabled:
             map.doubleClickZoomEnabled ?? map.zoomGesturesEnabled,
+        panInertia: map.panInertia,
+        hapticFeedbackEnabled: map.hapticFeedbackEnabled,
         myLocationEnabled: map.myLocationEnabled,
         myLocationTrackingMode: map.myLocationTrackingMode,
         myLocationRenderMode: map.myLocationRenderMode,
+        myLocationStyle: map.myLocationStyle ?? const MyLocationStyle(),
         logoEnabled: map.logoEnabled,
         logoViewPosition: map.logoViewPosition,
         logoViewMargins: map.logoViewMargins,
         compassViewPosition: map.compassViewPosition,
         compassViewMargins: map.compassViewMargins,
+        attributionEnabled: map.attributionEnabled,
         attributionButtonPosition: map.attributionButtonPosition,
         attributionButtonMargins: map.attributionButtonMargins,
         attributionButtonColor: map.attributionButtonColor,
@@ -653,6 +727,8 @@ class MapLibreMapOptions {
         foregroundLoadColor: map.foregroundLoadColor,
         translucentTextureSurface: map.translucentTextureSurface,
         featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
+        symbolPlacementTransitionsEnabled:
+            map.symbolPlacementTransitionsEnabled,
       );
 
   final bool? compassEnabled;
@@ -673,6 +749,9 @@ class MapLibreMapOptions {
 
   final bool doubleClickZoomEnabled;
 
+  final PanInertia? panInertia;
+  final bool? hapticFeedbackEnabled;
+
   final bool? trackCameraPosition;
 
   final bool? myLocationEnabled;
@@ -680,6 +759,8 @@ class MapLibreMapOptions {
   final MyLocationTrackingMode? myLocationTrackingMode;
 
   final MyLocationRenderMode? myLocationRenderMode;
+
+  final MyLocationStyle? myLocationStyle;
 
   final bool? logoEnabled;
 
@@ -690,6 +771,8 @@ class MapLibreMapOptions {
   final CompassViewPosition? compassViewPosition;
 
   final Point? compassViewMargins;
+
+  final bool? attributionEnabled;
 
   final AttributionButtonPosition? attributionButtonPosition;
 
@@ -713,12 +796,15 @@ class MapLibreMapOptions {
 
   final bool? featureTapsTriggersMapClick;
 
+  final bool? symbolPlacementTransitionsEnabled;
+
   final _gestureGroup = {
     'rotateGesturesEnabled',
     'scrollGesturesEnabled',
     'tiltGesturesEnabled',
     'zoomGesturesEnabled',
     'doubleClickZoomEnabled',
+    'panInertia',
   };
 
   Map<String, dynamic> toMap() {
@@ -748,16 +834,20 @@ class MapLibreMapOptions {
     addIfNonNull('tiltGesturesEnabled', tiltGesturesEnabled);
     addIfNonNull('zoomGesturesEnabled', zoomGesturesEnabled);
     addIfNonNull('doubleClickZoomEnabled', doubleClickZoomEnabled);
+    addIfNonNull('panInertia', panInertia?.index);
+    addIfNonNull('hapticFeedbackEnabled', hapticFeedbackEnabled);
 
     addIfNonNull('trackCameraPosition', trackCameraPosition);
     addIfNonNull('myLocationEnabled', myLocationEnabled);
     addIfNonNull('myLocationTrackingMode', myLocationTrackingMode?.index);
     addIfNonNull('myLocationRenderMode', myLocationRenderMode?.index);
+    addIfNonNull('myLocationStyle', myLocationStyle?.toJson());
     addIfNonNull('logoEnabled', logoEnabled);
     addIfNonNull('logoViewPosition', logoViewPosition?.index);
     addIfNonNull('logoViewMargins', pointToArray(logoViewMargins));
     addIfNonNull('compassViewPosition', compassViewPosition?.index);
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
+    addIfNonNull('attributionEnabled', attributionEnabled);
     addIfNonNull('attributionButtonPosition', attributionButtonPosition?.index);
     addIfNonNull(
       'attributionButtonMargins',
@@ -778,6 +868,10 @@ class MapLibreMapOptions {
     addIfNonNull('foregroundLoadColor', foregroundLoadColor?.toARGB32());
     addIfNonNull('translucentTextureSurface', translucentTextureSurface);
     addIfNonNull('featureTapsTriggersMapClick', featureTapsTriggersMapClick);
+    addIfNonNull(
+      'symbolPlacementTransitionsEnabled',
+      symbolPlacementTransitionsEnabled,
+    );
     return optionsMap;
   }
 
@@ -795,7 +889,8 @@ class MapLibreMapOptions {
     return newOptionsMap..removeWhere((key, value) {
       if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
       final oldValue = prevOptionsMap[key];
-      if (oldValue is List && value is List) {
+      if ((oldValue is List && value is List) ||
+          (oldValue is Map && value is Map)) {
         // Use a deep equality check so that nested structures (e.g. the
         // serialized `cameraTargetBounds`, which becomes a list of lists of
         // lists) are compared by value. `listEquals` only compares the

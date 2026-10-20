@@ -1,5 +1,44 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## Unreleased
+
+### Actions needed
+* `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id instead of answering an empty list or a wrong zoom; catch it where you used to check for 0 or an empty list (#1065).
+* `removeLayer`, `setLayerVisibility` and `setLayerProperties` throw `LAYER_NOT_FOUND_ERROR` for a missing layer instead of doing nothing (#1068).
+* Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` (#1068).
+* A feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS. Check any code that relied on a drag starting at mouse down (#1077).
+* On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
+* `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects; drop any filtering or conversion you did on the result (#1064).
+* `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* `easeCamera` completes when the camera arrives instead of when it starts, so code awaiting it now runs after the animation (#1069).
+* `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
+* `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
+* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
+
+### Added
+* `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
+* `MapLibreMap.symbolPlacementTransitionsEnabled` and `setSymbolPlacementTransitionsEnabled` turn off the symbol fade, so a symbol whose data just changed no longer flickers (#1056).
+* `SymbolLayerProperties.symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
+* `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
+* `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
+* `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
+* `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
+
+### Changed
+* maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
+
+### Fixed
+* Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).
+* `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
+* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
+* `setGeoJsonSource` with a Feature or a bare geometry sets that data instead of emptying the source (#1073).
+* `querySourceFeatures`, `queryRenderedFeatures` and `queryRenderedFeaturesInRect` return features while tiles or a source update are loading, instead of failing or returning nothing (#1076).
+* `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+* Changing another map option no longer moves the attribution control back to the bottom right (#1092).
+* Removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
+* Removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed

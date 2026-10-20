@@ -285,6 +285,36 @@ void main() {
     });
   });
 
+  group('setMaximumAmbientCacheSize', () {
+    if (!kIsWeb) {
+      test('sends the byte limit over the global channel', () async {
+        await setMaximumAmbientCacheSize(10 * 1024 * 1024);
+
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'setMaximumAmbientCacheSize');
+        expect((methodCalls[0].arguments as Map)['bytes'], 10 * 1024 * 1024);
+      });
+
+      test('zero is allowed, it disables ambient caching', () async {
+        await setMaximumAmbientCacheSize(0);
+
+        expect((methodCalls[0].arguments as Map)['bytes'], 0);
+      });
+    }
+
+    if (kIsWeb) {
+      test('is unsupported on web', () async {
+        expect(() => setMaximumAmbientCacheSize(0), throwsUnsupportedError);
+        expect(methodCalls, isEmpty);
+      });
+    }
+
+    test('rejects a negative limit before touching the channel', () async {
+      expect(() => setMaximumAmbientCacheSize(-1), throwsArgumentError);
+      expect(methodCalls, isEmpty);
+    });
+  });
+
   group('getOfflineRegionStatus', () {
     test('returns parsed status', () async {
       final fakeStatusJson = json.encode({

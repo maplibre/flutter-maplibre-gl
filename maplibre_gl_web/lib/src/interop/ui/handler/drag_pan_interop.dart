@@ -2,6 +2,7 @@
 library;
 
 import 'dart:js_interop';
+
 import 'package:web/web.dart';
 
 @JS()
@@ -23,9 +24,12 @@ extension DragPanHandlerJsImplExtension on DragPanHandlerJsImpl {
 
   ///  Enables the "drag to pan" interaction.
   ///
+  ///  [options] tunes the inertia after the drag (`linearity`, `easing`,
+  ///  `deceleration`, `maxSpeed`). Omitted keys keep their defaults.
+  ///
   ///  @example
   ///  map.dragPan.enable();
-  external void enable();
+  external void enable([JSAny? options]);
 
   ///  Disables the "drag to pan" interaction.
   ///

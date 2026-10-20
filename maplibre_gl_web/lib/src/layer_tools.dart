@@ -46,6 +46,8 @@ const _layoutProperties = {
   "text-overlap",
   "text-ignore-placement",
   "text-optional",
+  "symbol-height-offset",
+  "symbol-height-anchor",
   "visibility",
   "circle-sort-key",
   "line-cap",

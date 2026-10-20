@@ -64,6 +64,12 @@ class MapLibreMap extends Camera {
 
   dynamic get painter => jsObject.painter;
 
+  /// How long symbols fade as they are placed, in milliseconds. 0 places
+  /// them on every frame without fading.
+  num get placementFadeDuration => jsObject.placementFadeDuration.toDartDouble;
+  set placementFadeDuration(num value) =>
+      jsObject.placementFadeDuration = value.toJS;
+
   ///  The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
   ///  Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
   ScrollZoomHandler get scrollZoom =>
@@ -478,8 +484,17 @@ class MapLibreMap extends Camera {
   ///  });
   ///
   ///  @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js/docs/examples/query-similar-features/)
-  List<dynamic> querySourceFeatures(String sourceId, dynamic parameters) =>
-      jsObject.querySourceFeatures(sourceId, parameters).toDart;
+  List<Feature> querySourceFeatures(
+    String sourceId, [
+    Map<String, dynamic>? parameters,
+  ]) {
+    // The parameters have to cross into JS as a JS object: a Dart map reaches
+    // maplibre-gl-js as an opaque value, so its filter was silently dropped.
+    final jsParameters = parameters != null ? utils.jsify(parameters) : null;
+    return (jsObject.querySourceFeatures(sourceId, jsParameters).toDart as List)
+        .map((dynamic f) => Feature.fromJsObject(f))
+        .toList();
+  }
 
   ///  Updates the map's MapLibre style object with a new value.
   ///
@@ -850,7 +865,7 @@ class MapLibreMap extends Camera {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  MapLibreMap moveLayer(String id, String beforeId) =>
+  MapLibreMap moveLayer(String id, [String? beforeId]) =>
       MapLibreMap.fromJsObject(jsObject.moveLayer(id, beforeId));
 
   ///  Removes the layer with the given ID from the map's style.
@@ -919,15 +934,20 @@ class MapLibreMap extends Camera {
     String layerId,
     dynamic filter, [
     StyleSetterOptions? options,
-  ]) => MapLibreMap.fromJsObject(jsObject.setFilter(layerId, filter));
+  ]) => MapLibreMap.fromJsObject(
+    // jsify turns a Dart list into a JS array, nested lists included, and
+    // keeps null, which removes the filter.
+    jsObject.setFilter(layerId, (filter as Object?).jsify()),
+  );
 
   ///  Returns the filter applied to the specified style layer.
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  List<dynamic> getFilter(String layerId) {
-    final filter = jsObject.getFilter(layerId);
-    return filter != null ? filter.toDart : [];
+  dynamic getFilter(String layerId) {
+    // dartify converts the nested expression arrays too, which toDart does
+    // not. A filter can also be a plain boolean, so the result stays dynamic.
+    return jsObject.getFilter(layerId).dartify();
   }
 
   ///  Sets the value of a paint property in the specified style layer.
@@ -1073,7 +1093,7 @@ class MapLibreMap extends Camera {
   ///   required.*
   ///  @param {string} key (optional) The key in the feature state to reset.
   removeFeatureState(dynamic target, [String? key]) =>
-      jsObject.removeFeatureState(target);
+      jsObject.removeFeatureState(target, key);
 
   ///  Gets the state of a feature.
   ///  Features are identified by their `id` attribute, which must be an integer or a string that can be

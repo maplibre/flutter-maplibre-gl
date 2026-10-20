@@ -6,6 +6,7 @@ package org.maplibre.maplibregl;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import org.maplibre.android.location.engine.LocationEngineRequest;
@@ -16,6 +17,7 @@ import org.maplibre.android.camera.CameraUpdateFactory;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMap;
+import org.maplibre.android.maps.Projection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,23 +55,51 @@ class Convert {
       case "newLatLng":
         return CameraUpdateFactory.newLatLng(toLatLng(data.get(1)));
       case "newLatLngBounds":
-        return CameraUpdateFactory.newLatLngBounds(
+        return toBoundsCameraUpdate(
+            maplibreMap,
             toLatLngBounds(data.get(1)),
-            toPixels(data.get(2), density),
-            toPixels(data.get(3), density),
-            toPixels(data.get(4), density),
-            toPixels(data.get(5), density));
+            toDouble(data.get(2)),
+            toDouble(data.get(3)),
+            toDouble(data.get(4)),
+            toDouble(data.get(5)),
+            density);
       case "newLatLngZoom":
         return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
       case "scrollBy":
-        maplibreMap.scrollBy(
-            toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
-        return null;
+        {
+          // Pans like maplibre-gl-js panBy: positive x moves the view east,
+          // positive y south. MapLibreMap.scrollBy drags the content the other
+          // way and moves the camera outside any CameraUpdate, so the caller
+          // had nothing to animate or report on.
+          final Projection projection = maplibreMap.getProjection();
+          final PointF center =
+              projection.toScreenLocation(maplibreMap.getCameraPosition().target);
+          center.offset(
+              toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
+          return CameraUpdateFactory.newLatLng(projection.fromScreenLocation(center));
+        }
       case "zoomBy":
         if (data.size() == 2) {
           return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
         } else {
-          return CameraUpdateFactory.zoomBy(toFloat(data.get(1)), toPoint(data.get(2), density));
+          // Keeps the point under the focus where it is on screen.
+          // CameraUpdateFactory.zoomBy(amount, point) recenters on the point.
+          final float amount = toFloat(data.get(1));
+          final List<?> focusData = toList(data.get(2));
+          final float focusX = toFractionalPixels(focusData.get(0), density);
+          final float focusY = toFractionalPixels(focusData.get(1), density);
+          final Projection projection = maplibreMap.getProjection();
+          final CameraPosition camera = maplibreMap.getCameraPosition();
+          final PointF center = projection.toScreenLocation(camera.target);
+          final float scale = (float) Math.pow(2, -amount);
+          final PointF target =
+              new PointF(
+                  focusX + (center.x - focusX) * scale, focusY + (center.y - focusY) * scale);
+          return CameraUpdateFactory.newCameraPosition(
+              new CameraPosition.Builder(camera)
+                  .target(projection.fromScreenLocation(target))
+                  .zoom(camera.zoom + amount)
+                  .build());
         }
       case "zoomIn":
         return CameraUpdateFactory.zoomIn();
@@ -84,6 +114,73 @@ class Convert {
       default:
         throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
     }
+  }
+
+  /**
+   * Fits the bounds inside the map padding plus the given padding (in logical pixels), with the
+   * bounds in the middle of the padded area, as maplibre-gl-js fitBounds and iOS do.
+   *
+   * <p>CameraUpdateFactory.newLatLngBounds puts the padding in the camera position it moves to, so
+   * it stays on as the map padding after the move and every later camera target is the center of
+   * the padded area (#1047). Here the center is shifted instead, and the camera position carries
+   * no padding, so the map keeps its own.
+   */
+  private static CameraUpdate toBoundsCameraUpdate(
+      MapLibreMap maplibreMap,
+      LatLngBounds bounds,
+      double left,
+      double top,
+      double right,
+      double bottom,
+      float density) {
+    final double[] mapPadding = maplibreMap.getCameraPosition().padding;
+    final double[] padding = {left, top, right, bottom};
+    final int[] fitPadding = new int[4];
+    for (int i = 0; i < 4; i++) {
+      final double mapSide = mapPadding != null && mapPadding.length == 4 ? mapPadding[i] : 0;
+      fitPadding[i] = (int) (padding[i] * density + mapSide);
+    }
+    final CameraPosition fit = maplibreMap.getCameraForLatLngBounds(bounds, fitPadding);
+    if (fit == null || fit.target == null) {
+      // No camera came back to shift, for instance while the map has no size
+      // yet. Let the SDK fit the bounds when the move runs, as before: the
+      // bounds still land in the padded area, but the padding stays on as the
+      // map padding after the move.
+      return CameraUpdateFactory.newLatLngBounds(
+          bounds,
+          (int) (left * density),
+          (int) (top * density),
+          (int) (right * density),
+          (int) (bottom * density));
+    }
+    return CameraUpdateFactory.newCameraPosition(
+        new CameraPosition.Builder()
+            .target(
+                offset(fit.target, fit.zoom, fit.bearing, (right - left) / 2, (bottom - top) / 2))
+            .zoom(fit.zoom)
+            .bearing(fit.bearing)
+            .tilt(fit.tilt)
+            .build());
+  }
+
+  /**
+   * The coordinate dx logical pixels right and dy down on screen from center, for a camera at zoom
+   * facing bearing, in Web Mercator with 512 pixel tiles. The tilt is left out, as maplibre-gl-js
+   * does when it fits bounds. The longitude is wrapped into [-180, 180). iOS does the same sums.
+   */
+  static LatLng offset(LatLng center, double zoom, double bearing, double dx, double dy) {
+    final double worldSize = 512 * Math.pow(2, zoom);
+    final double radians = Math.toRadians(bearing);
+    final double offsetX = dx * Math.cos(radians) - dy * Math.sin(radians);
+    final double offsetY = dx * Math.sin(radians) + dy * Math.cos(radians);
+    final double sinLatitude = Math.sin(Math.toRadians(center.getLatitude()));
+    final double x = (center.getLongitude() + 180) / 360 * worldSize + offsetX;
+    final double y =
+        (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * worldSize
+            + offsetY;
+    final double longitude = ((x / worldSize * 360) % 360 + 360) % 360 - 180;
+    return new LatLng(
+        Math.toDegrees(Math.atan(Math.sinh(Math.PI * (1 - 2 * y / worldSize)))), longitude);
   }
 
   static double toDouble(Object o) {
@@ -263,6 +360,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (tiltGesturesEnabled != null) {
       sink.setTiltGesturesEnabled(toBoolean(tiltGesturesEnabled));
     }
+    final Object panInertia = data.get("panInertia");
+    if (panInertia != null) {
+      sink.setPanInertia(toInt(panInertia));
+    }
     final Object trackCameraPosition = data.get("trackCameraPosition");
     if (trackCameraPosition != null) {
       sink.setTrackCameraPosition(toBoolean(trackCameraPosition));
@@ -287,6 +388,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (myLocationRenderMode != null) {
       sink.setMyLocationRenderMode(toInt(myLocationRenderMode));
     }
+    final Object myLocationStyle = data.get("myLocationStyle");
+    if (myLocationStyle instanceof Map) {
+      sink.setMyLocationStyle(LocationPuckStyle.fromMap((Map<?, ?>) myLocationStyle));
+    }
     final Object logoEnabled = data.get("logoEnabled");
     if (logoEnabled != null) {
       sink.setLogoEnabled(toBoolean(logoEnabled));
@@ -310,6 +415,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
       final List compassViewMarginsData = toList(compassViewMargins);
       final Point point = toPoint(compassViewMarginsData, metrics.density);
       sink.setCompassViewMargins(point.x, point.y);
+    }
+    final Object attributionEnabled = data.get("attributionEnabled");
+    if (attributionEnabled != null) {
+      sink.setAttributionEnabled(toBoolean(attributionEnabled));
     }
     final Object attributionButtonGravity = data.get("attributionButtonPosition");
     if (attributionButtonGravity != null) {
@@ -340,6 +449,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     final Object featureTapsTriggersMapClick = data.get("featureTapsTriggersMapClick");
     if (featureTapsTriggersMapClick != null) {
       sink.setFeatureTapsTriggersMapClick(toBoolean(featureTapsTriggersMapClick));
+    }
+    final Object symbolPlacementTransitionsEnabled = data.get("symbolPlacementTransitionsEnabled");
+    if (symbolPlacementTransitionsEnabled != null) {
+      sink.setSymbolPlacementTransitionsEnabled(toBoolean(symbolPlacementTransitionsEnabled));
     }
   }
 }

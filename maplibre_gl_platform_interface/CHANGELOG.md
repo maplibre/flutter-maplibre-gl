@@ -1,3 +1,14 @@
+## Unreleased
+
+### Actions needed
+* `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
+
+### Added
+* `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
+
+### Deprecated
+* `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.

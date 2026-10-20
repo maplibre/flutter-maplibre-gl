@@ -187,6 +187,20 @@ void main() {
       expect(methodCalls[0].method, 'heatmapLayer#add');
     });
 
+    test('addHeatmapLayer sends the filter and source layer', () async {
+      await platform.addHeatmapLayer(
+        'heat-source',
+        'heatmap-layer',
+        {'heatmap-radius': 30},
+        sourceLayer: 'quakes',
+        filter: ['has', 'mag'],
+      );
+
+      final args = methodCalls.single.arguments as Map;
+      expect(args['sourceLayer'], 'quakes');
+      expect(args['filter'], '["has","mag"]');
+    });
+
     test('addLayer sends correct method', () async {
       await platform.addLayer('image-layer', 'image-source', 5, 15);
 
@@ -223,6 +237,49 @@ void main() {
       expect(args['layerId'], 'layer-to-remove');
     });
 
+    test('moveLayer sends correct method with belowLayerId', () async {
+      await platform.moveLayer('my-layer', belowLayerId: 'other-layer');
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'style#moveLayer');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerId'], 'my-layer');
+      expect(args['belowLayerId'], 'other-layer');
+    });
+
+    test('moveLayer sends correct method without belowLayerId', () async {
+      await platform.moveLayer('my-layer');
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'style#moveLayer');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerId'], 'my-layer');
+      expect(args.containsKey('belowLayerId'), isFalse);
+    });
+
+    test('moveLayer surfaces a platform error to the caller', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (methodCall) async =>
+                throw PlatformException(
+                  code: 'LAYER_NOT_FOUND_ERROR',
+                  message: 'Layer with id missing not found.',
+                ),
+          );
+
+      await expectLater(
+        platform.moveLayer('missing', belowLayerId: 'other-layer'),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'LAYER_NOT_FOUND_ERROR',
+          ),
+        ),
+      );
+    });
+
     test('setLayerVisibility sends correct method', () async {
       await platform.setLayerVisibility('my-layer', false);
 
@@ -241,6 +298,17 @@ void main() {
       final args = methodCalls[0].arguments as Map;
       expect(args['layerIds'], ['layer-a', 'layer-b']);
       expect(args['visible'], false);
+    });
+
+    test('setLayerZoomRange sends correct method', () async {
+      await platform.setLayerZoomRange('my-layer', 5.5, 15);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'layer#setZoomRange');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerId'], 'my-layer');
+      expect(args['minzoom'], 5.5);
+      expect(args['maxzoom'], 15.0);
     });
 
     test('getLayerVisibility returns result', () async {

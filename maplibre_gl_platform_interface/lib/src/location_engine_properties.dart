@@ -190,6 +190,12 @@ class LocationEnginePlatforms {
 /// (Android only)
 enum LocationPriority {
   /// High accuracy, may consume more power.
+  ///
+  /// On Android, uses Google's fused location provider when the device has
+  /// Google Play Services and the app was not built with
+  /// `maplibre_gl.playServicesLocation=false`, and the platform location
+  /// manager otherwise: Android's own fused provider on Android 12 and later,
+  /// GPS before.
   highAccuracy,
 
   /// Balanced accuracy and power usage.

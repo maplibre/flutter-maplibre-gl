@@ -111,6 +111,10 @@ Future<String?> exportOfflineDatabase(String destinationPath) async {
   return copyOfflineDatabase(dbPath, destinationPath);
 }
 
+/// Lists the offline regions stored on the device.
+///
+/// On iOS the stored regions load asynchronously after launch; this waits for
+/// them, so a call made right at startup returns the same list as Android.
 Future<List<OfflineRegion>> getListOfRegions() async {
   final String regionsJson = await _globalChannel.invokeMethod(
     'getListOfRegions',
@@ -120,6 +124,17 @@ Future<List<OfflineRegion>> getListOfRegions() async {
   return regions.map(OfflineRegion.fromMap).toList();
 }
 
+/// Replaces the metadata of the offline region with the given [id] and returns
+/// the updated region.
+///
+/// [metadata] must be JSON-encodable: strings, numbers, booleans, null, and
+/// lists and maps of those, with string keys. Other values, such as a
+/// `Uint8List`, fail on iOS with `UpdateMetadataError`, while Android stores
+/// them in whatever form its JSON encoder gives them (a `Uint8List` comes
+/// back as a list of numbers).
+///
+/// Throws a [PlatformException] with code `UpdateMetadataError` when no region
+/// has that [id].
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
   Map<String, dynamic> metadata,
@@ -201,6 +216,29 @@ Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
 /// same area.
 Future<void> clearAmbientCache() =>
     _globalChannel.invokeMethod('clearAmbientCache');
+
+/// Sets the size limit, in [bytes], of the ambient cache: the tiles and
+/// style resources the map keeps on disk from normal browsing. The default
+/// is 50 MB and `0` turns the cache off. Offline regions do not count
+/// towards the limit.
+///
+/// Call it before the first map is created. A cache already over the new
+/// limit is trimmed right away.
+///
+/// Throws an [ArgumentError] if [bytes] is negative. Android and iOS only;
+/// throws [UnsupportedError] on web.
+Future<void> setMaximumAmbientCacheSize(int bytes) {
+  if (bytes < 0) {
+    throw ArgumentError.value(bytes, 'bytes', 'Must be 0 or more');
+  }
+  if (kIsWeb) {
+    throw UnsupportedError('The ambient cache is not available on web.');
+  }
+  return _globalChannel.invokeMethod(
+    'setMaximumAmbientCacheSize',
+    <String, dynamic>{'bytes': bytes},
+  );
+}
 
 /// Resets the entire offline database: deletes every offline region and
 /// clears the ambient cache. Use with care — offline regions cannot be

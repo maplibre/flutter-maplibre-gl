@@ -60,6 +60,8 @@ If you want to show the user's location on the map, add location permissions to 
 </manifest>
 ```
 
+For F-Droid and other builds without Google Play Services, set `maplibre_gl.playServicesLocation=false` in `android/gradle.properties`, as shown in [User Location](advanced/user-location.md#building-without-google-play-services).
+
 ## iOS
 
 Add a location usage description to your `Info.plist`:
@@ -208,7 +210,7 @@ Future<void> main() async {
 |----------|----------------|
 | Flutter  | 3.29.0 |
 | Dart     | 3.7.0 |
-| Android  | API 21 (Android 5.0) |
+| Android  | API 23 (Android 6.0) |
 | iOS      | iOS 13 |
 | Web      | WebGL2, see [Requirements](#requirements) |
 | JDK      | 21 |

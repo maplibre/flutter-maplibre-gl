@@ -174,6 +174,9 @@ abstract class MapLibrePlatform {
   Future<bool> editGeoJsonUrl(String id, String url);
 
   /// Sets a filter for a layer.
+  @Deprecated(
+    'Use setFilter instead. MapLibreMapController.setLayerFilter calls it',
+  )
   Future<bool> setLayerFilter(String layerId, String filter);
 
   /// Gets the current map style as JSON string.
@@ -285,6 +288,13 @@ abstract class MapLibrePlatform {
   );
 
   Future<void> removeLayer(String imageLayerId);
+
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  Future<void> moveLayer(String layerId, {String? belowLayerId});
 
   Future<List> getLayerIds();
 
@@ -459,6 +469,7 @@ abstract class MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   });
 
   Future<void> addSource(String sourceId, SourceProperties properties);
@@ -487,6 +498,14 @@ abstract class MapLibrePlatform {
   /// [setLayerVisibility] calls when toggling a whole basemap: on Android each
   /// single call takes the map lock and can wait out a render frame.
   Future<void> setLayersVisibility(List<String> layerIds, bool visible);
+
+  /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
+  /// which the layer with [layerId] is drawn.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  );
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.

@@ -28,6 +28,8 @@ await controller.animateCamera(
 );
 ```
 
+The future completes when the animation ends: `true` once the camera has arrived, `false` if another camera call or a gesture cut it short. On iOS it completes with `null`.
+
 ## `moveCamera`: instant jump
 
 ```dart
@@ -51,10 +53,10 @@ await controller.moveCamera(
 | `CameraUpdate.zoomIn()` | Zoom in one level |
 | `CameraUpdate.zoomOut()` | Zoom out one level |
 | `CameraUpdate.zoomTo(double)` | Zoom to a specific level |
-| `CameraUpdate.zoomBy(double)` | Relative zoom change |
+| `CameraUpdate.zoomBy(double, [Offset])` | Relative zoom change, keeping the optional focus point in place |
 | `CameraUpdate.bearingTo(double)` | Rotate to a bearing |
 | `CameraUpdate.tiltTo(double)` | Set tilt angle |
-| `CameraUpdate.scrollBy(double, double)` | Pan by pixel offset |
+| `CameraUpdate.scrollBy(double, double)` | Pan by logical pixels (positive x east, positive y south) |
 
 ## Fit a bounding box
 

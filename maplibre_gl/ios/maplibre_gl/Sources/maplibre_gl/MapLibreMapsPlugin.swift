@@ -110,6 +110,24 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
             case "getListOfRegions":
                 // Note: this does not download anything from internet, it only fetches data drom database
                 OfflineManagerUtils.regionsList(result: result)
+            case "updateOfflineRegionMetadata":
+                guard let args = methodCall.arguments as? [String: Any],
+                      let id = args["id"] as? Int
+                else {
+                    result(FlutterError(
+                        code: "UpdateMetadataError",
+                        message: "could not decode arguments",
+                        details: nil
+                    ))
+                    return
+                }
+                // Android stores "{}" when no metadata is passed.
+                let metadata = args["metadata"] as? [String: Any] ?? [:]
+                OfflineManagerUtils.updateRegionMetadata(
+                    result: result,
+                    id: id,
+                    metadata: metadata
+                )
             case "mergeOfflineRegions":
                 guard let args = methodCall.arguments as? [String: Any],
                       let path = args["path"] as? String
@@ -136,6 +154,18 @@ public class MapLibreMapsPlugin: NSObject, FlutterPlugin {
                 OfflineManagerUtils.deleteRegion(result: result, id: id)
             case "clearAmbientCache":
                 OfflineManagerUtils.clearAmbientCache(result: result)
+            case "setMaximumAmbientCacheSize":
+                guard let arguments = methodCall.arguments as? [String: Any],
+                      let bytes = arguments["bytes"] as? UInt64
+                else {
+                    result(FlutterError(
+                        code: "SetMaximumAmbientCacheSizeError",
+                        message: "could not decode arguments",
+                        details: nil
+                    ))
+                    return
+                }
+                OfflineManagerUtils.setMaximumAmbientCacheSize(result: result, bytes: bytes)
             case "resetOfflineDatabase":
                 OfflineManagerUtils.resetOfflineDatabase(result: result)
             case "pauseOfflineRegionDownload":

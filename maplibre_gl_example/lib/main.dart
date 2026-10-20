@@ -20,6 +20,7 @@ import 'shared/tile_client_identity.dart';
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
 import 'examples/layers/background_layer_example.dart';
+import 'examples/layers/live_symbols_example.dart';
 import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
@@ -51,6 +52,7 @@ import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
+import 'examples/layers/move_layer_example.dart';
 
 // Advanced examples
 import 'examples/advanced/globe_terrain_sky.dart';
@@ -227,7 +229,9 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   // Feature state is available on web and Android, not on iOS yet.
   if (FeatureStateExample.isSupported) const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),
+  const LiveSymbolsExample(),
   const EditStyleLayerDraggableExample(),
+  const MoveLayerExample(),
 
   // Advanced
   const MapLanguageExample(),

@@ -118,6 +118,12 @@ await controller.addSource(
 
 PMTiles is a self-hosted single-file vector tile format. It uses a `pmtiles://` URL scheme in the style JSON, with no special Dart code needed. See the [PMTiles guide](../advanced/pmtiles.md) for the full walkthrough.
 
+## MBTiles
+
+A local `.mbtiles` file is read by MapLibre Native through `mbtiles://` plus an
+absolute path on disk (Android and iOS). Flutter assets have to be copied out
+first. See the [MBTiles guide](../advanced/mbtiles.md).
+
 ## Key APIs
 
 - [`MapLibreMapController.addSource()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/addSource.html)

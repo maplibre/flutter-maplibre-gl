@@ -207,6 +207,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
+      final styleLoad = ++_styleLoadCount;
       // Dispose old managers before re-creating them for the new style.
       // This prevents stale in-flight method channel calls from racing
       // with a new style that has cleared the native Style reference.
@@ -228,35 +229,68 @@ class MapLibreMapController extends ChangeNotifier {
       symbolManager = null;
 
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (final type in annotationOrder.toSet()) {
-        final enableInteraction = interactionEnabled.contains(type);
-        switch (type) {
-          case AnnotationType.fill:
-            fillManager = FillManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await fillManager!.initialize();
-          case AnnotationType.line:
-            lineManager = LineManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await lineManager!.initialize();
-          case AnnotationType.circle:
-            circleManager = CircleManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await circleManager!.initialize();
-          case AnnotationType.symbol:
-            symbolManager = SymbolManager(
-              this,
-              enableInteraction: enableInteraction,
-            );
-            await symbolManager!.initialize();
+      try {
+        for (final type in annotationOrder.toSet()) {
+          // A newer style load took over while this one was awaiting, and it
+          // sets the managers up for its own style. Or the map is gone.
+          if (styleLoad != _styleLoadCount || isDisposed) return;
+          final enableInteraction = interactionEnabled.contains(type);
+          switch (type) {
+            case AnnotationType.fill:
+              fillManager = FillManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await fillManager!.initialize();
+            case AnnotationType.line:
+              lineManager = LineManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await lineManager!.initialize();
+            case AnnotationType.circle:
+              circleManager = CircleManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await circleManager!.initialize();
+            case AnnotationType.symbol:
+              symbolManager = SymbolManager(
+                this,
+                enableInteraction: enableInteraction,
+              );
+              await symbolManager!.initialize();
+          }
         }
+      } on MissingPluginException {
+        // Disposing the map unregisters its channel on the native side, so a
+        // call still on its way fails like this. Nothing is left to set up.
+        if (isDisposed) return;
+        rethrow;
+      } on PlatformException catch (error) {
+        // Nobody awaits this listener, so whatever it throws is an unhandled
+        // error. When the style this run was set up for is gone, because it
+        // was replaced or the native map does not hold it (yet), or the map
+        // itself is gone, that error says nothing the app can act on: the
+        // next style load disposes the half-built managers and sets them up
+        // again. Anything else is real.
+        final superseded = styleLoad != _styleLoadCount;
+        if (superseded || isDisposed) return;
+        if (!_isStyleNotReady(error)) rethrow;
+        // Nothing retries until the next style load, so this load skips
+        // onStyleLoadedCallback. Say so in debug builds.
+        if (kDebugMode) {
+          debugPrint(
+            'MapLibre: annotation setup skipped, the style is not ready '
+            '(${error.code}). The next style load sets it up again and calls '
+            'onStyleLoadedCallback.',
+          );
+        }
+        return;
       }
+      // The last manager's initialize() may have been the await that a newer
+      // style load overtook; that load calls onStyleLoadedCallback itself.
+      if (styleLoad != _styleLoadCount || isDisposed) return;
       onStyleLoadedCallback?.call();
     });
 
@@ -300,6 +334,15 @@ class MapLibreMapController extends ChangeNotifier {
         circleManager?.byId(formattedId);
   }
 
+  /// Counts style loads, so the annotation manager setup for one style can
+  /// tell that a newer style load has taken over.
+  int _styleLoadCount = 0;
+
+  /// The errors Android, iOS and web answer with when a call needs a style
+  /// that the native map does not hold at that moment.
+  static bool _isStyleNotReady(PlatformException error) =>
+      error.code == 'STYLE_NOT_READY' || error.code == 'styleNotFound';
+
   FillManager? fillManager;
   LineManager? lineManager;
   CircleManager? circleManager;
@@ -335,6 +378,9 @@ class MapLibreMapController extends ChangeNotifier {
   final onFeatureTapped = <OnFeatureInteractionCallback>[];
 
   /// Callbacks to receive drag events for features (geojson layer) placed on this map.
+  ///
+  /// On Android and iOS a second finger ends the drag with an `end` event and
+  /// the map takes over the gesture.
   final onFeatureDrag = <OnFeatureDragCallback>[];
 
   /// Callbacks for mouse enter, move and leave over features of a style layer.
@@ -416,6 +462,17 @@ class MapLibreMapController extends ChangeNotifier {
     if (!isDisposed) notifyListeners();
   }
 
+  /// Turns MapLibre's placement transitions on or off now, without a widget
+  /// rebuild. See [MapLibreMap.symbolPlacementTransitionsEnabled].
+  ///
+  /// Sent on the same channel as source updates, so a call made before
+  /// [setGeoJsonSource] reaches the platform before it: turning transitions
+  /// off around an update places what changed in the frame it arrives, and
+  /// turning them back on afterwards restores the fades and makes the map
+  /// draw its final state.
+  Future<void> setSymbolPlacementTransitionsEnabled(bool enabled) =>
+      _updateMapOptions({'symbolPlacementTransitionsEnabled': enabled});
+
   /// Triggers a resize event for the map on web (ignored on Android or iOS).
   ///
   /// Checks first if a resize is required or if it looks like it is already correctly resized.
@@ -435,10 +492,11 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [duration] is the amount of time, that the transition animation should take.
   ///
-  /// The returned [Future] completes after the change has been started on the
-  /// platform side.
-  /// It returns true if the camera was successfully moved and false if the movement was canceled.
-  /// Note: this currently always returns immediately with a value of null on iOS
+  /// The returned [Future] completes when the animation ends, with true if the
+  /// camera arrived and false if the movement was canceled, for example by
+  /// another camera call or a gesture.
+  /// Note: on iOS it always completes with null: when the animation ends if a
+  /// [duration] is given, right away otherwise.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -469,6 +527,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
+  /// [sourceId] is already in use.
   Future<void> addGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson, {
@@ -637,6 +698,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addSymbolLayer(
     String sourceId,
     String layerId,
@@ -680,6 +744,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addLineLayer(
     String sourceId,
     String layerId,
@@ -712,6 +779,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerProperties(
     String layerId,
     LayerProperties properties,
@@ -741,6 +811,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addFillLayer(
     String sourceId,
     String layerId,
@@ -784,6 +857,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addFillExtrusionLayer(
     String sourceId,
     String layerId,
@@ -827,6 +903,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Filters are written as [expressions].
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addCircleLayer(
     String sourceId,
     String layerId,
@@ -865,6 +944,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addRasterLayer(
     String sourceId,
     String layerId,
@@ -899,6 +981,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addHillshadeLayer(
     String sourceId,
     String layerId,
@@ -933,6 +1018,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addColorReliefLayer(
     String sourceId,
     String layerId,
@@ -971,6 +1059,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// changing this one's properties afterwards can stop it drawing. Remove the
   /// style's background layer first, or set the properties you want when you
   /// add this one. See https://github.com/maplibre/maplibre-native/issues/4502.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addBackgroundLayer(
     String layerId,
     BackgroundLayerProperties properties, {
@@ -1001,6 +1092,13 @@ class MapLibreMapController extends ChangeNotifier {
   /// visible.
   /// [maxzoom] is the maximum (exclusive) zoom level at which the layer is
   /// visible.
+  /// [filter] determines which features should be rendered in the layer.
+  /// Filters are written as [expressions].
+  ///
+  /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
@@ -1009,6 +1107,7 @@ class MapLibreMapController extends ChangeNotifier {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
@@ -1018,6 +1117,7 @@ class MapLibreMapController extends ChangeNotifier {
       sourceLayer: sourceLayer,
       minzoom: minzoom,
       maxzoom: maxzoom,
+      filter: filter,
     );
   }
 
@@ -1184,6 +1284,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// this call stays paused when the host activity returns to the foreground
   /// until [resumeMap] is called.
   ///
+  /// On Android and iOS a paused map also stops location updates, so
+  /// [onUserLocationUpdated] does not fire until [resumeMap].
+  ///
   /// Platform behavior:
   /// - **Android**: stops the MapView render loop.
   /// - **iOS**: drops the preferred frame rate to 0 while paused and restores
@@ -1256,18 +1359,10 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.editGeoJsonUrl(id, url);
   }
 
-  /// Sets a filter for a layer.
-  ///
-  /// The [layerId] specifies the layer identifier, and [filter] contains the
-  /// filter expression as a JSON string.
-  ///
-  /// The returned [Future] completes with true if the filter was successfully
-  /// applied, false otherwise.
-  Future<bool> setLayerFilter(String layerId, String filter) async {
-    return _maplibrePlatform.setLayerFilter(layerId, filter);
-  }
-
   /// Gets the current map style as JSON string.
+  ///
+  /// On Android and iOS this is the style as loaded, without runtime changes.
+  /// On web it includes them.
   ///
   /// The returned [Future] completes with the style JSON string if successful,
   /// null otherwise.
@@ -1790,6 +1885,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// On Android and iOS a polygon is also returned for a point inside one of
+  /// its holes, as MapLibre Native reports it, while taps and drags ignore
+  /// it; on web the holes are left out.
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1807,6 +1906,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// On Android and iOS a polygon is also returned for a box inside one of
+  /// its holes, as MapLibre Native reports it, while taps and drags ignore
+  /// it; on web the holes are left out.
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
@@ -1857,8 +1960,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// await controller.animateCamera(CameraUpdate.newLatLngZoom(center, zoom + 0.5));
   /// ```
   ///
-  /// For a source that is not clustered, or a [clusterId] that is not one of
-  /// its current clusters, this answers 0 on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
+  /// has no cluster [clusterId], or is not clustered. Cluster ids change with
+  /// the data and the viewport, so use an id you just queried or tapped.
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
     return _maplibrePlatform.getClusterExpansionZoom(sourceId, clusterId);
   }
@@ -1873,8 +1977,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// For a source that is not clustered, or an unknown [clusterId], this
-  /// answers an empty list on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
+  /// has no cluster [clusterId], or is not clustered. Cluster ids change with
+  /// the data and the viewport, so use an id you just queried or tapped.
   Future<List<Map<String, dynamic>>> getClusterChildren(
     String sourceId,
     int clusterId,
@@ -1890,8 +1995,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature.
   ///
-  /// For a source that is not clustered, or an unknown [clusterId], this
-  /// answers an empty list on every platform.
+  /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
+  /// has no cluster [clusterId], or is not clustered. Cluster ids change with
+  /// the data and the viewport, so use an id you just queried or tapped.
   Future<List<Map<String, dynamic>>> getClusterLeaves(
     String sourceId,
     int clusterId, {
@@ -1942,6 +2048,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// This allows you to add an image to the currently displayed style once, and from there on refer to it e.g. in the [Symbol.iconImage] anytime you add a [Symbol] later on.
   /// Set [sdf] to true if the image you add is an SDF image.
   /// Returns after the image has successfully been added to the style.
+  /// An image already added under [name] is replaced.
+  /// [bytes] that cannot be decoded as an image throw a [PlatformException]
+  /// with code `INVALID_IMAGE`.
   /// Note: This can only be called after OnStyleLoadedCallback has been invoked and any added images will have to be re-added if a new style is loaded.
   ///
   /// Example: Adding an asset image and using it in a new symbol:
@@ -1998,6 +2107,9 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
   /// Not implemented on web.
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
+  /// [imageSourceId] is already in use.
   Future<void> addImageSource(
     String imageSourceId,
     Uint8List bytes,
@@ -2026,6 +2138,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer to the map's style at render time.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addImageLayer(
     String layerId,
     String imageSourceId, {
@@ -2036,6 +2151,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Adds an image layer below the layer provided with belowLayerId to the map's style at render time.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
+  /// [layerId] is already in use.
   Future<void> addImageLayerBelow(
     String layerId,
     String sourceId,
@@ -2053,16 +2171,61 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Removes a MapLibre style layer
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> removeLayer(String layerId) {
     return _maplibrePlatform.removeLayer(layerId);
   }
 
-  Future<void> setFilter(String layerId, dynamic filter) {
-    return _maplibrePlatform.setFilter(layerId, filter);
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  ///
+  /// The layer keeps its paint, layout, filter and source, and is not
+  /// recreated.
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if
+  /// [layerId] or [belowLayerId] is not a layer of the style; the layers are
+  /// then left as they were.
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) {
+    return _maplibrePlatform.moveLayer(layerId, belowLayerId: belowLayerId);
   }
 
-  Future<dynamic> getFilter(String layerId) {
+  /// Shows only the features of the layer [layerId] that match [filter].
+  ///
+  /// [filter] is an expression like `['==', ['get', 'type'], 'park']`, or the
+  /// same expression as a JSON string. Pass null to remove it.
+  ///
+  /// Throws a [PlatformException] if the layer is missing or cannot be
+  /// filtered, or if [filter] is invalid. The message says why.
+  Future<void> setLayerFilter(String layerId, dynamic filter) async {
+    await _maplibrePlatform.setFilter(
+      layerId,
+      filter is String ? jsonDecode(filter) : filter,
+    );
+  }
+
+  /// Returns the filter of the layer [layerId], or null if it has none.
+  Future<dynamic> getLayerFilter(String layerId) {
     return _maplibrePlatform.getFilter(layerId);
+  }
+
+  /// Removes the filter of the layer [layerId], so it shows all its features.
+  Future<void> removeLayerFilter(String layerId) {
+    return setLayerFilter(layerId, null);
+  }
+
+  @Deprecated('Use setLayerFilter instead, which takes the same arguments')
+  Future<void> setFilter(String layerId, dynamic filter) {
+    return setLayerFilter(layerId, filter);
+  }
+
+  @Deprecated('Use getLayerFilter instead, which takes the same arguments')
+  Future<dynamic> getFilter(String layerId) {
+    return getLayerFilter(layerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
@@ -2091,6 +2254,9 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Add a new source to the map
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if the
+  /// source id is already in use.
   Future<void> addSource(String sourceid, SourceProperties properties) async {
     return _maplibrePlatform.addSource(sourceid, properties);
   }
@@ -2168,6 +2334,8 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
+        enableInteraction: enableInteraction,
       );
     } else if (properties is LineLayerProperties) {
       await addLineLayer(
@@ -2240,6 +2408,7 @@ class MapLibreMapController extends ChangeNotifier {
         sourceLayer: sourceLayer,
         minzoom: minzoom,
         maxzoom: maxzoom,
+        filter: filter,
       );
     } else if (properties is ColorReliefLayerProperties) {
       if (filter != null) {
@@ -2313,7 +2482,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Sets the style's `light` root object, which lights extruded geometries.
   ///
   /// **Platform support**: all platforms. On Android and iOS the values must
-  /// be constants; only web also accepts expressions.
+  /// be constants; only web also accepts expressions. On Android and iOS a
+  /// non-constant value throws a [PlatformException] with code
+  /// `INVALID_ARGUMENT` and nothing is applied.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -2335,6 +2506,10 @@ class MapLibreMapController extends ChangeNotifier {
     await _maplibrePlatform.setGlobalStateProperty(name, value);
   }
 
+  /// Shows or hides the layer with [layerId].
+  ///
+  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
+  /// style has no layer with [layerId].
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
@@ -2344,6 +2519,29 @@ class MapLibreMapController extends ChangeNotifier {
   /// Missing layer ids are skipped by the native implementations.
   Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
     return _maplibrePlatform.setLayersVisibility(layerIds, visible);
+  }
+
+  /// Sets the zoom range in which the layer with [layerId] is drawn: from
+  /// [minzoom] (inclusive) up to [maxzoom] (exclusive), the layer's `minzoom`
+  /// and `maxzoom` in the style spec.
+  ///
+  /// Both values must be within 0 and 24, with [minzoom] not above [maxzoom].
+  /// Pass 0 and 24 to draw the layer at every zoom.
+  ///
+  /// Throws a [PlatformException] with code:
+  /// * `INVALID_ARGUMENT` if the range is outside 0 to 24 or [minzoom] is
+  ///   above [maxzoom]. Nothing is changed.
+  /// * `STYLE_NOT_READY` if the style has not loaded yet.
+  /// * `LAYER_NOT_FOUND_ERROR` if the style has no layer with [layerId].
+  ///
+  /// The new range is reported by [getLayerProperties] as `minzoom` and
+  /// `maxzoom`, which are left out when they are 0 and 24.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    return _maplibrePlatform.setLayerZoomRange(layerId, minzoom, maxzoom);
   }
 
   Future<List> getLayerIds() {
@@ -2368,10 +2566,15 @@ class MapLibreMapController extends ChangeNotifier {
   /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
   /// values are returned as JSON literals or expressions.
   ///
+  /// **Android**: runtime changes are included. Colors come back as
+  /// `rgba(...)` strings, and `layout` always has `visibility`.
+  ///
   /// **iOS**: only layers that came with the style are readable. iOS reads the
   /// style as it was loaded, so a layer added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
-  /// normally. See
+  /// normally. For layers that came with the style, the zoom range is read
+  /// live, so it follows [setLayerZoomRange], while the other properties read
+  /// as loaded. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);
@@ -2384,6 +2587,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
   /// `data`, `attribution`, `minzoom`, `maxzoom`).
   ///
+  /// **Android**: a source added at runtime reports only `type`, plus `url`
+  /// (`data` for GeoJSON loaded from a URL) and `attribution` when set. A
+  /// source from the style reports its full entry as loaded.
+  ///
   /// **iOS**: only sources that came with the style are readable. iOS reads the
   /// style as it was loaded, so a source added at runtime through this API is
   /// not in it and this answers null for it, where Android and web answer
@@ -2395,6 +2602,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the style
+  /// has loaded.
   Future<bool?> getLayerVisibility(String layerId) {
     return _maplibrePlatform.getLayerVisibility(layerId);
   }

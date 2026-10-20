@@ -43,6 +43,9 @@ class Convert {
         if let tiltGesturesEnabled = options["tiltGesturesEnabled"] as? Bool {
             delegate.setTiltGesturesEnabled(tiltGesturesEnabled: tiltGesturesEnabled)
         }
+        if let hapticFeedbackEnabled = options["hapticFeedbackEnabled"] as? Bool {
+            delegate.setHapticFeedbackEnabled(hapticFeedbackEnabled: hapticFeedbackEnabled)
+        }
         if let trackCameraPosition = options["trackCameraPosition"] as? Bool {
             delegate.setTrackCameraPosition(trackCameraPosition: trackCameraPosition)
         }
@@ -51,6 +54,9 @@ class Convert {
         }
         if let doubleClickZoomEnabled = options["doubleClickZoomEnabled"] as? Bool {
             delegate.setDoubleClickZoomEnabled(doubleClickZoomEnabled: doubleClickZoomEnabled)
+        }
+        if let panInertia = options["panInertia"] as? Int {
+            delegate.setPanInertia(panInertia: panInertia)
         }
         if let myLocationEnabled = options["myLocationEnabled"] as? Bool {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
@@ -64,6 +70,9 @@ class Convert {
            let renderMode = MyLocationRenderMode(rawValue: myLocationRenderMode)
         {
             delegate.setMyLocationRenderMode(myLocationRenderMode: renderMode)
+        }
+        if let myLocationStyle = options["myLocationStyle"] as? [String: Any] {
+            delegate.setMyLocationStyle(style: LocationPuckStyle(json: myLocationStyle))
         }
         if let logoEnabled = options["logoEnabled"] as? Bool {
             delegate.setLogoEnabled(logoEnabled: logoEnabled)
@@ -84,6 +93,9 @@ class Convert {
         if let compassViewMargins = options["compassViewMargins"] as? [Double] {
             delegate.setCompassViewMargins(x: compassViewMargins[0], y: compassViewMargins[1])
         }
+        if let attributionEnabled = options["attributionEnabled"] as? Bool {
+            delegate.setAttributionEnabled(attributionEnabled: attributionEnabled)
+        }
         if let attributionButtonMargins = options["attributionButtonMargins"] as? [Double] {
             delegate.setAttributionButtonMargins(
                 x: attributionButtonMargins[0],
@@ -100,6 +112,9 @@ class Convert {
         }
         if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
+        }
+        if let enabled = options["symbolPlacementTransitionsEnabled"] as? Bool {
+            delegate.setSymbolPlacementTransitionsEnabled(enabled: enabled)
         }
         // iOS serializes as [enableHighAccuracy (0/1), distanceFilter, intervalMs, pulseWindowMs]
         if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
@@ -145,32 +160,26 @@ class Convert {
             return MLNMapCamera.fromDict(cameraPosition, mapView: mapView)
         case "newLatLng":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
-            let camera = mapView.camera
-            camera.centerCoordinate = CLLocationCoordinate2D.fromArray(coordinate)
-            return camera
+            return cameraLooking(
+                at: CLLocationCoordinate2D.fromArray(coordinate),
+                zoom: getZoom(mapView: mapView),
+                mapView: mapView
+            )
         case "newLatLngBounds":
             guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
-            
-            if let padding = parseLatLngBoundsPadding(cameraUpdate) {
-                return mapView.cameraThatFitsCoordinateBounds(
-                    MLNCoordinateBounds.fromArray(bounds),
-                    edgePadding: padding
-                )
-            }
-            
-            return mapView.cameraThatFitsCoordinateBounds(MLNCoordinateBounds.fromArray(bounds))
-            
+            let padding = parseLatLngBoundsPadding(cameraUpdate) ?? .zero
+            let fit = mapView.cameraThatFitsCoordinateBounds(
+                MLNCoordinateBounds.fromArray(bounds),
+                edgePadding: padding
+            )
+            return cameraFitting(fit, padding: padding, mapView: mapView)
         case "newLatLngZoom":
             guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
             guard let zoom = cameraUpdate[2] as? Double else { return nil }
-            let camera = mapView.camera
-            camera.centerCoordinate = CLLocationCoordinate2D.fromArray(coordinate)
-            let altitude = getAltitude(zoom: zoom, mapView: mapView)
-            return MLNMapCamera(
-                lookingAtCenter: camera.centerCoordinate,
-                altitude: altitude,
-                pitch: camera.pitch,
-                heading: camera.heading
+            return cameraLooking(
+                at: CLLocationCoordinate2D.fromArray(coordinate),
+                zoom: zoom,
+                mapView: mapView
             )
         case "scrollBy":
             guard let x = cameraUpdate[1] as? CGFloat else { return nil }
@@ -178,22 +187,30 @@ class Convert {
             let camera = mapView.camera
             let mapPoint = mapView.convert(camera.centerCoordinate, toPointTo: mapView)
             let movedPoint = CGPoint(x: mapPoint.x + x, y: mapPoint.y + y)
-            camera.centerCoordinate = mapView.convert(movedPoint, toCoordinateFrom: mapView)
-            return camera
+            let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
+            return cameraLooking(at: center, zoom: getZoom(mapView: mapView), mapView: mapView)
         case "zoomBy":
             guard let zoomBy = cameraUpdate[1] as? Double else { return nil }
-            let camera = mapView.camera
-            let zoom = getZoom(mapView: mapView)
-            let altitude = getAltitude(zoom: zoom + zoomBy, mapView: mapView)
-            camera.altitude = altitude
+            let zoom = getZoom(mapView: mapView) + zoomBy
             if cameraUpdate.count == 2 {
+                let camera = mapView.camera
+                camera.altitude = getAltitude(zoom: zoom, mapView: mapView)
                 return camera
             } else {
                 guard let point = cameraUpdate[2] as? [CGFloat],
                       point.count == 2 else { return nil }
-                let movedPoint = CGPoint(x: point[0], y: point[1])
-                camera.centerCoordinate = mapView.convert(movedPoint, toCoordinateFrom: mapView)
-                return camera
+                // Keeps the point under the focus where it is on screen rather
+                // than recentring on it: the view center moves toward the focus
+                // by the share of the distance the zoom takes away.
+                let focus = CGPoint(x: point[0], y: point[1])
+                let centerPoint = mapView.convert(mapView.camera.centerCoordinate, toPointTo: mapView)
+                let scale = CGFloat(pow(2, -zoomBy))
+                let movedPoint = CGPoint(
+                    x: focus.x + (centerPoint.x - focus.x) * scale,
+                    y: focus.y + (centerPoint.y - focus.y) * scale
+                )
+                let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
+                return cameraLooking(at: center, zoom: zoom, mapView: mapView)
             }
         case "zoomIn":
             let camera = mapView.camera
@@ -220,8 +237,19 @@ class Convert {
             return camera
         case "tiltTo":
             guard let tilt = cameraUpdate[1] as? CGFloat else { return nil }
+            // The zoom comes from the altitude together with the pitch, so the
+            // same altitude at another pitch is another zoom level. Read the zoom
+            // first and work the altitude out again for the new pitch, so tilting
+            // keeps the zoom as on Android and web.
+            let zoom = getZoom(mapView: mapView)
             let camera = mapView.camera
             camera.pitch = tilt
+            camera.altitude = MLNAltitudeForZoomLevel(
+                zoom,
+                camera.pitch,
+                camera.centerCoordinate.latitude,
+                mapView.frame.size
+            )
             return camera
         default:
             print("\(type) not implemented!")
@@ -244,6 +272,90 @@ class Convert {
             mapView.camera.pitch,
             mapView.camera.centerCoordinate.latitude,
             mapView.frame.size
+        )
+    }
+
+    /// Camera on `center` at `zoom`, keeping pitch and heading. The altitude is
+    /// worked out for the new latitude: the same altitude at another latitude
+    /// is another zoom level.
+    class func cameraLooking(
+        at center: CLLocationCoordinate2D,
+        zoom: Double,
+        mapView: MLNMapView
+    ) -> MLNMapCamera {
+        let camera = mapView.camera
+        let altitude = MLNAltitudeForZoomLevel(
+            zoom,
+            camera.pitch,
+            center.latitude,
+            mapView.frame.size
+        )
+        return MLNMapCamera(
+            lookingAtCenter: center,
+            altitude: altitude,
+            pitch: camera.pitch,
+            heading: camera.heading
+        )
+    }
+
+    /// `cameraThatFitsCoordinateBounds` sizes the zoom for the padded area but
+    /// centers the camera on the bounds, expecting the same padding to be
+    /// passed again when the camera is set. Passing it would keep it as the
+    /// map's camera insets after the move, so the center is shifted here
+    /// instead: the bounds land in the middle of the padded area while the
+    /// map's own content insets stay as they were, as on Android and web.
+    class func cameraFitting(
+        _ fit: MLNMapCamera,
+        padding: UIEdgeInsets,
+        mapView: MLNMapView
+    ) -> MLNMapCamera {
+        let size = mapView.frame.size
+        let zoom = MLNZoomLevelForAltitude(
+            fit.altitude,
+            fit.pitch,
+            fit.centerCoordinate.latitude,
+            size
+        )
+        guard zoom.isFinite else { return fit }
+        let center = offset(
+            fit.centerCoordinate,
+            zoom: zoom,
+            heading: fit.heading,
+            dx: Double(padding.right - padding.left) / 2,
+            dy: Double(padding.bottom - padding.top) / 2
+        )
+        return MLNMapCamera(
+            lookingAtCenter: center,
+            altitude: MLNAltitudeForZoomLevel(zoom, fit.pitch, center.latitude, size),
+            pitch: fit.pitch,
+            heading: fit.heading
+        )
+    }
+
+    /// The coordinate `dx` points right and `dy` points down on screen from
+    /// `center`, for a camera at `zoom` facing `heading`, in Web Mercator with
+    /// 512 point tiles. The pitch is left out, as maplibre-gl-js does when it
+    /// fits bounds. The longitude is wrapped into [-180, 180). Android does
+    /// the same sums.
+    class func offset(
+        _ center: CLLocationCoordinate2D,
+        zoom: Double,
+        heading: CLLocationDirection,
+        dx: Double,
+        dy: Double
+    ) -> CLLocationCoordinate2D {
+        let worldSize = 512 * pow(2, zoom)
+        let radians = heading * Double.pi / 180
+        let offsetX = dx * cos(radians) - dy * sin(radians)
+        let offsetY = dx * sin(radians) + dy * cos(radians)
+        let sinLatitude = sin(center.latitude * Double.pi / 180)
+        let x = (center.longitude + 180) / 360 * worldSize + offsetX
+        let y = (0.5 - log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Double.pi)) * worldSize
+            + offsetY
+        let longitude = (x / worldSize * 360).truncatingRemainder(dividingBy: 360)
+        return CLLocationCoordinate2D(
+            latitude: atan(sinh(Double.pi * (1 - 2 * y / worldSize))) * 180 / Double.pi,
+            longitude: (longitude < 0 ? longitude + 360 : longitude) - 180
         )
     }
 

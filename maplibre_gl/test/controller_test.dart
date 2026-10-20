@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter/widgets.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -22,6 +24,21 @@ void main() {
       annotationConsumeTapEvents: AnnotationType.values,
     );
     platform.reset();
+  });
+
+  group('Placement transitions', () {
+    test(
+      'setSymbolPlacementTransitionsEnabled sends the option as an update',
+      () async {
+        await controller.setSymbolPlacementTransitionsEnabled(false);
+
+        final calls = platform.callsFor('updateMapOptions');
+        expect(calls.length, 1);
+        expect(calls.first.positionalArgs.first, {
+          'symbolPlacementTransitionsEnabled': false,
+        });
+      },
+    );
   });
 
   group('Camera delegation', () {
@@ -399,12 +416,78 @@ void main() {
       expect(platform.wasCalled('addCircleLayer'), isTrue);
     });
 
+    test('addLayer passes filter and enableInteraction for fill extrusion '
+        '(#360)', () async {
+      const filter = [
+        '>',
+        ['get', 'height'],
+        10,
+      ];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const FillExtrusionLayerProperties(fillExtrusionHeight: 20),
+        filter: filter,
+        enableInteraction: false,
+      );
+
+      final calls = platform.callsFor('addFillExtrusionLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+      expect(calls.first.namedArgs['enableInteraction'], isFalse);
+    });
+
+    test('addLayer passes filter for heatmap (#360)', () async {
+      const filter = ['==', 'kind', 'quake'];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
+    test('addHeatmapLayer passes filter', () async {
+      const filter = ['has', 'mag'];
+      await controller.addHeatmapLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
     test('removeLayer delegates to platform', () async {
       await controller.removeLayer('layer-1');
 
       final calls = platform.callsFor('removeLayer');
       expect(calls.length, 1);
       expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('moveLayer delegates to platform', () async {
+      await controller.moveLayer('layer-1', belowLayerId: 'layer-2');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], 'layer-2');
+    });
+
+    test('moveLayer delegates to platform without belowLayerId', () async {
+      await controller.moveLayer('layer-1');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], isNull);
     });
 
     test('setLayerVisibility delegates to platform', () async {
@@ -423,6 +506,93 @@ void main() {
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], ['layer-1', 'layer-2']);
       expect(calls.first.positionalArgs[1], false);
+    });
+
+    test('setLayerZoomRange delegates to platform', () async {
+      await controller.setLayerZoomRange('layer-1', 5.5, 15);
+
+      final calls = platform.callsFor('setLayerZoomRange');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['layer-1', 5.5, 15.0]);
+    });
+
+    test('setLayerFilter passes the expression to setFilter', () async {
+      await controller.setLayerFilter('layer-1', [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter decodes a filter given as JSON', () async {
+      await controller.setLayerFilter(
+        'layer-1',
+        '["==", ["get", "type"], "park"]',
+      );
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter passes null through to remove the filter', () async {
+      await controller.setLayerFilter('layer-1', null);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test('setLayerFilter fails its future on malformed JSON', () async {
+      final future = controller.setLayerFilter('layer-1', '["==", ');
+
+      await expectLater(future, throwsFormatException);
+      expect(platform.callsFor('setFilter'), isEmpty);
+    });
+
+    test('removeLayerFilter sends a null filter', () async {
+      await controller.removeLayerFilter('layer-1');
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test('getLayerFilter delegates to getFilter', () async {
+      await controller.getLayerFilter('layer-1');
+
+      final calls = platform.callsFor('getFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('deprecated setFilter and getFilter still work', () async {
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.setFilter('layer-1', ['has', 'name']);
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.getFilter('layer-1');
+
+      expect(platform.callsFor('setFilter').single.positionalArgs[1], [
+        'has',
+        'name',
+      ]);
+      expect(platform.callsFor('getFilter').length, 1);
     });
 
     test('addImageLayer delegates to addLayer on platform', () async {
@@ -691,6 +861,54 @@ void main() {
       controller.dispose();
 
       expect(controller.isDisposed, isTrue);
+    });
+
+    group('while the style load sets up annotations', () {
+      late int styleLoadedCalls;
+      late Completer<void> release;
+
+      setUp(() async {
+        styleLoadedCalls = 0;
+        // A platform of its own: the controller from the outer setUp would
+        // answer the style load too.
+        platform = FakeMapLibrePlatform();
+        controller = MapLibreMapController(
+          maplibrePlatform: platform,
+          initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+          annotationOrder: AnnotationType.values,
+          annotationConsumeTapEvents: AnnotationType.values,
+          onStyleLoadedCallback: () => styleLoadedCalls++,
+        );
+        release = Completer<void>();
+        platform.onAddGeoJsonSource = (_) => release.future;
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        platform.reset();
+        platform.onAddGeoJsonSource = null;
+      });
+
+      test(
+        'a call that fails because the map is gone is not an error',
+        () async {
+          // The native side unregisters the channel on dispose, so the pending
+          // call fails with MissingPluginException. An unhandled error here
+          // fails the test.
+          controller.dispose();
+          release.completeError(MissingPluginException('map disposed'));
+          await pumpEventQueue();
+
+          expect(styleLoadedCalls, 0);
+        },
+      );
+
+      test('nothing more is sent once the pending call returns', () async {
+        controller.dispose();
+        release.complete();
+        await pumpEventQueue();
+
+        expect(platform.calls, isEmpty);
+        expect(styleLoadedCalls, 0);
+      });
     });
   });
 

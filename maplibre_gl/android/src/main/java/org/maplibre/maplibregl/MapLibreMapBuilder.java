@@ -21,8 +21,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;
   private boolean featureTapsTriggersMapClick = false;
+  private boolean symbolPlacementTransitionsEnabled = true;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
+  private LocationPuckStyle myLocationStyle = LocationPuckStyle.DEFAULT;
   private String styleString = "";
   private LatLngBounds bounds = null;
   private LocationEngineRequest locationEngineRequest = null;
@@ -30,6 +32,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private boolean translucentRequested = false;
   private boolean hybridCompositionActive = false;
   private Integer attributionButtonColor = null;
+  private Integer panInertia = null;
 
   MapLibreMapController build(
       int id,
@@ -52,8 +55,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     controller.setMyLocationEnabled(myLocationEnabled);
     controller.setMyLocationTrackingMode(myLocationTrackingMode);
     controller.setMyLocationRenderMode(myLocationRenderMode);
+    controller.setMyLocationStyle(myLocationStyle);
     controller.setTrackCameraPosition(trackCameraPosition);
     controller.setLocationSource(locationSourceToken);
+    controller.setSymbolPlacementTransitionsEnabled(symbolPlacementTransitionsEnabled);
 
     if (null != bounds) {
       controller.setCameraTargetBounds(bounds);
@@ -65,6 +70,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
     if (null != attributionButtonColor) {
       controller.setAttributionButtonColor(attributionButtonColor);
+    }
+
+    if (null != panInertia) {
+      controller.setPanInertia(panInertia);
     }
 
     return controller;
@@ -130,6 +139,13 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
+  public void setPanInertia(int panInertia) {
+    // MapLibreMapOptions has no fling settings: they live on UiSettings, which
+    // only exists once the map is ready, so forward to the controller in build().
+    this.panInertia = panInertia;
+  }
+
+  @Override
   public void setMyLocationEnabled(boolean myLocationEnabled) {
     this.myLocationEnabled = myLocationEnabled;
   }
@@ -142,6 +158,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   @Override
   public void setMyLocationRenderMode(int myLocationRenderMode) {
     this.myLocationRenderMode = myLocationRenderMode;
+  }
+
+  @Override
+  public void setMyLocationStyle(@NonNull LocationPuckStyle style) {
+    this.myLocationStyle = style;
   }
 
   @Override
@@ -217,6 +238,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
+  public void setAttributionEnabled(boolean attributionEnabled) {
+    options.attributionEnabled(attributionEnabled);
+  }
+
+  @Override
   public void setAttributionButtonGravity(int gravity) {
     switch (gravity) {
       case 0:
@@ -268,6 +294,11 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
 
   public void setFeatureTapsTriggersMapClick(boolean triggers) {
     this.featureTapsTriggersMapClick = triggers;
+  }
+
+  @Override
+  public void setSymbolPlacementTransitionsEnabled(boolean enabled) {
+    this.symbolPlacementTransitionsEnabled = enabled;
   }
 
   @Override

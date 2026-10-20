@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'dart:math';
 import 'dart:ui' as ui;
@@ -28,6 +29,7 @@ import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dar
 import 'package:maplibre_gl_web/src/interop/ui/control/geolocate_control_interop.dart';
 import 'package:maplibre_gl_web/src/js_loader.dart';
 import 'package:maplibre_gl_web/src/layer_tools.dart';
+import 'package:maplibre_gl_web/src/location_puck_style.dart';
 import 'package:maplibre_gl_web/src/manual_location_puck.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
 import 'package:maplibre_gl_web/src/ui/camera.dart';
@@ -40,6 +42,7 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
 import 'package:maplibre_gl_web/src/webgl_support.dart';
 import 'package:maplibre_gl_web/src/camera_easing_math.dart';
+import 'package:maplibre_gl_web/src/feature_drag.dart';
 
 part 'src/convert.dart';
 

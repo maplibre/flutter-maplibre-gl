@@ -49,6 +49,10 @@ class Convert {
         tiltGesturesEnabled: options['tiltGesturesEnabled'],
         zoomGesturesEnabled: options['zoomGesturesEnabled'],
         doubleClickZoomEnabled: options['doubleClickZoomEnabled'],
+        panInertia:
+            options['panInertia'] is int
+                ? PanInertia.values[options['panInertia']]
+                : PanInertia.normal,
       );
     }
 
@@ -65,6 +69,11 @@ class Convert {
     }
     if (options.containsKey('myLocationRenderMode')) {
       sink.setMyLocationRenderMode(options['myLocationRenderMode']);
+    }
+    if (options['myLocationStyle'] is Map) {
+      sink.setMyLocationStyle(
+        Map<String, dynamic>.from(options['myLocationStyle'] as Map),
+      );
     }
     if (options.containsKey('logoViewPosition')) {
       final position = LogoViewPosition.values[options['logoViewPosition']];
@@ -87,13 +96,17 @@ class Convert {
         options['compassViewMargins'][1],
       );
     }
+    // Only what the options carry is applied: an update without them keeps
+    // the attribution where it is, shown or hidden. Enabled goes first, so a
+    // map created hidden never adds the control only to remove it again.
+    if (options.containsKey('attributionEnabled')) {
+      sink.setAttributionEnabled(options['attributionEnabled']);
+    }
     if (options.containsKey('attributionButtonPosition')) {
       final position =
           AttributionButtonPosition
               .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
-    } else {
-      sink.setAttributionButtonAlignment(AttributionButtonPosition.bottomRight);
     }
     if (options.containsKey('attributionButtonMargins')) {
       sink.setAttributionButtonMargins(
@@ -116,6 +129,11 @@ class Convert {
     if (options.containsKey('featureTapsTriggersMapClick')) {
       sink.setFeatureTapsTriggersMapClick(
         options['featureTapsTriggersMapClick'],
+      );
+    }
+    if (options.containsKey('symbolPlacementTransitionsEnabled')) {
+      sink.setSymbolPlacementTransitionsEnabled(
+        options['symbolPlacementTransitionsEnabled'],
       );
     }
     if (options.containsKey('locationSource')) {
@@ -163,12 +181,16 @@ class Convert {
         final top = json[3];
         final right = json[4];
         final bottom = json[5];
+        // cameraForBounds fits at bearing 0 unless told otherwise, so pass the
+        // current one to keep it, as Android and iOS do. The result carries no
+        // pitch, so the move keeps the current pitch too.
         final camera = mapLibreMap.cameraForBounds(
           LngLatBounds(
             LngLat(bounds[0][1], bounds[0][0]),
             LngLat(bounds[1][1], bounds[1][0]),
           ),
           {
+            'bearing': mapLibreMap.getBearing(),
             'padding': {
               'top': top,
               'bottom': bottom,
@@ -211,8 +233,20 @@ class Convert {
           );
         }
         final point = json[2];
+        final focusX = (point[0] as num).toDouble();
+        final focusY = (point[1] as num).toDouble();
+        // Keeps the point under the focus where it is on screen rather than
+        // recentring on it: the view center moves toward the focus by the
+        // share of the distance the zoom takes away.
+        final center = mapLibreMap.project(mapLibreMap.getCenter());
+        final scale = pow(2, -(zoom as num)).toDouble();
         return CameraOptions(
-          center: mapLibreMap.unproject(geo_point.Point(point[0], point[1])),
+          center: mapLibreMap.unproject(
+            geo_point.Point(
+              focusX + (center.x - focusX) * scale,
+              focusY + (center.y - focusY) * scale,
+            ),
+          ),
           zoom: mapLibreMap.getZoom() + zoom,
           pitch: mapLibreMap.getPitch(),
           bearing: mapLibreMap.getBearing(),
