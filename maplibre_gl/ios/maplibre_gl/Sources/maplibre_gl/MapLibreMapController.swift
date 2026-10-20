@@ -2960,9 +2960,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     func mapView(
         _ mapView: MLNMapView,
         regionDidChangeWith reason: MLNCameraChangeReason,
-        animated _: Bool
+        animated: Bool
     ) {
-        cameraAnimations.regionDidChange(reason: reason)
+        cameraAnimations.regionDidChange(reason: reason, animated: animated)
         let arguments = trackCameraPosition ? [
             "position": getCamera()?.toDict(mapView: mapView)
         ] : [:]
