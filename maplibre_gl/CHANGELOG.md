@@ -34,6 +34,7 @@
 * **Web**: `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them, like on Android and web. `animateCamera` used to complete with `null`, right away when no duration was given, so code awaiting it now runs after the animation; `easeCamera` used to complete with `true` even when interrupted.
+* **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null`. Code that treated `null` as success on iOS should check for `true`.
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).

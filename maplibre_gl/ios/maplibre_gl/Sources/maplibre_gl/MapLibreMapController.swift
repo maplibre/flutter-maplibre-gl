@@ -822,7 +822,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             guard let parsed = parseCameraCall(methodCall, result) else { return }
             cameraAnimations.interruptRunning()
             mapView.setCamera(parsed.camera, animated: false)
-            result(nil)
+            // Always true, as on Android and web: a jump moves the camera before setCamera
+            // returns, so nothing can cut it short. The Android SDK's moveCamera likewise only
+            // ever calls onFinish, never onCancel.
+            result(true)
         case "camera#animate":
             guard let parsed = parseCameraCall(methodCall, result) else { return }
             let arguments = parsed.arguments
