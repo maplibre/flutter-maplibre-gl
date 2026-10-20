@@ -47,6 +47,7 @@
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
 * **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
+* `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).

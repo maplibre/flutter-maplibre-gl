@@ -28,6 +28,9 @@ abstract class MapLibreMapOptionsSink {
 
   void setMyLocationRenderMode(int myLocationRenderMode);
 
+  /// Colors of the user-location puck, as written by `MyLocationStyle.toJson`.
+  void setMyLocationStyle(Map<String, dynamic> style);
+
   void setLogoViewAlignment(LogoViewPosition position);
 
   void setLogoViewMargins(int x, int y);

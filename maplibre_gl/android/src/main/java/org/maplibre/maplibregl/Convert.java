@@ -388,6 +388,10 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     if (myLocationRenderMode != null) {
       sink.setMyLocationRenderMode(toInt(myLocationRenderMode));
     }
+    final Object myLocationStyle = data.get("myLocationStyle");
+    if (myLocationStyle instanceof Map) {
+      sink.setMyLocationStyle(LocationPuckStyle.fromMap((Map<?, ?>) myLocationStyle));
+    }
     final Object logoEnabled = data.get("logoEnabled");
     if (logoEnabled != null) {
       sink.setLogoEnabled(toBoolean(logoEnabled));

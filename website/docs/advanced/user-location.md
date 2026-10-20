@@ -29,6 +29,42 @@ MapLibreMap(
 
 On web only `none` and `tracking` are meaningful, since the browser exposes no compass heading.
 
+## Style the puck
+
+`myLocationStyle` recolors the puck, for example to match your brand or to make it stand out on a light style. Every field is optional, and a field left out keeps the platform's own look:
+
+```dart
+MapLibreMap(
+  myLocationEnabled: true,
+  myLocationStyle: const MyLocationStyle(
+    fillColor: Color(0xFFE53935),
+    bearingColor: Color(0xFF1E88E5),
+    accuracyColor: Color(0xFFE53935),
+    pulseEnabled: true,
+    pulseColor: Color(0xFFE53935),
+  ),
+)
+```
+
+The style can change while the map is shown, and setting it back to `null` restores the default look.
+
+| Field | What it colors |
+|-------|----------------|
+| `fillColor` | the location dot |
+| `bearingColor` | the arrow that points along the direction of the user |
+| `accuracyColor` | the accuracy circle; only its color is used, not its alpha |
+| `accuracyCircleEnabled` | `false` hides the accuracy circle |
+| `pulseEnabled` | turns the pulse around the dot on or off; leave it `null` for the platform default |
+| `pulseColor` | the color of the pulse |
+
+Each platform draws the puck a little differently, so a few fields land on different parts:
+
+* **Android**: `bearingColor` is the bearing chevron of `MyLocationRenderMode.compass`, and `fillColor` also colors the navigation arrow of `MyLocationRenderMode.gps`. The pulse is off by default, so `pulseColor` alone shows nothing: set `pulseEnabled: true` too. The dot still turns grey when no fix has arrived for a while.
+* **iOS**: `bearingColor` is the arrow drawn in `MyLocationTrackingMode.trackingGps`, and `fillColor` also colors the heading arrow of `MyLocationRenderMode.compass`. The pulse is on by default but only drawn while the accuracy is 10 meters or better. While the user only grants an approximate location, iOS draws a wider halo in `accuracyColor` instead, and keeps it when `accuracyCircleEnabled` is `false`.
+* **Web**: `bearingColor` is the arrow of the puck drawn for a `ManualLocationSource`; the browser geolocation puck shows no direction. The pulse is on by default.
+
+The accuracy circle keeps each platform's own translucency, about 15% opacity on Android, 10% on iOS and 20% on web, so it never hides the map below.
+
 ## Pitch the camera while tracking
 
 A navigation-style view wants both things at once: the camera pitched, and the map still following the user. The regular camera calls (`animateCamera`, `easeCamera`, `moveCamera`) are not tracking-aware, so on Android they end tracking outright: the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Use `setTrackingCameraOptions` instead, which goes through the platform's tracking machinery and leaves the mode alone.
@@ -147,6 +183,7 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 | `myLocationEnabled` | show or hide the puck |
 | `myLocationTrackingMode` | how the camera follows the user |
 | `controller.setTrackingCameraOptions` | pitch the camera without ending tracking (not on web) |
+| `myLocationStyle` | colors of the dot, bearing arrow, accuracy circle and pulse |
 | `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (`gps` is not supported on iOS) |
 | `locationSource` | `PlatformLocationSource` (default) or `ManualLocationSource` |
 | `locationEnginePlatforms` | per-platform engine options, including iOS pulsing |
