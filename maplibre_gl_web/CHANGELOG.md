@@ -22,6 +22,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
+* `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).

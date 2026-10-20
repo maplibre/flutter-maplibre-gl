@@ -1,3 +1,4 @@
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -197,6 +198,88 @@ void main() {
       expect(on.updatesMap(off), {'attributionEnabled': false});
       expect(off.updatesMap(on), {'attributionEnabled': true});
       expect(off.updatesMap(off), isEmpty);
+    });
+  });
+
+  group('myLocationStyle', () {
+    const style = MyLocationStyle(
+      fillColor: Color(0xFFFF0000),
+      bearingColor: Color(0xFF00FF00),
+      accuracyColor: Color(0x800000FF),
+      accuracyCircleEnabled: false,
+      pulseEnabled: true,
+      pulseColor: Color(0xFFFFFF00),
+    );
+
+    test('is sent as an empty style when unset', () {
+      final options = MapLibreMapOptions.fromWidget(MapLibreMap());
+      expect(options.toMap()['myLocationStyle'], {
+        'accuracyCircleEnabled': true,
+      });
+    });
+
+    test('sends every color as ARGB and leaves out the null fields', () {
+      final options = MapLibreMapOptions.fromWidget(
+        MapLibreMap(myLocationStyle: style),
+      );
+      expect(options.toMap()['myLocationStyle'], {
+        'fillColor': 0xFFFF0000,
+        'bearingColor': 0xFF00FF00,
+        'accuracyColor': 0x800000FF,
+        'accuracyCircleEnabled': false,
+        'pulseEnabled': true,
+        'pulseColor': 0xFFFFFF00,
+      });
+      expect(
+        const MyLocationStyle(fillColor: Color(0xFF112233)).toJson(),
+        {'fillColor': 0xFF112233, 'accuracyCircleEnabled': true},
+      );
+    });
+
+    test('is sent as an update only when it changed, and can be reset', () {
+      final unset = MapLibreMapOptions.fromWidget(MapLibreMap());
+      final styled = MapLibreMapOptions.fromWidget(
+        MapLibreMap(myLocationStyle: style),
+      );
+      final sameStyle = MapLibreMapOptions.fromWidget(
+        MapLibreMap(
+          myLocationStyle: const MyLocationStyle(
+            fillColor: Color(0xFFFF0000),
+            bearingColor: Color(0xFF00FF00),
+            accuracyColor: Color(0x800000FF),
+            accuracyCircleEnabled: false,
+            pulseEnabled: true,
+            pulseColor: Color(0xFFFFFF00),
+          ),
+        ),
+      );
+
+      expect(unset.updatesMap(styled).keys, ['myLocationStyle']);
+      expect(styled.updatesMap(sameStyle), isEmpty);
+      expect(styled.updatesMap(unset), {
+        'myLocationStyle': {'accuracyCircleEnabled': true},
+      });
+      expect(
+        MapLibreMapOptions.fromWidget(
+          MapLibreMap(myLocationStyle: const MyLocationStyle()),
+        ).updatesMap(unset),
+        isEmpty,
+      );
+    });
+
+    test('compares by value', () {
+      expect(
+        const MyLocationStyle(fillColor: Color(0xFF000000)),
+        const MyLocationStyle(fillColor: Color(0xFF000000)),
+      );
+      expect(
+        const MyLocationStyle(fillColor: Color(0xFF000000)).hashCode,
+        const MyLocationStyle(fillColor: Color(0xFF000000)).hashCode,
+      );
+      expect(
+        const MyLocationStyle(pulseEnabled: false),
+        isNot(const MyLocationStyle()),
+      );
     });
   });
 }

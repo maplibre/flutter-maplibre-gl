@@ -1282,6 +1282,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// this call stays paused when the host activity returns to the foreground
   /// until [resumeMap] is called.
   ///
+  /// On Android and iOS a paused map also stops location updates, so
+  /// [onUserLocationUpdated] does not fire until [resumeMap].
+  ///
   /// Platform behavior:
   /// - **Android**: stops the MapView render loop.
   /// - **iOS**: drops the preferred frame rate to 0 while paused and restores

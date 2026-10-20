@@ -39,6 +39,9 @@ internal interface MapLibreMapOptionsSink {
 
     fun setMyLocationRenderMode(myLocationRenderMode: Int)
 
+    /** Colors of the user-location puck, from the Dart `MyLocationStyle`. */
+    fun setMyLocationStyle(style: LocationPuckStyle)
+
     fun setLogoEnabled(logoEnabled: Boolean)
 
     fun setLogoViewGravity(gravity: Int)
