@@ -59,13 +59,6 @@ flutter {
     source '../..'
 }
 
-dependencies {
-    // maplibre_gl uses the fused location provider for high accuracy only when the app ships
-    // Play Services location. Remove this line to try the FOSS setup, which falls back to the
-    // platform GPS engine.
-    implementation 'com.google.android.gms:play-services-location:21.4.0'
-}
-
 // The Java and Kotlin targets have to agree, and android.kotlinOptions is gone in AGP 9.
 kotlin {
     compilerOptions {

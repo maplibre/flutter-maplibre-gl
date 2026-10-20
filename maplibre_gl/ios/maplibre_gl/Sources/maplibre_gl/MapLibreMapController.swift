@@ -47,6 +47,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private let cameraAnimations = CameraAnimationTracker()
     private var myLocationEnabled = false
     private var manualLocationSource = false
+    /// Colors of the user-location puck, from the Dart `MyLocationStyle`.
+    private var locationPuckStyle = LocationPuckStyle()
+    /// Whether the puck view's tint was ever set from `locationPuckStyle`. Until
+    /// then the SDK's own look is left untouched.
+    private var locationPuckTinted = false
     private lazy var manualLocationManager = ManualLocationManager()
     private var scrollingEnabled = true
     private var isAdjustingCameraProgrammatically = false
@@ -117,14 +122,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let styleString = args["styleString"] as? String
         {
             if Self.styleStringIsJSON(styleString) {
-                return MLNMapView(frame: frame, styleJSON: styleString)
+                return LocationPuckMapView(frame: frame, styleJSON: styleString)
             }
 
             if let url = Self.styleStringAsURL(
                 styleString,
                 registrar: registrar
             ) {
-                return MLNMapView(frame: frame, styleURL: url)
+                return LocationPuckMapView(frame: frame, styleURL: url)
             }
         }
 
@@ -136,7 +141,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             """
         )
         // https://github.com/maplibre/maplibre-native/issues/709
-        return MLNMapView(frame: frame)
+        return LocationPuckMapView(frame: frame)
     }
 
     init(
@@ -167,6 +172,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             .setMethodCallHandler { [weak self] in self?.onMethodCall(methodCall: $0, result: $1) }
 
         mapView.delegate = self
+        (mapView as? LocationPuckMapView)?.onTintColorDidChange = { [weak self] in
+            self?.applyLocationPuckTint()
+        }
 
         let singleTap = UITapGestureRecognizer(
             target: self,
@@ -265,10 +273,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     @objc private func appDidEnterBackground() {
         isBackgroundPaused = true
         mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+        // Location updates stop in the background as on Android (#1094), whether
+        // or not the app has a location background mode for other reasons. The
+        // user-location annotation stays at its last position.
+        if myLocationEnabled && !manualLocationSource {
+            stopLocationUpdates()
+        }
     }
 
     @objc private func appWillEnterForeground() {
         isBackgroundPaused = false
+        // MLNMapView starts Core Location again on foreground. This restarts the
+        // pulse, or stops the updates again for a map paused from Dart.
+        if myLocationEnabled && !manualLocationSource {
+            restartLocationPulseIfNeeded()
+        }
         guard !pausedByDart else { return }
         mapView.preferredFramesPerSecond = userFps
     }
@@ -601,11 +620,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         case "map#pause":
             pausedByDart = true
             mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+            // As on Android, a paused map stops location updates too.
+            if myLocationEnabled && !manualLocationSource {
+                stopLocationUpdates()
+            }
             result(nil)
         case "map#resume":
             pausedByDart = false
             if !isBackgroundPaused {
                 mapView.preferredFramesPerSecond = userFps
+                if myLocationEnabled && !manualLocationSource {
+                    restartLocationPulseIfNeeded()
+                }
             }
             result(nil)
         case "camera#ease":
@@ -1987,13 +2013,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if myLocationEnabled {
             restartLocationPulseIfNeeded()
         } else {
-            locationPulseTimer?.invalidate()
-            locationPulseTimer = nil
-            locationPulseWindowTimer?.invalidate()
-            locationPulseWindowTimer = nil
-            setLocationUpdatesActive(false)
+            stopLocationUpdates()
             mapView.showsUserLocation = false
         }
+    }
+
+    /// Stops the pulse timers and Core Location, keeping the user-location annotation.
+    private func stopLocationUpdates() {
+        locationPulseTimer?.invalidate()
+        locationPulseTimer = nil
+        locationPulseWindowTimer?.invalidate()
+        locationPulseWindowTimer = nil
+        setLocationUpdatesActive(false)
     }
 
     /// Start or stop Core Location updates without toggling the user-location annotation.
@@ -2334,7 +2365,39 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return loadIconImage(name: name)
     }
 
+    func mapView(
+        styleForDefaultUserLocationAnnotationView mapView: MLNMapView
+    ) -> MLNUserLocationAnnotationViewStyle {
+        return locationPuckStyle.annotationViewStyle(defaultTint: mapView.tintColor)
+    }
+
+    /// Recolors the default puck view from `locationPuckStyle`.
+    ///
+    /// The view takes its accuracy circle color from its tint, and builds its
+    /// layers from the map's tint whenever it redraws: when it first appears,
+    /// and when course tracking starts or stops. So this runs after each of
+    /// those, on the next main-queue turn, once the SDK has drawn the view.
+    private func applyLocationPuckTint() {
+        guard locationPuckTinted || !locationPuckStyle.isDefault else { return }
+        guard let userLocation = mapView.userLocation,
+              let view = mapView.view(for: userLocation) as? MLNUserLocationAnnotationView
+        else { return }
+        locationPuckTinted = true
+        view.tintColor = locationPuckStyle.viewTintColor(
+            defaultTint: mapView.tintColor,
+            followingCourse: mapView.userTrackingMode == .followWithCourse
+        )
+    }
+
+    private func scheduleLocationPuckTint() {
+        guard locationPuckTinted || !locationPuckStyle.isDefault else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.applyLocationPuckTint()
+        }
+    }
+
     func mapView(_: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
+        scheduleLocationPuckTint()
         if let channel = channel, let userLocation = userLocation,
            let location = userLocation.location
         {
@@ -2346,6 +2409,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapView(_: MLNMapView, didChange mode: MLNUserTrackingMode, animated _: Bool) {
+        scheduleLocationPuckTint()
         if let channel = channel {
             channel.invokeMethod("map#onCameraTrackingChanged", arguments: ["mode": mode.rawValue])
             if mode == .none {
@@ -3367,6 +3431,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // so the pulse timers would only burn cycles.
         guard !manualLocationSource else { return }
 
+        // Paused from Dart or in the background: the puck stays at its last
+        // position and Core Location stays off until map#resume or the
+        // foreground handler calls this again (#1094).
+        guard !pausedByDart && !isBackgroundPaused else {
+            setLocationUpdatesActive(false)
+            return
+        }
+
         guard locationUpdateIntervalMs > 0 else {
             setLocationUpdatesActive(true)
             return
@@ -3405,6 +3477,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // manager. Applied before `showsUserLocation` is first enabled; runtime
         // changes do not re-activate the component.
         manualLocationSource = (token == "manual")
+    }
+
+    func setMyLocationStyle(style: LocationPuckStyle) {
+        guard style != locationPuckStyle else { return }
+        locationPuckStyle = style
+        applyLocationPuckTint()
     }
 
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {

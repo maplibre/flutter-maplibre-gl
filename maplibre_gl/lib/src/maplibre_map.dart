@@ -37,6 +37,7 @@ class MapLibreMap extends StatefulWidget {
     this.myLocationEnabled = false,
     this.myLocationTrackingMode = MyLocationTrackingMode.none,
     this.myLocationRenderMode = MyLocationRenderMode.normal,
+    this.myLocationStyle,
     this.logoEnabled = false,
     this.logoViewPosition,
     this.logoViewMargins,
@@ -280,6 +281,14 @@ class MapLibreMap extends StatefulWidget {
   /// See the documentation of [MyLocationRenderMode] for details.
   /// If this is set to a value other than [MyLocationRenderMode.normal], [myLocationEnabled] needs to be true.
   final MyLocationRenderMode myLocationRenderMode;
+
+  /// The colors of the user-location puck. Null keeps the platform's own
+  /// look. It can be changed while the map is shown, and setting it back to
+  /// null restores the default look.
+  ///
+  /// See [MyLocationStyle] for what each color applies to on Android, iOS and
+  /// web.
+  final MyLocationStyle? myLocationStyle;
 
   /// True if the MapLibre logo should be shown on the map.
   /// Defaults to false.
@@ -661,6 +670,7 @@ class MapLibreMapOptions {
     this.myLocationEnabled,
     this.myLocationTrackingMode,
     this.myLocationRenderMode,
+    this.myLocationStyle,
     this.logoEnabled,
     this.logoViewPosition,
     this.logoViewMargins,
@@ -701,6 +711,7 @@ class MapLibreMapOptions {
         myLocationEnabled: map.myLocationEnabled,
         myLocationTrackingMode: map.myLocationTrackingMode,
         myLocationRenderMode: map.myLocationRenderMode,
+        myLocationStyle: map.myLocationStyle ?? const MyLocationStyle(),
         logoEnabled: map.logoEnabled,
         logoViewPosition: map.logoViewPosition,
         logoViewMargins: map.logoViewMargins,
@@ -748,6 +759,8 @@ class MapLibreMapOptions {
   final MyLocationTrackingMode? myLocationTrackingMode;
 
   final MyLocationRenderMode? myLocationRenderMode;
+
+  final MyLocationStyle? myLocationStyle;
 
   final bool? logoEnabled;
 
@@ -828,6 +841,7 @@ class MapLibreMapOptions {
     addIfNonNull('myLocationEnabled', myLocationEnabled);
     addIfNonNull('myLocationTrackingMode', myLocationTrackingMode?.index);
     addIfNonNull('myLocationRenderMode', myLocationRenderMode?.index);
+    addIfNonNull('myLocationStyle', myLocationStyle?.toJson());
     addIfNonNull('logoEnabled', logoEnabled);
     addIfNonNull('logoViewPosition', logoViewPosition?.index);
     addIfNonNull('logoViewMargins', pointToArray(logoViewMargins));
@@ -875,7 +889,8 @@ class MapLibreMapOptions {
     return newOptionsMap..removeWhere((key, value) {
       if (_gestureGroup.contains(key)) return !gesturesRequireUpdate;
       final oldValue = prevOptionsMap[key];
-      if (oldValue is List && value is List) {
+      if ((oldValue is List && value is List) ||
+          (oldValue is Map && value is Map)) {
         // Use a deep equality check so that nested structures (e.g. the
         // serialized `cameraTargetBounds`, which becomes a list of lists of
         // lists) are compared by value. `listEquals` only compares the

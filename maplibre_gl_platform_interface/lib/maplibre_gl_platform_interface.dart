@@ -16,6 +16,7 @@ part 'src/global_platform.dart';
 part 'src/line.dart';
 part 'src/location.dart';
 part 'src/location_source.dart';
+part 'src/my_location_style.dart';
 part 'src/maplibre_js_source.dart';
 part 'src/method_channel_maplibre_gl.dart';
 part 'src/symbol.dart';
