@@ -5,7 +5,8 @@
 // symbol, background, heatmap, fill-extrusion), the generic addLayer and the
 // filter it carries, belowLayerId ordering, reading layers and sources back
 // (getLayerIds, getSourceIds, getLayerProperties, getSourceProperties),
-// setLayerProperties, layer visibility, setLayerZoomRange, and the edge cases
+// setLayerProperties, layer visibility (setLayerVisibility and the batch
+// setLayersVisibility), setLayerZoomRange, and the edge cases
 // around unknown and duplicate ids.
 //
 // Each of these calls ends in the native style (MapLibre Native on Android and
@@ -671,6 +672,102 @@ void main() {
     expect((properties!['layout'] as Map)['visibility'], 'none');
   });
 
+  testWidgets('setLayersVisibility hides and shows several layers at once', (
+    tester,
+  ) async {
+    final controller = await _pumpMapWithSource(tester);
+    final layerIds = await _addCircleLayers(tester, controller, 3);
+
+    // A repeated id is harmless.
+    await pumpUntil(
+      tester,
+      controller.setLayersVisibility([...layerIds, layerIds.first], false),
+      'setLayersVisibility false',
+    );
+    for (final layerId in layerIds) {
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getLayerVisibility(layerId),
+          'getLayerVisibility $layerId hidden',
+        ),
+        isFalse,
+      );
+    }
+
+    await pumpUntil(
+      tester,
+      controller.setLayersVisibility(layerIds, true),
+      'setLayersVisibility true',
+    );
+    for (final layerId in layerIds) {
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getLayerVisibility(layerId),
+          'getLayerVisibility $layerId shown',
+        ),
+        isTrue,
+      );
+    }
+  });
+
+  testWidgets('setLayersVisibility with an unknown id changes nothing', (
+    tester,
+  ) async {
+    final controller = await _pumpMapWithSource(tester);
+    final layerIds = await _addCircleLayers(tester, controller, 2);
+
+    // The unknown id sits between known ones: the first layer must not be
+    // hidden before the missing one is found.
+    final error = await expectPlatformError(
+      tester,
+      controller.setLayersVisibility([
+        layerIds[0],
+        'no-such-layer',
+        layerIds[1],
+        'other-missing-layer',
+      ], false),
+      'setLayersVisibility unknown',
+      code: 'LAYER_NOT_FOUND_ERROR',
+    );
+    // The error names the first missing id.
+    expect(error.details, contains('no-such-layer'));
+    expect(error.details, isNot(contains('other-missing-layer')));
+
+    for (final layerId in layerIds) {
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getLayerVisibility(layerId),
+          'getLayerVisibility $layerId after error',
+        ),
+        isTrue,
+      );
+    }
+  });
+
+  testWidgets('setLayersVisibility with an empty list succeeds', (
+    tester,
+  ) async {
+    final controller = await _pumpMapWithSource(tester);
+    final layerIds = await _addCircleLayers(tester, controller, 1);
+
+    await pumpUntil(
+      tester,
+      controller.setLayersVisibility(const [], false),
+      'setLayersVisibility empty',
+    );
+    expect(
+      await pumpUntil(
+        tester,
+        controller.getLayerVisibility(layerIds.single),
+        'getLayerVisibility after empty call',
+      ),
+      isTrue,
+    );
+  });
+
   testWidgets(
     'an unknown layer is LAYER_NOT_FOUND_ERROR, an unknown source a no-op',
     (
@@ -949,6 +1046,27 @@ String _styleWithSource() {
     'paint': {'circle-radius': 5},
   });
   return jsonEncode(style);
+}
+
+/// Adds [count] circle layers on the test source and returns their ids.
+Future<List<String>> _addCircleLayers(
+  WidgetTester tester,
+  MapLibreMapController controller,
+  int count,
+) async {
+  final layerIds = [for (var i = 0; i < count; i++) 'circle-$i'];
+  for (final layerId in layerIds) {
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        _sourceId,
+        layerId,
+        const CircleLayerProperties(circleRadius: 4),
+      ),
+      'addCircleLayer $layerId',
+    );
+  }
+  return layerIds;
 }
 
 Future<List<String>> _layerIds(
