@@ -1032,7 +1032,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         coordinates: PgLatLngQuad,
         result: @escaping FlutterResult
     ) {
-        if mapView.style?.source(withIdentifier: imageSourceId) != nil {
+        // Without a style the source went nowhere, and the call succeeded.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        if style.source(withIdentifier: imageSourceId) != nil {
             result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
             return
         }
@@ -1046,7 +1051,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             coordinateQuad: coordinates.coordinateQuad,
             image: image
         )
-        mapView.style?.addSource(source)
+        style.addSource(source)
 
         result(nil)
     }
@@ -1057,8 +1062,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         coordinates: PgLatLngQuad?,
         result: @escaping FlutterResult
     ) {
-        guard let imageSource = mapView.style?
-            .source(withIdentifier: imageSourceId) as? MLNImageSource
+        // Without a style this said SOURCE_NOT_FOUND, where Android says why.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard let imageSource = style.source(withIdentifier: imageSourceId) as? MLNImageSource
         else {
             result(FlutterError(
                 code: "SOURCE_NOT_FOUND",
@@ -1384,6 +1393,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleGetLayerProperties(layerId: String, result: @escaping FlutterResult) {
+        // Without a style nil would read as "no such layer", so report it as
+        // Android does.
+        guard mapView.style != nil else {
+            result(styleNotReadyError())
+            return
+        }
         // Read the serialized style and pluck the layer entry, rather than
         // enumerating every NSExpression property. This guarantees the
         // result matches the MapLibre style spec, like Android and web.
@@ -1410,6 +1425,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleGetSourceProperties(sourceId: String, result: @escaping FlutterResult) {
+        guard mapView.style != nil else {
+            result(styleNotReadyError())
+            return
+        }
         let styleObject = currentStyleObject()
         // Nil when there is no such source.
         var properties: String?
