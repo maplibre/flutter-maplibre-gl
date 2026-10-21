@@ -117,6 +117,17 @@ extension PgLatLngBounds {
     }
 }
 
+extension PgLatLngQuad {
+    var coordinateQuad: MLNCoordinateQuad {
+        return MLNCoordinateQuad(
+            topLeft: topLeft.coordinate,
+            bottomLeft: bottomLeft.coordinate,
+            bottomRight: bottomRight.coordinate,
+            topRight: topRight.coordinate
+        )
+    }
+}
+
 extension PgEdgeInsets {
     var edgeInsets: UIEdgeInsets {
         return UIEdgeInsets(

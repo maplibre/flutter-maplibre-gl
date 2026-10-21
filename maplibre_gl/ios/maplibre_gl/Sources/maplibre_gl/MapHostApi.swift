@@ -6,7 +6,7 @@ import Foundation
 /// Each method hands its typed arguments to the controller method of the
 /// same name through `MapLibreMapController.runCall`, which holds back the
 /// calls that need the view's size and applies the initial camera first.
-/// Nested payloads (options, camera updates, properties, filters) go over
+/// The maps of style data (layer and source properties, the light) go over
 /// as the codec decoded them, see `plainValue`, and the controller's
 /// `FlutterResult` answer is adapted to the Pigeon completion.
 ///
@@ -138,8 +138,8 @@ final class MapHostApi: MapLibreMapHostApi {
         run(voidResult(completion)) { $0.mapResume(result: $1) }
     }
 
-    func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion)) { $0.mapGetStyle(result: $1) }
+    func mapGetStyle(completion: @escaping (Result<String?, Error>) -> Void) {
+        run(pigeonResult(completion) { $0 as? String }) { $0.mapGetStyle(result: $1) }
     }
 
     func mapSetCustomHeaders(
@@ -152,8 +152,10 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion)) { $0.mapGetCustomHeaders(result: $1) }
+    func mapGetCustomHeaders(completion: @escaping (Result<[String: String], Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? [String: String] }) {
+            $0.mapGetCustomHeaders(result: $1)
+        }
     }
 
     func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
@@ -290,15 +292,15 @@ final class MapHostApi: MapLibreMapHostApi {
         x: Double,
         y: Double,
         layerIds: [String],
-        filter: [Any?]?,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        filter: String?,
+        completion: @escaping (Result<[String], Error>) -> Void
     ) {
-        run(anyResult(completion)) {
+        run(nonNullResult(completion) { $0 as? [String] }) {
             $0.mapQueryRenderedFeaturesAtPoint(
                 x: x,
                 y: y,
                 layerIds: layerIds,
-                filter: filter.map(plainList),
+                filter: filter,
                 result: $1
             )
         }
@@ -311,9 +313,9 @@ final class MapHostApi: MapLibreMapHostApi {
         bottom: Double,
         layerIds: [String],
         filter: String?,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<[String], Error>) -> Void
     ) {
-        run(anyResult(completion)) {
+        run(nonNullResult(completion) { $0 as? [String] }) {
             $0.mapQueryRenderedFeaturesInRect(
                 left: left,
                 top: top,
@@ -329,14 +331,14 @@ final class MapHostApi: MapLibreMapHostApi {
     func mapQuerySourceFeatures(
         sourceId: String,
         sourceLayerId: String?,
-        filter: [Any?]?,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        filter: String?,
+        completion: @escaping (Result<[String], Error>) -> Void
     ) {
-        run(anyResult(completion)) {
+        run(nonNullResult(completion) { $0 as? [String] }) {
             $0.mapQuerySourceFeatures(
                 sourceId: sourceId,
                 sourceLayerId: sourceLayerId,
-                filter: filter.map(plainList),
+                filter: filter,
                 result: $1
             )
         }
@@ -388,9 +390,9 @@ final class MapHostApi: MapLibreMapHostApi {
     func sourceGetClusterChildren(
         sourceId: String,
         clusterId: Int64,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<[String], Error>) -> Void
     ) {
-        run(anyResult(completion)) {
+        run(nonNullResult(completion) { $0 as? [String] }) {
             $0.sourceGetClusterChildren(sourceId: sourceId, clusterId: clusterId, result: $1)
         }
     }
@@ -400,9 +402,9 @@ final class MapHostApi: MapLibreMapHostApi {
         clusterId: Int64,
         limit: Int64,
         offset: Int64,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<[String], Error>) -> Void
     ) {
-        run(anyResult(completion)) {
+        run(nonNullResult(completion) { $0 as? [String] }) {
             $0.sourceGetClusterLeaves(
                 sourceId: sourceId,
                 clusterId: clusterId,
@@ -416,17 +418,21 @@ final class MapHostApi: MapLibreMapHostApi {
     func mapEditGeoJsonSource(
         id: String,
         data: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<Bool, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.mapEditGeoJsonSource(id: id, data: data, result: $1) }
+        run(nonNullResult(completion) { $0 as? Bool }) {
+            $0.mapEditGeoJsonSource(id: id, data: data, result: $1)
+        }
     }
 
     func mapEditGeoJsonUrl(
         id: String,
         url: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<Bool, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.mapEditGeoJsonUrl(id: id, url: url, result: $1) }
+        run(nonNullResult(completion) { $0 as? Bool }) {
+            $0.mapEditGeoJsonUrl(id: id, url: url, result: $1)
+        }
     }
 
     // The feature state calls have no iOS implementation: Dart rejects them
@@ -456,9 +462,9 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceId: String,
         featureId: String,
         sourceLayer: String?,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<String?, Error>) -> Void
     ) {
-        run(anyResult(completion), notImplemented)
+        run(pigeonResult(completion) { $0 as? String }, notImplemented)
     }
 
     // MARK: Style
@@ -479,14 +485,14 @@ final class MapHostApi: MapLibreMapHostApi {
         imageSourceId: String,
         bytes: FlutterStandardTypedData,
         length: Int64,
-        coordinates: [Any?],
+        coordinates: PgLatLngQuad,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) {
             $0.styleAddImageSource(
                 imageSourceId: imageSourceId,
                 bytes: bytes,
-                coordinates: plainList(coordinates),
+                coordinates: coordinates,
                 result: $1
             )
         }
@@ -496,14 +502,14 @@ final class MapHostApi: MapLibreMapHostApi {
         imageSourceId: String,
         bytes: FlutterStandardTypedData?,
         length: Int64?,
-        coordinates: [Any?]?,
+        coordinates: PgLatLngQuad?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) {
             $0.styleUpdateImageSource(
                 imageSourceId: imageSourceId,
                 bytes: bytes,
-                coordinates: coordinates.map(plainList),
+                coordinates: coordinates,
                 result: $1
             )
         }
@@ -573,7 +579,7 @@ final class MapHostApi: MapLibreMapHostApi {
 
     func styleSetFilter(
         layerId: String,
-        filter: String,
+        filter: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) { $0.styleSetFilter(layerId: layerId, filter: filter, result: $1) }
@@ -581,9 +587,11 @@ final class MapHostApi: MapLibreMapHostApi {
 
     func styleGetFilter(
         layerId: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<String?, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.styleGetFilter(layerId: layerId, result: $1) }
+        run(pigeonResult(completion) { $0 as? String }) {
+            $0.styleGetFilter(layerId: layerId, result: $1)
+        }
     }
 
     func styleAddSource(
@@ -603,26 +611,30 @@ final class MapHostApi: MapLibreMapHostApi {
         run(voidResult(completion)) { $0.styleSetLight(light: plainMap(light), result: $1) }
     }
 
-    func styleGetLayerIds(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion)) { $0.styleGetLayerIds(result: $1) }
+    func styleGetLayerIds(completion: @escaping (Result<[String], Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? [String] }) { $0.styleGetLayerIds(result: $1) }
     }
 
-    func styleGetSourceIds(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion)) { $0.styleGetSourceIds(result: $1) }
+    func styleGetSourceIds(completion: @escaping (Result<[String], Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? [String] }) { $0.styleGetSourceIds(result: $1) }
     }
 
     func styleGetLayerProperties(
         layerId: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<String?, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.styleGetLayerProperties(layerId: layerId, result: $1) }
+        run(pigeonResult(completion) { $0 as? String }) {
+            $0.styleGetLayerProperties(layerId: layerId, result: $1)
+        }
     }
 
     func styleGetSourceProperties(
         sourceId: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<String?, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.styleGetSourceProperties(sourceId: sourceId, result: $1) }
+        run(pigeonResult(completion) { $0 as? String }) {
+            $0.styleGetSourceProperties(sourceId: sourceId, result: $1)
+        }
     }
 
     func styleSetStyle(style: String, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -638,7 +650,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Bool,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
@@ -666,7 +678,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Bool,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
@@ -694,7 +706,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Bool,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
@@ -722,7 +734,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Bool,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
@@ -750,7 +762,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Bool,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
@@ -864,7 +876,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
@@ -936,9 +948,11 @@ final class MapHostApi: MapLibreMapHostApi {
     func mapSetLayerFilter(
         id: String,
         filter: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<Bool, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.mapSetLayerFilter(id: id, filter: filter, result: $1) }
+        run(nonNullResult(completion) { $0 as? Bool }) {
+            $0.mapSetLayerFilter(id: id, filter: filter, result: $1)
+        }
     }
 
     // MARK: Location component
@@ -954,18 +968,20 @@ final class MapHostApi: MapLibreMapHostApi {
     }
 
     func locationComponentSetManualLocation(
-        update: [String: Any?],
+        update: PgManualLocationUpdate,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) {
-            $0.locationComponentSetManualLocation(update: plainMap(update), result: $1)
+            $0.locationComponentSetManualLocation(update: update, result: $1)
         }
     }
 
     func locationComponentGetLastLocation(
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<PgLatLng, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.locationComponentGetLastLocation(result: $1) }
+        run(nonNullResult(completion) { $0 as? PgLatLng }) {
+            $0.locationComponentGetLastLocation(result: $1)
+        }
     }
 
     // MARK: Dispatch
@@ -995,11 +1011,6 @@ final class MapHostApi: MapLibreMapHostApi {
 /// into the `notImplemented` error.
 private func notImplemented(_: MapLibreMapController, _ result: @escaping FlutterResult) {
     result(FlutterMethodNotImplemented)
-}
-
-/// For the calls Pigeon answers with any object: the controller's answer as it is.
-private func anyResult(_ completion: @escaping (Result<Any?, Error>) -> Void) -> FlutterResult {
-    pigeonResult(completion) { $0 }
 }
 
 /// Like `pigeonResult`, for a return the schema declares non-null. An answer
@@ -1039,9 +1050,9 @@ private func plainList(_ list: [Any?]) -> [Any] {
 
 /// A value as the standard codec decoded it: nil as NSNull, numbers and
 /// booleans as NSNumber, and maps and lists, at any depth, as `[String: Any]`
-/// and `[Any]` without optionals. The readers of nested payloads (options,
-/// camera updates, style and layer properties, filters) cast from these
-/// (`as? [String: Any]`, `as? [[Double]]`, `as? CGFloat`, `is NSNull`).
+/// and `[Any]` without optionals. The readers of style data (layer and
+/// source properties, the light) cast from these (`as? [String: Any]`,
+/// `as? [Double]`, `as? NSNumber`, `is NSNull`).
 /// Strings and typed data pass through, as does a map with keys other than
 /// strings, which the codec handed over as is.
 private func plainValue(_ value: Any?) -> Any {
