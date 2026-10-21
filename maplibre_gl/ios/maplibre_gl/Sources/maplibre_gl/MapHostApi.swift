@@ -170,22 +170,6 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    func mapEditGeoJsonSource(
-        id: String,
-        data: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send("map#editGeoJsonSource", ["id": id, "data": data], result: anyResult(completion))
-    }
-
-    func mapEditGeoJsonUrl(
-        id: String,
-        url: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send("map#editGeoJsonUrl", ["id": id, "url": url], result: anyResult(completion))
-    }
-
     func mapSetLayerFilter(
         id: String,
         filter: String,
@@ -390,17 +374,45 @@ final class MapHostApi: MapLibreMapHostApi {
 
     // MARK: Sources
 
+    func sourceAddGeoJson(
+        sourceId: String,
+        geojson: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.sourceAddGeoJson(sourceId: sourceId, geojson: geojson, result: $1)
+        }
+    }
+
+    func sourceSetGeoJson(
+        sourceId: String,
+        geojson: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.sourceSetGeoJson(sourceId: sourceId, geojson: geojson, result: $1)
+        }
+    }
+
+    func sourceSetFeature(
+        sourceId: String,
+        geojsonFeature: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.sourceSetFeature(sourceId: sourceId, geojsonFeature: geojsonFeature, result: $1)
+        }
+    }
+
     func sourceGetClusterExpansionZoom(
         sourceId: String,
         clusterId: Int64,
         completion: @escaping (Result<Int64, Error>) -> Void
     ) {
-        send(
-            "source#getClusterExpansionZoom",
-            ["sourceId": sourceId, "clusterId": clusterId],
-            // The controller answers a Swift Int.
-            result: nonNullResult(completion) { value in (value as? Int).map { Int64($0) } }
-        )
+        // The controller answers a Swift Int.
+        run(nonNullResult(completion) { value in (value as? Int).map { Int64($0) } }) {
+            $0.sourceGetClusterExpansionZoom(sourceId: sourceId, clusterId: clusterId, result: $1)
+        }
     }
 
     func sourceGetClusterChildren(
@@ -408,11 +420,9 @@ final class MapHostApi: MapLibreMapHostApi {
         clusterId: Int64,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send(
-            "source#getClusterChildren",
-            ["sourceId": sourceId, "clusterId": clusterId],
-            result: anyResult(completion)
-        )
+        run(anyResult(completion)) {
+            $0.sourceGetClusterChildren(sourceId: sourceId, clusterId: clusterId, result: $1)
+        }
     }
 
     func sourceGetClusterLeaves(
@@ -422,51 +432,35 @@ final class MapHostApi: MapLibreMapHostApi {
         offset: Int64,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send(
-            "source#getClusterLeaves",
-            ["sourceId": sourceId, "clusterId": clusterId, "limit": limit, "offset": offset],
-            result: anyResult(completion)
-        )
+        run(anyResult(completion)) {
+            $0.sourceGetClusterLeaves(
+                sourceId: sourceId,
+                clusterId: clusterId,
+                limit: limit,
+                offset: offset,
+                result: $1
+            )
+        }
     }
 
-    func sourceAddGeoJson(
-        sourceId: String,
-        geojson: String,
-        completion: @escaping (Result<Void, Error>) -> Void
+    func mapEditGeoJsonSource(
+        id: String,
+        data: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send(
-            "source#addGeoJson",
-            ["sourceId": sourceId, "geojson": geojson],
-            result: voidResult(completion)
-        )
+        run(anyResult(completion)) { $0.mapEditGeoJsonSource(id: id, data: data, result: $1) }
     }
 
-    func sourceSetGeoJson(
-        sourceId: String,
-        geojson: String,
-        completion: @escaping (Result<Void, Error>) -> Void
+    func mapEditGeoJsonUrl(
+        id: String,
+        url: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send(
-            "source#setGeoJson",
-            ["sourceId": sourceId, "geojson": geojson],
-            result: voidResult(completion)
-        )
-    }
-
-    func sourceSetFeature(
-        sourceId: String,
-        geojsonFeature: String,
-        completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        send(
-            "source#setFeature",
-            ["sourceId": sourceId, "geojsonFeature": geojsonFeature],
-            result: voidResult(completion)
-        )
+        run(anyResult(completion)) { $0.mapEditGeoJsonUrl(id: id, url: url, result: $1) }
     }
 
     // The feature state calls have no iOS implementation: Dart rejects them
-    // before sending, and the controller answers not implemented otherwise.
+    // before sending, and they are answered not implemented otherwise.
 
     func sourceSetFeatureState(
         sourceId: String,
@@ -475,16 +469,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "source#setFeatureState",
-            [
-                "sourceId": sourceId,
-                "featureId": featureId,
-                "state": state,
-                "sourceLayer": sourceLayer,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion), notImplemented)
     }
 
     func sourceRemoveFeatureState(
@@ -494,16 +479,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "source#removeFeatureState",
-            [
-                "sourceId": sourceId,
-                "featureId": featureId,
-                "stateKey": stateKey,
-                "sourceLayer": sourceLayer,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion), notImplemented)
     }
 
     func sourceGetFeatureState(
@@ -512,11 +488,7 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send(
-            "source#getFeatureState",
-            ["sourceId": sourceId, "featureId": featureId, "sourceLayer": sourceLayer],
-            result: anyResult(completion)
-        )
+        run(anyResult(completion), notImplemented)
     }
 
     // MARK: Style
@@ -1079,6 +1051,12 @@ final class MapHostApi: MapLibreMapHostApi {
 }
 
 // MARK: Results
+
+/// Answers a call iOS does not implement. `pigeonResult` turns the answer
+/// into the `notImplemented` error.
+private func notImplemented(_: MapLibreMapController, _ result: @escaping FlutterResult) {
+    result(FlutterMethodNotImplemented)
+}
 
 /// For the calls Pigeon answers with any object: the controller's answer as it is.
 private func anyResult(_ completion: @escaping (Result<Any?, Error>) -> Void) -> FlutterResult {

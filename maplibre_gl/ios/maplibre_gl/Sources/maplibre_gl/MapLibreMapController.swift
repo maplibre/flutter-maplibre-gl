@@ -516,48 +516,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // The map view's delegate auto-fires map#onUserLocationUpdated.
             manualLocationManager.push(location)
             result(nil)
-        case "map#editGeoJsonSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let srcId = arguments["id"] as? String else { return }
-            guard let srcData = arguments["data"] as? String else { return }
-            guard let style = self.mapView.style else { return }
-
-            var ret: Bool = false
-            var reply: [String: Bool] = [:]
-            if let data = srcData.data(using: String.Encoding.utf8) {
-                let src = style.source(withIdentifier: srcId)
-                if src != nil && src is MLNShapeSource {
-                    let geojsonSrc = src as! MLNShapeSource
-                    let geojsonData = try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue)
-                    if geojsonData != nil {
-                        geojsonSrc.shape = geojsonData
-                        ret = true
-                    }
-                }
-            }
-
-            reply["result"] = ret
-            result(reply)
-        case "map#editGeoJsonUrl":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let srcId = arguments["id"] as? String else { return }
-            guard let srcUrl = arguments["url"] as? String else { return }
-            guard let style = self.mapView.style else { return }
-
-            var ret: Bool = false
-            var reply: [String: Bool] = [:]
-            let src = style.source(withIdentifier: srcId)
-            if src != nil && src is MLNShapeSource {
-                let geojsonSrc = src as! MLNShapeSource
-                let geojsonUrl = URL(string: srcUrl)
-                if geojsonUrl != nil {
-                    geojsonSrc.url = geojsonUrl
-                    ret = true
-                }
-            }
-
-            reply["result"] = ret
-            result(reply)
         case "map#setLayerFilter":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let layerId = arguments["id"] as? String else { return }
@@ -1254,17 +1212,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             case let .failure(error): result(error.flutterError)
             }
 
-        case "source#addGeoJson":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojson"] as? String else { return }
-            let addResult = addSourceGeojson(sourceId: sourceId, geojson: geojson)
-
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
         case "style#addSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
@@ -1274,99 +1221,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             switch addResult {
             case .success: result(nil)
             case let .failure(error): result(error.flutterError)
-            }
-
-        case "source#setGeoJson":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojson"] as? String else { return }
-            let setResult = setSource(sourceId: sourceId, geojson: geojson)
-
-            switch setResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "source#setFeature":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojsonFeature"] as? String else { return }
-            let setResult = setFeature(sourceId: sourceId, geojsonFeature: geojson)
-
-            switch setResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "source#getClusterExpansionZoom":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let sourceId = arguments["sourceId"] as? String,
-                  let clusterId = arguments["clusterId"] as? Int
-            else {
-                result(clusterArgumentError("getClusterExpansionZoom"))
-                return
-            }
-
-            switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
-            case let .failure(error): result(error.flutterError)
-            case let .success(source):
-                guard hasCluster(source, clusterId: clusterId) else {
-                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
-                    return
-                }
-                let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
-                // The SDK returns -1 for a cluster it cannot expand, whereas
-                // Android returns 0 for the same case. Report the Android value
-                // so the Dart return type can stay a plain int on both.
-                result(zoom < 0 ? 0 : Int(zoom.rounded()))
-            }
-
-        case "source#getClusterChildren":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let sourceId = arguments["sourceId"] as? String,
-                  let clusterId = arguments["clusterId"] as? Int
-            else {
-                result(clusterArgumentError("getClusterChildren"))
-                return
-            }
-
-            switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
-            case let .failure(error): result(error.flutterError)
-            case let .success(source):
-                guard hasCluster(source, clusterId: clusterId) else {
-                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
-                    return
-                }
-                result(featuresReply(
-                    source.children(of: clusterFeature(clusterId)),
-                    methodName: "getClusterChildren"
-                ))
-            }
-
-        case "source#getClusterLeaves":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let sourceId = arguments["sourceId"] as? String,
-                  let clusterId = arguments["clusterId"] as? Int,
-                  let limit = arguments["limit"] as? Int,
-                  let offset = arguments["offset"] as? Int
-            else {
-                result(clusterArgumentError("getClusterLeaves"))
-                return
-            }
-
-            switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
-            case let .failure(error): result(error.flutterError)
-            case let .success(source):
-                guard hasCluster(source, clusterId: clusterId) else {
-                    result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
-                    return
-                }
-                let leaves = source.leaves(
-                    of: clusterFeature(clusterId),
-                    offset: UInt(max(0, offset)),
-                    limit: UInt(max(0, limit))
-                )
-                result(featuresReply(leaves, methodName: "getClusterLeaves"))
             }
 
         case "layer#setVisibility":
@@ -2106,6 +1960,131 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
 
         result(featuresReply(features, methodName: "querySourceFeatures"))
+    }
+
+    // MARK: Dart calls: sources
+
+    func sourceAddGeoJson(sourceId: String, geojson: String, result: @escaping FlutterResult) {
+        answer(addSourceGeojson(sourceId: sourceId, geojson: geojson), result)
+    }
+
+    func sourceSetGeoJson(sourceId: String, geojson: String, result: @escaping FlutterResult) {
+        answer(setSource(sourceId: sourceId, geojson: geojson), result)
+    }
+
+    func sourceSetFeature(
+        sourceId: String,
+        geojsonFeature: String,
+        result: @escaping FlutterResult
+    ) {
+        answer(setFeature(sourceId: sourceId, geojsonFeature: geojsonFeature), result)
+    }
+
+    func sourceGetClusterExpansionZoom(
+        sourceId: String,
+        clusterId: Int64,
+        result: @escaping FlutterResult
+    ) {
+        let clusterId = Int(clusterId)
+        switch clusterSource(sourceId: sourceId, methodName: "getClusterExpansionZoom") {
+        case let .failure(error): result(error.flutterError)
+        case let .success(source):
+            guard hasCluster(source, clusterId: clusterId) else {
+                result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                return
+            }
+            let zoom = source.zoomLevel(forExpanding: clusterFeature(clusterId))
+            // The SDK returns -1 for a cluster it cannot expand, whereas
+            // Android returns 0 for the same case. Report the Android value
+            // so the Dart return type can stay a plain int on both.
+            result(zoom < 0 ? 0 : Int(zoom.rounded()))
+        }
+    }
+
+    func sourceGetClusterChildren(
+        sourceId: String,
+        clusterId: Int64,
+        result: @escaping FlutterResult
+    ) {
+        let clusterId = Int(clusterId)
+        switch clusterSource(sourceId: sourceId, methodName: "getClusterChildren") {
+        case let .failure(error): result(error.flutterError)
+        case let .success(source):
+            guard hasCluster(source, clusterId: clusterId) else {
+                result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                return
+            }
+            result(featuresReply(
+                source.children(of: clusterFeature(clusterId)),
+                methodName: "getClusterChildren"
+            ))
+        }
+    }
+
+    func sourceGetClusterLeaves(
+        sourceId: String,
+        clusterId: Int64,
+        limit: Int64,
+        offset: Int64,
+        result: @escaping FlutterResult
+    ) {
+        let clusterId = Int(clusterId)
+        let limit = Int(limit)
+        let offset = Int(offset)
+        switch clusterSource(sourceId: sourceId, methodName: "getClusterLeaves") {
+        case let .failure(error): result(error.flutterError)
+        case let .success(source):
+            guard hasCluster(source, clusterId: clusterId) else {
+                result(clusterNotFoundError(sourceId: sourceId, clusterId: clusterId))
+                return
+            }
+            let leaves = source.leaves(
+                of: clusterFeature(clusterId),
+                offset: UInt(max(0, offset)),
+                limit: UInt(max(0, limit))
+            )
+            result(featuresReply(leaves, methodName: "getClusterLeaves"))
+        }
+    }
+
+    func mapEditGeoJsonSource(id srcId: String, data srcData: String, result: @escaping FlutterResult) {
+        guard let style = self.mapView.style else { return }
+
+        var ret: Bool = false
+        var reply: [String: Bool] = [:]
+        if let data = srcData.data(using: String.Encoding.utf8) {
+            let src = style.source(withIdentifier: srcId)
+            if src != nil && src is MLNShapeSource {
+                let geojsonSrc = src as! MLNShapeSource
+                let geojsonData = try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue)
+                if geojsonData != nil {
+                    geojsonSrc.shape = geojsonData
+                    ret = true
+                }
+            }
+        }
+
+        reply["result"] = ret
+        result(reply)
+    }
+
+    func mapEditGeoJsonUrl(id srcId: String, url srcUrl: String, result: @escaping FlutterResult) {
+        guard let style = self.mapView.style else { return }
+
+        var ret: Bool = false
+        var reply: [String: Bool] = [:]
+        let src = style.source(withIdentifier: srcId)
+        if src != nil && src is MLNShapeSource {
+            let geojsonSrc = src as! MLNShapeSource
+            let geojsonUrl = URL(string: srcUrl)
+            if geojsonUrl != nil {
+                geojsonSrc.url = geojsonUrl
+                ret = true
+            }
+        }
+
+        reply["result"] = ret
+        result(reply)
     }
 
     private func loadIconImage(name: String) -> UIImage? {
@@ -3190,21 +3169,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return feature
     }
 
-    /// The error a cluster call answers when its arguments do not decode.
-    ///
-    /// Replying rather than returning matters: a channel call that never
-    /// answers leaves the Dart future pending for good, with nothing to catch.
-    private func clusterArgumentError(_ methodName: String) -> FlutterError {
-        return FlutterError(
-            code: "INVALID_ARGUMENT",
-            message: "\(methodName) requires a String 'sourceId' and an int "
-                + "'clusterId', and getClusterLeaves also an int 'limit' and 'offset'.",
-            details: nil
-        )
-    }
-
     private func invalidArgumentError(_ message: String) -> FlutterError {
         return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
+    }
+
+    /// Answers a call with nothing, or with the error it failed with.
+    private func answer(_ outcome: Result<Void, MethodCallError>, _ result: FlutterResult) {
+        switch outcome {
+        case .success: result(nil)
+        case let .failure(error): result(error.flutterError)
+        }
     }
 
     /// Reads the camera update of `cameraMove`, `cameraAnimate` or
