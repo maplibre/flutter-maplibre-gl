@@ -3,10 +3,25 @@
 // from it; run `melos run generate:pigeon` after any change and commit the
 // generated files with it.
 //
-// Payloads that are style-spec JSON or user data (offline region definitions
-// and metadata) cross as maps or JSON strings, exactly as they did over the
-// hand-written method channels, so both platforms keep reading them with the
-// code they already have.
+// Conventions of the map messages:
+// - Geographical coordinates are degrees, in a PgLatLng.
+// - Screen points, offsets and distances are logical pixels (points on iOS,
+//   density independent pixels on Android), x to the right and y down from
+//   the top left corner of the map view.
+// - Durations are milliseconds.
+// - Colors are 32-bit ARGB values, as Dart `Color.toARGB32` gives them.
+// - Enums keep the order of the Dart enum they stand for, so their raw
+//   values are the indices of that enum.
+// - A style filter is the JSON text of its expression. Null means no filter,
+//   and so does the JSON text `null`.
+// - Features are GeoJSON Feature objects, each one as its own JSON text, so
+//   nested properties keep their exact shape.
+//
+// Some payloads stay maps or JSON text because their values are style data
+// of no fixed shape: layer and source properties (style-spec values, any of
+// which can be an expression), the light, feature state (app data), styles,
+// and the offline region definitions and metadata. Native hands them to the
+// converters it already has for style-spec data.
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
@@ -137,7 +152,33 @@ class PgLatLng {
   double longitude;
 }
 
-/// A point of the map view, in logical pixels from its top left corner.
+/// A rectangle of latitudes and longitudes, given by two of its corners.
+class PgLatLngBounds {
+  PgLatLngBounds({required this.southwest, required this.northeast});
+
+  PgLatLng southwest;
+  PgLatLng northeast;
+}
+
+/// Four geographical corners, which need not form a rectangle: where an
+/// image source is drawn.
+class PgLatLngQuad {
+  PgLatLngQuad({
+    required this.topLeft,
+    required this.topRight,
+    required this.bottomRight,
+    required this.bottomLeft,
+  });
+
+  PgLatLng topLeft;
+  PgLatLng topRight;
+  PgLatLng bottomRight;
+  PgLatLng bottomLeft;
+}
+
+/// A point of the map view, or an offset on screen, in logical pixels: x to
+/// the right and y down, from the top left corner of the map view for a
+/// point.
 class PgScreenPoint {
   PgScreenPoint({required this.x, required this.y});
 
@@ -145,8 +186,22 @@ class PgScreenPoint {
   double y;
 }
 
-/// The camera of a map: the `position` map of `camera#onMove` and
-/// `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+/// A space along each edge of the map view, in logical pixels.
+class PgEdgeInsets {
+  PgEdgeInsets({
+    required this.top,
+    required this.left,
+    required this.bottom,
+    required this.right,
+  });
+
+  double top;
+  double left;
+  double bottom;
+  double right;
+}
+
+/// The camera of a map.
 class PgCameraPosition {
   PgCameraPosition({
     required this.bearing,
@@ -155,14 +210,376 @@ class PgCameraPosition {
     required this.zoom,
   });
 
+  /// Degrees clockwise from north.
   double bearing;
+
+  /// The location at the center of the map view.
   PgLatLng target;
+
+  /// Degrees from the nadir.
   double tilt;
+
+  /// The zoom level.
   double zoom;
 }
 
-/// The compass heading of a user location update: the `heading` map of
-/// `map#onUserLocationUpdated`. Only iOS sends one.
+/// A change of the camera, one subclass per kind. Native reads it against
+/// the camera the map has when the call arrives.
+sealed class PgCameraUpdate {}
+
+/// Moves the camera to [cameraPosition].
+class PgCameraUpdateNewCameraPosition extends PgCameraUpdate {
+  PgCameraUpdateNewCameraPosition({required this.cameraPosition});
+
+  PgCameraPosition cameraPosition;
+}
+
+/// Centers the camera on [latLng], keeping the zoom, bearing and tilt.
+class PgCameraUpdateNewLatLng extends PgCameraUpdate {
+  PgCameraUpdateNewLatLng({required this.latLng});
+
+  PgLatLng latLng;
+}
+
+/// Fits [bounds] in the map view inset by [padding], at the greatest zoom
+/// that shows them whole, keeping the bearing and tilt. The padding adds to
+/// the content insets of the map and does not stay on after the move.
+class PgCameraUpdateNewLatLngBounds extends PgCameraUpdate {
+  PgCameraUpdateNewLatLngBounds({required this.bounds, required this.padding});
+
+  PgLatLngBounds bounds;
+  PgEdgeInsets padding;
+}
+
+/// Centers the camera on [latLng] at [zoom], keeping the bearing and tilt.
+class PgCameraUpdateNewLatLngZoom extends PgCameraUpdate {
+  PgCameraUpdateNewLatLngZoom({required this.latLng, required this.zoom});
+
+  PgLatLng latLng;
+  double zoom;
+}
+
+/// Pans the view by [dx] and [dy] logical pixels: a positive [dx] moves the
+/// view east and a positive [dy] south, for a camera facing north.
+class PgCameraUpdateScrollBy extends PgCameraUpdate {
+  PgCameraUpdateScrollBy({required this.dx, required this.dy});
+
+  double dx;
+  double dy;
+}
+
+/// Changes the zoom by [amount]. With a [focus], the location under that
+/// point of the map view stays where it is on screen.
+class PgCameraUpdateZoomBy extends PgCameraUpdate {
+  PgCameraUpdateZoomBy({required this.amount, this.focus});
+
+  double amount;
+  PgScreenPoint? focus;
+}
+
+/// Zooms in by one level.
+class PgCameraUpdateZoomIn extends PgCameraUpdate {
+  PgCameraUpdateZoomIn();
+}
+
+/// Zooms out by one level.
+class PgCameraUpdateZoomOut extends PgCameraUpdate {
+  PgCameraUpdateZoomOut();
+}
+
+/// Sets the zoom level to [zoom].
+class PgCameraUpdateZoomTo extends PgCameraUpdate {
+  PgCameraUpdateZoomTo({required this.zoom});
+
+  double zoom;
+}
+
+/// Sets the bearing to [bearing] degrees clockwise from north.
+class PgCameraUpdateBearingTo extends PgCameraUpdate {
+  PgCameraUpdateBearingTo({required this.bearing});
+
+  double bearing;
+}
+
+/// Sets the tilt to [tilt] degrees from the nadir, keeping the zoom.
+class PgCameraUpdateTiltTo extends PgCameraUpdate {
+  PgCameraUpdateTiltTo({required this.tilt});
+
+  double tilt;
+}
+
+/// The timing curve of an eased camera move, the Dart
+/// `CameraAnimationInterpolation`. Android tells only [linear] apart: the
+/// others ease in and out there.
+enum PgCameraAnimationInterpolation {
+  linear,
+  easeInOut,
+  easeOut,
+  fastOutLinearIn,
+}
+
+/// How the camera follows the user location, the Dart
+/// `MyLocationTrackingMode`. The raw values are those of iOS
+/// `MLNUserTrackingMode`; on Android the cases match, in order, the camera
+/// modes NONE, TRACKING, TRACKING_COMPASS and TRACKING_GPS.
+enum PgMyLocationTrackingMode { none, tracking, trackingCompass, trackingGps }
+
+/// How the user location is drawn, the Dart `MyLocationRenderMode`.
+enum PgMyLocationRenderMode { normal, compass, gps }
+
+/// A corner of the map view, for the logo, the compass and the attribution
+/// button. The raw values are those of iOS `MLNOrnamentPosition`.
+enum PgOrnamentPosition { topLeft, topRight, bottomLeft, bottomRight }
+
+/// How long the map glides after a pan, the Dart `PanInertia`.
+enum PgPanInertia { none, short, normal }
+
+/// The Android location priority, the Dart `LocationPriority`. The raw values
+/// are those of the `LocationEngineRequest` priorities.
+enum PgLocationPriority { highAccuracy, balanced, lowPower, noPower }
+
+/// Where the user location comes from: the platform location engine, or the
+/// app through [MapLibreMapHostApi.locationComponentSetManualLocation].
+enum PgLocationSource { platform, manual }
+
+/// Bounds for the camera target. Null [bounds] lift the restriction, which
+/// is not the same as leaving this option out.
+class PgCameraTargetBounds {
+  PgCameraTargetBounds({this.bounds});
+
+  PgLatLngBounds? bounds;
+}
+
+/// The zoom range of the camera. A null end leaves that side unbounded, which
+/// is not the same as leaving this option out.
+class PgMinMaxZoomPreference {
+  PgMinMaxZoomPreference({this.minZoom, this.maxZoom});
+
+  double? minZoom;
+  double? maxZoom;
+}
+
+/// The colors of the user location puck, the Dart `MyLocationStyle`. A null
+/// color keeps the platform default.
+class PgMyLocationStyle {
+  PgMyLocationStyle({
+    this.fillColor,
+    this.bearingColor,
+    this.accuracyColor,
+    required this.accuracyCircleEnabled,
+    this.pulseEnabled,
+    this.pulseColor,
+  });
+
+  int? fillColor;
+  int? bearingColor;
+
+  /// Only its red, green and blue channels are used.
+  int? accuracyColor;
+  bool accuracyCircleEnabled;
+
+  /// Null keeps the platform default.
+  bool? pulseEnabled;
+  int? pulseColor;
+}
+
+/// The settings of the platform location engine. Dart fills only the fields
+/// of the platform it runs on: on Android [interval], [priority] and
+/// [displacement], on iOS [enableHighAccuracy], [displacement], [intervalMs]
+/// and [pulseWindowMs].
+class PgLocationEngineProperties {
+  PgLocationEngineProperties({
+    this.interval,
+    this.priority,
+    this.displacement,
+    this.enableHighAccuracy,
+    this.intervalMs,
+    this.pulseWindowMs,
+  });
+
+  /// Android: milliseconds between location updates.
+  int? interval;
+
+  /// Android.
+  PgLocationPriority? priority;
+
+  /// Meters the device moves before an update. iOS reads it as the distance
+  /// filter.
+  int? displacement;
+
+  /// iOS: the best accuracy rather than a hundred meters.
+  bool? enableHighAccuracy;
+
+  /// iOS: milliseconds between two GPS pulses, 0 for continuous updates.
+  int? intervalMs;
+
+  /// iOS: milliseconds the GPS stays on in each pulse.
+  int? pulseWindowMs;
+}
+
+/// The options of a map. On creation a null field keeps the platform
+/// default; in [MapLibreMapHostApi.mapUpdate] it leaves the option as it is,
+/// as Dart sends only the options that changed. Web-only options are not
+/// sent.
+class PgMapOptions {
+  PgMapOptions({
+    this.compassEnabled,
+    this.cameraTargetBounds,
+    this.styleString,
+    this.minMaxZoomPreference,
+    this.rotateGesturesEnabled,
+    this.scrollGesturesEnabled,
+    this.tiltGesturesEnabled,
+    this.zoomGesturesEnabled,
+    this.doubleClickZoomEnabled,
+    this.panInertia,
+    this.hapticFeedbackEnabled,
+    this.trackCameraPosition,
+    this.myLocationEnabled,
+    this.myLocationTrackingMode,
+    this.myLocationRenderMode,
+    this.myLocationStyle,
+    this.logoEnabled,
+    this.logoViewPosition,
+    this.logoViewMargins,
+    this.compassViewPosition,
+    this.compassViewMargins,
+    this.attributionEnabled,
+    this.attributionButtonPosition,
+    this.attributionButtonMargins,
+    this.attributionButtonColor,
+    this.locationEngineProperties,
+    this.locationSource,
+    this.foregroundLoadColor,
+    this.translucentTextureSurface,
+    this.featureTapsTriggersMapClick,
+    this.symbolPlacementTransitionsEnabled,
+  });
+
+  bool? compassEnabled;
+  PgCameraTargetBounds? cameraTargetBounds;
+
+  /// A style JSON, URL, file path or asset name.
+  String? styleString;
+  PgMinMaxZoomPreference? minMaxZoomPreference;
+  bool? rotateGesturesEnabled;
+  bool? scrollGesturesEnabled;
+  bool? tiltGesturesEnabled;
+  bool? zoomGesturesEnabled;
+  bool? doubleClickZoomEnabled;
+  PgPanInertia? panInertia;
+
+  /// iOS only.
+  bool? hapticFeedbackEnabled;
+
+  /// Whether the camera events and [MapLibreMapHostApi.mapUpdate] report the
+  /// camera position.
+  bool? trackCameraPosition;
+  bool? myLocationEnabled;
+  PgMyLocationTrackingMode? myLocationTrackingMode;
+  PgMyLocationRenderMode? myLocationRenderMode;
+  PgMyLocationStyle? myLocationStyle;
+  bool? logoEnabled;
+  PgOrnamentPosition? logoViewPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? logoViewMargins;
+  PgOrnamentPosition? compassViewPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? compassViewMargins;
+  bool? attributionEnabled;
+  PgOrnamentPosition? attributionButtonPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? attributionButtonMargins;
+
+  /// ARGB.
+  int? attributionButtonColor;
+  PgLocationEngineProperties? locationEngineProperties;
+  PgLocationSource? locationSource;
+
+  /// Android only, ARGB.
+  int? foregroundLoadColor;
+
+  /// Android only.
+  bool? translucentTextureSurface;
+  bool? featureTapsTriggersMapClick;
+  bool? symbolPlacementTransitionsEnabled;
+}
+
+/// What Dart hands the platform view of a map when it creates it, encoded
+/// with the codec of these messages (`MapLibreMapHostApi.pigeonChannelCodec`
+/// in Dart). The native platform view factories decode it with the same
+/// generated codec.
+class PgCreationParams {
+  PgCreationParams({
+    this.styleString,
+    required this.options,
+    this.initialCameraPosition,
+    required this.dragEnabled,
+    this.iosLongClickDurationMs,
+    required this.useHybridComposition,
+  });
+
+  /// The style to create the map with: a style JSON, URL, file path or asset
+  /// name. [options] carries the same value.
+  String? styleString;
+
+  /// The initial options.
+  PgMapOptions options;
+
+  /// Null leaves the camera to the style, or to the platform default.
+  PgCameraPosition? initialCameraPosition;
+
+  /// Whether the features of interactive layers can be dragged.
+  bool dragEnabled;
+
+  /// iOS only: how long a press lasts before it is a long click, in
+  /// milliseconds. Null keeps the platform default.
+  int? iosLongClickDurationMs;
+
+  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Always false on iOS.
+  bool useHybridComposition;
+}
+
+/// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes
+/// the user location.
+class PgManualLocationUpdate {
+  PgManualLocationUpdate({
+    required this.position,
+    required this.timestamp,
+    this.horizontalAccuracy,
+    this.verticalAccuracy,
+    this.altitude,
+    this.bearing,
+    this.speed,
+  });
+
+  PgLatLng position;
+
+  /// Milliseconds since the epoch. Dart sends the time of the call when the
+  /// app gives none.
+  int timestamp;
+
+  /// Meters. Null when unknown, as are the fields below.
+  double? horizontalAccuracy;
+
+  /// Meters.
+  double? verticalAccuracy;
+
+  /// Meters.
+  double? altitude;
+
+  /// The direction of travel, in degrees clockwise from north.
+  double? bearing;
+
+  /// Meters per second.
+  double? speed;
+}
+
+/// The compass heading of a user location update. Only iOS sends one.
 class PgUserHeading {
   PgUserHeading({
     this.magneticHeading,
@@ -185,8 +602,7 @@ class PgUserHeading {
   int timestamp;
 }
 
-/// A user location update: the `userLocation` map of
-/// `map#onUserLocationUpdated`.
+/// A user location update.
 class PgUserLocation {
   PgUserLocation({
     required this.position,
@@ -198,7 +614,6 @@ class PgUserLocation {
     required this.timestamp,
   });
 
-  /// The legacy `position` list, `[latitude, longitude]`.
   PgLatLng position;
   double? altitude;
   double? bearing;
@@ -212,8 +627,7 @@ class PgUserLocation {
   int timestamp;
 }
 
-/// A tap on a feature of an interactive layer: the arguments of
-/// `feature#onTap`.
+/// A tap on a feature of an interactive layer.
 class PgFeatureTap {
   PgFeatureTap({
     this.id,
@@ -225,15 +639,15 @@ class PgFeatureTap {
   /// The feature id, as the SDK reports it.
   Object? id;
 
-  /// The legacy `x` and `y`.
+  /// Where the tap landed on the map view.
   PgScreenPoint point;
 
-  /// The legacy `lat` and `lng`.
+  /// Where the tap landed on the map.
   PgLatLng latLng;
   String? layerId;
 }
 
-/// One step of a feature drag: the arguments of `feature#onDrag`.
+/// One step of a feature drag.
 class PgFeatureDrag {
   PgFeatureDrag({
     this.id,
@@ -247,16 +661,16 @@ class PgFeatureDrag {
   /// The feature id, as the SDK reports it.
   Object? id;
 
-  /// The legacy `x` and `y`.
+  /// Where the finger is on the map view.
   PgScreenPoint point;
 
-  /// The legacy `originLat` and `originLng`.
+  /// Where the drag started on the map.
   PgLatLng origin;
 
-  /// The legacy `currentLat` and `currentLng`.
+  /// Where the finger is on the map.
   PgLatLng current;
 
-  /// The legacy `deltaLat` and `deltaLng`.
+  /// How far the finger moved since the previous step, in degrees.
   PgLatLng delta;
 
   /// `start`, `drag` or `end`.
@@ -266,181 +680,147 @@ class PgFeatureDrag {
 /// The calls of one map, from Dart to native. Each map has its own channels,
 /// told apart by a message channel suffix: the platform view id of the map.
 ///
-/// Every method stands for one call of the method channel these messages
-/// replace, named in the first line of its documentation. Its parameters are
-/// named after the keys of that call's argument map, so native can rebuild
-/// the call and run it through the handler it already has. The documentation
-/// notes where a key was left out of the map when null, and where the
-/// arguments were not a map. Answers that Dart parses further, such as maps
-/// of features or camera positions, come back as [Object] in the shape the
-/// handler already answers with.
+/// Every method answers once its work is done, or fails with the error code
+/// native reports. See the top of this file for the units, the filters and
+/// the features.
 @HostApi()
 abstract class MapLibreMapHostApi {
-  /// map#waitForMap
-  ///
-  /// The legacy call had no arguments. Answers once the map is ready.
+  /// Answers once the native map is ready for the other calls.
   @asyncCallback
   void mapWaitForMap();
 
-  /// map#update
-  ///
-  /// Answers with the camera position map.
+  /// Applies the options that are set and answers with the camera position,
+  /// or with null when the map does not track the camera position.
   @asyncCallback
-  Object? mapUpdate(Map<String, Object?> options);
+  PgCameraPosition? mapUpdate(PgMapOptions options);
 
-  /// camera#animate
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
+  /// Animates the camera to [cameraUpdate] over [duration] milliseconds, or
+  /// over the platform default when it is null. Answers whether the move
+  /// finished, false when something cut it short.
   @asyncCallback
-  bool? cameraAnimate(List<Object?> cameraUpdate, int? duration);
+  bool? cameraAnimate(PgCameraUpdate cameraUpdate, int? duration);
 
-  /// camera#move
+  /// Moves the camera to [cameraUpdate] at once. Answers whether the move
+  /// finished.
   @asyncCallback
-  bool? cameraMove(List<Object?> cameraUpdate);
+  bool? cameraMove(PgCameraUpdate cameraUpdate);
 
-  /// map#updateMyLocationTrackingMode
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  /// Sets how the camera follows the user location.
   @asyncCallback
-  void mapUpdateMyLocationTrackingMode(int mode);
+  void mapUpdateMyLocationTrackingMode(PgMyLocationTrackingMode mode);
 
-  /// locationComponent#setTrackingCameraOptions
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
+  /// Tilts the camera to [tilt] degrees while it tracks the user location,
+  /// without ending the tracking, over [duration] milliseconds or the
+  /// platform default when it is null. Answers whether the tilt landed.
   @asyncCallback
   bool? locationComponentSetTrackingCameraOptions(double tilt, int? duration);
 
-  /// locationComponent#setManualLocation
-  ///
-  /// The legacy arguments were [update] itself, not a map holding it under a
-  /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
-  /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
-  /// `bearing` and `speed` only when set.
+  /// Makes [update] the user location, for a map whose location source is
+  /// [PgLocationSource.manual].
   @asyncCallback
-  void locationComponentSetManualLocation(Map<String, Object?> update);
+  void locationComponentSetManualLocation(PgManualLocationUpdate update);
 
-  /// map#matchMapLanguageWithDeviceDefault
-  ///
-  /// The legacy call had no arguments.
+  /// Shows the labels of the map in the language of the device.
   @asyncCallback
   void mapMatchMapLanguageWithDeviceDefault();
 
-  /// map#updateContentInsets
-  ///
-  /// [bounds] holds `top`, `left`, `bottom` and `right`.
+  /// Sets the content insets of the map, the space along its edges that the
+  /// camera keeps clear, animated or not.
   @asyncCallback
-  void mapUpdateContentInsets(Map<String, double> bounds, bool animated);
+  void mapUpdateContentInsets(PgEdgeInsets insets, bool animated);
 
-  /// map#setMapLanguage
+  /// Shows the labels of the map in [language], an ISO language code.
   @asyncCallback
   void mapSetMapLanguage(String language);
 
-  /// map#setTelemetryEnabled
+  /// Turns telemetry on or off where the SDK has it.
   @asyncCallback
   void mapSetTelemetryEnabled(bool enabled);
 
-  /// map#getTelemetryEnabled
-  ///
-  /// The legacy call had no arguments.
+  /// Answers whether telemetry is on.
   @asyncCallback
   bool mapGetTelemetryEnabled();
 
-  /// map#setMaximumFps
+  /// Caps the frame rate of the map at [fps].
   @asyncCallback
   void mapSetMaximumFps(int fps);
 
-  /// map#forceOnlineMode
-  ///
-  /// The legacy call had no arguments.
+  /// Tells the map it is online, so it loads from the network again. Android
+  /// only: iOS has nothing to do.
   @asyncCallback
   void mapForceOnlineMode();
 
-  /// map#pause
-  ///
-  /// The legacy call had no arguments.
+  /// Stops the rendering and the location updates of the map.
   @asyncCallback
   void mapPause();
 
-  /// map#resume
-  ///
-  /// The legacy call had no arguments.
+  /// Starts again what [mapPause] stopped.
   @asyncCallback
   void mapResume();
 
-  /// camera#ease
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
-  /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
-  /// value, and was omitted from the legacy map when null.
+  /// Eases the camera to [cameraUpdate] over [duration] milliseconds, or over
+  /// the platform default when it is null or not positive, along
+  /// [interpolation], or the platform default curve when it is null. Answers
+  /// whether the move finished.
   @asyncCallback
   bool cameraEase(
-    List<Object?> cameraUpdate,
+    PgCameraUpdate cameraUpdate,
     int? duration,
-    String? interpolation,
+    PgCameraAnimationInterpolation? interpolation,
   );
 
-  /// map#queryCameraPosition
-  ///
-  /// The legacy call had no arguments. Answers with the camera position map.
+  /// Answers with the current camera position.
   @asyncCallback
-  Object? mapQueryCameraPosition();
+  PgCameraPosition mapQueryCameraPosition();
 
-  /// map#editGeoJsonSource
-  ///
-  /// Answers with `{result: bool}`.
+  /// Replaces the data of the GeoJSON source [id] with [data], GeoJSON text.
+  /// Answers whether it did, false when there is no style or no such GeoJSON
+  /// source, or when the SDK rejects the data.
   @asyncCallback
-  Object? mapEditGeoJsonSource(String id, String data);
+  bool mapEditGeoJsonSource(String id, String data);
 
-  /// map#editGeoJsonUrl
-  ///
-  /// Answers with `{result: bool}`.
+  /// Points the GeoJSON source [id] at [url]. Answers whether it did, false
+  /// when there is no style or no such GeoJSON source, or when the SDK
+  /// rejects the URL.
   @asyncCallback
-  Object? mapEditGeoJsonUrl(String id, String url);
+  bool mapEditGeoJsonUrl(String id, String url);
 
-  /// map#setLayerFilter
-  ///
-  /// [filter] is the JSON string the caller passed. Answers with
-  /// `{result: bool}`.
+  /// Sets [filter], the JSON text of an expression, on the layer [id].
+  /// Answers whether it did, false when there is no style or no such layer,
+  /// when the layer takes no filter, or when the filter does not parse.
   @asyncCallback
-  Object? mapSetLayerFilter(String id, String filter);
+  bool mapSetLayerFilter(String id, String filter);
 
-  /// map#getStyle
-  ///
-  /// The legacy call had no arguments. Answers with `{result: bool, json:
-  /// String?}`.
+  /// Answers with the style of the map as JSON text, or with null when the
+  /// map has no style.
   @asyncCallback
-  Object? mapGetStyle();
+  String? mapGetStyle();
 
-  /// map#setCustomHeaders
-  ///
-  /// [filter] holds URL patterns, not a style filter.
+  /// Adds [headers] to the requests of the map whose URL matches one of the
+  /// patterns in [filter], or to every request when [filter] is empty.
   @asyncCallback
   void mapSetCustomHeaders(Map<String, String> headers, List<String> filter);
 
-  /// map#getCustomHeaders
-  ///
-  /// The legacy arguments were an empty map. Answers with the headers map.
+  /// Answers with the headers [mapSetCustomHeaders] set.
   @asyncCallback
-  Object? mapGetCustomHeaders();
+  Map<String, String> mapGetCustomHeaders();
 
-  /// map#queryRenderedFeatures
-  ///
-  /// The point form of the call. [filter] is the expression as a list, not
-  /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
+  /// Answers with the features rendered at the point [x], [y] of the map
+  /// view, on the layers [layerIds] or on all of them when it is empty, that
+  /// match [filter].
   @asyncCallback
-  Object? mapQueryRenderedFeaturesAtPoint(
+  List<String> mapQueryRenderedFeaturesAtPoint(
     double x,
     double y,
     List<String> layerIds,
-    List<Object?>? filter,
+    String? filter,
   );
 
-  /// map#queryRenderedFeatures
-  ///
-  /// The rectangle form of the call. [filter] is the JSON string the caller
-  /// passed. Answers with `{features: [String]}`, each feature a JSON string.
+  /// Answers with the features rendered in the rectangle of the map view
+  /// from [left], [top] to [right], [bottom], on the layers [layerIds] or on
+  /// all of them when it is empty, that match [filter].
   @asyncCallback
-  Object? mapQueryRenderedFeaturesInRect(
+  List<String> mapQueryRenderedFeaturesInRect(
     double left,
     double top,
     double right,
@@ -449,112 +829,97 @@ abstract class MapLibreMapHostApi {
     String? filter,
   );
 
-  /// map#querySourceFeatures
-  ///
-  /// [filter] is the expression as a list, not encoded. Answers with
-  /// `{features: [String]}`, each feature a JSON string.
+  /// Answers with the features of the source [sourceId], in its layer
+  /// [sourceLayerId] for a vector source, that match [filter], rendered or
+  /// not. A vector source without [sourceLayerId], or a source of another
+  /// kind, answers none.
   @asyncCallback
-  Object? mapQuerySourceFeatures(
+  List<String> mapQuerySourceFeatures(
     String sourceId,
     String? sourceLayerId,
-    List<Object?>? filter,
+    String? filter,
   );
 
-  /// source#getClusterExpansionZoom
+  /// Answers with the zoom at which the cluster [clusterId] of the GeoJSON
+  /// source [sourceId] splits.
   @asyncCallback
   int sourceGetClusterExpansionZoom(String sourceId, int clusterId);
 
-  /// source#getClusterChildren
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
+  /// Answers with the features one zoom level below the cluster [clusterId]
+  /// of the GeoJSON source [sourceId].
   @asyncCallback
-  Object? sourceGetClusterChildren(String sourceId, int clusterId);
+  List<String> sourceGetClusterChildren(String sourceId, int clusterId);
 
-  /// source#getClusterLeaves
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
+  /// Answers with the points of the cluster [clusterId] of the GeoJSON source
+  /// [sourceId], [limit] of them after skipping [offset].
   @asyncCallback
-  Object? sourceGetClusterLeaves(
+  List<String> sourceGetClusterLeaves(
     String sourceId,
     int clusterId,
     int limit,
     int offset,
   );
 
-  /// map#invalidateAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Marks the ambient cache as stale, so it is checked against the network.
   @asyncCallback
   void mapInvalidateAmbientCache();
 
-  /// map#clearAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Empties the ambient cache.
   @asyncCallback
   void mapClearAmbientCache();
 
-  /// locationComponent#getLastLocation
-  ///
-  /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
-  /// or null when there is no location.
+  /// Answers with the last known user location. Fails when there is none or
+  /// the location is off.
   @asyncCallback
-  Object? locationComponentGetLastLocation();
+  PgLatLng locationComponentGetLastLocation();
 
-  /// map#getVisibleRegion
-  ///
-  /// The legacy call had no arguments. Answers with `{sw: [latitude,
-  /// longitude], ne: [latitude, longitude]}`.
+  /// Answers with the region the map view shows.
   @asyncCallback
-  Object? mapGetVisibleRegion();
+  PgLatLngBounds mapGetVisibleRegion();
 
-  /// style#addImage
-  ///
-  /// [length] is the length of [bytes].
+  /// Adds the image [bytes] to the style as [name], as a signed distance
+  /// field image when [sdf] is true. [length] is the length of [bytes].
   @asyncCallback
   void styleAddImage(String name, Uint8List bytes, int length, bool sdf);
 
-  /// style#addImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list.
+  /// Adds an image source [imageSourceId] that draws the image [bytes] on
+  /// [coordinates]. [length] is the length of [bytes].
   @asyncCallback
   void styleAddImageSource(
     String imageSourceId,
     Uint8List bytes,
     int length,
-    List<Object?> coordinates,
+    PgLatLngQuad coordinates,
   );
 
-  /// style#updateImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list. The null ones were sent as null.
+  /// Changes the image, the corners, or both, of the image source
+  /// [imageSourceId]. What is null stays as it is. [length] is the length of
+  /// [bytes].
   @asyncCallback
   void styleUpdateImageSource(
     String imageSourceId,
     Uint8List? bytes,
     int? length,
-    List<Object?>? coordinates,
+    PgLatLngQuad? coordinates,
   );
 
-  /// map#toScreenLocation
-  ///
-  /// Answers with `{x, y}`.
+  /// Answers with where the location [latitude], [longitude] is on the map
+  /// view.
   @asyncCallback
-  Object? mapToScreenLocation(double latitude, double longitude);
+  PgScreenPoint mapToScreenLocation(double latitude, double longitude);
 
-  /// map#toScreenLocationBatch
-  ///
-  /// [coordinates] holds latitude and longitude pairs, one after the other.
-  /// Answers with x and y pairs in the same order.
+  /// The batch form of [mapToScreenLocation]: [coordinates] holds latitude
+  /// and longitude pairs one after the other, and the answer holds the x and
+  /// y of each in the same order.
   @asyncCallback
   Float64List mapToScreenLocationBatch(Float64List coordinates);
 
-  /// style#removeSource
+  /// Removes the source [sourceId] from the style.
   @asyncCallback
   void styleRemoveSource(String sourceId);
 
-  /// style#addLayer
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], on top of the others.
   @asyncCallback
   void styleAddLayer(
     String imageLayerId,
@@ -563,7 +928,8 @@ abstract class MapLibreMapHostApi {
     double? maxzoom,
   );
 
-  /// style#addLayerBelow
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], below the layer [belowLayerId].
   @asyncCallback
   void styleAddLayerBelow(
     String imageLayerId,
@@ -573,54 +939,45 @@ abstract class MapLibreMapHostApi {
     double? maxzoom,
   );
 
-  /// style#removeLayer
+  /// Removes the layer [layerId] from the style.
   @asyncCallback
   void styleRemoveLayer(String layerId);
 
-  /// style#moveLayer
-  ///
-  /// [belowLayerId] was omitted from the legacy map when null.
+  /// Moves the layer [layerId] below the layer [belowLayerId], or on top of
+  /// the others when it is null.
   @asyncCallback
   void styleMoveLayer(String layerId, String? belowLayerId);
 
-  /// style#setFilter
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Sets [filter] on the layer [layerId], or removes its filter when
+  /// [filter] is null.
   @asyncCallback
-  void styleSetFilter(String layerId, String filter);
+  void styleSetFilter(String layerId, String? filter);
 
-  /// style#getFilter
-  ///
-  /// Answers with `{filter: String?}`, the expression as a JSON string.
+  /// Answers with the filter of the layer [layerId] as JSON text, or with
+  /// null when it has none.
   @asyncCallback
-  Object? styleGetFilter(String layerId);
+  String? styleGetFilter(String layerId);
 
-  /// map#toLatLng
-  ///
-  /// Answers with `{latitude, longitude}`.
+  /// Answers with the location at the point [x], [y] of the map view.
   @asyncCallback
-  Object? mapToLatLng(double x, double y);
+  PgLatLng mapToLatLng(double x, double y);
 
-  /// map#getMetersPerPixelAtLatitude
-  ///
-  /// Answers with `{metersperpixel: double}`.
+  /// Answers with the meters per pixel at [latitude] at the current zoom, as
+  /// the SDK reports them.
   @asyncCallback
-  Object? mapGetMetersPerPixelAtLatitude(double latitude);
+  double mapGetMetersPerPixelAtLatitude(double latitude);
 
-  /// source#addGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Adds a GeoJSON source [sourceId] holding [geojson], GeoJSON text.
   @asyncCallback
   void sourceAddGeoJson(String sourceId, String geojson);
 
-  /// source#setGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Replaces the data of the GeoJSON source [sourceId] with [geojson],
+  /// GeoJSON text.
   @asyncCallback
   void sourceSetGeoJson(String sourceId, String geojson);
 
-  /// map#setCameraBounds
+  /// Eases the camera to the bounds from [west], [south] to [east], [north],
+  /// inset by [padding] logical pixels. Answers once the move starts.
   @asyncCallback
   void mapSetCameraBounds(
     double west,
@@ -630,10 +987,9 @@ abstract class MapLibreMapHostApi {
     int padding,
   );
 
-  /// symbolLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a symbol layer. [properties] are its paint and layout properties
+  /// in style-spec form. [enableInteraction] makes its features report taps
+  /// and drags.
   @asyncCallback
   void symbolLayerAdd(
     String sourceId,
@@ -642,15 +998,12 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   );
 
-  /// lineLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a line layer, as [symbolLayerAdd].
   @asyncCallback
   void lineLayerAdd(
     String sourceId,
@@ -659,19 +1012,17 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   );
 
-  /// layer#setProperties
+  /// Sets the paint and layout [properties], in style-spec form, of the
+  /// layer [layerId].
   @asyncCallback
   void layerSetProperties(String layerId, Map<String, Object?> properties);
 
-  /// circleLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a circle layer, as [symbolLayerAdd].
   @asyncCallback
   void circleLayerAdd(
     String sourceId,
@@ -680,15 +1031,12 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   );
 
-  /// fillLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a fill layer, as [symbolLayerAdd].
   @asyncCallback
   void fillLayerAdd(
     String sourceId,
@@ -697,15 +1045,12 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   );
 
-  /// fillExtrusionLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a fill extrusion layer, as [symbolLayerAdd].
   @asyncCallback
   void fillExtrusionLayerAdd(
     String sourceId,
@@ -714,18 +1059,18 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   );
 
-  /// style#addSource
-  ///
-  /// [properties] is the source in style-spec form.
+  /// Adds the source [sourceId]. [properties] is the source in style-spec
+  /// form.
   @asyncCallback
   void styleAddSource(String sourceId, Map<String, Object?> properties);
 
-  /// rasterLayer#add
+  /// Adds a raster layer. [properties] are its paint and layout properties
+  /// in style-spec form.
   @asyncCallback
   void rasterLayerAdd(
     String sourceId,
@@ -736,7 +1081,7 @@ abstract class MapLibreMapHostApi {
     Map<String, Object?> properties,
   );
 
-  /// hillshadeLayer#add
+  /// Adds a hillshade layer, as [rasterLayerAdd].
   @asyncCallback
   void hillshadeLayerAdd(
     String sourceId,
@@ -747,7 +1092,7 @@ abstract class MapLibreMapHostApi {
     Map<String, Object?> properties,
   );
 
-  /// colorReliefLayer#add
+  /// Adds a color relief layer, as [rasterLayerAdd].
   @asyncCallback
   void colorReliefLayerAdd(
     String sourceId,
@@ -758,7 +1103,7 @@ abstract class MapLibreMapHostApi {
     Map<String, Object?> properties,
   );
 
-  /// backgroundLayer#add
+  /// Adds a background layer, as [rasterLayerAdd] but without a source.
   @asyncCallback
   void backgroundLayerAdd(
     String layerId,
@@ -768,10 +1113,7 @@ abstract class MapLibreMapHostApi {
     Map<String, Object?> properties,
   );
 
-  /// heatmapLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a heatmap layer, as [symbolLayerAdd] but without interaction.
   @asyncCallback
   void heatmapLayerAdd(
     String sourceId,
@@ -780,19 +1122,18 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     Map<String, Object?> properties,
   );
 
-  /// source#setFeature
-  ///
-  /// [geojsonFeature] is the feature encoded by Dart.
+  /// Replaces the feature of the GeoJSON source [sourceId] that has the id
+  /// of [geojsonFeature], GeoJSON text, or adds it.
   @asyncCallback
   void sourceSetFeature(String sourceId, String geojsonFeature);
 
-  /// source#setFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Merges [state], app data of any shape, into the state of the feature
+  /// [featureId]. Android only: Dart rejects the call on iOS before sending
+  /// it.
   @asyncCallback
   void sourceSetFeatureState(
     String sourceId,
@@ -801,9 +1142,10 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
   );
 
-  /// source#removeFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Removes the key [stateKey] of the state of the feature [featureId], or
+  /// the whole state of that feature without [stateKey], or the state of
+  /// every feature of the source without [featureId]. Android only: Dart
+  /// rejects the call on iOS before sending it.
   @asyncCallback
   void sourceRemoveFeatureState(
     String sourceId,
@@ -812,144 +1154,123 @@ abstract class MapLibreMapHostApi {
     String? sourceLayer,
   );
 
-  /// source#getFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it. Answers
-  /// with `{state: String?}`, the state as a JSON string.
+  /// Answers with the state of the feature [featureId] as JSON text, or with
+  /// null when it has none. Android only: Dart rejects the call on iOS before
+  /// sending it.
   @asyncCallback
-  Object? sourceGetFeatureState(
+  String? sourceGetFeatureState(
     String sourceId,
     String featureId,
     String? sourceLayer,
   );
 
-  /// style#setLight
-  ///
-  /// [light] is the light in style-spec form.
+  /// Sets the light of the style. [light] holds the light properties in
+  /// style-spec form. It stays a map because each property can be any value
+  /// in Dart: native checks that each one is a constant of the right type.
   @asyncCallback
   void styleSetLight(Map<String, Object?> light);
 
-  /// layer#setVisibility
+  /// Shows or hides the layer [layerId].
   @asyncCallback
   void layerSetVisibility(String layerId, bool visible);
 
-  /// layer#setVisibilityBatch
-  ///
-  /// Answers with the ids that matched no layer.
+  /// Shows or hides the layers [layerIds]. Answers with the ids that matched
+  /// no layer.
   @asyncCallback
   List<String>? layerSetVisibilityBatch(List<String> layerIds, bool visible);
 
-  /// layer#setZoomRange
+  /// Sets the zoom range of the layer [layerId].
   @asyncCallback
   void layerSetZoomRange(String layerId, double minzoom, double maxzoom);
 
-  /// layer#getVisibility
-  ///
-  /// Answers with null when there is no such layer.
+  /// Answers whether the layer [layerId] is visible, or with null when there
+  /// is no such layer.
   @asyncCallback
   bool? layerGetVisibility(String layerId);
 
-  /// map#takeSnapshot
-  ///
-  /// [width] and [height] are in logical pixels, and each was omitted from
-  /// the legacy map when null. Answers with PNG bytes.
+  /// Answers with a PNG of the map, [width] by [height] logical pixels, or
+  /// the size of the map view for what is null.
   @asyncCallback
   Uint8List? mapTakeSnapshot(int? width, int? height);
 
-  /// style#getLayerIds
-  ///
-  /// The legacy call had no arguments. Answers with `{layers: [String]}`.
+  /// Answers with the ids of the layers of the style, in the order of the
+  /// style.
   @asyncCallback
-  Object? styleGetLayerIds();
+  List<String> styleGetLayerIds();
 
-  /// style#getSourceIds
-  ///
-  /// The legacy call had no arguments. Answers with `{sources: [String]}`.
+  /// Answers with the ids of the sources of the style.
   @asyncCallback
-  Object? styleGetSourceIds();
+  List<String> styleGetSourceIds();
 
-  /// style#getLayerProperties
-  ///
-  /// Answers with `{properties: String}`, the layer as a JSON string, or
-  /// without `properties` when there is no such layer.
+  /// Answers with the layer [layerId] in style-spec form as JSON text, or
+  /// with null when there is no such layer.
   @asyncCallback
-  Object? styleGetLayerProperties(String layerId);
+  String? styleGetLayerProperties(String layerId);
 
-  /// style#getSourceProperties
-  ///
-  /// Answers with `{properties: String}`, the source as a JSON string, or
-  /// without `properties` when there is no such source.
+  /// Answers with the source [sourceId] in style-spec form as JSON text, or
+  /// with null when there is no such source.
   @asyncCallback
-  Object? styleGetSourceProperties(String sourceId);
+  String? styleGetSourceProperties(String sourceId);
 
-  /// style#setStyle
+  /// Replaces the style with [style]: a style JSON, URL, file path or asset
+  /// name.
   @asyncCallback
   void styleSetStyle(String style);
 }
 
 /// The events of one map, from native to Dart, on channels told apart by the
 /// same suffix as [MapLibreMapHostApi].
-///
-/// Every method stands for one call native made on the method channel these
-/// messages replace, named in the first line of its documentation.
 @FlutterApi()
 abstract class MapLibreMapFlutterApi {
-  /// feature#onTap
+  /// The user tapped a feature of an interactive layer.
   @asyncCallback
   void featureOnTap(PgFeatureTap tap);
 
-  /// feature#onDrag
+  /// The user dragged a feature of an interactive layer.
   @asyncCallback
   void featureOnDrag(PgFeatureDrag drag);
 
-  /// camera#onMoveStarted
-  ///
-  /// [isGesture] is whether the SDK reports a gesture of the user as the
-  /// cause of the move. The legacy call carried it on Android only.
+  /// The camera started to move. [isGesture] is whether the SDK reports a
+  /// gesture of the user as the cause.
   @asyncCallback
   void cameraOnMoveStarted(bool isGesture);
 
-  /// camera#onMove
+  /// The camera moved, for a map that tracks the camera position.
   @asyncCallback
   void cameraOnMove(PgCameraPosition position);
 
-  /// camera#onIdle
-  ///
-  /// [position] is null when the map does not track the camera position.
+  /// The camera stopped. [position] is null when the map does not track the
+  /// camera position.
   @asyncCallback
   void cameraOnIdle(PgCameraPosition? position);
 
-  /// map#onStyleLoaded
+  /// A style finished loading.
   @asyncCallback
   void mapOnStyleLoaded();
 
-  /// map#onMapClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user tapped the map at [point] of the map view, [latLng] on the
+  /// map.
   @asyncCallback
   void mapOnMapClick(PgScreenPoint point, PgLatLng latLng);
 
-  /// map#onMapLongClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user long pressed the map at [point] of the map view, [latLng] on
+  /// the map.
   @asyncCallback
   void mapOnMapLongClick(PgScreenPoint point, PgLatLng latLng);
 
-  /// map#onCameraTrackingChanged
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  /// The way the camera follows the user location changed to [mode].
   @asyncCallback
-  void mapOnCameraTrackingChanged(int mode);
+  void mapOnCameraTrackingChanged(PgMyLocationTrackingMode mode);
 
-  /// map#onCameraTrackingDismissed
+  /// The camera stopped following the user location.
   @asyncCallback
   void mapOnCameraTrackingDismissed();
 
-  /// map#onIdle
+  /// The map finished rendering and has nothing left to load or animate.
   @asyncCallback
   void mapOnIdle();
 
-  /// map#onUserLocationUpdated
+  /// The user location changed, with the compass [heading] on iOS.
   @asyncCallback
   void mapOnUserLocationUpdated(
     PgUserLocation userLocation,
