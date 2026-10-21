@@ -50,6 +50,24 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 
 On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
 
+The error codes of the offline calls and of the download `Error` events are renamed, on Android and iOS alike. See [Errors](advanced/offline-regions.md#errors) for when each code fires:
+
+| Before | 0.28.0 |
+|---|---|
+| `invalidRegionDefinition` | `INVALID_REGION_DEFINITION` |
+| `tileCountLimitExceeded` | `TILE_COUNT_LIMIT_EXCEEDED` |
+| `RegionDeleted` | `REGION_DELETED` |
+| `RegionReplaced` | `REGION_REPLACED` |
+| `DatabaseReset` | `DATABASE_RESET` |
+| `UpdateMetadataError`, `DeleteRegionError`, `PauseRegionError`, `ResumeRegionError`, `GetRegionStatusError` for an id no region has | `REGION_NOT_FOUND` |
+| `ResumeRegionError` for a region with no download running (Android) | `REGION_NOT_RESUMABLE` |
+| `mergeOfflineRegions Error`, `RegionListError`, `ResetDatabaseError`, and the five codes above for any other failure of the database | `OFFLINE_DATABASE_ERROR` |
+| `ClearAmbientCacheError`, `SetMaximumAmbientCacheSizeError` | `AMBIENT_CACHE_ERROR` |
+| `SetOfflineTileCountLimitError` and `SetMaximumAmbientCacheSizeError` for a negative value (iOS), `InvalidMaxRequests`, `InvalidMaxRequestsPerHost` (Android), `UpdateMetadataError` for metadata that is not JSON-encodable (iOS) | `INVALID_ARGUMENT` |
+| `SetHttpHeadersError`, `SetMaxConcurrentRequestsError` (Android) | `HTTP_CLIENT_ERROR` |
+
+Android now rejects a negative `setOfflineTileCountLimit` with `INVALID_ARGUMENT`, as iOS did, and iOS rejects a `setOfflineMaxConcurrentRequests` value below 1, as Android did.
+
 `setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
 
 On web, the other plugin-wide calls that need offline storage or the native network stack throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache`. MapLibre GL JS has no offline storage.
