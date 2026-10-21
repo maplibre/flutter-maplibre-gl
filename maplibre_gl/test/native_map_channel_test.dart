@@ -291,17 +291,17 @@ void main() {
       );
     });
 
-    test('a call nothing answers is a channel-error', () async {
+    // No handler on the map's channel means native already released the
+    // map, on both platforms.
+    test('a call nothing answers fails with MAP_DISPOSED', () async {
       await expectLater(
         platform.getLayerIds(),
         throwsA(
-          isA<PlatformException>()
-              .having((e) => e.code, 'code', 'channel-error')
-              .having(
-                (e) => e.message,
-                'message',
-                contains('$hostApi.styleGetLayerIds.$viewId'),
-              ),
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'MAP_DISPOSED',
+          ),
         ),
       );
     });
@@ -398,7 +398,8 @@ void main() {
       platform.onCameraMovePlatform.add(moves.add);
       platform.onCameraIdlePlatform.add(idles.add);
 
-      await fromNative('cameraOnMoveStarted', null);
+      await fromNative('cameraOnMoveStarted', [true]);
+      await fromNative('cameraOnMoveStarted', [false]);
       await fromNative('cameraOnMove', [pgCamera(12)]);
       await fromNative('cameraOnIdle', [pgCamera(13)]);
       // Without a position when the map does not track the camera.
@@ -410,7 +411,7 @@ void main() {
         tilt: 10,
         zoom: 12,
       );
-      expect(moveStarts, 1);
+      expect(moveStarts, 2);
       expect(moves, [position]);
       expect(idles, [
         const CameraPosition(
