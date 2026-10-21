@@ -135,7 +135,7 @@ class SourcePropertyConverter {
                 // MLNDEMEncoding only knows mapbox and terrarium; the spec's
                 // "custom" encoding is web-only and is rejected before it gets
                 // here. Refusing anything else lets addSource report an
-                // invalidSourceType failure, rather than decoding the tiles as
+                // INVALID_ARGUMENT failure, rather than decoding the tiles as
                 // mapbox and drawing a plausible map from wrong elevations.
                 // The encoding is caller input, so it goes through the %@
                 // argument instead of into the NSLog format string.

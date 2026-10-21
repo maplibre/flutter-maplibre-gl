@@ -838,7 +838,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result: @escaping FlutterResult
     ) {
         guard let style = mapView.style else {
-            result(MethodCallError.styleNotFound.flutterError)
+            result(MethodCallError.styleNotReady.flutterError)
             return
         }
         var sourceLayerIds = Set<String>()
@@ -1003,11 +1003,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Every exit replies: a call that never answers leaves the Dart
         // future pending for good, with nothing to catch.
         guard let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
         guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
@@ -1111,37 +1107,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maxzoom: Double?,
         result: @escaping FlutterResult
     ) {
-        // Without a style this said noSuchSource.
-        guard let style = mapView.style else {
-            result(styleNotReadyError())
-            return
-        }
-        if style.layer(withIdentifier: imageLayerId) != nil {
-            result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
-            return
-        }
-        // Check for noSuchSource error
-        guard let source = style.source(withIdentifier: imageSourceId) else {
-            result(FlutterError(
-                code: "noSuchSource",
-                message: "No source found with imageSourceId \(imageSourceId)",
-                details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
-            ))
-            return
-        }
-
-        let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
-
-        if let minzoom = minzoom {
-            layer.minimumZoomLevel = Float(minzoom)
-        }
-
-        if let maxzoom = maxzoom {
-            layer.maximumZoomLevel = Float(maxzoom)
-        }
-
-        style.addLayer(layer)
-        result(nil)
+        answer(addRasterLayer(
+            sourceId: imageSourceId,
+            layerId: imageLayerId,
+            belowLayerId: nil,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: [:]
+        ), result)
     }
 
     func styleAddLayerBelow(
@@ -1152,44 +1125,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maxzoom: Double?,
         result: @escaping FlutterResult
     ) {
-        guard let style = mapView.style else {
-            result(styleNotReadyError())
-            return
-        }
-        if style.layer(withIdentifier: imageLayerId) != nil {
-            result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
-            return
-        }
-        // Check for noSuchSource error
-        guard let source = style.source(withIdentifier: imageSourceId) else {
-            result(FlutterError(
-                code: "noSuchSource",
-                message: "No source found with imageSourceId \(imageSourceId)",
-                details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
-            ))
-            return
-        }
-        // Check for noSuchLayer error
-        guard let belowLayer = style.layer(withIdentifier: belowLayerId) else {
-            result(FlutterError(
-                code: "noSuchLayer",
-                message: "No layer found with layerId \(belowLayerId)",
-                details: "Can't insert layer below layer with id \(belowLayerId), as no such layer exists."
-            ))
-            return
-        }
-
-        let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
-
-        if let minzoom = minzoom {
-            layer.minimumZoomLevel = Float(minzoom)
-        }
-
-        if let maxzoom = maxzoom {
-            layer.maximumZoomLevel = Float(maxzoom)
-        }
-        style.insertLayer(layer, below: belowLayer)
-        result(nil)
+        // A raster layer like any other: a missing source fails with
+        // SOURCE_NOT_FOUND, and a missing belowLayerId puts the layer on top,
+        // as on Android and web. This answered noSuchSource and noSuchLayer.
+        answer(addRasterLayer(
+            sourceId: imageSourceId,
+            layerId: imageLayerId,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: [:]
+        ), result)
     }
 
     func styleRemoveLayer(layerId: String, result: @escaping FlutterResult) {
@@ -1211,11 +1157,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleMoveLayer(layerId: String, belowLayerId: String?, result: @escaping FlutterResult) {
         guard styleIsReady, let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
         // Both layers are looked up before anything moves: a missing anchor
@@ -1247,7 +1189,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleSetFilter(layerId: String, filter: String?, result: @escaping FlutterResult) {
         guard let style = mapView.style else {
-            result(MethodCallError.styleNotFound.flutterError)
+            result(MethodCallError.styleNotReady.flutterError)
             return
         }
         guard let layer = style.layer(withIdentifier: layerId) else {
@@ -1261,7 +1203,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleGetFilter(layerId: String, result: @escaping FlutterResult) {
         guard let style = mapView.style else {
-            result(MethodCallError.styleNotFound.flutterError)
+            result(MethodCallError.styleNotReady.flutterError)
             return
         }
         guard let layer = style.layer(withIdentifier: layerId) else {
@@ -1296,7 +1238,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleSetLight(light lightProperties: [String: Any], result: @escaping FlutterResult) {
         guard let style = mapView.style else {
-            result(MethodCallError.styleNotFound.flutterError)
+            result(MethodCallError.styleNotReady.flutterError)
             return
         }
 
@@ -1387,11 +1329,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Without a style there are no ids to answer with, and an empty list
         // would read as a style without layers, so report it as Android does.
         guard let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
 
@@ -1400,11 +1338,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleGetSourceIds(result: @escaping FlutterResult) {
         guard let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
 
@@ -1725,7 +1659,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(FlutterError(
                 code: "UNSUPPORTED_LAYER_TYPE",
                 message: "Layer type not supported",
-                details: ""
+                details: nil
             ))
             return
         }
@@ -1792,11 +1726,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return
         }
         guard let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
         guard let layer = style.layer(withIdentifier: layerId) else {
@@ -1812,11 +1742,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Without a style there is no layer to look up, and null would read
         // as "no such layer", so report it as Android does.
         guard let style = mapView.style else {
-            result(FlutterError(
-                code: "STYLE_NOT_READY",
-                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                details: nil
-            ))
+            result(styleNotReadyError())
             return
         }
         // Documented contract: null tells the caller there is no such layer.
@@ -2374,7 +2300,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         layerId: String
     ) -> Result<(MLNStyle, MLNSource), MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
@@ -2640,7 +2566,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             return .success(())
         } catch {
-            return .failure(MethodCallError.invalidExpression)
+            // As on Android: the same code and message as for the queries.
+            return .failure(MethodCallError.invalidFilter(reason: Self.filterNotJSON))
         }
     }
 
@@ -2716,7 +2643,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         properties: [String: Any]
     ) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
@@ -2732,12 +2659,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if let maximumZoomLevel = maximumZoomLevel {
             layer.maximumZoomLevel = Float(maximumZoomLevel)
         }
-        if let id = belowLayerId {
-            // A background layer covers the whole viewport, so falling back to the
-            // top of the stack when the anchor is unknown would hide the map.
-            guard let belowLayer = style.layer(withIdentifier: id) else {
-                return .failure(.layerNotFound(layerId: id))
-            }
+        // A missing belowLayerId puts the layer on top, as for every other
+        // layer and on Android and web. This failed with LAYER_NOT_FOUND_ERROR.
+        if let id = belowLayerId, let belowLayer = style.layer(withIdentifier: id) {
             style.insertLayer(layer, below: belowLayer)
         } else {
             style.addLayer(layer)
@@ -2823,14 +2747,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func addSource(sourceId: String, properties: [String: Any]) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
         guard style.source(withIdentifier: sourceId) == nil else {
             return .failure(.sourceAlreadyExists(sourceId: sourceId))
         }
+        // Android answers the same for a type it cannot add and for
+        // properties it cannot build a source from.
         guard let type = properties["type"] as? String else {
-            return .failure(.invalidSourceType(
-                details: "Source '\(sourceId)' does not have a type."
+            return .failure(.unsupportedSourceType(
+                message: "Source '\(sourceId)' has no type."
             ))
         }
 
@@ -2862,17 +2788,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 properties: properties
             )
         default:
-            // unsupported source type
-            source = nil
+            return .failure(.unsupportedSourceType(
+                message: "Source '\(sourceId)' has the type '\(type)', which this platform "
+                    + "does not support."
+            ))
         }
-        if let source = source {
-            style.addSource(source)
-            return .success(())
+        guard let source = source else {
+            return .failure(.invalidArgument(
+                message: "Source '\(sourceId)' cannot be built from its properties as a "
+                    + "'\(type)' source."
+            ))
         }
-        return .failure(.invalidSourceType(
-            details: "Source '\(sourceId)' does not support type '\(type)'."
-        ))
-
+        style.addSource(source)
+        return .success(())
     }
 
     func mapViewWillStartRenderingFrame(_: MLNMapView) {
@@ -2926,49 +2854,51 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func addSourceGeojson(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {
-        do{
-            guard let style = mapView.style else {
-                return .failure(.styleNotFound)
-            }
-            guard style.source(withIdentifier: sourceId) == nil else {
-                return .failure(.sourceAlreadyExists(sourceId: sourceId))
-            }
-
-            let parsed = try MLNShape(
-                data: geojson.data(using: .utf8)!,
-                encoding: String.Encoding.utf8.rawValue
-            )
-            let source = MLNShapeSource(identifier: sourceId, shape: parsed, options: [:])
-            addedShapesByLayer[sourceId] = parsed
-            style.addSource(source)
-            return .success(())
-        } catch {
-            return .failure(.geojsonParseError(sourceId: sourceId))
+        guard let style = mapView.style else {
+            return .failure(.styleNotReady)
         }
+        guard style.source(withIdentifier: sourceId) == nil else {
+            return .failure(.sourceAlreadyExists(sourceId: sourceId))
+        }
+        guard let parsed = shape(fromGeoJson: geojson) else {
+            return .failure(unreadableGeoJson(sourceId: sourceId))
+        }
+        let source = MLNShapeSource(identifier: sourceId, shape: parsed, options: [:])
+        addedShapesByLayer[sourceId] = parsed
+        style.addSource(source)
+        return .success(())
     }
 
     func setSource(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
-
-        do{
-            let parsed = try MLNShape(
-                data: geojson.data(using: .utf8)!,
-                encoding: String.Encoding.utf8.rawValue
-            )
-            guard let source = style.source(withIdentifier: sourceId) as? MLNShapeSource else {
-                return .failure(.sourceNotFound(sourceId: sourceId))
-            }
-            addedShapesByLayer[sourceId] = parsed
-            source.shape = parsed
-            return .success(())
-        }catch{
-            return .failure(.geojsonParseError(sourceId: sourceId))
+        // The source is looked up before the data is read, as on Android,
+        // which cannot read the data first.
+        guard let source = style.source(withIdentifier: sourceId) as? MLNShapeSource else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
         }
-
+        guard let parsed = shape(fromGeoJson: geojson) else {
+            return .failure(unreadableGeoJson(sourceId: sourceId))
+        }
+        addedShapesByLayer[sourceId] = parsed
+        source.shape = parsed
+        return .success(())
     }
 
+    /// `geojson` as a shape, or nil when MapLibre cannot read it.
+    private func shape(fromGeoJson geojson: String) -> MLNShape? {
+        guard let data = geojson.data(using: .utf8) else { return nil }
+        return try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue)
+    }
+
+    /// GeoJSON data MapLibre cannot read. Android and web hand the data to
+    /// MapLibre as it is, which only logs what it cannot read.
+    private func unreadableGeoJson(sourceId: String) -> MethodCallError {
+        return .invalidGeoJson(
+            message: "The data for source '\(sourceId)' is not GeoJSON MapLibre can read."
+        )
+    }
 
     /// Resolves the shape source a cluster-inspection call addresses.
     ///
@@ -2979,14 +2909,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         methodName: String
     ) -> Result<MLNShapeSource, MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
         guard let source = style.source(withIdentifier: sourceId) else {
             return .failure(.sourceNotFound(sourceId: sourceId))
         }
         guard let shapeSource = source as? MLNShapeSource else {
-            return .failure(.invalidSourceType(
-                details: "Source with id \(sourceId) is a \(type(of: source)). " +
+            return .failure(.unsupportedSourceType(
+                message: "Source '\(sourceId)' is a \(type(of: source)). " +
                     "\(methodName) only applies to clustered GeoJSON sources."
             ))
         }
@@ -3045,11 +2975,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     /// A call that needs a style while none is loaded, answered as on Android.
     private func styleNotReadyError() -> FlutterError {
-        return FlutterError(
-            code: "STYLE_NOT_READY",
-            message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-            details: nil
-        )
+        return MethodCallError.styleNotReady.flutterError
     }
 
     /// Answers a call with nothing, or with the error it failed with.
@@ -3116,47 +3042,58 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return featuresJson
     }
 
+    /// Replaces the feature of the source with the id of `geojsonFeature`, in
+    /// the data addSourceGeojson or setSource gave the source.
+    ///
+    /// As on Android and web: a source without such data, added some other
+    /// way, and a feature whose id the data does not hold change nothing, and
+    /// data that is a lone Feature counts as a collection of one.
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {
-            return .failure(.styleNotFound)
+            return .failure(.styleNotReady)
         }
-        do {
-            let newShape = try MLNShape(
-                data: geojsonFeature.data(using: .utf8)!,
-                encoding: String.Encoding.utf8.rawValue
-            )
-            guard let source = style.source(withIdentifier: sourceId) as? MLNShapeSource else {
-                return .failure(.sourceNotFound(sourceId: sourceId))
-            }
-            if let shape = addedShapesByLayer[sourceId] as? MLNShapeCollectionFeature,
-               let feature = newShape as? MLNShape & MLNFeature
-            {
-                if let index = shape.shapes
-                    .firstIndex(where: {
-                        if let id = $0.identifier as? String,
-                           let featureId = feature.identifier as? String
-                        { return id == featureId }
-
-                        if let id = $0.identifier as? NSNumber,
-                           let featureId = feature.identifier as? NSNumber
-                        { return id == featureId }
-                        return false
-                    })
-                {
-                    var shapes = shape.shapes
-                    shapes[index] = feature
-
-                    source.shape = MLNShapeCollectionFeature(shapes: shapes)
-                }
-
-                addedShapesByLayer[sourceId] = source.shape
-                return .success(())
-            }
-            return .failure(.genericError(details: "Failed to set feature for sourceId \(sourceId)"))
-
-        } catch {
-            return .failure(.geojsonParseError(sourceId: sourceId))
+        guard let source = style.source(withIdentifier: sourceId) as? MLNShapeSource else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
         }
+        // Only a Feature replaces a feature. Its type is read from the JSON:
+        // MapLibre reads a FeatureCollection as a feature too.
+        guard let data = geojsonFeature.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              json["type"] as? String == "Feature",
+              let feature = shape(fromGeoJson: geojsonFeature) as? MLNShape & MLNFeature
+        else {
+            return .failure(.invalidGeoJson(
+                message: "The feature for source '\(sourceId)' is not a GeoJSON Feature."
+            ))
+        }
+        let shapes: [MLNShape & MLNFeature]
+        let stored = addedShapesByLayer[sourceId]
+        if let collection = stored as? MLNShapeCollectionFeature {
+            shapes = collection.shapes
+        } else if let lone = stored as? MLNShape & MLNFeature {
+            shapes = [lone]
+        } else {
+            return .success(())
+        }
+        let featureId = Self.featureIdKey(feature.identifier)
+        guard featureId != nil,
+              let index = shapes.firstIndex(where: { Self.featureIdKey($0.identifier) == featureId })
+        else {
+            return .success(())
+        }
+        var updated = shapes
+        updated[index] = feature
+        let collection = MLNShapeCollectionFeature(shapes: updated)
+        source.shape = collection
+        addedShapesByLayer[sourceId] = collection
+        return .success(())
+    }
+
+    /// A feature id as text, so 2 and "2" match, as on Android.
+    private static func featureIdKey(_ identifier: Any?) -> String? {
+        if let id = identifier as? String { return id }
+        if let id = identifier as? NSNumber { return id.stringValue }
+        return nil
     }
 
     /*
