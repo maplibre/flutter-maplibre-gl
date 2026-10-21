@@ -238,6 +238,40 @@ Passing `0` disables ambient caching. If the cache is already over the new
 limit, the SDK trims it immediately, which can take a moment on a large
 database. Not available on web, which has no ambient cache.
 
+## Errors
+
+The offline calls fail with a `PlatformException` whose `code` is the same on
+Android and iOS:
+
+| Code | When |
+|---|---|
+| `REGION_NOT_FOUND` | `pauseOfflineRegionDownload`, `resumeOfflineRegionDownload`, `getOfflineRegionStatus`, `deleteOfflineRegion` or `updateOfflineRegionMetadata` got an id that no stored region has. |
+| `INVALID_ARGUMENT` | A negative `setOfflineTileCountLimit` limit, a `setOfflineMaxConcurrentRequests` value below 1, or, on iOS, metadata that is not JSON-encodable. |
+| `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from. |
+| `OFFLINE_DATABASE_ERROR` | The offline database failed the call, for example on a file `mergeOfflineRegions` cannot import. The message carries MapLibre's reason. |
+| `AMBIENT_CACHE_ERROR` | MapLibre failed to clear the ambient cache or to change its size. |
+| `REGION_NOT_RESUMABLE` | Android only: `resumeOfflineRegionDownload` on a region whose download is not running in this app session, after a restart or once it ended. Download the region again. |
+
+A download that stops before it completes calls `onEvent` with an `Error`
+whose `cause.code` says why:
+
+| Code | When |
+|---|---|
+| `INVALID_REGION_DEFINITION` | MapLibre could not create the region. `downloadOfflineRegion` fails with the same error. |
+| `TILE_COUNT_LIMIT_EXCEEDED` | The region needs more tiles than the limit set with `setOfflineTileCountLimit`. The region is deleted. |
+| `REGION_DELETED` | `deleteOfflineRegion` deleted the region. |
+| `REGION_REPLACED` | A download of the same area replaced the region. |
+| `DATABASE_RESET` | `resetOfflineDatabase` deleted every region. |
+
+```dart
+try {
+  await deleteOfflineRegion(id);
+} on PlatformException catch (e) {
+  // Deleted already, for example from another screen.
+  if (e.code != 'REGION_NOT_FOUND') rethrow;
+}
+```
+
 ## Key APIs
 
 | Function | Description |

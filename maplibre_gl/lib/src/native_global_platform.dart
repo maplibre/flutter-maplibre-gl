@@ -154,7 +154,7 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
     try {
       await _api.resetOfflineDatabase();
     } finally {
-      // Native ends every download in flight with a DatabaseReset error, which
+      // Native ends every download in flight with a DATABASE_RESET error, which
       // removes its listener. The short delay lets those events arrive first;
       // any of those downloads still registered afterwards would never hear
       // from native again, so its listener is dropped.
