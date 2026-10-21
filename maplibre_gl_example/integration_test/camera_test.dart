@@ -2,9 +2,10 @@
 //
 // Covered: moveCamera with every CameraUpdate kind, the values moveCamera,
 // animateCamera and easeCamera complete with, including false when another
-// camera call or new padding cuts an animation short, animated moves landing
-// on their target, getVisibleRegion, toScreenLocation / toScreenLocationBatch /
-// toLatLng, getMetersPerPixelAtLatitude, setCameraBounds, the
+// camera call, new padding or disposing the map cuts an animation short,
+// animated moves landing on their target, getVisibleRegion, toScreenLocation /
+// toScreenLocationBatch / toLatLng, getMetersPerPixelAtLatitude,
+// setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
 // controller's cached cameraPosition, the onCameraMove / onCameraIdle
 // callbacks and the INVALID_ARGUMENT answer to calls Android and iOS cannot
@@ -25,7 +26,7 @@ import 'dart:math';
 import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:flutter/widgets.dart'
-    show AndroidViewSurface, EdgeInsets, Size, ValueNotifier;
+    show AndroidViewSurface, EdgeInsets, Size, SizedBox, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -711,6 +712,46 @@ void main() {
         expect(await pumpUntil(tester, second, 'second easeCamera'), isTrue);
         final camera = await _queryCamera(tester, controller);
         expect(_isNear(camera, target), isTrue, reason: '$camera');
+      },
+    );
+
+    // The map goes away with the animation still running: the waiting call
+    // completes with false instead of never.
+    testWidgets(
+      'an animateCamera cut short by disposing the map completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 30),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await tester.pumpWidget(const SizedBox());
+
+        expect(
+          await pumpUntil(tester, animation, 'animateCamera on a disposed map'),
+          isFalse,
+        );
+      },
+    );
+
+    testWidgets(
+      'an easeCamera cut short by disposing the map completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.easeCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 30),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await tester.pumpWidget(const SizedBox());
+
+        expect(
+          await pumpUntil(tester, animation, 'easeCamera on a disposed map'),
+          isFalse,
+        );
       },
     );
 

@@ -494,7 +494,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
-  /// another camera call or a gesture.
+  /// another camera call, a gesture or the map being disposed.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -1313,7 +1313,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
-  /// another camera call or a gesture.
+  /// another camera call, a gesture or the map being disposed.
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,

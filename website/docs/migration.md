@@ -91,6 +91,7 @@ None of these need a code change, but they are the places where code that worked
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
 * **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null`.
+* **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, mid-animation, like on web, instead of never completing, so the code after an awaited call now runs. Check `mounted` there before calling `setState`.
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer where it is instead of moving it on top.
 * Fill annotations without a `fillOutlineColor` get an outline in their fill color on Android and iOS, where it used to be transparent.
 * **Android**: on Android 12 and later devices without Google Play Services, high accuracy positions come from Android's `fused` provider instead of `gps`, so a coarser network fix can arrive before the GPS one.

@@ -106,6 +106,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 mapView.removeGestureRecognizer(recognizer)
             }
         }
+        // The map stops animating once out of its window and never runs the completion handler,
+        // so answer a camera call still waiting for it with false, as Android and web do.
+        cameraAnimations.cancelRunning()
         mapView.removeFromSuperview()
     }
 

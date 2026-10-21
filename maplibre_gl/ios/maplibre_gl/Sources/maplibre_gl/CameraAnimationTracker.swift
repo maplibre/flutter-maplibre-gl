@@ -19,14 +19,26 @@ import MapLibre
  *  While a gesture is in progress MLNMapView holds `regionDidChange` back, so two more signals
  *  count as an interruption: the reason of the change naming a gesture, and `shouldChangeFrom`,
  *  which every gesture asks right after cancelling the running animation.
+ *
+ *  A map that goes away mid-animation never runs the completion handler: out of its window
+ *  MLNMapView stops animating, and once deallocated it drops the transition without finishing
+ *  it. The controller answers that call through `cancelRunning`, and each call is answered once.
  */
 final class CameraAnimationTracker {
     private final class Animation {
-        let result: FlutterResult
+        private let result: FlutterResult
+        private var answered = false
         var interrupted = false
 
         init(result: @escaping FlutterResult) {
             self.result = result
+        }
+
+        /// Answers Dart with whether the camera arrived, the first time only.
+        func answer() {
+            guard !answered else { return }
+            answered = true
+            result(!interrupted)
         }
     }
 
@@ -60,7 +72,7 @@ final class CameraAnimationTracker {
             if self?.running === animation {
                 self?.running = nil
             }
-            animation.result(!animation.interrupted)
+            animation.answer()
         }
         isStarting = false
         // A zero duration ends inside the start call, and nothing can cut it short any more.
@@ -75,6 +87,14 @@ final class CameraAnimationTracker {
     func interruptRunning() {
         running?.interrupted = true
         running = nil
+    }
+
+    /// Answers the running animation with false now, for a map that goes away before it ends.
+    func cancelRunning() {
+        guard let animation = running else { return }
+        running = nil
+        animation.interrupted = true
+        animation.answer()
     }
 
     /// Call from `mapView(_:regionDidChangeWith:animated:)`.

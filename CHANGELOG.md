@@ -42,6 +42,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: `pauseMap()` also stops location updates, so `onUserLocationUpdated` does not fire until `resumeMap()` (#1105).
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them, like on Android and web. `animateCamera` used to complete with `null`, right away when no duration was given, so code awaiting it now runs after the animation; `easeCamera` used to complete with `true` even when interrupted (#1106).
 * **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null` (#1107).
+* **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, before the camera arrives, like on web, instead of never completing. Code after an awaited call now runs in that case: check `mounted` or `controller.isDisposed` before using the controller or calling `setState` (#1108).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
