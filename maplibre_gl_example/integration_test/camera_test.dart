@@ -1,8 +1,9 @@
 // Integration tests for the camera and the screen projection.
 //
 // Covered: moveCamera with every CameraUpdate kind, the values moveCamera,
-// animateCamera and easeCamera complete with, animated moves landing on their
-// target, getVisibleRegion, toScreenLocation / toScreenLocationBatch /
+// animateCamera and easeCamera complete with, including false when another
+// camera call or new padding cuts an animation short, animated moves landing
+// on their target, getVisibleRegion, toScreenLocation / toScreenLocationBatch /
 // toLatLng, getMetersPerPixelAtLatitude, setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
 // controller's cached cameraPosition, the onCameraMove / onCameraIdle
@@ -23,7 +24,8 @@ import 'dart:math';
 
 import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
-import 'package:flutter/widgets.dart' show AndroidViewSurface, EdgeInsets;
+import 'package:flutter/widgets.dart'
+    show AndroidViewSurface, EdgeInsets, Size, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -573,27 +575,15 @@ void main() {
         ),
         'animateCamera',
       );
-      _expectMoveResult(result, 'animateCamera');
+      expect(result, isTrue);
 
-      // Android and web complete once the camera arrived, so it is already
-      // on target. iOS answers null and promises nothing, so poll there.
-      final camera =
-          testPlatform == TestPlatform.ios
-              ? await pumpUntilValue(
-                tester,
-                () => _queryCamera(tester, controller),
-                (camera) => _isNear(camera, target),
-                'camera at animateCamera target',
-              )
-              : await _queryCamera(tester, controller);
+      // true means the camera arrived, so it is already on target.
+      final camera = await _queryCamera(tester, controller);
       _expectLatLng(camera.target, target.target, 0.05, 'animated target');
       expect(camera.zoom, closeTo(5, 0.05));
       expect(camera.bearing, closeTo(20, 0.5));
       expect(camera.tilt, closeTo(15, 0.5));
     });
-
-    // iOS completes animateCamera with null and does not report a cancel.
-    final skipIos = testPlatform == TestPlatform.ios;
 
     testWidgets(
       'an animateCamera cut short by another completes with false',
@@ -619,7 +609,6 @@ void main() {
         final camera = await _queryCamera(tester, controller);
         expect(_isNear(camera, target), isTrue, reason: '$camera');
       },
-      skip: skipIos,
     );
 
     testWidgets(
@@ -643,12 +632,91 @@ void main() {
           isFalse,
         );
       },
-      skip: skipIos,
+    );
+
+    testWidgets(
+      'an animateCamera resized and then cut short completes with false',
+      (tester) async {
+        // Resizing the map moves the camera at once without ending the
+        // animation. On iOS that change once read as the animation's end, so
+        // the moveCamera that really cut it short went unnoticed and the
+        // animation completed with true.
+        final size = ValueNotifier(const Size(_mapSize, _mapSize));
+        addTearDown(size.dispose);
+        final controller = await pumpMap(tester, resizableSize: size);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        size.value = const Size(_mapSize, _mapSize - 100);
+        await pumpFor(tester, const Duration(milliseconds: 500));
+        await pumpUntil(
+          tester,
+          controller.moveCamera(CameraUpdate.newLatLng(const LatLng(-5, -5))),
+          'moveCamera',
+        );
+
+        expect(
+          await pumpUntil(tester, animation, 'interrupted animateCamera'),
+          isFalse,
+        );
+      },
+    );
+
+    testWidgets(
+      'an animateCamera cut short by new padding completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await pumpUntil(
+          tester,
+          controller.setPadding(bottom: 100),
+          'setPadding',
+        );
+
+        expect(
+          await pumpUntil(tester, animation, 'interrupted animateCamera'),
+          isFalse,
+        );
+      },
+    );
+
+    testWidgets(
+      'an easeCamera cut short by another completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        const target = CameraPosition(target: LatLng(-10, 20), zoom: 4);
+
+        final first = controller.easeCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        final second = controller.easeCamera(
+          CameraUpdate.newCameraPosition(target),
+          duration: const Duration(milliseconds: 300),
+        );
+
+        expect(
+          await pumpUntil(tester, first, 'interrupted easeCamera'),
+          isFalse,
+        );
+        expect(await pumpUntil(tester, second, 'second easeCamera'), isTrue);
+        final camera = await _queryCamera(tester, controller);
+        expect(_isNear(camera, target), isTrue, reason: '$camera');
+      },
     );
 
     // Android rejects a zero duration and gives no promise for a move that
-    // goes nowhere, so these run on web only.
-    final skipNonWeb = testPlatform != TestPlatform.web;
+    // goes nowhere, so these run on iOS and web only.
+    final skipAndroid = testPlatform == TestPlatform.android;
 
     testWidgets(
       'an animateCamera with a zero duration completes with true',
@@ -669,7 +737,7 @@ void main() {
         final camera = await _queryCamera(tester, controller);
         expect(_isNear(camera, target), isTrue, reason: '$camera');
       },
-      skip: skipNonWeb,
+      skip: skipAndroid,
     );
 
     testWidgets(
@@ -689,7 +757,7 @@ void main() {
 
         expect(result, isTrue);
       },
-      skip: skipNonWeb,
+      skip: skipAndroid,
     );
 
     testWidgets('easeCamera completes once the camera is on target', (
@@ -1248,8 +1316,8 @@ Future<CameraPosition> _queryCamera(
 double _screenScale(WidgetTester tester) =>
     testPlatform == TestPlatform.android ? tester.view.devicePixelRatio : 1.0;
 
-/// moveCamera and animateCamera complete with true on success; on iOS they
-/// are documented to always complete with null.
+/// moveCamera completes with true on success; on iOS it is documented to
+/// always complete with null.
 void _expectMoveResult(bool? result, String label) {
   if (testPlatform == TestPlatform.ios) {
     expect(result, isNull, reason: label);

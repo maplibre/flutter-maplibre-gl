@@ -44,6 +44,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         "map#toLatLng",
     ]
     private var trackCameraPosition = false
+    private let cameraAnimations = CameraAnimationTracker()
     private var myLocationEnabled = false
     private var manualLocationSource = false
     /// Colors of the user-location puck, from the Dart `MyLocationStyle`.
@@ -71,6 +72,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// none. Matches the MapLibre Android location component's own tilt-while-tracking
     /// default, so the two platforms animate alike.
     static let defaultTrackingTiltDurationMs: Int = 1250
+
+    /// Duration of `camera#animate` and `camera#ease` when Dart sends none: the one
+    /// `setCamera(_:animated:)` uses, which has no completion handler, and the Android default.
+    static let defaultCameraAnimationDuration: TimeInterval = 0.3
 
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
@@ -634,10 +639,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let arguments = parsed.arguments
             let camera = parsed.camera
 
-            let completion = {
-                result(true)
-            }
-
             if let duration = arguments["duration"] as? Double, duration > 0 {
                 let interval: TimeInterval = duration / 1000.0
 
@@ -661,10 +662,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                 }
 
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
+                cameraAnimations.track(result: result) { completion in
+                    mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
+                }
             } else {
-                mapView.setCamera(camera, animated: true)
-                completion()
+                cameraAnimations.track(result: result) { completion in
+                    mapView.setCamera(
+                        camera,
+                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                        animationTimingFunction: nil,
+                        completionHandler: completion
+                    )
+                }
             }
         case "map#queryCameraPosition":
             // On-demand query: read the live camera directly. Unlike the
@@ -837,6 +846,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(reply)
         case "camera#move":
             guard let parsed = parseCameraCall(methodCall, result) else { return }
+            cameraAnimations.interruptRunning()
             mapView.setCamera(parsed.camera, animated: false)
             result(nil)
         case "camera#animate":
@@ -844,18 +854,20 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             let arguments = parsed.arguments
             let camera = parsed.camera
 
-            let completion = {
-                result(nil)
-            }
-
             // No edge padding here: a newLatLngBounds camera already has its
             // center shifted for the bounds padding, and padding passed to the
             // map view would stay on as camera insets after the move.
-            if let duration = arguments["duration"] as? TimeInterval {
-                mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
-            } else {
-                mapView.setCamera(camera, animated: true)
-                completion()
+            cameraAnimations.track(result: result) { completion in
+                if let duration = arguments["duration"] as? TimeInterval {
+                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
+                } else {
+                    mapView.setCamera(
+                        camera,
+                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                        animationTimingFunction: nil,
+                        completionHandler: completion
+                    )
+                }
             }
         case "symbolLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -2938,7 +2950,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
+    func mapView(_: MLNMapView, shouldChangeFrom _: MLNMapCamera, to _: MLNMapCamera) -> Bool {
+        // Only gestures ask this, each right after cancelling the running animation.
+        cameraAnimations.interruptRunning()
+        return true
+    }
+
+    // MLNMapView calls this instead of regionDidChangeAnimated, which takes no reason.
+    func mapView(
+        _ mapView: MLNMapView,
+        regionDidChangeWith reason: MLNCameraChangeReason,
+        animated: Bool
+    ) {
+        cameraAnimations.regionDidChange(reason: reason, animated: animated)
         let arguments = trackCameraPosition ? [
             "position": getCamera()?.toDict(mapView: mapView)
         ] : [:]

@@ -34,6 +34,7 @@
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
 * **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#1105).
 * **Android, iOS**: `pauseMap()` also stops location updates, so `onUserLocationUpdated` does not fire until `resumeMap()` (#1105).
+* **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them, like on Android and web. `animateCamera` used to complete with `null`, right away when no duration was given, so code awaiting it now runs after the animation; `easeCamera` used to complete with `true` even when interrupted (#1106).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
