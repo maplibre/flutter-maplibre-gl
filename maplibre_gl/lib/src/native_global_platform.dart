@@ -38,7 +38,11 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
   /// Listeners of the downloads in progress, by the id this class gave each
   /// download. Native tags every event with that id.
   final Map<int, void Function(DownloadRegionStatus)> _downloadListeners = {};
-  int _nextDownloadId = 0;
+
+  // Starts from the clock rather than 0: a hot restart builds a new instance
+  // while native downloads started before it may still send events, and an id
+  // handed out again would deliver them to the new download.
+  int _nextDownloadId = DateTime.now().microsecondsSinceEpoch;
 
   @override
   Future<void> preWarm() async {

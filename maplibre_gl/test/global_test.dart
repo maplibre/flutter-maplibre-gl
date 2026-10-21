@@ -214,6 +214,27 @@ void main() {
       expect(ids.toSet(), hasLength(2));
     });
 
+    test('does not hand out an id again after a hot restart', () async {
+      await downloadOfflineRegion(definition);
+      final earlierId = api.lastDownloadId!;
+
+      // A hot restart registers a new instance while the download native
+      // started for the old one can still send events.
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+      MapLibreNativePlugin.registerWith(globalHostApi: api);
+      final statuses = <DownloadRegionStatus>[];
+      await downloadOfflineRegion(definition, onEvent: statuses.add);
+      await (MapLibreGlobalPlatform.instance
+              as MapLibreOfflineDownloadFlutterApi)
+          .onDownloadEvent(
+            earlierId,
+            PgOfflineDownloadEvent(status: PgOfflineDownloadStatus.start),
+          );
+
+      expect(api.lastDownloadId, isNot(earlierId));
+      expect(statuses, isEmpty);
+    });
+
     test('onEvent receives start, progress and success', () async {
       final statuses = <DownloadRegionStatus>[];
       await downloadOfflineRegion(definition, onEvent: statuses.add);
