@@ -24,7 +24,8 @@ import 'dart:math';
 
 import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
-import 'package:flutter/widgets.dart' show AndroidViewSurface, EdgeInsets;
+import 'package:flutter/widgets.dart'
+    show AndroidViewSurface, EdgeInsets, Size, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -620,6 +621,37 @@ void main() {
           duration: const Duration(seconds: 5),
         );
         await pumpFor(tester, const Duration(milliseconds: 300));
+        await pumpUntil(
+          tester,
+          controller.moveCamera(CameraUpdate.newLatLng(const LatLng(-5, -5))),
+          'moveCamera',
+        );
+
+        expect(
+          await pumpUntil(tester, animation, 'interrupted animateCamera'),
+          isFalse,
+        );
+      },
+    );
+
+    testWidgets(
+      'an animateCamera resized and then cut short completes with false',
+      (tester) async {
+        // Resizing the map moves the camera at once without ending the
+        // animation. On iOS that change once read as the animation's end, so
+        // the moveCamera that really cut it short went unnoticed and the
+        // animation completed with true.
+        final size = ValueNotifier(const Size(_mapSize, _mapSize));
+        addTearDown(size.dispose);
+        final controller = await pumpMap(tester, resizableSize: size);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 5),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        size.value = const Size(_mapSize, _mapSize - 100);
+        await pumpFor(tester, const Duration(milliseconds: 500));
         await pumpUntil(
           tester,
           controller.moveCamera(CameraUpdate.newLatLng(const LatLng(-5, -5))),
