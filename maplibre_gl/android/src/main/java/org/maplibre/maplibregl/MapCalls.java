@@ -81,4 +81,15 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
       double east,
       long padding,
       MethodChannel.Result result);
+
+  // Location
+
+  void mapUpdateMyLocationTrackingMode(long mode, MethodChannel.Result result);
+
+  void locationComponentGetLastLocation(MethodChannel.Result result);
+
+  void locationComponentSetTrackingCameraOptions(
+      double tilt, @Nullable Long duration, MethodChannel.Result result);
+
+  void locationComponentSetManualLocation(Map<String, Object> update, MethodChannel.Result result);
 }

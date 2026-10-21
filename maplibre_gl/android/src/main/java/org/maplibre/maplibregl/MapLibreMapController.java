@@ -173,7 +173,7 @@ final class MapLibreMapController
   private static final String TAG = "MapLibreMapController";
 
   /**
-   * Duration used for {@code locationComponent#setTrackingCameraOptions} when Dart
+   * Duration used for {@link #locationComponentSetTrackingCameraOptions} when Dart
    * sends none. Mirrors the SDK's own {@code DEFAULT_TRACKING_TILT_ANIM_DURATION},
    * which is package-private, so the callback-taking overload cannot reuse it.
    */
@@ -666,7 +666,7 @@ final class MapLibreMapController
                       .locationComponentOptions(buildLocationComponentOptions(style));
       if (manualLocationSource) {
         // App-provided locations: disable the native engine. Updates arrive via
-        // locationComponent#setManualLocation -> forceLocationUpdate(location).
+        // locationComponentSetManualLocation -> forceLocationUpdate(location).
         optionsBuilder.useDefaultLocationEngine(false);
       } else {
         optionsBuilder.locationEngine(myLocationEngineFactory.getLocationEngine(context));
@@ -2239,6 +2239,172 @@ final class MapLibreMapController
     result.success(null);
   }
 
+  // -- Location ---------------------------------------------------------------
+
+  @Override
+  public void mapUpdateMyLocationTrackingMode(long mode, MethodChannel.Result result) {
+    setMyLocationTrackingMode(Convert.toIntExact(mode));
+    result.success(null);
+  }
+
+  @Override
+  public void locationComponentGetLastLocation(MethodChannel.Result result) {
+    Log.e(TAG, "location component: getLastLocation");
+    if (this.myLocationEnabled
+        && manualLocationSource
+        && locationComponent != null
+        && locationComponent.isLocationComponentActivated()) {
+      // Manual mode has no location engine; read the last forced location.
+      Location lastLocation = locationComponent.getLastKnownLocation();
+      if (lastLocation != null) {
+        Map<String, Object> reply = new HashMap<>();
+        reply.put("latitude", lastLocation.getLatitude());
+        reply.put("longitude", lastLocation.getLongitude());
+        reply.put("altitude", lastLocation.getAltitude());
+        result.success(reply);
+      } else {
+        result.error("LOCATION_UNAVAILABLE",
+            "Last location is not available", null);
+      }
+    } else if (this.myLocationEnabled
+        && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
+        && locationComponent.getLocationEngine() != null) {
+      Map<String, Object> reply = new HashMap<>();
+
+      mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
+          new LocationEngineCallback<LocationEngineResult>() {
+            @Override
+            public void onSuccess(LocationEngineResult locationEngineResult) {
+              Location lastLocation = locationEngineResult.getLastLocation();
+              if (lastLocation != null) {
+                reply.put("latitude", lastLocation.getLatitude());
+                reply.put("longitude", lastLocation.getLongitude());
+                reply.put("altitude", lastLocation.getAltitude());
+                result.success(reply);
+              } else {
+                result.error("LOCATION_UNAVAILABLE",
+                    "Last location is not available", null);
+              }
+            }
+
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+              result.error("LOCATION_ENGINE_FAILURE",
+                  "Failed to get last location: " + exception.getMessage(), null);
+            }
+          });
+    } else {
+      result.error("LOCATION_DISABLED",
+          "Location is disabled or location component is unavailable", null);
+    }
+  }
+
+  // Pitches the camera through the location component instead of the regular
+  // camera API. MapLibreMap#animateCamera and friends notify the SDK's
+  // developer-animation listeners, which the location component answers by
+  // dropping to CameraMode.NONE, so a plain camera call would end tracking and
+  // report a dismissal. LocationComponent#tiltWhileTracking feeds the same
+  // animator that drives tracking, so the camera mode is left alone.
+  @Override
+  public void locationComponentSetTrackingCameraOptions(
+      double tilt, @Nullable Long duration, MethodChannel.Result result) {
+    if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+      result.error(
+          "LOCATION_COMPONENT_NOT_READY",
+          "The location component is not ready. Ensure the map was created with "
+              + "myLocationEnabled: true.",
+          null);
+      return;
+    }
+    if (locationComponent.getCameraMode() == CameraMode.NONE) {
+      result.error(
+          "TRACKING_NOT_ACTIVE",
+          "A tracking mode other than MyLocationTrackingMode.none must be active "
+              + "before a tracking camera option can be applied.",
+          null);
+      return;
+    }
+    final MapLibreMap.CancelableCallback callback =
+        new MapLibreMap.CancelableCallback() {
+          @Override
+          public void onCancel() {
+            // Either superseded by a newer tracking-camera animation, or refused
+            // because the camera mode was still transitioning. The tilt is not
+            // guaranteed to have been applied, so report that rather than success.
+            result.success(false);
+          }
+
+          @Override
+          public void onFinish() {
+            result.success(true);
+          }
+        };
+    if (duration != null) {
+      locationComponent.tiltWhileTracking(tilt, duration, callback);
+    } else {
+      // Three-argument overload only; the two-argument one takes no callback, and
+      // the SDK's own default duration is not public.
+      locationComponent.tiltWhileTracking(tilt, DEFAULT_TRACKING_TILT_DURATION_MS, callback);
+    }
+  }
+
+  @Override
+  public void locationComponentSetManualLocation(
+      Map<String, Object> update, MethodChannel.Result result) {
+    if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+      result.error(
+          "LOCATION_COMPONENT_NOT_READY",
+          "The location component is not ready. Ensure the map was created with "
+              + "myLocationEnabled: true and locationSource: ManualLocationSource().",
+          null);
+      return;
+    }
+    if (!manualLocationSource) {
+      result.error(
+          "MANUAL_LOCATION_SOURCE_DISABLED",
+          "Manual locations require locationSource: ManualLocationSource().",
+          null);
+      return;
+    }
+    final List<?> position = (List<?>) update.get("position");
+    if (position == null || position.size() < 2) {
+      result.error("INVALID_ARGUMENT", "Missing or invalid 'position'.", null);
+      return;
+    }
+    final Location location = new Location("ManualLocationSource");
+    location.setLatitude(((Number) position.get(0)).doubleValue());
+    location.setLongitude(((Number) position.get(1)).doubleValue());
+    final Object altitude = update.get("altitude");
+    if (altitude != null) {
+      location.setAltitude(((Number) altitude).doubleValue());
+    }
+    final Object bearing = update.get("bearing");
+    if (bearing != null) {
+      location.setBearing(((Number) bearing).floatValue());
+    }
+    final Object speed = update.get("speed");
+    if (speed != null) {
+      location.setSpeed(((Number) speed).floatValue());
+    }
+    final Object horizontalAccuracy = update.get("horizontalAccuracy");
+    if (horizontalAccuracy != null) {
+      location.setAccuracy(((Number) horizontalAccuracy).floatValue());
+    }
+    final Object verticalAccuracy = update.get("verticalAccuracy");
+    if (verticalAccuracy != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      location.setVerticalAccuracyMeters(((Number) verticalAccuracy).floatValue());
+    }
+    final Object timestamp = update.get("timestamp");
+    if (timestamp != null) {
+      location.setTime(((Number) timestamp).longValue());
+    }
+    locationComponent.forceLocationUpdate(location);
+    // Keep map#onUserLocationUpdated firing, mirroring the engine path.
+    onUserLocationUpdate(location);
+    result.success(null);
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -2253,13 +2419,6 @@ final class MapLibreMapController
       return;
     }
     switch (call.method) {
-      case "map#updateMyLocationTrackingMode":
-        {
-          int myLocationTrackingMode = call.argument("mode");
-          setMyLocationTrackingMode(myLocationTrackingMode);
-          result.success(null);
-          break;
-        }
       case "map#getVisibleRegion":
         {
           Map<String, Object> reply = new HashMap<>();
@@ -3137,170 +3296,6 @@ final class MapLibreMapController
           }
           updateLocationComponentLayer();
 
-          result.success(null);
-          break;
-        }
-      case "locationComponent#getLastLocation":
-        {
-          Log.e(TAG, "location component: getLastLocation");
-          if (this.myLocationEnabled
-              && manualLocationSource
-              && locationComponent != null
-              && locationComponent.isLocationComponentActivated()) {
-            // Manual mode has no location engine; read the last forced location.
-            Location lastLocation = locationComponent.getLastKnownLocation();
-            if (lastLocation != null) {
-              Map<String, Object> reply = new HashMap<>();
-              reply.put("latitude", lastLocation.getLatitude());
-              reply.put("longitude", lastLocation.getLongitude());
-              reply.put("altitude", lastLocation.getAltitude());
-              result.success(reply);
-            } else {
-              result.error("LOCATION_UNAVAILABLE",
-                  "Last location is not available", null);
-            }
-          } else if (this.myLocationEnabled
-              && locationComponent != null
-              && locationComponent.isLocationComponentActivated()
-              && locationComponent.getLocationEngine() != null) {
-            Map<String, Object> reply = new HashMap<>();
-
-            mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
-                new LocationEngineCallback<LocationEngineResult>() {
-                  @Override
-                  public void onSuccess(LocationEngineResult locationEngineResult) {
-                    Location lastLocation = locationEngineResult.getLastLocation();
-                    if (lastLocation != null) {
-                      reply.put("latitude", lastLocation.getLatitude());
-                      reply.put("longitude", lastLocation.getLongitude());
-                      reply.put("altitude", lastLocation.getAltitude());
-                      result.success(reply);
-                    } else {
-                      result.error("LOCATION_UNAVAILABLE",
-                          "Last location is not available", null);
-                    }
-                  }
-
-                  @Override
-                  public void onFailure(@NonNull Exception exception) {
-                    result.error("LOCATION_ENGINE_FAILURE",
-                        "Failed to get last location: " + exception.getMessage(), null);
-                  }
-                });
-          } else {
-            result.error("LOCATION_DISABLED",
-                "Location is disabled or location component is unavailable", null);
-          }
-          break;
-        }
-        // Pitches the camera through the location component instead of the regular
-        // camera API. MapLibreMap#animateCamera and friends notify the SDK's
-        // developer-animation listeners, which the location component answers by
-        // dropping to CameraMode.NONE, so a plain camera call would end tracking and
-        // report a dismissal. LocationComponent#tiltWhileTracking feeds the same
-        // animator that drives tracking, so the camera mode is left alone.
-      case "locationComponent#setTrackingCameraOptions":
-        {
-          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
-            result.error(
-                "LOCATION_COMPONENT_NOT_READY",
-                "The location component is not ready. Ensure the map was created with "
-                    + "myLocationEnabled: true.",
-                null);
-            break;
-          }
-          if (locationComponent.getCameraMode() == CameraMode.NONE) {
-            result.error(
-                "TRACKING_NOT_ACTIVE",
-                "A tracking mode other than MyLocationTrackingMode.none must be active "
-                    + "before a tracking camera option can be applied.",
-                null);
-            break;
-          }
-          final Object tilt = call.argument("tilt");
-          if (!(tilt instanceof Number)) {
-            result.error("INVALID_ARGUMENT", "Missing or invalid 'tilt'.", null);
-            break;
-          }
-          final Object duration = call.argument("duration");
-          final MapLibreMap.CancelableCallback callback =
-              new MapLibreMap.CancelableCallback() {
-                @Override
-                public void onCancel() {
-                  // Either superseded by a newer tracking-camera animation, or refused
-                  // because the camera mode was still transitioning. The tilt is not
-                  // guaranteed to have been applied, so report that rather than success.
-                  result.success(false);
-                }
-
-                @Override
-                public void onFinish() {
-                  result.success(true);
-                }
-              };
-          if (duration instanceof Number) {
-            locationComponent.tiltWhileTracking(
-                ((Number) tilt).doubleValue(), ((Number) duration).longValue(), callback);
-          } else {
-            // Three-argument overload only; the two-argument one takes no callback, and
-            // the SDK's own default duration is not public.
-            locationComponent.tiltWhileTracking(
-                ((Number) tilt).doubleValue(), DEFAULT_TRACKING_TILT_DURATION_MS, callback);
-          }
-          break;
-        }
-      case "locationComponent#setManualLocation":
-        {
-          if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
-            result.error(
-                "LOCATION_COMPONENT_NOT_READY",
-                "The location component is not ready. Ensure the map was created with "
-                    + "myLocationEnabled: true and locationSource: ManualLocationSource().",
-                null);
-            break;
-          }
-          if (!manualLocationSource) {
-            result.error(
-                "MANUAL_LOCATION_SOURCE_DISABLED",
-                "Manual locations require locationSource: ManualLocationSource().",
-                null);
-            break;
-          }
-          final List<?> position = (List<?>) call.argument("position");
-          if (position == null || position.size() < 2) {
-            result.error("INVALID_ARGUMENT", "Missing or invalid 'position'.", null);
-            break;
-          }
-          final Location location = new Location("ManualLocationSource");
-          location.setLatitude(((Number) position.get(0)).doubleValue());
-          location.setLongitude(((Number) position.get(1)).doubleValue());
-          final Object altitude = call.argument("altitude");
-          if (altitude != null) {
-            location.setAltitude(((Number) altitude).doubleValue());
-          }
-          final Object bearing = call.argument("bearing");
-          if (bearing != null) {
-            location.setBearing(((Number) bearing).floatValue());
-          }
-          final Object speed = call.argument("speed");
-          if (speed != null) {
-            location.setSpeed(((Number) speed).floatValue());
-          }
-          final Object horizontalAccuracy = call.argument("horizontalAccuracy");
-          if (horizontalAccuracy != null) {
-            location.setAccuracy(((Number) horizontalAccuracy).floatValue());
-          }
-          final Object verticalAccuracy = call.argument("verticalAccuracy");
-          if (verticalAccuracy != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            location.setVerticalAccuracyMeters(((Number) verticalAccuracy).floatValue());
-          }
-          final Object timestamp = call.argument("timestamp");
-          if (timestamp != null) {
-            location.setTime(((Number) timestamp).longValue());
-          }
-          locationComponent.forceLocationUpdate(location);
-          // Keep map#onUserLocationUpdated firing, mirroring the engine path.
-          onUserLocationUpdate(location);
           result.success(null);
           break;
         }

@@ -32,23 +32,20 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         call(callback, { it as Boolean? }) { map.cameraMove(cameraUpdate, it) }
 
     override fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit) =
-        unit("map#updateMyLocationTrackingMode", hashMapOf("mode" to mode), callback)
+        unit(callback) { map.mapUpdateMyLocationTrackingMode(mode, it) }
 
     override fun locationComponentSetTrackingCameraOptions(
         tilt: Double,
         duration: Long?,
         callback: (Result<Boolean?>) -> Unit,
-    ) = call(
-        "locationComponent#setTrackingCameraOptions",
-        hashMapOf("tilt" to tilt, "duration" to duration),
-        callback,
-    ) { it as Boolean? }
+    ) = call(callback, { it as Boolean? }) {
+        map.locationComponentSetTrackingCameraOptions(tilt, duration, it)
+    }
 
-    // The legacy arguments were the update map itself.
     override fun locationComponentSetManualLocation(
         update: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("locationComponent#setManualLocation", update, callback)
+    ) = unit(callback) { map.locationComponentSetManualLocation(update, it) }
 
     override fun mapMatchMapLanguageWithDeviceDefault(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapMatchMapLanguageWithDeviceDefault(it) }
@@ -201,7 +198,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         unit(callback) { map.mapClearAmbientCache(it) }
 
     override fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit) =
-        any("locationComponent#getLastLocation", null, callback)
+        any(callback) { map.locationComponentGetLastLocation(it) }
 
     override fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit) =
         any("map#getVisibleRegion", null, callback)
