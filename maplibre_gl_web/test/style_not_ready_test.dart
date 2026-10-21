@@ -83,6 +83,14 @@ void main() {
           enableInteraction: false,
         ),
     'addBackgroundLayer': (c) => c.addBackgroundLayer('background', const {}),
+    'removeLayer': (c) => c.removeLayer('layer'),
+    'setLayerProperties':
+        (c) => c.setLayerProperties('layer', const {'circle-radius': 4}),
+    'setLayerVisibility': (c) => c.setLayerVisibility('layer', false),
+    'setLayersVisibility': (c) => c.setLayersVisibility(['layer'], false),
+    'removeSource': (c) => c.removeSource('source'),
+    'getLayerProperties': (c) => c.getLayerProperties('layer'),
+    'getSourceProperties': (c) => c.getSourceProperties('source'),
   };
 
   for (final call in calls.entries) {
@@ -111,4 +119,17 @@ void main() {
       expect(recorded, isEmpty, reason: 'nothing reaches maplibre-gl-js');
     });
   }
+
+  // An empty list changes nothing, so it needs no style, as on Android and
+  // iOS.
+  test('setLayersVisibility with no ids answers an empty list', () async {
+    final recorded = <String>[];
+    final controller =
+        MapLibreMapController()..debugSetMap(
+          MapLibreMap.fromJsObject(recordingMap(recorded) as MapLibreMapJsImpl),
+        );
+
+    expect(await controller.setLayersVisibility([], false), isEmpty);
+    expect(recorded, isEmpty);
+  });
 }

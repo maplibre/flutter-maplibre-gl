@@ -1,5 +1,9 @@
 part of '../maplibre_gl_web.dart';
 
+/// A feature of a GeoJSON source as maplibre-gl-js holds it, with the text of
+/// its id.
+typedef _SourceFeature = ({String? id, JSAny? feature});
+
 class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
   late web.HTMLDivElement _mapElement;
@@ -19,7 +23,11 @@ class MapLibreMapController extends MapLibrePlatform
   /// map's own `mouseup`.
   JSFunction? _windowMouseUp;
   bool _featureTapsTriggersMapClick = false;
-  final _addedFeaturesByLayer = <String, FeatureCollection>{};
+
+  /// The features of each GeoJSON source whose data [addGeoJsonSource],
+  /// [setGeoJsonSource] or [editGeoJsonSource] set, as maplibre-gl-js holds
+  /// them, with the text of their id, for [setFeatureForGeoJsonSource].
+  final _addedFeaturesByLayer = <String, List<_SourceFeature>>{};
   final _hoveredFeatureIdsByLayer = <String, List<dynamic>>{};
 
   /// Where the pointer was at the last hover event, for the leave events a
@@ -730,18 +738,39 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON source editing
-    print('editGeoJsonSource called in web, id: $id');
-    // For future implementation, we could use MapLibre GL JS source methods
-    throw UnimplementedError();
+    final Object? geojson;
+    try {
+      geojson = jsonDecode(data);
+    } on FormatException {
+      throw invalidGeoJson(id, _filterNotJson);
+    }
+    final reason = geoJsonError(geojson);
+    if (reason != null) throw invalidGeoJson(id, reason);
+    final source = _editableGeoJsonSource(id);
+    if (source == null) return false;
+    await _setSourceData(
+      source,
+      _rememberGeoJson(id, Map<String, dynamic>.from(geojson! as Map)),
+    );
+    return true;
   }
 
   @override
   Future<bool> editGeoJsonUrl(String id, String url) async {
-    // Web implementation: MapLibre GL JS doesn't have direct GeoJSON URL editing
-    print('editGeoJsonUrl called in web, id: $id, url: $url');
-    // For future implementation, we could use MapLibre GL JS source methods
-    throw UnimplementedError();
+    final source = _editableGeoJsonSource(id);
+    if (source == null) return false;
+    // setGeoJsonFeature cannot change data it does not hold.
+    _addedFeaturesByLayer.remove(id);
+    await _setSourceData(source, url.toJS);
+    return true;
+  }
+
+  /// The GeoJSON source [id], or null without a style or such a source.
+  GeoJsonSource? _editableGeoJsonSource(String id) {
+    if (!_styleReady) return null;
+    final source = _map.getSource(id);
+    if (source is! GeoJsonSource || _sourceType(id) != 'geojson') return null;
+    return source;
   }
 
   @override
@@ -1185,9 +1214,11 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> removeSource(String sourceId) async {
+    _ensureStyleReady();
     if (_map.getSource(sourceId) != null) {
       _map.removeSource(sourceId);
       _imageSourceIds.remove(sourceId);
+      _addedFeaturesByLayer.remove(sourceId);
     }
   }
 
@@ -1755,6 +1786,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
     _imageSourceIds.clear();
+    _addedFeaturesByLayer.clear();
     //remove old mouseenter callbacks to avoid multicalling
     _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
     _interactiveFeatureLayerIds.clear();
@@ -1833,6 +1865,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> removeLayer(String imageLayerId) async {
+    _ensureStyleReady();
     _ensureLayerExists(imageLayerId);
     // A layer added again under this id attaches its own listeners, so these
     // must go with it or each hover and drag callback runs once per add.
@@ -1954,81 +1987,85 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) async {
+    // maplibre-gl-js would only report bad data later, in an error event.
+    final reason = geoJsonError(geojson);
+    if (reason != null) throw invalidGeoJson(sourceId, reason);
     _ensureStyleReady();
     // Before the cache write below, so a rejected add keeps the original's data.
     _ensureNewSourceId(sourceId);
-    final data = _makeFeatureCollection(geojson);
-    _addedFeaturesByLayer[sourceId] = data;
-    _map.addSource(sourceId, <String, dynamic>{
-      "type": 'geojson',
-      "data": geojson, // pass the raw string here to avoid errors
-      if (promoteId != null) "promoteId": promoteId,
+    final source = jsifyMap({
+      'type': 'geojson',
+      if (promoteId != null) 'promoteId': promoteId,
     });
-  }
-
-  Feature _makeFeature(Map<String, dynamic> geojsonFeature) {
-    final geometry = Map<String, dynamic>.from(
-      geojsonFeature["geometry"] as Map,
-    );
-    final propertiesRaw = geojsonFeature["properties"];
-    final properties =
-        propertiesRaw != null
-            ? Map<String, dynamic>.from(propertiesRaw as Map)
-            : null;
-
-    return Feature(
-      geometry: Geometry(
-        type: geometry["type"],
-        coordinates: geometry["coordinates"],
-      ),
-      properties: properties,
-      id: properties?["id"] ?? geojsonFeature["id"],
+    source.setProperty('data'.toJS, _rememberGeoJson(sourceId, geojson));
+    (_map.jsObject as JSObject).callMethod<JSAny?>(
+      'addSource'.toJS,
+      sourceId.toJS,
+      source,
     );
   }
 
-  FeatureCollection _makeFeatureCollection(Map<String, dynamic> geojson) {
-    return FeatureCollection(
-      features: [
-        for (final f in _asFeatureCollection(geojson)["features"] as List)
-          _makeFeature(Map<String, dynamic>.from(f as Map)),
-      ],
-    );
-  }
-
-  /// Wraps a single Feature or a bare geometry in a FeatureCollection, so any
-  /// GeoJSON object is accepted as source data, as on Android and iOS.
-  Map<String, dynamic> _asFeatureCollection(Map<String, dynamic> geojson) {
+  /// [geojson] as a JS object, keeping its features for
+  /// [setFeatureForGeoJsonSource]. A lone Feature counts as a collection of
+  /// one; a geometry has no feature to replace.
+  JSObject _rememberGeoJson(String sourceId, Map<String, dynamic> geojson) {
+    final data = jsify(geojson)! as JSObject;
+    final List<_SourceFeature> features;
     switch (geojson['type']) {
       case 'FeatureCollection':
-        return {...geojson, 'features': geojson['features'] ?? const []};
+        final jsFeatures =
+            data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
+        final dartFeatures = geojson['features'] as List;
+        features = [
+          for (var i = 0; i < dartFeatures.length; i++)
+            (
+              id: _featureIdKey((dartFeatures[i] as Map)['id']),
+              feature: jsFeatures[i],
+            ),
+        ];
       case 'Feature':
-        return {
-          'type': 'FeatureCollection',
-          'features': [geojson],
-        };
+        features = [(id: _featureIdKey(geojson['id']), feature: data)];
       default:
-        return {
-          'type': 'FeatureCollection',
-          'features': [
-            {
-              'type': 'Feature',
-              'geometry': geojson,
-              'properties': <String, dynamic>{},
-            },
-          ],
-        };
+        features = const [];
     }
+    _addedFeaturesByLayer[sourceId] = features;
+    return data;
   }
+
+  /// A feature id as text, so 2, 2.0 and "2" match, as on Android and iOS.
+  static String? _featureIdKey(Object? id) {
+    if (id is num && id.isFinite && id == id.roundToDouble()) {
+      return id.toInt().toString();
+    }
+    return id?.toString();
+  }
+
+  /// A FeatureCollection of [features], as maplibre-gl-js takes it.
+  static JSObject _featureCollection(List<_SourceFeature> features) {
+    final collection = JSObject();
+    collection.setProperty('type'.toJS, 'FeatureCollection'.toJS);
+    collection.setProperty(
+      'features'.toJS,
+      [for (final feature in features) feature.feature].toJS,
+    );
+    return collection;
+  }
+
+  /// Replaces the data of [source] with [data], GeoJSON or its url.
+  static Future<void> _setSourceData(GeoJsonSource source, JSAny data) =>
+      source.setData(
+        FeatureCollection.fromJsObject(data as FeatureCollectionJsImpl),
+      );
 
   @override
   Future<void> setGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson,
   ) async {
+    final reason = geoJsonError(geojson);
+    if (reason != null) throw invalidGeoJson(sourceId, reason);
     final source = _geoJsonSource(sourceId);
-    final data = _makeFeatureCollection(geojson);
-    _addedFeaturesByLayer[sourceId] = data;
-    await source.setData(data);
+    await _setSourceData(source, _rememberGeoJson(sourceId, geojson));
   }
 
   /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
@@ -2166,23 +2203,82 @@ class MapLibreMapController extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
   ) async {
+    _ensureStyleReady();
     _ensureLayerExists(layerId);
-    for (final entry in properties.entries) {
-      // Try paint property first (most common), then layout property
+    final layerType = _layerType(layerId);
+    final map = _map.jsObject as JSObject;
+    // maplibre-gl-js validates one property at a time, so the ones set before
+    // a rejected one are put back: a failed call changes nothing.
+    final applied = <({String setter, String name, JSAny? previous})>[];
+    for (final name in properties.keys.toList()..sort()) {
+      if (layerType != null && !checks.isPropertyOf(layerType, name)) continue;
+      final value = properties[name];
+      final layout = isLayoutProperty(name);
+      final setter = layout ? 'setLayoutProperty' : 'setPaintProperty';
+      final previous = map.callMethod<JSAny?>(
+        (layout ? 'getLayoutProperty' : 'getPaintProperty').toJS,
+        layerId.toJS,
+        name.toJS,
+      );
+      String? reason;
       try {
-        _map.setPaintProperty(layerId, entry.key, entry.value);
+        final errors = _mapErrorsDuring(
+          () => map.callMethod<JSAny?>(
+            setter.toJS,
+            layerId.toJS,
+            name.toJS,
+            jsify(value),
+          ),
+        );
+        for (final message in errors) {
+          final error = checks.propertyError(message);
+          if (error == null || checks.isUnknownProperty(error.reason)) {
+            web.console.warn(message.toJS);
+          } else {
+            reason ??= error.reason;
+          }
+        }
       } catch (e) {
-        // If setPaintProperty fails, try setLayoutProperty
-        try {
-          _map.setLayoutProperty(layerId, entry.key, entry.value);
-        } catch (e) {
-          // If both fail, the property doesn't exist on this layer type
-          print(
-            'Warning: Could not set property "${entry.key}" on layer "$layerId" for value "${entry.value}": $e',
+        // Resetting fails only for a property maplibre-gl-js does not know.
+        if (value == null) {
+          web.console.warn('Cannot reset "$name" of layer "$layerId": $e'.toJS);
+          continue;
+        }
+        reason = e.toString();
+      }
+      if (reason != null) {
+        for (final set in applied.reversed) {
+          map.callMethod<JSAny?>(
+            set.setter.toJS,
+            layerId.toJS,
+            set.name.toJS,
+            set.previous,
           );
         }
+        throw _invalidProperty(layerId, name, value, reason);
       }
+      applied.add((setter: setter, name: name, previous: previous));
     }
+  }
+
+  /// The type of the layer [layerId], such as `circle`, or null.
+  String? _layerType(String layerId) {
+    final layer = _map.getLayer(layerId);
+    if (layer == null) return null;
+    return (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+  }
+
+  /// The error for a value of [property] maplibre-gl-js rejected, also logged
+  /// as a warning.
+  static PlatformException _invalidProperty(
+    String layerId,
+    String property,
+    Object? value,
+    String reason,
+  ) {
+    final error = checks.invalidProperty(layerId, property, value, reason);
+    web.console.warn(error.message!.toJS);
+    return error;
   }
 
   @override
@@ -2265,21 +2361,14 @@ class MapLibreMapController extends MapLibrePlatform
   }) async {
     _ensureStyleReady();
     _ensureNewLayerId(layerId);
-    final layout = Map<String, dynamic>.fromEntries(
-      properties.entries.where((entry) => isLayoutProperty(entry.key)),
+    _addValidatedLayer(
+      layerId,
+      'background',
+      properties,
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
     );
-    final paint = Map<String, dynamic>.fromEntries(
-      properties.entries.where((entry) => !isLayoutProperty(entry.key)),
-    );
-
-    _map.addLayer(<String, dynamic>{
-      'id': layerId,
-      'type': 'background',
-      'layout': layout,
-      'paint': paint,
-      if (minzoom != null) 'minzoom': minzoom,
-      if (maxzoom != null) 'maxzoom': maxzoom,
-    }, _existingLayerId(belowLayerId));
   }
 
   @override
@@ -2381,44 +2470,23 @@ class MapLibreMapController extends MapLibrePlatform
     _ensureStyleReady();
     _ensureNewLayerId(layerId);
     _ensureSourceExists(sourceId);
-    final layout = Map<String, dynamic>.fromEntries(
-      properties.entries.where((entry) => isLayoutProperty(entry.key)),
-    );
-    final paint = Map<String, dynamic>.fromEntries(
-      properties.entries.where((entry) => !isLayoutProperty(entry.key)),
-    );
-
-    final layer = <String, dynamic>{
-      'id': layerId,
-      'type': layerType,
-      'source': sourceId,
-      'layout': layout,
-      'paint': paint,
-      if (sourceLayer != null) 'source-layer': sourceLayer,
-      if (minzoom != null) 'minzoom': minzoom,
-      if (maxzoom != null) 'maxzoom': maxzoom,
-      if (filter != null) 'filter': filter,
-    };
-    final before = _existingLayerId(belowLayerId);
-    if (filter == null) {
-      _map.addLayer(layer, before);
-    } else {
-      // A filter maplibre-gl-js rejects keeps the layer out, which it only
-      // reports through an error event. Android and iOS answer
-      // INVALID_EXPRESSION.
-      final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
-      final key = RegExp(r'^layers\..*?\.filter[^:]*: ');
-      String? reason;
-      for (final message in errors) {
-        final match = key.firstMatch(message);
-        if (match == null) {
-          web.console.error(message.toJS);
-        } else {
-          reason ??= message.substring(match.end);
-        }
-      }
-      if (reason != null) throw _invalidFilter(reason);
+    final sourceType = _sourceType(sourceId);
+    if (sourceType != null && !checks.canDraw(layerType, sourceType)) {
+      throw checks.incompatibleSource(layerId, layerType, sourceId, sourceType);
     }
+    _addValidatedLayer(
+      layerId,
+      layerType,
+      properties,
+      belowLayerId: belowLayerId,
+      source: <String, dynamic>{
+        'source': sourceId,
+        if (sourceLayer != null) 'source-layer': sourceLayer,
+      },
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      filter: filter,
+    );
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
@@ -2426,6 +2494,80 @@ class MapLibreMapController extends MapLibrePlatform
       _map.on('mousemove', layerId, _handleLayerMouseMove);
       _map.on('mouseleave', layerId, _handleLayerMouseMove);
       if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
+    }
+  }
+
+  /// Adds the layer [layerId] of [layerType] with [properties] and the
+  /// [source] entries. maplibre-gl-js reports an invalid filter or property
+  /// only through an error event; this throws it instead, the filter first,
+  /// then the property whose name comes first. A property maplibre-gl-js does
+  /// not know is dropped.
+  void _addValidatedLayer(
+    String layerId,
+    String layerType,
+    Map<String, dynamic> properties, {
+    String? belowLayerId,
+    Map<String, dynamic> source = const {},
+    double? minzoom,
+    double? maxzoom,
+    dynamic filter,
+  }) {
+    final before = _existingLayerId(belowLayerId);
+    var kept = properties;
+    // At most twice: the second time without the properties it did not know.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final layer = <String, dynamic>{
+        'id': layerId,
+        'type': layerType,
+        ...source,
+        'layout': {
+          for (final entry in kept.entries)
+            if (isLayoutProperty(entry.key)) entry.key: entry.value,
+        },
+        'paint': {
+          for (final entry in kept.entries)
+            if (!isLayoutProperty(entry.key)) entry.key: entry.value,
+        },
+        if (minzoom != null) 'minzoom': minzoom,
+        if (maxzoom != null) 'maxzoom': maxzoom,
+        if (filter != null) 'filter': filter,
+      };
+      final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
+      final filterKey = RegExp(r'^layers\..*?\.filter[^:]*: ');
+      String? filterReason;
+      checks.PropertyError? propertyError;
+      final unknown = <String>{};
+      for (final message in errors) {
+        final filterMatch = filterKey.firstMatch(message);
+        if (filterMatch != null) {
+          filterReason ??= message.substring(filterMatch.end);
+          continue;
+        }
+        final error = checks.propertyError(message);
+        if (error == null) {
+          web.console.error(message.toJS);
+        } else if (checks.isUnknownProperty(error.reason)) {
+          web.console.warn(message.toJS);
+          unknown.add(error.property);
+        } else if (propertyError == null ||
+            error.property.compareTo(propertyError.property) < 0) {
+          propertyError = error;
+        }
+      }
+      if (filterReason != null) throw _invalidFilter(filterReason);
+      if (propertyError case final error?) {
+        throw _invalidProperty(
+          layerId,
+          error.property,
+          kept[error.property],
+          error.reason,
+        );
+      }
+      if (unknown.isEmpty || _map.getLayer(layerId) != null) return;
+      kept = {
+        for (final entry in kept.entries)
+          if (!unknown.contains(entry.key)) entry.key: entry.value,
+      };
     }
   }
 
@@ -2584,9 +2726,25 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    final json = properties.toJson();
+    final type = json['type'] as String?;
+    // A string is the url of the data.
+    final data = json['data'];
+    if (type == 'geojson' && data != null && data is! String) {
+      final reason = geoJsonError(data);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+    }
     _ensureStyleReady();
     _ensureNewSourceId(sourceId);
-    _map.addSource(sourceId, properties.toJson());
+    if (!checks.canBuildSource(type, json)) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            "Source '$sourceId' cannot be built from its properties as a "
+            "'$type' source.",
+      );
+    }
+    _map.addSource(sourceId, json);
   }
 
   @override
@@ -2622,20 +2780,22 @@ class MapLibreMapController extends MapLibrePlatform
     final url = bytes == null ? null : await _imageDataUrl(bytes);
     _ensureStyleReady();
     final source = _imageSource(imageSourceId);
-    final corners = coordinates == null ? null : _corners(coordinates);
-    if (url != null) {
+    // updateImage would move the corners only once the image has loaded.
+    if (coordinates != null) {
       source.callMethod<JSAny?>(
-        'updateImage'.toJS,
-        jsify({'url': url, if (corners != null) 'coordinates': corners}),
+        'setCoordinates'.toJS,
+        jsify(_corners(coordinates)),
       );
-    } else if (corners != null) {
-      source.callMethod<JSAny?>('setCoordinates'.toJS, jsify(corners));
+    }
+    if (url != null) {
+      source.callMethod<JSAny?>('updateImage'.toJS, jsify({'url': url}));
+      // Its url is now a data URL, which getSourceProperties leaves out.
+      _imageSourceIds.add(imageSourceId);
     }
   }
 
-  /// The ids of the image sources [addImageSource] made from bytes. Their url
-  /// is a data URL of the whole image, which [getSourceProperties] leaves
-  /// out: Android and iOS answer no url for them either.
+  /// The ids of the image sources whose image came from bytes. Their url is a
+  /// data URL, which [getSourceProperties] leaves out.
   final _imageSourceIds = <String>{};
 
   /// The image source [imageSourceId] as maplibre-gl-js holds it. Throws
@@ -2766,34 +2926,20 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojsonFeature,
   ) async {
+    final reason = geoJsonFeatureError(geojsonFeature);
+    if (reason != null) throw invalidGeoJsonFeature(sourceId, reason);
     final source = _geoJsonSource(sourceId);
-    // Only a Feature replaces a feature, as on Android and iOS.
-    if (geojsonFeature['type'] != 'Feature') {
-      throw PlatformException(
-        code: 'INVALID_GEOJSON',
-        message: "The feature for source '$sourceId' is not a GeoJSON Feature.",
-      );
-    }
-    // Without data set through addGeoJsonSource or setGeoJsonSource, as for a
-    // source added some other way, nothing changes, as on Android and iOS.
-    final data = _addedFeaturesByLayer[sourceId];
-
-    if (data != null) {
-      final feature = _makeFeature(geojsonFeature);
-      final features = data.features.toList();
-      // Ids are compared by their text, as on Android and iOS, so 2 and "2"
-      // match. A feature without an id replaces nothing.
-      final id = feature.id?.toString();
-      final index =
-          id == null ? -1 : features.indexWhere((f) => f.id?.toString() == id);
-      if (index >= 0) {
-        features[index] = feature;
-        final newData = FeatureCollection(features: features);
-        _addedFeaturesByLayer[sourceId] = newData;
-
-        await source.setData(newData);
-      }
-    }
+    // Nothing changes in a source whose data this controller did not set.
+    final features = _addedFeaturesByLayer[sourceId];
+    // A feature without an id replaces nothing.
+    final id = _featureIdKey(geojsonFeature['id']);
+    if (features == null || id == null) return;
+    final index = features.indexWhere((feature) => feature.id == id);
+    if (index < 0) return;
+    final updated = List.of(features);
+    updated[index] = (id: id, feature: jsify(geojsonFeature));
+    _addedFeaturesByLayer[sourceId] = updated;
+    await _setSourceData(source, _featureCollection(updated));
   }
 
   @override
@@ -2878,6 +3024,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
+    _ensureStyleReady();
     _ensureLayerExists(layerId);
     _map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
   }
@@ -2887,7 +3034,9 @@ class MapLibreMapController extends MapLibrePlatform
     List<String> layerIds,
     bool visible,
   ) async {
-    // Unknown ids are skipped and returned, as on Android and iOS.
+    // An empty list needs no style. Unknown ids are skipped and returned.
+    if (layerIds.isEmpty) return [];
+    _ensureStyleReady();
     final visibility = visible ? 'visible' : 'none';
     final missing = <String>[];
     for (final layerId in layerIds) {
@@ -2973,6 +3122,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
+    _ensureStyleReady();
     // The serialized style already holds each layer in MapLibre style-spec
     // form (id/type/source/paint/layout/...), which is exactly the contract,
     // so we read it from there rather than reassembling it from getters.
@@ -2996,6 +3146,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
+    _ensureStyleReady();
     final sources = _styleMap()?['sources'];
     if (sources is! Map) return null;
     final source = sources[sourceId];
