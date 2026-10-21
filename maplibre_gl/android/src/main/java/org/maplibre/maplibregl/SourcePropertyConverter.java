@@ -170,12 +170,18 @@ class SourcePropertyConverter {
     return null;
   }
 
+  /**
+   * {@code coordinates}, the four [longitude, latitude] corners of an image source from the top
+   * left clockwise, as a quad.
+   */
+  static LatLngQuad buildLatLngQuad(Object coordinates) {
+    final List<LatLng> corners = Convert.toLatLngList(coordinates, true);
+    return new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+  }
+
   static ImageSource buildImageSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
-    List<LatLng> coordinates = Convert.toLatLngList(properties.get("coordinates"), true);
-    final LatLngQuad quad =
-        new LatLngQuad(
-            coordinates.get(0), coordinates.get(1), coordinates.get(2), coordinates.get(3));
+    final LatLngQuad quad = buildLatLngQuad(properties.get("coordinates"));
     try {
       final URI uri = new URI(Convert.toString(url));
       return new ImageSource(id, quad, uri);

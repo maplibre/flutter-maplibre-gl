@@ -51,6 +51,7 @@ import org.maplibre.android.camera.CameraUpdateFactory;
 import org.maplibre.android.constants.MapLibreConstants;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
+import org.maplibre.android.geometry.LatLngQuad;
 import org.maplibre.android.gestures.AndroidGesturesManager;
 import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.android.location.LocationComponent;
@@ -278,6 +279,10 @@ final class MapLibreMapController
   private MapSnapshotter activeSnapshotter;
   // Never added to a style: the engine checks the filter of each feature query on it.
   private CircleLayer queryFilterCheck;
+  // Never added to a style, one per layer type: the engine checks layer properties on them.
+  private final Map<String, Layer> propertyCheckLayers = new HashMap<>();
+  // Image source corners set through this API, which the SDK cannot read back.
+  private final Map<String, LatLngQuad> imageSourceCoordinates = new HashMap<>();
 
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
@@ -526,6 +531,7 @@ final class MapLibreMapController
     mapViewResumed = false;
     interactiveFeatureLayerIds.clear();
     addedFeaturesByLayer.clear();
+    imageSourceCoordinates.clear();
 
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
@@ -631,6 +637,9 @@ final class MapLibreMapController
     if (interactiveFeatureLayerIds != null) {
       interactiveFeatureLayerIds.clear();
     }
+    // The data of the old style's sources must not come back through setGeoJsonFeature.
+    addedFeaturesByLayer.clear();
+    imageSourceCoordinates.clear();
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -876,8 +885,13 @@ final class MapLibreMapController
     }
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonObject sources = styleJson.getAsJsonObject("sources");
-    if (sources != null && sources.has(sourceId)) {
-      return sources.getAsJsonObject(sourceId).toString();
+    final JsonObject loaded =
+        sources != null && sources.has(sourceId) ? sources.getAsJsonObject(sourceId) : null;
+    if (source instanceof ImageSource) {
+      return imageSourceProperties(sourceId, (ImageSource) source, loaded).toString();
+    }
+    if (loaded != null) {
+      return loaded.toString();
     }
 
     final JsonObject json = new JsonObject();
@@ -896,15 +910,40 @@ final class MapLibreMapController
     } else if (source instanceof RasterSource) {
       json.addProperty("type", "raster");
       putIfNotEmpty(json, "url", ((RasterSource) source).getUri());
-    } else if (source instanceof ImageSource) {
-      json.addProperty("type", "image");
-      putIfNotEmpty(json, "url", ((ImageSource) source).getUri());
     } else {
       // Not a style-spec source type (a custom geometry source).
       return null;
     }
     putIfNotEmpty(json, "attribution", source.getAttribution());
     return json.toString();
+  }
+
+  /**
+   * The style-spec entry of an image source, as iOS and web give it: type, four [lng, lat] corners
+   * from the top left clockwise, and the url only when the image comes from one.
+   */
+  private JsonObject imageSourceProperties(
+      String sourceId, ImageSource source, @Nullable JsonObject loaded) {
+    final JsonObject json = new JsonObject();
+    json.addProperty("type", "image");
+    putIfNotEmpty(json, "url", source.getUri());
+    final LatLngQuad quad = imageSourceCoordinates.get(sourceId);
+    if (quad != null) {
+      final JsonArray corners = new JsonArray();
+      for (LatLng corner :
+          new LatLng[] {
+            quad.getTopLeft(), quad.getTopRight(), quad.getBottomRight(), quad.getBottomLeft()
+          }) {
+        final JsonArray pair = new JsonArray();
+        pair.add(corner.getLongitude());
+        pair.add(corner.getLatitude());
+        corners.add(pair);
+      }
+      json.add("coordinates", corners);
+    } else if (loaded != null && loaded.has("coordinates")) {
+      json.add("coordinates", loaded.get("coordinates"));
+    }
+    return json;
   }
 
   private static void putIfNotEmpty(JsonObject json, String key, String value) {
@@ -1541,13 +1580,31 @@ final class MapLibreMapController
   }
 
   private static final String FILTER_ERROR_PREFIX = "Error setting filter: ";
+  private static final String PROPERTY_ERROR_PREFIX = "Error setting property: ";
 
   /**
    * Runs {@code action} and returns why the engine rejected a filter meanwhile, or null. The engine
-   * does not throw for an invalid filter: it logs the reason and keeps the old filter. So the SDK
-   * logger is swapped for one that records that log, also when the app silenced logging.
+   * does not throw for an invalid filter: it logs the reason and keeps the old filter.
    */
   private static String captureFilterError(Runnable action) {
+    return captureEngineError(FILTER_ERROR_PREFIX, action);
+  }
+
+  /**
+   * Runs {@code action}, which sets {@code property} on a layer, and returns why the engine
+   * rejected the value, or null. The engine logs it instead of throwing.
+   */
+  @Nullable
+  private static String capturePropertyError(String property, Runnable action) {
+    final String logged = captureEngineError(PROPERTY_ERROR_PREFIX, action);
+    return logged == null ? null : StyleChecks.propertyReason(logged, property);
+  }
+
+  /**
+   * Runs {@code action} and returns what the engine logged after {@code prefix} meanwhile, or null.
+   * The SDK logger is swapped for one that records that log, also when the app silenced logging.
+   */
+  private static String captureEngineError(String prefix, Runnable action) {
     LoggerDefinition previous;
     int previousLevel;
     Field loggerField;
@@ -1570,9 +1627,9 @@ final class MapLibreMapController
           @Override
           public void e(String tag, String msg) {
             // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
-            int start = msg == null ? -1 : msg.indexOf(FILTER_ERROR_PREFIX);
+            int start = msg == null ? -1 : msg.indexOf(prefix);
             if (error[0] == null && start >= 0) {
-              error[0] = msg.substring(start + FILTER_ERROR_PREFIX.length());
+              error[0] = msg.substring(start + prefix.length());
             }
             if (previousLevel <= Logger.ERROR) {
               super.e(tag, msg);
@@ -1934,22 +1991,150 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers STYLE_NOT_READY without a style, and SOURCE_NOT_FOUND when the style has no source with
-   * {@code sourceId}, as iOS and web do for a layer that draws a source. The engine would add the
-   * layer all the same, drawing nothing.
+   * Answers STYLE_NOT_READY without a style, SOURCE_NOT_FOUND without the source {@code sourceId},
+   * and UNSUPPORTED_SOURCE_TYPE when a layer of {@code layerType} cannot draw that source.
    *
    * @return true when the call has been answered with an error.
    */
-  private boolean rejectMissingLayerSource(String sourceId, MethodChannel.Result result) {
+  private boolean rejectLayerSource(
+      String layerId, String layerType, String sourceId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
       return true;
     }
-    if (style.getSource(sourceId) == null) {
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
       replySourceNotFound(result, sourceId);
       return true;
     }
+    final String sourceType = StyleChecks.sourceType(source);
+    if (sourceType != null && !StyleChecks.canDraw(layerType, sourceType)) {
+      result.error(
+          StyleChecks.UNSUPPORTED_SOURCE_TYPE,
+          StyleChecks.incompatibleSource(layerId, layerType, sourceId, sourceType),
+          null);
+      return true;
+    }
     return false;
+  }
+
+  /**
+   * Answers INVALID_EXPRESSION or INVALID_ARGUMENT, and logs a warning, when the engine rejects one
+   * of {@code properties}. They are tried in name order on a layer outside the style, so a failed
+   * call changes nothing.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectInvalidLayerProperties(
+      String layerId,
+      String layerType,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final Layer check = propertyCheckLayer(layerType);
+    if (check == null || properties.isEmpty()) {
+      return false;
+    }
+    final List<String> names = new ArrayList<>(properties.keySet());
+    Collections.sort(names);
+    for (String name : names) {
+      final Object value = properties.get(name);
+      if (value == null) {
+        // Null resets the property, which the engine always takes.
+        continue;
+      }
+      String reason;
+      try {
+        final PropertyValue[] values =
+            interpretLayerProperties(layerType, Collections.singletonMap(name, value));
+        reason = capturePropertyError(name, () -> check.setProperties(values));
+      } catch (RuntimeException e) {
+        // The SDK cannot build an expression from it, such as from an empty array.
+        reason = e.getMessage() != null ? e.getMessage() : e.toString();
+      }
+      if (reason != null) {
+        final String message = StyleChecks.invalidProperty(layerId, name, value, reason);
+        Log.w(TAG, message);
+        result.error(StyleChecks.invalidPropertyCode(value), message, reason);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static final String PROPERTY_CHECK_ID = "maplibre-gl-property-check";
+
+  /** A layer of {@code layerType} that is never added to a style, or null for an unknown type. */
+  @Nullable
+  private Layer propertyCheckLayer(String layerType) {
+    Layer layer = propertyCheckLayers.get(layerType);
+    if (layer != null) {
+      return layer;
+    }
+    switch (layerType) {
+      case "symbol":
+        layer = new SymbolLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "line":
+        layer = new LineLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "fill":
+        layer = new FillLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "fill-extrusion":
+        layer = new FillExtrusionLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "circle":
+        layer = new CircleLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "heatmap":
+        layer = new HeatmapLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "raster":
+        layer = new RasterLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "hillshade":
+        layer = new HillshadeLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "color-relief":
+        layer = new ColorReliefLayer(PROPERTY_CHECK_ID, PROPERTY_CHECK_ID);
+        break;
+      case "background":
+        layer = new BackgroundLayer(PROPERTY_CHECK_ID);
+        break;
+      default:
+        return null;
+    }
+    propertyCheckLayers.put(layerType, layer);
+    return layer;
+  }
+
+  /** {@code properties} as the property values of a layer of {@code layerType}. */
+  private static PropertyValue[] interpretLayerProperties(
+      String layerType, Map<String, Object> properties) {
+    switch (layerType) {
+      case "symbol":
+        return LayerPropertyConverter.interpretSymbolLayerProperties(properties);
+      case "line":
+        return LayerPropertyConverter.interpretLineLayerProperties(properties);
+      case "fill":
+        return LayerPropertyConverter.interpretFillLayerProperties(properties);
+      case "fill-extrusion":
+        return LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
+      case "circle":
+        return LayerPropertyConverter.interpretCircleLayerProperties(properties);
+      case "heatmap":
+        return LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
+      case "raster":
+        return LayerPropertyConverter.interpretRasterLayerProperties(properties);
+      case "hillshade":
+        return LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
+      case "color-relief":
+        return LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
+      case "background":
+        return LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
+      default:
+        return new PropertyValue[] {};
+    }
   }
 
   /**
@@ -2653,6 +2838,8 @@ final class MapLibreMapController
           GeoJsonSource source = style.getSourceAs(id);
           if (source != null) {
             source.setGeoJson(data);
+            // The data setGeoJsonFeature changes from now on.
+            addedFeaturesByLayer.put(id, data);
             ret = true;
           }
         } catch (Exception e) {
@@ -2673,6 +2860,8 @@ final class MapLibreMapController
           GeoJsonSource source = style.getSourceAs(id);
           if (source != null) {
             source.setUrl(url);
+            // setGeoJsonFeature cannot change data it does not hold.
+            addedFeaturesByLayer.remove(id);
             ret = true;
           }
         } catch (Exception e) {
@@ -2867,6 +3056,11 @@ final class MapLibreMapController
       result.error("UNSUPPORTED_SOURCE_TYPE", "Source '" + sourceId + "' has no type.", null);
       return;
     }
+    if ("video".equals(type)) {
+      // MapLibre Native has no video source.
+      result.error(StyleChecks.UNSUPPORTED_SOURCE_TYPE, StyleChecks.videoSource(sourceId), null);
+      return;
+    }
     if (!SourcePropertyConverter.isSupportedType((String) type)) {
       result.error(
           "UNSUPPORTED_SOURCE_TYPE",
@@ -2875,7 +3069,10 @@ final class MapLibreMapController
           null);
       return;
     }
-    final Source source = SourcePropertyConverter.buildSource(sourceId, (String) type, properties);
+    final Source source =
+        "image".equals(type) && !StyleChecks.isImageSource(properties)
+            ? null
+            : SourcePropertyConverter.buildSource(sourceId, (String) type, properties);
     if (source == null) {
       result.error(
           "INVALID_ARGUMENT",
@@ -2885,6 +3082,10 @@ final class MapLibreMapController
       return;
     }
     style.addSource(source);
+    if (source instanceof ImageSource) {
+      imageSourceCoordinates.put(
+          sourceId, SourcePropertyConverter.buildLatLngQuad(properties.get("coordinates")));
+    }
     result.success(null);
   }
 
@@ -2898,6 +3099,7 @@ final class MapLibreMapController
       return;
     }
     style.removeSource(sourceId);
+    imageSourceCoordinates.remove(sourceId);
     result.success(null);
   }
 
@@ -2921,9 +3123,9 @@ final class MapLibreMapController
       result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
       return;
     }
-    style.addSource(
-        new ImageSource(
-            imageSourceId, PigeonConvert.toLatLngQuad(coordinates), addSourceBitmap));
+    final LatLngQuad quad = PigeonConvert.toLatLngQuad(coordinates);
+    style.addSource(new ImageSource(imageSourceId, quad, addSourceBitmap));
+    imageSourceCoordinates.put(imageSourceId, quad);
     result.success(null);
   }
 
@@ -2960,7 +3162,9 @@ final class MapLibreMapController
       }
     }
     if (coordinates != null) {
-      imageSource.setCoordinates(PigeonConvert.toLatLngQuad(coordinates));
+      final LatLngQuad quad = PigeonConvert.toLatLngQuad(coordinates);
+      imageSource.setCoordinates(quad);
+      imageSourceCoordinates.put(imageSourceId, quad);
     }
     if (updateBitmap != null) {
       imageSource.setImage(updateBitmap);
@@ -3010,10 +3214,13 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "symbol", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "symbol", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3051,10 +3258,13 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "line", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "line", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3092,10 +3302,13 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "fill", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "fill", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3133,10 +3346,13 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "fill-extrusion", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "fill-extrusion", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3174,10 +3390,13 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "circle", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "circle", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3212,7 +3431,10 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "raster", sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "raster", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3242,7 +3464,10 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "hillshade", sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "hillshade", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3272,7 +3497,10 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "color-relief", sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "color-relief", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3301,6 +3529,13 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "background", properties, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
     if (!addBackgroundLayer(
@@ -3328,10 +3563,13 @@ final class MapLibreMapController
       @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(sourceId, result)) {
+    if (rejectLayerSource(layerId, "heatmap", sourceId, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, "heatmap", properties, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3360,47 +3598,24 @@ final class MapLibreMapController
   public void layerSetProperties(
       String layerId, Map<String, Object> properties, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
-
-    Layer layer = style.getLayer(layerId);
-
-    if (layer != null) {
-      final PropertyValue[] propertyValues;
-
-      if (layer instanceof LineLayer) {
-        propertyValues = LayerPropertyConverter.interpretLineLayerProperties(properties);
-      } else if (layer instanceof FillLayer) {
-        propertyValues = LayerPropertyConverter.interpretFillLayerProperties(properties);
-      } else if (layer instanceof CircleLayer) {
-        propertyValues = LayerPropertyConverter.interpretCircleLayerProperties(properties);
-      } else if (layer instanceof SymbolLayer) {
-        propertyValues = LayerPropertyConverter.interpretSymbolLayerProperties(properties);
-      } else if (layer instanceof RasterLayer) {
-        propertyValues = LayerPropertyConverter.interpretRasterLayerProperties(properties);
-      } else if (layer instanceof FillExtrusionLayer) {
-        propertyValues = LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
-      } else if (layer instanceof HeatmapLayer) {
-        propertyValues = LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
-      } else if (layer instanceof HillshadeLayer) {
-        propertyValues = LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
-      } else if (layer instanceof ColorReliefLayer) {
-        propertyValues = LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
-      } else if (layer instanceof BackgroundLayer) {
-        propertyValues = LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
-      } else {
-        result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
-        return;
-      }
-      layer.setProperties(propertyValues);
-      result.success(null);
-    } else {
+    final Layer layer = style.getLayer(layerId);
+    if (layer == null) {
       replyLayerNotFound(result, layerId);
+      return;
     }
+    final String type = LayerPropertyConverter.layerType(layer);
+    if (type == null) {
+      result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
+      return;
+    }
+    if (rejectInvalidLayerProperties(layerId, type, properties, result)) {
+      return;
+    }
+    layer.setProperties(interpretLayerProperties(type, properties));
+    result.success(null);
   }
 
   @Override
@@ -3507,7 +3722,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(imageSourceId, result)) {
+    if (rejectLayerSource(imageLayerId, "raster", imageSourceId, result)) {
       return;
     }
     if (!addRasterLayer(
@@ -3532,7 +3747,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectMissingLayerSource(imageSourceId, result)) {
+    if (rejectLayerSource(imageLayerId, "raster", imageSourceId, result)) {
       return;
     }
     if (!addRasterLayer(
