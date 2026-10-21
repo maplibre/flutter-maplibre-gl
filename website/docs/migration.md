@@ -50,10 +50,6 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 
 On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
 
-`setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
-
-On web, the other plugin-wide calls that need offline storage or the native network stack throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache`. MapLibre GL JS has no offline storage.
-
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
@@ -61,6 +57,10 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
 * `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
 * `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
+
+### Android: numeric feature ids
+
+Numeric GeoJSON feature ids stay numbers in queries and filters on Android, as on iOS and web, where they used to turn into strings. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
 
 ### Android and iOS: Pigeon messages
 
@@ -99,9 +99,10 @@ See [Building without Google Play Services](advanced/user-location.md#building-w
 
 None of these need a code change, but they are the places where code that worked before starts behaving differently.
 
+* **iOS, Web**: `setOffline` throws an `UnsupportedError`, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
+* **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`. MapLibre GL JS has no offline storage.
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
-* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
