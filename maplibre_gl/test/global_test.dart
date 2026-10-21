@@ -325,6 +325,22 @@ void main() {
         ),
       );
     });
+
+    test('drops the listener when native fails the call', () async {
+      // As iOS does on a definition it cannot read: no event follows.
+      api.downloadError = PlatformException(code: 'invalidRegionDefinition');
+      final statuses = <DownloadRegionStatus>[];
+
+      await expectLater(
+        downloadOfflineRegion(definition, onEvent: statuses.add),
+        throwsA(isA<PlatformException>()),
+      );
+      await sendDownloadEvent(
+        PgOfflineDownloadEvent(status: PgOfflineDownloadStatus.start),
+      );
+
+      expect(statuses, isEmpty);
+    });
   });
 
   test('pause and resume send the id', () async {

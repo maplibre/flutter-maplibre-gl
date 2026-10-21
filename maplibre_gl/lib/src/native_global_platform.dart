@@ -167,11 +167,19 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
     }
     final downloadId = _nextDownloadId++;
     if (onEvent != null) _downloadListeners[downloadId] = onEvent;
-    final regionJson = await _api.downloadOfflineRegion(
-      downloadId,
-      definition.toMap(),
-      metadata,
-    );
+    final String regionJson;
+    try {
+      regionJson = await _api.downloadOfflineRegion(
+        downloadId,
+        definition.toMap(),
+        metadata,
+      );
+    } catch (_) {
+      // A call that fails, for instance on a definition native cannot read,
+      // may end without the final event that would remove the listener.
+      _downloadListeners.remove(downloadId);
+      rethrow;
+    }
     return OfflineRegion.fromMap(json.decode(regionJson));
   }
 
