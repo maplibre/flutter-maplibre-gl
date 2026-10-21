@@ -27,6 +27,13 @@ class PigeonMethodResultTest {
     }
 
     @Test
+    fun aValueConvertCannotReadFailsTheCall() {
+        lengthOfString().success(42)
+
+        assertEquals("error", singleError().code)
+    }
+
+    @Test
     fun onlyTheFirstSuccessIsDelivered() {
         val result = lengthOfString()
 
@@ -101,5 +108,12 @@ class PigeonMethodResultTest {
         val error = singleError()
         assertEquals("code", error.code)
         assertEquals(42, error.details)
+    }
+
+    @Test
+    fun stringFailsTheCallOnNull() {
+        PigeonMethodResult.string { answers.add(it) }.success(null)
+
+        assertEquals("error", singleError().code)
     }
 }
