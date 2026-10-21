@@ -736,12 +736,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result: @escaping FlutterResult
     ) {
         let styleLayerIdentifiers = queriedLayerIds(layerIds)
-        let features = mapView.visibleFeatures(
-            at: CGPoint(x: x, y: y),
-            styleLayerIdentifiers: styleLayerIdentifiers,
-            predicate: queryPredicate(filter, arraysOnly: true)
-        )
-        result(featuresReply(features, methodName: "queryRenderedFeatures"))
+        answerFeatures(
+            filter: filter,
+            methodName: "queryRenderedFeatures",
+            result: result
+        ) { predicate in
+            self.mapView.visibleFeatures(
+                at: CGPoint(x: x, y: y),
+                styleLayerIdentifiers: styleLayerIdentifiers,
+                predicate: predicate
+            )
+        }
     }
 
     func mapQueryRenderedFeaturesInRect(
@@ -754,11 +759,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result: @escaping FlutterResult
     ) {
         let styleLayerIdentifiers = queriedLayerIds(layerIds)
-        let filterExpression = queryPredicate(filter, arraysOnly: false)
-        let width = right - left
-        let height = bottom - top
-        let features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
-        result(featuresReply(features, methodName: "queryRenderedFeaturesInRect"))
+        let rect = CGRect(x: left, y: top, width: right - left, height: bottom - top)
+        answerFeatures(
+            filter: filter,
+            methodName: "queryRenderedFeaturesInRect",
+            result: result
+        ) { predicate in
+            self.mapView.visibleFeatures(
+                in: rect,
+                styleLayerIdentifiers: styleLayerIdentifiers,
+                predicate: predicate
+            )
+        }
     }
 
     /// The layers a rendered features query looks in: all of them, `nil`,
@@ -767,18 +779,56 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return layerIds.isEmpty ? nil : Set<String>(layerIds)
     }
 
-    /// The predicate of a features query, from the JSON text of its filter.
-    /// No filter, the text `null`, or text that does not parse, filters
-    /// nothing. With `arraysOnly`, as for the point and source queries, which
-    /// only ever took an expression array, any other value filters nothing
-    /// either.
-    private func queryPredicate(_ filter: String?, arraysOnly: Bool) -> NSPredicate? {
-        guard let data = filter?.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed),
-              !(json is NSNull),
-              !arraysOnly || json is [Any]
-        else { return nil }
-        return NSPredicate(mglJSONObject: json)
+    /// Answers the features `query` finds with the predicate of `filter`, the
+    /// JSON text of an expression.
+    ///
+    /// Only an expression array filters, as on Android: no filter, the text
+    /// `null` and any other JSON value query with no predicate. A filter
+    /// MapLibre rejects, and text that is not JSON, fail the call with
+    /// INVALID_EXPRESSION. MapLibre raises an Objective-C exception for an
+    /// invalid filter, when it builds the predicate or when the query turns
+    /// it into a filter of its own, which would crash the app if it reached
+    /// Swift.
+    private func answerFeatures(
+        filter: String?,
+        methodName: String,
+        result: FlutterResult,
+        _ query: (NSPredicate?) -> [MLNFeature]
+    ) {
+        var json: Any?
+        if let filter = filter {
+            guard let data = filter.data(using: .utf8),
+                  let parsed = try? JSONSerialization.jsonObject(
+                      with: data,
+                      options: .fragmentsAllowed
+                  )
+            else {
+                result(MethodCallError.invalidFilter(reason: Self.filterNotJSON).flutterError)
+                return
+            }
+            json = parsed is [Any] ? parsed : nil
+        }
+        var features: [MLNFeature] = []
+        let exception = MapLibreGLCatchException {
+            features = query(json.map { NSPredicate(mglJSONObject: $0) })
+        }
+        if let exception = exception {
+            result(MethodCallError.invalidFilter(
+                reason: Self.filterRejection(exception)
+            ).flutterError)
+            return
+        }
+        result(featuresReply(features, methodName: methodName))
+    }
+
+    /// Why a filter cannot be read, when its text is not JSON. Android says
+    /// the same.
+    static let filterNotJSON = "Not valid JSON."
+
+    /// Why MapLibre rejected a filter, from the exception it raised.
+    static func filterRejection(_ exception: NSException) -> String {
+        return (exception.reason ?? "rejected by the map")
+            .replacingOccurrences(of: "Invalid filter value: ", with: "")
     }
 
     func mapQuerySourceFeatures(
@@ -787,27 +837,31 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         filter: String?,
         result: @escaping FlutterResult
     ) {
-        var sourceLayerIds = Set<String>()
-        if let layerId = sourceLayerId {
-            sourceLayerIds.insert(layerId)
-        }
-        let filterExpression = queryPredicate(filter, arraysOnly: true)
-
-        var features: [MLNFeature] = []
-
         guard let style = mapView.style else {
             result(MethodCallError.styleNotFound.flutterError)
             return
         }
-        if let source = style.source(withIdentifier: sourceId) {
-            if let vectorSource = source as? MLNVectorTileSource {
-                features = vectorSource.features(sourceLayerIdentifiers: sourceLayerIds, predicate: filterExpression)
-            } else if let shapeSource = source as? MLNShapeSource {
-                features = shapeSource.features(matching: filterExpression)
-            }
+        var sourceLayerIds = Set<String>()
+        if let layerId = sourceLayerId {
+            sourceLayerIds.insert(layerId)
         }
-
-        result(featuresReply(features, methodName: "querySourceFeatures"))
+        let source = style.source(withIdentifier: sourceId)
+        answerFeatures(
+            filter: filter,
+            methodName: "querySourceFeatures",
+            result: result
+        ) { predicate in
+            if let vectorSource = source as? MLNVectorTileSource {
+                return vectorSource.features(
+                    sourceLayerIdentifiers: sourceLayerIds,
+                    predicate: predicate
+                )
+            }
+            if let shapeSource = source as? MLNShapeSource {
+                return shapeSource.features(matching: predicate)
+            }
+            return []
+        }
     }
 
     // MARK: Dart calls: sources
@@ -2536,9 +2590,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 layer.predicate = filter is NSNull ? nil : NSPredicate(mglJSONObject: filter)
             }
             if let exception = exception {
-                let reason = (exception.reason ?? "rejected by the map")
-                    .replacingOccurrences(of: "Invalid filter value: ", with: "")
-                return .failure(MethodCallError.invalidFilter(reason: reason))
+                return .failure(MethodCallError.invalidFilter(
+                    reason: Self.filterRejection(exception)
+                ))
             }
             return .success(())
         } catch {
