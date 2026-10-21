@@ -500,12 +500,26 @@ void main() {
     });
 
     test('setLayersVisibility delegates to platform', () async {
-      await controller.setLayersVisibility(['layer-1', 'layer-2'], false);
+      final missing = await controller.setLayersVisibility([
+        'layer-1',
+        'layer-2',
+      ], false);
 
       final calls = platform.callsFor('setLayersVisibility');
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], ['layer-1', 'layer-2']);
       expect(calls.first.positionalArgs[1], false);
+      expect(missing, isEmpty);
+    });
+
+    test('setLayersVisibility returns the skipped ids', () async {
+      final missing = await controller.setLayersVisibility([
+        'layer-1',
+        'missing-a',
+        'missing-a',
+      ], true);
+
+      expect(missing, ['missing-a']);
     });
 
     test('setLayerZoomRange delegates to platform', () async {

@@ -1682,21 +1682,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 ))
                 return
             }
-            // Every id is checked before any layer changes, so an unknown id
-            // leaves the style as it was, as on Android and web. Without a
-            // style no layer is found, as for layer#setVisibility.
-            var layers: [MLNStyleLayer] = []
+            // Unknown ids are skipped and returned, as on Android and web.
+            // Without a style no layer is found, as for layer#setVisibility.
+            var missingLayerIds: [String] = []
             for layerId in layerIds {
                 guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                    result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
-                    return
+                    if !missingLayerIds.contains(layerId) {
+                        missingLayerIds.append(layerId)
+                    }
+                    continue
                 }
-                layers.append(layer)
-            }
-            for layer in layers {
                 layer.isVisible = visible
             }
-            result(nil)
+            result(missingLayerIds)
 
         case "layer#setZoomRange":
             guard let arguments = methodCall.arguments as? [String: Any],

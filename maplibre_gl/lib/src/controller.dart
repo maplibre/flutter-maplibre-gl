@@ -2521,11 +2521,25 @@ class MapLibreMapController extends ChangeNotifier {
   /// whole group of layers such as a basemap. Repeated ids are harmless and an
   /// empty list does nothing.
   ///
-  /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR`, naming
-  /// the first missing id, if the style has no layer for one of [layerIds].
-  /// Every id is checked first, so in that case no layer is changed.
-  Future<void> setLayersVisibility(List<String> layerIds, bool visible) async {
-    return _maplibrePlatform.setLayersVisibility(layerIds, visible);
+  /// Ids the style has no layer for are skipped, and the other layers are
+  /// still changed. The returned [Future] completes with the skipped ids, in
+  /// the order given and without repeats, or an empty list when every layer
+  /// was found; debug builds also print them.
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    final missing = await _maplibrePlatform.setLayersVisibility(
+      layerIds,
+      visible,
+    );
+    if (kDebugMode && missing.isNotEmpty) {
+      debugPrint(
+        'MapLibre: setLayersVisibility skipped layers that are not in the '
+        'style: ${missing.join(', ')}',
+      );
+    }
+    return missing;
   }
 
   /// Sets the zoom range in which the layer with [layerId] is drawn: from

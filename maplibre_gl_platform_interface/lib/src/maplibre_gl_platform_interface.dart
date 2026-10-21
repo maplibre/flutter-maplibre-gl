@@ -495,10 +495,13 @@ abstract class MapLibrePlatform {
   /// Shows or hides every layer in [layerIds] with one platform call, all in
   /// the same UI turn so the changes render together.
   ///
-  /// Every id is checked before any layer changes: if one is missing, this
-  /// throws `LAYER_NOT_FOUND_ERROR` naming the first missing id and changes
-  /// nothing. An empty list does nothing.
-  Future<void> setLayersVisibility(List<String> layerIds, bool visible);
+  /// Ids with no layer in the style are skipped and returned, in the order
+  /// given and without repeats; the other layers are still changed. An empty
+  /// list does nothing.
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  );
 
   /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
   /// which the layer with [layerId] is drawn.

@@ -3620,7 +3620,7 @@ final class MapLibreMapController
             layerIds.add((String) layerId);
           }
           if (layerIds.isEmpty()) {
-            result.success(null);
+            result.success(new ArrayList<String>());
             break;
           }
           if (style == null || !style.isFullyLoaded()) {
@@ -3630,28 +3630,21 @@ final class MapLibreMapController
                 null);
             break;
           }
-          // Every id is checked before any layer changes, so an unknown id
-          // leaves the style as it was, as on iOS and web.
-          final List<Layer> layers = new ArrayList<>();
-          String missingLayerId = null;
+          // Unknown ids are skipped and returned, as on iOS and web.
+          final String visibility =
+              Boolean.TRUE.equals(visibleArgument) ? Property.VISIBLE : Property.NONE;
+          final List<String> missingLayerIds = new ArrayList<>();
           for (String layerId : layerIds) {
             final Layer layer = style.getLayer(layerId);
             if (layer == null) {
-              missingLayerId = layerId;
-              break;
+              if (!missingLayerIds.contains(layerId)) {
+                missingLayerIds.add(layerId);
+              }
+              continue;
             }
-            layers.add(layer);
-          }
-          if (missingLayerId != null) {
-            replyLayerNotFound(result, missingLayerId);
-            break;
-          }
-          final String visibility =
-              Boolean.TRUE.equals(visibleArgument) ? Property.VISIBLE : Property.NONE;
-          for (Layer layer : layers) {
             layer.setProperties(PropertyFactory.visibility(visibility));
           }
-          result.success(null);
+          result.success(missingLayerIds);
           break;
         }
         case "layer#setZoomRange":

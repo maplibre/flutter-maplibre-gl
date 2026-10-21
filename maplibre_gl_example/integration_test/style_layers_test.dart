@@ -679,10 +679,13 @@ void main() {
     final layerIds = await _addCircleLayers(tester, controller, 3);
 
     // A repeated id is harmless.
-    await pumpUntil(
-      tester,
-      controller.setLayersVisibility([...layerIds, layerIds.first], false),
-      'setLayersVisibility false',
+    expect(
+      await pumpUntil(
+        tester,
+        controller.setLayersVisibility([...layerIds, layerIds.first], false),
+        'setLayersVisibility false',
+      ),
+      isEmpty,
     );
     for (final layerId in layerIds) {
       expect(
@@ -712,37 +715,35 @@ void main() {
     }
   });
 
-  testWidgets('setLayersVisibility with an unknown id changes nothing', (
+  testWidgets('setLayersVisibility skips unknown ids and returns them', (
     tester,
   ) async {
     final controller = await _pumpMapWithSource(tester);
     final layerIds = await _addCircleLayers(tester, controller, 2);
 
-    // The unknown id sits between known ones: the first layer must not be
-    // hidden before the missing one is found.
-    final error = await expectPlatformError(
+    // Unknown ids around and between known ones, one of them repeated.
+    final missing = await pumpUntil(
       tester,
       controller.setLayersVisibility([
         layerIds[0],
         'no-such-layer',
         layerIds[1],
         'other-missing-layer',
+        'no-such-layer',
       ], false),
       'setLayersVisibility unknown',
-      code: 'LAYER_NOT_FOUND_ERROR',
     );
-    // The error names the first missing id.
-    expect(error.details, contains('no-such-layer'));
-    expect(error.details, isNot(contains('other-missing-layer')));
+    expect(missing, ['no-such-layer', 'other-missing-layer']);
 
+    // The known layers were still hidden.
     for (final layerId in layerIds) {
       expect(
         await pumpUntil(
           tester,
           controller.getLayerVisibility(layerId),
-          'getLayerVisibility $layerId after error',
+          'getLayerVisibility $layerId after skipped ids',
         ),
-        isTrue,
+        isFalse,
       );
     }
   });
@@ -753,10 +754,13 @@ void main() {
     final controller = await _pumpMapWithSource(tester);
     final layerIds = await _addCircleLayers(tester, controller, 1);
 
-    await pumpUntil(
-      tester,
-      controller.setLayersVisibility(const [], false),
-      'setLayersVisibility empty',
+    expect(
+      await pumpUntil(
+        tester,
+        controller.setLayersVisibility(const [], false),
+        'setLayersVisibility empty',
+      ),
+      isEmpty,
     );
     expect(
       await pumpUntil(
