@@ -4430,7 +4430,8 @@ class MapLibreMapHostApi {
   }
 
   /// Replaces the feature of the GeoJSON source [sourceId] that has the id
-  /// of [geojsonFeature], GeoJSON text, or adds it.
+  /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+  /// changes.
   Future<void> sourceSetFeature(String sourceId, String geojsonFeature) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature$pigeonVar_messageChannelSuffix';

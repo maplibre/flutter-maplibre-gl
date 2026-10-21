@@ -370,17 +370,19 @@ Map<String, dynamic> buildStyleProperty(
 
 /// Class docs of the source properties, one paragraph per entry.
 const Map<String, List<String>> sourceClassDocs = {
-  "video": ["A video source.", _videoSourceSupport],
+  "video": [_videoSourceDoc, _videoSourceSupport],
   "image": [_imageSourceDoc],
 };
+
+const _videoSourceDoc = "A video drawn over four corners of the map.";
 
 const _videoSourceSupport =
     "**Platform support**: web only. On Android and iOS "
     "`MapLibreMapController.addSource` throws `UNSUPPORTED_SOURCE_TYPE`.";
 
 const _imageSourceDoc =
-    "An image drawn from a url over four corners of the map, on every "
-    "platform. For image bytes, use `MapLibreMapController.addImageSource`.";
+    "An image drawn from a url over four corners of the map. For image bytes, "
+    "use `MapLibreMapController.addImageSource`.";
 
 /// The lines of the doc of a source property class, from [paragraphs], or no
 /// lines without any.
@@ -441,7 +443,7 @@ const sourcePropertyDocOverrides = {
     "coordinates":
         "Corners of the image as [longitude, latitude]: top left, top right, "
         "bottom right, bottom left. Required: `addSource` throws "
-        "`INVALID_ARGUMENT` without four of them on the map.",
+        "`INVALID_ARGUMENT` without four valid corners.",
   },
 };
 

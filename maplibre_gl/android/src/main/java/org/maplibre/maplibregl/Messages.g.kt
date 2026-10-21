@@ -2993,7 +2993,8 @@ interface MapLibreMapHostApi {
   fun heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
   /**
    * Replaces the feature of the GeoJSON source [sourceId] that has the id
-   * of [geojsonFeature], GeoJSON text, or adds it.
+   * of [geojsonFeature], GeoJSON text. Without such a feature nothing
+   * changes.
    */
   fun sourceSetFeature(sourceId: String, geojsonFeature: String, callback: (Result<Unit>) -> Unit)
   /**

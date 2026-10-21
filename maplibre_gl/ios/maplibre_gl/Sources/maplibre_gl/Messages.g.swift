@@ -2689,7 +2689,8 @@ protocol MapLibreMapHostApi {
   /// Adds a heatmap layer, as [symbolLayerAdd] but without interaction.
   func heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
   /// Replaces the feature of the GeoJSON source [sourceId] that has the id
-  /// of [geojsonFeature], GeoJSON text, or adds it.
+  /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+  /// changes.
   func sourceSetFeature(sourceId: String, geojsonFeature: String, completion: @escaping (Result<Void, Error>) -> Void)
   /// Merges [state], app data of any shape, into the state of the feature
   /// [featureId]. Android only: Dart rejects the call on iOS before sending
@@ -4021,7 +4022,8 @@ class MapLibreMapHostApiSetup {
       heatmapLayerAddChannel.setMessageHandler(nil)
     }
     /// Replaces the feature of the GeoJSON source [sourceId] that has the id
-    /// of [geojsonFeature], GeoJSON text, or adds it.
+    /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+    /// changes.
     let sourceSetFeatureChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceSetFeatureChannel.setMessageHandler { message, reply in
