@@ -928,7 +928,7 @@ final class MapLibreMapController
   // VectorSource carry the API. On a vector source every call is additionally
   // scoped to a source layer, so a missing sourceLayer would leave the call
   // with nothing to address; that is rejected here once instead of in each
-  // method-channel case.
+  // feature-state call.
   private Source getFeatureStateCapableSource(
       String sourceId, String sourceLayer, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
@@ -1820,15 +1820,10 @@ final class MapLibreMapController
     }
     final String method = call.method;
     String layerId = null;
-    String sourceId = null;
     if (method.endsWith("Layer#add")) {
       layerId = call.argument("layerId");
     } else if (method.equals("style#addLayer") || method.equals("style#addLayerBelow")) {
       layerId = call.argument("imageLayerId");
-    } else if (method.equals("style#addSource") || method.equals("source#addGeoJson")) {
-      sourceId = call.argument("sourceId");
-    } else if (method.equals("style#addImageSource")) {
-      sourceId = call.argument("imageSourceId");
     }
     if (layerId != null && style.getLayer(layerId) != null) {
       result.error(
@@ -1837,14 +1832,26 @@ final class MapLibreMapController
           "Layer with id " + layerId + " already exists.");
       return true;
     }
-    if (sourceId != null && style.getSource(sourceId) != null) {
-      result.error(
-          "SOURCE_ALREADY_EXISTS",
-          "Source already exists",
-          "Source with id " + sourceId + " already exists.");
-      return true;
-    }
     return false;
+  }
+
+  /**
+   * Answers SOURCE_ALREADY_EXISTS, as iOS and web do, when the style already holds a source with
+   * the id a call adds. The SDK would otherwise throw (reaching Dart with a generic code) or skip
+   * the add and report a success. Either way the original stays untouched.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  @Override
+  public boolean rejectDuplicateSourceId(String sourceId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded() || style.getSource(sourceId) == null) {
+      return false;
+    }
+    result.error(
+        "SOURCE_ALREADY_EXISTS",
+        "Source already exists",
+        "Source with id " + sourceId + " already exists.");
+    return true;
   }
 
   /**
@@ -2545,6 +2552,340 @@ final class MapLibreMapController
     result.success(featuresReply(features));
   }
 
+  // -- Sources ----------------------------------------------------------------
+
+  @Override
+  public void mapEditGeoJsonSource(String id, String data, MethodChannel.Result result) {
+    boolean ret = false;
+    if (mapLibreMap != null) {
+      Style style = mapLibreMap.getStyle();
+      if (style != null) {
+        try {
+          GeoJsonSource source = style.getSourceAs(id);
+          if (source != null) {
+            source.setGeoJson(data);
+            ret = true;
+          }
+        } catch (Exception e) {
+          Log.e(TAG, "editGeoJsonSource: error updating source '" + id + "'", e);
+        }
+      }
+    }
+    Map<String, Boolean> reply = new HashMap<>();
+    reply.put("result", ret);
+    result.success(reply);
+  }
+
+  @Override
+  public void mapEditGeoJsonUrl(String id, String url, MethodChannel.Result result) {
+    boolean ret = false;
+    if (mapLibreMap != null) {
+      Style style = mapLibreMap.getStyle();
+      if (style != null) {
+        try {
+          GeoJsonSource source = style.getSourceAs(id);
+          if (source != null) {
+            source.setUrl(url);
+            ret = true;
+          }
+        } catch (Exception e) {
+          Log.e(TAG, "editGeoJsonUrl: error updating source '" + id + "'", e);
+        }
+      }
+    }
+    Map<String, Boolean> reply = new HashMap<>();
+    reply.put("result", ret);
+    result.success(reply);
+  }
+
+  @Override
+  public void sourceAddGeoJson(String sourceId, String geojson, MethodChannel.Result result) {
+    addGeoJsonSource(sourceId, geojson);
+    result.success(null);
+  }
+
+  @Override
+  public void sourceSetGeoJson(String sourceId, String geojson, MethodChannel.Result result) {
+    setGeoJsonSource(sourceId, geojson);
+    result.success(null);
+  }
+
+  @Override
+  public void sourceSetFeature(
+      String sourceId, String geojsonFeature, MethodChannel.Result result) {
+    setGeoJsonFeature(sourceId, geojsonFeature);
+    result.success(null);
+  }
+
+  @Override
+  public void sourceSetFeatureState(
+      String sourceId,
+      String featureId,
+      Map<String, Object> state,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result) {
+    final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+    if (source == null) {
+      return;
+    }
+    final JsonObject stateJson = new Gson().toJsonTree(state).getAsJsonObject();
+    final boolean applied =
+        source instanceof VectorSource
+            ? ((VectorSource) source).setFeatureState(sourceLayer, featureId, stateJson)
+            : ((GeoJsonSource) source).setFeatureState(featureId, stateJson);
+    if (applied) {
+      result.success(null);
+    } else {
+      // The SDK setters return false instead of throwing; surfacing that
+      // as an error keeps a rejected call from looking like a success.
+      result.error(
+          "FEATURE_STATE_NOT_APPLIED",
+          "setFeatureState for feature '"
+              + featureId
+              + "' on source '"
+              + sourceId
+              + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+          null);
+    }
+  }
+
+  @Override
+  public void sourceRemoveFeatureState(
+      String sourceId,
+      @Nullable String featureId,
+      @Nullable String stateKey,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result) {
+    // A stateKey lives inside one feature's state, so without a featureId
+    // there is nothing the SDK could remove it from.
+    if (featureId == null && stateKey != null) {
+      result.error(
+          "INVALID_ARGUMENT",
+          "removeFeatureState with a 'stateKey' also requires the 'featureId' that owns the key.",
+          null);
+      return;
+    }
+    final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+    if (source == null) {
+      return;
+    }
+    // Which arguments are present picks the operation, matching web:
+    // both drop one key, featureId alone drops that feature's whole
+    // state, neither resets the whole source (or source layer).
+    final boolean applied;
+    if (source instanceof VectorSource) {
+      final VectorSource vectorSource = (VectorSource) source;
+      if (featureId == null) {
+        applied = vectorSource.resetFeatureStates(sourceLayer);
+      } else if (stateKey == null) {
+        applied = vectorSource.removeFeatureState(sourceLayer, featureId);
+      } else {
+        applied = vectorSource.removeFeatureState(sourceLayer, featureId, stateKey);
+      }
+    } else {
+      final GeoJsonSource geoJsonSource = (GeoJsonSource) source;
+      if (featureId == null) {
+        applied = geoJsonSource.resetFeatureStates();
+      } else if (stateKey == null) {
+        applied = geoJsonSource.removeFeatureState(featureId);
+      } else {
+        applied = geoJsonSource.removeFeatureState(featureId, stateKey);
+      }
+    }
+    if (applied) {
+      result.success(null);
+    } else {
+      result.error(
+          "FEATURE_STATE_NOT_APPLIED",
+          "removeFeatureState on source '"
+              + sourceId
+              + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
+          null);
+    }
+  }
+
+  @Override
+  public void sourceGetFeatureState(
+      String sourceId,
+      String featureId,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result) {
+    final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
+    if (source == null) {
+      return;
+    }
+    final JsonObject stateJson =
+        source instanceof VectorSource
+            ? ((VectorSource) source).getFeatureState(sourceLayer, featureId)
+            : ((GeoJsonSource) source).getFeatureState(featureId);
+    // Serialized as a JSON string so nested values survive the channel
+    // intact, like styleGetLayerProperties. A null state must stay null
+    // rather than become an empty map: the Dart return type is nullable
+    // and callers distinguish "no state" from an empty state.
+    final Map<String, Object> reply = new HashMap<>();
+    reply.put("state", stateJson == null ? null : stateJson.toString());
+    result.success(reply);
+  }
+
+  @Override
+  public void sourceGetClusterExpansionZoom(
+      String sourceId, long clusterId, MethodChannel.Result result) {
+    final GeoJsonSource source =
+        getClusterCapableSource(sourceId, "getClusterExpansionZoom", result);
+    if (source == null) {
+      return;
+    }
+    if (!hasCluster(source, clusterId)) {
+      clusterNotFound(result, sourceId, clusterId);
+      return;
+    }
+    result.success(source.getClusterExpansionZoom(clusterFeature(clusterId)));
+  }
+
+  @Override
+  public void sourceGetClusterChildren(
+      String sourceId, long clusterId, MethodChannel.Result result) {
+    final GeoJsonSource source =
+        getClusterCapableSource(sourceId, "getClusterChildren", result);
+    if (source == null) {
+      return;
+    }
+    if (!hasCluster(source, clusterId)) {
+      clusterNotFound(result, sourceId, clusterId);
+      return;
+    }
+    result.success(featuresReply(source.getClusterChildren(clusterFeature(clusterId))));
+  }
+
+  @Override
+  public void sourceGetClusterLeaves(
+      String sourceId, long clusterId, long limit, long offset, MethodChannel.Result result) {
+    final GeoJsonSource source =
+        getClusterCapableSource(sourceId, "getClusterLeaves", result);
+    if (source == null) {
+      return;
+    }
+    if (!hasCluster(source, clusterId)) {
+      clusterNotFound(result, sourceId, clusterId);
+      return;
+    }
+    result.success(
+        featuresReply(source.getClusterLeaves(clusterFeature(clusterId), limit, offset)));
+  }
+
+  @Override
+  public void styleAddSource(
+      String sourceId, Map<String, Object> properties, MethodChannel.Result result) {
+    SourcePropertyConverter.addSource(sourceId, properties, style);
+    result.success(null);
+  }
+
+  @Override
+  public void styleRemoveSource(String sourceId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    style.removeSource(sourceId);
+    result.success(null);
+  }
+
+  @Override
+  public void styleAddImageSource(
+      String imageSourceId,
+      byte[] bytes,
+      long length,
+      List<Object> coordinates,
+      MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    List<LatLng> corners = Convert.toLatLngList(coordinates, false);
+    Bitmap addSourceBitmap =
+        BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
+    if (addSourceBitmap == null) {
+      result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+      return;
+    }
+    style.addSource(
+        new ImageSource(
+            imageSourceId,
+            new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3)),
+            addSourceBitmap));
+    result.success(null);
+  }
+
+  @Override
+  public void styleUpdateImageSource(
+      String imageSourceId,
+      @Nullable byte[] bytes,
+      @Nullable Long length,
+      @Nullable List<Object> coordinates,
+      MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    ImageSource imageSource = style.getSourceAs(imageSourceId);
+    List<LatLng> corners = Convert.toLatLngList(coordinates, false);
+    if (corners != null) {
+      imageSource.setCoordinates(
+          new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3)));
+    }
+    if (bytes != null) {
+      Bitmap updateBitmap =
+          BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
+      if (updateBitmap == null) {
+        result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+        return;
+      }
+      imageSource.setImage(updateBitmap);
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleGetSourceIds(MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+              "STYLE_NOT_READY",
+              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+              null);
+      return;
+    }
+    Map<String, Object> reply = new HashMap<>();
+
+    List<String> sourceIds = new ArrayList<>();
+    for (Source source : style.getSources()) {
+      sourceIds.add(source.getId());
+    }
+
+    reply.put("sources", sourceIds);
+    result.success(reply);
+  }
+
+  @Override
+  public void styleGetSourceProperties(String sourceId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+              "STYLE_NOT_READY",
+              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+              null);
+      return;
+    }
+    result.success(getSourceProperties(sourceId));
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -2559,50 +2900,6 @@ final class MapLibreMapController
       return;
     }
     switch (call.method) {
-      case "map#editGeoJsonSource":
-        {
-          boolean ret = false;
-          if (mapLibreMap != null) {
-            Style style = mapLibreMap.getStyle();
-            if (style != null) {
-              try {
-                GeoJsonSource source = style.getSourceAs(call.argument("id"));
-                if (source != null) {
-                  source.setGeoJson((String)call.argument("data"));
-                  ret = true;
-                }
-              } catch (Exception e) {
-                Log.e(TAG, "editGeoJsonSource: error updating source '" + call.argument("id") + "'", e);
-              }
-            }
-          }
-          Map<String, Boolean> reply = new HashMap<>();
-          reply.put("result", ret);
-          result.success(reply);
-          break;
-        }
-      case "map#editGeoJsonUrl":
-        {
-          boolean ret = false;
-          if (mapLibreMap != null) {
-            Style style = mapLibreMap.getStyle();
-            if (style != null) {
-              try {
-                GeoJsonSource source = style.getSourceAs(call.argument("id"));
-                if (source != null) {
-                  source.setUrl((String)call.argument("url"));
-                  ret = true;
-                }
-              } catch (Exception e) {
-                Log.e(TAG, "editGeoJsonUrl: error updating source '" + call.argument("id") + "'", e);
-              }
-            }
-          }
-          Map<String, Boolean> reply = new HashMap<>();
-          reply.put("result", ret);
-          result.success(reply);
-          break;
-        }
       case "map#setLayerFilter":
         {
           boolean ret = false;
@@ -2655,222 +2952,6 @@ final class MapLibreMapController
           }
           reply.put("result", ret);
           result.success(reply);
-          break;
-        }
-      case "source#addGeoJson":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String geojson = call.argument("geojson");
-          addGeoJsonSource(sourceId, geojson);
-          result.success(null);
-          break;
-        }
-      case "source#setGeoJson":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String geojson = call.argument("geojson");
-          setGeoJsonSource(sourceId, geojson);
-          result.success(null);
-          break;
-        }
-      case "source#setFeature":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String geojsonFeature = call.argument("geojsonFeature");
-          setGeoJsonFeature(sourceId, geojsonFeature);
-          result.success(null);
-          break;
-        }
-      case "source#setFeatureState":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final String featureId = call.argument("featureId");
-          final Map<String, Object> state = call.argument("state");
-          // Read blind these would surface as an IllegalStateException from Gson
-          // or a NullPointerException from the SDK, both reaching Dart as a bare
-          // "error" rather than something a caller can act on.
-          if (featureId == null || state == null) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "setFeatureState requires a 'featureId' and a 'state' map.",
-                null);
-            break;
-          }
-          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
-          if (source == null) {
-            break;
-          }
-          final JsonObject stateJson = new Gson().toJsonTree(state).getAsJsonObject();
-          final boolean applied =
-              source instanceof VectorSource
-                  ? ((VectorSource) source).setFeatureState(sourceLayer, featureId, stateJson)
-                  : ((GeoJsonSource) source).setFeatureState(featureId, stateJson);
-          if (applied) {
-            result.success(null);
-          } else {
-            // The SDK setters return false instead of throwing; surfacing that
-            // as an error keeps a rejected call from looking like a success.
-            result.error(
-                "FEATURE_STATE_NOT_APPLIED",
-                "setFeatureState for feature '"
-                    + featureId
-                    + "' on source '"
-                    + sourceId
-                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
-                null);
-          }
-          break;
-        }
-      case "source#removeFeatureState":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final String featureId = call.argument("featureId");
-          final String stateKey = call.argument("stateKey");
-          // A stateKey lives inside one feature's state, so without a featureId
-          // there is nothing the SDK could remove it from.
-          if (featureId == null && stateKey != null) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "removeFeatureState with a 'stateKey' also requires the 'featureId' that owns the key.",
-                null);
-            break;
-          }
-          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
-          if (source == null) {
-            break;
-          }
-          // Which arguments are present picks the operation, matching web:
-          // both drop one key, featureId alone drops that feature's whole
-          // state, neither resets the whole source (or source layer).
-          final boolean applied;
-          if (source instanceof VectorSource) {
-            final VectorSource vectorSource = (VectorSource) source;
-            if (featureId == null) {
-              applied = vectorSource.resetFeatureStates(sourceLayer);
-            } else if (stateKey == null) {
-              applied = vectorSource.removeFeatureState(sourceLayer, featureId);
-            } else {
-              applied = vectorSource.removeFeatureState(sourceLayer, featureId, stateKey);
-            }
-          } else {
-            final GeoJsonSource geoJsonSource = (GeoJsonSource) source;
-            if (featureId == null) {
-              applied = geoJsonSource.resetFeatureStates();
-            } else if (stateKey == null) {
-              applied = geoJsonSource.removeFeatureState(featureId);
-            } else {
-              applied = geoJsonSource.removeFeatureState(featureId, stateKey);
-            }
-          }
-          if (applied) {
-            result.success(null);
-          } else {
-            result.error(
-                "FEATURE_STATE_NOT_APPLIED",
-                "removeFeatureState on source '"
-                    + sourceId
-                    + "' was rejected by the SDK. This usually means the source is no longer attached to the map.",
-                null);
-          }
-          break;
-        }
-      case "source#getFeatureState":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final String featureId = call.argument("featureId");
-          final Source source = getFeatureStateCapableSource(sourceId, sourceLayer, result);
-          if (source == null) {
-            break;
-          }
-          final JsonObject stateJson =
-              source instanceof VectorSource
-                  ? ((VectorSource) source).getFeatureState(sourceLayer, featureId)
-                  : ((GeoJsonSource) source).getFeatureState(featureId);
-          // Serialized as a JSON string so nested values survive the channel
-          // intact, like style#getLayerProperties. A null state must stay null
-          // rather than become an empty map: the Dart return type is nullable
-          // and callers distinguish "no state" from an empty state.
-          final Map<String, Object> reply = new HashMap<>();
-          reply.put("state", stateJson == null ? null : stateJson.toString());
-          result.success(reply);
-          break;
-        }
-      case "source#getClusterExpansionZoom":
-        {
-          final String sourceId = call.argument("sourceId");
-          final Number clusterId = call.argument("clusterId");
-          if (clusterId == null) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "getClusterExpansionZoom requires an int 'clusterId'.",
-                null);
-            break;
-          }
-          final GeoJsonSource source =
-              getClusterCapableSource(sourceId, "getClusterExpansionZoom", result);
-          if (source == null) {
-            break;
-          }
-          if (!hasCluster(source, clusterId.longValue())) {
-            clusterNotFound(result, sourceId, clusterId.longValue());
-            break;
-          }
-          result.success(source.getClusterExpansionZoom(clusterFeature(clusterId.longValue())));
-          break;
-        }
-      case "source#getClusterChildren":
-        {
-          final String sourceId = call.argument("sourceId");
-          final Number clusterId = call.argument("clusterId");
-          if (clusterId == null) {
-            result.error(
-                "INVALID_ARGUMENT", "getClusterChildren requires an int 'clusterId'.", null);
-            break;
-          }
-          final GeoJsonSource source =
-              getClusterCapableSource(sourceId, "getClusterChildren", result);
-          if (source == null) {
-            break;
-          }
-          if (!hasCluster(source, clusterId.longValue())) {
-            clusterNotFound(result, sourceId, clusterId.longValue());
-            break;
-          }
-          result.success(
-              featuresReply(source.getClusterChildren(clusterFeature(clusterId.longValue()))));
-          break;
-        }
-      case "source#getClusterLeaves":
-        {
-          final String sourceId = call.argument("sourceId");
-          final Number clusterId = call.argument("clusterId");
-          final Number limit = call.argument("limit");
-          final Number offset = call.argument("offset");
-          if (clusterId == null || limit == null || offset == null) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "getClusterLeaves requires an int 'clusterId', 'limit' and 'offset'.",
-                null);
-            break;
-          }
-          final GeoJsonSource source =
-              getClusterCapableSource(sourceId, "getClusterLeaves", result);
-          if (source == null) {
-            break;
-          }
-          if (!hasCluster(source, clusterId.longValue())) {
-            clusterNotFound(result, sourceId, clusterId.longValue());
-            break;
-          }
-          result.success(
-              featuresReply(
-                  source.getClusterLeaves(
-                      clusterFeature(clusterId.longValue()),
-                      limit.longValue(),
-                      offset.longValue())));
           break;
         }
       case "symbolLayer#add":
@@ -3325,89 +3406,7 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-      case "style#addImageSource":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
-          Bitmap addSourceBitmap = BitmapFactory.decodeByteArray(
-              call.argument("bytes"),
-              0,
-              call.argument("length"));
-          if (addSourceBitmap == null) {
-            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
-            break;
-          }
-          style.addSource(
-              new ImageSource(
-                  call.argument("imageSourceId"),
-                  new LatLngQuad(
-                      coordinates.get(0),
-                      coordinates.get(1),
-                      coordinates.get(2),
-                      coordinates.get(3)),
-                  addSourceBitmap));
-          result.success(null);
-          break;
-        }
-        case "style#updateImageSource":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          ImageSource imageSource = style.getSourceAs(call.argument("imageSourceId"));
-          List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"), false);
-          if (coordinates != null) {
-            imageSource.setCoordinates(
-                new LatLngQuad(
-                    coordinates.get(0),
-                    coordinates.get(1),
-                    coordinates.get(2),
-                    coordinates.get(3)));
-          }
-          byte[] bytes = call.argument("bytes");
-          if (bytes != null) {
-            Bitmap updateBitmap = BitmapFactory.decodeByteArray(bytes, 0, call.argument("length"));
-            if (updateBitmap == null) {
-              result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
-              break;
-            }
-            imageSource.setImage(updateBitmap);
-          }
-          result.success(null);
-          break;
-        }
-      case "style#addSource":
-        {
-          final String id = Convert.toString(call.argument("sourceId"));
-          final Map<String, Object> properties = (Map<String, Object>) call.argument("properties");
-          SourcePropertyConverter.addSource(id, properties, style);
-          result.success(null);
-          break;
-        }
 
-      case "style#removeSource":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          style.removeSource((String) call.argument("sourceId"));
-          result.success(null);
-          break;
-        }
       case "style#addLayer":
         {
           if (!addRasterLayer(
@@ -3736,26 +3735,6 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-      case "style#getSourceIds":
-      {
-        if (style == null || !style.isFullyLoaded()) {
-          result.error(
-                  "STYLE_NOT_READY",
-                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                  null);
-          break;
-        }
-        Map<String, Object> reply = new HashMap<>();
-
-        List<String> sourceIds = new ArrayList<>();
-        for (Source source : style.getSources()) {
-          sourceIds.add(source.getId());
-        }
-
-        reply.put("sources", sourceIds);
-        result.success(reply);
-        break;
-      }
       case "style#getLayerProperties":
       {
         if (style == null || !style.isFullyLoaded()) {
@@ -3767,19 +3746,6 @@ final class MapLibreMapController
         }
         String layerId = call.argument("layerId");
         result.success(getLayerProperties(layerId));
-        break;
-      }
-      case "style#getSourceProperties":
-      {
-        if (style == null || !style.isFullyLoaded()) {
-          result.error(
-                  "STYLE_NOT_READY",
-                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                  null);
-          break;
-        }
-        String sourceId = call.argument("sourceId");
-        result.success(getSourceProperties(sourceId));
         break;
       }
       case "style#setStyle":

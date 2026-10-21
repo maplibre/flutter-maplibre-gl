@@ -23,6 +23,14 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
   /** Whether the native map exists. It does not while the MapView is being rebuilt. */
   boolean isMapReady();
 
+  /**
+   * Answers SOURCE_ALREADY_EXISTS when the style already holds a source with {@code sourceId}.
+   * {@link MapHostApi} asks it before every call that adds a source.
+   *
+   * @return true when {@code result} has been answered.
+   */
+  boolean rejectDuplicateSourceId(String sourceId, MethodChannel.Result result);
+
   // Map
 
   void mapWaitForMap(MethodChannel.Result result);
@@ -126,4 +134,66 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
       @Nullable String sourceLayerId,
       @Nullable List<Object> filter,
       MethodChannel.Result result);
+
+  // Sources
+
+  void mapEditGeoJsonSource(String id, String data, MethodChannel.Result result);
+
+  void mapEditGeoJsonUrl(String id, String url, MethodChannel.Result result);
+
+  void sourceAddGeoJson(String sourceId, String geojson, MethodChannel.Result result);
+
+  void sourceSetGeoJson(String sourceId, String geojson, MethodChannel.Result result);
+
+  void sourceSetFeature(String sourceId, String geojsonFeature, MethodChannel.Result result);
+
+  void sourceSetFeatureState(
+      String sourceId,
+      String featureId,
+      Map<String, Object> state,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result);
+
+  void sourceRemoveFeatureState(
+      String sourceId,
+      @Nullable String featureId,
+      @Nullable String stateKey,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result);
+
+  void sourceGetFeatureState(
+      String sourceId,
+      String featureId,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result);
+
+  void sourceGetClusterExpansionZoom(String sourceId, long clusterId, MethodChannel.Result result);
+
+  void sourceGetClusterChildren(String sourceId, long clusterId, MethodChannel.Result result);
+
+  void sourceGetClusterLeaves(
+      String sourceId, long clusterId, long limit, long offset, MethodChannel.Result result);
+
+  void styleAddSource(
+      String sourceId, Map<String, Object> properties, MethodChannel.Result result);
+
+  void styleRemoveSource(String sourceId, MethodChannel.Result result);
+
+  void styleAddImageSource(
+      String imageSourceId,
+      byte[] bytes,
+      long length,
+      List<Object> coordinates,
+      MethodChannel.Result result);
+
+  void styleUpdateImageSource(
+      String imageSourceId,
+      @Nullable byte[] bytes,
+      @Nullable Long length,
+      @Nullable List<Object> coordinates,
+      MethodChannel.Result result);
+
+  void styleGetSourceIds(MethodChannel.Result result);
+
+  void styleGetSourceProperties(String sourceId, MethodChannel.Result result);
 }

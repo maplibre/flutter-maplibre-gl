@@ -24,6 +24,12 @@ class MapHostApiTest {
     /** What isMapReady answers. */
     private var mapReady = true
 
+    /** The source and layer ids the stand-in reports as taken. */
+    private var takenIds = setOf<String>()
+
+    /** The duplicate checks the stand-in received: the check and the id. */
+    private val checks = mutableListOf<Pair<String, Any?>>()
+
     /** How the stand-in answers: a success with null unless a test says otherwise. */
     private var answer: (Call, MethodChannel.Result) -> Unit = { _, result -> result.success(null) }
 
@@ -33,6 +39,15 @@ class MapHostApiTest {
     ) { proxy, method, args ->
         when (method.name) {
             "isMapReady" -> mapReady
+            "rejectDuplicateSourceId" -> {
+                val id = args!![0] as String
+                checks.add(method.name to id)
+                val taken = id in takenIds
+                if (taken) {
+                    (args[1] as MethodChannel.Result).error("ALREADY_EXISTS", id, null)
+                }
+                taken
+            }
             "equals" -> proxy === args!![0]
             "hashCode" -> System.identityHashCode(proxy)
             "toString" -> "MapCalls stand-in"
@@ -53,6 +68,16 @@ class MapHostApiTest {
         MapLibreMapHostApi::class.java.declaredMethods
             .filter { pigeon -> MapCalls::class.java.methods.any { it.name == pigeon.name } }
             .sortedBy { it.name }
+
+    /**
+     * The Pigeon methods that add a source or a layer, with the duplicate check they make first
+     * and the position of the id it checks.
+     */
+    private val duplicateChecks = mapOf(
+        "sourceAddGeoJson" to ("rejectDuplicateSourceId" to 0),
+        "styleAddSource" to ("rejectDuplicateSourceId" to 0),
+        "styleAddImageSource" to ("rejectDuplicateSourceId" to 0),
+    )
 
     /** An argument of [type] that tells position [index] apart from the others. */
     private fun argument(type: Class<*>, index: Int): Any = when (type) {
@@ -121,11 +146,43 @@ class MapHostApiTest {
                 assertTrue(method.name, answers.single().isSuccess)
             } else {
                 assertEquals(method.name, emptyList<Call>(), calls)
+                assertEquals(method.name, emptyList<Pair<String, Any?>>(), checks)
                 val error = answers.single().exceptionOrNull() as PigeonError
                 assertEquals(method.name, "MAP_NOT_READY", error.code)
                 assertEquals("Map is not ready (activity may have been recreated)", error.message)
                 assertNull(error.details)
             }
+        }
+    }
+
+    @Test
+    fun theCallsThatAddASourceOrALayerCheckTheirIdFirst() {
+        for (method in typedPigeonMethods) {
+            checks.clear()
+
+            val (arguments, _) = invoke(method)
+
+            val check = duplicateChecks[method.name]
+            assertEquals(
+                method.name,
+                listOfNotNull(check?.let { (name, position) -> name to arguments[position] }),
+                checks,
+            )
+        }
+    }
+
+    @Test
+    fun aCallThatAddsATakenIdIsAnsweredByTheCheckAlone() {
+        takenIds = setOf("argument 0", "argument 1")
+        val adding = typedPigeonMethods.filter { it.name in duplicateChecks }
+        assertTrue(adding.isNotEmpty())
+        for (method in adding) {
+            calls.clear()
+
+            val (_, answers) = invoke(method)
+
+            assertEquals(method.name, emptyList<Call>(), calls)
+            assertEquals(method.name, "ALREADY_EXISTS", (answers.single().exceptionOrNull() as PigeonError).code)
         }
     }
 
@@ -227,6 +284,14 @@ class MapHostApiTest {
 
         assertSame(png, value<ByteArray?> { api.mapTakeSnapshot(100L, null, it) })
         assertEquals(listOf<Any?>(100L, null), calls.single().arguments)
+    }
+
+    @Test
+    fun answersTheIntOfGetClusterExpansionZoomAsALong() {
+        answer = { _, result -> result.success(9) }
+
+        assertEquals(9L, value<Long> { api.sourceGetClusterExpansionZoom("points", 3_000_000_000L, it) })
+        assertEquals(listOf<Any?>("points", 3_000_000_000L), calls.single().arguments)
     }
 
     @Test

@@ -90,10 +90,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any(callback) { map.mapQueryCameraPosition(it) }
 
     override fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit) =
-        any("map#editGeoJsonSource", hashMapOf("id" to id, "data" to data), callback)
+        any(callback) { map.mapEditGeoJsonSource(id, data, it) }
 
     override fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Any?>) -> Unit) =
-        any("map#editGeoJsonUrl", hashMapOf("id" to id, "url" to url), callback)
+        any(callback) { map.mapEditGeoJsonUrl(id, url, it) }
 
     override fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit) =
         any("map#setLayerFilter", hashMapOf("id" to id, "filter" to filter), callback)
@@ -136,26 +136,20 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<Any?>) -> Unit,
     ) = any(callback) { map.mapQuerySourceFeatures(sourceId, sourceLayerId, filter, it) }
 
-    // The handler answers an Integer.
+    // The SDK answers an int.
     override fun sourceGetClusterExpansionZoom(
         sourceId: String,
         clusterId: Long,
         callback: (Result<Long>) -> Unit,
-    ) = call(
-        "source#getClusterExpansionZoom",
-        hashMapOf("sourceId" to sourceId, "clusterId" to clusterId),
-        callback,
-    ) { (it as Number).toLong() }
+    ) = call(callback, { (it as Number).toLong() }) {
+        map.sourceGetClusterExpansionZoom(sourceId, clusterId, it)
+    }
 
     override fun sourceGetClusterChildren(
         sourceId: String,
         clusterId: Long,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getClusterChildren",
-        hashMapOf("sourceId" to sourceId, "clusterId" to clusterId),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetClusterChildren(sourceId, clusterId, it) }
 
     override fun sourceGetClusterLeaves(
         sourceId: String,
@@ -163,16 +157,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         limit: Long,
         offset: Long,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getClusterLeaves",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "clusterId" to clusterId,
-            "limit" to limit,
-            "offset" to offset,
-        ),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetClusterLeaves(sourceId, clusterId, limit, offset, it) }
 
     override fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapInvalidateAmbientCache(it) }
@@ -204,16 +189,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         length: Long,
         coordinates: List<Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addImageSource",
-        hashMapOf(
-            "imageSourceId" to imageSourceId,
-            "bytes" to bytes,
-            "length" to length,
-            "coordinates" to coordinates,
-        ),
-        callback,
-    )
+    ) = addSource(imageSourceId, callback) {
+        map.styleAddImageSource(imageSourceId, bytes, length, coordinates, it)
+    }
 
     override fun styleUpdateImageSource(
         imageSourceId: String,
@@ -221,16 +199,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         length: Long?,
         coordinates: List<Any?>?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#updateImageSource",
-        hashMapOf(
-            "imageSourceId" to imageSourceId,
-            "bytes" to bytes,
-            "length" to length,
-            "coordinates" to coordinates,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.styleUpdateImageSource(imageSourceId, bytes, length, coordinates, it) }
 
     override fun mapToScreenLocation(
         latitude: Double,
@@ -245,7 +214,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     ) = call(callback, { it as DoubleArray }) { map.mapToScreenLocationBatch(coordinates, it) }
 
     override fun styleRemoveSource(sourceId: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#removeSource", hashMapOf("sourceId" to sourceId), callback)
+        unit(callback) { map.styleRemoveSource(sourceId, it) }
 
     override fun styleAddLayer(
         imageLayerId: String,
@@ -317,13 +286,13 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceId: String,
         geojson: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("source#addGeoJson", hashMapOf("sourceId" to sourceId, "geojson" to geojson), callback)
+    ) = addSource(sourceId, callback) { map.sourceAddGeoJson(sourceId, geojson, it) }
 
     override fun sourceSetGeoJson(
         sourceId: String,
         geojson: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("source#setGeoJson", hashMapOf("sourceId" to sourceId, "geojson" to geojson), callback)
+    ) = unit(callback) { map.sourceSetGeoJson(sourceId, geojson, it) }
 
     override fun mapSetCameraBounds(
         west: Double,
@@ -443,11 +412,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceId: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addSource",
-        hashMapOf("sourceId" to sourceId, "properties" to properties),
-        callback,
-    )
+    ) = addSource(sourceId, callback) { map.styleAddSource(sourceId, properties, it) }
 
     override fun rasterLayerAdd(
         sourceId: String,
@@ -532,11 +497,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceId: String,
         geojsonFeature: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#setFeature",
-        hashMapOf("sourceId" to sourceId, "geojsonFeature" to geojsonFeature),
-        callback,
-    )
+    ) = unit(callback) { map.sourceSetFeature(sourceId, geojsonFeature, it) }
 
     override fun sourceSetFeatureState(
         sourceId: String,
@@ -544,16 +505,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         state: Map<String, Any?>,
         sourceLayer: String?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#setFeatureState",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "featureId" to featureId,
-            "state" to state,
-            "sourceLayer" to sourceLayer,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.sourceSetFeatureState(sourceId, featureId, state, sourceLayer, it) }
 
     override fun sourceRemoveFeatureState(
         sourceId: String,
@@ -561,27 +513,16 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         stateKey: String?,
         sourceLayer: String?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#removeFeatureState",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "featureId" to featureId,
-            "stateKey" to stateKey,
-            "sourceLayer" to sourceLayer,
-        ),
-        callback,
-    )
+    ) = unit(callback) {
+        map.sourceRemoveFeatureState(sourceId, featureId, stateKey, sourceLayer, it)
+    }
 
     override fun sourceGetFeatureState(
         sourceId: String,
         featureId: String,
         sourceLayer: String?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getFeatureState",
-        hashMapOf("sourceId" to sourceId, "featureId" to featureId, "sourceLayer" to sourceLayer),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetFeatureState(sourceId, featureId, sourceLayer, it) }
 
     override fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit) =
         unit("style#setLight", hashMapOf("light" to light), callback)
@@ -632,13 +573,13 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any("style#getLayerIds", null, callback)
 
     override fun styleGetSourceIds(callback: (Result<Any?>) -> Unit) =
-        any("style#getSourceIds", null, callback)
+        any(callback) { map.styleGetSourceIds(it) }
 
     override fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit) =
         any("style#getLayerProperties", hashMapOf("layerId" to layerId), callback)
 
     override fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getSourceProperties", hashMapOf("sourceId" to sourceId), callback)
+        any(callback) { map.styleGetSourceProperties(sourceId, it) }
 
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
         unit("style#setStyle", hashMapOf("style" to style), callback)
@@ -698,6 +639,20 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         convert: (Any?) -> T,
         body: (MethodChannel.Result) -> Unit,
     ) = withMap(PigeonMethodResult(callback, convert), body)
+
+    /**
+     * Runs [body], which adds a source, unless the style already holds one
+     * with [sourceId]: the map answers that call SOURCE_ALREADY_EXISTS.
+     */
+    private fun addSource(
+        sourceId: String,
+        callback: (Result<Unit>) -> Unit,
+        body: (MethodChannel.Result) -> Unit,
+    ) = unit(callback) {
+        if (!map.rejectDuplicateSourceId(sourceId, it)) {
+            body(it)
+        }
+    }
 
     /** Runs [body] if the map is ready, and answers MAP_NOT_READY otherwise. */
     private fun withMap(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) =
