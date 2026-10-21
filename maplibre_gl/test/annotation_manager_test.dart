@@ -545,6 +545,132 @@ void main() {
     });
   });
 
+  group('AnnotationManager set', () {
+    /// The single feature sent by the one setFeatureForGeoJsonSource call
+    /// recorded since the last reset, after checking that no whole source was
+    /// rewritten.
+    Map<String, dynamic> singleFeatureWrite(String sourceId) {
+      expect(platform.wasCalled('setGeoJsonSource'), isFalse);
+      final calls = platform.callsFor('setFeatureForGeoJsonSource');
+      expect(calls, hasLength(1));
+      expect(calls.single.positionalArgs[0], sourceId);
+      return calls.single.positionalArgs[1] as Map<String, dynamic>;
+    }
+
+    test('updateCircle sends only the updated circle', () async {
+      await controller.addCircles([
+        const CircleOptions(geometry: LatLng(1, 2)),
+        const CircleOptions(geometry: LatLng(3, 4)),
+      ]);
+      final circle = controller.circles.first;
+      platform.reset();
+
+      await controller.updateCircle(
+        circle,
+        const CircleOptions(circleRadius: 15.0),
+      );
+
+      final feature = singleFeatureWrite(controller.circleManager!.layerIds[0]);
+      expect(feature['id'], circle.id);
+      expect(feature['properties']['circleRadius'], 15.0);
+    });
+
+    test('updateSymbol sends only the updated symbol', () async {
+      await controller.addSymbols([
+        const SymbolOptions(geometry: LatLng(1, 2)),
+        const SymbolOptions(geometry: LatLng(3, 4)),
+      ]);
+      final symbol = controller.symbols.first;
+      platform.reset();
+
+      await controller.updateSymbol(
+        symbol,
+        const SymbolOptions(geometry: LatLng(5, 6)),
+      );
+
+      final feature = singleFeatureWrite(controller.symbolManager!.layerIds[0]);
+      expect(feature['id'], symbol.id);
+      expect(feature['geometry']['coordinates'], [6.0, 5.0]);
+    });
+
+    test('dragging a circle sends only that circle', () async {
+      await controller.addCircles([
+        const CircleOptions(geometry: LatLng(10, 20), draggable: true),
+        const CircleOptions(geometry: LatLng(30, 40), draggable: true),
+      ]);
+      final circle = controller.circles.first;
+      platform.reset();
+
+      platform.onFeatureDraggedPlatform.call({
+        'id': circle.id,
+        'eventType': DragEventType.drag.name,
+        'point': const Point(0.0, 0.0),
+        'origin': const LatLng(10, 20),
+        'current': const LatLng(11, 22),
+        'delta': const LatLng(1, 2),
+      });
+      await pumpEventQueue();
+
+      final feature = singleFeatureWrite(controller.circleManager!.layerIds[0]);
+      expect(feature['id'], circle.id);
+      expect(feature['geometry']['coordinates'], [22.0, 11.0]);
+    });
+
+    test(
+      'a circle removed and added again is still updated in place',
+      () async {
+        final circle = await controller.addCircle(
+          const CircleOptions(geometry: LatLng(10, 20)),
+        );
+        await controller.removeCircle(circle);
+        await controller.circleManager!.add(circle);
+        platform.reset();
+
+        await controller.updateCircle(
+          circle,
+          const CircleOptions(circleRadius: 15.0),
+        );
+
+        expect(
+          singleFeatureWrite(controller.circleManager!.layerIds[0])['id'],
+          circle.id,
+        );
+      },
+    );
+
+    test('updateLine on the same layer sends only the updated line', () async {
+      final line = await controller.addLine(
+        const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
+      );
+      platform.reset();
+
+      await controller.updateLine(line, const LineOptions(lineWidth: 4.0));
+
+      expect(
+        singleFeatureWrite(controller.lineManager!.layerIds[0])['id'],
+        line.id,
+      );
+    });
+
+    test('updateLine that changes layer rewrites every line source', () async {
+      final line = await controller.addLine(
+        const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
+      );
+      platform.reset();
+
+      await controller.updateLine(
+        line,
+        const LineOptions(linePattern: 'pattern'),
+      );
+
+      expect(platform.wasCalled('setFeatureForGeoJsonSource'), isFalse);
+      expect([
+        for (final call in platform.callsFor('setGeoJsonSource'))
+          call.positionalArgs[0],
+      ], controller.lineManager!.layerIds);
+    });
+  });
+
   group('Annotation tap callbacks', () {
     test('onCircleTapped fires when feature tapped', () async {
       final circle = await controller.addCircle(
