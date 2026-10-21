@@ -414,7 +414,7 @@ class OfflineManagerUtils {
             sessionConfig.httpMaximumConnectionsPerHost = maxPerHost
             // With custom headers set, MapLibreHeadersProtocol intercepts the
             // request and opens the connection on a session of its own, so the
-            // limit above no longer governs it and has to be relayed.
+            // limit above does not apply to it and has to be relayed.
             MapLibreHeadersProtocol.setMaxConnectionsPerHost(maxPerHost)
         }
         MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig

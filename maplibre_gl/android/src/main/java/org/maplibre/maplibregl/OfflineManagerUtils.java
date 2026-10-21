@@ -555,7 +555,7 @@ abstract class OfflineManagerUtils {
     ActiveDownload download = activeDownloads.get(id);
     if (download != null) {
       // Deliver status messages even while inactive so the state-change
-      // callback fires after STATE_ACTIVE — some paths rely on this to
+      // callback fires after STATE_ACTIVE: some paths rely on this to
       // re-arm internal tile dispatching.
       download.region.setDeliverInactiveMessages(true);
       // Re-set the observer to ensure callbacks fire after resume

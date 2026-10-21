@@ -190,7 +190,7 @@ class SourcePropertyConverter {
                     let mapExpressionValue = expressions[1]
 
                     // The operator can be either:
-                    // 1. A simple string like "+" — expand to ["+", ["accumulated"], ["get", propertyName]]
+                    // 1. A simple string like "+": expand to ["+", ["accumulated"], ["get", propertyName]]
                     // 2. A full reduce expression array like ["+", ["accumulated"], ["get", "sum"]]
                     let operatorJSON: Any
                     if let op = operatorValue as? String {
