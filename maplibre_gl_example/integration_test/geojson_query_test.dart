@@ -476,22 +476,24 @@ void main() {
       final controller = await _pumpMapWithCluster(tester);
       await _waitForCluster(tester, controller);
 
-      // Codes are not pinned: Android and web say SOURCE_NOT_FOUND, iOS
-      // sourceNotFound.
+      // iOS said sourceNotFound.
       await expectPlatformError(
         tester,
         controller.getClusterExpansionZoom('missing', 1),
         'getClusterExpansionZoom on a missing source',
+        code: 'SOURCE_NOT_FOUND',
       );
       await expectPlatformError(
         tester,
         controller.getClusterChildren('missing', 1),
         'getClusterChildren on a missing source',
+        code: 'SOURCE_NOT_FOUND',
       );
       await expectPlatformError(
         tester,
         controller.getClusterLeaves('missing', 1),
         'getClusterLeaves on a missing source',
+        code: 'SOURCE_NOT_FOUND',
       );
     });
 

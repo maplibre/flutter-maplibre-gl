@@ -1,23 +1,35 @@
-// Integration tests for the calls Android and iOS used to answer differently.
+// Integration tests for the calls Android, iOS and web used to answer
+// differently.
 //
 // Covered: the feature queries and the platform's setLayerFilter with a
 // filter MapLibre rejects, the rect query with a filter that is not an
 // expression array, query filters with large numbers, image sources with an
-// id in use or bytes that are not an image, and the image source and style
-// property calls made while no style is loaded.
+// id in use or bytes that are not an image, layer adds with a missing source,
+// a missing belowLayerId or an invalid filter, the GeoJSON source updates with
+// a missing source or something that is not a Feature, sources Android and
+// iOS cannot build, and the calls made while no style is loaded.
 //
-// Each case now answers the same on Android and iOS: an invalid query filter
-// is INVALID_EXPRESSION, setLayerFilter answers false for anything it cannot
-// set, and a call that needs a style answers STYLE_NOT_READY, with the same
-// message, while none is loaded. Before, iOS crashed on an invalid filter and
-// left some of these calls without the error Android gave.
+// Each case now answers the same everywhere: an invalid query filter is
+// INVALID_EXPRESSION, setLayerFilter answers false for anything it cannot
+// set, a missing source is SOURCE_NOT_FOUND, a layer below a missing one goes
+// on top, and a call that needs a style answers STYLE_NOT_READY, with the
+// same message, while none is loaded. Before, iOS crashed on an invalid
+// filter and answered with codes of its own, Android ignored some of these
+// calls, and web threw raw maplibre-gl-js errors or did nothing.
 //
-// Web is skipped: it does not implement image sources, and maplibre-gl-js
-// reports an invalid query filter with an error of its own rather than a
-// PlatformException.
+// The calls without a style run on Android and iOS only: web cannot load a
+// style that fails to parse, so there is no way to drop the style there.
+// Web also adds the video sources and the empty image sources Android and iOS
+// cannot build.
 //
 // Run on Android or iOS:
 //   flutter test integration_test/platform_parity_test.dart -d <device id>
+//
+// Run on Chrome (with chromedriver on :4444):
+//   flutter drive \
+//     --driver=test_driver/integration_test.dart \
+//     --target=integration_test/platform_parity_test.dart \
+//     -d web-server
 import 'dart:convert';
 import 'dart:math' show Point;
 import 'dart:typed_data';
@@ -66,6 +78,22 @@ const _movedQuad = LatLngQuad(
   bottomLeft: LatLng(-4, -4),
 );
 
+/// A FeatureCollection of [_p1] alone, with id 1 and `n` 1.
+const Map<String, dynamic> _onePoint = {
+  'type': 'FeatureCollection',
+  'features': [
+    {
+      'type': 'Feature',
+      'id': 1,
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [-8.0, 5.0],
+      },
+      'properties': {'n': 1},
+    },
+  ],
+};
+
 /// Bytes that no platform decodes as an image.
 final Uint8List _notAnImage = Uint8List.fromList(utf8.encode('not an image'));
 
@@ -76,7 +104,6 @@ void main() {
     testWidgets('an invalid filter fails every query with INVALID_EXPRESSION', (
       tester,
     ) async {
-      if (kIsWeb) return;
       final controller = await _pumpMapWithPoints(tester);
       final p1 = await _screen(tester, controller, _p1);
       await _waitForRendered(tester, controller, p1);
@@ -136,7 +163,6 @@ void main() {
     testWidgets('the rect query filters only with an expression array', (
       tester,
     ) async {
-      if (kIsWeb) return;
       final controller = await _pumpMapWithPoints(tester);
       final rect = await _leftColumnRect(tester, controller);
       await pumpUntilValue(
@@ -184,7 +210,6 @@ void main() {
     });
 
     testWidgets('a query filter keeps its numbers exact', (tester) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
       // 123456789 as a float is 123456792: a filter rounded that way picks
       // the other feature.
@@ -231,7 +256,6 @@ void main() {
   group('setLayerFilter of the platform', () {
     testWidgets('sets a valid filter on every layer type that has one, and '
         'answers false for anything else', (tester) async {
-      if (kIsWeb) return;
       final (controller, platform) = await _pumpMapWithPlatform(tester);
       await _addPoints(tester, controller);
       await pumpUntil(
@@ -343,7 +367,6 @@ void main() {
   group('image sources', () {
     testWidgets('addImageSource rejects an id in use with '
         'SOURCE_ALREADY_EXISTS', (tester) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
       final image = await _loadPng(tester, 'assets/sydney0.png');
       await _addPoints(tester, controller);
@@ -390,7 +413,6 @@ void main() {
 
     testWidgets('updateImageSource with bytes that are not an image fails '
         'before it changes anything', (tester) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
       final first = await _loadPng(tester, 'assets/sydney0.png');
       final second = await _loadPng(tester, 'assets/sydney1.png');
@@ -426,6 +448,314 @@ void main() {
     });
   });
 
+  group('layer adds', () {
+    testWidgets('a missing source fails with SOURCE_NOT_FOUND', (tester) async {
+      final controller = await pumpMap(tester);
+      final layersBefore = await pumpUntil(
+        tester,
+        controller.getLayerIds(),
+        'getLayerIds',
+      );
+
+      // Android added these layers, which then drew nothing, and iOS said
+      // sourceNotFound or noSuchSource. Web added nothing and said nothing.
+      final calls = <String, Future<Object?> Function()>{
+        'addCircleLayer':
+            () => controller.addCircleLayer(
+              'no-such-source',
+              'circles',
+              const CircleLayerProperties(),
+            ),
+        'addLayer':
+            () => controller.addLayer(
+              'no-such-source',
+              'lines',
+              const LineLayerProperties(),
+            ),
+        'addRasterLayer':
+            () => controller.addRasterLayer(
+              'no-such-source',
+              'raster',
+              const RasterLayerProperties(),
+            ),
+        'addImageLayer':
+            () => controller.addImageLayer('image-layer', 'no-such-source'),
+        'addImageLayerBelow':
+            () => controller.addImageLayerBelow(
+              'image-below',
+              'no-such-source',
+              backgroundLayerId,
+            ),
+      };
+      for (final call in calls.entries) {
+        await expectPlatformError(
+          tester,
+          call.value(),
+          call.key,
+          code: 'SOURCE_NOT_FOUND',
+        );
+      }
+      expect(
+        await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
+        layersBefore,
+      );
+    });
+
+    testWidgets('a missing belowLayerId puts the layer on top', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      final image = await _loadPng(tester, 'assets/sydney0.png');
+      await _addPoints(tester, controller);
+      await pumpUntil(
+        tester,
+        controller.addImageSource('image', image, _quad),
+        'addImageSource',
+      );
+
+      // iOS failed the image layer with noSuchLayer and the background layer
+      // with LAYER_NOT_FOUND_ERROR. Web added none of them.
+      final calls = <String, Future<Object?> Function()>{
+        'circles':
+            () => controller.addCircleLayer(
+              _sourceId,
+              'circles',
+              const CircleLayerProperties(),
+              belowLayerId: 'no-such-layer',
+            ),
+        'image-below':
+            () => controller.addImageLayerBelow(
+              'image-below',
+              'image',
+              'no-such-layer',
+            ),
+        'second-background':
+            () => controller.addBackgroundLayer(
+              'second-background',
+              const BackgroundLayerProperties(backgroundOpacity: 0),
+              belowLayerId: 'no-such-layer',
+            ),
+      };
+      for (final call in calls.entries) {
+        await pumpUntil(tester, call.value(), 'add ${call.key}');
+        final ids = await pumpUntil(
+          tester,
+          controller.getLayerIds(),
+          'getLayerIds',
+        );
+        expect(ids.last, call.key);
+      }
+    });
+
+    testWidgets('an invalid filter fails with INVALID_EXPRESSION', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      await _addPoints(tester, controller);
+
+      // Android added the layer without the filter, or failed with a bare
+      // "error" for one that is not an expression. Web added nothing and
+      // said nothing.
+      for (final filter in <Object>[
+        _unknownOperator,
+        [
+          '==',
+          ['get', 'n'],
+        ],
+        [1, 2],
+      ]) {
+        final error = await expectPlatformError(
+          tester,
+          controller.addCircleLayer(
+            _sourceId,
+            _layerId,
+            const CircleLayerProperties(),
+            filter: filter,
+          ),
+          'addCircleLayer with $filter',
+          code: 'INVALID_EXPRESSION',
+        );
+        expect(error.message, startsWith('Invalid filter: '));
+      }
+      expect(
+        await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
+        isNot(contains(_layerId)),
+      );
+
+      // A valid filter still goes in.
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          _layerId,
+          const CircleLayerProperties(),
+          filter: [
+            '==',
+            ['get', 'n'],
+            2,
+          ],
+        ),
+        'addCircleLayer with a valid filter',
+      );
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getLayerFilter(_layerId),
+          'getLayerFilter',
+        ),
+        [
+          '==',
+          ['get', 'n'],
+          2,
+        ],
+      );
+    });
+  });
+
+  group('GeoJSON source updates', () {
+    testWidgets('a missing source fails with SOURCE_NOT_FOUND', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      final image = await _loadPng(tester, 'assets/sydney0.png');
+      await pumpUntil(
+        tester,
+        controller.addImageSource('image', image, _quad),
+        'addImageSource',
+      );
+
+      // Android and web ignored these, iOS said sourceNotFound. A source
+      // that is not GeoJSON counts as missing, as for updateImageSource.
+      for (final sourceId in ['no-such-source', 'image']) {
+        await expectPlatformError(
+          tester,
+          controller.setGeoJsonSource(sourceId, _onePoint),
+          'setGeoJsonSource on $sourceId',
+          code: 'SOURCE_NOT_FOUND',
+        );
+        await expectPlatformError(
+          tester,
+          controller.setGeoJsonFeature(sourceId, _point(1, _p1, {'n': 5})),
+          'setGeoJsonFeature on $sourceId',
+          code: 'SOURCE_NOT_FOUND',
+        );
+      }
+    });
+
+    testWidgets('setGeoJsonFeature takes a Feature only, and replaces it in '
+        'a source of one Feature too', (tester) async {
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.addGeoJsonSource(_sourceId, _point(1, _p1, {'n': 1})),
+        'addGeoJsonSource with a Feature',
+      );
+      // A layer, so the source has tiles to query.
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          _layerId,
+          const CircleLayerProperties(circleRadius: 6),
+        ),
+        'addCircleLayer',
+      );
+
+      // iOS failed a geometry with genericError and ignored a collection,
+      // Android ignored both, and web failed with a TypeError.
+      for (final notAFeature in <Map<String, dynamic>>[
+        {
+          'type': 'Point',
+          'coordinates': [_p1.longitude, _p1.latitude],
+        },
+        _onePoint,
+      ]) {
+        await expectPlatformError(
+          tester,
+          controller.setGeoJsonFeature(_sourceId, notAFeature),
+          'setGeoJsonFeature with a ${notAFeature['type']}',
+          code: 'INVALID_GEOJSON',
+        );
+      }
+
+      // iOS failed this with genericError: its data was not a collection.
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
+        'setGeoJsonFeature',
+      );
+      await pumpUntilValue(
+        tester,
+        () => controller.querySourceFeatures(_sourceId, null, [
+          '==',
+          ['get', 'n'],
+          5,
+        ]),
+        (features) => _ids(features).contains(1),
+        'querySourceFeatures after setGeoJsonFeature',
+      );
+    });
+
+    testWidgets('setGeoJsonFeature changes nothing in a source it did not '
+        'give its data', (tester) async {
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.addSource(
+          _sourceId,
+          const GeojsonSourceProperties(data: _onePoint),
+        ),
+        'addSource',
+      );
+
+      // iOS failed with genericError, Android and web did nothing.
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
+        'setGeoJsonFeature',
+      );
+    });
+  });
+
+  group('sources Android and iOS cannot build', () {
+    testWidgets('a video source is UNSUPPORTED_SOURCE_TYPE and a tiled source '
+        'without tiles INVALID_ARGUMENT', (tester) async {
+      // maplibre-gl-js adds both.
+      if (kIsWeb) return;
+      final controller = await pumpMap(tester);
+
+      // iOS said invalidSourceType for both, Android added nothing and
+      // answered a success.
+      await expectPlatformError(
+        tester,
+        controller.addSource(
+          'video',
+          const VideoSourceProperties(
+            urls: ['https://example.com/video.mp4'],
+            coordinates: [
+              [-2, 2],
+              [2, 2],
+              [2, -2],
+              [-2, -2],
+            ],
+          ),
+        ),
+        'addSource video',
+        code: 'UNSUPPORTED_SOURCE_TYPE',
+      );
+      await expectPlatformError(
+        tester,
+        controller.addSource('vector', const VectorSourceProperties()),
+        'addSource vector without url or tiles',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(
+        await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+        isNot(anyOf(contains('video'), contains('vector'))),
+      );
+    });
+  });
+
   group('without a style', () {
     testWidgets('calls that need a style answer STYLE_NOT_READY', (
       tester,
@@ -451,10 +781,46 @@ void main() {
       // nothing for the properties, a success for addImageSource and
       // removeSource, SOURCE_NOT_FOUND for updateImageSource,
       // LAYER_NOT_FOUND_ERROR for the layer calls, noSuchSource for the
-      // image layers, and every id as unknown for setLayersVisibility.
+      // image layers, every id as unknown for setLayersVisibility, and
+      // styleNotFound for the rest. Android answered a success for the
+      // GeoJSON source calls and a bare "error" for addSource.
       // One at a time: a call that fails before it is awaited would be an
       // unhandled error.
       final calls = <String, Future<Object?> Function()>{
+        'addGeoJsonSource':
+            () => controller.addGeoJsonSource('new-points', _onePoint),
+        'setGeoJsonSource':
+            () => controller.setGeoJsonSource(_sourceId, _onePoint),
+        'setGeoJsonFeature':
+            () => controller.setGeoJsonFeature(
+              _sourceId,
+              _point(1, _p1, {'n': 5}),
+            ),
+        'addSource':
+            () => controller.addSource(
+              'new-source',
+              const GeojsonSourceProperties(data: _onePoint),
+            ),
+        'querySourceFeatures':
+            () => controller.querySourceFeatures(_sourceId, null, null),
+        'getClusterExpansionZoom':
+            () => controller.getClusterExpansionZoom(_sourceId, 1),
+        'addCircleLayer':
+            () => controller.addCircleLayer(
+              _sourceId,
+              'new-circles',
+              const CircleLayerProperties(),
+            ),
+        'addBackgroundLayer':
+            () => controller.addBackgroundLayer(
+              'new-background',
+              const BackgroundLayerProperties(),
+            ),
+        'setLayerFilter':
+            () => controller.setLayerFilter(backgroundLayerId, null),
+        'getLayerFilter': () => controller.getLayerFilter(backgroundLayerId),
+        'setLight':
+            () => controller.setLight(const LightProperties(intensity: 0.5)),
         'addImageSource':
             () => controller.addImageSource('new-image', image, _quad),
         'updateImageSource':
