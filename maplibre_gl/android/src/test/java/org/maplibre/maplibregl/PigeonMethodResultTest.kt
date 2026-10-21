@@ -61,11 +61,11 @@ class PigeonMethodResultTest {
     fun errorBecomesAPigeonErrorWithItsCodeMessageAndDetails() {
         val details = mapOf("id" to 9)
 
-        lengthOfString().error("UpdateMetadataError", "There is no region with the id 9.", details)
+        lengthOfString().error("REGION_NOT_FOUND", "There is no offline region with id 9.", details)
 
         val error = singleError()
-        assertEquals("UpdateMetadataError", error.code)
-        assertEquals("There is no region with the id 9.", error.message)
+        assertEquals("REGION_NOT_FOUND", error.code)
+        assertEquals("There is no offline region with id 9.", error.message)
         assertEquals(details, error.details)
     }
 

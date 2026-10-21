@@ -60,9 +60,8 @@ class OfflineManagerUtils {
             (MLNOfflineStorage.shared.packs ?? []).map(packIdentityKey(for:))
         )
         MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
-            // The code Android answers with.
             if let error = error {
-                result(FlutterError(code: "mergeOfflineRegions Error", message: error.localizedDescription, details: nil))
+                result(databaseError(error.localizedDescription))
                 return
             }
             let importedPacks = (packs ?? []).filter {
@@ -72,7 +71,7 @@ class OfflineManagerUtils {
             guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
                   let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
             else {
-                result(FlutterError(code: "mergeOfflineRegions Error", message: "Failed to serialize merged regions", details: nil))
+                result(databaseError("Failed to serialize the merged regions"))
                 return
             }
             result(regionsArgsJsonString)
@@ -146,7 +145,7 @@ class OfflineManagerUtils {
         guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
               let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
         else {
-            result(FlutterError(code: "RegionListError", message: nil, details: nil))
+            result(databaseError("Failed to serialize the regions"))
             return
         }
         result(regionsArgsJsonString)
@@ -171,16 +170,13 @@ class OfflineManagerUtils {
         guard let pack = findPack(id: id),
               let tileRegion = pack.region as? MLNTilePyramidOfflineRegion
         else {
-            result(FlutterError(
-                code: "UpdateMetadataError",
-                message: "There is no region with given id to update.",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
             return
         }
+        // Android stores whatever its JSON encoder makes of such a value.
         guard JSONSerialization.isValidJSONObject(metadata) else {
             result(FlutterError(
-                code: "UpdateMetadataError",
+                code: OfflineErrorCode.invalidArgument,
                 message: "Metadata is not JSON serializable",
                 details: nil
             ))
@@ -196,21 +192,13 @@ class OfflineManagerUtils {
         )
         pack.setContext(region.prepareContext()) { error in
             if let error = error {
-                result(FlutterError(
-                    code: "UpdateMetadataError",
-                    message: error.localizedDescription,
-                    details: nil
-                ))
+                result(databaseError(error.localizedDescription))
                 return
             }
             guard let jsonData = try? JSONSerialization.data(withJSONObject: region.toDictionary()),
                   let jsonString = String(data: jsonData, encoding: .utf8)
             else {
-                result(FlutterError(
-                    code: "UpdateMetadataError",
-                    message: "Failed to serialize the updated region",
-                    details: nil
-                ))
+                result(databaseError("Failed to serialize the updated region"))
                 return
             }
             result(jsonString)
@@ -227,7 +215,7 @@ class OfflineManagerUtils {
         MLNOfflineStorage.shared.clearAmbientCache { error in
             if let error = error {
                 result(FlutterError(
-                    code: "ClearAmbientCacheError",
+                    code: OfflineErrorCode.ambientCacheError,
                     message: error.localizedDescription,
                     details: nil
                 ))
@@ -241,7 +229,7 @@ class OfflineManagerUtils {
         MLNOfflineStorage.shared.setMaximumAmbientCacheSize(UInt(bytes)) { error in
             if let error = error {
                 result(FlutterError(
-                    code: "SetMaximumAmbientCacheSizeError",
+                    code: OfflineErrorCode.ambientCacheError,
                     message: error.localizedDescription,
                     details: nil
                 ))
@@ -269,7 +257,7 @@ class OfflineManagerUtils {
         // Terminate the Dart-side subscriptions so their Futures resolve.
         for (_, downloader) in activeDownloaders {
             downloader.terminate(
-                errorCode: "DatabaseReset",
+                errorCode: OfflineErrorCode.databaseReset,
                 errorMessage: "Offline database was reset before the download completed"
             )
         }
@@ -278,11 +266,7 @@ class OfflineManagerUtils {
 
         MLNOfflineStorage.shared.resetDatabase { error in
             if let error = error {
-                result(FlutterError(
-                    code: "ResetDatabaseError",
-                    message: error.localizedDescription,
-                    details: nil
-                ))
+                result(databaseError(error.localizedDescription))
                 return
             }
             // resetDatabase wipes the underlying SQLite DB but leaves the
@@ -310,11 +294,7 @@ class OfflineManagerUtils {
     private static func removeRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = MLNOfflineStorage.shared
         guard let pacs = offlineStorage.packs else {
-            result(FlutterError(
-                code: "DeleteRegionError",
-                message: "Offline packs are unavailable",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
             return
         }
         let packToRemove = pacs.first(where: { pack -> Bool in
@@ -331,7 +311,7 @@ class OfflineManagerUtils {
             packToRemoveUnwrapped.suspend()
             // Terminate the Dart-side subscription if a download is in flight.
             activeDownloaders[id]?.terminate(
-                errorCode: "RegionDeleted",
+                errorCode: OfflineErrorCode.regionDeleted,
                 errorMessage: "Region was deleted before the download completed"
             )
             activePacks.removeValue(forKey: id)
@@ -339,21 +319,13 @@ class OfflineManagerUtils {
 
             offlineStorage.removePack(packToRemoveUnwrapped) { error in
                 if let error = error {
-                    result(FlutterError(
-                        code: "DeleteRegionError",
-                        message: error.localizedDescription,
-                        details: nil
-                    ))
+                    result(databaseError(error.localizedDescription))
                 } else {
                     result(nil)
                 }
             }
         } else {
-            result(FlutterError(
-                code: "DeleteRegionError",
-                message: "There is no region with given id to delete",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -373,11 +345,7 @@ class OfflineManagerUtils {
             pack.suspend()
             result(nil)
         } else {
-            result(FlutterError(
-                code: "PauseRegionError",
-                message: "There is no active region with given id to pause",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -387,14 +355,17 @@ class OfflineManagerUtils {
 
     private static func resumeLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
-            pack.resume()
+            // A pack with no download of this session behind it resumes too,
+            // without events: no downloader follows it. A complete pack has
+            // nothing left to download, and resuming it would only show it
+            // active until MapLibre reports it complete again, so it is left
+            // as it is, like on Android.
+            if pack.state != .complete {
+                pack.resume()
+            }
             result(nil)
         } else {
-            result(FlutterError(
-                code: "ResumeRegionError",
-                message: "There is no active region with given id to resume",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -424,16 +395,12 @@ class OfflineManagerUtils {
             guard let jsonData = try? JSONSerialization.data(withJSONObject: statusDict),
                   let jsonString = String(data: jsonData, encoding: .utf8)
             else {
-                result(FlutterError(code: "GetRegionStatusError", message: "Failed to serialize status", details: nil))
+                result(databaseError("Failed to serialize the status"))
                 return
             }
             result(jsonString)
         } else {
-            result(FlutterError(
-                code: "GetRegionStatusError",
-                message: "There is no region with given id",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -453,6 +420,27 @@ class OfflineManagerUtils {
         }
         MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
         result(nil)
+    }
+
+    // MARK: Errors
+
+    /// The answer for a region `findPack` did not find: `REGION_NOT_FOUND`, or
+    /// `OFFLINE_DATABASE_ERROR` when the stored packs never loaded, which is
+    /// what Android answers when it cannot list its regions.
+    private static func missingRegionError(id: Int) -> FlutterError {
+        if MLNOfflineStorage.shared.packs == nil {
+            return databaseError("The offline regions could not be loaded")
+        }
+        return FlutterError(
+            code: OfflineErrorCode.regionNotFound,
+            message: "There is no offline region with id \(id).",
+            details: nil
+        )
+    }
+
+    /// A failure of the offline database, with what MapLibre reported.
+    private static func databaseError(_ message: String?) -> FlutterError {
+        FlutterError(code: OfflineErrorCode.offlineDatabaseError, message: message, details: nil)
     }
 
     // MARK: Pack Lookup
@@ -648,4 +636,27 @@ private final class PacksReloadObserver: NSObject {
         retainCycle = nil
         callback()
     }
+}
+
+/// The error codes of the offline calls and download events. Android answers
+/// the same codes, with the same messages where the case is the same.
+enum OfflineErrorCode {
+    /// No offline region has the id the call was given.
+    static let regionNotFound = "REGION_NOT_FOUND"
+    /// The offline database failed an operation, with MapLibre's message.
+    static let offlineDatabaseError = "OFFLINE_DATABASE_ERROR"
+    /// The ambient cache failed an operation, with MapLibre's message.
+    static let ambientCacheError = "AMBIENT_CACHE_ERROR"
+    /// An argument the call cannot use, such as a negative limit.
+    static let invalidArgument = "INVALID_ARGUMENT"
+    /// A region definition MapLibre cannot download.
+    static let invalidRegionDefinition = "INVALID_REGION_DEFINITION"
+    /// The download needs more tiles than the offline tile count limit.
+    static let tileCountLimitExceeded = "TILE_COUNT_LIMIT_EXCEEDED"
+    /// The region was deleted before its download completed.
+    static let regionDeleted = "REGION_DELETED"
+    /// A download of the same area replaced the region before it completed.
+    static let regionReplaced = "REGION_REPLACED"
+    /// The offline database was reset before the download completed.
+    static let databaseReset = "DATABASE_RESET"
 }
