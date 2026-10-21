@@ -1187,6 +1187,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<void> removeSource(String sourceId) async {
     if (_map.getSource(sourceId) != null) {
       _map.removeSource(sourceId);
+      _imageSourceIds.remove(sourceId);
     }
   }
 
@@ -1753,6 +1754,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
+    _imageSourceIds.clear();
     //remove old mouseenter callbacks to avoid multicalling
     _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
     _interactiveFeatureLayerIds.clear();
@@ -2592,9 +2594,20 @@ class MapLibreMapController extends MapLibrePlatform
     String imageSourceId,
     Uint8List bytes,
     LatLngQuad coordinates,
-  ) {
-    // TODO: implement addImageSource
-    throw UnimplementedError();
+  ) async {
+    // Checked in the order of Android and iOS: the id before the bytes.
+    _ensureStyleReady();
+    _ensureNewSourceId(imageSourceId);
+    final url = await _imageDataUrl(bytes);
+    // The decoding yields, so the style or the id may have changed since.
+    _ensureStyleReady();
+    _ensureNewSourceId(imageSourceId);
+    _map.addSource(imageSourceId, <String, dynamic>{
+      'type': 'image',
+      'url': url,
+      'coordinates': _corners(coordinates),
+    });
+    _imageSourceIds.add(imageSourceId);
   }
 
   @override
@@ -2602,9 +2615,75 @@ class MapLibreMapController extends MapLibrePlatform
     String imageSourceId,
     Uint8List? bytes,
     LatLngQuad? coordinates,
-  ) {
-    // TODO: implement updateImageSource
-    throw UnimplementedError();
+  ) async {
+    _ensureStyleReady();
+    _imageSource(imageSourceId);
+    // Decoded before anything changes, so a call that fails changes nothing.
+    final url = bytes == null ? null : await _imageDataUrl(bytes);
+    _ensureStyleReady();
+    final source = _imageSource(imageSourceId);
+    final corners = coordinates == null ? null : _corners(coordinates);
+    if (url != null) {
+      source.callMethod<JSAny?>(
+        'updateImage'.toJS,
+        jsify({'url': url, if (corners != null) 'coordinates': corners}),
+      );
+    } else if (corners != null) {
+      source.callMethod<JSAny?>('setCoordinates'.toJS, jsify(corners));
+    }
+  }
+
+  /// The ids of the image sources [addImageSource] made from bytes. Their url
+  /// is a data URL of the whole image, which [getSourceProperties] leaves
+  /// out: Android and iOS answer no url for them either.
+  final _imageSourceIds = <String>{};
+
+  /// The image source [imageSourceId] as maplibre-gl-js holds it. Throws
+  /// `SOURCE_NOT_FOUND` with the message of Android and iOS when the style
+  /// has no image source with that id.
+  JSObject _imageSource(String imageSourceId) {
+    final source = _jsSource(imageSourceId);
+    if (source == null || _sourceType(imageSourceId) != 'image') {
+      throw PlatformException(
+        code: 'SOURCE_NOT_FOUND',
+        message: 'Image source $imageSourceId not found.',
+      );
+    }
+    return source;
+  }
+
+  /// The corners of an image source in the order maplibre-gl-js takes them:
+  /// top left, top right, bottom right, bottom left, each as [lng, lat].
+  static List<List<double>> _corners(LatLngQuad quad) => [
+    for (final corner in [
+      quad.topLeft,
+      quad.topRight,
+      quad.bottomRight,
+      quad.bottomLeft,
+    ])
+      [corner.longitude, corner.latitude],
+  ];
+
+  /// [bytes] as a data URL an image source can load. Throws `INVALID_IMAGE`,
+  /// as Android and iOS do, for bytes the browser cannot decode as an image:
+  /// maplibre-gl-js would only report them through an error event, after the
+  /// call.
+  static Future<String> _imageDataUrl(Uint8List bytes) async {
+    try {
+      final bitmap =
+          await web.window
+              .createImageBitmap(web.Blob([bytes.toJS].toJS))
+              .toDart;
+      bitmap.close();
+    } catch (_) {
+      throw PlatformException(
+        code: 'INVALID_IMAGE',
+        message: 'Failed to decode image bytes.',
+      );
+    }
+    // maplibre-gl-js reads the image from the bytes it fetches, whatever the
+    // type says.
+    return 'data:application/octet-stream;base64,${base64Encode(bytes)}';
   }
 
   @override
@@ -2614,8 +2693,15 @@ class MapLibreMapController extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   ) {
-    // TODO: implement addLayer
-    throw UnimplementedError();
+    return _addLayer(
+      imageSourceId,
+      imageLayerId,
+      const {},
+      'raster',
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
   }
 
   @override
@@ -2626,8 +2712,16 @@ class MapLibreMapController extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   ) {
-    // TODO: implement addLayerBelow
-    throw UnimplementedError();
+    return _addLayer(
+      imageSourceId,
+      imageLayerId,
+      const {},
+      'raster',
+      belowLayerId: belowLayerId,
+      minzoom: minzoom,
+      maxzoom: maxzoom,
+      enableInteraction: false,
+    );
   }
 
   @override
@@ -2906,7 +3000,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (sources is! Map) return null;
     final source = sources[sourceId];
     if (source is! Map) return null;
-    return _styleShaped(source);
+    final shaped = _styleShaped(source);
+    if (_imageSourceIds.contains(sourceId)) shaped.remove('url');
+    return shaped;
   }
 
   /// The current style as a Dart map (style-spec shaped), or null if unset.
