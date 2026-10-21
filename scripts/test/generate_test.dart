@@ -254,4 +254,9 @@ void main() {
       expect(constantKind({'type': 'array', 'value': 'padding'}), isNull);
     });
   });
+
+  test('buildClassDocSplit wraps each paragraph and keeps them apart', () {
+    expect(buildClassDocSplit(null), isEmpty);
+    expect(buildClassDocSplit(['One.', 'Two.']), ['One.', '', 'Two.']);
+  });
 }

@@ -17,6 +17,7 @@ flutter-maplibre-gl supports multiple data source types for loading map data. Ea
 | Raster tiles | `RasterSourceProperties` | Raster tile servers (png/jpg tiles) |
 | Raster DEM | `RasterDemSourceProperties` | Terrain elevation data (RGB-encoded DEM tiles) |
 | Image | `ImageSourceProperties` | A single geo-referenced image overlay |
+| Video | `VideoSourceProperties` | A geo-referenced video overlay (web only) |
 
 ## GeoJSON source
 
@@ -114,6 +115,46 @@ await controller.addSource(
 );
 ```
 
+The `url` and the four corners are required: without them `addSource` throws
+a `PlatformException` with code `INVALID_ARGUMENT`. To show image bytes
+instead, use `addImageSource()`, and `updateImageSource()` to change the bytes
+or the corners later.
+
+`getSourceProperties()` reads an image source the same way on every platform:
+`type` is `image`, `coordinates` the four corners in the order above, and
+`url` only when the image comes from a url.
+
+## Video source (web only)
+
+```dart
+await controller.addSource(
+  'drone',
+  const VideoSourceProperties(
+    urls: ['https://example.com/drone.mp4', 'https://example.com/drone.webm'],
+    coordinates: [
+      [-122.5160, 37.5624],
+      [-122.5147, 37.5641],
+      [-122.5131, 37.5634],
+      [-122.5142, 37.5616],
+    ],
+  ),
+);
+```
+
+MapLibre Native has no video source: on Android and iOS `addSource` throws
+`UNSUPPORTED_SOURCE_TYPE`.
+
+## Which layer draws which source
+
+A layer draws only the sources whose tiles it can read. Any other pair throws
+`UNSUPPORTED_SOURCE_TYPE` and adds nothing.
+
+| Layer | Source |
+|---|---|
+| fill, line, symbol, circle, heatmap, fill-extrusion | GeoJSON, vector |
+| raster, image layer | raster, image (and video on web) |
+| hillshade, color relief | raster DEM |
+
 ## PMTiles
 
 PMTiles is a self-hosted single-file vector tile format. It uses a `pmtiles://` URL scheme in the style JSON, with no special Dart code needed. See the [PMTiles guide](../advanced/pmtiles.md) for the full walkthrough.
@@ -131,3 +172,5 @@ first. See the [MBTiles guide](../advanced/mbtiles.md).
 - [`GeojsonSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/GeojsonSourceProperties-class.html)
 - [`VectorSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/VectorSourceProperties-class.html)
 - [`RasterSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/RasterSourceProperties-class.html)
+- [`ImageSourceProperties`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/ImageSourceProperties-class.html)
+- [`MapLibreMapController.getSourceProperties()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/getSourceProperties.html)

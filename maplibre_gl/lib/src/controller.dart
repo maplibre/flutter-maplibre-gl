@@ -523,10 +523,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   ///
-  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
-  /// [sourceId] is already in use, and `STYLE_NOT_READY` before the style has
-  /// loaded. On iOS it also throws `INVALID_GEOJSON` for data MapLibre cannot
-  /// read; Android and web add the source, which MapLibre leaves empty.
+  /// Throws a [PlatformException] with code `INVALID_GEOJSON` if [geojson] is
+  /// not a valid FeatureCollection, Feature or geometry (a feature `id` must
+  /// be a string or a number), `SOURCE_ALREADY_EXISTS` if [sourceId] is
+  /// already in use, and `STYLE_NOT_READY` before the style has loaded.
   Future<void> addGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson, {
@@ -551,10 +551,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   ///
-  /// Throws a [PlatformException] with code `SOURCE_NOT_FOUND` if the style
-  /// has no GeoJSON source [sourceId], and `STYLE_NOT_READY` before the style
-  /// has loaded. On iOS it also throws `INVALID_GEOJSON` for data MapLibre
-  /// cannot read.
+  /// Throws a [PlatformException] with code `INVALID_GEOJSON` if [geojson] is
+  /// not valid GeoJSON (see [addGeoJsonSource]), `SOURCE_NOT_FOUND` if the
+  /// style has no GeoJSON source [sourceId], and `STYLE_NOT_READY` before the
+  /// style has loaded.
   Future<void> setGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson,
@@ -566,8 +566,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// [geojsonFeature].
   ///
   /// This only works if the data of the source was set with
-  /// [addGeoJsonSource] or [setGeoJsonSource]. For a source added some other
-  /// way, or a feature whose id the data does not hold, nothing changes.
+  /// [addGeoJsonSource], [setGeoJsonSource] or [editGeoJsonSource]. For any
+  /// other source, or a feature whose id the data does not hold, nothing
+  /// changes.
   ///
   /// [geojsonFeature] has to be a GeoJSON Feature, as specified in
   /// https://datatracker.ietf.org/doc/html/rfc7946#section-3.2
@@ -575,9 +576,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   ///
-  /// Throws a [PlatformException] with code `SOURCE_NOT_FOUND` if the style
-  /// has no GeoJSON source [sourceId], `INVALID_GEOJSON` if [geojsonFeature]
-  /// is not a Feature, and `STYLE_NOT_READY` before the style has loaded.
+  /// Throws a [PlatformException] with code `INVALID_GEOJSON` if
+  /// [geojsonFeature] is not a valid GeoJSON Feature, `SOURCE_NOT_FOUND` if
+  /// the style has no GeoJSON source [sourceId], and `STYLE_NOT_READY` before
+  /// the style has loaded.
   Future<void> setGeoJsonFeature(
     String sourceId,
     Map<String, dynamic> geojsonFeature,
@@ -708,9 +710,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addSymbolLayer(
     String sourceId,
     String layerId,
@@ -757,9 +762,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addLineLayer(
     String sourceId,
     String layerId,
@@ -794,7 +802,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// NOTE: The [properties] will not skip null values, so setting a property to null will potentially reset it to default.
   ///
   /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
-  /// style has no layer with [layerId].
+  /// style has no layer with [layerId], `INVALID_EXPRESSION` for an
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a value of the wrong
+  /// kind, and `STYLE_NOT_READY` before the style has loaded. A failed call
+  /// changes no property. Properties of another layer type are ignored.
   Future<void> setLayerProperties(
     String layerId,
     LayerProperties properties,
@@ -827,9 +838,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addFillLayer(
     String sourceId,
     String layerId,
@@ -876,9 +890,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addFillExtrusionLayer(
     String sourceId,
     String layerId,
@@ -925,9 +942,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addCircleLayer(
     String sourceId,
     String layerId,
@@ -969,8 +989,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a raster or
+  /// image source (or a video source, on web),
+  /// `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a property value MapLibre
+  /// rejects, and `STYLE_NOT_READY` before the style has loaded. A failed call
+  /// adds nothing. A [belowLayerId] the style does not hold puts the layer on
+  /// top.
   Future<void> addRasterLayer(
     String sourceId,
     String layerId,
@@ -1008,8 +1032,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a raster dem
+  /// source,
+  /// `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a property value MapLibre
+  /// rejects, and `STYLE_NOT_READY` before the style has loaded. A failed call
+  /// adds nothing. A [belowLayerId] the style does not hold puts the layer on
+  /// top.
   Future<void> addHillshadeLayer(
     String sourceId,
     String layerId,
@@ -1047,8 +1075,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a raster dem
+  /// source,
+  /// `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a property value MapLibre
+  /// rejects, and `STYLE_NOT_READY` before the style has loaded. A failed call
+  /// adds nothing. A [belowLayerId] the style does not hold puts the layer on
+  /// top.
   Future<void> addColorReliefLayer(
     String sourceId,
     String layerId,
@@ -1090,7 +1122,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, and `STYLE_NOT_READY` before the style has
-  /// loaded. A [belowLayerId] the style does not hold puts the layer on top.
+  /// loaded, and `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a property
+  /// value MapLibre rejects. A failed call adds nothing. A [belowLayerId] the
+  /// style does not hold puts the layer on top.
   Future<void> addBackgroundLayer(
     String layerId,
     BackgroundLayerProperties properties, {
@@ -1128,9 +1162,12 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], `INVALID_EXPRESSION` for a [filter] MapLibre does not
-  /// accept, and `STYLE_NOT_READY` before the style has loaded. A
-  /// [belowLayerId] the style does not hold puts the layer on top.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not a GeoJSON or
+  /// vector source, `INVALID_EXPRESSION` for a [filter] or property
+  /// expression MapLibre rejects, `INVALID_ARGUMENT` for a property value of
+  /// the wrong kind, and `STYLE_NOT_READY` before the style has loaded. A
+  /// failed call adds nothing. A [belowLayerId] the style does not hold puts
+  /// the layer on top.
   Future<void> addHeatmapLayer(
     String sourceId,
     String layerId,
@@ -1375,8 +1412,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The [id] specifies the source identifier, and [data] contains the new
   /// GeoJSON data as a string.
   ///
-  /// The returned [Future] completes with true if the source was successfully
-  /// updated, false otherwise.
+  /// The returned [Future] completes with true if the source was updated, and
+  /// false without a style or a GeoJSON source [id]. Throws a
+  /// [PlatformException] with code `INVALID_GEOJSON` if [data] is not valid
+  /// GeoJSON text (see [addGeoJsonSource]).
   Future<bool> editGeoJsonSource(String id, String data) async {
     return _maplibrePlatform.editGeoJsonSource(id, data);
   }
@@ -1386,8 +1425,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// The [id] specifies the source identifier, and [url] contains the new
   /// URL for the GeoJSON data.
   ///
-  /// The returned [Future] completes with true if the source was successfully
-  /// updated, false otherwise.
+  /// The returned [Future] completes with true if the source was updated, and
+  /// false without a style or a GeoJSON source [id].
   Future<bool> editGeoJsonUrl(String id, String url) async {
     return _maplibrePlatform.editGeoJsonUrl(id, url);
   }
@@ -2182,6 +2221,10 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Removes previously added source by id
+  ///
+  /// A source the style does not hold is no error. Throws a
+  /// [PlatformException] with code `STYLE_NOT_READY` before the style has
+  /// loaded.
   Future<void> removeSource(String sourceId) {
     return _maplibrePlatform.removeSource(sourceId);
   }
@@ -2190,8 +2233,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [imageSourceId], and `STYLE_NOT_READY` before the style has
-  /// loaded.
+  /// source [imageSourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not an image
+  /// or raster source, and `STYLE_NOT_READY` before the style has loaded.
   Future<void> addImageLayer(
     String layerId,
     String imageSourceId, {
@@ -2208,7 +2251,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `LAYER_ALREADY_EXISTS` if
   /// [layerId] is already in use, `SOURCE_NOT_FOUND` if the style has no
-  /// source [sourceId], and `STYLE_NOT_READY` before the style has loaded.
+  /// source [sourceId], `UNSUPPORTED_SOURCE_TYPE` if it is not an image or
+  /// raster source, and `STYLE_NOT_READY` before the style has loaded.
   Future<void> addImageLayerBelow(
     String layerId,
     String sourceId,
@@ -2228,7 +2272,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Removes a MapLibre style layer
   ///
   /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
-  /// style has no layer with [layerId].
+  /// style has no layer with [layerId], and `STYLE_NOT_READY` before the
+  /// style has loaded.
   Future<void> removeLayer(String layerId) {
     return _maplibrePlatform.removeLayer(layerId);
   }
@@ -2308,14 +2353,21 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getMetersPerPixelAtLatitude(latitude);
   }
 
-  /// Add a new source to the map
+  /// Adds a source to the style.
   ///
-  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if the
-  /// source id is already in use, and `STYLE_NOT_READY` before the style has
-  /// loaded. On Android and iOS it also throws `UNSUPPORTED_SOURCE_TYPE` for
-  /// a source type they cannot add, such as video, and `INVALID_ARGUMENT` for
-  /// properties they cannot build a source from, such as a tiled source with
-  /// neither a url nor tiles.
+  /// An [ImageSourceProperties] source loads its image from `url` on every
+  /// platform; for image bytes use [addImageSource].
+  ///
+  /// Throws a [PlatformException] with code `SOURCE_ALREADY_EXISTS` if
+  /// [sourceid] is already in use, `INVALID_GEOJSON` for inline GeoJSON data
+  /// that is not valid GeoJSON, `INVALID_ARGUMENT` for properties no source
+  /// can be built from (a tiled source with neither url nor tiles, a GeoJSON
+  /// source without data, an image source without a url or four corners), and
+  /// `STYLE_NOT_READY` before the style has loaded.
+  ///
+  /// **Platform support**: [VideoSourceProperties] is web only. Android and
+  /// iOS throw `UNSUPPORTED_SOURCE_TYPE`, since MapLibre Native has no video
+  /// source.
   Future<void> addSource(String sourceid, SourceProperties properties) async {
     return _maplibrePlatform.addSource(sourceid, properties);
   }
@@ -2361,6 +2413,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// ColorReliefLayer.
   ///
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
+  ///
+  /// Throws what the add method of the type of [properties] throws, such as
+  /// [addLineLayer].
   Future<void> addLayer(
     String sourceId,
     String layerId,
@@ -2568,7 +2623,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Shows or hides the layer with [layerId].
   ///
   /// Throws a [PlatformException] with code `LAYER_NOT_FOUND_ERROR` if the
-  /// style has no layer with [layerId].
+  /// style has no layer with [layerId], and `STYLE_NOT_READY` before the
+  /// style has loaded.
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
@@ -2584,6 +2640,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// still changed. The returned [Future] completes with the skipped ids, in
   /// the order given and without repeats, or an empty list when every layer
   /// was found; debug builds also print them.
+  ///
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
+  /// style has loaded, unless [layerIds] is empty.
   Future<List<String>> setLayersVisibility(
     List<String> layerIds,
     bool visible,
@@ -2656,6 +2715,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// live, so it follows [setLayerZoomRange], while the other properties read
   /// as loaded. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
+  ///
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
+  /// style has loaded.
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) {
     return _maplibrePlatform.getLayerProperties(layerId);
   }
@@ -2667,15 +2729,21 @@ class MapLibreMapController extends ChangeNotifier {
   /// contains `type` plus the type-specific properties (e.g. `url`, `tiles`,
   /// `data`, `attribution`, `minzoom`, `maxzoom`).
   ///
-  /// **Android**: a source added at runtime reports only `type`, plus `url`
-  /// (`data` for GeoJSON loaded from a URL) and `attribution` when set. A
-  /// source from the style reports its full entry as loaded.
+  /// An image source reads the same on every platform: `type` is `image`,
+  /// `coordinates` its four [longitude, latitude] corners (top left, top
+  /// right, bottom right, bottom left), and `url` is there only when the
+  /// image comes from a url, not from bytes.
   ///
-  /// **iOS**: only sources that came with the style are readable. iOS reads the
-  /// style as it was loaded, so a source added at runtime through this API is
-  /// not in it and this answers null for it, where Android and web answer
-  /// normally. See
+  /// **Android**: any other source added at runtime reports only `type`,
+  /// plus `url` (`data` for GeoJSON loaded from a URL) and `attribution` when
+  /// set. A source from the style reports its full entry as loaded.
+  ///
+  /// **iOS**: apart from image sources, only sources that came with the
+  /// style are readable; this answers null for one added at runtime. See
   /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
+  ///
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
+  /// style has loaded.
   Future<Map<String, dynamic>?> getSourceProperties(String sourceId) {
     return _maplibrePlatform.getSourceProperties(sourceId);
   }

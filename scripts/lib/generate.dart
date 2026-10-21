@@ -115,6 +115,10 @@ Future<void> main() async {
           "type": type.replaceAll("_", "-"),
           "typePascal": ReCase(type).pascalCase,
           "properties": buildSourceProperties(styleJson, "source_$type"),
+          "classDocSplit": [
+            for (final line in buildClassDocSplit(sourceClassDocs[type]))
+              {"part": line},
+          ],
         },
     ],
     'expressions': buildExpressionProperties(styleJson),
@@ -364,6 +368,29 @@ Map<String, dynamic> buildStyleProperty(
   };
 }
 
+/// Class docs of the source properties, one paragraph per entry.
+const Map<String, List<String>> sourceClassDocs = {
+  "video": ["A video source.", _videoSourceSupport],
+  "image": [_imageSourceDoc],
+};
+
+const _videoSourceSupport =
+    "**Platform support**: web only. On Android and iOS "
+    "`MapLibreMapController.addSource` throws `UNSUPPORTED_SOURCE_TYPE`.";
+
+const _imageSourceDoc =
+    "An image drawn from a url over four corners of the map, on every "
+    "platform. For image bytes, use `MapLibreMapController.addImageSource`.";
+
+/// The lines of the doc of a source property class, from [paragraphs], or no
+/// lines without any.
+List<String> buildClassDocSplit(List<String>? paragraphs) => [
+  for (final (i, paragraph) in (paragraphs ?? const <String>[]).indexed) ...[
+    if (i > 0) "",
+    ...splitIntoChunks(paragraph, 76),
+  ],
+];
+
 /// The kind of constant each layer property takes, by name, for the Swift
 /// converter, which checks constants MapLibre on iOS does not: `number`,
 /// `boolean`, `string`, `color`, `enum:` with its values joined by `|`, or
@@ -403,16 +430,37 @@ String? constantKind(Map<String, dynamic> spec) {
   return 'array:${spec['length'] ?? '*'}:$item';
 }
 
+/// Source property docs that replace the spec's, by spec section and
+/// property. The spec makes the url of an image source optional, but
+/// MapLibre Native cannot build one without it.
+const sourcePropertyDocOverrides = {
+  "source_image": {
+    "url":
+        "URL that points to an image. Required: `addSource` throws "
+        "`INVALID_ARGUMENT` without it.",
+    "coordinates":
+        "Corners of the image as [longitude, latitude]: top left, top right, "
+        "bottom right, bottom left. Required: `addSource` throws "
+        "`INVALID_ARGUMENT` without four of them on the map.",
+  },
+};
+
 /// Build the list of source properties (excluding generic wildcard entries).
 List<Map<String, dynamic>> buildSourceProperties(
   Map<String, dynamic> styleJson,
   String key,
 ) {
   final Map<String, dynamic> items = styleJson[key];
+  final overrides = sourcePropertyDocOverrides[key] ?? const {};
 
   return items.entries
       .where((e) => e.key != "*" && e.key != "type")
-      .map((e) => buildSourceProperty(e.key, e.value))
+      .map(
+        (e) => buildSourceProperty(e.key, {
+          ...e.value as Map<String, dynamic>,
+          if (overrides[e.key] case final doc?) "doc": doc,
+        }),
+      )
       .toList();
 }
 
