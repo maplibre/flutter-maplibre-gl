@@ -516,435 +516,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // The map view's delegate auto-fires map#onUserLocationUpdated.
             manualLocationManager.push(location)
             result(nil)
-        case "map#setLayerFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["id"] as? String else { return }
-            guard let layerFilter = arguments["filter"] as? String else { return }
-            guard let style = self.mapView.style else { return }
-
-            var ret: Bool = false
-            var reply: [String: Bool] = [:]
-            let layer = style.layer(withIdentifier: layerId)
-            if layer != nil {
-                do {
-                    if let data = layerFilter.data(using: .utf8) {
-                        let jsonFilter = try JSONSerialization.jsonObject(with: data, options: [])
-                        let predicate = NSPredicate(mglJSONObject: jsonFilter)
-                        if let layer = layer as? MLNVectorStyleLayer {
-                            layer.predicate = predicate
-                            ret = true
-                        }
-                    }
-                } catch {
-                    print("Error parsing filter: \(error.localizedDescription)")
-                }
-            }
-
-            reply["result"] = ret
-            result(reply)
-        case "symbolLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-
-            let addResult = addSymbolLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                enableInteraction: enableInteraction,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "lineLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-
-            let addResult = addLineLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                enableInteraction: enableInteraction,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "layer#setProperties":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
-                return
-            }
-
-            //switch depending on the runtime type of layer
-            switch layer {
-            case let lineLayer as MLNLineStyleLayer:
-                LayerPropertyConverter.addLineProperties(lineLayer: lineLayer, properties: properties)
-            case let fillLayer as MLNFillStyleLayer:
-                LayerPropertyConverter.addFillProperties(fillLayer: fillLayer, properties: properties)
-            case let circleLayer as MLNCircleStyleLayer:
-                LayerPropertyConverter.addCircleProperties(circleLayer: circleLayer, properties: properties)
-             case let symbolLayer as MLNSymbolStyleLayer:
-                LayerPropertyConverter.addSymbolProperties(symbolLayer: symbolLayer, properties: properties)
-            case let rasterLayer as MLNRasterStyleLayer:
-                LayerPropertyConverter.addRasterProperties(rasterLayer: rasterLayer, properties: properties)
-            case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
-                LayerPropertyConverter.addFillExtrusionProperties(fillExtrusionLayer: fillExtrusionLayer, properties: properties)
-            case let heatmapLayer as MLNHeatmapStyleLayer:
-                LayerPropertyConverter.addHeatmapProperties(heatmapLayer: heatmapLayer, properties: properties)
-            case let hillshadeLayer as MLNHillshadeStyleLayer:
-                LayerPropertyConverter.addHillshadeProperties(hillshadeLayer: hillshadeLayer, properties: properties)
-            case let colorReliefLayer as MLNColorReliefStyleLayer:
-                LayerPropertyConverter.addColorReliefProperties(colorReliefLayer: colorReliefLayer, properties: properties)
-            case let backgroundLayer as MLNBackgroundStyleLayer:
-                LayerPropertyConverter.addBackgroundProperties(backgroundLayer: backgroundLayer, properties: properties)
-            default:
-                result(FlutterError(
-                    code: "UNSUPPORTED_LAYER_TYPE",
-                    message: "Layer type not supported",
-                    details: ""
-                ))
-                return
-            }
-
-            result(nil)
-
-        case "fillLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-
-            let addResult = addFillLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                enableInteraction: enableInteraction,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "fillExtrusionLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-
-            let addResult = addFillExtrusionLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                enableInteraction: enableInteraction,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "circleLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-
-            let addResult = addCircleLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                enableInteraction: enableInteraction,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "hillshadeLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-
-            let addResult = addHillshadeLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                properties: properties
-            )
-
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "colorReliefLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-
-            let addResult = addColorReliefLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                properties: properties
-            )
-
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "backgroundLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-
-            let addResult = addBackgroundLayer(
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                properties: properties
-            )
-
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "heatmapLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let sourceLayer = arguments["sourceLayer"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let filter = arguments["filter"] as? String
-            let addResult = addHeatmapLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                sourceLayerIdentifier: sourceLayer,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                filter: filter,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "rasterLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-            let addResult = addRasterLayer(
-                sourceId: sourceId,
-                layerId: layerId,
-                belowLayerId: belowLayerId,
-                minimumZoomLevel: minzoom,
-                maximumZoomLevel: maxzoom,
-                properties: properties
-            )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "layer#setVisibility":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let visible = arguments["visible"] as? Bool else { return }
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(
-                   layerId: layerId
-                ).flutterError)
-                return
-            }
-            layer.isVisible = visible
-            result(nil)
-
-        case "layer#setVisibilityBatch":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerIds = arguments["layerIds"] as? [String],
-                  let visible = arguments["visible"] as? Bool
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "setLayersVisibility requires 'layerIds' and 'visible'.",
-                    details: nil
-                ))
-                return
-            }
-            // Unknown ids are skipped and returned, as on Android and web.
-            // Without a style no layer is found, as for layer#setVisibility.
-            var missingLayerIds: [String] = []
-            for layerId in layerIds {
-                guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                    if !missingLayerIds.contains(layerId) {
-                        missingLayerIds.append(layerId)
-                    }
-                    continue
-                }
-                layer.isVisible = visible
-            }
-            result(missingLayerIds)
-
-        case "layer#setZoomRange":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerId = arguments["layerId"] as? String,
-                  let minzoom = arguments["minzoom"] as? Double,
-                  let maxzoom = arguments["maxzoom"] as? Double
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "setLayerZoomRange requires 'layerId', 'minzoom' and 'maxzoom'.",
-                    details: nil
-                ))
-                return
-            }
-            // Checked here because MapLibre takes any range, and Android and
-            // web reject the same values.
-            guard minzoom >= 0, maxzoom <= 24, minzoom <= maxzoom else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "Invalid zoom range [\(minzoom), \(maxzoom)]: both must be within 0 and 24, "
-                        + "with minzoom not above maxzoom.",
-                    details: nil
-                ))
-                return
-            }
-            guard let style = mapView.style else {
-                result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    details: nil
-                ))
-                return
-            }
-            guard let layer = style.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
-                return
-            }
-            layer.minimumZoomLevel = Float(minzoom)
-            layer.maximumZoomLevel = Float(maxzoom)
-            result(nil)
-
-        case "layer#getVisibility":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerId = arguments["layerId"] as? String
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "getLayerVisibility needs a 'layerId' string.",
-                    details: nil
-                ))
-                return
-            }
-            // Without a style there is no layer to look up, and null would read
-            // as "no such layer", so report it as Android does.
-            guard let style = mapView.style else {
-                result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    details: nil
-                ))
-                return
-            }
-            // Documented contract: null tells the caller there is no such layer.
-            guard let layer = style.layer(withIdentifier: layerId) else {
-                result(nil)
-                return
-            }
-            result(layer.isVisible)
-
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -2024,6 +1595,375 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     func styleSetStyle(style: String, result: @escaping FlutterResult) {
         setStyleString(styleString: style)
         result(nil)
+    }
+
+    // MARK: Dart calls: layers
+
+    func symbolLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addSymbolLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            enableInteraction: enableInteraction,
+            properties: properties
+        ), result)
+    }
+
+    func lineLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addLineLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            enableInteraction: enableInteraction,
+            properties: properties
+        ), result)
+    }
+
+    func circleLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addCircleLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            enableInteraction: enableInteraction,
+            properties: properties
+        ), result)
+    }
+
+    func fillLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addFillLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            enableInteraction: enableInteraction,
+            properties: properties
+        ), result)
+    }
+
+    func fillExtrusionLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addFillExtrusionLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            enableInteraction: enableInteraction,
+            properties: properties
+        ), result)
+    }
+
+    func rasterLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addRasterLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: properties
+        ), result)
+    }
+
+    func hillshadeLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addHillshadeLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: properties
+        ), result)
+    }
+
+    func colorReliefLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addColorReliefLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: properties
+        ), result)
+    }
+
+    func backgroundLayerAdd(
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addBackgroundLayer(
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            properties: properties
+        ), result)
+    }
+
+    func heatmapLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        properties: [String: Any],
+        result: @escaping FlutterResult
+    ) {
+        answer(addHeatmapLayer(
+            sourceId: sourceId,
+            layerId: layerId,
+            belowLayerId: belowLayerId,
+            sourceLayerIdentifier: sourceLayer,
+            minimumZoomLevel: minzoom,
+            maximumZoomLevel: maxzoom,
+            filter: filter,
+            properties: properties
+        ), result)
+    }
+
+    func layerSetProperties(layerId: String, properties: [String: Any], result: @escaping FlutterResult) {
+        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+            return
+        }
+
+        //switch depending on the runtime type of layer
+        switch layer {
+        case let lineLayer as MLNLineStyleLayer:
+            LayerPropertyConverter.addLineProperties(lineLayer: lineLayer, properties: properties)
+        case let fillLayer as MLNFillStyleLayer:
+            LayerPropertyConverter.addFillProperties(fillLayer: fillLayer, properties: properties)
+        case let circleLayer as MLNCircleStyleLayer:
+            LayerPropertyConverter.addCircleProperties(circleLayer: circleLayer, properties: properties)
+         case let symbolLayer as MLNSymbolStyleLayer:
+            LayerPropertyConverter.addSymbolProperties(symbolLayer: symbolLayer, properties: properties)
+        case let rasterLayer as MLNRasterStyleLayer:
+            LayerPropertyConverter.addRasterProperties(rasterLayer: rasterLayer, properties: properties)
+        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+            LayerPropertyConverter.addFillExtrusionProperties(fillExtrusionLayer: fillExtrusionLayer, properties: properties)
+        case let heatmapLayer as MLNHeatmapStyleLayer:
+            LayerPropertyConverter.addHeatmapProperties(heatmapLayer: heatmapLayer, properties: properties)
+        case let hillshadeLayer as MLNHillshadeStyleLayer:
+            LayerPropertyConverter.addHillshadeProperties(hillshadeLayer: hillshadeLayer, properties: properties)
+        case let colorReliefLayer as MLNColorReliefStyleLayer:
+            LayerPropertyConverter.addColorReliefProperties(colorReliefLayer: colorReliefLayer, properties: properties)
+        case let backgroundLayer as MLNBackgroundStyleLayer:
+            LayerPropertyConverter.addBackgroundProperties(backgroundLayer: backgroundLayer, properties: properties)
+        default:
+            result(FlutterError(
+                code: "UNSUPPORTED_LAYER_TYPE",
+                message: "Layer type not supported",
+                details: ""
+            ))
+            return
+        }
+
+        result(nil)
+    }
+
+    func layerSetVisibility(layerId: String, visible: Bool, result: @escaping FlutterResult) {
+        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(
+               layerId: layerId
+            ).flutterError)
+            return
+        }
+        layer.isVisible = visible
+        result(nil)
+    }
+
+    func layerSetVisibilityBatch(layerIds: [String], visible: Bool, result: @escaping FlutterResult) {
+        // Unknown ids are skipped and returned, as on Android and web.
+        // Without a style no layer is found, as for layerSetVisibility.
+        var missingLayerIds: [String] = []
+        for layerId in layerIds {
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                if !missingLayerIds.contains(layerId) {
+                    missingLayerIds.append(layerId)
+                }
+                continue
+            }
+            layer.isVisible = visible
+        }
+        result(missingLayerIds)
+    }
+
+    func layerSetZoomRange(
+        layerId: String,
+        minzoom: Double,
+        maxzoom: Double,
+        result: @escaping FlutterResult
+    ) {
+        // Checked here because MapLibre takes any range, and Android and
+        // web reject the same values.
+        guard minzoom >= 0, maxzoom <= 24, minzoom <= maxzoom else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "Invalid zoom range [\(minzoom), \(maxzoom)]: both must be within 0 and 24, "
+                    + "with minzoom not above maxzoom.",
+                details: nil
+            ))
+            return
+        }
+        guard let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+            return
+        }
+        layer.minimumZoomLevel = Float(minzoom)
+        layer.maximumZoomLevel = Float(maxzoom)
+        result(nil)
+    }
+
+    func layerGetVisibility(layerId: String, result: @escaping FlutterResult) {
+        // Without a style there is no layer to look up, and null would read
+        // as "no such layer", so report it as Android does.
+        guard let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
+        // Documented contract: null tells the caller there is no such layer.
+        guard let layer = style.layer(withIdentifier: layerId) else {
+            result(nil)
+            return
+        }
+        result(layer.isVisible)
+    }
+
+    func mapSetLayerFilter(id layerId: String, filter layerFilter: String, result: @escaping FlutterResult) {
+        guard let style = self.mapView.style else { return }
+
+        var ret: Bool = false
+        var reply: [String: Bool] = [:]
+        let layer = style.layer(withIdentifier: layerId)
+        if layer != nil {
+            do {
+                if let data = layerFilter.data(using: .utf8) {
+                    let jsonFilter = try JSONSerialization.jsonObject(with: data, options: [])
+                    let predicate = NSPredicate(mglJSONObject: jsonFilter)
+                    if let layer = layer as? MLNVectorStyleLayer {
+                        layer.predicate = predicate
+                        ret = true
+                    }
+                }
+            } catch {
+                print("Error parsing filter: \(error.localizedDescription)")
+            }
+        }
+
+        reply["result"] = ret
+        result(reply)
     }
 
     private func loadIconImage(name: String) -> UIImage? {

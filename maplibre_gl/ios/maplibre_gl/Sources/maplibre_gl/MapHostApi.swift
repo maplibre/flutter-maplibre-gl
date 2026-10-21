@@ -170,14 +170,6 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    func mapSetLayerFilter(
-        id: String,
-        filter: String,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send("map#setLayerFilter", ["id": id, "filter": filter], result: anyResult(completion))
-    }
-
     // MARK: Camera
 
     func cameraAnimate(
@@ -673,21 +665,20 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "symbolLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "enableInteraction": enableInteraction,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.symbolLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func lineLayerAdd(
@@ -702,21 +693,20 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "lineLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "enableInteraction": enableInteraction,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.lineLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func circleLayerAdd(
@@ -731,21 +721,20 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "circleLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "enableInteraction": enableInteraction,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.circleLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func fillLayerAdd(
@@ -760,21 +749,20 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "fillLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "enableInteraction": enableInteraction,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.fillLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func fillExtrusionLayerAdd(
@@ -789,21 +777,20 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "fillExtrusionLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "enableInteraction": enableInteraction,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.fillExtrusionLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                enableInteraction: enableInteraction,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func rasterLayerAdd(
@@ -815,18 +802,17 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "rasterLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.rasterLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func hillshadeLayerAdd(
@@ -838,18 +824,17 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "hillshadeLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.hillshadeLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func colorReliefLayerAdd(
@@ -861,18 +846,17 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "colorReliefLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.colorReliefLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func backgroundLayerAdd(
@@ -883,17 +867,16 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "backgroundLayer#add",
-            [
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.backgroundLayerAdd(
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func heatmapLayerAdd(
@@ -907,20 +890,19 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "heatmapLayer#add",
-            [
-                "sourceId": sourceId,
-                "layerId": layerId,
-                "belowLayerId": belowLayerId,
-                "sourceLayer": sourceLayer,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-                "filter": filter,
-                "properties": properties,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.heatmapLayerAdd(
+                sourceId: sourceId,
+                layerId: layerId,
+                belowLayerId: belowLayerId,
+                sourceLayer: sourceLayer,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                filter: filter,
+                properties: plainMap(properties),
+                result: $1
+            )
+        }
     }
 
     func layerSetProperties(
@@ -928,11 +910,9 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "layer#setProperties",
-            ["layerId": layerId, "properties": properties],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.layerSetProperties(layerId: layerId, properties: plainMap(properties), result: $1)
+        }
     }
 
     func layerSetVisibility(
@@ -940,11 +920,9 @@ final class MapHostApi: MapLibreMapHostApi {
         visible: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "layer#setVisibility",
-            ["layerId": layerId, "visible": visible],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.layerSetVisibility(layerId: layerId, visible: visible, result: $1)
+        }
     }
 
     func layerSetVisibilityBatch(
@@ -952,11 +930,9 @@ final class MapHostApi: MapLibreMapHostApi {
         visible: Bool,
         completion: @escaping (Result<[String]?, Error>) -> Void
     ) {
-        send(
-            "layer#setVisibilityBatch",
-            ["layerIds": layerIds, "visible": visible],
-            result: pigeonResult(completion) { $0 as? [String] }
-        )
+        run(pigeonResult(completion) { $0 as? [String] }) {
+            $0.layerSetVisibilityBatch(layerIds: layerIds, visible: visible, result: $1)
+        }
     }
 
     func layerSetZoomRange(
@@ -965,22 +941,26 @@ final class MapHostApi: MapLibreMapHostApi {
         maxzoom: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "layer#setZoomRange",
-            ["layerId": layerId, "minzoom": minzoom, "maxzoom": maxzoom],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.layerSetZoomRange(layerId: layerId, minzoom: minzoom, maxzoom: maxzoom, result: $1)
+        }
     }
 
     func layerGetVisibility(
         layerId: String,
         completion: @escaping (Result<Bool?, Error>) -> Void
     ) {
-        send(
-            "layer#getVisibility",
-            ["layerId": layerId],
-            result: pigeonResult(completion) { $0 as? Bool }
-        )
+        run(pigeonResult(completion) { $0 as? Bool }) {
+            $0.layerGetVisibility(layerId: layerId, result: $1)
+        }
+    }
+
+    func mapSetLayerFilter(
+        id: String,
+        filter: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        run(anyResult(completion)) { $0.mapSetLayerFilter(id: id, filter: filter, result: $1) }
     }
 
     // MARK: Dispatch
