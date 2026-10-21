@@ -393,129 +393,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // initial camera, never under it.
         applyInitialCameraIfNeeded()
         switch methodCall.method {
-        case "locationComponent#getLastLocation":
-            var reply = [String: NSObject]()
-            if let loc = mapView.userLocation?.location?.coordinate {
-                reply["latitude"] = loc.latitude as NSObject
-                reply["longitude"] = loc.longitude as NSObject
-                result(reply)
-            } else {
-                result(
-                    FlutterError(
-                        code: "LOCATION_UNAVAILABLE",
-                        message: "User location is not available",
-                        details: nil
-                    )
-                )
-            }
-        case "locationComponent#setTrackingCameraOptions":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let tilt = (arguments["tilt"] as? NSNumber)?.doubleValue
-            else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGUMENT",
-                        message: "Missing or invalid 'tilt'.",
-                        details: nil
-                    )
-                )
-                return
-            }
-            // Same precondition Android checks, and the same error code: without the
-            // user-location component there is nothing to track, and telling the app
-            // to enable a tracking mode would not be the fix.
-            guard mapView.showsUserLocation else {
-                result(
-                    FlutterError(
-                        code: "LOCATION_COMPONENT_NOT_READY",
-                        message: "The location component is not ready. Ensure the map was "
-                            + "created with myLocationEnabled: true.",
-                        details: nil
-                    )
-                )
-                return
-            }
-            guard mapView.userTrackingMode != .none else {
-                result(
-                    FlutterError(
-                        code: "TRACKING_NOT_ACTIVE",
-                        message: "A tracking mode other than MyLocationTrackingMode.none "
-                            + "must be active before a tracking camera option can be applied.",
-                        details: nil
-                    )
-                )
-                return
-            }
-            // The iOS SDK has no tracking-aware camera call, so the pitch goes through
-            // the ordinary camera. That is safe on the pinned SDK:
-            // `setCamera(_:withDuration:...)` leaves `userTrackingMode` alone, and the
-            // follow paths (`didUpdateLocationIncrementallyDuration:`,
-            // `didUpdateLocationSignificantlyAnimated:`) never write the pitch, so the
-            // camera keeps following the user tilted. Nothing is restored afterwards on
-            // purpose: a mode change arriving during the animation is the user panning,
-            // and putting the mode back would fight the gesture and hide the dismissal.
-            let camera = mapView.camera
-            camera.pitch = CGFloat(tilt)
-            let durationMs = (arguments["duration"] as? NSNumber)?.doubleValue
-            mapView.setCamera(
-                camera,
-                withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
-                animationTimingFunction: nil
-            ) { [weak self] in
-                // The completion runs both when the animation finishes and when it is
-                // interrupted, with no flag telling the two apart, so the pitch that
-                // actually landed decides the answer. Android reports a cancelled tilt
-                // as false the same way, and the Dart API promises that.
-                guard let self = self else {
-                    result(false)
-                    return
-                }
-                result(abs(self.mapView.camera.pitch - CGFloat(tilt)) < 0.5)
-            }
-        case "locationComponent#setManualLocation":
-            guard manualLocationSource else {
-                result(
-                    FlutterError(
-                        code: "MANUAL_LOCATION_SOURCE_DISABLED",
-                        message: "Manual locations require locationSource: ManualLocationSource().",
-                        details: nil
-                    )
-                )
-                return
-            }
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let position = arguments["position"] as? [Double],
-                  position.count >= 2
-            else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGUMENT",
-                        message: "Missing or invalid 'position'.",
-                        details: nil
-                    )
-                )
-                return
-            }
-            let coordinate = CLLocationCoordinate2D(
-                latitude: position[0],
-                longitude: position[1]
-            )
-            // Negative accuracies/course/speed mark a value as invalid in CLLocation.
-            let timestampMs = (arguments["timestamp"] as? NSNumber)?.doubleValue
-            let location = CLLocation(
-                coordinate: coordinate,
-                altitude: (arguments["altitude"] as? Double) ?? 0,
-                horizontalAccuracy: (arguments["horizontalAccuracy"] as? Double) ?? -1,
-                verticalAccuracy: (arguments["verticalAccuracy"] as? Double) ?? -1,
-                course: (arguments["bearing"] as? Double) ?? -1,
-                speed: (arguments["speed"] as? Double) ?? -1,
-                timestamp: timestampMs != nil
-                    ? Date(timeIntervalSince1970: timestampMs! / 1000.0)
-                    : Date()
-            )
-            // The map view's delegate auto-fires map#onUserLocationUpdated.
-            manualLocationManager.push(location)
-            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -1964,6 +1841,128 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         reply["result"] = ret
         result(reply)
+    }
+
+    // MARK: Dart calls: location component
+
+    func locationComponentSetTrackingCameraOptions(
+        tilt: Double,
+        duration: Int64?,
+        result: @escaping FlutterResult
+    ) {
+        // Same precondition Android checks, and the same error code: without the
+        // user-location component there is nothing to track, and telling the app
+        // to enable a tracking mode would not be the fix.
+        guard mapView.showsUserLocation else {
+            result(
+                FlutterError(
+                    code: "LOCATION_COMPONENT_NOT_READY",
+                    message: "The location component is not ready. Ensure the map was "
+                        + "created with myLocationEnabled: true.",
+                    details: nil
+                )
+            )
+            return
+        }
+        guard mapView.userTrackingMode != .none else {
+            result(
+                FlutterError(
+                    code: "TRACKING_NOT_ACTIVE",
+                    message: "A tracking mode other than MyLocationTrackingMode.none "
+                        + "must be active before a tracking camera option can be applied.",
+                    details: nil
+                )
+            )
+            return
+        }
+        // The iOS SDK has no tracking-aware camera call, so the pitch goes through
+        // the ordinary camera. That is safe on the pinned SDK:
+        // `setCamera(_:withDuration:...)` leaves `userTrackingMode` alone, and the
+        // follow paths (`didUpdateLocationIncrementallyDuration:`,
+        // `didUpdateLocationSignificantlyAnimated:`) never write the pitch, so the
+        // camera keeps following the user tilted. Nothing is restored afterwards on
+        // purpose: a mode change arriving during the animation is the user panning,
+        // and putting the mode back would fight the gesture and hide the dismissal.
+        let camera = mapView.camera
+        camera.pitch = CGFloat(tilt)
+        let durationMs = duration.map { Double($0) }
+        mapView.setCamera(
+            camera,
+            withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
+            animationTimingFunction: nil
+        ) { [weak self] in
+            // The completion runs both when the animation finishes and when it is
+            // interrupted, with no flag telling the two apart, so the pitch that
+            // actually landed decides the answer. Android reports a cancelled tilt
+            // as false the same way, and the Dart API promises that.
+            guard let self = self else {
+                result(false)
+                return
+            }
+            result(abs(self.mapView.camera.pitch - CGFloat(tilt)) < 0.5)
+        }
+    }
+
+    func locationComponentSetManualLocation(update: [String: Any], result: @escaping FlutterResult) {
+        guard manualLocationSource else {
+            result(
+                FlutterError(
+                    code: "MANUAL_LOCATION_SOURCE_DISABLED",
+                    message: "Manual locations require locationSource: ManualLocationSource().",
+                    details: nil
+                )
+            )
+            return
+        }
+        guard let position = update["position"] as? [Double],
+              position.count >= 2
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "Missing or invalid 'position'.",
+                    details: nil
+                )
+            )
+            return
+        }
+        let coordinate = CLLocationCoordinate2D(
+            latitude: position[0],
+            longitude: position[1]
+        )
+        // Negative accuracies/course/speed mark a value as invalid in CLLocation.
+        let timestampMs = (update["timestamp"] as? NSNumber)?.doubleValue
+        let location = CLLocation(
+            coordinate: coordinate,
+            altitude: (update["altitude"] as? Double) ?? 0,
+            horizontalAccuracy: (update["horizontalAccuracy"] as? Double) ?? -1,
+            verticalAccuracy: (update["verticalAccuracy"] as? Double) ?? -1,
+            course: (update["bearing"] as? Double) ?? -1,
+            speed: (update["speed"] as? Double) ?? -1,
+            timestamp: timestampMs != nil
+                ? Date(timeIntervalSince1970: timestampMs! / 1000.0)
+                : Date()
+        )
+        // The map view's delegate auto-fires map#onUserLocationUpdated.
+        manualLocationManager.push(location)
+        result(nil)
+    }
+
+    func locationComponentGetLastLocation(result: @escaping FlutterResult) {
+        var reply = [String: NSObject]()
+        if let loc = mapView.userLocation?.location?.coordinate {
+            reply["latitude"] = loc.latitude as NSObject
+            reply["longitude"] = loc.longitude as NSObject
+            result(reply)
+        } else {
+            result(
+                FlutterError(
+                    code: "LOCATION_UNAVAILABLE",
+                    message: "User location is not available",
+                    details: nil
+                )
+            )
+        }
     }
 
     private func loadIconImage(name: String) -> UIImage? {

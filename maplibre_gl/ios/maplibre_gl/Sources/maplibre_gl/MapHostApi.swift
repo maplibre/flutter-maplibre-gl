@@ -332,38 +332,6 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    // MARK: Location component
-
-    func locationComponentSetTrackingCameraOptions(
-        tilt: Double,
-        duration: Int64?,
-        completion: @escaping (Result<Bool?, Error>) -> Void
-    ) {
-        send(
-            "locationComponent#setTrackingCameraOptions",
-            ["tilt": tilt, "duration": duration],
-            result: pigeonResult(completion) { $0 as? Bool }
-        )
-    }
-
-    func locationComponentSetManualLocation(
-        update: [String: Any?],
-        completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        // The legacy arguments were the update itself, not a map holding it.
-        dispatch(
-            "locationComponent#setManualLocation",
-            arguments: plainMap(update),
-            result: voidResult(completion)
-        )
-    }
-
-    func locationComponentGetLastLocation(
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send("locationComponent#getLastLocation", result: anyResult(completion))
-    }
-
     // MARK: Sources
 
     func sourceAddGeoJson(
@@ -961,6 +929,33 @@ final class MapHostApi: MapLibreMapHostApi {
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
         run(anyResult(completion)) { $0.mapSetLayerFilter(id: id, filter: filter, result: $1) }
+    }
+
+    // MARK: Location component
+
+    func locationComponentSetTrackingCameraOptions(
+        tilt: Double,
+        duration: Int64?,
+        completion: @escaping (Result<Bool?, Error>) -> Void
+    ) {
+        run(pigeonResult(completion) { $0 as? Bool }) {
+            $0.locationComponentSetTrackingCameraOptions(tilt: tilt, duration: duration, result: $1)
+        }
+    }
+
+    func locationComponentSetManualLocation(
+        update: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.locationComponentSetManualLocation(update: plainMap(update), result: $1)
+        }
+    }
+
+    func locationComponentGetLastLocation(
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        run(anyResult(completion)) { $0.locationComponentGetLastLocation(result: $1) }
     }
 
     // MARK: Dispatch
