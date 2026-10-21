@@ -5,7 +5,8 @@
 // so it never needs the network, then replaces the region's metadata and
 // checks that both the returned region and getListOfRegions carry the new
 // metadata under the same id. A second case checks that an unknown id fails
-// with the same error code on both platforms.
+// with the same error code on both platforms, and a third that two downloads
+// started together both finish.
 //
 // The empty getListOfRegions right after launch on iOS (#381) is not covered:
 // it needs a cold start of the app with regions already stored, which a single
@@ -110,6 +111,35 @@ void main() {
         code: 'UpdateMetadataError',
       );
     });
+
+    testWidgets('two downloads at the same time both finish', (tester) async {
+      if (kIsWeb) return;
+
+      // Each download used to need its own setup call before it started, and
+      // the second setup overwrote the first, so starting two downloads
+      // together failed one of them. Areas apart from each other and from the
+      // other tests' region, so none replaces another as a duplicate.
+      final regions = await pumpUntil(
+        tester,
+        Future.wait([
+          _startTinyDownload(
+            server,
+            metadata: {'name': 'west'},
+            center: const LatLng(0, 20),
+          ),
+          _startTinyDownload(
+            server,
+            metadata: {'name': 'east'},
+            center: const LatLng(0, 30),
+          ),
+        ]),
+        'two downloads at the same time',
+      );
+      downloaded.addAll(regions.map((r) => r.id));
+
+      expect(regions.map((r) => r.metadata['name']), ['west', 'east']);
+      expect(regions.first.id, isNot(regions.last.id));
+    });
   });
 }
 
@@ -120,30 +150,39 @@ Future<OfflineRegion> _downloadTinyRegion(
   WidgetTester tester,
   TileServer server, {
   required Map<String, dynamic> metadata,
+}) => pumpUntil(
+  tester,
+  _startTinyDownload(server, metadata: metadata),
+  'the offline download to finish',
+);
+
+/// Starts downloading the region of a few tiles around [center] and
+/// completes with it once the download has finished. Does not pump: the
+/// caller does, once for any number of downloads.
+Future<OfflineRegion> _startTinyDownload(
+  TileServer server, {
+  required Map<String, dynamic> metadata,
+  LatLng center = const LatLng(0, 0),
 }) async {
   final finished = Completer<void>();
-  final region = await pumpUntil(
-    tester,
-    downloadOfflineRegion(
-      OfflineRegionDefinition(
-        bounds: LatLngBounds(
-          southwest: const LatLng(-1, -1),
-          northeast: const LatLng(1, 1),
-        ),
-        mapStyleUrl: server.styleUrl,
-        minZoom: 0,
-        maxZoom: 1,
+  final region = await downloadOfflineRegion(
+    OfflineRegionDefinition(
+      bounds: LatLngBounds(
+        southwest: LatLng(center.latitude - 1, center.longitude - 1),
+        northeast: LatLng(center.latitude + 1, center.longitude + 1),
       ),
-      metadata: metadata,
-      onEvent: (event) {
-        if (finished.isCompleted) return;
-        if (event is Success) finished.complete();
-        if (event is Error) finished.completeError(event.cause);
-      },
+      mapStyleUrl: server.styleUrl,
+      minZoom: 0,
+      maxZoom: 1,
     ),
-    'downloadOfflineRegion',
+    metadata: metadata,
+    onEvent: (event) {
+      if (finished.isCompleted) return;
+      if (event is Success) finished.complete();
+      if (event is Error) finished.completeError(event.cause);
+    },
   );
-  await pumpUntil(tester, finished.future, 'the offline download to finish');
+  await finished.future;
   return region;
 }
 

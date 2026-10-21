@@ -90,7 +90,17 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           melos run generate
+          melos run generate:pigeon
           melos run format-all
+      # Calls must reach native in the order Dart sends them. Pigeon's
+      # coroutine and async/await handlers re-dispatch each call, so every
+      # asynchronous method has to use @asyncCallback.
+      - name: Check the Pigeon output uses callbacks only
+        if: ${{ !cancelled() }}
+        run: |
+          # `! grep` would not fail the step under `set -e`, hence the ifs.
+          if grep -nE "suspend fun|kotlinx\.coroutines" maplibre_gl/android/src/main/java/org/maplibre/maplibregl/Messages.g.kt; then exit 1; fi
+          if grep -nE "\) async|async throws" maplibre_gl/ios/maplibre_gl/Sources/maplibre_gl/Messages.g.swift; then exit 1; fi
       - name: Check Git changes after code generation
         if: ${{ !cancelled() }}
         uses: multani/git-changes-action@v1

@@ -1,6 +1,7 @@
 analyzer:
   exclude:
     - build/**
+    - lib/src/native/*.g.dart
     - android/**
     - ios/**
     - web/**

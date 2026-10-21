@@ -37,12 +37,12 @@ abstract class OfflineManagerUtils {
   /** Holds the state needed to observe and control an in-progress download. */
   static class ActiveDownload {
     final OfflineRegion region;
-    final OfflineChannelHandlerImpl channelHandler;
+    final OfflineDownloadEvents channelHandler;
     final AtomicBoolean isComplete;
     long lastProgressEmitMs;
     long lastEmittedCompletedCount;
 
-    ActiveDownload(OfflineRegion region, OfflineChannelHandlerImpl channelHandler, AtomicBoolean isComplete) {
+    ActiveDownload(OfflineRegion region, OfflineDownloadEvents channelHandler, AtomicBoolean isComplete) {
       this.region = region;
       this.channelHandler = channelHandler;
       this.isComplete = isComplete;
@@ -152,7 +152,7 @@ abstract class OfflineManagerUtils {
    * The observer forwards progress, completion, and error events to the channel handler.
    */
   private static void setObserverOnRegion(
-      OfflineRegion region, OfflineChannelHandlerImpl channelHandler,
+      OfflineRegion region, OfflineDownloadEvents channelHandler,
       AtomicBoolean isComplete, Context context) {
     OfflineRegion.OfflineRegionObserver observer =
         new OfflineRegion.OfflineRegionObserver() {
@@ -235,7 +235,7 @@ abstract class OfflineManagerUtils {
       Context context,
       Map<String, Object> definitionMap,
       Map<String, Object> metadataMap,
-      OfflineChannelHandlerImpl channelHandler) {
+      OfflineDownloadEvents channelHandler) {
     float pixelDensity = context.getResources().getDisplayMetrics().density;
     OfflineRegionDefinition definition = mapToRegionDefinition(definitionMap, pixelDensity);
     String metadataJson = "{}";
@@ -340,7 +340,7 @@ abstract class OfflineManagerUtils {
       Context context,
       OfflineRegionDefinition definition,
       String metadata,
-      OfflineChannelHandlerImpl channelHandler) {
+      OfflineDownloadEvents channelHandler) {
     AtomicBoolean isComplete = new AtomicBoolean(false);
     // Download region
     OfflineManager.Companion.getInstance(context)

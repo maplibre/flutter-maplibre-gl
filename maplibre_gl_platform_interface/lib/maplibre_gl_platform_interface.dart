@@ -8,6 +8,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+
+import 'download_region_status.dart';
 part 'src/annotation.dart';
 part 'src/callbacks.dart';
 part 'src/camera.dart';
@@ -17,6 +19,7 @@ part 'src/line.dart';
 part 'src/location.dart';
 part 'src/location_source.dart';
 part 'src/my_location_style.dart';
+part 'src/offline_region.dart';
 part 'src/maplibre_js_source.dart';
 part 'src/method_channel_maplibre_gl.dart';
 part 'src/symbol.dart';

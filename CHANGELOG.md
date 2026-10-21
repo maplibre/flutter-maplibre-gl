@@ -45,6 +45,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, before the camera arrives, like on web, instead of never completing. Code after an awaited call now runs in that case: check `mounted` or `controller.isDisposed` before using the controller or calling `setState` (#1108).
 * **iOS, Web**: `setOffline` throws an `UnsupportedError` instead of failing with a `MissingPluginException`. MapLibre iOS and maplibre-gl-js have no offline switch, so the call never had an effect there; call it on Android only (#1111).
 * **Android**: the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`, and iOS reports the same code. Update any `catch` on the old code (#1111).
+* **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException` that read like a broken plugin registration. MapLibre GL JS has no offline storage; catch `UnsupportedError` where you call them on web (#1114, #937).
+* `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it (#1114).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -67,6 +69,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set (#1081).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
+* **Android, iOS**: the plugin-wide calls (offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`) reach native through messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of a hand-written method channel, the first step of #465. Apps need no change (#1114).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -109,6 +112,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
 * **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background (#1105).
 * Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
+* **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1114).
+* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#1114).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

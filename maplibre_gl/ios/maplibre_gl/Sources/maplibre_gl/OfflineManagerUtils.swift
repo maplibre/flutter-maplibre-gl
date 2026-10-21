@@ -18,7 +18,7 @@ class OfflineManagerUtils {
         metadata: [String: Any],
         result: @escaping FlutterResult,
         registrar _: FlutterPluginRegistrar,
-        channelHandler: OfflineChannelHandler
+        channelHandler: OfflineDownloadEvents
     ) {
         // Prepare downloader
         let downloader = OfflinePackDownloader(

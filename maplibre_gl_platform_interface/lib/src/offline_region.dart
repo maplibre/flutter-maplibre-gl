@@ -1,4 +1,4 @@
-part of '../maplibre_gl.dart';
+part of '../maplibre_gl_platform_interface.dart';
 
 /// Description of region to be downloaded. Identifier will be generated when
 /// the download is initiated.

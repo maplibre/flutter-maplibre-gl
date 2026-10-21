@@ -14,6 +14,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `animateCamera` completes when the camera arrives instead of when it starts, and with `false` when another camera call or a gesture interrupts it, so code awaiting it now runs after the animation (#1089).
 * `CameraUpdate.newLatLngBounds` keeps the current bearing like on Android and iOS, instead of turning the map north up (#1090).
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
+* The offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException`: `MapLibreGlobalWeb` implements them (#1114, #937).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).

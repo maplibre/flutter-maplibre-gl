@@ -463,13 +463,13 @@ class MapLibreMap extends StatefulWidget {
   /// this. Likewise, an app that creates its binding inside a custom [Zone],
   /// for example under `runZonedGuarded`, should call this inside that zone.
   static Future<void> preWarm() {
-    // On Android and iOS this reaches native over a method channel, whose
+    // On Android and iOS this reaches native over a platform channel, whose
     // messenger comes from ServicesBinding.instance, and being called before
     // runApp() is the whole point of the method, so the binding runApp() would
     // have created does not exist yet. ensureInitialized is idempotent, so
     // doing it here costs an app that already did it nothing.
     //
-    // Background isolates are skipped: there MethodChannel routes through
+    // Background isolates are skipped: there platform channels route through
     // BackgroundIsolateBinaryMessenger rather than the binding, and building a
     // binding would throw "UI actions are only available on root isolate" and
     // leave that isolate's binding statics half-initialized. The condition
@@ -477,7 +477,7 @@ class MapLibreMap extends StatefulWidget {
     if (kIsWeb || ServicesBinding.rootIsolateToken != null) {
       WidgetsFlutterBinding.ensureInitialized();
     }
-    return MapLibreGlobalPlatform.instance.preWarm();
+    return _global.preWarm();
   }
 
   /// Completes once MapLibre GL JS is on the page and the `maplibregl` global
@@ -502,8 +502,7 @@ class MapLibreMap extends StatefulWidget {
   /// ```
   ///
   /// Where the library comes from is configured with [webLibrarySource].
-  static Future<void> ensureWebLibraryLoaded() =>
-      MapLibreGlobalPlatform.instance.ensureLibraryLoaded();
+  static Future<void> ensureWebLibraryLoaded() => _global.ensureLibraryLoaded();
 
   @override
   State createState() => _MapLibreMapState();

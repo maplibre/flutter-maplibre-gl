@@ -52,6 +52,10 @@ On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fa
 
 `setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
 
+On web, the other plugin-wide calls that need offline storage or the native network stack throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache`. MapLibre GL JS has no offline storage.
+
+`setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
+
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
