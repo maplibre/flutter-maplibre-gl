@@ -640,6 +640,11 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
+    final reason =
+        data.length > _geoJsonTextOffloadLength
+            ? await compute(geoJsonTextError, data)
+            : geoJsonTextError(data);
+    if (reason != null) throw invalidGeoJson(id, reason);
     return _api.mapEditGeoJsonSource(id, data);
   }
 
@@ -918,14 +923,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? promoteId,
   }) {
     return _writeGeoJson(sourceId, () async {
-      await _api.sourceAddGeoJson(sourceId, await _encodeGeoJson(geojson));
+      await _api.sourceAddGeoJson(
+        sourceId,
+        await _encodeGeoJson(geojson, sourceId),
+      );
     });
   }
 
   @override
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson) {
     return _writeGeoJson(sourceId, () async {
-      await _api.sourceSetGeoJson(sourceId, await _encodeGeoJson(geojson));
+      await _api.sourceSetGeoJson(
+        sourceId,
+        await _encodeGeoJson(geojson, sourceId),
+      );
     });
   }
 
@@ -937,7 +948,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetFeature(
         sourceId,
-        await _encodeGeoJson(geojsonFeature),
+        await _encodeGeoJson(geojsonFeature, sourceId, feature: true),
       );
     });
   }
@@ -988,14 +999,47 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   static const _geoJsonOffloadFeatureCount = 100;
   static const _geoJsonOffloadPositionCount = 2000;
 
-  /// Encodes [geojson] to a JSON string, offloading to a background isolate
-  /// when the payload is large enough to be worth it. See [_isLargeGeoJson].
-  static Future<String> _encodeGeoJson(Map<String, dynamic> geojson) {
-    if (_isLargeGeoJson(geojson)) {
-      return compute(jsonEncode, geojson);
+  /// Checks [geojson], the data of the source [sourceId] or with [feature] one
+  /// of its features, and encodes it to a JSON string, on a background
+  /// isolate when the payload is large (see [_isLargeGeoJson]). Throws
+  /// `INVALID_GEOJSON` for data that is not valid GeoJSON.
+  static Future<String> _encodeGeoJson(
+    Map<String, dynamic> geojson,
+    String sourceId, {
+    bool feature = false,
+  }) async {
+    final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
+    final (json, reason) =
+        _isLargeGeoJson(geojson)
+            ? await compute(encode, geojson)
+            : encode(geojson);
+    if (reason != null) {
+      throw feature
+          ? invalidGeoJsonFeature(sourceId, reason)
+          : invalidGeoJson(sourceId, reason);
     }
-    return Future.value(jsonEncode(geojson));
+    return json!;
   }
+
+  /// [geojson] as JSON text, or why it is not GeoJSON.
+  static (String?, String?) _checkAndEncodeGeoJson(
+    Map<String, dynamic> geojson,
+  ) {
+    final reason = geoJsonError(geojson);
+    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+  }
+
+  /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
+  static (String?, String?) _checkAndEncodeFeature(
+    Map<String, dynamic> geojson,
+  ) {
+    final reason = geoJsonFeatureError(geojson);
+    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+  }
+
+  /// The length of JSON text above which [editGeoJsonSource] checks it on a
+  /// background isolate.
+  static const _geoJsonTextOffloadLength = 100000;
 
   /// Whether [geojson] is large enough that encoding it should move off the
   /// main isolate.
@@ -1205,7 +1249,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
     _ensureDemEncodingSupported(properties);
-    await _api.styleAddSource(sourceId, properties.toJson());
+    final json = properties.toJson();
+    // A string is the url of the data.
+    final data = json['data'];
+    if (properties is GeojsonSourceProperties &&
+        data != null &&
+        data is! String) {
+      final reason = geoJsonError(data);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+    }
+    await _api.styleAddSource(sourceId, json);
   }
 
   /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre

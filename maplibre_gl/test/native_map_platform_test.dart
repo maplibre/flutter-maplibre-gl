@@ -605,12 +605,115 @@ void main() {
       await platform.setFeatureForGeoJsonSource('source', {
         'type': 'Feature',
         'properties': <String, dynamic>{},
+        'geometry': null,
       });
 
       expect(api.calls.map((call) => call.first), [
         'sourceSetGeoJson',
         'sourceSetFeature',
       ]);
+    });
+
+    // Checked before anything reaches native, as on web.
+    test('data that is not GeoJSON fails with INVALID_GEOJSON', () async {
+      final notGeoJson = {
+        'type': 'FeatureCollection',
+        'features': [
+          {'type': 'Feature', 'properties': <String, dynamic>{}},
+        ],
+      };
+      final invalid = isA<PlatformException>()
+          .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+          .having(
+            (e) => e.message,
+            'message',
+            "The data for source 'source' is not GeoJSON: Feature 0: A "
+                'Feature must have a "geometry" member.',
+          );
+
+      await expectLater(
+        platform.addGeoJsonSource('source', notGeoJson),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setGeoJsonSource('source', notGeoJson),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource(
+          'source',
+          GeojsonSourceProperties(data: notGeoJson),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.editGeoJsonSource('source', jsonEncode(notGeoJson)),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setFeatureForGeoJsonSource('source', {
+          'type': 'Point',
+          'coordinates': [0, 0],
+        }),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.message,
+                'message',
+                "The feature for source 'source' is not a GeoJSON Feature: "
+                    'It is a Point, not a Feature.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('text that is not JSON fails editGeoJsonSource', () async {
+      await expectLater(
+        platform.editGeoJsonSource('source', 'not json'),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.message,
+                'message',
+                "The data for source 'source' is not GeoJSON: Not valid JSON.",
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    // A payload above the offload thresholds is checked on the other isolate,
+    // with the same answer.
+    test('a large payload is checked too', () async {
+      final big = line(40000);
+      ((big['features'] as List).single as Map)['properties'] = 'none';
+
+      await expectLater(
+        platform.setGeoJsonSource('source', big),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.details,
+                'details',
+                'Feature 0: The "properties" of a Feature must be an object '
+                    'or null.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('a url as the data of addSource is not checked', () async {
+      await platform.addSource(
+        'source',
+        const GeojsonSourceProperties(data: 'https://example.com/a.json'),
+      );
+
+      expect(api.calls.single.take(2), ['styleAddSource', 'source']);
     });
 
     test('addSource rejects the custom raster-dem encoding', () {
@@ -1488,7 +1591,13 @@ void main() {
       api.replies['mapEditGeoJsonUrl'] = false;
       api.replies['mapSetLayerFilter'] = true;
 
-      expect(await platform.editGeoJsonSource('source', '{}'), isTrue);
+      expect(
+        await platform.editGeoJsonSource(
+          'source',
+          '{"type":"Point","coordinates":[1,2]}',
+        ),
+        isTrue,
+      );
       expect(
         await platform.editGeoJsonUrl('source', 'https://example.com/a.json'),
         isFalse,
@@ -1497,7 +1606,11 @@ void main() {
       // ignore: deprecated_member_use
       expect(await platform.setLayerFilter('layer', '["has","a"]'), isTrue);
       expect(api.calls, [
-        ['mapEditGeoJsonSource', 'source', '{}'],
+        [
+          'mapEditGeoJsonSource',
+          'source',
+          '{"type":"Point","coordinates":[1,2]}',
+        ],
         ['mapEditGeoJsonUrl', 'source', 'https://example.com/a.json'],
         ['mapSetLayerFilter', 'layer', '["has","a"]'],
       ]);
@@ -1876,12 +1989,8 @@ void main() {
         'a small GeometryCollection',
         {
           'type': 'GeometryCollection',
-          'geometries': [lineString(2), 'not a geometry'],
+          'geometries': [lineString(2), lineString(3)],
         },
-      ),
-      (
-        'a GeometryCollection without a geometries list',
-        {'type': 'GeometryCollection', 'geometries': 'none'},
       ),
       ('a feature without a geometry', null),
     ]) {
@@ -1893,6 +2002,36 @@ void main() {
         expect(api.calls, [
           ['sourceSetFeature', 'source', jsonEncode(payload)],
         ]);
+      });
+    }
+
+    // The size check runs first and must not trip on what is not GeoJSON,
+    // which then fails the call without reaching native.
+    for (final (name, geometry) in [
+      (
+        'a GeometryCollection holding something else',
+        {
+          'type': 'GeometryCollection',
+          'geometries': [lineString(2), 'not a geometry'],
+        },
+      ),
+      (
+        'a GeometryCollection without a geometries list',
+        {'type': 'GeometryCollection', 'geometries': 'none'},
+      ),
+    ]) {
+      test('setFeatureForGeoJsonSource rejects $name', () async {
+        await expectLater(
+          platform.setFeatureForGeoJsonSource('source', feature(geometry)),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'INVALID_GEOJSON',
+            ),
+          ),
+        );
+        expect(api.calls, isEmpty);
       });
     }
   });
