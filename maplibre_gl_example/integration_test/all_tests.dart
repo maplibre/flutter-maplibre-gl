@@ -26,6 +26,7 @@ import 'my_location_style_test.dart' as my_location_style;
 import 'offline_region_metadata_test.dart' as offline_region_metadata;
 import 'pan_inertia_test.dart' as pan_inertia;
 import 'placement_transitions_test.dart' as placement_transitions;
+import 'platform_parity_test.dart' as platform_parity;
 import 'polygon_hole_test.dart' as polygon_hole;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
@@ -45,6 +46,7 @@ void main() {
   offline_region_metadata.main();
   pan_inertia.main();
   placement_transitions.main();
+  platform_parity.main();
   polygon_hole.main();
   style_layers.main();
   style_misc.main();
