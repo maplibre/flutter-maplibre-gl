@@ -1688,6 +1688,32 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             layer.isVisible = visible
             result(nil)
 
+        case "layer#setVisibilityBatch":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerIds = arguments["layerIds"] as? [String],
+                  let visible = arguments["visible"] as? Bool
+            else {
+                result(FlutterError(
+                    code: "INVALID_ARGUMENT",
+                    message: "setLayersVisibility requires 'layerIds' and 'visible'.",
+                    details: nil
+                ))
+                return
+            }
+            // Unknown ids are skipped and returned, as on Android and web.
+            // Without a style no layer is found, as for layer#setVisibility.
+            var missingLayerIds: [String] = []
+            for layerId in layerIds {
+                guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+                    if !missingLayerIds.contains(layerId) {
+                        missingLayerIds.append(layerId)
+                    }
+                    continue
+                }
+                layer.isVisible = visible
+            }
+            result(missingLayerIds)
+
         case "layer#setZoomRange":
             guard let arguments = methodCall.arguments as? [String: Any],
                   let layerId = arguments["layerId"] as? String,

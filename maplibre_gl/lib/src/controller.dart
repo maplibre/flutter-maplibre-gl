@@ -2513,6 +2513,34 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setLayerVisibility(layerId, visible);
   }
 
+  /// Shows or hides every layer in [layerIds] with one platform call.
+  ///
+  /// All the changes are applied in the same UI turn, so they show up together
+  /// in the next frame instead of layer by layer, which helps when toggling a
+  /// whole group of layers such as a basemap. Repeated ids are harmless and an
+  /// empty list does nothing.
+  ///
+  /// Ids the style has no layer for are skipped, and the other layers are
+  /// still changed. The returned [Future] completes with the skipped ids, in
+  /// the order given and without repeats, or an empty list when every layer
+  /// was found; debug builds also print them.
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    final missing = await _maplibrePlatform.setLayersVisibility(
+      layerIds,
+      visible,
+    );
+    if (kDebugMode && missing.isNotEmpty) {
+      debugPrint(
+        'MapLibre: setLayersVisibility skipped layers that are not in the '
+        'style: ${missing.join(', ')}',
+      );
+    }
+    return missing;
+  }
+
   /// Sets the zoom range in which the layer with [layerId] is drawn: from
   /// [minzoom] (inclusive) up to [maxzoom] (exclusive), the layer's `minzoom`
   /// and `maxzoom` in the style spec.

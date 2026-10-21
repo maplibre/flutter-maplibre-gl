@@ -3599,6 +3599,54 @@ final class MapLibreMapController
           break;
 
         }
+        case "layer#setVisibilityBatch":
+        {
+          final Object layerIdsArgument = call.argument("layerIds");
+          final Object visibleArgument = call.argument("visible");
+          if (!(layerIdsArgument instanceof List) || !(visibleArgument instanceof Boolean)) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "setLayersVisibility requires 'layerIds' and 'visible'.",
+                null);
+            break;
+          }
+          final List<String> layerIds = new ArrayList<>();
+          for (Object layerId : (List<?>) layerIdsArgument) {
+            if (!(layerId instanceof String)) {
+              result.error(
+                  "INVALID_ARGUMENT", "setLayersVisibility requires string layer ids.", null);
+              return;
+            }
+            layerIds.add((String) layerId);
+          }
+          if (layerIds.isEmpty()) {
+            result.success(new ArrayList<String>());
+            break;
+          }
+          if (style == null || !style.isFullyLoaded()) {
+            result.error(
+                "STYLE_NOT_READY",
+                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                null);
+            break;
+          }
+          // Unknown ids are skipped and returned, as on iOS and web.
+          final String visibility =
+              Boolean.TRUE.equals(visibleArgument) ? Property.VISIBLE : Property.NONE;
+          final List<String> missingLayerIds = new ArrayList<>();
+          for (String layerId : layerIds) {
+            final Layer layer = style.getLayer(layerId);
+            if (layer == null) {
+              if (!missingLayerIds.contains(layerId)) {
+                missingLayerIds.add(layerId);
+              }
+              continue;
+            }
+            layer.setProperties(PropertyFactory.visibility(visibility));
+          }
+          result.success(missingLayerIds);
+          break;
+        }
         case "layer#setZoomRange":
         {
           // Checked here because MapLibre takes any range, and iOS and web

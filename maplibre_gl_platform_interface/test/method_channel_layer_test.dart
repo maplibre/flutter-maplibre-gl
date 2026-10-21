@@ -290,6 +290,29 @@ void main() {
       expect(args['visible'], false);
     });
 
+    test('setLayersVisibility sends one batch method', () async {
+      await platform.setLayersVisibility(['layer-a', 'layer-b'], false);
+
+      expect(methodCalls.length, 1);
+      expect(methodCalls[0].method, 'layer#setVisibilityBatch');
+      final args = methodCalls[0].arguments as Map;
+      expect(args['layerIds'], ['layer-a', 'layer-b']);
+      expect(args['visible'], false);
+    });
+
+    test('setLayersVisibility returns the ids the platform skipped', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/maplibre_gl_0'),
+            (call) async => ['layer-b'],
+          );
+
+      expect(
+        await platform.setLayersVisibility(['layer-a', 'layer-b'], false),
+        ['layer-b'],
+      );
+    });
+
     test('setLayerZoomRange sends correct method', () async {
       await platform.setLayerZoomRange('my-layer', 5.5, 15);
 

@@ -492,6 +492,17 @@ abstract class MapLibrePlatform {
 
   Future<void> setLayerVisibility(String layerId, bool visible);
 
+  /// Shows or hides every layer in [layerIds] with one platform call, all in
+  /// the same UI turn so the changes render together.
+  ///
+  /// Ids with no layer in the style are skipped and returned, in the order
+  /// given and without repeats; the other layers are still changed. An empty
+  /// list does nothing.
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  );
+
   /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
   /// which the layer with [layerId] is drawn.
   Future<void> setLayerZoomRange(

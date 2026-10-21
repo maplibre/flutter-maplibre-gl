@@ -679,6 +679,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    calls.add(PlatformCall('setLayersVisibility', [layerIds, visible]));
+    return layerIds.where((id) => id.startsWith('missing')).toSet().toList();
+  }
+
+  @override
   Future<void> setLayerZoomRange(
     String layerId,
     double minzoom,

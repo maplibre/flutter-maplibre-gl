@@ -1404,6 +1404,18 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    final missing = await _channel.invokeMethod<List<Object?>>(
+      'layer#setVisibilityBatch',
+      <String, dynamic>{'layerIds': layerIds, 'visible': visible},
+    );
+    return missing?.cast<String>() ?? const [];
+  }
+
+  @override
   Future<void> setLayerZoomRange(
     String layerId,
     double minzoom,

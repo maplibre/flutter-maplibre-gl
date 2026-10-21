@@ -2633,6 +2633,24 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    // Unknown ids are skipped and returned, as on Android and iOS.
+    final visibility = visible ? 'visible' : 'none';
+    final missing = <String>[];
+    for (final layerId in layerIds) {
+      if (_map.getLayer(layerId) == null) {
+        if (!missing.contains(layerId)) missing.add(layerId);
+        continue;
+      }
+      _map.setLayoutProperty(layerId, 'visibility', visibility);
+    }
+    return missing;
+  }
+
+  @override
   Future<void> setLayerZoomRange(
     String layerId,
     double minzoom,
