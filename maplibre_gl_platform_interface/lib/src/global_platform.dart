@@ -11,9 +11,10 @@ part of '../maplibre_gl_platform_interface.dart';
 ///
 /// The methods back the top-level functions of `maplibre_gl` with the same
 /// names, which document them for apps. Those added after [preWarm] and
-/// [ensureLibraryLoaded] throw [UnimplementedError] unless a platform
+/// [ensureLibraryLoaded] fail with [UnimplementedError] unless a platform
 /// overrides them, so an implementation written against an older version of
-/// this class keeps compiling.
+/// this class keeps compiling. The error arrives through the returned future,
+/// not as a throw from the call itself.
 abstract class MapLibreGlobalPlatform {
   /// The instance behind the global functions in `maplibre_gl`, such as
   /// `preWarm()`, `ensureWebLibraryLoaded()` and the offline region calls.
@@ -36,86 +37,70 @@ abstract class MapLibreGlobalPlatform {
   /// Copies a sideloaded tiles database into place, from an absolute path or
   /// a Flutter asset key.
   Future<void> installOfflineMapTiles(String tilesDb) =>
-      throw UnimplementedError('installOfflineMapTiles() is not implemented.');
+      _notImplemented('installOfflineMapTiles');
 
   /// Forces the map engine offline, or gives the network state back to the
   /// system.
-  Future<void> setOffline(bool offline) =>
-      throw UnimplementedError('setOffline() is not implemented.');
+  Future<void> setOffline(bool offline) => _notImplemented('setOffline');
 
   /// Sets the HTTP headers sent with every request of every map.
   Future<void> setHttpHeaders(Map<String, String> headers) =>
-      throw UnimplementedError('setHttpHeaders() is not implemented.');
+      _notImplemented('setHttpHeaders');
 
   /// Imports the regions of another offline database and returns them.
   Future<List<OfflineRegion>> mergeOfflineRegions(String path) =>
-      throw UnimplementedError('mergeOfflineRegions() is not implemented.');
+      _notImplemented('mergeOfflineRegions');
 
   /// The absolute path of the offline database, or `null`.
   Future<String?> getOfflineDatabasePath() =>
-      throw UnimplementedError('getOfflineDatabasePath() is not implemented.');
+      _notImplemented('getOfflineDatabasePath');
 
   /// The offline regions stored on the device.
   Future<List<OfflineRegion>> getListOfRegions() =>
-      throw UnimplementedError('getListOfRegions() is not implemented.');
+      _notImplemented('getListOfRegions');
 
   /// Replaces the metadata of a region and returns the updated region.
   Future<OfflineRegion> updateOfflineRegionMetadata(
     int id,
     Map<String, dynamic> metadata,
-  ) =>
-      throw UnimplementedError(
-        'updateOfflineRegionMetadata() is not implemented.',
-      );
+  ) => _notImplemented('updateOfflineRegionMetadata');
 
   /// Caps the number of tiles an offline download may store.
   Future<void> setOfflineTileCountLimit(int limit) =>
-      throw UnimplementedError(
-        'setOfflineTileCountLimit() is not implemented.',
-      );
+      _notImplemented('setOfflineTileCountLimit');
 
   /// Limits the concurrent tile requests, in total and per host.
   Future<void> setOfflineMaxConcurrentRequests({
     int? maxRequests,
     int? maxRequestsPerHost,
-  }) =>
-      throw UnimplementedError(
-        'setOfflineMaxConcurrentRequests() is not implemented.',
-      );
+  }) => _notImplemented('setOfflineMaxConcurrentRequests');
 
   /// Pauses the download of a region.
   Future<void> pauseOfflineRegionDownload(int id) =>
-      throw UnimplementedError(
-        'pauseOfflineRegionDownload() is not implemented.',
-      );
+      _notImplemented('pauseOfflineRegionDownload');
 
   /// Resumes the paused download of a region.
   Future<void> resumeOfflineRegionDownload(int id) =>
-      throw UnimplementedError(
-        'resumeOfflineRegionDownload() is not implemented.',
-      );
+      _notImplemented('resumeOfflineRegionDownload');
 
   /// The download status of a region.
   Future<OfflineRegionStatus> getOfflineRegionStatus(int id) =>
-      throw UnimplementedError('getOfflineRegionStatus() is not implemented.');
+      _notImplemented('getOfflineRegionStatus');
 
   /// Deletes a region.
   Future<void> deleteOfflineRegion(int id) =>
-      throw UnimplementedError('deleteOfflineRegion() is not implemented.');
+      _notImplemented('deleteOfflineRegion');
 
   /// Removes the ambient cache tiles that belong to no offline region.
-  Future<void> clearAmbientCache() =>
-      throw UnimplementedError('clearAmbientCache() is not implemented.');
+  Future<void> clearAmbientCache() => _notImplemented('clearAmbientCache');
 
   /// Sets the size limit of the ambient cache, in bytes.
   Future<void> setMaximumAmbientCacheSize(int bytes) =>
-      throw UnimplementedError(
-        'setMaximumAmbientCacheSize() is not implemented.',
-      );
+      _notImplemented('setMaximumAmbientCacheSize');
 
   /// Deletes every offline region and clears the ambient cache.
   Future<void> resetOfflineDatabase() =>
-      throw UnimplementedError('resetOfflineDatabase() is not implemented.');
+      _notImplemented('resetOfflineDatabase');
 
   /// Starts downloading a region and completes with it once it is created.
   /// [onEvent] receives the progress of the download, then its end.
@@ -123,7 +108,14 @@ abstract class MapLibreGlobalPlatform {
     OfflineRegionDefinition definition, {
     Map<String, dynamic> metadata = const {},
     void Function(DownloadRegionStatus event)? onEvent,
-  }) => throw UnimplementedError('downloadOfflineRegion() is not implemented.');
+  }) => _notImplemented('downloadOfflineRegion');
+
+  // The answer of a member the platform does not override. The error arrives
+  // through the returned future, so callers handle it like any other failure
+  // of the call. Typed after the member rather than Future<Never>, so a
+  // catchError handler can return a fallback value.
+  static Future<T> _notImplemented<T>(String method) =>
+      Future<T>.error(UnimplementedError('$method() is not implemented.'));
 }
 
 /// The default [MapLibreGlobalPlatform] until a platform registers its own.
