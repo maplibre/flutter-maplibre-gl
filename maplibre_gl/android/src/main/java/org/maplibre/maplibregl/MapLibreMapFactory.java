@@ -4,14 +4,11 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import org.maplibre.android.camera.CameraPosition;
 import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -45,7 +42,8 @@ public class MapLibreMapFactory extends PlatformViewFactory {
 
   public MapLibreMapFactory(
       BinaryMessenger messenger, MapLibreMapsPlugin.LifecycleProvider lifecycleProvider) {
-    super(StandardMessageCodec.INSTANCE);
+    // Dart encodes the creation params with the codec of the map messages.
+    super(MapLibreMapHostApi.Companion.getCodec());
     this.messenger = messenger;
     this.lifecycleProvider = lifecycleProvider;
   }
@@ -53,27 +51,40 @@ public class MapLibreMapFactory extends PlatformViewFactory {
   @NonNull
   @Override
   public PlatformView create(Context context, int id, Object args) {
-    Map<String, Object> params = (Map<String, Object>) args;
     final MapLibreMapBuilder builder = new MapLibreMapBuilder();
-
-    Convert.interpretMapLibreMapOptions(params.get("options"), builder, context);
-    if (params.containsKey("initialCameraPosition")) {
-      CameraPosition position = Convert.toCameraPosition(params.get("initialCameraPosition"));
-      builder.setInitialCameraPosition(position);
-    }
-    if (params.containsKey("dragEnabled")) {
-      boolean dragEnabled = Convert.toBoolean(params.get("dragEnabled"));
-      builder.setDragEnabled(dragEnabled);
-    }
-    if(params.containsKey("styleString")) {
-      String styleString = Convert.toString(params.get("styleString"));
-      builder.setStyleString(styleString);
-    }
+    configure(builder, args, context.getResources().getDisplayMetrics().density);
 
     final MapLibreMapController controller =
         builder.build(id, context, messenger, lifecycleProvider);
     controllers.add(controller);
     return controller;
+  }
+
+  /**
+   * Hands {@code builder} the creation params of a map, {@code args}, which Dart sends as a {@link
+   * PgCreationParams}. The margins in the options become physical pixels at {@code density}.
+   *
+   * @throws IllegalArgumentException when {@code args} is not a {@link PgCreationParams}.
+   */
+  static void configure(MapLibreMapBuilder builder, Object args, float density) {
+    if (!(args instanceof PgCreationParams)) {
+      throw new IllegalArgumentException(
+          "The creation params of a map are a PgCreationParams, not " + args + ".");
+    }
+    final PgCreationParams params = (PgCreationParams) args;
+    PigeonConvert.applyMapOptions(params.getOptions(), builder, density);
+    final PgCameraPosition initialCameraPosition = params.getInitialCameraPosition();
+    if (initialCameraPosition != null) {
+      builder.setInitialCameraPosition(PigeonConvert.toCameraPosition(initialCameraPosition));
+    }
+    builder.setDragEnabled(params.getDragEnabled());
+    final String styleString = params.getStyleString();
+    if (styleString != null) {
+      builder.setStyleString(styleString);
+    }
+    // Not a map option: how Flutter composes the view, which the map has to know before it builds
+    // its MapView, so it is set every time.
+    builder.setUseHybridComposition(params.getUseHybridComposition());
   }
 
   /**

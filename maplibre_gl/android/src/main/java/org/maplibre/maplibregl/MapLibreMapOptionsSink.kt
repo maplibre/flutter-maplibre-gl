@@ -72,6 +72,4 @@ internal interface MapLibreMapOptionsSink {
 
     /** Whether MapLibre fades symbols in and out as it places them; kept across style loads. */
     fun setSymbolPlacementTransitionsEnabled(enabled: Boolean)
-
-    fun setUseHybridComposition(useHybridComposition: Boolean)
 }

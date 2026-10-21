@@ -328,7 +328,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     options.textureMode(translucentRequested || hybridCompositionActive);
   }
 
-  @Override
+  /**
+   * Whether Flutter composes the map view with hybrid composition, which needs the map to draw
+   * into a TextureView. The factory sets it from the creation params, as it is no map option.
+   */
   public void setUseHybridComposition(boolean useHybridComposition) {
     this.hybridCompositionActive = useHybridComposition;
     options.textureMode(translucentRequested || hybridCompositionActive);

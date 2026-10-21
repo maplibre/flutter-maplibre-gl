@@ -31,25 +31,12 @@ class ConvertTest {
         assertEquals(12f, Convert.toFloat(12L))
         assertEquals(12.0, Convert.toDouble(12L), 0.0)
         assertEquals(12L, Convert.toLong(12L))
-        assertEquals(12f, Convert.toFloatWrapper(12L))
     }
 
     @Test
     fun toIntKeepsTheBitsOfAColorAbove32BitsSigned() {
         // An opaque ARGB color is above Int.MAX_VALUE as a Dart int.
         assertEquals(0xFF336699.toInt(), Convert.toInt(0xFF336699L))
-    }
-
-    @Test
-    fun aCameraPositionReadsLongs() {
-        val position = Convert.toCameraPosition(
-            mapOf("bearing" to 90L, "target" to listOf(45L, 9L), "tilt" to 30L, "zoom" to 12L),
-        )
-
-        assertEquals(90.0, position.bearing, 0.0)
-        assertEquals(LatLng(45.0, 9.0), position.target)
-        assertEquals(30.0, position.tilt, 0.0)
-        assertEquals(12.0, position.zoom, 0.0)
     }
 
     @Test

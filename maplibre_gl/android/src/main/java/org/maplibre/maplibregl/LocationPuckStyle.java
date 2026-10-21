@@ -2,7 +2,6 @@ package org.maplibre.maplibregl;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import java.util.Map;
 import org.maplibre.android.location.LocationComponentOptions;
 
 /**
@@ -33,24 +32,6 @@ final class LocationPuckStyle {
     this.accuracyCircleEnabled = accuracyCircleEnabled;
     this.pulseEnabled = pulseEnabled;
     this.pulseColor = pulseColor;
-  }
-
-  /** Reads the map written by {@code MyLocationStyle.toJson}. */
-  static LocationPuckStyle fromMap(@NonNull Map<?, ?> data) {
-    final Object accuracyCircleEnabled = data.get("accuracyCircleEnabled");
-    final Object pulseEnabled = data.get("pulseEnabled");
-    return new LocationPuckStyle(
-        color(data.get("fillColor")),
-        color(data.get("bearingColor")),
-        color(data.get("accuracyColor")),
-        accuracyCircleEnabled == null || Convert.toBoolean(accuracyCircleEnabled),
-        pulseEnabled == null ? null : Convert.toBoolean(pulseEnabled),
-        color(data.get("pulseColor")));
-  }
-
-  @Nullable
-  private static Integer color(@Nullable Object value) {
-    return value == null ? null : Convert.toInt(value);
   }
 
   /** Reads the {@code myLocationStyle} of the map options. */

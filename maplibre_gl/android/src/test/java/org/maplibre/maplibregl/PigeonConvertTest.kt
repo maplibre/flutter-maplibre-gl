@@ -296,7 +296,5 @@ class PigeonConvertTest {
         override fun setFeatureTapsTriggersMapClick(triggers: Boolean) = record("featureTapsTriggersMapClick", triggers)
         override fun setSymbolPlacementTransitionsEnabled(enabled: Boolean) =
             record("symbolPlacementTransitionsEnabled", enabled)
-        override fun setUseHybridComposition(useHybridComposition: Boolean) =
-            record("useHybridComposition", useHybridComposition)
     }
 }
