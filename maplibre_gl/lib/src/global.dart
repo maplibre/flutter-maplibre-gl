@@ -10,9 +10,11 @@ part of '../maplibre_gl.dart';
 MapLibreGlobalPlatform get _global {
   // The generated registrant only runs in the app's main isolate. Elsewhere,
   // for instance in an isolate the app spawns, install the Android and iOS
-  // implementation on first use instead of leaving the default in place.
+  // implementation on first use instead of leaving the default in place. The
+  // exact type check keeps a subclass that a package installed on purpose.
   if (!kIsWeb &&
-      MapLibreGlobalPlatform.instance is MapLibreGlobalMethodChannel &&
+      MapLibreGlobalPlatform.instance.runtimeType ==
+          MapLibreGlobalMethodChannel &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {
     MapLibreNativePlugin.registerWith();

@@ -557,6 +557,15 @@ void main() {
       });
     }
 
+    test('keeps a subclass of the default a package installed', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      final custom = _CustomGlobalMethodChannel();
+      MapLibreGlobalPlatform.instance = custom;
+
+      expect(await getListOfRegions(), isEmpty);
+      expect(MapLibreGlobalPlatform.instance, same(custom));
+    });
+
     test('keeps an implementation a platform registered', () async {
       MapLibreNativePlugin.registerWith(globalHostApi: api);
       final registered = MapLibreGlobalPlatform.instance;
@@ -569,6 +578,12 @@ void main() {
       ]);
     });
   });
+}
+
+/// A package's own take on the default implementation.
+class _CustomGlobalMethodChannel extends MapLibreGlobalMethodChannel {
+  @override
+  Future<List<OfflineRegion>> getListOfRegions() async => [];
 }
 
 /// Records every call with its arguments and answers like native would.
