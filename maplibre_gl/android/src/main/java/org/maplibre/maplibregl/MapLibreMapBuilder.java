@@ -7,6 +7,7 @@ package org.maplibre.maplibregl;
 import android.content.Context;
 import android.view.Gravity;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.location.engine.LocationEngineRequest;
@@ -89,7 +90,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
-  public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
+  public void setCameraTargetBounds(@Nullable LatLngBounds bounds) {
     this.bounds = bounds;
   }
 

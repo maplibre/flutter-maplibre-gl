@@ -50,8 +50,6 @@ import org.maplibre.android.camera.CameraUpdateFactory;
 import org.maplibre.android.constants.MapLibreConstants;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
-import org.maplibre.android.geometry.LatLngQuad;
-import org.maplibre.android.geometry.VisibleRegion;
 import org.maplibre.android.gestures.AndroidGesturesManager;
 import org.maplibre.android.gestures.MoveGestureDetector;
 import org.maplibre.android.location.LocationComponent;
@@ -767,26 +765,22 @@ final class MapLibreMapController
     flutterApi.mapOnUserLocationUpdated(userLocation, null, PigeonReplies.IGNORE);
   }
 
-  // Returns a reply map carrying the layer's MapLibre style-spec JSON under
-  // "properties" (id/type/source/source-layer/minzoom/maxzoom/filter/paint/
-  // layout), or an empty map if the layer is absent. The runtime layer is read,
-  // not style.getJson(): that is the style as loaded, so it misses layers added
-  // later and every property set since.
-  private Map<String, Object> getLayerProperties(String layerId) {
-    Map<String, Object> reply = new HashMap<>();
+  // Returns the layer's MapLibre style-spec JSON (id/type/source/source-layer/
+  // minzoom/maxzoom/filter/paint/layout), or null if the layer is absent. The
+  // runtime layer is read, not style.getJson(): that is the style as loaded,
+  // so it misses layers added later and every property set since.
+  @Nullable
+  private String getLayerProperties(String layerId) {
     final Layer layer = style.getLayer(layerId);
     if (layer == null) {
-      return reply;
+      return null;
     }
     final String type = LayerPropertyConverter.layerType(layer);
     if (type == null) {
       // Not a style-spec layer type (a CustomLayer): only the loaded style can
       // describe it, if it came with it.
       JsonObject loaded = findLoadedLayer(layerId);
-      if (loaded != null) {
-        reply.put("properties", loaded.toString());
-      }
-      return reply;
+      return loaded != null ? loaded.toString() : null;
     }
 
     final JsonObject json = new JsonObject();
@@ -848,8 +842,7 @@ final class MapLibreMapController
     LayerPropertyConverter.readLayerProperties(layer, paint, layout);
     json.add("paint", paint);
     json.add("layout", layout);
-    reply.put("properties", json.toString());
-    return reply;
+    return json.toString();
   }
 
   // The layer entry of the style as it was loaded, or null.
@@ -872,17 +865,16 @@ final class MapLibreMapController
   // style is read from the loaded style JSON, the only place holding all of
   // its properties (data, tiles, ...). The SDK exposes little on a runtime
   // source, so one added later reports its type, its url and its attribution.
-  private Map<String, Object> getSourceProperties(String sourceId) {
-    Map<String, Object> reply = new HashMap<>();
+  @Nullable
+  private String getSourceProperties(String sourceId) {
     final Source source = style.getSource(sourceId);
     if (source == null) {
-      return reply;
+      return null;
     }
     JsonObject styleJson = JsonParser.parseString(style.getJson()).getAsJsonObject();
     JsonObject sources = styleJson.getAsJsonObject("sources");
     if (sources != null && sources.has(sourceId)) {
-      reply.put("properties", sources.getAsJsonObject(sourceId).toString());
-      return reply;
+      return sources.getAsJsonObject(sourceId).toString();
     }
 
     final JsonObject json = new JsonObject();
@@ -906,11 +898,10 @@ final class MapLibreMapController
       putIfNotEmpty(json, "url", ((ImageSource) source).getUri());
     } else {
       // Not a style-spec source type (a custom geometry source).
-      return reply;
+      return null;
     }
     putIfNotEmpty(json, "attribution", source.getAttribution());
-    reply.put("properties", json.toString());
-    return reply;
+    return json.toString();
   }
 
   private static void putIfNotEmpty(JsonObject json, String key, String value) {
@@ -1049,19 +1040,17 @@ final class MapLibreMapController
         null);
   }
 
-  // Serializes features for the channel as JSON strings, so nested properties
-  // survive intact. Shared by every call that answers with features: the
-  // rendered and source feature queries and the cluster calls.
-  private static Map<String, Object> featuresReply(List<Feature> features) {
+  // Serializes features as JSON strings, so nested properties survive intact.
+  // Shared by every call that answers with features: the rendered and source
+  // feature queries and the cluster calls.
+  private static List<String> featuresReply(List<Feature> features) {
     final List<String> featuresJson = new ArrayList<>();
     if (features != null) {
       for (Feature feature : features) {
         featuresJson.add(featureJson(feature));
       }
     }
-    final Map<String, Object> reply = new HashMap<>();
-    reply.put("features", featuresJson);
-    return reply;
+    return featuresJson;
   }
 
   private static final Pattern INTEGER_ID = Pattern.compile("-?(0|[1-9][0-9]*)");
@@ -1108,7 +1097,7 @@ final class MapLibreMapController
 
   // The cluster calls answer with a FeatureCollection, which is null when the
   // id matches nothing.
-  private static Map<String, Object> featuresReply(FeatureCollection collection) {
+  private static List<String> featuresReply(FeatureCollection collection) {
     return featuresReply(collection == null ? null : collection.features());
   }
 
@@ -1400,7 +1389,15 @@ final class MapLibreMapController
     return true;
   }
 
-  private Expression parseFilter(String filter) {
+  /**
+   * The filter of a layer, the JSON text of an expression or of a boolean, or null for no filter:
+   * {@code filter} is null or the text {@code null}.
+   */
+  @Nullable
+  static Expression parseFilter(@Nullable String filter) {
+    if (filter == null) {
+      return null;
+    }
     JsonElement json = new JsonParser().parse(filter);
     if (json.isJsonNull()) {
       return null;
@@ -1844,23 +1841,18 @@ final class MapLibreMapController
   }
 
   /**
-   * Reads the camera update of a {@link #cameraMove}, {@link #cameraAnimate} or {@link
-   * #cameraEase} call. When it does not decode, the call is answered with INVALID_ARGUMENT, as on
-   * iOS, and null comes back.
+   * The camera update of a {@link #cameraMove}, {@link #cameraAnimate} or {@link #cameraEase}
+   * call. When the SDK cannot build it, for instance from a latitude beyond the poles, the call is
+   * answered with INVALID_ARGUMENT, as on iOS, and null comes back.
    */
   @Nullable
-  private CameraUpdate parseCameraUpdate(Object data, MethodChannel.Result result) {
+  private CameraUpdate toCameraUpdate(PgCameraUpdate update, MethodChannel.Result result) {
     try {
-      final CameraUpdate cameraUpdate = Convert.toCameraUpdate(data, mapLibreMap, density);
-      if (cameraUpdate != null) {
-        return cameraUpdate;
-      }
+      return PigeonConvert.toCameraUpdate(update, mapLibreMap, density);
     } catch (RuntimeException e) {
-      // A wrong type or a missing value surfaces as a ClassCastException,
-      // NullPointerException or IndexOutOfBoundsException from the converters.
+      result.error("INVALID_ARGUMENT", "Cannot interpret " + update + " as CameraUpdate.", null);
+      return null;
     }
-    result.error("INVALID_ARGUMENT", "Cannot interpret " + data + " as CameraUpdate.", null);
-    return null;
   }
 
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
@@ -1884,9 +1876,9 @@ final class MapLibreMapController
   }
 
   @Override
-  public void mapUpdate(Map<String, Object> options, MethodChannel.Result result) {
-    Convert.interpretMapLibreMapOptions(options, this, context);
-    result.success(Convert.toJson(getCameraPosition()));
+  public void mapUpdate(PgMapOptions options, MethodChannel.Result result) {
+    PigeonConvert.applyMapOptions(options, this, density);
+    result.success(Convert.toPgCameraPosition(getCameraPosition()));
   }
 
   // Dart-driven pause/resume. Only flips MapView state when it's actually out
@@ -1989,11 +1981,7 @@ final class MapLibreMapController
 
   @Override
   public void mapGetCustomHeaders(MethodChannel.Result result) {
-    if (mapLibreMap != null) {
-      result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
-    } else {
-      result.success(null);
-    }
+    result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
   }
 
   @Override
@@ -2082,8 +2070,8 @@ final class MapLibreMapController
   // -- Camera -----------------------------------------------------------------
 
   @Override
-  public void cameraMove(List<Object> cameraUpdate, MethodChannel.Result result) {
-    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+  public void cameraMove(PgCameraUpdate cameraUpdate, MethodChannel.Result result) {
+    final CameraUpdate update = toCameraUpdate(cameraUpdate, result);
     if (update == null) {
       return;
     }
@@ -2106,8 +2094,8 @@ final class MapLibreMapController
 
   @Override
   public void cameraAnimate(
-      List<Object> cameraUpdate, @Nullable Long duration, MethodChannel.Result result) {
-    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+      PgCameraUpdate cameraUpdate, @Nullable Long duration, MethodChannel.Result result) {
+    final CameraUpdate update = toCameraUpdate(cameraUpdate, result);
     if (update == null) {
       return;
     }
@@ -2136,11 +2124,11 @@ final class MapLibreMapController
 
   @Override
   public void cameraEase(
-      List<Object> cameraUpdate,
+      PgCameraUpdate cameraUpdate,
       @Nullable Long duration,
-      @Nullable String interpolation,
+      @Nullable PgCameraAnimationInterpolation interpolation,
       MethodChannel.Result result) {
-    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+    final CameraUpdate update = toCameraUpdate(cameraUpdate, result);
     if (update == null) {
       return;
     }
@@ -2150,9 +2138,9 @@ final class MapLibreMapController
     //   false = linear (constant velocity)
     //   true  = default ease-in/ease-out
     // Custom timing curves (easeOut, fastOutLinearIn) are not supported
-    // natively, so any non-"linear" value falls back to eased. This
-    // cross-platform caveat is documented on CameraAnimationInterpolation.
-    final boolean easingInterpolator = !"linear".equals(interpolation);
+    // natively, so any value but linear falls back to eased, and so does none.
+    // This cross-platform caveat is documented on CameraAnimationInterpolation.
+    final boolean easingInterpolator = interpolation != PgCameraAnimationInterpolation.LINEAR;
 
     final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
         new OnCameraMoveFinishedListener() {
@@ -2178,18 +2166,18 @@ final class MapLibreMapController
 
   @Override
   public void mapQueryCameraPosition(MethodChannel.Result result) {
-    result.success(Convert.toJson(mapLibreMap.getCameraPosition()));
+    result.success(Convert.toPgCameraPosition(mapLibreMap.getCameraPosition()));
   }
 
   @Override
   public void mapUpdateContentInsets(
-      Map<String, Double> bounds, boolean animated, MethodChannel.Result result) {
+      PgEdgeInsets insets, boolean animated, MethodChannel.Result result) {
     final CameraUpdate cameraUpdate =
         CameraUpdateFactory.paddingTo(
-            Convert.toPixels(bounds.get("left"), density),
-            Convert.toPixels(bounds.get("top"), density),
-            Convert.toPixels(bounds.get("right"), density),
-            Convert.toPixels(bounds.get("bottom"), density));
+            Convert.toPixels(insets.getLeft(), density),
+            Convert.toPixels(insets.getTop(), density),
+            Convert.toPixels(insets.getRight(), density),
+            Convert.toPixels(insets.getBottom(), density));
 
     if (animated) {
       animateCamera(cameraUpdate, null, result);
@@ -2224,8 +2212,9 @@ final class MapLibreMapController
   // -- Location ---------------------------------------------------------------
 
   @Override
-  public void mapUpdateMyLocationTrackingMode(long mode, MethodChannel.Result result) {
-    setMyLocationTrackingMode(Convert.toIntExact(mode));
+  public void mapUpdateMyLocationTrackingMode(
+      PgMyLocationTrackingMode mode, MethodChannel.Result result) {
+    setMyLocationTrackingMode(mode.getRaw());
     result.success(null);
   }
 
@@ -2239,11 +2228,7 @@ final class MapLibreMapController
       // Manual mode has no location engine; read the last forced location.
       Location lastLocation = locationComponent.getLastKnownLocation();
       if (lastLocation != null) {
-        Map<String, Object> reply = new HashMap<>();
-        reply.put("latitude", lastLocation.getLatitude());
-        reply.put("longitude", lastLocation.getLongitude());
-        reply.put("altitude", lastLocation.getAltitude());
-        result.success(reply);
+        result.success(new PgLatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
       } else {
         result.error("LOCATION_UNAVAILABLE",
             "Last location is not available", null);
@@ -2252,18 +2237,14 @@ final class MapLibreMapController
         && locationComponent != null
         && locationComponent.isLocationComponentActivated()
         && locationComponent.getLocationEngine() != null) {
-      Map<String, Object> reply = new HashMap<>();
-
       mapLibreMap.getLocationComponent().getLocationEngine().getLastLocation(
           new LocationEngineCallback<LocationEngineResult>() {
             @Override
             public void onSuccess(LocationEngineResult locationEngineResult) {
               Location lastLocation = locationEngineResult.getLastLocation();
               if (lastLocation != null) {
-                reply.put("latitude", lastLocation.getLatitude());
-                reply.put("longitude", lastLocation.getLongitude());
-                reply.put("altitude", lastLocation.getAltitude());
-                result.success(reply);
+                result.success(
+                    new PgLatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
               } else {
                 result.error("LOCATION_UNAVAILABLE",
                     "Last location is not available", null);
@@ -2333,7 +2314,7 @@ final class MapLibreMapController
 
   @Override
   public void locationComponentSetManualLocation(
-      Map<String, Object> update, MethodChannel.Result result) {
+      PgManualLocationUpdate update, MethodChannel.Result result) {
     if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
       result.error(
           "LOCATION_COMPONENT_NOT_READY",
@@ -2349,38 +2330,31 @@ final class MapLibreMapController
           null);
       return;
     }
-    final List<?> position = (List<?>) update.get("position");
-    if (position == null || position.size() < 2) {
-      result.error("INVALID_ARGUMENT", "Missing or invalid 'position'.", null);
-      return;
-    }
+    // What is unknown stays unset on the Location.
     final Location location = new Location("ManualLocationSource");
-    location.setLatitude(((Number) position.get(0)).doubleValue());
-    location.setLongitude(((Number) position.get(1)).doubleValue());
-    final Object altitude = update.get("altitude");
+    location.setLatitude(update.getPosition().getLatitude());
+    location.setLongitude(update.getPosition().getLongitude());
+    final Double altitude = update.getAltitude();
     if (altitude != null) {
-      location.setAltitude(((Number) altitude).doubleValue());
+      location.setAltitude(altitude);
     }
-    final Object bearing = update.get("bearing");
+    final Double bearing = update.getBearing();
     if (bearing != null) {
-      location.setBearing(((Number) bearing).floatValue());
+      location.setBearing(bearing.floatValue());
     }
-    final Object speed = update.get("speed");
+    final Double speed = update.getSpeed();
     if (speed != null) {
-      location.setSpeed(((Number) speed).floatValue());
+      location.setSpeed(speed.floatValue());
     }
-    final Object horizontalAccuracy = update.get("horizontalAccuracy");
+    final Double horizontalAccuracy = update.getHorizontalAccuracy();
     if (horizontalAccuracy != null) {
-      location.setAccuracy(((Number) horizontalAccuracy).floatValue());
+      location.setAccuracy(horizontalAccuracy.floatValue());
     }
-    final Object verticalAccuracy = update.get("verticalAccuracy");
+    final Double verticalAccuracy = update.getVerticalAccuracy();
     if (verticalAccuracy != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      location.setVerticalAccuracyMeters(((Number) verticalAccuracy).floatValue());
+      location.setVerticalAccuracyMeters(verticalAccuracy.floatValue());
     }
-    final Object timestamp = update.get("timestamp");
-    if (timestamp != null) {
-      location.setTime(((Number) timestamp).longValue());
-    }
+    location.setTime(update.getTimestamp());
     locationComponent.forceLocationUpdate(location);
     // Keep map#onUserLocationUpdated firing, mirroring the engine path.
     onUserLocationUpdate(location);
@@ -2391,28 +2365,18 @@ final class MapLibreMapController
 
   @Override
   public void mapGetVisibleRegion(MethodChannel.Result result) {
-    Map<String, Object> reply = new HashMap<>();
-    VisibleRegion visibleRegion = mapLibreMap.getProjection().getVisibleRegion();
-    reply.put(
-        "sw",
-        Arrays.asList(
-            visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
-    reply.put(
-        "ne",
-        Arrays.asList(
-              visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
-
-    result.success(reply);
+    final LatLngBounds bounds = mapLibreMap.getProjection().getVisibleRegion().latLngBounds;
+    result.success(
+        new PgLatLngBounds(
+            new PgLatLng(bounds.getLatSouth(), bounds.getLonWest()),
+            new PgLatLng(bounds.getLatNorth(), bounds.getLonEast())));
   }
 
   @Override
   public void mapToScreenLocation(double latitude, double longitude, MethodChannel.Result result) {
-    Map<String, Object> reply = new HashMap<>();
     PointF pointf =
         mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
-    reply.put("x", pointf.x);
-    reply.put("y", pointf.y);
-    result.success(reply);
+    result.success(new PgScreenPoint(pointf.x, pointf.y));
   }
 
   @Override
@@ -2433,20 +2397,14 @@ final class MapLibreMapController
 
   @Override
   public void mapToLatLng(double x, double y, MethodChannel.Result result) {
-    Map<String, Object> reply = new HashMap<>();
     LatLng latlng =
         mapLibreMap.getProjection().fromScreenLocation(new PointF((float) x, (float) y));
-    reply.put("latitude", latlng.getLatitude());
-    reply.put("longitude", latlng.getLongitude());
-    result.success(reply);
+    result.success(new PgLatLng(latlng.getLatitude(), latlng.getLongitude()));
   }
 
   @Override
   public void mapGetMetersPerPixelAtLatitude(double latitude, MethodChannel.Result result) {
-    Map<String, Object> reply = new HashMap<>();
-    Double retVal = mapLibreMap.getProjection().getMetersPerPixelAtLatitude(latitude);
-    reply.put("metersperpixel", retVal);
-    result.success(reply);
+    result.success(mapLibreMap.getProjection().getMetersPerPixelAtLatitude(latitude));
   }
 
   @Override
@@ -2454,10 +2412,10 @@ final class MapLibreMapController
       double x,
       double y,
       List<String> layerIds,
-      @Nullable List<Object> filter,
+      @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final Expression filterExpression = renderedFeaturesFilter(filter);
+    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
     final PointF pixel = new PointF((float) x, (float) y);
     result.success(
         featuresReply(mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layers)));
@@ -2473,37 +2431,17 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final Expression filterExpression = renderedFeaturesFilter(filter);
+    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
     final RectF rectF = new RectF((float) left, (float) top, (float) right, (float) bottom);
     result.success(
         featuresReply(mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layers)));
-  }
-
-  /**
-   * The filter of a rendered-features query, or null when there is none. The point query sends
-   * it as a list, while the rect query sends the same expression already encoded as a JSON
-   * string. Only an expression array filters.
-   */
-  @Nullable
-  private static Expression renderedFeaturesFilter(@Nullable Object filter) {
-    JsonElement jsonElement = null;
-    if (filter instanceof String) {
-      jsonElement = JsonParser.parseString((String) filter);
-    } else if (filter != null) {
-      jsonElement = new Gson().toJsonTree(filter);
-    }
-    JsonArray jsonArray = null;
-    if (jsonElement != null && jsonElement.isJsonArray()) {
-      jsonArray = jsonElement.getAsJsonArray();
-    }
-    return jsonArray == null ? null : Expression.Converter.convert(jsonArray);
   }
 
   @Override
   public void mapQuerySourceFeatures(
       String sourceId,
       @Nullable String sourceLayerId,
-      @Nullable List<Object> filter,
+      @Nullable String filter,
       MethodChannel.Result result) {
     List<Feature> features;
 
@@ -2518,14 +2456,7 @@ final class MapLibreMapController
       return;
     }
 
-    JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
-    JsonArray jsonArray = null;
-    if (jsonElement != null && jsonElement.isJsonArray()) {
-      jsonArray = jsonElement.getAsJsonArray();
-    }
-    Expression filterExpression =
-            jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-
+    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
 
     Source source = style.getSource(sourceId);
     if (source instanceof GeoJsonSource) {
@@ -2560,9 +2491,7 @@ final class MapLibreMapController
         }
       }
     }
-    Map<String, Boolean> reply = new HashMap<>();
-    reply.put("result", ret);
-    result.success(reply);
+    result.success(ret);
   }
 
   @Override
@@ -2582,9 +2511,7 @@ final class MapLibreMapController
         }
       }
     }
-    Map<String, Boolean> reply = new HashMap<>();
-    reply.put("result", ret);
-    result.success(reply);
+    result.success(ret);
   }
 
   @Override
@@ -2711,9 +2638,7 @@ final class MapLibreMapController
     // intact, like styleGetLayerProperties. A null state must stay null
     // rather than become an empty map: the Dart return type is nullable
     // and callers distinguish "no state" from an empty state.
-    final Map<String, Object> reply = new HashMap<>();
-    reply.put("state", stateJson == null ? null : stateJson.toString());
-    result.success(reply);
+    result.success(stateJson == null ? null : stateJson.toString());
   }
 
   @Override
@@ -2787,7 +2712,7 @@ final class MapLibreMapController
       String imageSourceId,
       byte[] bytes,
       long length,
-      List<Object> coordinates,
+      PgLatLngQuad coordinates,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       result.error(
@@ -2796,7 +2721,6 @@ final class MapLibreMapController
           null);
       return;
     }
-    List<LatLng> corners = Convert.toLatLngList(coordinates, false);
     Bitmap addSourceBitmap =
         BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
     if (addSourceBitmap == null) {
@@ -2805,9 +2729,7 @@ final class MapLibreMapController
     }
     style.addSource(
         new ImageSource(
-            imageSourceId,
-            new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3)),
-            addSourceBitmap));
+            imageSourceId, PigeonConvert.toLatLngQuad(coordinates), addSourceBitmap));
     result.success(null);
   }
 
@@ -2816,7 +2738,7 @@ final class MapLibreMapController
       String imageSourceId,
       @Nullable byte[] bytes,
       @Nullable Long length,
-      @Nullable List<Object> coordinates,
+      @Nullable PgLatLngQuad coordinates,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       result.error(
@@ -2826,10 +2748,8 @@ final class MapLibreMapController
       return;
     }
     ImageSource imageSource = style.getSourceAs(imageSourceId);
-    List<LatLng> corners = Convert.toLatLngList(coordinates, false);
-    if (corners != null) {
-      imageSource.setCoordinates(
-          new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3)));
+    if (coordinates != null) {
+      imageSource.setCoordinates(PigeonConvert.toLatLngQuad(coordinates));
     }
     if (bytes != null) {
       Bitmap updateBitmap =
@@ -2852,15 +2772,11 @@ final class MapLibreMapController
               null);
       return;
     }
-    Map<String, Object> reply = new HashMap<>();
-
     List<String> sourceIds = new ArrayList<>();
     for (Source source : style.getSources()) {
       sourceIds.add(source.getId());
     }
-
-    reply.put("sources", sourceIds);
-    result.success(reply);
+    result.success(sourceIds);
   }
 
   @Override
@@ -2885,7 +2801,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
@@ -2920,7 +2836,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
@@ -2955,7 +2871,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
@@ -2990,7 +2906,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
@@ -3025,7 +2941,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
@@ -3165,7 +3081,7 @@ final class MapLibreMapController
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result) {
     final PropertyValue[] propertyValues =
@@ -3433,7 +3349,8 @@ final class MapLibreMapController
   }
 
   @Override
-  public void styleSetFilter(String layerId, String filter, MethodChannel.Result result) {
+  public void styleSetFilter(
+      String layerId, @Nullable String filter, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       result.error(
           "STYLE_NOT_READY",
@@ -3484,7 +3401,6 @@ final class MapLibreMapController
               null);
       return;
     }
-    Map<String, Object> reply = new HashMap<>();
     Layer layer = style.getLayer(layerId);
     if (layer == null) {
       result.error(
@@ -3507,8 +3423,7 @@ final class MapLibreMapController
       result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
       return;
     }
-    reply.put("filter", filter == null ? null : new Gson().toJson(filter));
-    result.success(reply);
+    result.success(filter == null ? null : new Gson().toJson(filter));
   }
 
   @Override
@@ -3539,9 +3454,7 @@ final class MapLibreMapController
           }
       }
     }
-    Map<String, Boolean> reply = new HashMap<>();
-    reply.put("result", ret);
-    result.success(reply);
+    result.success(ret);
   }
 
   @Override
@@ -3553,15 +3466,11 @@ final class MapLibreMapController
               null);
       return;
     }
-    Map<String, Object> reply = new HashMap<>();
-
     List<String> layerIds = new ArrayList<>();
     for (Layer layer : style.getLayers()) {
       layerIds.add(layer.getId());
     }
-
-    reply.put("layers", layerIds);
-    result.success(reply);
+    result.success(layerIds);
   }
 
   @Override
@@ -3680,20 +3589,17 @@ final class MapLibreMapController
 
   @Override
   public void mapGetStyle(MethodChannel.Result result) {
-    Map<String, Object> reply = new HashMap<>();
-    boolean ret = false;
+    // The style JSON, or null without a style.
+    String json = null;
     if (mapLibreMap != null) {
       Style style = mapLibreMap.getStyle();
       if (style != null) {
         try {
-          String json = style.getJson();
-          reply.put("json", json);
-          ret = true;
+          json = style.getJson();
         } catch (Exception e) {}
       }
     }
-    reply.put("result", ret);
-    result.success(reply);
+    result.success(json);
   }
 
   @Override
@@ -3722,20 +3628,19 @@ final class MapLibreMapController
 
   @Override
   public void onCameraTrackingChanged(int currentMode) {
-    // The index of the Dart MyLocationTrackingMode.
-    final long mode;
+    final PgMyLocationTrackingMode mode;
     switch (currentMode) {
         case CameraMode.NONE:
-            mode = 0;
+            mode = PgMyLocationTrackingMode.NONE;
             break;
         case CameraMode.TRACKING:
-            mode = 1;
+            mode = PgMyLocationTrackingMode.TRACKING;
             break;
         case CameraMode.TRACKING_COMPASS:
-            mode = 2;
+            mode = PgMyLocationTrackingMode.TRACKING_COMPASS;
             break;
         case CameraMode.TRACKING_GPS:
-            mode = 3;
+            mode = PgMyLocationTrackingMode.TRACKING_GPS;
             break;
         default:
             Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");

@@ -3,6 +3,7 @@ package org.maplibre.maplibregl
 import io.flutter.plugin.common.MethodChannel
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -99,8 +100,18 @@ class MapHostApiTest {
         Map::class.java -> mapOf("key $index" to index)
         ByteArray::class.java -> byteArrayOf(index.toByte())
         DoubleArray::class.java -> doubleArrayOf(index.toDouble())
+        PgMapOptions::class.java -> PgMapOptions(compassEnabled = index % 2 == 0)
+        PgCameraUpdate::class.java -> PgCameraUpdateZoomTo(index.toDouble())
+        PgCameraAnimationInterpolation::class.java -> PgCameraAnimationInterpolation.entries[index % 4]
+        PgMyLocationTrackingMode::class.java -> PgMyLocationTrackingMode.entries[index % 4]
+        PgManualLocationUpdate::class.java -> PgManualLocationUpdate(latLng(index), 1_000L + index)
+        PgEdgeInsets::class.java -> PgEdgeInsets(index.toDouble(), 1.0, 2.0, 3.0)
+        PgLatLngQuad::class.java ->
+            PgLatLngQuad(latLng(index), latLng(index + 1), latLng(index + 2), latLng(index + 3))
         else -> throw AssertionError("No argument for $type")
     }
+
+    private fun latLng(index: Int) = PgLatLng(index.toDouble(), index + 0.5)
 
     /**
      * Calls the Pigeon [method] of the api with arguments told apart by their position. Returns
@@ -346,18 +357,85 @@ class MapHostApiTest {
     @Test
     fun answersWhetherACameraMoveFinished() {
         answer = { _, result -> result.success(false) }
+        val zoomIn = PgCameraUpdateZoomIn()
+        val linear = PgCameraAnimationInterpolation.LINEAR
 
-        assertEquals(false, value<Boolean?> { api.cameraMove(listOf("zoomIn"), it) })
-        assertEquals(false, value<Boolean?> { api.cameraAnimate(listOf("zoomIn"), 300L, it) })
-        assertEquals(false, value<Boolean> { api.cameraEase(listOf("zoomIn"), null, "linear", it) })
-        assertEquals(listOf<Any?>(listOf("zoomIn"), null, "linear"), calls.last().arguments)
+        assertEquals(false, value<Boolean?> { api.cameraMove(zoomIn, it) })
+        assertEquals(false, value<Boolean?> { api.cameraAnimate(zoomIn, 300L, it) })
+        assertEquals(false, value<Boolean> { api.cameraEase(zoomIn, null, linear, it) })
+        assertEquals(listOf<Any?>(zoomIn, null, linear), calls.last().arguments)
     }
 
     @Test
-    fun answersTheReplyOfTheCallAsItIs() {
+    fun answersACopyOfTheCustomHeaders() {
         val headers = hashMapOf("Authorization" to "Bearer token")
         answer = { _, result -> result.success(headers) }
 
-        assertSame(headers, value<Any?> { api.mapGetCustomHeaders(it) })
+        val answered = value<Map<String, String>> { api.mapGetCustomHeaders(it) }
+
+        assertEquals(headers, answered)
+        assertNotSame(headers, answered)
+    }
+
+    @Test
+    fun answersTheCameraPositionOfAnUpdateOrNull() {
+        val position = PgCameraPosition(90.0, PgLatLng(45.0, 9.0), 30.0, 12.0)
+        val options = PgMapOptions(trackCameraPosition = true)
+        answer = { _, result -> result.success(position) }
+        assertSame(position, value<PgCameraPosition?> { api.mapUpdate(options, it) })
+        assertEquals(listOf<Any?>(options), calls.single().arguments)
+
+        answer = { _, result -> result.success(null) }
+        assertNull(value<PgCameraPosition?> { api.mapUpdate(PgMapOptions(), it) })
+    }
+
+    @Test
+    fun answersTheTypedValuesOfTheQueries() {
+        val point = PgScreenPoint(10.0, 20.0)
+        answer = { _, result -> result.success(point) }
+        assertSame(point, value<PgScreenPoint> { api.mapToScreenLocation(45.0, 9.0, it) })
+
+        val latLng = PgLatLng(45.0, 9.0)
+        answer = { _, result -> result.success(latLng) }
+        assertSame(latLng, value<PgLatLng> { api.mapToLatLng(10.0, 20.0, it) })
+        assertSame(latLng, value<PgLatLng> { api.locationComponentGetLastLocation(it) })
+
+        val region = PgLatLngBounds(PgLatLng(44.0, 8.0), PgLatLng(46.0, 10.0))
+        answer = { _, result -> result.success(region) }
+        assertSame(region, value<PgLatLngBounds> { api.mapGetVisibleRegion(it) })
+
+        answer = { _, result -> result.success(2.5) }
+        assertEquals(2.5, value<Double> { api.mapGetMetersPerPixelAtLatitude(45.0, it) }, 0.0)
+    }
+
+    @Test
+    fun answersTheFeaturesAndIdsAsListsOfStrings() {
+        val features = arrayListOf("{\"type\":\"Feature\"}")
+        answer = { _, result -> result.success(features) }
+
+        assertEquals(features, value<List<String>> { api.mapQueryRenderedFeaturesAtPoint(1.0, 2.0, emptyList(), null, it) })
+        assertEquals(features, value<List<String>> { api.mapQuerySourceFeatures("source", null, "null", it) })
+        assertEquals(features, value<List<String>> { api.sourceGetClusterLeaves("source", 1L, 10L, 0L, it) })
+        assertEquals(features, value<List<String>> { api.styleGetLayerIds(it) })
+    }
+
+    @Test
+    fun answersTheJsonOfTheStyleObjectsOrNull() {
+        answer = { _, result -> result.success("[\"==\",\"a\",1]") }
+        assertEquals("[\"==\",\"a\",1]", value<String?> { api.styleGetFilter("layer", it) })
+
+        answer = { _, result -> result.success(null) }
+        assertNull(value<String?> { api.styleGetFilter("layer", it) })
+        assertNull(value<String?> { api.styleGetLayerProperties("missing", it) })
+        assertNull(value<String?> { api.styleGetSourceProperties("missing", it) })
+        assertNull(value<String?> { api.sourceGetFeatureState("source", "1", null, it) })
+        assertNull(value<String?> { api.mapGetStyle(it) })
+    }
+
+    @Test
+    fun aReplyInTheShapeOfTheMethodChannelArrivesAsAnError() {
+        answer = { _, result -> result.success(mapOf("result" to true)) }
+
+        assertEquals("error", failure<Boolean> { api.mapEditGeoJsonSource("source", "{}", it) }.code)
     }
 }

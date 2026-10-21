@@ -43,77 +43,39 @@ class Convert {
     return builder.build();
   }
 
-  static boolean isScrollByCameraUpdate(Object o) {
-    return toString(toList(o).get(0)).equals("scrollBy");
+  /**
+   * Pans like maplibre-gl-js panBy: a positive {@code dx} moves the view east, a positive {@code
+   * dy} south, both in logical pixels. MapLibreMap.scrollBy drags the content the other way and
+   * moves the camera outside any CameraUpdate, so the caller had nothing to animate or report on.
+   */
+  static CameraUpdate scrollBy(MapLibreMap maplibreMap, double dx, double dy, float density) {
+    final Projection projection = maplibreMap.getProjection();
+    final PointF center = projection.toScreenLocation(maplibreMap.getCameraPosition().target);
+    center.offset(toFractionalPixels(dx, density), toFractionalPixels(dy, density));
+    return CameraUpdateFactory.newLatLng(projection.fromScreenLocation(center));
   }
 
-  static CameraUpdate toCameraUpdate(Object o, MapLibreMap maplibreMap, float density) {
-    final List<?> data = toList(o);
-    switch (toString(data.get(0))) {
-      case "newCameraPosition":
-        return CameraUpdateFactory.newCameraPosition(toCameraPosition(data.get(1)));
-      case "newLatLng":
-        return CameraUpdateFactory.newLatLng(toLatLng(data.get(1)));
-      case "newLatLngBounds":
-        return toBoundsCameraUpdate(
-            maplibreMap,
-            toLatLngBounds(data.get(1)),
-            toDouble(data.get(2)),
-            toDouble(data.get(3)),
-            toDouble(data.get(4)),
-            toDouble(data.get(5)),
-            density);
-      case "newLatLngZoom":
-        return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
-      case "scrollBy":
-        {
-          // Pans like maplibre-gl-js panBy: positive x moves the view east,
-          // positive y south. MapLibreMap.scrollBy drags the content the other
-          // way and moves the camera outside any CameraUpdate, so the caller
-          // had nothing to animate or report on.
-          final Projection projection = maplibreMap.getProjection();
-          final PointF center =
-              projection.toScreenLocation(maplibreMap.getCameraPosition().target);
-          center.offset(
-              toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
-          return CameraUpdateFactory.newLatLng(projection.fromScreenLocation(center));
-        }
-      case "zoomBy":
-        if (data.size() == 2) {
-          return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
-        } else {
-          // Keeps the point under the focus where it is on screen.
-          // CameraUpdateFactory.zoomBy(amount, point) recenters on the point.
-          final float amount = toFloat(data.get(1));
-          final List<?> focusData = toList(data.get(2));
-          final float focusX = toFractionalPixels(focusData.get(0), density);
-          final float focusY = toFractionalPixels(focusData.get(1), density);
-          final Projection projection = maplibreMap.getProjection();
-          final CameraPosition camera = maplibreMap.getCameraPosition();
-          final PointF center = projection.toScreenLocation(camera.target);
-          final float scale = (float) Math.pow(2, -amount);
-          final PointF target =
-              new PointF(
-                  focusX + (center.x - focusX) * scale, focusY + (center.y - focusY) * scale);
-          return CameraUpdateFactory.newCameraPosition(
-              new CameraPosition.Builder(camera)
-                  .target(projection.fromScreenLocation(target))
-                  .zoom(camera.zoom + amount)
-                  .build());
-        }
-      case "zoomIn":
-        return CameraUpdateFactory.zoomIn();
-      case "zoomOut":
-        return CameraUpdateFactory.zoomOut();
-      case "zoomTo":
-        return CameraUpdateFactory.zoomTo(toFloat(data.get(1)));
-      case "bearingTo":
-        return CameraUpdateFactory.bearingTo(toFloat(data.get(1)));
-      case "tiltTo":
-        return CameraUpdateFactory.tiltTo(toFloat(data.get(1)));
-      default:
-        throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
-    }
+  /**
+   * Zooms by {@code amount} keeping the location under the focus, in logical pixels, where it is
+   * on screen. CameraUpdateFactory.zoomBy(amount, point) recenters on the point instead.
+   */
+  static CameraUpdate zoomBy(
+      MapLibreMap maplibreMap, double amount, double focusX, double focusY, float density) {
+    final float focusPixelX = toFractionalPixels(focusX, density);
+    final float focusPixelY = toFractionalPixels(focusY, density);
+    final Projection projection = maplibreMap.getProjection();
+    final CameraPosition camera = maplibreMap.getCameraPosition();
+    final PointF center = projection.toScreenLocation(camera.target);
+    final float scale = (float) Math.pow(2, -amount);
+    final PointF target =
+        new PointF(
+            focusPixelX + (center.x - focusPixelX) * scale,
+            focusPixelY + (center.y - focusPixelY) * scale);
+    return CameraUpdateFactory.newCameraPosition(
+        new CameraPosition.Builder(camera)
+            .target(projection.fromScreenLocation(target))
+            .zoom(camera.zoom + amount)
+            .build());
   }
 
   /**
@@ -125,7 +87,7 @@ class Convert {
    * the padded area (#1047). Here the center is shifted instead, and the camera position carries
    * no padding, so the map keeps its own.
    */
-  private static CameraUpdate toBoundsCameraUpdate(
+  static CameraUpdate toBoundsCameraUpdate(
       MapLibreMap maplibreMap,
       LatLngBounds bounds,
       double left,
@@ -212,18 +174,6 @@ class Convert {
     return narrowed;
   }
 
-  static Object toJson(CameraPosition position) {
-    if (position == null) {
-      return null;
-    }
-    final Map<String, Object> data = new HashMap<>();
-    data.put("bearing", position.bearing);
-    data.put("target", toJson(position.target));
-    data.put("tilt", position.tilt);
-    data.put("zoom", position.zoom);
-    return data;
-  }
-
   /** The camera position of camera#onMove and camera#onIdle, with the fields of the map above. */
   static PgCameraPosition toPgCameraPosition(CameraPosition position) {
     if (position == null) {
@@ -234,10 +184,6 @@ class Convert {
         new PgLatLng(position.target.getLatitude(), position.target.getLongitude()),
         position.tilt,
         position.zoom);
-  }
-
-  private static Object toJson(LatLng latLng) {
-    return Arrays.asList(latLng.getLatitude(), latLng.getLongitude());
   }
 
   static LatLng toLatLng(Object o) {
@@ -329,6 +275,16 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
 
   static int toPixels(Object o, float density) {
     return (int) toFractionalPixels(o, density);
+  }
+
+  /** {@code value}, in logical pixels, in physical pixels: a float, as the SDK takes them. */
+  private static float toFractionalPixels(double value, float density) {
+    return (float) value * density;
+  }
+
+  /** {@code value}, in logical pixels, in whole physical pixels, rounded towards zero. */
+  static int toPixels(double value, float density) {
+    return (int) toFractionalPixels(value, density);
   }
 
   private static Point toPoint(Object o, float density) {

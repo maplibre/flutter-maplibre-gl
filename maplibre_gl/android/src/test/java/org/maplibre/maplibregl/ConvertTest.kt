@@ -3,7 +3,6 @@ package org.maplibre.maplibregl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 
 /**
@@ -51,23 +50,6 @@ class ConvertTest {
         assertEquals(LatLng(45.0, 9.0), position.target)
         assertEquals(30.0, position.tilt, 0.0)
         assertEquals(12.0, position.zoom, 0.0)
-    }
-
-    @Test
-    fun aCameraUpdateReadsLongs() {
-        val zoom = Convert.toCameraUpdate(listOf("zoomTo", 12L), null, 2f)
-            as CameraUpdateFactory.ZoomUpdate
-        assertEquals(12.0, zoom.zoom, 0.0)
-
-        val zoomBy = Convert.toCameraUpdate(listOf("zoomBy", -2L), null, 2f)
-            as CameraUpdateFactory.ZoomUpdate
-        assertEquals(-2.0, zoomBy.zoom, 0.0)
-
-        val position = Convert.toCameraUpdate(
-            listOf("newLatLngZoom", listOf(45L, 9L), 10L), null, 2f,
-        ) as CameraUpdateFactory.CameraPositionUpdate
-        assertEquals(LatLng(45.0, 9.0), position.target)
-        assertEquals(10.0, position.zoom, 0.0)
     }
 
     @Test

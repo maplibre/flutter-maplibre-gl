@@ -53,6 +53,23 @@ final class LocationPuckStyle {
     return value == null ? null : Convert.toInt(value);
   }
 
+  /** Reads the {@code myLocationStyle} of the map options. */
+  static LocationPuckStyle from(@NonNull PgMyLocationStyle style) {
+    return new LocationPuckStyle(
+        color(style.getFillColor()),
+        color(style.getBearingColor()),
+        color(style.getAccuracyColor()),
+        style.getAccuracyCircleEnabled(),
+        style.getPulseEnabled(),
+        color(style.getPulseColor()));
+  }
+
+  /** {@code value}, an ARGB color, as an Android color int: its low 32 bits. */
+  @Nullable
+  private static Integer color(@Nullable Long value) {
+    return value == null ? null : value.intValue();
+  }
+
   void applyTo(@NonNull LocationComponentOptions.Builder builder) {
     if (fillColor != null) {
       builder.foregroundTintColor(fillColor);

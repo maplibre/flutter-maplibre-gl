@@ -6,7 +6,8 @@ import io.flutter.plugin.common.MethodChannel
 /**
  * The calls of one map, from Dart. Each one goes to the [MapCalls] method of
  * the same name, with the same arguments, which answers through a
- * [MethodChannel.Result]: [PigeonMethodResult] hands that answer to Pigeon.
+ * [MethodChannel.Result] with a value of the type the Pigeon method returns:
+ * [PigeonMethodResult] hands that answer to Pigeon.
  *
  * Every call but [mapWaitForMap], [mapPause] and [mapResume] needs the native
  * map, which is null while the MapView is being rebuilt after the activity was
@@ -18,20 +19,25 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapWaitForMap(callback: (Result<Unit>) -> Unit) =
         answer(PigeonMethodResult.unit(callback)) { map.mapWaitForMap(it) }
 
-    override fun mapUpdate(options: Map<String, Any?>, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapUpdate(options, it) }
+    // Answered with the camera position, or null when the map does not track it.
+    override fun mapUpdate(
+        options: PgMapOptions,
+        callback: (Result<PgCameraPosition?>) -> Unit,
+    ) = call(callback, { it as PgCameraPosition? }) { map.mapUpdate(options, it) }
 
     override fun cameraAnimate(
-        cameraUpdate: List<Any?>,
+        cameraUpdate: PgCameraUpdate,
         duration: Long?,
         callback: (Result<Boolean?>) -> Unit,
     ) = call(callback, { it as Boolean? }) { map.cameraAnimate(cameraUpdate, duration, it) }
 
-    override fun cameraMove(cameraUpdate: List<Any?>, callback: (Result<Boolean?>) -> Unit) =
+    override fun cameraMove(cameraUpdate: PgCameraUpdate, callback: (Result<Boolean?>) -> Unit) =
         call(callback, { it as Boolean? }) { map.cameraMove(cameraUpdate, it) }
 
-    override fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit) =
-        unit(callback) { map.mapUpdateMyLocationTrackingMode(mode, it) }
+    override fun mapUpdateMyLocationTrackingMode(
+        mode: PgMyLocationTrackingMode,
+        callback: (Result<Unit>) -> Unit,
+    ) = unit(callback) { map.mapUpdateMyLocationTrackingMode(mode, it) }
 
     override fun locationComponentSetTrackingCameraOptions(
         tilt: Double,
@@ -42,7 +48,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     }
 
     override fun locationComponentSetManualLocation(
-        update: Map<String, Any?>,
+        update: PgManualLocationUpdate,
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.locationComponentSetManualLocation(update, it) }
 
@@ -50,10 +56,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         unit(callback) { map.mapMatchMapLanguageWithDeviceDefault(it) }
 
     override fun mapUpdateContentInsets(
-        bounds: Map<String, Double>,
+        insets: PgEdgeInsets,
         animated: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(callback) { map.mapUpdateContentInsets(bounds, animated, it) }
+    ) = unit(callback) { map.mapUpdateContentInsets(insets, animated, it) }
 
     override fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapSetMapLanguage(language, it) }
@@ -77,28 +83,35 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         answer(PigeonMethodResult.unit(callback)) { map.mapResume(it) }
 
     override fun cameraEase(
-        cameraUpdate: List<Any?>,
+        cameraUpdate: PgCameraUpdate,
         duration: Long?,
-        interpolation: String?,
+        interpolation: PgCameraAnimationInterpolation?,
         callback: (Result<Boolean>) -> Unit,
     ) = call(callback, { it as Boolean }) {
         map.cameraEase(cameraUpdate, duration, interpolation, it)
     }
 
-    override fun mapQueryCameraPosition(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapQueryCameraPosition(it) }
+    override fun mapQueryCameraPosition(callback: (Result<PgCameraPosition>) -> Unit) =
+        call(callback, { it as PgCameraPosition }) { map.mapQueryCameraPosition(it) }
 
-    override fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapEditGeoJsonSource(id, data, it) }
+    override fun mapEditGeoJsonSource(
+        id: String,
+        data: String,
+        callback: (Result<Boolean>) -> Unit,
+    ) = call(callback, { it as Boolean }) { map.mapEditGeoJsonSource(id, data, it) }
 
-    override fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapEditGeoJsonUrl(id, url, it) }
+    override fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Boolean>) -> Unit) =
+        call(callback, { it as Boolean }) { map.mapEditGeoJsonUrl(id, url, it) }
 
-    override fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapSetLayerFilter(id, filter, it) }
+    override fun mapSetLayerFilter(
+        id: String,
+        filter: String,
+        callback: (Result<Boolean>) -> Unit,
+    ) = call(callback, { it as Boolean }) { map.mapSetLayerFilter(id, filter, it) }
 
-    override fun mapGetStyle(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapGetStyle(it) }
+    // Answered with the style JSON, or null without a style.
+    override fun mapGetStyle(callback: (Result<String?>) -> Unit) =
+        call(callback, { it as String? }) { map.mapGetStyle(it) }
 
     override fun mapSetCustomHeaders(
         headers: Map<String, String>,
@@ -106,16 +119,20 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.mapSetCustomHeaders(headers, filter, it) }
 
-    override fun mapGetCustomHeaders(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapGetCustomHeaders(it) }
+    // Answered with a copy of the headers, which later calls change.
+    override fun mapGetCustomHeaders(callback: (Result<Map<String, String>>) -> Unit) =
+        call(callback, ::stringMap) { map.mapGetCustomHeaders(it) }
 
+    // The feature queries answer with the features, each one as its own JSON text.
     override fun mapQueryRenderedFeaturesAtPoint(
         x: Double,
         y: Double,
         layerIds: List<String>,
-        filter: List<Any?>?,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.mapQueryRenderedFeaturesAtPoint(x, y, layerIds, filter, it) }
+        filter: String?,
+        callback: (Result<List<String>>) -> Unit,
+    ) = call(callback, ::strings) {
+        map.mapQueryRenderedFeaturesAtPoint(x, y, layerIds, filter, it)
+    }
 
     override fun mapQueryRenderedFeaturesInRect(
         left: Double,
@@ -124,17 +141,19 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         bottom: Double,
         layerIds: List<String>,
         filter: String?,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) {
+        callback: (Result<List<String>>) -> Unit,
+    ) = call(callback, ::strings) {
         map.mapQueryRenderedFeaturesInRect(left, top, right, bottom, layerIds, filter, it)
     }
 
     override fun mapQuerySourceFeatures(
         sourceId: String,
         sourceLayerId: String?,
-        filter: List<Any?>?,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.mapQuerySourceFeatures(sourceId, sourceLayerId, filter, it) }
+        filter: String?,
+        callback: (Result<List<String>>) -> Unit,
+    ) = call(callback, ::strings) {
+        map.mapQuerySourceFeatures(sourceId, sourceLayerId, filter, it)
+    }
 
     // The SDK answers an int.
     override fun sourceGetClusterExpansionZoom(
@@ -148,16 +167,18 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun sourceGetClusterChildren(
         sourceId: String,
         clusterId: Long,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.sourceGetClusterChildren(sourceId, clusterId, it) }
+        callback: (Result<List<String>>) -> Unit,
+    ) = call(callback, ::strings) { map.sourceGetClusterChildren(sourceId, clusterId, it) }
 
     override fun sourceGetClusterLeaves(
         sourceId: String,
         clusterId: Long,
         limit: Long,
         offset: Long,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.sourceGetClusterLeaves(sourceId, clusterId, limit, offset, it) }
+        callback: (Result<List<String>>) -> Unit,
+    ) = call(callback, ::strings) {
+        map.sourceGetClusterLeaves(sourceId, clusterId, limit, offset, it)
+    }
 
     override fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapInvalidateAmbientCache(it) }
@@ -165,11 +186,11 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapClearAmbientCache(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapClearAmbientCache(it) }
 
-    override fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.locationComponentGetLastLocation(it) }
+    override fun locationComponentGetLastLocation(callback: (Result<PgLatLng>) -> Unit) =
+        call(callback, { it as PgLatLng }) { map.locationComponentGetLastLocation(it) }
 
-    override fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapGetVisibleRegion(it) }
+    override fun mapGetVisibleRegion(callback: (Result<PgLatLngBounds>) -> Unit) =
+        call(callback, { it as PgLatLngBounds }) { map.mapGetVisibleRegion(it) }
 
     override fun styleAddImage(
         name: String,
@@ -183,7 +204,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         imageSourceId: String,
         bytes: ByteArray,
         length: Long,
-        coordinates: List<Any?>,
+        coordinates: PgLatLngQuad,
         callback: (Result<Unit>) -> Unit,
     ) = addSource(imageSourceId, callback) {
         map.styleAddImageSource(imageSourceId, bytes, length, coordinates, it)
@@ -193,15 +214,15 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         imageSourceId: String,
         bytes: ByteArray?,
         length: Long?,
-        coordinates: List<Any?>?,
+        coordinates: PgLatLngQuad?,
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.styleUpdateImageSource(imageSourceId, bytes, length, coordinates, it) }
 
     override fun mapToScreenLocation(
         latitude: Double,
         longitude: Double,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.mapToScreenLocation(latitude, longitude, it) }
+        callback: (Result<PgScreenPoint>) -> Unit,
+    ) = call(callback, { it as PgScreenPoint }) { map.mapToScreenLocation(latitude, longitude, it) }
 
     // Answered with the screen points as a double[], x and y in turn.
     override fun mapToScreenLocationBatch(
@@ -242,19 +263,23 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.styleMoveLayer(layerId, belowLayerId, it) }
 
-    override fun styleSetFilter(layerId: String, filter: String, callback: (Result<Unit>) -> Unit) =
-        unit(callback) { map.styleSetFilter(layerId, filter, it) }
+    override fun styleSetFilter(
+        layerId: String,
+        filter: String?,
+        callback: (Result<Unit>) -> Unit,
+    ) = unit(callback) { map.styleSetFilter(layerId, filter, it) }
 
-    override fun styleGetFilter(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.styleGetFilter(layerId, it) }
+    // Answered with the filter JSON, or null when the layer has none.
+    override fun styleGetFilter(layerId: String, callback: (Result<String?>) -> Unit) =
+        call(callback, { it as String? }) { map.styleGetFilter(layerId, it) }
 
-    override fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.mapToLatLng(x, y, it) }
+    override fun mapToLatLng(x: Double, y: Double, callback: (Result<PgLatLng>) -> Unit) =
+        call(callback, { it as PgLatLng }) { map.mapToLatLng(x, y, it) }
 
     override fun mapGetMetersPerPixelAtLatitude(
         latitude: Double,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.mapGetMetersPerPixelAtLatitude(latitude, it) }
+        callback: (Result<Double>) -> Unit,
+    ) = call(callback, { it as Double }) { map.mapGetMetersPerPixelAtLatitude(latitude, it) }
 
     override fun sourceAddGeoJson(
         sourceId: String,
@@ -284,7 +309,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
@@ -302,7 +327,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
@@ -326,7 +351,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
@@ -344,7 +369,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
@@ -362,7 +387,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
@@ -433,7 +458,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         sourceLayer: String?,
         minzoom: Double?,
         maxzoom: Double?,
-        filter: String,
+        filter: String?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
     ) = addLayer(layerId, callback) {
@@ -466,12 +491,15 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         map.sourceRemoveFeatureState(sourceId, featureId, stateKey, sourceLayer, it)
     }
 
+    // Answered with the state JSON, or null when the feature has none.
     override fun sourceGetFeatureState(
         sourceId: String,
         featureId: String,
         sourceLayer: String?,
-        callback: (Result<Any?>) -> Unit,
-    ) = any(callback) { map.sourceGetFeatureState(sourceId, featureId, sourceLayer, it) }
+        callback: (Result<String?>) -> Unit,
+    ) = call(callback, { it as String? }) {
+        map.sourceGetFeatureState(sourceId, featureId, sourceLayer, it)
+    }
 
     override fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.styleSetLight(light, it) }
@@ -487,7 +515,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         layerIds: List<String>,
         visible: Boolean,
         callback: (Result<List<String>?>) -> Unit,
-    ) = call(callback, { reply -> (reply as List<*>?)?.map { it as String } }) {
+    ) = call(callback, { reply -> reply?.let(::strings) }) {
         map.layerSetVisibilityBatch(layerIds, visible, it)
     }
 
@@ -508,17 +536,19 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<ByteArray?>) -> Unit,
     ) = call(callback, { it as ByteArray? }) { map.mapTakeSnapshot(width, height, it) }
 
-    override fun styleGetLayerIds(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.styleGetLayerIds(it) }
+    override fun styleGetLayerIds(callback: (Result<List<String>>) -> Unit) =
+        call(callback, ::strings) { map.styleGetLayerIds(it) }
 
-    override fun styleGetSourceIds(callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.styleGetSourceIds(it) }
+    override fun styleGetSourceIds(callback: (Result<List<String>>) -> Unit) =
+        call(callback, ::strings) { map.styleGetSourceIds(it) }
 
-    override fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.styleGetLayerProperties(layerId, it) }
+    // Answered with the style-spec JSON, or null when there is no such layer.
+    override fun styleGetLayerProperties(layerId: String, callback: (Result<String?>) -> Unit) =
+        call(callback, { it as String? }) { map.styleGetLayerProperties(layerId, it) }
 
-    override fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit) =
-        any(callback) { map.styleGetSourceProperties(sourceId, it) }
+    // Answered with the style-spec JSON, or null when there is no such source.
+    override fun styleGetSourceProperties(sourceId: String, callback: (Result<String?>) -> Unit) =
+        call(callback, { it as String? }) { map.styleGetSourceProperties(sourceId, it) }
 
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.styleSetStyle(style, it) }
@@ -526,10 +556,6 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
     private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =
         withMap(PigeonMethodResult.unit(callback), body)
-
-    /** Runs [body], which needs the map, for a call whose answer goes to Dart as it is. */
-    private fun any(callback: (Result<Any?>) -> Unit, body: (MethodChannel.Result) -> Unit) =
-        withMap(PigeonMethodResult(callback) { it }, body)
 
     /**
      * Runs [body], which needs the map, for a call whose answer [convert] turns
@@ -600,3 +626,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
             "Map is not ready (activity may have been recreated)"
     }
 }
+
+/** [reply], a list of strings, as the List<String> Pigeon sends. */
+private fun strings(reply: Any?): List<String> = (reply as List<*>).map { it as String }
+
+/** [reply], a map of strings, as a new Map<String, String>. */
+private fun stringMap(reply: Any?): Map<String, String> =
+    (reply as Map<*, *>).entries.associate { (key, value) -> key as String to value as String }

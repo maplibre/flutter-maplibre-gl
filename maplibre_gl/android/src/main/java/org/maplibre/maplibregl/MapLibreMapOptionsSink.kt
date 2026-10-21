@@ -8,8 +8,8 @@ import org.maplibre.android.location.engine.LocationEngineRequest
 
 /** Receiver of MapLibreMap configuration options.  */
 internal interface MapLibreMapOptionsSink {
-    // todo: dddd replace with CameraPosition.Builder target
-    fun setCameraTargetBounds(bounds: LatLngBounds)
+    /** Null lifts the restriction. */
+    fun setCameraTargetBounds(bounds: LatLngBounds?)
 
     fun setCompassEnabled(compassEnabled: Boolean)
 

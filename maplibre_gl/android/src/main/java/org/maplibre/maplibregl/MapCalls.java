@@ -10,7 +10,8 @@ import io.flutter.plugin.common.MethodChannel;
 /**
  * The calls of one map, as {@link MapHostApi} hands them over. Each one is named after the {@link
  * MapLibreMapHostApi} method it serves, takes its arguments in the same order, and answers through
- * {@code result}.
+ * {@code result} with a value of the type that method returns, which {@link MapHostApi} hands to
+ * Pigeon.
  *
  * <p>While {@link #isMapReady()} is false, {@link MapHostApi} answers every call but {@link
  * #mapWaitForMap}, {@link #mapPause} and {@link #mapResume} with {@code MAP_NOT_READY} itself,
@@ -43,7 +44,7 @@ public interface MapCalls {
 
   void mapWaitForMap(MethodChannel.Result result);
 
-  void mapUpdate(Map<String, Object> options, MethodChannel.Result result);
+  void mapUpdate(PgMapOptions options, MethodChannel.Result result);
 
   void mapMatchMapLanguageWithDeviceDefault(MethodChannel.Result result);
 
@@ -74,21 +75,20 @@ public interface MapCalls {
 
   // Camera
 
-  void cameraMove(List<Object> cameraUpdate, MethodChannel.Result result);
+  void cameraMove(PgCameraUpdate cameraUpdate, MethodChannel.Result result);
 
   void cameraAnimate(
-      List<Object> cameraUpdate, @Nullable Long duration, MethodChannel.Result result);
+      PgCameraUpdate cameraUpdate, @Nullable Long duration, MethodChannel.Result result);
 
   void cameraEase(
-      List<Object> cameraUpdate,
+      PgCameraUpdate cameraUpdate,
       @Nullable Long duration,
-      @Nullable String interpolation,
+      @Nullable PgCameraAnimationInterpolation interpolation,
       MethodChannel.Result result);
 
   void mapQueryCameraPosition(MethodChannel.Result result);
 
-  void mapUpdateContentInsets(
-      Map<String, Double> bounds, boolean animated, MethodChannel.Result result);
+  void mapUpdateContentInsets(PgEdgeInsets insets, boolean animated, MethodChannel.Result result);
 
   void mapSetCameraBounds(
       double west,
@@ -100,14 +100,15 @@ public interface MapCalls {
 
   // Location
 
-  void mapUpdateMyLocationTrackingMode(long mode, MethodChannel.Result result);
+  void mapUpdateMyLocationTrackingMode(PgMyLocationTrackingMode mode, MethodChannel.Result result);
 
   void locationComponentGetLastLocation(MethodChannel.Result result);
 
   void locationComponentSetTrackingCameraOptions(
       double tilt, @Nullable Long duration, MethodChannel.Result result);
 
-  void locationComponentSetManualLocation(Map<String, Object> update, MethodChannel.Result result);
+  void locationComponentSetManualLocation(
+      PgManualLocationUpdate update, MethodChannel.Result result);
 
   // Queries
 
@@ -125,7 +126,7 @@ public interface MapCalls {
       double x,
       double y,
       List<String> layerIds,
-      @Nullable List<Object> filter,
+      @Nullable String filter,
       MethodChannel.Result result);
 
   void mapQueryRenderedFeaturesInRect(
@@ -140,7 +141,7 @@ public interface MapCalls {
   void mapQuerySourceFeatures(
       String sourceId,
       @Nullable String sourceLayerId,
-      @Nullable List<Object> filter,
+      @Nullable String filter,
       MethodChannel.Result result);
 
   // Sources
@@ -191,14 +192,14 @@ public interface MapCalls {
       String imageSourceId,
       byte[] bytes,
       long length,
-      List<Object> coordinates,
+      PgLatLngQuad coordinates,
       MethodChannel.Result result);
 
   void styleUpdateImageSource(
       String imageSourceId,
       @Nullable byte[] bytes,
       @Nullable Long length,
-      @Nullable List<Object> coordinates,
+      @Nullable PgLatLngQuad coordinates,
       MethodChannel.Result result);
 
   void styleGetSourceIds(MethodChannel.Result result);
@@ -214,7 +215,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result);
@@ -226,7 +227,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result);
@@ -238,7 +239,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result);
@@ -250,7 +251,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result);
@@ -262,7 +263,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result);
@@ -309,7 +310,7 @@ public interface MapCalls {
       @Nullable String sourceLayer,
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
-      String filter,
+      @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result);
 
@@ -345,7 +346,7 @@ public interface MapCalls {
 
   void styleMoveLayer(String layerId, @Nullable String belowLayerId, MethodChannel.Result result);
 
-  void styleSetFilter(String layerId, String filter, MethodChannel.Result result);
+  void styleSetFilter(String layerId, @Nullable String filter, MethodChannel.Result result);
 
   void styleGetFilter(String layerId, MethodChannel.Result result);
 
