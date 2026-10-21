@@ -207,11 +207,14 @@ Future<void> pauseOfflineRegionDownload(int id) =>
 
 /// Resumes a paused offline region download.
 ///
+/// A region that no [downloadOfflineRegion] call of this app session is
+/// following, for example one paused before the app restarted, resumes too.
+/// Nothing reports its progress then: follow it with
+/// [getOfflineRegionStatus]. A region that is already complete is left as it
+/// is.
+///
 /// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
-/// has that [id]. On Android, a region whose download is not running in this
-/// app session, because the app restarted or the download already ended,
-/// fails with `REGION_NOT_RESUMABLE`: download it again with
-/// [downloadOfflineRegion]. iOS resumes such a region without sending events.
+/// has that [id].
 Future<void> resumeOfflineRegionDownload(int id) =>
     _global.resumeOfflineRegionDownload(id);
 

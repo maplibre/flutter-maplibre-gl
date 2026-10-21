@@ -250,7 +250,6 @@ Android and iOS:
 | `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from. |
 | `OFFLINE_DATABASE_ERROR` | The offline database failed the call, for example on a file `mergeOfflineRegions` cannot import. The message carries MapLibre's reason. |
 | `AMBIENT_CACHE_ERROR` | MapLibre failed to clear the ambient cache or to change its size. |
-| `REGION_NOT_RESUMABLE` | Android only: `resumeOfflineRegionDownload` on a region whose download is not running in this app session, after a restart or once it ended. Download the region again. |
 
 A download that stops before it completes calls `onEvent` with an `Error`
 whose `cause.code` says why:

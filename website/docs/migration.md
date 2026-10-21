@@ -60,13 +60,14 @@ The error codes of the offline calls and of the download `Error` events are rena
 | `RegionReplaced` | `REGION_REPLACED` |
 | `DatabaseReset` | `DATABASE_RESET` |
 | `UpdateMetadataError`, `DeleteRegionError`, `PauseRegionError`, `ResumeRegionError`, `GetRegionStatusError` for an id no region has | `REGION_NOT_FOUND` |
-| `ResumeRegionError` for a region with no download running (Android) | `REGION_NOT_RESUMABLE` |
 | `mergeOfflineRegions Error`, `RegionListError`, `ResetDatabaseError`, and the five codes above for any other failure of the database | `OFFLINE_DATABASE_ERROR` |
 | `ClearAmbientCacheError`, `SetMaximumAmbientCacheSizeError` | `AMBIENT_CACHE_ERROR` |
 | `SetOfflineTileCountLimitError` and `SetMaximumAmbientCacheSizeError` for a negative value (iOS), `InvalidMaxRequests`, `InvalidMaxRequestsPerHost` (Android), `UpdateMetadataError` for metadata that is not JSON-encodable (iOS) | `INVALID_ARGUMENT` |
 | `SetHttpHeadersError`, `SetMaxConcurrentRequestsError` (Android) | `HTTP_CLIENT_ERROR` |
 
 Android now rejects a negative `setOfflineTileCountLimit` with `INVALID_ARGUMENT`, as iOS did, and iOS rejects a `setOfflineMaxConcurrentRequests` value below 1, as Android did.
+
+On Android, `resumeOfflineRegionDownload` resumes a region that no download of the current app session follows, for example one paused before the app restarted, as iOS does. It used to fail with `ResumeRegionError`. Such a download sends no events, so follow it with `getOfflineRegionStatus`. Resuming a region that is already complete does nothing on either platform.
 
 `setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
 
