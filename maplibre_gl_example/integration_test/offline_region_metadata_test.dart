@@ -1,12 +1,17 @@
-// Integration test for `updateOfflineRegionMetadata` on Android and iOS.
+// Integration test for `updateOfflineRegionMetadata` and the offline error
+// codes on Android and iOS.
 //
 // iOS had no handler for the call, so it failed with a MissingPluginException.
 // The test downloads a tiny region from an HTTP server inside the test process,
 // so it never needs the network, then replaces the region's metadata and
 // checks that both the returned region and getListOfRegions carry the new
-// metadata under the same id. A second case checks that an unknown id fails
-// with the same error code on both platforms, and a third that two downloads
-// started together both finish.
+// metadata under the same id. A second case checks that two downloads started
+// together both finish.
+//
+// The offline errors group checks that both platforms answer the same code and
+// message: REGION_NOT_FOUND for an unknown id in every call that takes one,
+// and INVALID_ARGUMENT for a negative tile count limit or ambient cache size
+// and for a concurrent request limit below 1.
 //
 // The empty getListOfRegions right after launch on iOS (#381) is not covered:
 // it needs a cold start of the app with regions already stored, which a single
@@ -22,6 +27,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+// The generated client reaches native with arguments the public functions
+// reject in Dart first, to check the native answer to them.
+// ignore: implementation_imports
+import 'package:maplibre_gl/src/native/messages.g.dart'
+    show MapLibreGlobalHostApi;
 
 import 'support/map_harness.dart';
 import 'support/tile_server.dart'
@@ -88,30 +98,6 @@ void main() {
       _expectSameDefinition(listed.single.definition, region.definition);
     });
 
-    testWidgets('an unknown id fails with UpdateMetadataError', (
-      tester,
-    ) async {
-      if (kIsWeb) return;
-
-      final regions = await pumpUntil(
-        tester,
-        getListOfRegions(),
-        'getListOfRegions',
-      );
-      final ids = regions.map((r) => r.id).toSet();
-      var unknownId = -1;
-      while (ids.contains(unknownId)) {
-        unknownId--;
-      }
-
-      await expectPlatformError(
-        tester,
-        updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
-        'updateOfflineRegionMetadata with an unknown id',
-        code: 'UpdateMetadataError',
-      );
-    });
-
     testWidgets('two downloads at the same time both finish', (tester) async {
       if (kIsWeb) return;
 
@@ -139,6 +125,102 @@ void main() {
 
       expect(regions.map((r) => r.metadata['name']), ['west', 'east']);
       expect(regions.first.id, isNot(regions.last.id));
+    });
+  });
+
+  group('offline errors', () {
+    testWidgets('an unknown id fails with REGION_NOT_FOUND in every call', (
+      tester,
+    ) async {
+      if (kIsWeb) return;
+
+      final regions = await pumpUntil(
+        tester,
+        getListOfRegions(),
+        'getListOfRegions',
+      );
+      final ids = regions.map((r) => r.id).toSet();
+      var unknownId = -1;
+      while (ids.contains(unknownId)) {
+        unknownId--;
+      }
+
+      final calls = <String, Future<Object?> Function()>{
+        'pauseOfflineRegionDownload':
+            () => pauseOfflineRegionDownload(unknownId),
+        'resumeOfflineRegionDownload':
+            () => resumeOfflineRegionDownload(unknownId),
+        'getOfflineRegionStatus': () => getOfflineRegionStatus(unknownId),
+        'deleteOfflineRegion': () => deleteOfflineRegion(unknownId),
+        'updateOfflineRegionMetadata':
+            () => updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
+      };
+      for (final MapEntry(key: method, value: call) in calls.entries) {
+        final error = await expectPlatformError(
+          tester,
+          call(),
+          '$method with an unknown id',
+          code: 'REGION_NOT_FOUND',
+        );
+        expect(
+          error.message,
+          'There is no offline region with id $unknownId.',
+          reason: method,
+        );
+      }
+    });
+
+    testWidgets('a negative tile count limit fails with INVALID_ARGUMENT', (
+      tester,
+    ) async {
+      if (kIsWeb) return;
+
+      final error = await expectPlatformError(
+        tester,
+        setOfflineTileCountLimit(-1),
+        'setOfflineTileCountLimit(-1)',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(error.message, 'limit must be >= 0 (got -1)');
+    });
+
+    testWidgets('a negative ambient cache size fails with INVALID_ARGUMENT', (
+      tester,
+    ) async {
+      if (kIsWeb) return;
+
+      // setMaximumAmbientCacheSize throws an ArgumentError before native.
+      final error = await expectPlatformError(
+        tester,
+        MapLibreGlobalHostApi().setMaximumAmbientCacheSize(-1),
+        'setMaximumAmbientCacheSize(-1) in native',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(error.message, 'bytes must be >= 0 (got -1)');
+    });
+
+    testWidgets('a concurrent request limit below 1 fails with '
+        'INVALID_ARGUMENT', (tester) async {
+      if (kIsWeb) return;
+
+      // setOfflineMaxConcurrentRequests asserts both before native. iOS has
+      // no total limit, and still rejects one Android would reject.
+      final api = MapLibreGlobalHostApi();
+      final total = await expectPlatformError(
+        tester,
+        api.setOfflineMaxConcurrentRequests(0, null),
+        'setOfflineMaxConcurrentRequests(maxRequests: 0) in native',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(total.message, 'maxRequests must be >= 1 (got 0)');
+
+      final perHost = await expectPlatformError(
+        tester,
+        api.setOfflineMaxConcurrentRequests(null, 0),
+        'setOfflineMaxConcurrentRequests(maxRequestsPerHost: 0) in native',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(perHost.message, 'maxRequestsPerHost must be >= 1 (got 0)');
     });
   });
 }

@@ -380,8 +380,8 @@ void main() {
       host.answer(
         'updateOfflineRegionMetadata',
         error: PlatformException(
-          code: 'UpdateMetadataError',
-          message: 'There is no region with the id 9.',
+          code: 'REGION_NOT_FOUND',
+          message: 'There is no offline region with id 9.',
           details: {'id': 9},
         ),
       );
@@ -390,11 +390,11 @@ void main() {
         updateOfflineRegionMetadata(9, {'name': 'x'}),
         throwsA(
           isA<PlatformException>()
-              .having((e) => e.code, 'code', 'UpdateMetadataError')
+              .having((e) => e.code, 'code', 'REGION_NOT_FOUND')
               .having(
                 (e) => e.message,
                 'message',
-                'There is no region with the id 9.',
+                'There is no offline region with id 9.',
               )
               .having((e) => e.details, 'details', {'id': 9}),
         ),
@@ -454,7 +454,7 @@ void main() {
             downloadId,
             PgOfflineDownloadEvent(
               status: PgOfflineDownloadStatus.error,
-              errorCode: 'tileCountLimitExceeded',
+              errorCode: 'TILE_COUNT_LIMIT_EXCEEDED',
               errorMessage: 'too many tiles',
               errorDetails: {'limit': 6000},
             ),
@@ -465,7 +465,7 @@ void main() {
               (s) => s.cause,
               'cause',
               isA<PlatformException>()
-                  .having((e) => e.code, 'code', 'tileCountLimitExceeded')
+                  .having((e) => e.code, 'code', 'TILE_COUNT_LIMIT_EXCEEDED')
                   .having((e) => e.message, 'message', 'too many tiles')
                   .having((e) => e.details, 'details', {'limit': 6000}),
             ),
