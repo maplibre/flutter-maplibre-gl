@@ -815,8 +815,11 @@ class MapLibreMapController extends MapLibrePlatform
     final geometry = jsify([point.x, point.y]);
     if (geometry == null) return [];
 
-    return _map
-        .queryRenderedFeatures(geometry, options)
+    return _filteredQuery(
+          'queryRenderedFeatures',
+          filter != null,
+          () => _map.queryRenderedFeatures(geometry, options),
+        )
         .map(
           (feature) => <String, dynamic>{
             'type': 'Feature',
@@ -856,8 +859,15 @@ class MapLibreMapController extends MapLibrePlatform
       // This call takes the filter as a JSON string, where
       // queryRenderedFeatures takes the expression itself. maplibre-gl-js only
       // accepts the expression, so the string has to be decoded here or the
-      // filter never reaches the query.
-      options['filter'] = jsonDecode(filter);
+      // filter never reaches the query. As on Android and iOS, only an
+      // expression array filters, and text that is not JSON is an error.
+      final Object? decoded;
+      try {
+        decoded = jsonDecode(filter);
+      } on FormatException {
+        throw _invalidFilter(_filterNotJson);
+      }
+      if (decoded is List) options['filter'] = decoded;
     }
 
     final geometry = jsify([
@@ -865,8 +875,11 @@ class MapLibreMapController extends MapLibrePlatform
       [rect.right, rect.top],
     ]);
     if (geometry == null) return [];
-    return _map
-        .queryRenderedFeatures(geometry, options)
+    return _filteredQuery(
+          'queryRenderedFeatures',
+          options.containsKey('filter'),
+          () => _map.queryRenderedFeatures(geometry, options),
+        )
         .map(
           (feature) => <String, dynamic>{
             'type': 'Feature',
@@ -891,17 +904,9 @@ class MapLibreMapController extends MapLibrePlatform
     // A source is resolved by id out of the style, so without a style there is
     // no source to query. Answering with an empty list would look like a
     // source that holds no features, which the caller cannot tell apart, so
-    // report it as Android and iOS do. Not isStyleLoaded(): it is also false
-    // while tiles or a source update load.
-    if (!_styleReady) {
-      throw PlatformException(
-        code: 'STYLE_NOT_READY',
-        message:
-            'querySourceFeatures was called before the style finished '
-            "loading, so source '$sourceId' does not exist yet. Wait for "
-            'onStyleLoadedCallback.',
-      );
-    }
+    // report it as Android and iOS do, with their message. Not
+    // isStyleLoaded(): it is also false while tiles or a source update load.
+    _ensureStyleReady();
 
     final parameters = <String, dynamic>{};
 
@@ -913,8 +918,11 @@ class MapLibreMapController extends MapLibrePlatform
       parameters['filter'] = filter;
     }
 
-    return _map
-        .querySourceFeatures(sourceId, parameters)
+    return _filteredQuery(
+          'querySourceFeatures',
+          filter != null,
+          () => _map.querySourceFeatures(sourceId, parameters),
+        )
         .map(
           (feature) => <String, dynamic>{
             'type': 'Feature',
@@ -931,6 +939,80 @@ class MapLibreMapController extends MapLibrePlatform
         )
         .toList();
   }
+
+  /// Runs [query], the maplibre-gl-js feature query [method], and throws
+  /// `INVALID_EXPRESSION`, as Android and iOS do, for a filter maplibre-gl-js
+  /// rejects. It reports that through an error event, then throws an error of
+  /// its own or queries all the same.
+  T _filteredQuery<T>(String method, bool filtered, T Function() query) {
+    if (!filtered) return query();
+    late T features;
+    Object? thrown;
+    StackTrace? thrownStack;
+    final errors = _mapErrorsDuring(() {
+      try {
+        features = query();
+      } catch (error, stack) {
+        thrown = error;
+        thrownStack = stack;
+      }
+    });
+    // The key before the reason names the filter, such as
+    // "queryRenderedFeatures.filter[0]: ".
+    final key = RegExp('^${RegExp.escape(method)}\\.filter[^:]*: ');
+    String? reason;
+    for (final message in errors) {
+      final match = key.firstMatch(message);
+      if (match == null) {
+        // Not about the filter: logged, as maplibre-gl-js does without a
+        // listener.
+        web.console.error(message.toJS);
+      } else {
+        reason ??= message.substring(match.end);
+      }
+    }
+    if (reason != null) throw _invalidFilter(reason);
+    if (thrown case final error?) {
+      Error.throwWithStackTrace(error, thrownStack!);
+    }
+    return features;
+  }
+
+  /// Runs [action] and returns the messages of the error events
+  /// maplibre-gl-js fired meanwhile. It reports what fails its validation
+  /// that way instead of throwing.
+  List<String> _mapErrorsDuring(void Function() action) {
+    final errors = <String>[];
+    final listener =
+        ((JSObject event) {
+          final message =
+              event
+                  .getProperty<JSObject?>('error'.toJS)
+                  ?.getProperty<JSString?>('message'.toJS)
+                  ?.toDart;
+          if (message != null) errors.add(message);
+        }).toJS;
+    final map = _map.jsObject as JSObject;
+    map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
+    try {
+      action();
+    } finally {
+      map.callMethod<JSAny?>('off'.toJS, 'error'.toJS, listener);
+    }
+    return errors;
+  }
+
+  /// Why a filter cannot be read, when its text is not JSON. Android and iOS
+  /// say the same.
+  static const _filterNotJson = 'Not valid JSON.';
+
+  /// A filter maplibre-gl-js rejected, or that cannot be read, answered as on
+  /// Android and iOS.
+  static PlatformException _invalidFilter(String reason) => PlatformException(
+    code: 'INVALID_EXPRESSION',
+    message: 'Invalid filter: $reason',
+    details: reason,
+  );
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
@@ -1759,6 +1841,51 @@ class MapLibreMapController extends MapLibrePlatform
     _map.removeLayer(imageLayerId);
   }
 
+  /// Throws `STYLE_NOT_READY`, with the message of Android and iOS, until
+  /// the style has loaded. maplibre-gl-js throws an error of its own for most
+  /// calls then.
+  void _ensureStyleReady() {
+    if (!_styleReady) {
+      throw PlatformException(
+        code: 'STYLE_NOT_READY',
+        message:
+            'Style is null or not fully loaded. Has onStyleLoaded() already '
+            'been invoked?',
+      );
+    }
+  }
+
+  /// Throws `SOURCE_NOT_FOUND`, as Android and iOS do, for a source the style
+  /// does not hold. maplibre-gl-js does not add a layer of such a source, and
+  /// only says so through an error event.
+  void _ensureSourceExists(String sourceId) {
+    if (_map.getSource(sourceId) == null) throw _sourceNotFound(sourceId);
+  }
+
+  static PlatformException _sourceNotFound(String sourceId) =>
+      PlatformException(
+        code: 'SOURCE_NOT_FOUND',
+        message: "Source '$sourceId' does not exist in the current style.",
+      );
+
+  /// The type of the source [sourceId], such as `geojson` or `image`, or
+  /// null without such a source. [MapLibreMap.getSource] wraps every source
+  /// in a GeoJsonSource, so the type is read off the source itself.
+  String? _sourceType(String sourceId) =>
+      _jsSource(sourceId)?.getProperty<JSString?>('type'.toJS)?.toDart;
+
+  /// The source [sourceId] as maplibre-gl-js holds it, or null.
+  JSObject? _jsSource(String sourceId) => (_map.jsObject as JSObject)
+      .callMethod<JSObject?>('getSource'.toJS, sourceId.toJS);
+
+  /// [belowLayerId] when the style holds that layer, and null otherwise, so a
+  /// layer added below a missing one goes on top, as on Android and iOS.
+  /// maplibre-gl-js would not add it at all.
+  String? _existingLayerId(String? belowLayerId) =>
+      belowLayerId != null && _map.getLayer(belowLayerId) != null
+          ? belowLayerId
+          : null;
+
   /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
   /// layer. maplibre-gl-js only fires an error event, which callers never see.
   void _ensureLayerExists(String layerId) {
@@ -1810,29 +1937,11 @@ class MapLibreMapController extends MapLibrePlatform
     _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
     // throwing, so listen for it while the filter is set.
-    String? error;
-    final listener =
-        ((JSObject event) {
-          final message =
-              event
-                  .getProperty<JSObject?>('error'.toJS)
-                  ?.getProperty<JSString?>('message'.toJS)
-                  ?.toDart;
-          // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
-          error ??= message?.replaceFirst(RegExp(r'^layers\.[^:]*: '), '');
-        }).toJS;
-    final map = _map.jsObject as JSObject;
-    map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
-    try {
-      _map.setFilter(layerId, filter);
-    } finally {
-      map.callMethod<JSAny?>('off'.toJS, 'error'.toJS, listener);
-    }
-    if (error != null) {
-      throw PlatformException(
-        code: 'INVALID_EXPRESSION',
-        message: 'Invalid filter: $error',
-        details: error,
+    final errors = _mapErrorsDuring(() => _map.setFilter(layerId, filter));
+    if (errors.isNotEmpty) {
+      // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+      throw _invalidFilter(
+        errors.first.replaceFirst(RegExp(r'^layers\.[^:]*: '), ''),
       );
     }
   }
@@ -1843,6 +1952,7 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) async {
+    _ensureStyleReady();
     // Before the cache write below, so a rejected add keeps the original's data.
     _ensureNewSourceId(sourceId);
     final data = _makeFeatureCollection(geojson);
@@ -1913,15 +2023,22 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojson,
   ) async {
-    final source = _map.getSource(sourceId);
-    if (source == null) return;
-    if (source is! GeoJsonSource) {
-      // Source exists but is not a GeoJsonSource; nothing to update.
-      return;
-    }
+    final source = _geoJsonSource(sourceId);
     final data = _makeFeatureCollection(geojson);
     _addedFeaturesByLayer[sourceId] = data;
     await source.setData(data);
+  }
+
+  /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
+  /// and `SOURCE_NOT_FOUND` without such a source, as Android and iOS do,
+  /// where this ignored the call.
+  GeoJsonSource _geoJsonSource(String sourceId) {
+    _ensureStyleReady();
+    final source = _map.getSource(sourceId);
+    if (source is! GeoJsonSource || _sourceType(sourceId) != 'geojson') {
+      throw _sourceNotFound(sourceId);
+    }
+    return source;
   }
 
   @override
@@ -2144,6 +2261,7 @@ class MapLibreMapController extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
+    _ensureStyleReady();
     _ensureNewLayerId(layerId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
@@ -2159,7 +2277,7 @@ class MapLibreMapController extends MapLibrePlatform
       'paint': paint,
       if (minzoom != null) 'minzoom': minzoom,
       if (maxzoom != null) 'maxzoom': maxzoom,
-    }, belowLayerId);
+    }, _existingLayerId(belowLayerId));
   }
 
   @override
@@ -2255,8 +2373,12 @@ class MapLibreMapController extends MapLibrePlatform
     required bool enableInteraction,
   }) async {
     // Before anything else: a second add used to pass silently and attach the
-    // hover listeners to the existing layer once more.
+    // hover listeners to the existing layer once more. Then, as on Android
+    // and iOS, the source, which maplibre-gl-js would only report through an
+    // error event, without adding the layer.
+    _ensureStyleReady();
     _ensureNewLayerId(layerId);
+    _ensureSourceExists(sourceId);
     final layout = Map<String, dynamic>.fromEntries(
       properties.entries.where((entry) => isLayoutProperty(entry.key)),
     );
@@ -2264,7 +2386,7 @@ class MapLibreMapController extends MapLibrePlatform
       properties.entries.where((entry) => !isLayoutProperty(entry.key)),
     );
 
-    _map.addLayer(<String, dynamic>{
+    final layer = <String, dynamic>{
       'id': layerId,
       'type': layerType,
       'source': sourceId,
@@ -2274,7 +2396,27 @@ class MapLibreMapController extends MapLibrePlatform
       if (minzoom != null) 'minzoom': minzoom,
       if (maxzoom != null) 'maxzoom': maxzoom,
       if (filter != null) 'filter': filter,
-    }, belowLayerId);
+    };
+    final before = _existingLayerId(belowLayerId);
+    if (filter == null) {
+      _map.addLayer(layer, before);
+    } else {
+      // A filter maplibre-gl-js rejects keeps the layer out, which it only
+      // reports through an error event. Android and iOS answer
+      // INVALID_EXPRESSION.
+      final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
+      final key = RegExp(r'^layers\..*?\.filter[^:]*: ');
+      String? reason;
+      for (final message in errors) {
+        final match = key.firstMatch(message);
+        if (match == null) {
+          web.console.error(message.toJS);
+        } else {
+          reason ??= message.substring(match.end);
+        }
+      }
+      if (reason != null) throw _invalidFilter(reason);
+    }
 
     if (enableInteraction) {
       _interactiveFeatureLayerIds.add(layerId);
@@ -2440,6 +2582,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _ensureStyleReady();
     _ensureNewSourceId(sourceId);
     _map.addSource(sourceId, properties.toJson());
   }
@@ -2529,13 +2672,26 @@ class MapLibreMapController extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojsonFeature,
   ) async {
-    final source = _map.getSource(sourceId) as GeoJsonSource?;
+    final source = _geoJsonSource(sourceId);
+    // Only a Feature replaces a feature, as on Android and iOS.
+    if (geojsonFeature['type'] != 'Feature') {
+      throw PlatformException(
+        code: 'INVALID_GEOJSON',
+        message: "The feature for source '$sourceId' is not a GeoJSON Feature.",
+      );
+    }
+    // Without data set through addGeoJsonSource or setGeoJsonSource, as for a
+    // source added some other way, nothing changes, as on Android and iOS.
     final data = _addedFeaturesByLayer[sourceId];
 
-    if (source != null && data != null) {
+    if (data != null) {
       final feature = _makeFeature(geojsonFeature);
       final features = data.features.toList();
-      final index = features.indexWhere((f) => f.id == feature.id);
+      // Ids are compared by their text, as on Android and iOS, so 2 and "2"
+      // match. A feature without an id replaces nothing.
+      final id = feature.id?.toString();
+      final index =
+          id == null ? -1 : features.indexWhere((f) => f.id?.toString() == id);
       if (index >= 0) {
         features[index] = feature;
         final newData = FeatureCollection(features: features);
@@ -2666,16 +2822,7 @@ class MapLibreMapController extends MapLibrePlatform
             'and 24, with minzoom not above maxzoom.',
       );
     }
-    if (!_styleReady) {
-      // Same code and message as Android and iOS. maplibre-gl-js would throw
-      // its own error instead.
-      throw PlatformException(
-        code: 'STYLE_NOT_READY',
-        message:
-            'Style is null or not fully loaded. Has onStyleLoaded() already '
-            'been invoked?',
-      );
-    }
+    _ensureStyleReady();
     _ensureLayerExists(layerId);
     _map.setLayerZoomRange(layerId, minzoom, maxzoom);
   }
@@ -2784,15 +2931,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {
-    if (!_styleReady) {
-      // Same code and message as Android and iOS.
-      throw PlatformException(
-        code: 'STYLE_NOT_READY',
-        message:
-            'Style is null or not fully loaded. Has onStyleLoaded() already '
-            'been invoked?',
-      );
-    }
+    _ensureStyleReady();
     if (_map.getLayer(layerId) == null) return null;
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
