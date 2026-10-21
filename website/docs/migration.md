@@ -60,7 +60,20 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 
 ### Android: numeric feature ids
 
-Numeric GeoJSON feature ids stay numbers in queries and filters on Android, as on iOS and web, where they used to turn into strings. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
+Numeric GeoJSON feature ids stay numbers in queries and filters on Android, as on iOS and web, where they used to turn into strings. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`:
+
+```dart
+// Source data: {'type': 'Feature', 'id': 2, ...}
+final features = await controller.queryRenderedFeatures(point, ['pois'], null);
+
+// Before (Android)
+final isSelected = features.first['id'] == '2';
+await controller.setLayerFilter('pois', ['==', ['id'], '2']);
+
+// After (every platform)
+final isSelected = features.first['id'] == 2;
+await controller.setLayerFilter('pois', ['==', ['id'], 2]);
+```
 
 String ids such as `"poi-12"` stay strings on every platform. The exception is a string that looks like a number, such as `"2"`: Android returns it as the number `2`, because MapLibre Android reports every id as text and the plugin cannot tell the two apart. If you compare ids across platforms, use numbers or ids that are not numeric strings.
 
