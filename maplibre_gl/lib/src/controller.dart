@@ -335,10 +335,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// tell that a newer style load has taken over.
   int _styleLoadCount = 0;
 
-  /// The errors Android, iOS and web answer with when a call needs a style
+  /// The error Android, iOS and web answer with when a call needs a style
   /// that the native map does not hold at that moment.
   static bool _isStyleNotReady(PlatformException error) =>
-      error.code == 'STYLE_NOT_READY' || error.code == 'styleNotFound';
+      error.code == 'STYLE_NOT_READY';
 
   FillManager? fillManager;
   LineManager? lineManager;

@@ -645,8 +645,8 @@ class _MapLibreMapState extends State<MapLibreMap> {
     // The widget was disposed while the map was being created, so dispose()
     // has already torn the platform down. Publishing the controller now would
     // hand out one whose native map no longer exists, and the style-loaded
-    // callback it wires up would then fail against it, which on iOS surfaces
-    // as an unhandled `styleNotFound` out of the annotation managers.
+    // callback it wires up would then fail against it, which surfaces as an
+    // unhandled `STYLE_NOT_READY` out of the annotation managers.
     if (_disposed) return;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);
