@@ -30,7 +30,6 @@ class ConvertTest {
         assertEquals(12, Convert.toInt(12L))
         assertEquals(12f, Convert.toFloat(12L))
         assertEquals(12.0, Convert.toDouble(12L), 0.0)
-        assertEquals(12L, Convert.toLong(12L))
     }
 
     @Test

@@ -5,8 +5,6 @@
 package org.maplibre.maplibregl;
 
 import android.graphics.PointF;
-import android.util.Log;
-import org.maplibre.geojson.Polygon;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -23,8 +21,6 @@ import java.util.Map;
  * camera sums behind the typed camera updates of {@link PigeonConvert}.
  */
 class Convert {
-
-  private static final String TAG = "Convert";
 
   static boolean toBoolean(Object o) {
     return (Boolean) o;
@@ -186,38 +182,8 @@ class Convert {
     return latLngList;
   }
 
-  private static List<List<LatLng>> toLatLngListList(Object o) {
-    if (o == null) {
-      return null;
-    }
-    final List<?> data = toList(o);
-    List<List<LatLng>> latLngListList = new ArrayList<>();
-    for (int i = 0; i < data.size(); i++) {
-      List<LatLng> latLngList = toLatLngList(data.get(i), false);
-      latLngListList.add(latLngList);
-    }
-    return latLngListList;
-  }
-
-  static Polygon interpretListLatLng(List<List<LatLng>> geometry) {
-    List<List<org.maplibre.geojson.Point>> points = new ArrayList<>(geometry.size());
-    for (List<LatLng> innerGeometry : geometry) {
-      List<org.maplibre.geojson.Point> innerPoints = new ArrayList<>(innerGeometry.size());
-      for (LatLng latLng : innerGeometry) {
-        innerPoints.add(
-            org.maplibre.geojson.Point.fromLngLat(latLng.getLongitude(), latLng.getLatitude()));
-      }
-      points.add(innerPoints);
-    }
-    return Polygon.fromLngLats(points);
-  }
-
   static List<?> toList(Object o) {
     return (List<?>) o;
-  }
-
-  static long toLong(Object o) {
-    return ((Number) o).longValue();
   }
 
   static Map<?, ?> toMap(Object o) {
