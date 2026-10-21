@@ -230,6 +230,14 @@ class MapHostApiTest {
     }
 
     @Test
+    fun answersTheScreenPointsOfABatchAsTheyAre() {
+        val points = doubleArrayOf(10.0, 20.0)
+        answer = { _, result -> result.success(points) }
+
+        assertSame(points, value<DoubleArray> { api.mapToScreenLocationBatch(doubleArrayOf(45.0, 9.0), it) })
+    }
+
+    @Test
     fun answersWhetherACameraMoveFinished() {
         answer = { _, result -> result.success(false) }
 

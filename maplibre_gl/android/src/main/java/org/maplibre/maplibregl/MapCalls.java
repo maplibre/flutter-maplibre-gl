@@ -92,4 +92,38 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
       double tilt, @Nullable Long duration, MethodChannel.Result result);
 
   void locationComponentSetManualLocation(Map<String, Object> update, MethodChannel.Result result);
+
+  // Queries
+
+  void mapGetVisibleRegion(MethodChannel.Result result);
+
+  void mapToScreenLocation(double latitude, double longitude, MethodChannel.Result result);
+
+  void mapToScreenLocationBatch(double[] coordinates, MethodChannel.Result result);
+
+  void mapToLatLng(double x, double y, MethodChannel.Result result);
+
+  void mapGetMetersPerPixelAtLatitude(double latitude, MethodChannel.Result result);
+
+  void mapQueryRenderedFeaturesAtPoint(
+      double x,
+      double y,
+      List<String> layerIds,
+      @Nullable List<Object> filter,
+      MethodChannel.Result result);
+
+  void mapQueryRenderedFeaturesInRect(
+      double left,
+      double top,
+      double right,
+      double bottom,
+      List<String> layerIds,
+      @Nullable String filter,
+      MethodChannel.Result result);
+
+  void mapQuerySourceFeatures(
+      String sourceId,
+      @Nullable String sourceLayerId,
+      @Nullable List<Object> filter,
+      MethodChannel.Result result);
 }

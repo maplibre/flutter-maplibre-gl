@@ -1051,8 +1051,8 @@ final class MapLibreMapController
   }
 
   // Serializes features for the channel as JSON strings, so nested properties
-  // survive intact. Shared by every call that answers with features:
-  // map#queryRenderedFeatures, map#querySourceFeatures and the cluster calls.
+  // survive intact. Shared by every call that answers with features: the
+  // rendered and source feature queries and the cluster calls.
   private static Map<String, Object> featuresReply(List<Feature> features) {
     final List<String> featuresJson = new ArrayList<>();
     if (features != null) {
@@ -1847,20 +1847,6 @@ final class MapLibreMapController
     return false;
   }
 
-  /** The argument [key] of [call] as a double, or null when it is missing or not a number. */
-  private static Double numberArgument(MethodCall call, String key) {
-    final Object value = call.argument(key);
-    return value instanceof Number ? ((Number) value).doubleValue() : null;
-  }
-
-  /**
-   * Answers INVALID_ARGUMENT, as iOS does, for a call whose arguments cannot be read, instead of
-   * letting a cast fail and reach Dart as a generic error.
-   */
-  private static void invalidArgument(MethodChannel.Result result, String message) {
-    result.error("INVALID_ARGUMENT", message, null);
-  }
-
   /**
    * Reads the camera update of a {@link #cameraMove}, {@link #cameraAnimate} or {@link
    * #cameraEase} call. When it does not decode, the call is answered with INVALID_ARGUMENT, as on
@@ -2405,6 +2391,160 @@ final class MapLibreMapController
     result.success(null);
   }
 
+  // -- Queries ----------------------------------------------------------------
+
+  @Override
+  public void mapGetVisibleRegion(MethodChannel.Result result) {
+    Map<String, Object> reply = new HashMap<>();
+    VisibleRegion visibleRegion = mapLibreMap.getProjection().getVisibleRegion();
+    reply.put(
+        "sw",
+        Arrays.asList(
+            visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
+    reply.put(
+        "ne",
+        Arrays.asList(
+              visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
+
+    result.success(reply);
+  }
+
+  @Override
+  public void mapToScreenLocation(double latitude, double longitude, MethodChannel.Result result) {
+    Map<String, Object> reply = new HashMap<>();
+    PointF pointf =
+        mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
+    reply.put("x", pointf.x);
+    reply.put("y", pointf.y);
+    result.success(reply);
+  }
+
+  @Override
+  public void mapToScreenLocationBatch(double[] coordinates, MethodChannel.Result result) {
+    double[] reply = new double[coordinates.length];
+
+    for (int i = 0; i < coordinates.length; i += 2) {
+      PointF pointf =
+          mapLibreMap
+              .getProjection()
+              .toScreenLocation(new LatLng(coordinates[i], coordinates[i + 1]));
+      reply[i] = pointf.x;
+      reply[i + 1] = pointf.y;
+    }
+
+    result.success(reply);
+  }
+
+  @Override
+  public void mapToLatLng(double x, double y, MethodChannel.Result result) {
+    Map<String, Object> reply = new HashMap<>();
+    LatLng latlng =
+        mapLibreMap.getProjection().fromScreenLocation(new PointF((float) x, (float) y));
+    reply.put("latitude", latlng.getLatitude());
+    reply.put("longitude", latlng.getLongitude());
+    result.success(reply);
+  }
+
+  @Override
+  public void mapGetMetersPerPixelAtLatitude(double latitude, MethodChannel.Result result) {
+    Map<String, Object> reply = new HashMap<>();
+    Double retVal = mapLibreMap.getProjection().getMetersPerPixelAtLatitude(latitude);
+    reply.put("metersperpixel", retVal);
+    result.success(reply);
+  }
+
+  @Override
+  public void mapQueryRenderedFeaturesAtPoint(
+      double x,
+      double y,
+      List<String> layerIds,
+      @Nullable List<Object> filter,
+      MethodChannel.Result result) {
+    final String[] layers = layerIds.toArray(new String[0]);
+    final Expression filterExpression = renderedFeaturesFilter(filter);
+    final PointF pixel = new PointF((float) x, (float) y);
+    result.success(
+        featuresReply(mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layers)));
+  }
+
+  @Override
+  public void mapQueryRenderedFeaturesInRect(
+      double left,
+      double top,
+      double right,
+      double bottom,
+      List<String> layerIds,
+      @Nullable String filter,
+      MethodChannel.Result result) {
+    final String[] layers = layerIds.toArray(new String[0]);
+    final Expression filterExpression = renderedFeaturesFilter(filter);
+    final RectF rectF = new RectF((float) left, (float) top, (float) right, (float) bottom);
+    result.success(
+        featuresReply(mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layers)));
+  }
+
+  /**
+   * The filter of a rendered-features query, or null when there is none. The point query sends
+   * it as a list, while the rect query sends the same expression already encoded as a JSON
+   * string. Only an expression array filters.
+   */
+  @Nullable
+  private static Expression renderedFeaturesFilter(@Nullable Object filter) {
+    JsonElement jsonElement = null;
+    if (filter instanceof String) {
+      jsonElement = JsonParser.parseString((String) filter);
+    } else if (filter != null) {
+      jsonElement = new Gson().toJsonTree(filter);
+    }
+    JsonArray jsonArray = null;
+    if (jsonElement != null && jsonElement.isJsonArray()) {
+      jsonArray = jsonElement.getAsJsonArray();
+    }
+    return jsonArray == null ? null : Expression.Converter.convert(jsonArray);
+  }
+
+  @Override
+  public void mapQuerySourceFeatures(
+      String sourceId,
+      @Nullable String sourceLayerId,
+      @Nullable List<Object> filter,
+      MethodChannel.Result result) {
+    List<Feature> features;
+
+    // A source is resolved by id out of the style, so without a style
+    // there is no source to query. Reading it blind raised a
+    // NullPointerException, which reached the caller as a bare "error".
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+
+    JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
+    JsonArray jsonArray = null;
+    if (jsonElement != null && jsonElement.isJsonArray()) {
+      jsonArray = jsonElement.getAsJsonArray();
+    }
+    Expression filterExpression =
+            jsonArray == null ? null : Expression.Converter.convert(jsonArray);
+
+
+    Source source = style.getSource(sourceId);
+    if (source instanceof GeoJsonSource) {
+      features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
+    } else if (source instanceof CustomGeometrySource) {
+      features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
+    } else if (source instanceof VectorSource && sourceLayerId != null) {
+      features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
+    } else {
+      features = Collections.emptyList();
+    }
+
+    result.success(featuresReply(features));
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -2419,149 +2559,6 @@ final class MapLibreMapController
       return;
     }
     switch (call.method) {
-      case "map#getVisibleRegion":
-        {
-          Map<String, Object> reply = new HashMap<>();
-          VisibleRegion visibleRegion = mapLibreMap.getProjection().getVisibleRegion();
-          reply.put(
-              "sw",
-              Arrays.asList(
-                  visibleRegion.latLngBounds.getLatSouth(), visibleRegion.latLngBounds.getLonWest()));
-          reply.put(
-              "ne",
-              Arrays.asList(
-                    visibleRegion.latLngBounds.getLatNorth(), visibleRegion.latLngBounds.getLonEast()));
-
-          result.success(reply);
-          break;
-        }
-      case "map#toScreenLocation":
-        {
-          final Double latitude = numberArgument(call, "latitude");
-          final Double longitude = numberArgument(call, "longitude");
-          if (latitude == null || longitude == null) {
-            invalidArgument(
-                result, "toScreenLocation requires 'latitude' and 'longitude' as numbers.");
-            break;
-          }
-          Map<String, Object> reply = new HashMap<>();
-          PointF pointf =
-              mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
-          reply.put("x", pointf.x);
-          reply.put("y", pointf.y);
-          result.success(reply);
-          break;
-        }
-      case "map#toScreenLocationBatch":
-        {
-          final Object coordinates = call.argument("coordinates");
-          if (!(coordinates instanceof double[])) {
-            invalidArgument(
-                result, "toScreenLocationBatch requires 'coordinates' as a Float64List.");
-            break;
-          }
-          double[] param = (double[]) coordinates;
-          double[] reply = new double[param.length];
-
-          for (int i = 0; i < param.length; i += 2) {
-            PointF pointf =
-                mapLibreMap.getProjection().toScreenLocation(new LatLng(param[i], param[i + 1]));
-            reply[i] = pointf.x;
-            reply[i + 1] = pointf.y;
-          }
-
-          result.success(reply);
-          break;
-        }
-      case "map#toLatLng":
-        {
-          final Double x = numberArgument(call, "x");
-          final Double y = numberArgument(call, "y");
-          if (x == null || y == null) {
-            invalidArgument(result, "toLatLng requires 'x' and 'y' as numbers.");
-            break;
-          }
-          Map<String, Object> reply = new HashMap<>();
-          LatLng latlng =
-              mapLibreMap
-                  .getProjection()
-                  .fromScreenLocation(new PointF(x.floatValue(), y.floatValue()));
-          reply.put("latitude", latlng.getLatitude());
-          reply.put("longitude", latlng.getLongitude());
-          result.success(reply);
-          break;
-        }
-      case "map#getMetersPerPixelAtLatitude":
-        {
-          final Double latitude = numberArgument(call, "latitude");
-          if (latitude == null) {
-            invalidArgument(result, "getMetersPerPixelAtLatitude requires 'latitude' as a number.");
-            break;
-          }
-          Map<String, Object> reply = new HashMap<>();
-          Double retVal = mapLibreMap.getProjection().getMetersPerPixelAtLatitude(latitude);
-          reply.put("metersperpixel", retVal);
-          result.success(reply);
-          break;
-        }
-      case "map#queryRenderedFeatures":
-        {
-          List<Feature> features;
-
-          List<String> layerIdsArgument = call.argument("layerIds");
-          if (layerIdsArgument == null) {
-            result.error(
-                "INVALID_ARGUMENT", "queryRenderedFeatures requires a 'layerIds' list.", null);
-            break;
-          }
-          String[] layerIds = layerIdsArgument.toArray(new String[0]);
-
-          // queryRenderedFeatures sends the filter as a list, while
-          // queryRenderedFeaturesInRect sends the same expression already
-          // encoded as a JSON string. Reading only the list shape dropped the
-          // filter for the rect call, which then answered with every feature
-          // in the rectangle.
-          Object filter = call.argument("filter");
-          JsonElement jsonElement = null;
-          if (filter instanceof String) {
-            jsonElement = JsonParser.parseString((String) filter);
-          } else if (filter != null) {
-            jsonElement = new Gson().toJsonTree(filter);
-          }
-          JsonArray jsonArray = null;
-          if (jsonElement != null && jsonElement.isJsonArray()) {
-            jsonArray = jsonElement.getAsJsonArray();
-          }
-          Expression filterExpression =
-              jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-          Double x = call.argument("x");
-          Double y = call.argument("y");
-          Double left = call.argument("left");
-          Double top = call.argument("top");
-          Double right = call.argument("right");
-          Double bottom = call.argument("bottom");
-          if (x != null && y != null) {
-            PointF pixel = new PointF(x.floatValue(), y.floatValue());
-            features = mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layerIds);
-          } else if (left != null && top != null && right != null && bottom != null) {
-            RectF rectF =
-                new RectF(
-                    left.floatValue(), top.floatValue(), right.floatValue(), bottom.floatValue());
-            features = mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layerIds);
-          } else {
-            // Reading the coordinates blind turned a bad call into a
-            // NullPointerException, and answering with an empty list would look
-            // like a query that found nothing. Say which arguments are missing.
-            result.error(
-                "INVALID_ARGUMENT",
-                "queryRenderedFeatures requires either 'x' and 'y', or 'left', 'top', 'right' "
-                    + "and 'bottom', as numbers.",
-                null);
-            break;
-          }
-          result.success(featuresReply(features));
-          break;
-        }
       case "map#editGeoJsonSource":
         {
           boolean ret = false;
@@ -3717,54 +3714,6 @@ final class MapLibreMapController
             break;
           }
           result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
-          break;
-        }
-        case "map#querySourceFeatures":
-        {
-          List<Feature> features;
-
-          String sourceId = (String) call.argument("sourceId");
-          if (sourceId == null) {
-            result.error(
-                "INVALID_ARGUMENT", "querySourceFeatures requires a 'sourceId' string.", null);
-            break;
-          }
-
-          // A source is resolved by id out of the style, so without a style
-          // there is no source to query. Reading it blind raised a
-          // NullPointerException, which reached the caller as a bare "error".
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-
-          String sourceLayerId = (String) call.argument("sourceLayerId");
-
-          List<Object> filter = call.argument("filter");
-          JsonElement jsonElement = filter == null ? null : new Gson().toJsonTree(filter);
-          JsonArray jsonArray = null;
-          if (jsonElement != null && jsonElement.isJsonArray()) {
-            jsonArray = jsonElement.getAsJsonArray();
-          }
-          Expression filterExpression =
-                  jsonArray == null ? null : Expression.Converter.convert(jsonArray);
-
-
-          Source source = style.getSource(sourceId);
-          if (source instanceof GeoJsonSource) {
-            features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
-          } else if (source instanceof CustomGeometrySource) {
-            features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
-          } else if (source instanceof VectorSource && sourceLayerId != null) {
-            features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
-          } else {
-            features = Collections.emptyList();
-          }
-
-          result.success(featuresReply(features));
           break;
         }
         case "style#getLayerIds":

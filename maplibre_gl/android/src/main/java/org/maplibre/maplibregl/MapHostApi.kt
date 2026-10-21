@@ -115,11 +115,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         layerIds: List<String>,
         filter: List<Any?>?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#queryRenderedFeatures",
-        hashMapOf("x" to x, "y" to y, "layerIds" to layerIds, "filter" to filter),
-        callback,
-    )
+    ) = any(callback) { map.mapQueryRenderedFeaturesAtPoint(x, y, layerIds, filter, it) }
 
     override fun mapQueryRenderedFeaturesInRect(
         left: Double,
@@ -129,29 +125,16 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         layerIds: List<String>,
         filter: String?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#queryRenderedFeatures",
-        hashMapOf(
-            "left" to left,
-            "top" to top,
-            "right" to right,
-            "bottom" to bottom,
-            "layerIds" to layerIds,
-            "filter" to filter,
-        ),
-        callback,
-    )
+    ) = any(callback) {
+        map.mapQueryRenderedFeaturesInRect(left, top, right, bottom, layerIds, filter, it)
+    }
 
     override fun mapQuerySourceFeatures(
         sourceId: String,
         sourceLayerId: String?,
         filter: List<Any?>?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#querySourceFeatures",
-        hashMapOf("sourceId" to sourceId, "sourceLayerId" to sourceLayerId, "filter" to filter),
-        callback,
-    )
+    ) = any(callback) { map.mapQuerySourceFeatures(sourceId, sourceLayerId, filter, it) }
 
     // The handler answers an Integer.
     override fun sourceGetClusterExpansionZoom(
@@ -201,7 +184,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any(callback) { map.locationComponentGetLastLocation(it) }
 
     override fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit) =
-        any("map#getVisibleRegion", null, callback)
+        any(callback) { map.mapGetVisibleRegion(it) }
 
     override fun styleAddImage(
         name: String,
@@ -253,21 +236,13 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         latitude: Double,
         longitude: Double,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#toScreenLocation",
-        hashMapOf("latitude" to latitude, "longitude" to longitude),
-        callback,
-    )
+    ) = any(callback) { map.mapToScreenLocation(latitude, longitude, it) }
 
-    // The handler answers a double[].
+    // Answered with the screen points as a double[], x and y in turn.
     override fun mapToScreenLocationBatch(
         coordinates: DoubleArray,
         callback: (Result<DoubleArray>) -> Unit,
-    ) = call(
-        "map#toScreenLocationBatch",
-        hashMapOf("coordinates" to coordinates),
-        callback,
-    ) { it as DoubleArray }
+    ) = call(callback, { it as DoubleArray }) { map.mapToScreenLocationBatch(coordinates, it) }
 
     override fun styleRemoveSource(sourceId: String, callback: (Result<Unit>) -> Unit) =
         unit("style#removeSource", hashMapOf("sourceId" to sourceId), callback)
@@ -331,12 +306,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any("style#getFilter", hashMapOf("layerId" to layerId), callback)
 
     override fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit) =
-        any("map#toLatLng", hashMapOf("x" to x, "y" to y), callback)
+        any(callback) { map.mapToLatLng(x, y, it) }
 
     override fun mapGetMetersPerPixelAtLatitude(
         latitude: Double,
         callback: (Result<Any?>) -> Unit,
-    ) = any("map#getMetersPerPixelAtLatitude", hashMapOf("latitude" to latitude), callback)
+    ) = any(callback) { map.mapGetMetersPerPixelAtLatitude(latitude, it) }
 
     override fun sourceAddGeoJson(
         sourceId: String,
