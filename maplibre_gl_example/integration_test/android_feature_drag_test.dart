@@ -83,6 +83,31 @@ void main() {
     final end = map.drags.last;
     expect(end.origin, start.origin);
     expect(end.current.longitude, greaterThan(start.current.longitude));
+
+    // Each drag event replaced the circle in its source, so the source holds
+    // the position the circle was dragged to. The query answers once per tile
+    // holding the circle; the tolerance covers the tile quantization, well
+    // below the distance dragged.
+    final dragged = map.controller.circles.single.options.geometry!;
+    expect(dragged.longitude, greaterThan(_center.longitude + 0.005));
+    await pumpUntilValue(
+      tester,
+      () => map.controller.querySourceFeatures(
+        map.controller.circleManager!.layerIds.single,
+        null,
+        null,
+      ),
+      (features) =>
+          features.isNotEmpty &&
+          features.cast<Map>().every((feature) {
+            final coordinates =
+                (feature['geometry'] as Map)['coordinates'] as List;
+            return ((coordinates[0] as num) - dragged.longitude).abs() <
+                    0.001 &&
+                ((coordinates[1] as num) - dragged.latitude).abs() < 0.001;
+          }),
+      'dragged circle moved in the source to $dragged',
+    );
   });
 
   testWidgets('two fingers down on a feature pinch the map, no drag', (

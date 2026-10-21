@@ -156,6 +156,10 @@ abstract class AnnotationManager<T extends Annotation> {
   Future<void> _setAll() async {
     if (controller.isDisposed) return;
 
+    // Rebuilt on every full write, so a removed annotation leaves no entry
+    // behind. [set] reads it to update a single feature in place, which needs
+    // the layer of every annotation, including when there is only one layer.
+    _idToLayerIndex.clear();
     if (selectLayer != null) {
       final featureBuckets = [for (final _ in allLayerProperties) <T>[]];
 
@@ -174,6 +178,9 @@ abstract class AnnotationManager<T extends Annotation> {
         );
       }
     } else {
+      for (final id in _idToAnnotation.keys) {
+        _idToLayerIndex[id] = 0;
+      }
       await controller.setGeoJsonSource(
         _makeLayerId(0),
         buildFeatureCollection([

@@ -108,6 +108,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
 * **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background (#1105).
+* Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

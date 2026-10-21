@@ -278,8 +278,8 @@ final class MapLibreMapController
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
   // setGeoJsonFeature. Holds the raw String until the first setFeature parses
-  // it into a FeatureCollection JsonObject, so plain data updates never pay a
-  // parse on the platform thread.
+  // it into a FeatureCollectionText, so plain data updates never pay a parse
+  // on the platform thread.
   private Map<String, Object> addedFeaturesByLayer;
 
   private LatLngBounds bounds = null;
@@ -1160,44 +1160,21 @@ final class MapLibreMapController
     }
   }
 
-  // The source data as a FeatureCollection JsonObject, parsed on first use and
-  // cached, or null when it is neither a FeatureCollection nor a Feature.
-  private JsonObject parsedSourceData(String sourceName) {
+  // The source data as a FeatureCollection, parsed on first use and cached, or
+  // null when it is neither a FeatureCollection nor a Feature.
+  private FeatureCollectionText parsedSourceData(String sourceName) {
     final Object stored = addedFeaturesByLayer.get(sourceName);
-    if (stored instanceof JsonObject) {
-      return (JsonObject) stored;
+    if (stored instanceof FeatureCollectionText) {
+      return (FeatureCollectionText) stored;
     }
     if (!(stored instanceof String)) {
       return null;
     }
-    final JsonElement element = JsonParser.parseString((String) stored);
-    if (!element.isJsonObject()) {
-      return null;
+    final FeatureCollectionText collection = FeatureCollectionText.parse((String) stored);
+    if (collection != null) {
+      addedFeaturesByLayer.put(sourceName, collection);
     }
-    JsonObject data = element.getAsJsonObject();
-    final JsonElement type = data.get("type");
-    final String typeName = type != null && type.isJsonPrimitive() ? type.getAsString() : null;
-    if ("Feature".equals(typeName)) {
-      final JsonArray features = new JsonArray();
-      features.add(data);
-      data = new JsonObject();
-      data.addProperty("type", "FeatureCollection");
-      data.add("features", features);
-    } else if (!"FeatureCollection".equals(typeName) || !data.has("features")
-        || !data.get("features").isJsonArray()) {
-      return null;
-    }
-    addedFeaturesByLayer.put(sourceName, data);
-    return data;
-  }
-
-  // Compares ids by their text, so 2 and "2" match as they did before.
-  private static String featureIdKey(JsonElement feature) {
-    if (feature == null || !feature.isJsonObject()) {
-      return null;
-    }
-    final JsonElement id = feature.getAsJsonObject().get("id");
-    return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
+    return collection;
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -1211,25 +1188,15 @@ final class MapLibreMapController
       if (geoJsonSource == null) {
         return;
       }
-      final JsonObject data = parsedSourceData(sourceName);
+      final FeatureCollectionText data = parsedSourceData(sourceName);
       if (data == null) {
         return;
       }
 
       // Merged as JSON rather than through the Java Feature, which would turn
       // the ids of the whole source into Strings.
-      final JsonElement feature = JsonParser.parseString(geojsonFeature);
-      final String featureId = featureIdKey(feature);
-      if (featureId == null) {
-        return;
-      }
-      final JsonArray features = data.getAsJsonArray("features");
-      for (int i = 0; i < features.size(); i++) {
-        if (featureId.equals(featureIdKey(features.get(i)))) {
-          features.set(i, feature);
-          geoJsonSource.setGeoJson(data.toString());
-          break;
-        }
+      if (data.replace(JsonParser.parseString(geojsonFeature))) {
+        geoJsonSource.setGeoJson(data.toJson());
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
