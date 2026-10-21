@@ -6,6 +6,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl/src/native/messages.g.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
-    show MapLibreGlobalPlatform;
+    show MapLibreGlobalMethodChannel, MapLibreGlobalPlatform;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +50,10 @@ void main() {
     api = _FakeGlobalHostApi(regionJson: fakeRegionJson);
     MapLibreNativePlugin.registerWith(globalHostApi: api);
   });
+
+  tearDown(
+    () => MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel(),
+  );
 
   /// What native does while a download runs: an event for the download
   /// Dart started, tagged with the id Dart chose.
@@ -129,6 +134,63 @@ void main() {
       ],
     ]);
     expect(region.id, 1);
+  });
+
+  test('mergeOfflineRegions sends the path and parses the regions', () async {
+    final regions = await mergeOfflineRegions('/data/other.db');
+
+    expect(api.calls, [
+      ['mergeOfflineRegions', '/data/other.db'],
+    ]);
+    expect(regions.single.id, 1);
+  });
+
+  group('getOfflineDatabasePath', () {
+    test('returns the path native answers', () async {
+      api.databasePath = '/data/offline.db';
+
+      expect(await getOfflineDatabasePath(), '/data/offline.db');
+    });
+
+    test('returns null when native has no path', () async {
+      expect(await getOfflineDatabasePath(), isNull);
+    });
+  });
+
+  group('exportOfflineDatabase', () {
+    test('returns null when there is no database path', () async {
+      expect(await exportOfflineDatabase('/tmp/copy.db'), isNull);
+    });
+
+    test('copies the database and its sidecars', () async {
+      final dir = Directory.systemTemp.createTempSync('maplibre_export_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      File('${dir.path}/offline.db').writeAsBytesSync([1, 2, 3]);
+      File('${dir.path}/offline.db-wal').writeAsBytesSync([4]);
+      api.databasePath = '${dir.path}/offline.db';
+      final destination = '${dir.path}/copy.db';
+
+      expect(await exportOfflineDatabase(destination), destination);
+      expect(File(destination).readAsBytesSync(), [1, 2, 3]);
+      expect(File('$destination-wal').readAsBytesSync(), [4]);
+      expect(File('$destination-shm').existsSync(), isFalse);
+    });
+  });
+
+  test('setOfflineTileCountLimit sends the limit', () async {
+    await setOfflineTileCountLimit(6000);
+
+    expect(api.calls, [
+      ['setOfflineTileCountLimit', 6000],
+    ]);
+  });
+
+  test('clearAmbientCache reaches native', () async {
+    await clearAmbientCache();
+
+    expect(api.calls, [
+      ['clearAmbientCache'],
+    ]);
   });
 
   group('downloadOfflineRegion', () {
@@ -273,6 +335,30 @@ void main() {
         ['setOfflineMaxConcurrentRequests', null, 2],
       ]);
     });
+
+    test('rejects a limit below 1 before reaching native', () {
+      expect(
+        () => setOfflineMaxConcurrentRequests(maxRequests: 0),
+        throwsA(
+          isA<AssertionError>().having(
+            (e) => e.message,
+            'message',
+            'maxRequests must be >= 1 (got 0)',
+          ),
+        ),
+      );
+      expect(
+        () => setOfflineMaxConcurrentRequests(maxRequestsPerHost: 0),
+        throwsA(
+          isA<AssertionError>().having(
+            (e) => e.message,
+            'message',
+            'maxRequestsPerHost must be >= 1 (got 0)',
+          ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
   });
 
   group('setMaximumAmbientCacheSize', () {
@@ -357,6 +443,71 @@ void main() {
       );
     });
   });
+
+  // The generated registrant does not run everywhere, for instance in an
+  // isolate the app spawns, so the first global call installs the Android and
+  // iOS implementation itself when the default is still in place.
+  group('the first global call', () {
+    setUp(
+      () => MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel(),
+    );
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+      test('installs the Pigeon one on ${platform.name}', () async {
+        debugDefaultTargetPlatformOverride = platform;
+        const channel =
+            'dev.flutter.pigeon.maplibre_gl.MapLibreGlobalHostApi.getListOfRegions';
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMessageHandler(
+          channel,
+          (_) async => MapLibreGlobalHostApi.pigeonChannelCodec.encodeMessage([
+            '[$fakeRegionJson]',
+          ]),
+        );
+        addTearDown(() => messenger.setMockMessageHandler(channel, null));
+
+        final regions = await getListOfRegions();
+
+        expect(regions.single.id, 1);
+        expect(
+          MapLibreGlobalPlatform.instance,
+          isA<MapLibreOfflineDownloadFlutterApi>(),
+        );
+      });
+    }
+
+    for (final platform in [
+      TargetPlatform.fuchsia,
+      TargetPlatform.linux,
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+    ]) {
+      test('leaves the default in place on ${platform.name}', () async {
+        debugDefaultTargetPlatformOverride = platform;
+
+        await MapLibreMap.ensureWebLibraryLoaded();
+
+        expect(
+          MapLibreGlobalPlatform.instance,
+          isA<MapLibreGlobalMethodChannel>(),
+        );
+      });
+    }
+
+    test('keeps an implementation a platform registered', () async {
+      MapLibreNativePlugin.registerWith(globalHostApi: api);
+      final registered = MapLibreGlobalPlatform.instance;
+
+      await deleteOfflineRegion(1);
+
+      expect(MapLibreGlobalPlatform.instance, same(registered));
+      expect(api.calls, [
+        ['deleteOfflineRegion', 1],
+      ]);
+    });
+  });
 }
 
 /// Records every call with its arguments and answers like native would.
@@ -370,6 +521,9 @@ class _FakeGlobalHostApi extends MapLibreGlobalHostApi {
   int? lastDownloadId;
   PlatformException? downloadError;
   PlatformException? preWarmError;
+
+  /// What getOfflineDatabasePath answers.
+  String? databasePath;
 
   static final String _statusJson = json.encode({
     'completedResourceCount': 150,
@@ -396,6 +550,15 @@ class _FakeGlobalHostApi extends MapLibreGlobalHostApi {
   @override
   Future<void> setHttpHeaders(Map<String, String> headers) async =>
       calls.add(['setHttpHeaders', headers]);
+
+  @override
+  Future<String> mergeOfflineRegions(String path) async {
+    calls.add(['mergeOfflineRegions', path]);
+    return '[$regionJson]';
+  }
+
+  @override
+  Future<String?> getOfflineDatabasePath() async => databasePath;
 
   @override
   Future<String> getListOfRegions() async => '[$regionJson]';
@@ -434,8 +597,15 @@ class _FakeGlobalHostApi extends MapLibreGlobalHostApi {
   }
 
   @override
+  Future<void> setOfflineTileCountLimit(int limit) async =>
+      calls.add(['setOfflineTileCountLimit', limit]);
+
+  @override
   Future<void> deleteOfflineRegion(int id) async =>
       calls.add(['deleteOfflineRegion', id]);
+
+  @override
+  Future<void> clearAmbientCache() async => calls.add(['clearAmbientCache']);
 
   @override
   Future<void> setMaximumAmbientCacheSize(int bytes) async =>

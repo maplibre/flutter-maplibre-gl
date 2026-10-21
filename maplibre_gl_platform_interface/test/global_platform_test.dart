@@ -26,6 +26,72 @@ void main() {
         isA<MapLibreGlobalMethodChannel>(),
       );
     });
+
+    // A platform written before these methods existed overrides only preWarm
+    // and ensureLibraryLoaded. It must keep compiling, and each call it does
+    // not implement must say which one is missing.
+    group('methods a platform does not override', () {
+      final platform = _PreWarmOnlyPlatform();
+      final definition = OfflineRegionDefinition(
+        bounds: LatLngBounds(
+          southwest: const LatLng(10.0, 20.0),
+          northeast: const LatLng(30.0, 40.0),
+        ),
+        mapStyleUrl: 'https://example.com/style.json',
+        minZoom: 5.0,
+        maxZoom: 15.0,
+      );
+
+      final calls = <String, Future<Object?> Function()>{
+        'installOfflineMapTiles':
+            () => platform.installOfflineMapTiles('cache.db'),
+        'setOffline': () => platform.setOffline(true),
+        'setHttpHeaders': () => platform.setHttpHeaders({'a': 'b'}),
+        'mergeOfflineRegions': () => platform.mergeOfflineRegions('other.db'),
+        'getOfflineDatabasePath': platform.getOfflineDatabasePath,
+        'getListOfRegions': platform.getListOfRegions,
+        'updateOfflineRegionMetadata':
+            () => platform.updateOfflineRegionMetadata(1, {'name': 'x'}),
+        'setOfflineTileCountLimit':
+            () => platform.setOfflineTileCountLimit(6000),
+        'setOfflineMaxConcurrentRequests':
+            () => platform.setOfflineMaxConcurrentRequests(
+              maxRequests: 8,
+              maxRequestsPerHost: 2,
+            ),
+        'pauseOfflineRegionDownload':
+            () => platform.pauseOfflineRegionDownload(1),
+        'resumeOfflineRegionDownload':
+            () => platform.resumeOfflineRegionDownload(1),
+        'getOfflineRegionStatus': () => platform.getOfflineRegionStatus(1),
+        'deleteOfflineRegion': () => platform.deleteOfflineRegion(1),
+        'clearAmbientCache': platform.clearAmbientCache,
+        'setMaximumAmbientCacheSize':
+            () => platform.setMaximumAmbientCacheSize(1024),
+        'resetOfflineDatabase': platform.resetOfflineDatabase,
+        'downloadOfflineRegion':
+            () => platform.downloadOfflineRegion(
+              definition,
+              metadata: {'name': 'x'},
+              onEvent: (_) {},
+            ),
+      };
+
+      for (final MapEntry(key: name, value: call) in calls.entries) {
+        test('$name throws UnimplementedError naming it', () {
+          expect(
+            call,
+            throwsA(
+              isA<UnimplementedError>().having(
+                (e) => e.message,
+                'message',
+                '$name() is not implemented.',
+              ),
+            ),
+          );
+        });
+      }
+    });
   });
 
   group('MapLibreGlobalMethodChannel', () {
@@ -98,4 +164,14 @@ void main() {
       expect(MapLibreJsSource.configured, isNull);
     });
   });
+}
+
+/// A platform that implements only what [MapLibreGlobalPlatform] required
+/// before the offline calls joined it.
+class _PreWarmOnlyPlatform extends MapLibreGlobalPlatform {
+  @override
+  Future<void> preWarm() async {}
+
+  @override
+  Future<void> ensureLibraryLoaded() async {}
 }
