@@ -896,7 +896,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapEditGeoJsonSource(id srcId: String, data srcData: String, result: @escaping FlutterResult) {
-        guard let style = self.mapView.style else { return }
+        // Without a style there is no source to edit, as on Android.
+        guard let style = self.mapView.style else {
+            result(false)
+            return
+        }
 
         var ret: Bool = false
         if let data = srcData.data(using: String.Encoding.utf8) {
@@ -915,7 +919,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapEditGeoJsonUrl(id srcId: String, url srcUrl: String, result: @escaping FlutterResult) {
-        guard let style = self.mapView.style else { return }
+        guard let style = self.mapView.style else {
+            result(false)
+            return
+        }
 
         var ret: Bool = false
         let src = style.source(withIdentifier: srcId)
@@ -1280,13 +1287,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleGetLayerIds(result: @escaping FlutterResult) {
-        guard let style = mapView.style else { return }
+        // Without a style there are no ids to answer with, and an empty list
+        // would read as a style without layers, so report it as Android does.
+        guard let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
 
         result(style.layers.map { $0.identifier })
     }
 
     func styleGetSourceIds(result: @escaping FlutterResult) {
-        guard let style = mapView.style else { return }
+        guard let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
 
         result(style.sources.map { $0.identifier })
     }
@@ -1679,7 +1702,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapSetLayerFilter(id layerId: String, filter layerFilter: String, result: @escaping FlutterResult) {
-        guard let style = self.mapView.style else { return }
+        // Without a style there is no layer to filter, as on Android.
+        guard let style = self.mapView.style else {
+            result(false)
+            return
+        }
 
         var ret: Bool = false
         let layer = style.layer(withIdentifier: layerId)
