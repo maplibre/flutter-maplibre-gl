@@ -62,6 +62,12 @@ jobs:
         with:
           name: maplibre-flutter-demo.apk
           path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
+      # The plugin's JVM unit tests (Pigeon adapters and bridges, GeoJSON
+      # helpers), through the example's Gradle project the build above set up.
+      - if: inputs.platform == 'android'
+        name: Run the Android unit tests
+        working-directory: maplibre_gl_example/android
+        run: ./gradlew :maplibre_gl:testDebugUnitTest
 
       - if: inputs.platform == 'ios'
         name: Build iOS package
