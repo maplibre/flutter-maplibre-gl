@@ -47,6 +47,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`, and iOS reports the same code. Update any `catch` on the old code (#1111).
 * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException` that read like a broken plugin registration. MapLibre GL JS has no offline storage; catch `UnsupportedError` where you call them on web (#1114, #937).
 * `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it (#1114).
+* **Android, iOS**: a call that reaches a map after it was disposed fails with a `PlatformException` with code `MAP_DISPOSED` instead of a `MissingPluginException`. Update any `catch` on the old exception (#1115).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -70,7 +71,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 * **Android, iOS**: the plugin-wide calls (offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`) reach native through messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of a hand-written method channel, the first step of #465. Apps need no change (#1114).
-* **Android, iOS**: the calls of each map and its events (taps, drags, camera moves, style loads, location updates) go through Pigeon messages too, completing #465 for 0.28.0. Apps need no change. `MapLibreMethodChannel` is deprecated and no longer reaches native code (#1115).
+* **Android, iOS**: the calls of each map and its events (taps, drags, camera moves, style loads, location updates) go through Pigeon messages too, completing #465 for 0.28.0. `MapLibreMethodChannel` is deprecated and no longer reaches native code (#1115).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).

@@ -36,7 +36,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     MapLibreMapFlutterApi.setUp(this, messageChannelSuffix: '$id');
     final api =
         _hostApiFactory?.call(id) ??
-        MapLibreMapHostApi(messageChannelSuffix: '$id');
+        MapLibreMapHostApi(
+          binaryMessenger: const _MapCallMessenger(),
+          messageChannelSuffix: '$id',
+        );
     _hostApi = api;
     await api.mapWaitForMap();
   }
@@ -1301,5 +1304,52 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<void> setStyle(String styleString) async {
     await _api.styleSetStyle(styleString);
+  }
+}
+
+/// The messenger of the calls of a map, which fails a call that finds no
+/// handler on the channels of the map with `MAP_DISPOSED`.
+///
+/// Native removes the handlers of a map when the map goes away: Android in
+/// `dispose()`, iOS when it releases the controller. A call after that gets
+/// no answer, which Pigeon reports as a `channel-error`, while a call that
+/// reaches the released iOS controller first is answered with `MAP_DISPOSED`.
+/// Failing the first kind like the second makes the two platforms agree.
+class _MapCallMessenger extends BinaryMessenger {
+  const _MapCallMessenger();
+
+  /// Looked up on each use, as Pigeon does when it is given no messenger.
+  static BinaryMessenger get _messenger =>
+      ServicesBinding.instance.defaultBinaryMessenger;
+
+  @override
+  Future<ByteData?> send(String channel, ByteData? message) async {
+    final reply = await _messenger.send(channel, message);
+    // Pigeon replies to every call native has a handler for, a void one
+    // included, so no reply means no handler.
+    if (reply == null) {
+      throw PlatformException(
+        code: 'MAP_DISPOSED',
+        // The message iOS answers with.
+        message: 'The map was disposed before the call reached it.',
+      );
+    }
+    return reply;
+  }
+
+  @override
+  void setMessageHandler(String channel, MessageHandler? handler) =>
+      _messenger.setMessageHandler(channel, handler);
+
+  @override
+  Future<void> handlePlatformMessage(
+    String channel,
+    ByteData? data,
+    PlatformMessageResponseCallback? callback,
+  ) {
+    // BinaryMessenger requires it, though it deprecates it; the calls of a
+    // map never use it.
+    // ignore: deprecated_member_use
+    return _messenger.handlePlatformMessage(channel, data, callback);
   }
 }

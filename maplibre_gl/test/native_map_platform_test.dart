@@ -170,6 +170,84 @@ void main() {
     });
   });
 
+  group('once native removed the handlers of the map', () {
+    // The generated client this time, over the platform's own messenger, with
+    // native played by mock handlers on the channels of the map.
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const codec = MapLibreMapHostApi.pigeonChannelCodec;
+    String channel(String method, [int id = viewId]) =>
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.$method.$id';
+
+    /// Plays native for [method] of the map [id], answering with [reply].
+    /// A null [reply] is what a channel without a handler answers.
+    void answer(String method, List<Object?>? reply, [int id = viewId]) {
+      messenger.setMockMessageHandler(
+        channel(method, id),
+        (_) async => reply == null ? null : codec.encodeMessage(reply),
+      );
+      addTearDown(
+        () => messenger.setMockMessageHandler(channel(method, id), null),
+      );
+    }
+
+    final mapDisposed = isA<PlatformException>()
+        .having((e) => e.code, 'code', 'MAP_DISPOSED')
+        .having(
+          (e) => e.message,
+          'message',
+          'The map was disposed before the call reached it.',
+        );
+
+    late MapLibrePlatform map;
+
+    setUp(() async {
+      MapLibreNativePlugin.registerWith();
+      map = MapLibrePlatform.createInstance();
+      addTearDown(map.dispose);
+      answer('mapWaitForMap', [null]);
+      await map.initPlatform(viewId);
+    });
+
+    test('a call fails with MAP_DISPOSED', () async {
+      answer('styleGetLayerIds', null);
+
+      await expectLater(map.getLayerIds(), throwsA(mapDisposed));
+    });
+
+    test(
+      'waiting for a map that is already gone fails with MAP_DISPOSED',
+      () async {
+        final gone = MapLibrePlatform.createInstance();
+        addTearDown(gone.dispose);
+        answer('mapWaitForMap', null, viewId + 1);
+
+        await expectLater(gone.initPlatform(viewId + 1), throwsA(mapDisposed));
+      },
+    );
+
+    test('answers and errors of native pass through', () async {
+      answer('styleGetLayerIds', [
+        <Object?, Object?>{
+          'layers': ['road'],
+        },
+      ]);
+      expect(await map.getLayerIds(), ['road']);
+
+      answer('styleGetLayerIds', ['STYLE_NOT_READY', 'No style yet', null]);
+      await expectLater(
+        map.getLayerIds(),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'STYLE_NOT_READY',
+          ),
+        ),
+      );
+    });
+  });
+
   group('camera', () {
     setUp(init);
 
