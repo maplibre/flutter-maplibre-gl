@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -879,11 +880,1129 @@ void main() {
       expect(received!.altitude, isNull);
     });
   });
+
+  group('events through the channel', () {
+    setUp(init);
+
+    PgLatLng pgLatLng(double latitude, double longitude) =>
+        PgLatLng(latitude: latitude, longitude: longitude);
+
+    test('featureOnTap with a numeric id', () async {
+      Map<String, dynamic>? received;
+      platform.onFeatureTappedPlatform.add((event) => received = event);
+
+      await sendFromNative('featureOnTap', [
+        PgFeatureTap(
+          id: 42,
+          point: PgScreenPoint(x: 1, y: 2),
+          latLng: pgLatLng(3, 4),
+        ),
+      ]);
+
+      expect(received, {
+        'id': 42,
+        'point': const Point<double>(1, 2),
+        'latLng': const LatLng(3, 4),
+        'layerId': null,
+      });
+    });
+
+    test('featureOnDrag with a string id', () async {
+      Map<String, dynamic>? received;
+      platform.onFeatureDraggedPlatform.add((event) => received = event);
+
+      await sendFromNative('featureOnDrag', [
+        PgFeatureDrag(
+          id: 'pin',
+          point: PgScreenPoint(x: 5, y: 6),
+          origin: pgLatLng(1, 2),
+          current: pgLatLng(3, 4),
+          delta: pgLatLng(2, 2),
+          eventType: 'end',
+        ),
+      ]);
+
+      expect(received, {
+        'id': 'pin',
+        'point': const Point<double>(5, 6),
+        'origin': const LatLng(1, 2),
+        'current': const LatLng(3, 4),
+        'delta': const LatLng(2, 2),
+        'eventType': 'end',
+      });
+    });
+
+    test('cameraOnIdle without a position', () async {
+      final received = <CameraPosition?>[];
+      platform.onCameraIdlePlatform.add(received.add);
+
+      await sendFromNative('cameraOnIdle', [null]);
+
+      expect(received, [null]);
+    });
+
+    test('mapOnUserLocationUpdated without a heading', () async {
+      UserLocation? received;
+      platform.onUserLocationUpdatedPlatform.add(
+        (location) => received = location,
+      );
+
+      await sendFromNative('mapOnUserLocationUpdated', [
+        PgUserLocation(
+          position: pgLatLng(45, 9),
+          verticalAccuracy: 2,
+          timestamp: 3000,
+        ),
+        null,
+      ]);
+
+      expect(received!.position, const LatLng(45, 9));
+      expect(received!.verticalAccuracy, 2.0);
+      expect(received!.heading, isNull);
+      expect(received!.timestamp, DateTime.fromMillisecondsSinceEpoch(3000));
+    });
+  });
+
+  group('map options and location', () {
+    setUp(init);
+
+    test('updateMapOptions sends the update and reads the camera', () async {
+      api.replies['mapUpdate'] = <Object?, Object?>{
+        'bearing': 1.0,
+        'target': <Object?>[10.0, 20.0],
+        'tilt': 2.0,
+        'zoom': 3.0,
+      };
+
+      final position = await platform.updateMapOptions({
+        'compassEnabled': false,
+      });
+
+      expect(
+        position,
+        const CameraPosition(
+          bearing: 1,
+          target: LatLng(10, 20),
+          tilt: 2,
+          zoom: 3,
+        ),
+      );
+      expect(api.calls, [
+        [
+          'mapUpdate',
+          {'compassEnabled': false},
+        ],
+      ]);
+    });
+
+    test('updateMapOptions is null when native sends no camera', () async {
+      expect(await platform.updateMapOptions(const {}), isNull);
+    });
+
+    test('updateMyLocationTrackingMode sends the index', () async {
+      await platform.updateMyLocationTrackingMode(
+        MyLocationTrackingMode.trackingCompass,
+      );
+
+      expect(api.calls, [
+        ['mapUpdateMyLocationTrackingMode', 2],
+      ]);
+    });
+
+    test('setTrackingCameraOptions sends the tilt and duration', () async {
+      api.replies['locationComponentSetTrackingCameraOptions'] = true;
+
+      final applied = await platform.setTrackingCameraOptions(
+        tilt: 45,
+        duration: const Duration(milliseconds: 250),
+      );
+
+      expect(applied, isTrue);
+      expect(api.calls, [
+        ['locationComponentSetTrackingCameraOptions', 45.0, 250],
+      ]);
+    });
+
+    test('setTrackingCameraOptions reads a null answer as false', () async {
+      final applied = await platform.setTrackingCameraOptions(tilt: 0);
+
+      expect(applied, isFalse);
+      expect(api.calls, [
+        ['locationComponentSetTrackingCameraOptions', 0.0, null],
+      ]);
+    });
+
+    test('setManualLocation sends the update map', () async {
+      await platform.setManualLocation(
+        ManualLocationUpdate(
+          target: const LatLng(1, 2),
+          horizontalAccuracy: 5,
+          timestamp: DateTime.fromMillisecondsSinceEpoch(1000),
+        ),
+      );
+
+      expect(api.calls, [
+        [
+          'locationComponentSetManualLocation',
+          {
+            'position': [1.0, 2.0],
+            'timestamp': 1000,
+            'horizontalAccuracy': 5.0,
+          },
+        ],
+      ]);
+    });
+
+    test('calls without an answer send their arguments', () async {
+      await platform.matchMapLanguageWithDeviceDefault();
+      await platform.setMapLanguage('it');
+      await platform.setTelemetryEnabled(false);
+      await platform.setMaximumFps(30);
+      await platform.forceOnlineMode();
+      await platform.pauseMap();
+      await platform.resumeMap();
+      await platform.invalidateAmbientCache();
+      await platform.clearAmbientCache();
+      await platform.setStyle('https://example.com/style.json');
+
+      expect(api.calls, [
+        ['mapMatchMapLanguageWithDeviceDefault'],
+        ['mapSetMapLanguage', 'it'],
+        ['mapSetTelemetryEnabled', false],
+        ['mapSetMaximumFps', 30],
+        ['mapForceOnlineMode'],
+        ['mapPause'],
+        ['mapResume'],
+        ['mapInvalidateAmbientCache'],
+        ['mapClearAmbientCache'],
+        ['styleSetStyle', 'https://example.com/style.json'],
+      ]);
+    });
+
+    test('getTelemetryEnabled returns the answer', () async {
+      api.replies['mapGetTelemetryEnabled'] = true;
+
+      expect(await platform.getTelemetryEnabled(), isTrue);
+      expect(api.calls, [
+        ['mapGetTelemetryEnabled'],
+      ]);
+    });
+
+    test('updateContentInsets sends the four sides', () async {
+      await platform.updateContentInsets(
+        const EdgeInsets.fromLTRB(1, 2, 3, 4),
+        true,
+      );
+
+      expect(api.calls, [
+        [
+          'mapUpdateContentInsets',
+          {'top': 2.0, 'left': 1.0, 'bottom': 4.0, 'right': 3.0},
+          true,
+        ],
+      ]);
+    });
+
+    test('setCameraBounds sends the bounds and the padding', () async {
+      await platform.setCameraBounds(
+        west: -10,
+        north: 50,
+        south: 40,
+        east: 10,
+        padding: 8,
+      );
+
+      expect(api.calls, [
+        ['mapSetCameraBounds', -10.0, 50.0, 40.0, 10.0, 8],
+      ]);
+    });
+
+    test('setCustomHeaders sends the headers and the filter', () async {
+      await platform.setCustomHeaders({'X-Key': 'v'}, ['example.com']);
+
+      expect(api.calls, [
+        [
+          'mapSetCustomHeaders',
+          {'X-Key': 'v'},
+          ['example.com'],
+        ],
+      ]);
+    });
+
+    test('getCustomHeaders turns keys and values into strings', () async {
+      api.replies['mapGetCustomHeaders'] = <Object?, Object?>{
+        'X-Key': 'v',
+        'X-Count': 2,
+      };
+
+      expect(await platform.getCustomHeaders(), {
+        'X-Key': 'v',
+        'X-Count': '2',
+      });
+      expect(api.calls, [
+        ['mapGetCustomHeaders'],
+      ]);
+    });
+
+    test('getCustomHeaders is empty for a null answer', () async {
+      expect(await platform.getCustomHeaders(), isEmpty);
+    });
+
+    test('requestMyLocationLatLng reads the coordinates', () async {
+      api.replies['locationComponentGetLastLocation'] = <Object?, Object?>{
+        'latitude': 45.5,
+        // An int, as a JSON round trip may give.
+        'longitude': 9,
+      };
+
+      expect(await platform.requestMyLocationLatLng(), const LatLng(45.5, 9));
+      expect(api.calls, [
+        ['locationComponentGetLastLocation'],
+      ]);
+    });
+
+    test('requestMyLocationLatLng is null without a location', () async {
+      expect(await platform.requestMyLocationLatLng(), isNull);
+    });
+
+    test('requestMyLocationLatLng reads a missing coordinate as 0', () async {
+      api.replies['locationComponentGetLastLocation'] = <Object?, Object?>{
+        'latitude': null,
+        'longitude': 9.5,
+      };
+
+      expect(await platform.requestMyLocationLatLng(), const LatLng(0, 9.5));
+    });
+  });
+
+  group('style', () {
+    setUp(init);
+
+    test('getStyle returns the JSON when native has it', () async {
+      api.replies['mapGetStyle'] = <Object?, Object?>{
+        'result': true,
+        'json': '{"version":8}',
+      };
+
+      expect(await platform.getStyle(), '{"version":8}');
+      expect(api.calls, [
+        ['mapGetStyle'],
+      ]);
+    });
+
+    test('getStyle is null when native has no style', () async {
+      api.replies['mapGetStyle'] = <Object?, Object?>{'result': false};
+      expect(await platform.getStyle(), isNull);
+
+      api.replies['mapGetStyle'] = <Object?, Object?>{};
+      expect(await platform.getStyle(), isNull);
+    });
+
+    test('the edit calls send their arguments and read the result', () async {
+      api.replies['mapEditGeoJsonSource'] = <Object?, Object?>{'result': true};
+      api.replies['mapEditGeoJsonUrl'] = <Object?, Object?>{'result': false};
+      api.replies['mapSetLayerFilter'] = <Object?, Object?>{'result': true};
+
+      expect(await platform.editGeoJsonSource('source', '{}'), isTrue);
+      expect(
+        await platform.editGeoJsonUrl('source', 'https://example.com/a.json'),
+        isFalse,
+      );
+      // The deprecated controller method still reaches it.
+      // ignore: deprecated_member_use
+      expect(await platform.setLayerFilter('layer', '["has","a"]'), isTrue);
+      expect(api.calls, [
+        ['mapEditGeoJsonSource', 'source', '{}'],
+        ['mapEditGeoJsonUrl', 'source', 'https://example.com/a.json'],
+        ['mapSetLayerFilter', 'layer', '["has","a"]'],
+      ]);
+    });
+
+    // As it did when the method channel reply was assigned to a map.
+    test('a call that always answers a map fails on a null answer', () {
+      expect(
+        platform.editGeoJsonSource('source', '{}'),
+        throwsA(isA<TypeError>()),
+      );
+    });
+
+    test('addSource sends the properties', () async {
+      const properties = VectorSourceProperties(
+        url: 'https://example.com/tiles.json',
+      );
+
+      await platform.addSource('vector', properties);
+
+      expect(api.calls, [
+        ['styleAddSource', 'vector', properties.toJson()],
+      ]);
+      expect((api.calls.single[2]! as Map)['type'], 'vector');
+    });
+
+    test('addSource accepts the built-in raster-dem encodings', () async {
+      await platform.addSource(
+        'dem',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          encoding: 'terrarium',
+        ),
+      );
+
+      expect(api.calls.single.take(2), ['styleAddSource', 'dem']);
+    });
+
+    test('removeSource sends the id', () async {
+      await platform.removeSource('source');
+
+      expect(api.calls, [
+        ['styleRemoveSource', 'source'],
+      ]);
+    });
+
+    test('setLight sends the light', () async {
+      await platform.setLight(
+        const LightProperties(anchor: 'map', intensity: 0.4),
+      );
+
+      expect(api.calls, [
+        [
+          'styleSetLight',
+          {'anchor': 'map', 'intensity': 0.4},
+        ],
+      ]);
+    });
+
+    test('getSourceIds reads the sources as strings', () async {
+      api.replies['styleGetSourceIds'] = <Object?, Object?>{
+        'sources': <Object?>['water', 7],
+      };
+
+      expect(await platform.getSourceIds(), ['water', '7']);
+      expect(api.calls, [
+        ['styleGetSourceIds'],
+      ]);
+    });
+
+    test('getSourceProperties decodes and shapes the source', () async {
+      api.replies['styleGetSourceProperties'] = <Object?, Object?>{
+        'properties':
+            '{"type":"vector","maxzoom":14.0,"bounds":[-180.0,-85.5,180.0,85.5]}',
+      };
+
+      final properties = await platform.getSourceProperties('vector');
+
+      expect(properties, {
+        'type': 'vector',
+        'maxzoom': 14,
+        'bounds': [-180, -85.5, 180, 85.5],
+      });
+      expect(properties!['maxzoom'], isA<int>());
+      expect(api.calls, [
+        ['styleGetSourceProperties', 'vector'],
+      ]);
+    });
+
+    test('getSourceProperties is null for a missing source', () async {
+      api.replies['styleGetSourceProperties'] = <Object?, Object?>{};
+
+      expect(await platform.getSourceProperties('none'), isNull);
+    });
+  });
+
+  group('images', () {
+    setUp(init);
+
+    const quad = LatLngQuad(
+      topLeft: LatLng(4, 1),
+      topRight: LatLng(4, 2),
+      bottomRight: LatLng(3, 2),
+      bottomLeft: LatLng(3, 1),
+    );
+    final quadList = [
+      [4.0, 1.0],
+      [4.0, 2.0],
+      [3.0, 2.0],
+      [3.0, 1.0],
+    ];
+
+    test('addImage sends the bytes, their length and sdf', () async {
+      final bytes = Uint8List.fromList([1, 2, 3]);
+
+      await platform.addImage('pin', bytes);
+      await platform.addImage('glyph', bytes, true);
+
+      expect(api.calls, [
+        ['styleAddImage', 'pin', bytes, 3, false],
+        ['styleAddImage', 'glyph', bytes, 3, true],
+      ]);
+    });
+
+    test('addImageSource sends the coordinates as lists', () async {
+      final bytes = Uint8List.fromList([1, 2]);
+
+      await platform.addImageSource('image', bytes, quad);
+
+      expect(api.calls, [
+        ['styleAddImageSource', 'image', bytes, 2, quadList],
+      ]);
+    });
+
+    test('updateImageSource sends what is set and null otherwise', () async {
+      final bytes = Uint8List.fromList([9]);
+
+      await platform.updateImageSource('image', bytes, quad);
+      await platform.updateImageSource('image', null, null);
+
+      expect(api.calls, [
+        ['styleUpdateImageSource', 'image', bytes, 1, quadList],
+        ['styleUpdateImageSource', 'image', null, null, null],
+      ]);
+    });
+
+    test('addLayer and addLayerBelow send the zoom range', () async {
+      await platform.addLayer('image-layer', 'image', 1, 10);
+      await platform.addLayer('image-layer', 'image', null, null);
+      await platform.addLayerBelow('image-layer', 'image', 'labels', 2, null);
+
+      expect(api.calls, [
+        ['styleAddLayer', 'image-layer', 'image', 1.0, 10.0],
+        ['styleAddLayer', 'image-layer', 'image', null, null],
+        ['styleAddLayerBelow', 'image-layer', 'image', 'labels', 2.0, null],
+      ]);
+    });
+  });
+
+  group('layer calls', () {
+    setUp(init);
+
+    const properties = <String, dynamic>{'fill-opacity': 0.5};
+
+    test('the filtered layer adds send every argument', () async {
+      const filter = ['has', 'name'];
+
+      await platform.addCircleLayer(
+        'source',
+        'circles',
+        properties,
+        belowLayerId: 'labels',
+        sourceLayer: 'poi',
+        minzoom: 1,
+        maxzoom: 2,
+        filter: filter,
+        enableInteraction: true,
+      );
+      await platform.addFillLayer(
+        'source',
+        'fills',
+        properties,
+        filter: filter,
+        enableInteraction: false,
+      );
+      await platform.addFillExtrusionLayer(
+        'source',
+        'extrusions',
+        properties,
+        sourceLayer: 'building',
+        enableInteraction: true,
+      );
+
+      expect(api.calls, [
+        [
+          'circleLayerAdd',
+          'source',
+          'circles',
+          'labels',
+          'poi',
+          1.0,
+          2.0,
+          '["has","name"]',
+          true,
+          properties,
+        ],
+        [
+          'fillLayerAdd',
+          'source',
+          'fills',
+          null,
+          null,
+          null,
+          null,
+          '["has","name"]',
+          false,
+          properties,
+        ],
+        [
+          'fillExtrusionLayerAdd',
+          'source',
+          'extrusions',
+          null,
+          'building',
+          null,
+          null,
+          'null',
+          true,
+          properties,
+        ],
+      ]);
+    });
+
+    test(
+      'the raster, hillshade and color relief adds send no filter',
+      () async {
+        await platform.addRasterLayer(
+          'raster',
+          'raster-layer',
+          properties,
+          belowLayerId: 'labels',
+          sourceLayer: 'ignored',
+          minzoom: 3,
+          maxzoom: 4,
+        );
+        await platform.addHillshadeLayer('dem', 'hillshade', properties);
+        await platform.addColorReliefLayer(
+          'dem',
+          'relief',
+          properties,
+          belowLayerId: 'water',
+          minzoom: 5,
+        );
+
+        expect(api.calls, [
+          [
+            'rasterLayerAdd',
+            'raster',
+            'raster-layer',
+            'labels',
+            3.0,
+            4.0,
+            properties,
+          ],
+          [
+            'hillshadeLayerAdd',
+            'dem',
+            'hillshade',
+            null,
+            null,
+            null,
+            properties,
+          ],
+          [
+            'colorReliefLayerAdd',
+            'dem',
+            'relief',
+            'water',
+            5.0,
+            null,
+            properties,
+          ],
+        ]);
+      },
+    );
+
+    test('addBackgroundLayer sends no source', () async {
+      await platform.addBackgroundLayer(
+        'background',
+        properties,
+        belowLayerId: 'water',
+        maxzoom: 9,
+      );
+
+      expect(api.calls, [
+        ['backgroundLayerAdd', 'background', 'water', null, 9.0, properties],
+      ]);
+    });
+
+    test('removeLayer, setLayerProperties and the visibility calls', () async {
+      api.replies['layerGetVisibility'] = true;
+
+      await platform.removeLayer('a');
+      await platform.setLayerProperties('a', properties);
+      await platform.setLayerVisibility('a', false);
+      await platform.setLayerZoomRange('a', 2, 12);
+      final visible = await platform.getLayerVisibility('a');
+
+      expect(visible, isTrue);
+      expect(api.calls, [
+        ['styleRemoveLayer', 'a'],
+        ['layerSetProperties', 'a', properties],
+        ['layerSetVisibility', 'a', false],
+        ['layerSetZoomRange', 'a', 2.0, 12.0],
+        ['layerGetVisibility', 'a'],
+      ]);
+    });
+
+    test('getLayerVisibility is null for a missing layer', () async {
+      expect(await platform.getLayerVisibility('none'), isNull);
+    });
+
+    test('setLayersVisibility reads a null answer as none missing', () async {
+      expect(await platform.setLayersVisibility(['a'], true), isEmpty);
+    });
+
+    test('setFilter encodes the filter and getFilter decodes it', () async {
+      api.replies['styleGetFilter'] = <Object?, Object?>{
+        'filter': '["==",["get","kind"],"cafe"]',
+      };
+
+      await platform.setFilter('a', [
+        '==',
+        ['get', 'kind'],
+        'cafe',
+      ]);
+      final filter = await platform.getFilter('a');
+
+      expect(filter, [
+        '==',
+        ['get', 'kind'],
+        'cafe',
+      ]);
+      expect(api.calls, [
+        ['styleSetFilter', 'a', '["==",["get","kind"],"cafe"]'],
+        ['styleGetFilter', 'a'],
+      ]);
+    });
+
+    test('getFilter is null for a layer without a filter', () async {
+      api.replies['styleGetFilter'] = <Object?, Object?>{'filter': null};
+
+      expect(await platform.getFilter('a'), isNull);
+    });
+  });
+
+  group('GeoJSON size check', () {
+    setUp(init);
+
+    Map<String, dynamic> lineString(int points) => {
+      'type': 'LineString',
+      'coordinates': List.generate(points, (i) => [i * 0.001, 0.0]),
+    };
+
+    Map<String, dynamic> feature(Object? geometry) => {
+      'type': 'Feature',
+      'properties': <String, dynamic>{},
+      'geometry': geometry,
+    };
+
+    // Each one reaches native intact, whether the payload is encoded on the
+    // main isolate or on another one.
+    for (final (name, geometry) in [
+      (
+        'a large GeometryCollection',
+        {
+          'type': 'GeometryCollection',
+          'geometries': [lineString(1500), lineString(1500)],
+        },
+      ),
+      (
+        'a small GeometryCollection',
+        {
+          'type': 'GeometryCollection',
+          'geometries': [lineString(2), 'not a geometry'],
+        },
+      ),
+      (
+        'a GeometryCollection without a geometries list',
+        {'type': 'GeometryCollection', 'geometries': 'none'},
+      ),
+      ('a feature without a geometry', null),
+    ]) {
+      test('setFeatureForGeoJsonSource sends $name', () async {
+        final payload = feature(geometry);
+
+        await platform.setFeatureForGeoJsonSource('source', payload);
+
+        expect(api.calls, [
+          ['sourceSetFeature', 'source', jsonEncode(payload)],
+        ]);
+      });
+    }
+  });
+
+  group('conversions, clusters and feature state', () {
+    setUp(init);
+
+    test('querySourceFeatures sends the filter and decodes', () async {
+      api.replies['mapQuerySourceFeatures'] = <Object?, Object?>{
+        'features': <Object?>['{"id":"a","properties":{"n":[1,2]}}'],
+      };
+
+      final features = await platform.querySourceFeatures('source', 'layer', [
+        'has',
+        'n',
+      ]);
+
+      expect(features, [
+        {
+          'id': 'a',
+          'properties': {
+            'n': [1, 2],
+          },
+        },
+      ]);
+      expect(api.calls, [
+        [
+          'mapQuerySourceFeatures',
+          'source',
+          'layer',
+          ['has', 'n'],
+        ],
+      ]);
+    });
+
+    test('querySourceFeatures sends null for what is unset', () async {
+      api.replies['mapQuerySourceFeatures'] = <Object?, Object?>{
+        'features': <Object?>[],
+      };
+
+      expect(await platform.querySourceFeatures('source', null, null), isEmpty);
+      expect(api.calls, [
+        ['mapQuerySourceFeatures', 'source', null, null],
+      ]);
+    });
+
+    test('getClusterExpansionZoom returns the zoom', () async {
+      api.replies['sourceGetClusterExpansionZoom'] = 9;
+
+      expect(await platform.getClusterExpansionZoom('points', 12), 9);
+      expect(api.calls, [
+        ['sourceGetClusterExpansionZoom', 'points', 12],
+      ]);
+    });
+
+    test('getClusterChildren decodes the features', () async {
+      api.replies['sourceGetClusterChildren'] = <Object?, Object?>{
+        'features': <Object?>['{"id":1,"properties":{"cluster":true}}'],
+      };
+
+      final children = await platform.getClusterChildren('points', 12);
+
+      expect(children, [
+        {
+          'id': 1,
+          'properties': {'cluster': true},
+        },
+      ]);
+      expect(children.single, isA<Map<String, dynamic>>());
+      expect(api.calls, [
+        ['sourceGetClusterChildren', 'points', 12],
+      ]);
+    });
+
+    test('getClusterChildren is empty for a null answer', () async {
+      expect(await platform.getClusterChildren('points', 12), isEmpty);
+    });
+
+    test('getClusterLeaves pages from the start by default', () async {
+      api.replies['sourceGetClusterLeaves'] = <Object?, Object?>{};
+
+      expect(await platform.getClusterLeaves('points', 12), isEmpty);
+      expect(api.calls, [
+        ['sourceGetClusterLeaves', 'points', 12, 10, 0],
+      ]);
+    });
+
+    test('toScreenLocation sends the coordinates and reads x and y', () async {
+      api.replies['mapToScreenLocation'] = <Object?, Object?>{
+        'x': 100.5,
+        'y': 200.0,
+      };
+
+      final point = await platform.toScreenLocation(const LatLng(45, 9));
+
+      expect(point, const Point(100.5, 200.0));
+      expect(api.calls, [
+        ['mapToScreenLocation', 45.0, 9.0],
+      ]);
+    });
+
+    test('getMetersPerPixelAtLatitude reads the answer', () async {
+      api.replies['mapGetMetersPerPixelAtLatitude'] = <Object?, Object?>{
+        'metersperpixel': 1.25,
+      };
+
+      expect(await platform.getMetersPerPixelAtLatitude(45), 1.25);
+      expect(api.calls, [
+        ['mapGetMetersPerPixelAtLatitude', 45.0],
+      ]);
+    });
+
+    test('feature state reaches native on Android', () async {
+      await platform.setFeatureState('source', '1', {
+        'hover': true,
+      }, sourceLayer: 'layer');
+      await platform.removeFeatureState(
+        'source',
+        featureId: '1',
+        stateKey: 'hover',
+        sourceLayer: 'layer',
+      );
+      await platform.removeFeatureState('source');
+
+      expect(api.calls, [
+        [
+          'sourceSetFeatureState',
+          'source',
+          '1',
+          {'hover': true},
+          'layer',
+        ],
+        ['sourceRemoveFeatureState', 'source', '1', 'hover', 'layer'],
+        ['sourceRemoveFeatureState', 'source', null, null, null],
+      ]);
+    });
+
+    test('getFeatureState is null when the feature has no state', () async {
+      expect(await platform.getFeatureState('source', '1'), isNull);
+
+      api.replies['sourceGetFeatureState'] = <Object?, Object?>{'state': null};
+      expect(await platform.getFeatureState('source', '1'), isNull);
+
+      expect(api.calls, [
+        ['sourceGetFeatureState', 'source', '1', null],
+        ['sourceGetFeatureState', 'source', '1', null],
+      ]);
+    });
+
+    test('every feature state call fails on iOS without reaching native', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      expect(
+        () => platform.removeFeatureState('source', featureId: '1'),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            startsWith('removeFeatureState is not available on iOS'),
+          ),
+        ),
+      );
+      expect(
+        () => platform.getFeatureState('source', '1'),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            startsWith('getFeatureState is not available on iOS'),
+          ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+  });
+
+  group('web only', () {
+    setUp(init);
+
+    test('what MapLibre Native lacks fails without reaching native', () {
+      Matcher unsupported(String method) => throwsA(
+        isA<UnsupportedError>().having(
+          (e) => e.message,
+          'message',
+          startsWith('$method is not available on Android and iOS'),
+        ),
+      );
+
+      expect(platform.setSky(const SkyProperties()), unsupported('setSky'));
+      expect(
+        platform.setTerrain(const TerrainProperties(source: 'dem')),
+        unsupported('setTerrain'),
+      );
+      expect(platform.setTerrain(null), unsupported('setTerrain'));
+      expect(platform.setProjection('globe'), unsupported('setProjection'));
+      expect(
+        platform.setGlobalStateProperty('mode', 'dark'),
+        unsupported('setGlobalStateProperty'),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('the web helpers are no-ops', () async {
+      const size = Size(320, 240);
+
+      expect(await platform.setWebMapToCustomSize(size), size);
+      await platform.waitUntilMapIsIdleAfterMovement();
+      await platform.waitUntilMapTilesAreLoaded();
+      platform.forceResizeWebMap();
+      platform.resizeWebMap();
+
+      expect(api.calls, isEmpty);
+    });
+  });
+
+  group('buildView', () {
+    const viewType = 'plugins.flutter.io/maplibre_gl';
+
+    tearDown(() => MapLibreMap.useHybridComposition = false);
+
+    Map<String, dynamic> creationParams() => {
+      'options': <String, dynamic>{'compassEnabled': true},
+    };
+
+    void onPlatform(TargetPlatform target) {
+      debugDefaultTargetPlatformOverride = target;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    }
+
+    test('Android builds an AndroidView by default', () {
+      onPlatform(TargetPlatform.android);
+      final params = creationParams();
+      void onCreated(int id) {}
+      final recognizers = <Factory<OneSequenceGestureRecognizer>>{
+        const Factory(EagerGestureRecognizer.new),
+      };
+
+      final view = platform.buildView(params, onCreated, recognizers);
+
+      expect(
+        view,
+        isA<AndroidView>()
+            .having((v) => v.viewType, 'viewType', viewType)
+            .having((v) => v.creationParams, 'creationParams', same(params))
+            .having(
+              (v) => v.onPlatformViewCreated,
+              'onPlatformViewCreated',
+              same(onCreated),
+            )
+            .having(
+              (v) => v.gestureRecognizers,
+              'gestureRecognizers',
+              same(recognizers),
+            ),
+      );
+      expect(params['options'], {
+        'compassEnabled': true,
+        'useHybridComposition': false,
+      });
+    });
+
+    test('Android copes with creation params without options', () {
+      onPlatform(TargetPlatform.android);
+      final params = <String, dynamic>{};
+
+      expect(platform.buildView(params, (_) {}, null), isA<AndroidView>());
+      expect(params, isEmpty);
+    });
+
+    testWidgets(
+      'Android with hybrid composition creates the view itself',
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        MapLibreMap.useHybridComposition = true;
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          switch (call.method) {
+            case 'create':
+              // A texture id: the view is drawn by Flutter.
+              return 0;
+            case 'resize':
+              final args = call.arguments as Map;
+              return <String, Object?>{
+                'width': args['width'],
+                'height': args['height'],
+              };
+          }
+          return null;
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
+        );
+        final params = creationParams();
+        final created = <int>[];
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(params, created.add, null),
+          ),
+        );
+        await tester.pump();
+
+        expect(params['options']['useHybridComposition'], isTrue);
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final args = create.arguments as Map;
+        expect(args['viewType'], viewType);
+        expect(
+          const StandardMessageCodec().decodeMessage(
+            ByteData.sublistView(args['params'] as Uint8List),
+          ),
+          params,
+        );
+        expect(created, [args['id']]);
+        expect(find.byType(AndroidViewSurface), findsOneWidget);
+
+        // Native asks for the focus when the view is touched.
+        await messenger.handlePlatformMessage(
+          SystemChannels.platform_views.name,
+          const StandardMethodCodec().encodeMethodCall(
+            MethodCall('viewFocused', created.single),
+          ),
+          (_) {},
+        );
+        await tester.pump();
+        expect(
+          FocusManager.instance.primaryFocus?.debugLabel,
+          startsWith('PlatformView'),
+        );
+
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    test('iOS builds a UiKitView without the Android flag', () {
+      onPlatform(TargetPlatform.iOS);
+      MapLibreMap.useHybridComposition = true;
+      final params = creationParams();
+      void onCreated(int id) {}
+
+      final view = platform.buildView(params, onCreated, null);
+
+      expect(
+        view,
+        isA<UiKitView>()
+            .having((v) => v.viewType, 'viewType', viewType)
+            .having((v) => v.creationParams, 'creationParams', same(params))
+            .having(
+              (v) => v.onPlatformViewCreated,
+              'onPlatformViewCreated',
+              same(onCreated),
+            ),
+      );
+      expect(params['options'], {'compassEnabled': true});
+    });
+
+    test('other platforms get a message instead of a map', () {
+      onPlatform(TargetPlatform.linux);
+
+      final view = platform.buildView(creationParams(), (_) {}, null);
+
+      expect(
+        view,
+        isA<Text>().having(
+          (v) => v.data,
+          'data',
+          'TargetPlatform.linux is not yet supported by the maps plugin',
+        ),
+      );
+    });
+  });
 }
 
 /// Records each call as its name followed by its arguments, and answers with
 /// [replies] by name, or fails with [errors] by name.
+///
+/// Every method of the generated client is overridden. One that was not would
+/// send on a channel nothing listens to, and fail with a channel-error.
 class _FakeMapHostApi extends MapLibreMapHostApi {
+  _FakeMapHostApi() : super(messageChannelSuffix: 'not-overridden');
+
   final List<List<Object?>> calls = [];
   final Map<String, Object?> replies = {};
   final Map<String, PlatformException> errors = {};
@@ -905,12 +2024,64 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   }
 
   @override
+  Future<Object?> mapUpdate(Map<String, Object?> options) =>
+      _call('mapUpdate', [options]);
+
+  @override
   Future<bool?> cameraAnimate(List<Object?> cameraUpdate, int? duration) =>
       _call('cameraAnimate', [cameraUpdate, duration]);
 
   @override
   Future<bool?> cameraMove(List<Object?> cameraUpdate) =>
       _call('cameraMove', [cameraUpdate]);
+
+  @override
+  Future<void> mapUpdateMyLocationTrackingMode(int mode) =>
+      _call('mapUpdateMyLocationTrackingMode', [mode]);
+
+  @override
+  Future<bool?> locationComponentSetTrackingCameraOptions(
+    double tilt,
+    int? duration,
+  ) => _call('locationComponentSetTrackingCameraOptions', [tilt, duration]);
+
+  @override
+  Future<void> locationComponentSetManualLocation(
+    Map<String, Object?> update,
+  ) => _call('locationComponentSetManualLocation', [update]);
+
+  @override
+  Future<void> mapMatchMapLanguageWithDeviceDefault() =>
+      _call('mapMatchMapLanguageWithDeviceDefault');
+
+  @override
+  Future<void> mapUpdateContentInsets(
+    Map<String, double> bounds,
+    bool animated,
+  ) => _call('mapUpdateContentInsets', [bounds, animated]);
+
+  @override
+  Future<void> mapSetMapLanguage(String language) =>
+      _call('mapSetMapLanguage', [language]);
+
+  @override
+  Future<void> mapSetTelemetryEnabled(bool enabled) =>
+      _call('mapSetTelemetryEnabled', [enabled]);
+
+  @override
+  Future<bool> mapGetTelemetryEnabled() => _call('mapGetTelemetryEnabled');
+
+  @override
+  Future<void> mapSetMaximumFps(int fps) => _call('mapSetMaximumFps', [fps]);
+
+  @override
+  Future<void> mapForceOnlineMode() => _call('mapForceOnlineMode');
+
+  @override
+  Future<void> mapPause() => _call('mapPause');
+
+  @override
+  Future<void> mapResume() => _call('mapResume');
 
   @override
   Future<bool> cameraEase(
@@ -921,6 +2092,202 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
 
   @override
   Future<Object?> mapQueryCameraPosition() => _call('mapQueryCameraPosition');
+
+  @override
+  Future<Object?> mapEditGeoJsonSource(String id, String data) =>
+      _call('mapEditGeoJsonSource', [id, data]);
+
+  @override
+  Future<Object?> mapEditGeoJsonUrl(String id, String url) =>
+      _call('mapEditGeoJsonUrl', [id, url]);
+
+  @override
+  Future<Object?> mapSetLayerFilter(String id, String filter) =>
+      _call('mapSetLayerFilter', [id, filter]);
+
+  @override
+  Future<Object?> mapGetStyle() => _call('mapGetStyle');
+
+  @override
+  Future<void> mapSetCustomHeaders(
+    Map<String, String> headers,
+    List<String> filter,
+  ) => _call('mapSetCustomHeaders', [headers, filter]);
+
+  @override
+  Future<Object?> mapGetCustomHeaders() => _call('mapGetCustomHeaders');
+
+  @override
+  Future<Object?> mapQueryRenderedFeaturesAtPoint(
+    double x,
+    double y,
+    List<String> layerIds,
+    List<Object?>? filter,
+  ) => _call('mapQueryRenderedFeaturesAtPoint', [x, y, layerIds, filter]);
+
+  @override
+  Future<Object?> mapQueryRenderedFeaturesInRect(
+    double left,
+    double top,
+    double right,
+    double bottom,
+    List<String> layerIds,
+    String? filter,
+  ) => _call('mapQueryRenderedFeaturesInRect', [
+    left,
+    top,
+    right,
+    bottom,
+    layerIds,
+    filter,
+  ]);
+
+  @override
+  Future<Object?> mapQuerySourceFeatures(
+    String sourceId,
+    String? sourceLayerId,
+    List<Object?>? filter,
+  ) => _call('mapQuerySourceFeatures', [sourceId, sourceLayerId, filter]);
+
+  @override
+  Future<int> sourceGetClusterExpansionZoom(String sourceId, int clusterId) =>
+      _call('sourceGetClusterExpansionZoom', [sourceId, clusterId]);
+
+  @override
+  Future<Object?> sourceGetClusterChildren(String sourceId, int clusterId) =>
+      _call('sourceGetClusterChildren', [sourceId, clusterId]);
+
+  @override
+  Future<Object?> sourceGetClusterLeaves(
+    String sourceId,
+    int clusterId,
+    int limit,
+    int offset,
+  ) => _call('sourceGetClusterLeaves', [sourceId, clusterId, limit, offset]);
+
+  @override
+  Future<void> mapInvalidateAmbientCache() =>
+      _call('mapInvalidateAmbientCache');
+
+  @override
+  Future<void> mapClearAmbientCache() => _call('mapClearAmbientCache');
+
+  @override
+  Future<Object?> locationComponentGetLastLocation() =>
+      _call('locationComponentGetLastLocation');
+
+  @override
+  Future<Object?> mapGetVisibleRegion() => _call('mapGetVisibleRegion');
+
+  @override
+  Future<void> styleAddImage(
+    String name,
+    Uint8List bytes,
+    int length,
+    bool sdf,
+  ) => _call('styleAddImage', [name, bytes, length, sdf]);
+
+  @override
+  Future<void> styleAddImageSource(
+    String imageSourceId,
+    Uint8List bytes,
+    int length,
+    List<Object?> coordinates,
+  ) => _call('styleAddImageSource', [
+    imageSourceId,
+    bytes,
+    length,
+    coordinates,
+  ]);
+
+  @override
+  Future<void> styleUpdateImageSource(
+    String imageSourceId,
+    Uint8List? bytes,
+    int? length,
+    List<Object?>? coordinates,
+  ) => _call('styleUpdateImageSource', [
+    imageSourceId,
+    bytes,
+    length,
+    coordinates,
+  ]);
+
+  @override
+  Future<Object?> mapToScreenLocation(double latitude, double longitude) =>
+      _call('mapToScreenLocation', [latitude, longitude]);
+
+  @override
+  Future<Float64List> mapToScreenLocationBatch(Float64List coordinates) =>
+      _call('mapToScreenLocationBatch', [coordinates]);
+
+  @override
+  Future<void> styleRemoveSource(String sourceId) =>
+      _call('styleRemoveSource', [sourceId]);
+
+  @override
+  Future<void> styleAddLayer(
+    String imageLayerId,
+    String imageSourceId,
+    double? minzoom,
+    double? maxzoom,
+  ) => _call('styleAddLayer', [imageLayerId, imageSourceId, minzoom, maxzoom]);
+
+  @override
+  Future<void> styleAddLayerBelow(
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  ) => _call('styleAddLayerBelow', [
+    imageLayerId,
+    imageSourceId,
+    belowLayerId,
+    minzoom,
+    maxzoom,
+  ]);
+
+  @override
+  Future<void> styleRemoveLayer(String layerId) =>
+      _call('styleRemoveLayer', [layerId]);
+
+  @override
+  Future<void> styleMoveLayer(String layerId, String? belowLayerId) =>
+      _call('styleMoveLayer', [layerId, belowLayerId]);
+
+  @override
+  Future<void> styleSetFilter(String layerId, String filter) =>
+      _call('styleSetFilter', [layerId, filter]);
+
+  @override
+  Future<Object?> styleGetFilter(String layerId) =>
+      _call('styleGetFilter', [layerId]);
+
+  @override
+  Future<Object?> mapToLatLng(double x, double y) =>
+      _call('mapToLatLng', [x, y]);
+
+  @override
+  Future<Object?> mapGetMetersPerPixelAtLatitude(double latitude) =>
+      _call('mapGetMetersPerPixelAtLatitude', [latitude]);
+
+  @override
+  Future<void> sourceAddGeoJson(String sourceId, String geojson) =>
+      _call('sourceAddGeoJson', [sourceId, geojson]);
+
+  @override
+  Future<void> sourceSetGeoJson(String sourceId, String geojson) =>
+      _call('sourceSetGeoJson', [sourceId, geojson]);
+
+  @override
+  Future<void> mapSetCameraBounds(
+    double west,
+    double north,
+    double south,
+    double east,
+    int padding,
+  ) => _call('mapSetCameraBounds', [west, north, south, east, padding]);
 
   @override
   Future<void> symbolLayerAdd(
@@ -969,6 +2336,153 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ]);
 
   @override
+  Future<void> layerSetProperties(
+    String layerId,
+    Map<String, Object?> properties,
+  ) => _call('layerSetProperties', [layerId, properties]);
+
+  @override
+  Future<void> circleLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) => _call('circleLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    sourceLayer,
+    minzoom,
+    maxzoom,
+    filter,
+    enableInteraction,
+    properties,
+  ]);
+
+  @override
+  Future<void> fillLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) => _call('fillLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    sourceLayer,
+    minzoom,
+    maxzoom,
+    filter,
+    enableInteraction,
+    properties,
+  ]);
+
+  @override
+  Future<void> fillExtrusionLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) => _call('fillExtrusionLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    sourceLayer,
+    minzoom,
+    maxzoom,
+    filter,
+    enableInteraction,
+    properties,
+  ]);
+
+  @override
+  Future<void> styleAddSource(
+    String sourceId,
+    Map<String, Object?> properties,
+  ) => _call('styleAddSource', [sourceId, properties]);
+
+  @override
+  Future<void> rasterLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) => _call('rasterLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    minzoom,
+    maxzoom,
+    properties,
+  ]);
+
+  @override
+  Future<void> hillshadeLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) => _call('hillshadeLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    minzoom,
+    maxzoom,
+    properties,
+  ]);
+
+  @override
+  Future<void> colorReliefLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) => _call('colorReliefLayerAdd', [
+    sourceId,
+    layerId,
+    belowLayerId,
+    minzoom,
+    maxzoom,
+    properties,
+  ]);
+
+  @override
+  Future<void> backgroundLayerAdd(
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) => _call('backgroundLayerAdd', [
+    layerId,
+    belowLayerId,
+    minzoom,
+    maxzoom,
+    properties,
+  ]);
+
+  @override
   Future<void> heatmapLayerAdd(
     String sourceId,
     String layerId,
@@ -990,87 +2504,8 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ]);
 
   @override
-  Future<void> styleMoveLayer(String layerId, String? belowLayerId) =>
-      _call('styleMoveLayer', [layerId, belowLayerId]);
-
-  @override
-  Future<List<String>?> layerSetVisibilityBatch(
-    List<String> layerIds,
-    bool visible,
-  ) => _call('layerSetVisibilityBatch', [layerIds, visible]);
-
-  @override
-  Future<Object?> styleGetLayerIds() => _call('styleGetLayerIds');
-
-  @override
-  Future<Object?> styleGetLayerProperties(String layerId) =>
-      _call('styleGetLayerProperties', [layerId]);
-
-  @override
-  Future<void> sourceAddGeoJson(String sourceId, String geojson) =>
-      _call('sourceAddGeoJson', [sourceId, geojson]);
-
-  @override
-  Future<void> sourceSetGeoJson(String sourceId, String geojson) =>
-      _call('sourceSetGeoJson', [sourceId, geojson]);
-
-  @override
   Future<void> sourceSetFeature(String sourceId, String geojsonFeature) =>
       _call('sourceSetFeature', [sourceId, geojsonFeature]);
-
-  @override
-  Future<void> styleAddSource(
-    String sourceId,
-    Map<String, Object?> properties,
-  ) => _call('styleAddSource', [sourceId, properties]);
-
-  @override
-  Future<Object?> mapQueryRenderedFeaturesAtPoint(
-    double x,
-    double y,
-    List<String> layerIds,
-    List<Object?>? filter,
-  ) => _call('mapQueryRenderedFeaturesAtPoint', [x, y, layerIds, filter]);
-
-  @override
-  Future<Object?> mapQueryRenderedFeaturesInRect(
-    double left,
-    double top,
-    double right,
-    double bottom,
-    List<String> layerIds,
-    String? filter,
-  ) => _call('mapQueryRenderedFeaturesInRect', [
-    left,
-    top,
-    right,
-    bottom,
-    layerIds,
-    filter,
-  ]);
-
-  @override
-  Future<Object?> sourceGetClusterLeaves(
-    String sourceId,
-    int clusterId,
-    int limit,
-    int offset,
-  ) => _call('sourceGetClusterLeaves', [sourceId, clusterId, limit, offset]);
-
-  @override
-  Future<Object?> mapGetVisibleRegion() => _call('mapGetVisibleRegion');
-
-  @override
-  Future<Float64List> mapToScreenLocationBatch(Float64List coordinates) =>
-      _call('mapToScreenLocationBatch', [coordinates]);
-
-  @override
-  Future<Object?> mapToLatLng(double x, double y) =>
-      _call('mapToLatLng', [x, y]);
-
-  @override
-  Future<Object?> locationComponentGetLastLocation() =>
-      _call('locationComponentGetLastLocation');
 
   @override
   Future<void> sourceSetFeatureState(
@@ -1082,6 +2517,19 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('sourceSetFeatureState', [sourceId, featureId, state, sourceLayer]);
 
   @override
+  Future<void> sourceRemoveFeatureState(
+    String sourceId,
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  ) => _call('sourceRemoveFeatureState', [
+    sourceId,
+    featureId,
+    stateKey,
+    sourceLayer,
+  ]);
+
+  @override
   Future<Object?> sourceGetFeatureState(
     String sourceId,
     String featureId,
@@ -1089,6 +2537,48 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ) => _call('sourceGetFeatureState', [sourceId, featureId, sourceLayer]);
 
   @override
+  Future<void> styleSetLight(Map<String, Object?> light) =>
+      _call('styleSetLight', [light]);
+
+  @override
+  Future<void> layerSetVisibility(String layerId, bool visible) =>
+      _call('layerSetVisibility', [layerId, visible]);
+
+  @override
+  Future<List<String>?> layerSetVisibilityBatch(
+    List<String> layerIds,
+    bool visible,
+  ) => _call('layerSetVisibilityBatch', [layerIds, visible]);
+
+  @override
+  Future<void> layerSetZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) => _call('layerSetZoomRange', [layerId, minzoom, maxzoom]);
+
+  @override
+  Future<bool?> layerGetVisibility(String layerId) =>
+      _call('layerGetVisibility', [layerId]);
+
+  @override
   Future<Uint8List?> mapTakeSnapshot(int? width, int? height) =>
       _call('mapTakeSnapshot', [width, height]);
+
+  @override
+  Future<Object?> styleGetLayerIds() => _call('styleGetLayerIds');
+
+  @override
+  Future<Object?> styleGetSourceIds() => _call('styleGetSourceIds');
+
+  @override
+  Future<Object?> styleGetLayerProperties(String layerId) =>
+      _call('styleGetLayerProperties', [layerId]);
+
+  @override
+  Future<Object?> styleGetSourceProperties(String sourceId) =>
+      _call('styleGetSourceProperties', [sourceId]);
+
+  @override
+  Future<void> styleSetStyle(String style) => _call('styleSetStyle', [style]);
 }
