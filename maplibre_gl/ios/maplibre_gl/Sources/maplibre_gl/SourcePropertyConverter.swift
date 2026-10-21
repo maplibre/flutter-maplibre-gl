@@ -233,6 +233,37 @@ class SourcePropertyConverter {
         return nil
     }
 
+    /// Whether `properties` give an image source a url and four [lng, lat]
+    /// corners. quadFromArray and MapLibre would crash on bad corners.
+    class func isImageSource(_ properties: [String: Any]) -> Bool {
+        guard let url = properties["url"] as? String, !url.isEmpty,
+              let corners = properties["coordinates"] as? [Any], corners.count == 4
+        else {
+            return false
+        }
+        for corner in corners {
+            guard let pair = corner as? [Any], pair.count == 2,
+                  let longitude = number(pair[0]), let latitude = number(pair[1]),
+                  longitude.doubleValue.isFinite,
+                  latitude.doubleValue >= -90, latitude.doubleValue <= 90
+            else {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// `value` as a number, or nil. The channel hands booleans over as
+    /// NSNumbers too.
+    private class func number(_ value: Any) -> NSNumber? {
+        guard let number = value as? NSNumber,
+              CFGetTypeID(number) != CFBooleanGetTypeID()
+        else {
+            return nil
+        }
+        return number
+    }
+
     class func buildImageSource(identifier: String, properties: [String: Any]) -> MLNImageSource? {
         if let rawUrl = properties["url"] as? String, let url = URL(string: rawUrl),
            let coordinates = properties["coordinates"] as? [[Double]]

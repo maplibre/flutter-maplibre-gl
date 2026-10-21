@@ -10,6 +10,9 @@ enum MethodCallError: Error {
     case invalidArgument(message: String)
     /// A filter that is not JSON or that the engine rejected, with why.
     case invalidFilter(reason: String)
+    /// A layer property value the engine rejected: INVALID_EXPRESSION for an
+    /// expression, INVALID_ARGUMENT for any other value.
+    case invalidLayerProperty(layerId: String, property: String, isExpression: Bool, reason: String)
     /// GeoJSON that MapLibre cannot read, or that is not what the call takes.
     case invalidGeoJson(message: String)
     case sourceNotFound(sourceId: String)
@@ -29,6 +32,8 @@ enum MethodCallError: Error {
             return "INVALID_ARGUMENT"
         case .invalidFilter:
             return "INVALID_EXPRESSION"
+        case let .invalidLayerProperty(_, _, isExpression, _):
+            return isExpression ? "INVALID_EXPRESSION" : "INVALID_ARGUMENT"
         case .invalidGeoJson:
             return "INVALID_GEOJSON"
         case .sourceNotFound:
@@ -54,6 +59,9 @@ enum MethodCallError: Error {
             return message
         case let .invalidFilter(reason):
             return "Invalid filter: \(reason)"
+        case let .invalidLayerProperty(layerId, property, isExpression, reason):
+            return "\(isExpression ? "Invalid expression" : "Invalid value") for property "
+                + "'\(property)' of layer '\(layerId)': \(reason)"
         case let .invalidGeoJson(message):
             return message
         case let .sourceNotFound(sourceId):
@@ -74,6 +82,8 @@ enum MethodCallError: Error {
         case let .invalidLayerType(details):
             return details
         case let .invalidFilter(reason):
+            return reason
+        case let .invalidLayerProperty(_, _, _, reason):
             return reason
         case let .layerNotFound(layerId):
             return "Layer with id \(layerId) not found."

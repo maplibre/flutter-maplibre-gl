@@ -219,4 +219,39 @@ void main() {
       expect(android.map((p) => p['value']), ['raster-opacity']);
     });
   });
+
+  group('constantKind', () {
+    test('names the kind of each constant the Swift converter checks', () {
+      expect(constantKind({'type': 'number'}), 'number');
+      expect(constantKind({'type': 'boolean'}), 'boolean');
+      expect(constantKind({'type': 'string'}), 'string');
+      expect(constantKind({'type': 'resolvedImage'}), 'string');
+      expect(constantKind({'type': 'color'}), 'color');
+      expect(
+        constantKind({
+          'type': 'enum',
+          'values': {'butt': {}, 'round': {}},
+        }),
+        'enum:butt|round',
+      );
+      expect(
+        constantKind({'type': 'array', 'value': 'number', 'length': 2}),
+        'array:2:number',
+      );
+      expect(
+        constantKind({
+          'type': 'array',
+          'value': 'enum',
+          'values': {'top': {}, 'left': {}},
+        }),
+        'array:*:enum:top|left',
+      );
+    });
+
+    test('leaves out the kinds it does not check', () {
+      expect(constantKind({'type': 'formatted'}), isNull);
+      expect(constantKind({'type': 'padding'}), isNull);
+      expect(constantKind({'type': 'array', 'value': 'padding'}), isNull);
+    });
+  });
 }

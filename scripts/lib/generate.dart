@@ -118,6 +118,10 @@ Future<void> main() async {
         },
     ],
     'expressions': buildExpressionProperties(styleJson),
+    'constantKinds': [
+      for (final entry in buildConstantKinds(styleJson).entries)
+        {"name": entry.key, "kind": entry.value},
+    ],
   };
 
   // required for deduplication
@@ -358,6 +362,45 @@ Map<String, dynamic> buildStyleProperty(
     'valueAsCamelCase': camelCase,
     'valueAsPascalCase': ReCase(key).pascalCase,
   };
+}
+
+/// The kind of constant each layer property takes, by name, for the Swift
+/// converter, which checks constants MapLibre on iOS does not: `number`,
+/// `boolean`, `string`, `color`, `enum:` with its values joined by `|`, or
+/// `array:`, the length (`*` for any) and the kind of its items. Kinds that
+/// are not checked are left out.
+Map<String, String> buildConstantKinds(Map<String, dynamic> styleJson) {
+  final kinds = <String, String>{};
+  for (final section in styleJson.entries) {
+    if (!section.key.startsWith('paint_') &&
+        !section.key.startsWith('layout_')) {
+      continue;
+    }
+    for (final property in (section.value as Map<String, dynamic>).entries) {
+      final kind = constantKind(property.value as Map<String, dynamic>);
+      if (kind != null) kinds[property.key] = kind;
+    }
+  }
+  return Map.fromEntries(
+    kinds.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
+}
+
+/// The kind of constant a property of [spec] takes. See [buildConstantKinds].
+String? constantKind(Map<String, dynamic> spec) {
+  String? itemKind(Object? type) => switch (type) {
+    'number' => 'number',
+    'boolean' => 'boolean',
+    'string' || 'resolvedImage' => 'string',
+    'color' => 'color',
+    'enum' => 'enum:${(spec['values'] as Map).keys.join('|')}',
+    _ => null,
+  };
+  if (spec['type'] != 'array') return itemKind(spec['type']);
+  final value = spec['value'];
+  final item = itemKind(value is Map ? value['type'] : value);
+  if (item == null) return null;
+  return 'array:${spec['length'] ?? '*'}:$item';
 }
 
 /// Build the list of source properties (excluding generic wildcard entries).
