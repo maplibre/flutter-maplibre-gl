@@ -1091,11 +1091,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleRemoveSource(sourceId: String, result: @escaping FlutterResult) {
-        guard let source = mapView.style?.source(withIdentifier: sourceId) else {
+        // Without a style this succeeded, with nothing removed.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard let source = style.source(withIdentifier: sourceId) else {
             result(nil)
             return
         }
-        mapView.style?.removeSource(source)
+        style.removeSource(source)
         result(nil)
     }
 
@@ -1106,12 +1111,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maxzoom: Double?,
         result: @escaping FlutterResult
     ) {
-        if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+        // Without a style this said noSuchSource.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        if style.layer(withIdentifier: imageLayerId) != nil {
             result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
             return
         }
         // Check for noSuchSource error
-        guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
+        guard let source = style.source(withIdentifier: imageSourceId) else {
             result(FlutterError(
                 code: "noSuchSource",
                 message: "No source found with imageSourceId \(imageSourceId)",
@@ -1130,7 +1140,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             layer.maximumZoomLevel = Float(maxzoom)
         }
 
-        mapView.style?.addLayer(layer)
+        style.addLayer(layer)
         result(nil)
     }
 
@@ -1142,12 +1152,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maxzoom: Double?,
         result: @escaping FlutterResult
     ) {
-        if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        if style.layer(withIdentifier: imageLayerId) != nil {
             result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
             return
         }
         // Check for noSuchSource error
-        guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
+        guard let source = style.source(withIdentifier: imageSourceId) else {
             result(FlutterError(
                 code: "noSuchSource",
                 message: "No source found with imageSourceId \(imageSourceId)",
@@ -1156,7 +1170,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return
         }
         // Check for noSuchLayer error
-        guard let belowLayer = mapView.style?.layer(withIdentifier: belowLayerId) else {
+        guard let belowLayer = style.layer(withIdentifier: belowLayerId) else {
             result(FlutterError(
                 code: "noSuchLayer",
                 message: "No layer found with layerId \(belowLayerId)",
@@ -1174,19 +1188,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if let maxzoom = maxzoom {
             layer.maximumZoomLevel = Float(maxzoom)
         }
-        mapView.style?.insertLayer(layer, below: belowLayer)
+        style.insertLayer(layer, below: belowLayer)
         result(nil)
     }
 
     func styleRemoveLayer(layerId: String, result: @escaping FlutterResult) {
-        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+        // Without a style this said LAYER_NOT_FOUND_ERROR.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
             result(MethodCallError.layerNotFound(
                layerId: layerId
             ).flutterError)
             return
         }
         interactiveFeatureLayerIds.remove(layerId)
-        mapView.style?.removeLayer(layer)
+        style.removeLayer(layer)
         result(nil)
     }
 
@@ -1670,7 +1689,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func layerSetProperties(layerId: String, properties: [String: Any], result: @escaping FlutterResult) {
-        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+        // Without a style this said LAYER_NOT_FOUND_ERROR.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
             result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
             return
         }
@@ -1710,7 +1734,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func layerSetVisibility(layerId: String, visible: Bool, result: @escaping FlutterResult) {
-        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+        // Without a style this said LAYER_NOT_FOUND_ERROR.
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
             result(MethodCallError.layerNotFound(
                layerId: layerId
             ).flutterError)
@@ -1722,10 +1751,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func layerSetVisibilityBatch(layerIds: [String], visible: Bool, result: @escaping FlutterResult) {
         // Unknown ids are skipped and returned, as on Android and web.
-        // Without a style no layer is found, as for layerSetVisibility.
+        // Without a style every id came back as unknown; an empty list still
+        // answers an empty list, as on Android.
+        if layerIds.isEmpty {
+            result([String]())
+            return
+        }
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
         var missingLayerIds: [String] = []
         for layerId in layerIds {
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            guard let layer = style.layer(withIdentifier: layerId) else {
                 if !missingLayerIds.contains(layerId) {
                     missingLayerIds.append(layerId)
                 }
@@ -3003,6 +3041,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// Image bytes that do not decode, answered as on Android.
     private func invalidImageError() -> FlutterError {
         return FlutterError(code: "INVALID_IMAGE", message: "Failed to decode image bytes.", details: nil)
+    }
+
+    /// A call that needs a style while none is loaded, answered as on Android.
+    private func styleNotReadyError() -> FlutterError {
+        return FlutterError(
+            code: "STYLE_NOT_READY",
+            message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+            details: nil
+        )
     }
 
     /// Answers a call with nothing, or with the error it failed with.
