@@ -2981,8 +2981,16 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         flutterApi.mapOnIdle { _ in }
     }
 
-    func mapView(_: MLNMapView, regionWillChangeAnimated _: Bool) {
-        flutterApi.cameraOnMoveStarted { _ in }
+    // MLNMapView calls this instead of regionWillChangeAnimated, which takes no reason.
+    func mapView(
+        _: MLNMapView,
+        regionWillChangeWith reason: MLNCameraChangeReason,
+        animated _: Bool
+    ) {
+        // Whether a gesture of the user moves the camera, which Android tells
+        // with REASON_API_GESTURE.
+        let isGesture = !reason.isDisjoint(with: .gestures)
+        flutterApi.cameraOnMoveStarted(isGesture: isGesture) { _ in }
     }
 
     func mapViewRegionIsChanging(_ mapView: MLNMapView) {

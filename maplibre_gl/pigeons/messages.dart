@@ -903,8 +903,11 @@ abstract class MapLibreMapFlutterApi {
   void featureOnDrag(PgFeatureDrag drag);
 
   /// camera#onMoveStarted
+  ///
+  /// [isGesture] is whether the SDK reports a gesture of the user as the
+  /// cause of the move. The legacy call carried it on Android only.
   @asyncCallback
-  void cameraOnMoveStarted();
+  void cameraOnMoveStarted(bool isGesture);
 
   /// camera#onMove
   @asyncCallback

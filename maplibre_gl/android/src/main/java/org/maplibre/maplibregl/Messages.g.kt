@@ -3312,13 +3312,18 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** camera#onMoveStarted */
-  fun cameraOnMoveStarted(callback: (Result<Unit>) -> Unit)
+  /**
+   * camera#onMoveStarted
+   *
+   * [isGesture] is whether the SDK reports a gesture of the user as the
+   * cause of the move. The legacy call carried it on Android only.
+   */
+  fun cameraOnMoveStarted(isGestureArg: Boolean, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(null) {
+    channel.send(listOf(isGestureArg)) {
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))

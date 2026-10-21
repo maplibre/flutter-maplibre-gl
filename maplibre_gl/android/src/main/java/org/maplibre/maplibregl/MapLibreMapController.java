@@ -3866,7 +3866,8 @@ final class MapLibreMapController
 
   @Override
   public void onCameraMoveStarted(int reason) {
-    flutterApi.cameraOnMoveStarted(PigeonReplies.IGNORE);
+    final boolean isGesture = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
+    flutterApi.cameraOnMoveStarted(isGesture, PigeonReplies.IGNORE);
   }
 
   @Override

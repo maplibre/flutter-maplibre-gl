@@ -3121,7 +3121,10 @@ protocol MapLibreMapFlutterApiProtocol {
   /// feature#onDrag
   func featureOnDrag(drag dragArg: PgFeatureDrag, completion: @escaping (Result<Void, PigeonError>) -> Void)
   /// camera#onMoveStarted
-  func cameraOnMoveStarted(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  ///
+  /// [isGesture] is whether the SDK reports a gesture of the user as the
+  /// cause of the move. The legacy call carried it on Android only.
+  func cameraOnMoveStarted(isGesture isGestureArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
   /// camera#onMove
   func cameraOnMove(position positionArg: PgCameraPosition, completion: @escaping (Result<Void, PigeonError>) -> Void)
   /// camera#onIdle
@@ -3198,10 +3201,13 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
     }
   }
   /// camera#onMoveStarted
-  func cameraOnMoveStarted(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+  ///
+  /// [isGesture] is whether the SDK reports a gesture of the user as the
+  /// cause of the move. The legacy call carried it on Android only.
+  func cameraOnMoveStarted(isGesture isGestureArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-    channel.sendMessage(nil) { response in
+    channel.sendMessage([isGestureArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

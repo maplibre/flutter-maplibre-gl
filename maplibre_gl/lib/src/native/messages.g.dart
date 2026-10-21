@@ -3279,7 +3279,10 @@ abstract class MapLibreMapFlutterApi {
   Future<void> featureOnDrag(PgFeatureDrag drag);
 
   /// camera#onMoveStarted
-  Future<void> cameraOnMoveStarted();
+  ///
+  /// [isGesture] is whether the SDK reports a gesture of the user as the
+  /// cause of the move. The legacy call carried it on Android only.
+  Future<void> cameraOnMoveStarted(bool isGesture);
 
   /// camera#onMove
   Future<void> cameraOnMove(PgCameraPosition position);
@@ -3386,8 +3389,10 @@ abstract class MapLibreMapFlutterApi {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final bool arg_isGesture = args[0]! as bool;
           try {
-            await api.cameraOnMoveStarted();
+            await api.cameraOnMoveStarted(arg_isGesture);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

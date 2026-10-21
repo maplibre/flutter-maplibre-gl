@@ -141,7 +141,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<void> cameraOnMoveStarted() async {
+  Future<void> cameraOnMoveStarted(bool isGesture) async {
+    // Not exposed yet, as the method channel never passed it on: telling the
+    // user's moves from the app's is #1019.
     onCameraMoveStartedPlatform(null);
   }
 

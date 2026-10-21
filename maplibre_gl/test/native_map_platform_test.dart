@@ -728,13 +728,16 @@ void main() {
       });
     });
 
-    test('cameraOnMoveStarted', () async {
+    test('cameraOnMoveStarted, through the channel', () async {
       var calls = 0;
       platform.onCameraMoveStartedPlatform.add((_) => calls++);
 
-      await events().cameraOnMoveStarted();
+      // Native tells a gesture from a call; Dart does not pass that on yet
+      // (#1019), but takes both.
+      expect(await sendFromNative('cameraOnMoveStarted', [true]), isNotNull);
+      expect(await sendFromNative('cameraOnMoveStarted', [false]), isNotNull);
 
-      expect(calls, 1);
+      expect(calls, 2);
     });
 
     test('cameraOnMove, through the channel', () async {

@@ -43,16 +43,8 @@ final class CameraAnimationTracker {
     }
 
     /// Change reasons that mean the running animation did not arrive.
-    private static let interruptingReasons: MLNCameraChangeReason = [
-        .transitionCancelled,
-        .gesturePan,
-        .gesturePinch,
-        .gestureRotate,
-        .gestureZoomIn,
-        .gestureZoomOut,
-        .gestureOneFingerZoom,
-        .gestureTilt,
-    ]
+    private static let interruptingReasons = MLNCameraChangeReason.gestures
+        .union(.transitionCancelled)
 
     /// The animation moving the camera, until it ends or is interrupted.
     private var running: Animation?

@@ -52,6 +52,19 @@ extension MLNMapCamera {
     }
 }
 
+extension MLNCameraChangeReason {
+    /// The reasons that name a gesture of the user.
+    static let gestures: MLNCameraChangeReason = [
+        .gesturePan,
+        .gesturePinch,
+        .gestureRotate,
+        .gestureZoomIn,
+        .gestureZoomOut,
+        .gestureOneFingerZoom,
+        .gestureTilt,
+    ]
+}
+
 extension CLLocation {
     /// The location as `map#onUserLocationUpdated` reports it, timestamp in
     /// milliseconds since the epoch.
