@@ -61,6 +61,11 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
 * `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
 * `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
+* A layer whose type cannot draw its source, such as a raster layer on a GeoJSON source, throws `UNSUPPORTED_SOURCE_TYPE`. iOS crashed, Android threw a generic error, and web added nothing or a layer that drew nothing.
+* A layer property value MapLibre rejects throws `INVALID_EXPRESSION` (an expression) or `INVALID_ARGUMENT` (any other value) from the layer adds and `setLayerProperties`, and the call changes nothing. Android ignored the value, iOS crashed or misread it, and web dropped the layer.
+* Data that is not a valid GeoJSON FeatureCollection, Feature or geometry throws `INVALID_GEOJSON` from `addGeoJsonSource`, `setGeoJsonSource`, `setGeoJsonFeature`, `editGeoJsonSource` and `addSource`, where Android and web left the source empty. A feature with `"id": null` counts as invalid: MapLibre Native cannot read it.
+* `addSource` throws `INVALID_ARGUMENT` for an image source without a `url` or four corners, and for a tiled source without `url` or `tiles` or a GeoJSON source without `data`, which web used to add. For image bytes, use `addImageSource`.
+* On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
 
 ### Android and iOS: Pigeon messages
 
