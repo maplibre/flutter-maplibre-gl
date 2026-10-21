@@ -64,10 +64,14 @@ jobs:
           path: maplibre_gl_example/build/app/outputs/flutter-apk/app-release.apk
       # The plugin's JVM unit tests (Pigeon adapters and bridges, GeoJSON
       # helpers), through the example's Gradle project the build above set up.
+      # Release, like that build, so they reuse its compiled classes and
+      # engine artifacts instead of compiling a debug variant from scratch.
+      # AGP 9 creates unit tests for the tested build type (debug) only, so
+      # the property brings back the release ones.
       - if: inputs.platform == 'android'
         name: Run the Android unit tests
         working-directory: maplibre_gl_example/android
-        run: ./gradlew :maplibre_gl:testDebugUnitTest
+        run: ./gradlew :maplibre_gl:testReleaseUnitTest -Pandroid.onlyEnableUnitTestForTheTestedBuildType=false
 
       - if: inputs.platform == 'ios'
         name: Build iOS package
