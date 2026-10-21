@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Readers of the JSON-like values that stay maps, such as layer and source properties, and the
- * camera sums behind the typed camera updates of {@link PigeonConvert}.
+ * Readers of the untyped values, such as layer and source properties, and the camera math behind
+ * the camera updates of {@link PigeonConvert}.
  */
 class Convert {
 
@@ -28,8 +28,8 @@ class Convert {
 
   /**
    * Pans like maplibre-gl-js panBy: a positive {@code dx} moves the view east, a positive {@code
-   * dy} south, both in logical pixels. MapLibreMap.scrollBy drags the content the other way and
-   * moves the camera outside any CameraUpdate, so the caller had nothing to animate or report on.
+   * dy} south, in logical pixels. MapLibreMap.scrollBy pans the other way and moves the camera
+   * outside any CameraUpdate.
    */
   static CameraUpdate scrollBy(MapLibreMap maplibreMap, double dx, double dy, float density) {
     final Projection projection = maplibreMap.getProjection();
@@ -39,8 +39,8 @@ class Convert {
   }
 
   /**
-   * Zooms by {@code amount} keeping the location under the focus, in logical pixels, where it is
-   * on screen. CameraUpdateFactory.zoomBy(amount, point) recenters on the point instead.
+   * Zooms by {@code amount}, keeping the location under the focus (in logical pixels) in place.
+   * CameraUpdateFactory.zoomBy(amount, point) would recenter on the point instead.
    */
   static CameraUpdate zoomBy(
       MapLibreMap maplibreMap, double amount, double focusX, double focusY, float density) {
@@ -141,9 +141,8 @@ class Convert {
   }
 
   /**
-   * {@code value}, a Dart int, as the int the platform API takes. Pigeon delivers every Dart int as
-   * a long: one that does not fit in 32 bits fails the call, with code "error", rather than wrap
-   * around.
+   * Narrows {@code value}, a Dart int that Pigeon delivers as a long, to an int. A value outside 32
+   * bits throws, failing the call with code "error", rather than wrapping around.
    */
   static int toIntExact(long value) {
     final int narrowed = (int) value;
@@ -190,12 +189,12 @@ class Convert {
     return (Map<?, ?>) o;
   }
 
-  /** {@code value}, in logical pixels, in physical pixels: a float, as the SDK takes them. */
+  /** Converts {@code value} from logical to physical pixels, as the float the SDK takes. */
   private static float toFractionalPixels(double value, float density) {
     return (float) value * density;
   }
 
-  /** {@code value}, in logical pixels, in whole physical pixels, rounded towards zero. */
+  /** Converts {@code value} from logical to whole physical pixels, rounded towards zero. */
   static int toPixels(double value, float density) {
     return (int) toFractionalPixels(value, density);
   }

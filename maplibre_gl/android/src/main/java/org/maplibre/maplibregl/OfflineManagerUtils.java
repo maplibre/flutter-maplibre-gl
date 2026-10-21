@@ -25,8 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 abstract class OfflineManagerUtils {
   private static final String TAG = "OfflineManagerUtils";
 
-  // The error codes of the offline calls and download events. iOS answers the
-  // same codes, with the same messages where the case is the same.
+  // The error codes of the offline calls and download events, shared with iOS.
   private static final String REGION_NOT_FOUND = "REGION_NOT_FOUND";
   private static final String OFFLINE_DATABASE_ERROR = "OFFLINE_DATABASE_ERROR";
   private static final String AMBIENT_CACHE_ERROR = "AMBIENT_CACHE_ERROR";
@@ -48,8 +47,8 @@ abstract class OfflineManagerUtils {
 
   /**
    * Holds the state needed to observe and control an in-progress download.
-   * {@code channelHandler} is null for a region resumed without a download of
-   * this session behind it: nothing listens to it on the Dart side.
+   * {@code channelHandler} is null for a region resumed by resumeUntracked,
+   * which nothing on the Dart side listens to.
    */
   static class ActiveDownload {
     final OfflineRegion region;
@@ -194,8 +193,6 @@ abstract class OfflineManagerUtils {
               }
               return;
             }
-            // Nothing listens to the progress of a region resumed without a
-            // download of this session behind it.
             if (channelHandler == null) {
               return;
             }
@@ -233,8 +230,8 @@ abstract class OfflineManagerUtils {
           public void onError(OfflineRegionError error) {
             // Recoverable: the SDK re-requests what failed once the network is
             // back, so this only reports and the download stays active. Ending
-            // it here lost the whole download to any brief outage.
-            // The tile count limit below is the one that is really terminal.
+            // it here would lose the whole download to any brief outage.
+            // Only the tile count limit below is terminal.
             Log.w(
                 TAG,
                 "offline download error, the SDK will retry (reason "
@@ -249,8 +246,7 @@ abstract class OfflineManagerUtils {
             region.setDownloadState(OfflineRegion.STATE_INACTIVE);
             activeDownloads.remove(region.getId());
             isComplete.set(true);
-            // A region nobody listens to stops and stays, as iOS leaves a pack
-            // no download of the session follows.
+            // A region nobody listens to stops but is kept, as iOS keeps its pack.
             if (channelHandler == null) {
               return;
             }
@@ -275,8 +271,7 @@ abstract class OfflineManagerUtils {
     try {
       definition = mapToRegionDefinition(definitionMap, pixelDensity);
     } catch (RuntimeException e) {
-      // A key missing or of the wrong type. The message is the one iOS
-      // answers for a definition it cannot read.
+      // A key is missing or has the wrong type.
       result.error(
           INVALID_REGION_DEFINITION,
           "The region definition needs bounds, mapStyleUrl, minZoom and maxZoom.",
@@ -568,20 +563,18 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_ACTIVE);
       result.success(null);
     } else {
-      // No download of this session behind the region: it was paused before
-      // the app restarted, merged in, or its download ended. Resume it as iOS
-      // does.
+      // No download of this session follows the region: it was paused before
+      // the app restarted, merged in, or its download ended.
       findRegionById(
           context, id, result, foundRegion -> resumeUntracked(result, context, foundRegion));
     }
   }
 
   /**
-   * Resumes a region no download of this session follows. Nothing listens to
-   * it on the Dart side, so it sends no download events, as on iOS;
-   * getOfflineRegionStatus follows it. It is tracked so that pause, status
-   * and delete reach the region object whose download runs, and its observer
-   * stops the download once it completes. A complete region is left as it is.
+   * Resumes a region no download of this session follows. As on iOS, it sends
+   * no download events: getOfflineRegionStatus reports its progress. It is
+   * tracked so that pause, status and delete reach the region object that
+   * downloads. A complete region is left as it is.
    */
   private static void resumeUntracked(
       MethodChannel.Result result, Context context, OfflineRegion region) {
@@ -589,8 +582,8 @@ abstract class OfflineManagerUtils {
         new OfflineRegion.OfflineRegionStatusCallback() {
           @Override
           public void onStatus(OfflineRegionStatus status) {
-            // Nothing left to download. Another resume of the same region may
-            // also have started it while this one read the status.
+            // Complete, or already started by another resume while this one
+            // read the status.
             if (status.isComplete() || activeDownloads.containsKey(region.getId())) {
               result.success(null);
               return;
@@ -687,7 +680,7 @@ abstract class OfflineManagerUtils {
         });
   }
 
-  /** Answers that no offline region has the given id, as iOS does. */
+  /** Answers REGION_NOT_FOUND for {@code id}. */
   private static void regionNotFound(MethodChannel.Result result, long id) {
     result.error(REGION_NOT_FOUND, "There is no offline region with id " + id + ".", null);
   }

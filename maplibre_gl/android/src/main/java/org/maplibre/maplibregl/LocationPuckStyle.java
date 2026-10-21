@@ -45,7 +45,7 @@ final class LocationPuckStyle {
         color(style.getPulseColor()));
   }
 
-  /** {@code value}, an ARGB color, as an Android color int: its low 32 bits. */
+  /** Converts {@code value}, an ARGB color, to an Android color int: its low 32 bits. */
   @Nullable
   private static Integer color(@Nullable Long value) {
     return value == null ? null : value.intValue();

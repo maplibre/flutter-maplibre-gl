@@ -30,7 +30,7 @@ abstract class MapLibreHttpRequestUtil {
       Integer maxRequests, Integer maxRequestsPerHost, MethodChannel.Result result) {
     // OkHttp's Dispatcher throws IllegalArgumentException for values < 1.
     // Validate before mutating state so a rejected call doesn't leave the
-    // static fields half-updated. iOS answers the same codes and messages.
+    // static fields half-updated.
     if (maxRequests != null && maxRequests < 1) {
       result.error(
           "INVALID_ARGUMENT",

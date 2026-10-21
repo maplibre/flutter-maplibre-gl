@@ -10,7 +10,7 @@ import org.maplibre.android.style.sources.RasterSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 
-/** Checks of the layer and source calls, with the codes and messages iOS and web give. */
+/** Checks of the layer and source calls, with the codes and messages shared with iOS and web. */
 final class StyleChecks {
   private StyleChecks() {}
 
@@ -110,8 +110,8 @@ final class StyleChecks {
   }
 
   /**
-   * Whether {@code value}, a layer property value, reads as an expression: an array that starts with
-   * a string. Every platform picks INVALID_EXPRESSION or INVALID_ARGUMENT this way.
+   * Whether {@code value}, a layer property value, is an expression: an array that starts with a
+   * string. It decides between INVALID_EXPRESSION and INVALID_ARGUMENT.
    */
   static boolean isExpression(@Nullable Object value) {
     return value instanceof List

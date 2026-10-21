@@ -123,7 +123,7 @@ class MapLibreMapFactoryTest {
 
     @Test
     fun theFactoryRejectsCreationParamsOfAnotherShape() {
-        // The map the method channel path sent, before the creation params were typed.
+        // Creation params as a plain map rather than a PgCreationParams.
         val legacy = mapOf("options" to mapOf("compassEnabled" to true), "dragEnabled" to true)
         val buffer = StandardMessageCodec.INSTANCE.encodeMessage(legacy)!!
         buffer.flip()

@@ -5,13 +5,12 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * The calls of one map, from Dart. Each one goes to the [MapCalls] method of
- * the same name, with the same arguments, which answers through a
- * [MethodChannel.Result] with a value of the type the Pigeon method returns:
- * [PigeonMethodResult] hands that answer to Pigeon.
+ * the same name, and [PigeonMethodResult] hands its [MethodChannel.Result]
+ * answer to Pigeon.
  *
- * Every call but [mapWaitForMap], [mapPause] and [mapResume] needs the native
- * map, which is null while the MapView is being rebuilt after the activity was
- * recreated. Such a call is answered MAP_NOT_READY then, without reaching [map].
+ * While the MapView is being rebuilt after an activity recreation, every call
+ * but [mapWaitForMap], [mapPause] and [mapResume] is answered MAP_NOT_READY
+ * without reaching [map].
  */
 internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
 
@@ -119,11 +118,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.mapSetCustomHeaders(headers, filter, it) }
 
-    // Answered with a copy of the headers, which later calls change.
     override fun mapGetCustomHeaders(callback: (Result<Map<String, String>>) -> Unit) =
         call(callback, ::stringMap) { map.mapGetCustomHeaders(it) }
 
-    // The feature queries answer with the features, each one as its own JSON text.
+    // The feature queries answer each feature as its own JSON text.
     override fun mapQueryRenderedFeaturesAtPoint(
         x: Double,
         y: Double,
@@ -553,7 +551,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.styleSetStyle(style, it) }
 
-    /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
+    /** Runs [body], which needs the map, for a call that answers nothing. */
     private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =
         withMap(PigeonMethodResult.unit(callback), body)
 
@@ -568,8 +566,8 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     ) = withMap(PigeonMethodResult(callback, convert), body)
 
     /**
-     * Runs [body], which adds a layer, unless the style already holds one
-     * with [layerId]: the map answers that call LAYER_ALREADY_EXISTS.
+     * Runs [body], which adds a layer, unless [layerId] is taken: the map then
+     * answers LAYER_ALREADY_EXISTS.
      */
     private fun addLayer(
         layerId: String,
@@ -582,8 +580,8 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     }
 
     /**
-     * Runs [body], which adds a source, unless the style already holds one
-     * with [sourceId]: the map answers that call SOURCE_ALREADY_EXISTS.
+     * Runs [body], which adds a source, unless [sourceId] is taken: the map
+     * then answers SOURCE_ALREADY_EXISTS.
      */
     private fun addSource(
         sourceId: String,
@@ -606,9 +604,8 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         }
 
     /**
-     * Runs [body] with [result]. What it throws is answered with code "error":
-     * Pigeon does not catch what an asynchronous handler throws, which would
-     * reach Dart as a channel-error.
+     * Runs [body] with [result] and answers what it throws with code "error",
+     * as Pigeon does not catch the exceptions of an asynchronous handler.
      */
     private fun answer(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) {
         try {
@@ -627,9 +624,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     }
 }
 
-/** [reply], a list of strings, as the List<String> Pigeon sends. */
+/** Casts [reply] to the List<String> Pigeon sends. */
 private fun strings(reply: Any?): List<String> = (reply as List<*>).map { it as String }
 
-/** [reply], a map of strings, as a new Map<String, String>. */
+/** Copies [reply] into a new Map<String, String>. */
 private fun stringMap(reply: Any?): Map<String, String> =
     (reply as Map<*, *>).entries.associate { (key, value) -> key as String to value as String }

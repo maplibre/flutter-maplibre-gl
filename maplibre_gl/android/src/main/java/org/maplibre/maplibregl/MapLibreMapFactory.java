@@ -61,8 +61,8 @@ public class MapLibreMapFactory extends PlatformViewFactory {
   }
 
   /**
-   * Hands {@code builder} the creation params of a map, {@code args}, which Dart sends as a {@link
-   * PgCreationParams}. The margins in the options become physical pixels at {@code density}.
+   * Configures {@code builder} from {@code args}, the {@link PgCreationParams} Dart sends. Margins
+   * become physical pixels at {@code density}.
    *
    * @throws IllegalArgumentException when {@code args} is not a {@link PgCreationParams}.
    */
@@ -82,8 +82,7 @@ public class MapLibreMapFactory extends PlatformViewFactory {
     if (styleString != null) {
       builder.setStyleString(styleString);
     }
-    // Not a map option: how Flutter composes the view, which the map has to know before it builds
-    // its MapView, so it is set every time.
+    // Not a map option: the map needs it before it builds its MapView.
     builder.setUseHybridComposition(params.getUseHybridComposition());
   }
 

@@ -130,8 +130,7 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
         )
     }
 
-    // A negative limit or size is rejected before the SDK sees it, with the
-    // code and message iOS answers.
+    // A negative limit or size is rejected here, before it reaches the SDK.
     private fun invalidArgument(message: String): Result<Unit> =
         Result.failure(PigeonError("INVALID_ARGUMENT", message, null))
 

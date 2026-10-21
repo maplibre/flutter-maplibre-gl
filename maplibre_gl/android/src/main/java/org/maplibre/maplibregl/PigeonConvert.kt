@@ -18,8 +18,8 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.style.expressions.Expression
 
 /**
- * Conversions of the typed map messages into MapLibre types, and of the map options into calls of
- * a [MapLibreMapOptionsSink]. Screen values arrive in logical pixels and become physical pixels at
+ * Converts the typed map messages into MapLibre types, and the map options into calls of a
+ * [MapLibreMapOptionsSink]. Screen values arrive in logical pixels and become physical pixels at
  * `density` pixels per logical pixel.
  */
 internal object PigeonConvert {
@@ -52,8 +52,8 @@ internal object PigeonConvert {
             .build()
 
     /**
-     * [update] as a [CameraUpdate], read against the camera [map] has now. Only scrollBy, zoomBy
-     * with a focus and newLatLngBounds read [map].
+     * Converts [update] into a [CameraUpdate]. Only scrollBy, zoomBy with a focus and
+     * newLatLngBounds read the current camera of [map].
      */
     @JvmStatic
     fun toCameraUpdate(update: PgCameraUpdate, map: MapLibreMap?, density: Float): CameraUpdate =
@@ -92,17 +92,15 @@ internal object PigeonConvert {
         }
 
     /**
-     * Hands [sink] the options that are set in [options], and nothing for the null ones: at
-     * creation the sink keeps its defaults, and on an update the option stays as it is. Margins
-     * are converted to physical pixels.
+     * Hands [sink] the options set in [options]. A null option is skipped, so the sink keeps its
+     * default or current value. Margins become physical pixels.
      */
     @JvmStatic
     fun applyMapOptions(options: PgMapOptions, sink: MapLibreMapOptionsSink, density: Float) {
         fun pixels(value: Double) = Convert.toPixels(value, density)
 
-        // The order is the one the options have always been applied in: the location source
-        // before the location component is enabled, and each ornament position before its
-        // margins, which are laid out for the corner the ornament is in.
+        // Order matters: the location source before the location component is enabled, and each
+        // ornament position before its margins, which are laid out for the ornament's corner.
         options.locationEngineProperties?.let { properties ->
             toLocationEngineRequest(properties)?.let { sink.setLocationEngineProperties(it) }
         }
@@ -154,8 +152,8 @@ internal object PigeonConvert {
     }
 
     /**
-     * The location request of [properties], or null without the interval it is built on. On
-     * Android Dart sends the interval, the priority and the displacement together.
+     * The location request of [properties], or null without an interval. On Android Dart sends
+     * the interval, the priority and the displacement together.
      */
     @JvmStatic
     fun toLocationEngineRequest(properties: PgLocationEngineProperties): LocationEngineRequest? {
@@ -167,12 +165,11 @@ internal object PigeonConvert {
     }
 
     /**
-     * The filter of a feature query, the JSON text of an expression, or null when there is none.
-     * Only an expression array filters: null, the text `null` and any other JSON value do not.
-     * Numbers keep their exact value, as in a layer filter.
+     * Parses the filter of a feature query, the JSON text of an expression. Only an expression
+     * array filters: null, the text `null` and any other JSON value give null. Numbers stay exact.
      *
      * @throws IllegalArgumentException, saying why, for text that is not JSON and for an array
-     *   that is not an expression. Whether the engine takes the expression is not checked here.
+     *   that is not an expression. Whether the engine accepts the expression is not checked here.
      */
     @JvmStatic
     fun toQueryFilter(filter: String?): Expression? {
@@ -183,12 +180,12 @@ internal object PigeonConvert {
         return if (json.isJsonArray) MapLibreMapController.toFilterExpression(json) else null
     }
 
-    /** Why a filter cannot be read, when its text is not JSON. iOS says the same. */
+    /** The reason given for filter text that is not JSON. */
     const val FILTER_NOT_JSON = "Not valid JSON."
 
     /**
-     * [filter], the text of a filter, as JSON. It is read strictly, as iOS reads it: Gson would
-     * otherwise read text such as `n == 3` as a string, which then filters nothing.
+     * Parses [filter] as strict JSON. Lenient Gson would read text such as `n == 3` as a string,
+     * which filters nothing.
      *
      * @throws IllegalArgumentException with [FILTER_NOT_JSON] for text that is not JSON.
      */

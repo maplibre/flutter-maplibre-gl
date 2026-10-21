@@ -777,10 +777,9 @@ final class MapLibreMapController
     flutterApi.mapOnUserLocationUpdated(userLocation, null, PigeonReplies.IGNORE);
   }
 
-  // Returns the layer's MapLibre style-spec JSON (id/type/source/source-layer/
-  // minzoom/maxzoom/filter/paint/layout), or null if the layer is absent. The
-  // runtime layer is read, not style.getJson(): that is the style as loaded,
-  // so it misses layers added later and every property set since.
+  // The layer's style-spec JSON, or null if the layer is absent. Read from the
+  // runtime layer: style.getJson() is the style as loaded, without the layers
+  // and properties set since.
   @Nullable
   private String getLayerProperties(String layerId) {
     final Layer layer = style.getLayer(layerId);
@@ -919,8 +918,8 @@ final class MapLibreMapController
   }
 
   /**
-   * The style-spec entry of an image source, as iOS and web give it: type, four [lng, lat] corners
-   * from the top left clockwise, and the url only when the image comes from one.
+   * The style-spec entry of an image source: type, the url when it has one, and four [lng, lat]
+   * corners from the top left clockwise.
    */
   private JsonObject imageSourceProperties(
       String sourceId, ImageSource source, @Nullable JsonObject loaded) {
@@ -1083,8 +1082,6 @@ final class MapLibreMapController
   }
 
   // Serializes features as JSON strings, so nested properties survive intact.
-  // Shared by every call that answers with features: the rendered and source
-  // feature queries and the cluster calls.
   private static List<String> featuresReply(List<Feature> features) {
     final List<String> featuresJson = new ArrayList<>();
     if (features != null) {
@@ -1144,8 +1141,7 @@ final class MapLibreMapController
   }
 
   /**
-   * Adds a GeoJSON source with {@code source}, its data. Without a style this answers
-   * STYLE_NOT_READY, as iOS does. It used to log a warning and answer a success.
+   * Adds a GeoJSON source with {@code source}, its data. Answers STYLE_NOT_READY without a style.
    */
   private void addGeoJsonSource(String sourceName, String source, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
@@ -1179,9 +1175,8 @@ final class MapLibreMapController
   }
 
   /**
-   * Replaces the data of the GeoJSON source {@code sourceName}. Without a style this answers
-   * STYLE_NOT_READY, and SOURCE_NOT_FOUND without such a source, as iOS does. Both used to log a
-   * warning and answer a success.
+   * Replaces the data of the GeoJSON source {@code sourceName}. Answers STYLE_NOT_READY without a
+   * style and SOURCE_NOT_FOUND without such a source.
    */
   private void setGeoJsonSource(String sourceName, String geojson, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
@@ -1222,13 +1217,10 @@ final class MapLibreMapController
   }
 
   /**
-   * Replaces the feature of the GeoJSON source {@code sourceName} that has the id of {@code
-   * geojsonFeature}, in the data addGeoJsonSource or setGeoJsonSource gave the source.
-   *
-   * <p>As on iOS: without a style this answers STYLE_NOT_READY, without such a source
-   * SOURCE_NOT_FOUND, both of which used to be a success, and INVALID_GEOJSON for anything but a
-   * GeoJSON Feature, which used to change nothing. A source without such data, added some other
-   * way, and a feature whose id the data does not hold still change nothing.
+   * Replaces the feature with the id of {@code geojsonFeature} in the data addGeoJsonSource or
+   * setGeoJsonSource gave {@code sourceName}. Answers STYLE_NOT_READY without a style,
+   * SOURCE_NOT_FOUND without such a source and INVALID_GEOJSON for anything but a Feature. A source
+   * added some other way, or an id its data does not hold, changes nothing.
    */
   private void setGeoJsonFeature(
       String sourceName, String geojsonFeature, MethodChannel.Result result) {
@@ -1475,8 +1467,8 @@ final class MapLibreMapController
   }
 
   /**
-   * The filter of a layer, the JSON text of an expression or of a boolean, or null for no filter:
-   * {@code filter} is null or the text {@code null}.
+   * Parses {@code filter}, the JSON text of an expression or a boolean, into a layer filter. Null
+   * and the text {@code null} mean no filter.
    *
    * @throws IllegalArgumentException, saying why, for text that is not JSON or not a filter.
    */
@@ -1493,8 +1485,8 @@ final class MapLibreMapController
   }
 
   /**
-   * {@code json}, an expression array or a boolean, as the expression of a filter, with its numbers
-   * exact. Whether the engine takes it is not checked here.
+   * Converts {@code json}, an expression array or a boolean, into a filter expression with exact
+   * numbers. Whether the engine accepts it is not checked here.
    *
    * @throws IllegalArgumentException for any other value, or an array that does not start with the
    *     name of an operator.
@@ -1602,7 +1594,7 @@ final class MapLibreMapController
 
   /**
    * Runs {@code action} and returns what the engine logged after {@code prefix} meanwhile, or null.
-   * The SDK logger is swapped for one that records that log, also when the app silenced logging.
+   * The SDK logger is swapped for a recording one, which works even when the app silenced logging.
    */
   private static String captureEngineError(String prefix, Runnable action) {
     LoggerDefinition previous;
@@ -1922,9 +1914,8 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers LAYER_ALREADY_EXISTS, as iOS and web do, when the style already holds a layer with the
-   * id a call adds. The SDK would otherwise throw, reaching Dart with a generic code. Either way the
-   * original stays untouched.
+   * Answers LAYER_ALREADY_EXISTS when the style already holds a layer with the id a call adds. The
+   * SDK would throw a generic error instead.
    *
    * @return true when the call has been answered with an error.
    */
@@ -1941,9 +1932,8 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers SOURCE_ALREADY_EXISTS, as iOS and web do, when the style already holds a source with
-   * the id a call adds. The SDK would otherwise throw (reaching Dart with a generic code) or skip
-   * the add and report a success. Either way the original stays untouched.
+   * Answers SOURCE_ALREADY_EXISTS when the style already holds a source with the id a call adds.
+   * The SDK would throw a generic error or silently skip the add instead.
    *
    * @return true when the call has been answered with an error.
    */
@@ -1961,8 +1951,8 @@ final class MapLibreMapController
 
   /**
    * The camera update of a {@link #cameraMove}, {@link #cameraAnimate} or {@link #cameraEase}
-   * call. When the SDK cannot build it, for instance from a latitude beyond the poles, the call is
-   * answered with INVALID_ARGUMENT, as on iOS, and null comes back.
+   * call, or null after answering INVALID_ARGUMENT when the SDK cannot build it, such as for a
+   * latitude beyond the poles.
    */
   @Nullable
   private CameraUpdate toCameraUpdate(PgCameraUpdate update, MethodChannel.Result result) {
@@ -2108,7 +2098,7 @@ final class MapLibreMapController
     return layer;
   }
 
-  /** {@code properties} as the property values of a layer of {@code layerType}. */
+  /** Converts {@code properties} into property values for a layer of {@code layerType}. */
   private static PropertyValue[] interpretLayerProperties(
       String layerType, Map<String, Object> properties) {
     switch (layerType) {
@@ -2138,9 +2128,8 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers INVALID_EXPRESSION, as iOS does, for the filter of a layer add that is not JSON, not a
-   * filter, or one the engine rejects. The engine would add the layer without it, and the other
-   * two used to fail the call with a bare "error".
+   * Answers INVALID_EXPRESSION for the filter of a layer add that is not JSON, not a filter, or one
+   * the engine rejects, which the engine would otherwise drop silently.
    *
    * @return true when the call has been answered with an error.
    */
@@ -2746,9 +2735,6 @@ final class MapLibreMapController
       @Nullable String sourceLayerId,
       @Nullable String filter,
       MethodChannel.Result result) {
-    // A source is resolved by id out of the style, so without a style
-    // there is no source to query. Reading it blind raised a
-    // NullPointerException, which reached the caller as a bare "error".
     if (style == null || !style.isFullyLoaded()) {
       result.error(
           "STYLE_NOT_READY",
@@ -2780,12 +2766,10 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers the features {@code query} finds with {@code filter}, the JSON text of an expression.
-   * Only an expression array filters, see {@link PigeonConvert#toQueryFilter}.
-   *
-   * <p>A filter that is not JSON, not an expression, or one the engine rejects is answered with
-   * INVALID_EXPRESSION, as on iOS, and the query does not run: the engine only logs why it cannot
-   * read the filter of a query, then queries with it all the same, which crashed the app.
+   * Answers the features {@code query} finds with {@code filter}, the JSON text of an expression
+   * (see {@link PigeonConvert#toQueryFilter}). Answers INVALID_EXPRESSION, without running the
+   * query, for a filter that is not JSON, not an expression, or one the engine rejects: the engine
+   * would only log the problem and query anyway, which can crash the app.
    */
   private void answerFeatures(
       @Nullable String filter, MethodChannel.Result result, FeatureQuery query) {
@@ -2807,9 +2791,8 @@ final class MapLibreMapController
   }
 
   /**
-   * Why the engine rejects {@code filter} as the filter of a query, or null when it takes it. A
-   * query and a layer read their filter the same way, so the filter is set on a layer that is never
-   * added to a style, where the engine reports what it rejects.
+   * Why the engine rejects {@code filter} for a query, or null when it accepts it. Queries and
+   * layers read filters the same way, so the check runs on a layer that is never added to a style.
    */
   @Nullable
   private String queryFilterError(Expression filter) {
@@ -2838,7 +2821,7 @@ final class MapLibreMapController
           GeoJsonSource source = style.getSourceAs(id);
           if (source != null) {
             source.setGeoJson(data);
-            // The data setGeoJsonFeature changes from now on.
+            // Kept for setGeoJsonFeature.
             addedFeaturesByLayer.put(id, data);
             ret = true;
           }
@@ -3045,8 +3028,6 @@ final class MapLibreMapController
   @Override
   public void styleAddSource(
       String sourceId, Map<String, Object> properties, MethodChannel.Result result) {
-    // Answered as on iOS. Without a style this failed with a NullPointerException, a bare
-    // "error", and a source it could not build was skipped with a success.
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
       return;
@@ -3143,16 +3124,13 @@ final class MapLibreMapController
           null);
       return;
     }
-    // getSourceAs would cast whatever source has the id, and a missing one
-    // came back null: both failed the call with a bare "error".
     final Source source = style.getSource(imageSourceId);
     if (!(source instanceof ImageSource)) {
       result.error("SOURCE_NOT_FOUND", "Image source " + imageSourceId + " not found.", null);
       return;
     }
     final ImageSource imageSource = (ImageSource) source;
-    // Decoded before anything changes, as on iOS, so a call that fails changes nothing. The
-    // corners used to move first, and stayed moved when the bytes did not decode.
+    // Decoded first, so a call that fails changes nothing.
     Bitmap updateBitmap = null;
     if (bytes != null) {
       updateBitmap = BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
@@ -3795,8 +3773,7 @@ final class MapLibreMapController
     }
     Layer layer = style.getLayer(layerId);
     // Both layers are checked before anything moves: a missing anchor found
-    // after the removal would lose the layer. Answered with the message the
-    // other layer calls, iOS and web give.
+    // after the removal would lose the layer.
     if (layer == null) {
       replyLayerNotFound(result, layerId);
       return;
@@ -3898,9 +3875,8 @@ final class MapLibreMapController
 
   @Override
   public void mapSetLayerFilter(String id, String filter, MethodChannel.Result result) {
-    // styleSetFilter answered as a boolean, as on iOS: false without a style or such a layer, for
-    // a layer that takes no filter, and for a filter the engine rejects. This took line, fill and
-    // symbol layers only, and answered true for a filter the engine had rejected.
+    // styleSetFilter as a boolean: false for any error, such as no style or layer, a layer that
+    // takes no filter, or a filter the engine rejects.
     styleSetFilter(
         id,
         filter,
@@ -4055,7 +4031,6 @@ final class MapLibreMapController
 
   @Override
   public void mapGetStyle(MethodChannel.Result result) {
-    // The style JSON, or null without a style.
     String json = null;
     if (mapLibreMap != null) {
       Style style = mapLibreMap.getStyle();

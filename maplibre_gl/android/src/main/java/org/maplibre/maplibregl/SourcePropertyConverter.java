@@ -171,8 +171,8 @@ class SourcePropertyConverter {
   }
 
   /**
-   * {@code coordinates}, the four [longitude, latitude] corners of an image source from the top
-   * left clockwise, as a quad.
+   * Builds a quad from {@code coordinates}, the four [longitude, latitude] corners of an image
+   * source from the top left clockwise.
    */
   static LatLngQuad buildLatLngQuad(Object coordinates) {
     final List<LatLng> corners = Convert.toLatLngList(coordinates, true);
