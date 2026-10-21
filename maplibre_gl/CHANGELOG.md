@@ -39,7 +39,7 @@
 * **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, before the camera arrives, like on web, instead of never completing. Code after an awaited call now runs in that case: check `mounted` or `controller.isDisposed` before using the controller or calling `setState` (#1108).
 * **iOS, Web**: `setOffline` throws an `UnsupportedError` instead of failing with a `MissingPluginException`. MapLibre iOS and maplibre-gl-js have no offline switch, so the call never had an effect there; call it on Android only (#1111).
 * **Android**: the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`, and iOS reports the same code. Update any `catch` on the old code (#1111).
-* **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException` that read like a broken plugin registration. MapLibre GL JS has no offline storage; catch `UnsupportedError` where you call them on web (#XXXX, #937).
+* **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException` that read like a broken plugin registration. MapLibre GL JS has no offline storage; catch `UnsupportedError` where you call them on web (#1112, #937).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -61,7 +61,7 @@
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
-* **Android, iOS**: the plugin-wide calls (offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`) reach native through messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of a hand-written method channel, the first step of #465. Apps need no change (#XXXX).
+* **Android, iOS**: the plugin-wide calls (offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`) reach native through messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of a hand-written method channel, the first step of #465. Apps need no change (#1112).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -106,6 +106,8 @@
 * Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
 * **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#XXXX).
 * **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#XXXX).
+* **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1112).
+* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#1112).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

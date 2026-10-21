@@ -7,8 +7,8 @@
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
 
 ### Changed
-* `MapLibreGlobalPlatform` declares every plugin-wide operation: offline regions, the offline database, the ambient cache, HTTP headers and `setOffline`, which `maplibre_gl` now calls through it. The new members throw `UnimplementedError` unless a platform overrides them, so an existing implementation keeps compiling (#XXXX, #937).
-* `OfflineRegion`, `OfflineRegionDefinition` and `OfflineRegionStatus` move here from `maplibre_gl`, and `DownloadRegionStatus` with `InProgress`, `Success` and `Error` to the separate library `package:maplibre_gl_platform_interface/download_region_status.dart`, so its `Error` does not hide `dart:core`'s. `maplibre_gl` still exports all of them (#XXXX).
+* `MapLibreGlobalPlatform` declares every plugin-wide operation: offline regions, the offline database, the ambient cache, HTTP headers and `setOffline`, which `maplibre_gl` now calls through it. The new members throw `UnimplementedError` unless a platform overrides them, so an existing implementation keeps compiling (#1112, #937).
+* `OfflineRegion`, `OfflineRegionDefinition` and `OfflineRegionStatus` move here from `maplibre_gl`, and `DownloadRegionStatus` with `InProgress`, `Success` and `Error` to the separate library `package:maplibre_gl_platform_interface/download_region_status.dart`, so its `Error` does not hide `dart:core`'s. `maplibre_gl` still exports all of them (#1112).
 
 ### Deprecated
 * `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
