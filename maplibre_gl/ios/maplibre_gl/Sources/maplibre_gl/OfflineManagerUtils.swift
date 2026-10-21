@@ -355,7 +355,14 @@ class OfflineManagerUtils {
 
     private static func resumeLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
-            pack.resume()
+            // A pack with no download of this session behind it resumes too,
+            // without events: no downloader follows it. A complete pack has
+            // nothing left to download, and resuming it would only show it
+            // active until MapLibre reports it complete again, so it is left
+            // as it is, like on Android.
+            if pack.state != .complete {
+                pack.resume()
+            }
             result(nil)
         } else {
             result(missingRegionError(id: id))
