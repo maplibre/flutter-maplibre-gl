@@ -68,14 +68,39 @@ void main() {
   });
 
   group('setOffline', () {
-    test('sends correct method and arguments', () async {
-      await setOffline(true);
+    Matcher throwsUnsupportedOn(String platform) => throwsA(
+      isA<UnsupportedError>().having(
+        (e) => e.message,
+        'message',
+        allOf(contains('not available on $platform'), contains('Android only')),
+      ),
+    );
 
-      expect(methodCalls.length, 1);
-      expect(methodCalls[0].method, 'setOffline');
-      final args = methodCalls[0].arguments as Map;
-      expect(args['offline'], true);
-    });
+    if (!kIsWeb) {
+      test('sends correct method and arguments', () async {
+        await setOffline(true);
+
+        expect(methodCalls.length, 1);
+        expect(methodCalls[0].method, 'setOffline');
+        final args = methodCalls[0].arguments as Map;
+        expect(args['offline'], true);
+      });
+
+      test('throws UnsupportedError on iOS and sends nothing', () {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+        expect(() => setOffline(true), throwsUnsupportedOn('iOS'));
+        expect(methodCalls, isEmpty);
+      });
+    }
+
+    if (kIsWeb) {
+      test('is unsupported on web', () {
+        expect(() => setOffline(true), throwsUnsupportedOn('web'));
+        expect(methodCalls, isEmpty);
+      });
+    }
   });
 
   group('deleteOfflineRegion', () {

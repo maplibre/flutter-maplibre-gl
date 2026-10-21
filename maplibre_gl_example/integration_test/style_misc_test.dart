@@ -4,7 +4,8 @@
 // a rebuilt widget), reading it back (getStyle), image sources and image
 // layers, the style root objects (light, sky, terrain, projection, global
 // state), snapshots, the rendering controls (max fps, pause and resume),
-// telemetry, map language, the wait helpers and clearing the ambient cache.
+// telemetry, map language, the wait helpers, clearing the ambient cache and
+// forcing the map offline.
 //
 // Each of these either reloads the native style, reads it back from the
 // renderer or talks to the platform's file source, so none of it can be
@@ -514,6 +515,22 @@ void main() {
       return;
     }
     await pumpUntil(tester, clearAmbientCache(), 'clearAmbientCache');
+  });
+
+  testWidgets('setOffline works on Android and is unsupported elsewhere', (
+    tester,
+  ) async {
+    await pumpMap(tester);
+
+    if (testPlatform != TestPlatform.android) {
+      // MapLibre iOS and maplibre-gl-js have no offline switch, so the call
+      // is rejected in Dart before it reaches a channel with no handler.
+      expect(() => setOffline(true), throwsUnsupportedError);
+      return;
+    }
+    await pumpUntil(tester, setOffline(true), 'setOffline true');
+    // Hand the network state back to the system for the tests that follow.
+    await pumpUntil(tester, setOffline(false), 'setOffline false');
   });
 
   testWidgets(
