@@ -9,6 +9,9 @@ import okhttp3.Request;
 
 abstract class MapLibreHttpRequestUtil {
 
+  /** The HTTP client could not be rebuilt with the new settings. */
+  private static final String HTTP_CLIENT_ERROR = "HTTP_CLIENT_ERROR";
+
   private static Map<String, String> currentHeaders;
   private static Integer currentMaxRequests;
   private static Integer currentMaxRequestsPerHost;
@@ -19,7 +22,7 @@ abstract class MapLibreHttpRequestUtil {
       rebuildClient();
       result.success(null);
     } catch (RuntimeException e) {
-      result.error("SetHttpHeadersError", e.getMessage(), null);
+      result.error(HTTP_CLIENT_ERROR, e.getMessage(), null);
     }
   }
 
@@ -27,17 +30,17 @@ abstract class MapLibreHttpRequestUtil {
       Integer maxRequests, Integer maxRequestsPerHost, MethodChannel.Result result) {
     // OkHttp's Dispatcher throws IllegalArgumentException for values < 1.
     // Validate before mutating state so a rejected call doesn't leave the
-    // static fields half-updated.
+    // static fields half-updated. iOS answers the same codes and messages.
     if (maxRequests != null && maxRequests < 1) {
       result.error(
-          "InvalidMaxRequests",
+          "INVALID_ARGUMENT",
           "maxRequests must be >= 1 (got " + maxRequests + ")",
           null);
       return;
     }
     if (maxRequestsPerHost != null && maxRequestsPerHost < 1) {
       result.error(
-          "InvalidMaxRequestsPerHost",
+          "INVALID_ARGUMENT",
           "maxRequestsPerHost must be >= 1 (got " + maxRequestsPerHost + ")",
           null);
       return;
@@ -48,7 +51,7 @@ abstract class MapLibreHttpRequestUtil {
       rebuildClient();
       result.success(null);
     } catch (RuntimeException e) {
-      result.error("SetMaxConcurrentRequestsError", e.getMessage(), null);
+      result.error(HTTP_CLIENT_ERROR, e.getMessage(), null);
     }
   }
 

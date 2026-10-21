@@ -24,6 +24,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 abstract class OfflineManagerUtils {
   private static final String TAG = "OfflineManagerUtils";
 
+  // The error codes of the offline calls and download events. iOS answers the
+  // same codes, with the same messages where the case is the same.
+  private static final String REGION_NOT_FOUND = "REGION_NOT_FOUND";
+  private static final String REGION_NOT_RESUMABLE = "REGION_NOT_RESUMABLE";
+  private static final String OFFLINE_DATABASE_ERROR = "OFFLINE_DATABASE_ERROR";
+  private static final String AMBIENT_CACHE_ERROR = "AMBIENT_CACHE_ERROR";
+  private static final String INVALID_REGION_DEFINITION = "INVALID_REGION_DEFINITION";
+  private static final String TILE_COUNT_LIMIT_EXCEEDED = "TILE_COUNT_LIMIT_EXCEEDED";
+  private static final String REGION_DELETED = "REGION_DELETED";
+  private static final String REGION_REPLACED = "REGION_REPLACED";
+  private static final String DATABASE_RESET = "DATABASE_RESET";
+
   /**
    * Minimum interval between progress events forwarded to Dart. When tiles are
    * served from the local MapLibre cache (e.g. a previously downloaded region
@@ -70,7 +82,7 @@ abstract class OfflineManagerUtils {
 
               public void onError(String error) {
                 if (result == null) return;
-                result.error("mergeOfflineRegions Error", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -91,7 +103,7 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(@NonNull String message) {
-                result.error("ClearAmbientCacheError", message, null);
+                result.error(AMBIENT_CACHE_ERROR, message, null);
               }
             });
   }
@@ -109,7 +121,7 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(@NonNull String message) {
-                result.error("SetMaximumAmbientCacheSizeError", message, null);
+                result.error(AMBIENT_CACHE_ERROR, message, null);
               }
             });
   }
@@ -126,7 +138,7 @@ abstract class OfflineManagerUtils {
       // Terminate the in-flight download on the Dart side so its stream
       // subscription is cleaned up and the awaiting Future resolves.
       ad.channelHandler.onError(
-          "DatabaseReset",
+          DATABASE_RESET,
           "Offline database was reset before the download completed",
           null);
     }
@@ -142,7 +154,7 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(@NonNull String message) {
-                result.error("ResetDatabaseError", message, null);
+                result.error(OFFLINE_DATABASE_ERROR, message, null);
               }
             });
   }
@@ -205,7 +217,7 @@ abstract class OfflineManagerUtils {
             // Recoverable: the SDK re-requests what failed once the network is
             // back, so this only reports and the download stays active. Ending
             // it here lost the whole download to any brief outage.
-            // tileCountLimitExceeded below is the one that is really terminal.
+            // The tile count limit below is the one that is really terminal.
             Log.w(
                 TAG,
                 "offline download error, the SDK will retry (reason "
@@ -221,7 +233,7 @@ abstract class OfflineManagerUtils {
             activeDownloads.remove(region.getId());
             isComplete.set(true);
             channelHandler.onError(
-                "tileCountLimitExceeded",
+                TILE_COUNT_LIMIT_EXCEEDED,
                 "MapLibre tile count limit exceeded: " + limit,
                 null);
             deleteRegion(null, context, region.getId());
@@ -237,7 +249,18 @@ abstract class OfflineManagerUtils {
       Map<String, Object> metadataMap,
       OfflineDownloadEvents channelHandler) {
     float pixelDensity = context.getResources().getDisplayMetrics().density;
-    OfflineRegionDefinition definition = mapToRegionDefinition(definitionMap, pixelDensity);
+    final OfflineRegionDefinition definition;
+    try {
+      definition = mapToRegionDefinition(definitionMap, pixelDensity);
+    } catch (RuntimeException e) {
+      // A key missing or of the wrong type. The message is the one iOS
+      // answers for a definition it cannot read.
+      result.error(
+          INVALID_REGION_DEFINITION,
+          "The region definition needs bounds, mapStyleUrl, minZoom and maxZoom.",
+          null);
+      return;
+    }
     String metadataJson = "{}";
     if (metadataMap != null) {
       metadataJson = new Gson().toJson(metadataMap);
@@ -329,7 +352,7 @@ abstract class OfflineManagerUtils {
       active.isComplete.set(true);
       active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
       active.channelHandler.onError(
-          "RegionReplaced",
+          REGION_REPLACED,
           "Region was replaced by a new download of the same area",
           null);
     }
@@ -372,8 +395,8 @@ abstract class OfflineManagerUtils {
                 if (_offlineRegion != null) {
                   _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
                 }
-                channelHandler.onError("invalidRegionDefinition", error, null);
-                result.error("invalidRegionDefinition", error, null);
+                channelHandler.onError(INVALID_REGION_DEFINITION, error, null);
+                result.error(INVALID_REGION_DEFINITION, error, null);
               }
             });
   }
@@ -393,7 +416,7 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(String error) {
-                result.error("RegionListError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -427,22 +450,19 @@ abstract class OfflineManagerUtils {
                         @Override
                         public void onError(String error) {
                           if (result == null) return;
-                          result.error("UpdateMetadataError", error, null);
+                          result.error(OFFLINE_DATABASE_ERROR, error, null);
                         }
                       });
                   return;
                 }
                 if (result == null) return;
-                result.error(
-                    "UpdateMetadataError",
-                    "There is no " + "region with given id to " + "update.",
-                    null);
+                regionNotFound(result, id);
               }
 
               @Override
               public void onError(String error) {
                 if (result == null) return;
-                result.error("RegionListError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -455,7 +475,7 @@ abstract class OfflineManagerUtils {
       // Terminate the in-flight download on the Dart side so its stream
       // subscription is cleaned up and the awaiting Future resolves.
       active.channelHandler.onError(
-          "RegionDeleted",
+          REGION_DELETED,
           "Region was deleted before the download completed",
           null);
     }
@@ -478,22 +498,19 @@ abstract class OfflineManagerUtils {
                         @Override
                         public void onError(String error) {
                           if (result == null) return;
-                          result.error("DeleteRegionError", error, null);
+                          result.error(OFFLINE_DATABASE_ERROR, error, null);
                         }
                       });
                   return;
                 }
                 if (result == null) return;
-                result.error(
-                    "DeleteRegionError",
-                    "There is no " + "region with given id to " + "delete.",
-                    null);
+                regionNotFound(result, id);
               }
 
               @Override
               public void onError(String error) {
                 if (result == null) return;
-                result.error("RegionListError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -506,7 +523,7 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
       result.success(null);
     } else {
-      findRegionById(context, id, result, "PauseRegionError", foundRegion -> {
+      findRegionById(context, id, result, foundRegion -> {
         foundRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
         result.success(null);
       });
@@ -525,12 +542,15 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_ACTIVE);
       result.success(null);
     } else {
-      findRegionById(context, id, result, "ResumeRegionError", foundRegion -> {
-        // Region was not tracked (e.g. app restarted) — we cannot resume
-        // progress events without a channel handler, so return an error.
+      findRegionById(context, id, result, foundRegion -> {
+        // Region was not tracked (e.g. app restarted, or its download
+        // finished): there is no channel handler to send progress events to,
+        // so return an error.
         result.error(
-            "ResumeRegionError",
-            "Region is no longer actively tracked. Please restart the download.",
+            REGION_NOT_RESUMABLE,
+            "There is no download of offline region "
+                + id
+                + " to resume. Start it again with downloadOfflineRegion.",
             null);
       });
     }
@@ -541,7 +561,7 @@ abstract class OfflineManagerUtils {
   }
 
   private static void findRegionById(
-      Context context, long id, MethodChannel.Result result, String errorCode, RegionCallback callback) {
+      Context context, long id, MethodChannel.Result result, RegionCallback callback) {
     OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
@@ -552,12 +572,12 @@ abstract class OfflineManagerUtils {
                   callback.onFound(offlineRegion);
                   return;
                 }
-                result.error(errorCode, "There is no region with given id", null);
+                regionNotFound(result, id);
               }
 
               @Override
               public void onError(String error) {
-                result.error(errorCode, error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -580,13 +600,12 @@ abstract class OfflineManagerUtils {
                   fetchAndReturnStatus(result, offlineRegion);
                   return;
                 }
-                result.error(
-                    "GetRegionStatusError", "There is no region with given id", null);
+                regionNotFound(result, id);
               }
 
               @Override
               public void onError(String error) {
-                result.error("GetRegionStatusError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -610,9 +629,14 @@ abstract class OfflineManagerUtils {
 
           @Override
           public void onError(String error) {
-            result.error("GetRegionStatusError", error, null);
+            result.error(OFFLINE_DATABASE_ERROR, error, null);
           }
         });
+  }
+
+  /** Answers that no offline region has the given id, as iOS does. */
+  private static void regionNotFound(MethodChannel.Result result, long id) {
+    result.error(REGION_NOT_FOUND, "There is no offline region with id " + id + ".", null);
   }
 
   private static double calculateDownloadingProgress(
