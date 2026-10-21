@@ -3,10 +3,12 @@ import Foundation
 
 /// The calls of one map, from Dart to native.
 ///
-/// Each method rebuilds the call the method channel used to deliver, named
-/// in the first line of its schema documentation, and hands it to
-/// `MapLibreMapController.onMethodCall`, so every call keeps a single
-/// implementation and answers exactly as before.
+/// Each method hands its typed arguments to the controller method of the
+/// same name through `MapLibreMapController.runCall`, which holds back the
+/// calls that need the view's size and applies the initial camera first.
+/// Nested payloads (options, camera updates, properties, filters) go over
+/// as the codec decoded them, see `plainValue`, and the controller's
+/// `FlutterResult` answer is adapted to the Pigeon completion.
 ///
 /// The generated setup holds this object strongly while its handlers are
 /// registered, so the controller is held weakly: a strong reference would
@@ -976,35 +978,6 @@ final class MapHostApi: MapLibreMapHostApi {
             return
         }
         controller.runCall(kind) { call($0, result) }
-    }
-
-    /// A call whose legacy arguments were nil.
-    private func send(_ method: String, result: @escaping FlutterResult) {
-        dispatch(method, arguments: nil, result: result)
-    }
-
-    /// A call whose legacy arguments were a map, keyed by the parameter names.
-    private func send(
-        _ method: String,
-        _ arguments: [String: Any?],
-        result: @escaping FlutterResult
-    ) {
-        dispatch(method, arguments: plainMap(arguments), result: result)
-    }
-
-    private func dispatch(_ method: String, arguments: Any?, result: @escaping FlutterResult) {
-        guard let controller = controller else {
-            result(FlutterError(
-                code: "MAP_DISPOSED",
-                message: "The map was disposed before the call reached it.",
-                details: nil
-            ))
-            return
-        }
-        controller.onMethodCall(
-            methodCall: FlutterMethodCall(methodName: method, arguments: arguments),
-            result: result
-        )
     }
 }
 

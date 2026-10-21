@@ -40,16 +40,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
     /// MLNMapView takes for "no change" and drops, so the map stays at zoom 0.
     private var pendingInitialCamera: [String: Any]?
-    /// Dart calls that read the camera or the projection. While the initial
-    /// camera waits for a size they wait too, or they would report zoom 0.
-    private static let cameraReadingMethods: Set<String> = [
-        "map#queryCameraPosition",
-        "map#getVisibleRegion",
-        "map#toScreenLocation",
-        "map#toScreenLocationBatch",
-        "map#getMetersPerPixelAtLatitude",
-        "map#toLatLng",
-    ]
     private var trackCameraPosition = false
     private let cameraAnimations = CameraAnimationTracker()
     private var myLocationEnabled = false
@@ -75,12 +65,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var locationPulseWindowMs: Int = MapLibreMapController.defaultPulseWindowMs
     static let defaultPulseWindowMs: Int = 5000
 
-    /// Duration used for `locationComponent#setTrackingCameraOptions` when Dart sends
+    /// Duration used for `locationComponentSetTrackingCameraOptions` when Dart sends
     /// none. Matches the MapLibre Android location component's own tilt-while-tracking
     /// default, so the two platforms animate alike.
     static let defaultTrackingTiltDurationMs: Int = 1250
 
-    /// Duration of `camera#animate` and `camera#ease` when Dart sends none: the one
+    /// Duration of `cameraAnimate` and `cameraEase` when Dart sends none: the one
     /// `setCamera(_:animated:)` uses, which has no completion handler, and the Android default.
     static let defaultCameraAnimationDuration: TimeInterval = 0.3
 
@@ -371,31 +361,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
         applyInitialCameraIfNeeded()
         call(self)
-    }
-
-    func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
-        // Camera ops touch the C++ map's projection; on a zero-sized PlatformView
-        // frame (e.g. moveCamera fired from Dart onMapCreated before layout) the
-        // unproject runs on a 0×0 viewport → NaN → mbgl::LatLng throws
-        // std::domain_error → SIGABRT. Defer the whole call until the frame is
-        // real. (issue #819, onMethodCall path — not covered by the init-only fix)
-        if mapView.frame.size.equalTo(.zero),
-           methodCall.method.hasPrefix("camera#")
-           || (pendingInitialCamera != nil
-               && Self.cameraReadingMethods.contains(methodCall.method))
-        {
-            DispatchQueue.main.async { [weak self] in
-                self?.onMethodCall(methodCall: methodCall, result: result)
-            }
-            return
-        }
-        // Before any app call: a camera move from Dart must land on top of the
-        // initial camera, never under it.
-        applyInitialCameraIfNeeded()
-        switch methodCall.method {
-        default:
-            result(FlutterMethodNotImplemented)
-        }
     }
 
     // MARK: Dart calls: map
@@ -3378,7 +3343,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // `showsUserLocation` is first enabled: turning it on while the default
         // manager is still in place asks for location permission, which is what
         // manual mode exists to avoid. Updates then arrive via
-        // locationComponent#setManualLocation -> manualLocationManager.push.
+        // locationComponentSetManualLocation -> manualLocationManager.push.
         if manualLocationSource, !(mapView.locationManager is ManualLocationManager) {
             mapView.locationManager = manualLocationManager
         }
@@ -3392,7 +3357,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard !manualLocationSource else { return }
 
         // Paused from Dart or in the background: the puck stays at its last
-        // position and Core Location stays off until map#resume or the
+        // position and Core Location stays off until mapResume or the
         // foreground handler calls this again (#1094).
         guard !pausedByDart && !isBackgroundPaused else {
             setLocationUpdatesActive(false)
