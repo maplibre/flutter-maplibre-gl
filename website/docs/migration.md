@@ -62,6 +62,8 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 
 Numeric GeoJSON feature ids stay numbers in queries and filters on Android, as on iOS and web, where they used to turn into strings. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
 
+String ids such as `"poi-12"` stay strings on every platform. The exception is a string that looks like a number, such as `"2"`: Android returns it as the number `2`, because MapLibre Android reports every id as text and the plugin cannot tell the two apart. If you compare ids across platforms, use numbers or ids that are not numeric strings.
+
 ### Android and iOS: Pigeon messages
 
 The plugin now talks to Android and iOS through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon), instead of hand-written method channels. Your map code keeps working as before, with these differences:
