@@ -556,11 +556,11 @@ class _MapLibreMapState extends State<MapLibreMap> {
   @override
   void dispose() {
     _disposed = true;
-    // Once the controller exists it owns the platform and disposes it for us.
-    // Before that it does not, and there are two ways to get here without one:
-    // the map is still being created, or its creation threw. Tearing the
-    // platform down anyway is what keeps the registered platform view, and on
-    // web the map element and its listeners, from outliving the widget.
+    // Once the controller exists it owns the platform and disposes it for us,
+    // also while the map is still being created or when its creation threw.
+    // Before that, the platform view was never created: tearing the platform
+    // down anyway is what keeps the registered platform view, and on web the
+    // map element and its listeners, from outliving the widget.
     final controller = _mapController;
     if (controller != null) {
       controller.dispose();
@@ -620,6 +620,11 @@ class _MapLibreMapState extends State<MapLibreMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
+    // The controller listens to the platform from here on, so dispose() must
+    // reach it even if the widget goes away before the map is created:
+    // otherwise a style that loads meanwhile starts an annotation setup on a
+    // controller that never learns the map is gone.
+    _mapController = controller;
     // Nobody awaits this method: the platform view factory calls it and drops
     // the future. So a failure here has to reach the completer, or everything
     // waiting on the controller, including onStyleLoadedCallback above, waits
@@ -639,7 +644,6 @@ class _MapLibreMapState extends State<MapLibreMap> {
     // callback it wires up would then fail against it, which on iOS surfaces
     // as an unhandled `styleNotFound` out of the annotation managers.
     if (_disposed) return;
-    _mapController = controller;
     _controller.complete(controller);
     widget.onMapCreated?.call(controller);
   }
