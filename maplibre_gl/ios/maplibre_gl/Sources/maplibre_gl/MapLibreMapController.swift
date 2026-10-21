@@ -96,9 +96,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Drive the view out of its window and drop the remaining references so
         // the engine is reclaimed promptly when the platform view is removed.
         NotificationCenter.default.removeObserver(self)
-        // A mapWaitForMap still waiting for the style would never be
-        // answered, leaving the Dart future pending for good. Android fails
-        // it the same way.
+        // Fails a mapWaitForMap still waiting for the style, whose Dart future
+        // would otherwise never complete.
         if let waitingResult = mapReadyResult {
             mapReadyResult = nil
             waitingResult(FlutterError(
@@ -161,8 +160,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         arguments args: Any?,
         registrar: FlutterPluginRegistrar
     ) {
-        // Dart encodes them with the codec of the messages, see
-        // MapLibreMapFactory.createArgsCodec.
+        // Decoded by MapLibreMapFactory.createArgsCodec.
         let params = args as? PgCreationParams
         mapView = Self.createMapView(
             styleString: params?.styleString,
@@ -327,26 +325,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     enum CallKind {
         /// Runs at once.
         case plain
-        /// Moves the camera, which touches the C++ map's projection. On a
-        /// zero-sized platform view frame (a moveCamera fired from Dart
-        /// onMapCreated before layout, say) the unproject runs on a 0x0
-        /// viewport: NaN, mbgl::LatLng throws std::domain_error, SIGABRT.
-        /// Waits until the frame is real (issue #819, the call path, not
-        /// covered by the init-only fix).
+        /// Moves the camera. On a zero-sized frame, such as a move from Dart
+        /// onMapCreated before layout, the projection yields NaN and
+        /// mbgl::LatLng aborts the app, so it waits for a real frame (#819).
         case movesCamera
         /// Reads the camera or the projection. While the initial camera waits
         /// for a size these calls wait too, or they would report zoom 0.
         case readsCamera
     }
 
-    /// Runs a Dart call on this map.
+    /// Runs a Dart call on this map, after the initial camera, so a camera move
+    /// from Dart lands on top of it.
     ///
-    /// A call that has to wait for the view's size goes to the next turn of
-    /// the main queue, as many times as it takes. The controller is handed to
-    /// `call` rather than captured, so a call still waiting does not keep a
-    /// disposed map alive: it is dropped with it. Every call applies the
-    /// initial camera first, so a camera move from Dart lands on top of the
-    /// initial camera, never under it.
+    /// A call that waits for the view's size retries on the next turn of the
+    /// main queue. The controller is passed to `call`, not captured, so a
+    /// waiting call does not keep a disposed map alive.
     func runCall(_ kind: CallKind, _ call: @escaping (MapLibreMapController) -> Void) {
         if mapView.frame.size.equalTo(.zero),
            kind == .movesCamera || (kind == .readsCamera && pendingInitialCamera != nil)
@@ -773,8 +766,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    /// The layers a rendered features query looks in: all of them, `nil`,
-    /// for an empty list.
+    /// The layers a rendered features query looks in: `nil`, meaning all of
+    /// them, for an empty list.
     private func queriedLayerIds(_ layerIds: [String]) -> Set<String>? {
         return layerIds.isEmpty ? nil : Set<String>(layerIds)
     }
@@ -783,12 +776,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// JSON text of an expression.
     ///
     /// Only an expression array filters, as on Android: no filter, the text
-    /// `null` and any other JSON value query with no predicate. A filter
-    /// MapLibre rejects, and text that is not JSON, fail the call with
-    /// INVALID_EXPRESSION. MapLibre raises an Objective-C exception for an
-    /// invalid filter, when it builds the predicate or when the query turns
-    /// it into a filter of its own, which would crash the app if it reached
-    /// Swift.
+    /// `null` and any other JSON value query without a predicate. Text that is
+    /// not JSON, or a filter MapLibre rejects, fails with INVALID_EXPRESSION.
+    /// MapLibre raises an Objective-C exception for a bad filter both when it
+    /// builds the predicate and when it runs the query, so both are caught.
     private func answerFeatures(
         filter: String?,
         methodName: String,
@@ -821,8 +812,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(featuresReply(features, methodName: methodName))
     }
 
-    /// Why a filter cannot be read, when its text is not JSON. Android says
-    /// the same.
+    /// The reason for a filter whose text is not JSON.
     static let filterNotJSON = "Not valid JSON."
 
     /// Why MapLibre rejected a filter, from the exception it raised.
@@ -950,7 +940,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapEditGeoJsonSource(id srcId: String, data srcData: String, result: @escaping FlutterResult) {
-        // Without a style there is no source to edit, as on Android.
         guard let style = self.mapView.style else {
             result(false)
             return
@@ -964,7 +953,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 let geojsonData = try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue)
                 if geojsonData != nil {
                     geojsonSrc.shape = geojsonData
-                    // The data setGeoJsonFeature changes from now on.
+                    // The data setGeoJsonFeature edits.
                     addedShapesByLayer[srcId] = geojsonData
                     ret = true
                 }
@@ -1004,8 +993,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         sdf: Bool,
         result: @escaping FlutterResult
     ) {
-        // Every exit replies: a call that never answers leaves the Dart
-        // future pending for good, with nothing to catch.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1032,7 +1019,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         coordinates: PgLatLngQuad,
         result: @escaping FlutterResult
     ) {
-        // Without a style the source went nowhere, and the call succeeded.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1062,7 +1048,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         coordinates: PgLatLngQuad?,
         result: @escaping FlutterResult
     ) {
-        // Without a style this said SOURCE_NOT_FOUND, where Android says why.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1091,7 +1076,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleRemoveSource(sourceId: String, result: @escaping FlutterResult) {
-        // Without a style this succeeded, with nothing removed.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1129,9 +1113,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         maxzoom: Double?,
         result: @escaping FlutterResult
     ) {
-        // A raster layer like any other: a missing source fails with
-        // SOURCE_NOT_FOUND, and a missing belowLayerId puts the layer on top,
-        // as on Android and web. This answered noSuchSource and noSuchLayer.
         answer(addRasterLayer(
             sourceId: imageSourceId,
             layerId: imageLayerId,
@@ -1143,7 +1124,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleRemoveLayer(layerId: String, result: @escaping FlutterResult) {
-        // Without a style this said LAYER_NOT_FOUND_ERROR.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1330,8 +1310,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleGetLayerIds(result: @escaping FlutterResult) {
-        // Without a style there are no ids to answer with, and an empty list
-        // would read as a style without layers, so report it as Android does.
+        // An empty list would read as a style without layers.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1350,8 +1329,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func styleGetLayerProperties(layerId: String, result: @escaping FlutterResult) {
-        // Without a style nil would read as "no such layer", so report it as
-        // Android does.
+        // Nil would read as "no such layer".
         guard mapView.style != nil else {
             result(styleNotReadyError())
             return
@@ -1402,9 +1380,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(properties)
     }
 
-    /// The style-spec entry of `source`, as Android and web give it: type,
-    /// four [lng, lat] corners from the top left clockwise, and the url only
-    /// when the image comes from one.
+    /// The style-spec entry of `source`: its type, four [lng, lat] corners from
+    /// the top left clockwise, and the url when the image comes from one.
     static func imageSourceProperties(_ source: MLNImageSource) -> [String: Any] {
         let quad = source.coordinates
         var properties: [String: Any] = [
@@ -1649,7 +1626,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func layerSetProperties(layerId: String, properties: [String: Any], result: @escaping FlutterResult) {
-        // Without a style this said LAYER_NOT_FOUND_ERROR.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1685,7 +1661,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func layerSetVisibility(layerId: String, visible: Bool, result: @escaping FlutterResult) {
-        // Without a style this said LAYER_NOT_FOUND_ERROR.
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
@@ -1702,8 +1677,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func layerSetVisibilityBatch(layerIds: [String], visible: Bool, result: @escaping FlutterResult) {
         // Unknown ids are skipped and returned, as on Android and web.
-        // Without a style every id came back as unknown; an empty list still
-        // answers an empty list, as on Android.
+        // An empty list answers an empty list, even without a style.
         if layerIds.isEmpty {
             result([String]())
             return
@@ -1771,9 +1745,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapSetLayerFilter(id layerId: String, filter layerFilter: String, result: @escaping FlutterResult) {
-        // styleSetFilter answered as a Bool, as on Android: false without a
-        // style or such a layer, for a layer that takes no filter, and for a
-        // filter MapLibre rejects, which used to crash the app here.
+        // False without a style or such a layer, for a layer that takes no
+        // filter and for a filter MapLibre rejects.
         guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
             result(false)
             return
@@ -2370,8 +2343,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     /// Adds `layer` to `style` below `belowLayerId`, or on top without such a
-    /// layer. An Objective-C exception MapLibre raises fails the call instead
-    /// of the app.
+    /// layer, as on Android and web. An Objective-C exception MapLibre raises
+    /// fails the call with INVALID_ARGUMENT.
     private func insert(
         _ layer: MLNStyleLayer,
         into style: MLNStyle,
@@ -2436,12 +2409,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return true
     }
 
-    /// Sets `properties` on `layer` one at a time in name order, and returns
-    /// the first value MapLibre rejects as INVALID_EXPRESSION or
-    /// INVALID_ARGUMENT, also logged. With `onlyCheck`, `layer` is outside the
-    /// style and nulls are skipped. Constants are checked against their kind
-    /// first: MapLibre on iOS reads a constant of the wrong kind as something
-    /// else.
+    /// Sets `properties` on `layer` one at a time in name order and returns the
+    /// first value MapLibre rejects, also logged. With `onlyCheck`, `layer` is
+    /// outside the style and nulls are skipped. Constants are checked against
+    /// their kind first: MapLibre on iOS reads a constant of the wrong kind as
+    /// something else.
     private func applyLayerProperties(
         _ properties: [String: Any],
         to layer: MLNStyleLayer,
@@ -2754,7 +2726,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             return .success(())
         } catch {
-            // As on Android: the same code and message as for the queries.
             return .failure(MethodCallError.invalidFilter(reason: Self.filterNotJSON))
         }
     }
@@ -2814,8 +2785,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
         }
-        // A missing belowLayerId puts the layer on top, as for every other
-        // layer and on Android and web. This failed with LAYER_NOT_FOUND_ERROR.
         return finishLayerAdd(
             MLNBackgroundStyleLayer(identifier: layerId),
             style: style,
@@ -2879,8 +2848,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard style.source(withIdentifier: sourceId) == nil else {
             return .failure(.sourceAlreadyExists(sourceId: sourceId))
         }
-        // Android answers the same for a type it cannot add and for
-        // properties it cannot build a source from.
         guard let type = properties["type"] as? String else {
             return .failure(.unsupportedSourceType(
                 message: "Source '\(sourceId)' has no type."
@@ -3009,8 +2976,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard let style = mapView.style else {
             return .failure(.styleNotReady)
         }
-        // The source is looked up before the data is read, as on Android,
-        // which cannot read the data first.
+        // The source is looked up first, so a bad id wins over bad data, as on
+        // Android.
         guard let source = style.source(withIdentifier: sourceId) as? MLNShapeSource else {
             return .failure(.sourceNotFound(sourceId: sourceId))
         }
@@ -3114,12 +3081,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
     }
 
-    /// Image bytes that do not decode, answered as on Android.
+    /// Image bytes that do not decode.
     private func invalidImageError() -> FlutterError {
         return FlutterError(code: "INVALID_IMAGE", message: "Failed to decode image bytes.", details: nil)
     }
 
-    /// A call that needs a style while none is loaded, answered as on Android.
+    /// A call that needs a style while none is loaded.
     private func styleNotReadyError() -> FlutterError {
         return MethodCallError.styleNotReady.flutterError
     }
@@ -3132,11 +3099,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    /// The camera `cameraUpdate` of `cameraMove`, `cameraAnimate` or
-    /// `cameraEase` moves to. For an update of a kind this side does not
-    /// know, the call is answered with `INVALID_ARGUMENT` and `nil` comes
-    /// back: returning without a reply would leave the Dart future pending for
-    /// good.
+    /// The camera `cameraUpdate` moves to. For a kind of update this side does
+    /// not know, answers the call with INVALID_ARGUMENT and returns nil.
     private func targetCamera(of cameraUpdate: PgCameraUpdate, _ result: FlutterResult) -> MLNMapCamera? {
         guard let camera = Convert.camera(for: cameraUpdate, mapView: mapView) else {
             result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
@@ -3145,9 +3109,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return camera
     }
 
-    /// Serializes features for the channel as JSON strings, so nested
-    /// properties survive intact, and answers the list of them. Shared by
-    /// every call that answers with features.
+    /// Serializes features as JSON strings, so nested properties survive
+    /// intact, and answers the list of them.
     ///
     /// Returns a `FlutterError` if any feature fails to serialize, rather than
     /// skipping it. A short list is worse than an error: the caller has no way
@@ -3188,12 +3151,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return featuresJson
     }
 
-    /// Replaces the feature of the source with the id of `geojsonFeature`, in
-    /// the data addSourceGeojson or setSource gave the source.
+    /// Replaces the feature with the id of `geojsonFeature` in the data
+    /// addSourceGeojson or setSource gave the source.
     ///
-    /// As on Android and web: a source without such data, added some other
-    /// way, and a feature whose id the data does not hold change nothing, and
-    /// data that is a lone Feature counts as a collection of one.
+    /// A source without such data and an id the data does not hold change
+    /// nothing, as on Android and web. Data that is a lone Feature counts as a
+    /// collection of one.
     func setFeature(sourceId: String, geojsonFeature: String) -> Result<Void, MethodCallError> {
         guard let style = mapView.style else {
             return .failure(.styleNotReady)
@@ -3235,7 +3198,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return .success(())
     }
 
-    /// A feature id as text, so 2 and "2" match, as on Android.
+    /// A feature id as text, so 2 and "2" match.
     private static func featureIdKey(_ identifier: Any?) -> String? {
         if let id = identifier as? String { return id }
         if let id = identifier as? NSNumber { return id.stringValue }

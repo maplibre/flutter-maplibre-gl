@@ -3,12 +3,10 @@ import Foundation
 
 /// The calls of one map, from Dart to native.
 ///
-/// Each method hands its typed arguments to the controller method of the
-/// same name through `MapLibreMapController.runCall`, which holds back the
-/// calls that need the view's size and applies the initial camera first.
-/// The maps of style data (layer and source properties, the light) go over
-/// as the codec decoded them, see `plainValue`, and the controller's
-/// `FlutterResult` answer is adapted to the Pigeon completion.
+/// Each method hands its arguments to the controller method of the same name
+/// through `MapLibreMapController.runCall` and adapts the controller's
+/// `FlutterResult` answer to the Pigeon completion. Style data maps (layer
+/// and source properties, the light) go over as `plainValue` makes them.
 ///
 /// The generated setup holds this object strongly while its handlers are
 /// registered, so the controller is held weakly: a strong reference would
@@ -1048,13 +1046,11 @@ private func plainList(_ list: [Any?]) -> [Any] {
     list.map(plainValue)
 }
 
-/// A value as the standard codec decoded it: nil as NSNull, numbers and
-/// booleans as NSNumber, and maps and lists, at any depth, as `[String: Any]`
-/// and `[Any]` without optionals. The readers of style data (layer and
-/// source properties, the light) cast from these (`as? [String: Any]`,
-/// `as? [Double]`, `as? NSNumber`, `is NSNull`).
-/// Strings and typed data pass through, as does a map with keys other than
-/// strings, which the codec handed over as is.
+/// A value as the standard codec decoded it, the shape the style data readers
+/// cast from: nil as NSNull, numbers and booleans as NSNumber, maps and lists
+/// at any depth as `[String: Any]` and `[Any]` without optionals. Anything
+/// else, such as a string, typed data or a map with keys other than strings,
+/// passes through.
 private func plainValue(_ value: Any?) -> Any {
     guard let value = value else { return NSNull() }
     switch value {

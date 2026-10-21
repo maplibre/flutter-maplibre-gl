@@ -132,13 +132,10 @@ class SourcePropertyConverter {
         if let tiles = properties["tiles"] as? [String] {
             var options = interpretTileOptions(properties: properties)
             if let encoding = properties["encoding"] as? String {
-                // MLNDEMEncoding only knows mapbox and terrarium; the spec's
-                // "custom" encoding is web-only and is rejected before it gets
-                // here. Refusing anything else lets addSource report an
-                // INVALID_ARGUMENT failure, rather than decoding the tiles as
-                // mapbox and drawing a plausible map from wrong elevations.
-                // The encoding is caller input, so it goes through the %@
-                // argument instead of into the NSLog format string.
+                // MLNDEMEncoding knows only the two encodings below ("custom" is web
+                // only and rejected before this). Any other fails addSource with
+                // INVALID_ARGUMENT rather than drawing wrong elevations with the default.
+                // The encoding is caller input, so it goes through %@, not the format string.
                 switch encoding {
                 case "terrarium":
                     options[.demEncoding] = NSNumber(value: MLNDEMEncoding.terrarium.rawValue)

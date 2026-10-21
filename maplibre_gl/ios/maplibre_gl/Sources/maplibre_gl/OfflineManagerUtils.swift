@@ -173,7 +173,8 @@ class OfflineManagerUtils {
             result(missingRegionError(id: id))
             return
         }
-        // Android stores whatever its JSON encoder makes of such a value.
+        // JSONSerialization in prepareContext raises an NSException, which Swift
+        // cannot catch, for metadata that is not JSON.
         guard JSONSerialization.isValidJSONObject(metadata) else {
             result(FlutterError(
                 code: OfflineErrorCode.invalidArgument,
@@ -355,11 +356,9 @@ class OfflineManagerUtils {
 
     private static func resumeLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
-            // A pack with no download of this session behind it resumes too,
-            // without events: no downloader follows it. A complete pack has
-            // nothing left to download, and resuming it would only show it
-            // active until MapLibre reports it complete again, so it is left
-            // as it is, like on Android.
+            // Resuming a complete pack would only show it active until MapLibre
+            // reports it complete again. A pack with no download of this session
+            // behind it resumes without events.
             if pack.state != .complete {
                 pack.resume()
             }
@@ -424,9 +423,8 @@ class OfflineManagerUtils {
 
     // MARK: Errors
 
-    /// The answer for a region `findPack` did not find: `REGION_NOT_FOUND`, or
-    /// `OFFLINE_DATABASE_ERROR` when the stored packs never loaded, which is
-    /// what Android answers when it cannot list its regions.
+    /// The error for a region `findPack` did not find: `REGION_NOT_FOUND`, or
+    /// `OFFLINE_DATABASE_ERROR` when the stored packs never loaded.
     private static func missingRegionError(id: Int) -> FlutterError {
         if MLNOfflineStorage.shared.packs == nil {
             return databaseError("The offline regions could not be loaded")
@@ -638,8 +636,8 @@ private final class PacksReloadObserver: NSObject {
     }
 }
 
-/// The error codes of the offline calls and download events. Android answers
-/// the same codes, with the same messages where the case is the same.
+/// The error codes of the offline calls and download events, the same as on
+/// Android.
 enum OfflineErrorCode {
     /// No offline region has the id the call was given.
     static let regionNotFound = "REGION_NOT_FOUND"

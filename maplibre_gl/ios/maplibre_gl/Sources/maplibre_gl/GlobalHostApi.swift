@@ -93,8 +93,7 @@ class GlobalHostApi: MapLibreGlobalHostApi {
         limit: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        // UInt64 below would trap on a negative limit. Android answers the
-        // same code and message.
+        // UInt64 below would trap on a negative limit.
         guard limit >= 0 else {
             completion(.failure(invalidArgument("limit must be >= 0 (got \(limit))")))
             return
@@ -110,9 +109,8 @@ class GlobalHostApi: MapLibreGlobalHostApi {
         maxRequestsPerHost: Int64?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        // iOS has a per-host limit only; maxRequests is Android only. Both
-        // are still checked, so a value Android rejects fails here too, with
-        // the same code and message.
+        // iOS has a per-host limit only. maxRequests is still checked, so a
+        // value Android rejects fails here too.
         if let maxRequests = maxRequests, maxRequests < 1 {
             completion(.failure(invalidArgument("maxRequests must be >= 1 (got \(maxRequests))")))
             return
@@ -159,8 +157,7 @@ class GlobalHostApi: MapLibreGlobalHostApi {
         bytes: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        // UInt64 below would trap on a negative size. Android answers the
-        // same code and message.
+        // UInt64 below would trap on a negative size.
         guard bytes >= 0 else {
             completion(.failure(invalidArgument("bytes must be >= 0 (got \(bytes))")))
             return

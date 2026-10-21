@@ -105,7 +105,7 @@ class Convert {
         if let enabled = options.symbolPlacementTransitionsEnabled {
             delegate.setSymbolPlacementTransitionsEnabled(enabled: enabled)
         }
-        // Dart fills the iOS fields only.
+        // interval and priority are Android only.
         if let locationEngineProperties = options.locationEngineProperties {
             delegate.setLocationEngineProperties(
                 enableHighAccuracy: locationEngineProperties.enableHighAccuracy ?? false,
