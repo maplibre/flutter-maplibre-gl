@@ -278,8 +278,8 @@ final class MapLibreMapController
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
   // setGeoJsonFeature. Holds the raw String until the first setFeature parses
-  // it into a FeatureCollection JsonObject, so plain data updates never pay a
-  // parse on the platform thread.
+  // it into a FeatureCollectionText, so plain data updates never pay a parse
+  // on the platform thread.
   private Map<String, Object> addedFeaturesByLayer;
 
   private LatLngBounds bounds = null;
@@ -1160,12 +1160,12 @@ final class MapLibreMapController
     }
   }
 
-  // The source data as a FeatureCollection JsonObject, parsed on first use and
-  // cached, or null when it is neither a FeatureCollection nor a Feature.
-  private JsonObject parsedSourceData(String sourceName) {
+  // The source data as a FeatureCollection, parsed on first use and cached, or
+  // null when it is neither a FeatureCollection nor a Feature.
+  private FeatureCollectionText parsedSourceData(String sourceName) {
     final Object stored = addedFeaturesByLayer.get(sourceName);
-    if (stored instanceof JsonObject) {
-      return (JsonObject) stored;
+    if (stored instanceof FeatureCollectionText) {
+      return (FeatureCollectionText) stored;
     }
     if (!(stored instanceof String)) {
       return null;
@@ -1187,8 +1187,9 @@ final class MapLibreMapController
         || !data.get("features").isJsonArray()) {
       return null;
     }
-    addedFeaturesByLayer.put(sourceName, data);
-    return data;
+    final FeatureCollectionText collection = new FeatureCollectionText(data);
+    addedFeaturesByLayer.put(sourceName, collection);
+    return collection;
   }
 
   // Compares ids by their text, so 2 and "2" match as they did before.
@@ -1198,6 +1199,69 @@ final class MapLibreMapController
     }
     final JsonElement id = feature.getAsJsonObject().get("id");
     return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
+  }
+
+  // A FeatureCollection kept as the JSON text of each feature. Replacing one
+  // feature then rebuilds the source data by joining strings, instead of
+  // serializing every feature of the source again on the platform thread,
+  // which made each drag event of a large annotation source slow.
+  private static final class FeatureCollectionText {
+    // The collection's other members (type, bbox, ...) up to the opening
+    // bracket of the features array.
+    private final String head;
+    private final List<String> features;
+    // Index of the first feature with each id, the one a merge replaces.
+    private final Map<String, Integer> indexById = new HashMap<>();
+
+    FeatureCollectionText(JsonObject data) {
+      final JsonArray array = data.getAsJsonArray("features");
+      features = new ArrayList<>(array.size());
+      for (int i = 0; i < array.size(); i++) {
+        final JsonElement feature = array.get(i);
+        features.add(feature.toString());
+        final String id = featureIdKey(feature);
+        if (id != null && !indexById.containsKey(id)) {
+          indexById.put(id, i);
+        }
+      }
+      final JsonObject rest = new JsonObject();
+      for (Map.Entry<String, JsonElement> member : data.entrySet()) {
+        if (!"features".equals(member.getKey())) {
+          rest.add(member.getKey(), member.getValue());
+        }
+      }
+      final String restJson = rest.toString();
+      head = restJson.substring(0, restJson.length() - 1)
+          + (rest.entrySet().isEmpty() ? "" : ",")
+          + "\"features\":[";
+    }
+
+    // Replaces the feature with the same id as [feature]. False when the
+    // collection has no feature with that id, or [feature] has no id.
+    boolean replace(JsonElement feature) {
+      final String id = featureIdKey(feature);
+      final Integer index = id != null ? indexById.get(id) : null;
+      if (index == null) {
+        return false;
+      }
+      features.set(index, feature.toString());
+      return true;
+    }
+
+    String toJson() {
+      int length = head.length() + features.size() + 2;
+      for (String feature : features) {
+        length += feature.length();
+      }
+      final StringBuilder json = new StringBuilder(length).append(head);
+      for (int i = 0; i < features.size(); i++) {
+        if (i > 0) {
+          json.append(',');
+        }
+        json.append(features.get(i));
+      }
+      return json.append("]}").toString();
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -1211,25 +1275,15 @@ final class MapLibreMapController
       if (geoJsonSource == null) {
         return;
       }
-      final JsonObject data = parsedSourceData(sourceName);
+      final FeatureCollectionText data = parsedSourceData(sourceName);
       if (data == null) {
         return;
       }
 
       // Merged as JSON rather than through the Java Feature, which would turn
       // the ids of the whole source into Strings.
-      final JsonElement feature = JsonParser.parseString(geojsonFeature);
-      final String featureId = featureIdKey(feature);
-      if (featureId == null) {
-        return;
-      }
-      final JsonArray features = data.getAsJsonArray("features");
-      for (int i = 0; i < features.size(); i++) {
-        if (featureId.equals(featureIdKey(features.get(i)))) {
-          features.set(i, feature);
-          geoJsonSource.setGeoJson(data.toString());
-          break;
-        }
+      if (data.replace(JsonParser.parseString(geojsonFeature))) {
+        geoJsonSource.setGeoJson(data.toJson());
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
