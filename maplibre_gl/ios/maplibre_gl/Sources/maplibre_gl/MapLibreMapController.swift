@@ -1771,30 +1771,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapSetLayerFilter(id layerId: String, filter layerFilter: String, result: @escaping FlutterResult) {
-        // Without a style there is no layer to filter, as on Android.
-        guard let style = self.mapView.style else {
+        // styleSetFilter answered as a Bool, as on Android: false without a
+        // style or such a layer, for a layer that takes no filter, and for a
+        // filter MapLibre rejects, which used to crash the app here.
+        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
             result(false)
             return
         }
-
-        var ret: Bool = false
-        let layer = style.layer(withIdentifier: layerId)
-        if layer != nil {
-            do {
-                if let data = layerFilter.data(using: .utf8) {
-                    let jsonFilter = try JSONSerialization.jsonObject(with: data, options: [])
-                    let predicate = NSPredicate(mglJSONObject: jsonFilter)
-                    if let layer = layer as? MLNVectorStyleLayer {
-                        layer.predicate = predicate
-                        ret = true
-                    }
-                }
-            } catch {
-                print("Error parsing filter: \(error.localizedDescription)")
-            }
+        switch setFilter(layer, layerFilter) {
+        case .success: result(true)
+        case .failure: result(false)
         }
-
-        result(ret)
     }
 
     // MARK: Dart calls: location component
