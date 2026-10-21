@@ -37,8 +37,10 @@ class MapLibreGlobalWeb extends MapLibreGlobalPlatform {
   // switch to force the map offline. Each call says so, instead of failing
   // with a MissingPluginException that reads like a broken registration. The
   // error arrives through the returned future, as that exception did.
-  static Future<Never> _unsupported(String method, String reason) =>
-      Future.error(
+  // Typed after the method it fails, not Future<Never>: catchError on a
+  // Future<Never> rejects a handler that returns the method's own type.
+  static Future<T> _unsupported<T>(String method, String reason) =>
+      Future<T>.error(
         UnsupportedError('$method is not available on web: $reason'),
       );
 

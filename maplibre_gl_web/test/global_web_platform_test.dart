@@ -57,4 +57,14 @@ void main() {
       );
     });
   }
+
+  // The failed future has the method's own type, so a handler that falls
+  // back to a value of that type is accepted.
+  test('catchError can fall back to a value of the method type', () async {
+    final regions = await web.getListOfRegions().catchError(
+      (Object _) => <OfflineRegion>[],
+    );
+
+    expect(regions, isEmpty);
+  });
 }
