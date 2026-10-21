@@ -434,6 +434,26 @@ class MapLibreMap extends StatefulWidget {
   /// `runApp()`; maps already on screen keep the mode they were created with.
   static bool useHybridComposition = false;
 
+  /// Whether the Android map is embedded through Flutter's Hybrid
+  /// Composition. Ignored on iOS and web.
+  ///
+  /// `false` (the default) creates the platform view with
+  /// `PlatformViewsService.initAndroidView`. Flutter then draws the map as a
+  /// texture when it renders into a `TextureView`, or through Virtual Display
+  /// when it renders into a `GLSurfaceView`.
+  ///
+  /// `true` creates it with `PlatformViewsService.initExpensiveAndroidView`.
+  /// The map's view is placed in the Android view hierarchy and the system
+  /// composites it, so the map keeps drawing while Flutter is idle. The mode
+  /// and its costs are described in
+  /// [Hosting native Android views](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition)
+  /// and its [Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)
+  /// section.
+  ///
+  /// Independent of [useHybridComposition], which picks the view the map
+  /// renders into. Assign before the first [MapLibreMap] is built.
+  static bool androidHybridComposition = false;
+
   /// Where the web implementation loads MapLibre GL JS from.
   ///
   /// Leave it unset and the plugin injects the build it is tested against, so

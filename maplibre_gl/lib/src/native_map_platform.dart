@@ -64,7 +64,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         creationParams,
         useHybridComposition: useHybridComposition,
       );
-      if (useHybridComposition) {
+      final androidHybridComposition = MapLibreMap.androidHybridComposition;
+      if (useHybridComposition || androidHybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -77,7 +78,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            final controller = PlatformViewsService.initAndroidView(
+            // initExpensiveAndroidView is Hybrid Composition; initAndroidView
+            // is the texture layer, or Virtual Display when the map is on a
+            // SurfaceView.
+            final init =
+                androidHybridComposition
+                    ? PlatformViewsService.initExpensiveAndroidView
+                    : PlatformViewsService.initAndroidView;
+            final controller = init(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,

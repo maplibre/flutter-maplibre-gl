@@ -3245,7 +3245,10 @@ void main() {
     const viewType = 'plugins.flutter.io/maplibre_gl';
     const codec = MapLibreMapHostApi.pigeonChannelCodec;
 
-    tearDown(() => MapLibreMap.useHybridComposition = false);
+    tearDown(() {
+      MapLibreMap.useHybridComposition = false;
+      MapLibreMap.androidHybridComposition = false;
+    });
 
     Map<String, dynamic> creationParams() => {
       'options': <String, dynamic>{'compassEnabled': true},
@@ -3382,6 +3385,68 @@ void main() {
           FocusManager.instance.primaryFocus?.debugLabel,
           startsWith('PlatformView'),
         );
+
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'Android with androidHybridComposition asks for Hybrid Composition',
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        MapLibreMap.androidHybridComposition = true;
+        // Dart creates an Android platform view by sending `create` over the
+        // platform views channel. initExpensiveAndroidView, which is Hybrid
+        // Composition, sends `hybrid: true`; initAndroidView sends
+        // `hybridFallback: true` instead. The test stands in for the engine
+        // and records the call to see which one the plugin used.
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          // Hybrid Composition answers no texture id: the system draws the view.
+          return null;
+        });
+        // A null handler removes the mock.
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
+        );
+        final created = <int>[];
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(creationParams(), created.add, null),
+          ),
+        );
+        await tester.pump();
+
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final createArguments = create.arguments as Map;
+        expect(createArguments['viewType'], viewType);
+        // The core assertion: `hybrid` is what initExpensiveAndroidView sends,
+        // and `hybridFallback` what initAndroidView sends, so the plugin asked
+        // for Hybrid Composition and not the texture layer or Virtual Display.
+        expect(createArguments['hybrid'], isTrue);
+        expect(createArguments['hybridFallback'], isNull);
+        // `params` are the creation params native decodes. Native picks the
+        // view from their useHybridComposition (MapLibreMapBuilder turns it
+        // into textureMode). It is still false, the value typed() carries, so
+        // the new flag did not change what native reads to pick the view.
+        // Which view native then builds is outside what this test can see.
+        final nativeCreationParams = codec.decodeMessage(
+          ByteData.sublistView(createArguments['params'] as Uint8List),
+        );
+        expect(nativeCreationParams, typed());
+        // The plugin's own created callback still fires with this view's id.
+        expect(created, [createArguments['id']]);
+        // The PlatformViewLink branch was taken, not the plain AndroidView.
+        expect(find.byType(AndroidViewSurface), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
       },

@@ -87,12 +87,40 @@ Set it before the first map is built. The mode is fixed once a platform view
 exists, so changing it later leaves maps already on screen untouched.
 
 Two things about this flag are worth knowing. Despite the name it does not select
-Flutter's "Hybrid Composition" mode: both values go through
+Flutter's "Hybrid Composition" mode on its own: both values go through
 `PlatformViewsService.initAndroidView`, and Flutter chooses Texture Layer Hybrid
-Composition or Virtual Display based on the native view it finds. And the
+Composition or Virtual Display based on the native view it finds; see
+[Hybrid Composition](#hybrid-composition) below for that mode. And the
 `translucentTextureSurface` map option moves the map to a `TextureView` as well,
 additionally making it non-opaque, so reach for `useHybridComposition` when you
 want the texture layer with an opaque surface.
+
+### Hybrid Composition
+
+`MapLibreMap.androidHybridComposition` chooses how Flutter creates the map's
+platform view:
+
+- **`false` (the default)**: `PlatformViewsService.initAndroidView`. Flutter
+  draws the map as a texture when it renders into a `TextureView`, or through
+  Virtual Display when it renders into a `GLSurfaceView`, as described above.
+- **`true`**: `PlatformViewsService.initExpensiveAndroidView`, Flutter's
+  [Hybrid Composition](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition).
+  The map's view is placed in the Android view hierarchy and the system
+  composites it, so the map keeps drawing while Flutter is idle. In the texture
+  layer and Virtual Display modes a map frame reaches the screen only when
+  Flutter paints one.
+
+```dart
+MapLibreMap.androidHybridComposition = true; // call before runApp()
+```
+
+The flag is independent of `useHybridComposition`, which keeps picking the view
+the map renders into. Set it before the first map is built, like
+`useHybridComposition`. Flutter's
+[Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)
+section describes what the mode costs: the raster and platform threads merge
+while a Hybrid Composition view is on screen, and `onPlatformViewCreated`
+fires after the first frame.
 
 ### Hybrid Composition++
 
@@ -135,4 +163,5 @@ The [annotation API](../concepts/annotations-vs-layers.md) is convenient but kee
 | `controller.pauseMap()` / `resumeMap()` | stop and restart rendering for an off-screen map |
 | `maplibre_gl.renderer` | Android rendering backend, set in `gradle.properties`, see [Rendering backend (Android)](#rendering-backend-android) |
 | `MapLibreMap.useHybridComposition` | which Android view the map renders into, see [Platform view mode (Android)](#platform-view-mode-android) |
+| `MapLibreMap.androidHybridComposition` | let the system composite the Android map, see [Hybrid Composition](#hybrid-composition) |
 | `controller.setFeatureState()` | restyle single features without touching source data |
