@@ -232,14 +232,26 @@ private func voidResult(_ completion: @escaping (Result<Void, Error>) -> Void) -
     pigeonResult(completion) { _ in () }
 }
 
-/// Like `voidResult`, for the helpers that answer with a JSON string.
+/// Like `voidResult`, for the helpers that answer with a JSON string. Any
+/// other value fails the call with code `error`, as on Android.
 private func stringResult(_ completion: @escaping (Result<String, Error>) -> Void) -> FlutterResult {
-    pigeonResult(completion) { $0 as? String ?? "" }
+    pigeonResult(completion) { value in
+        guard let json = value as? String else {
+            throw PigeonError(
+                code: "error",
+                message: "Expected a JSON string, got \(String(describing: value)).",
+                details: nil
+            )
+        }
+        return json
+    }
 }
 
+/// `convert` turns the success value into the type the Pigeon method
+/// returns; when it throws, the call fails with that error.
 private func pigeonResult<T>(
     _ completion: @escaping (Result<T, Error>) -> Void,
-    convert: @escaping (Any?) -> T
+    convert: @escaping (Any?) throws -> T
 ) -> FlutterResult {
     var answered = false
     return { value in
@@ -258,7 +270,20 @@ private func pigeonResult<T>(
                 details: nil
             )))
         } else {
-            completion(.success(convert(value)))
+            // A value convert cannot read fails the call, as on Android,
+            // instead of reaching Dart as something it cannot parse.
+            let converted: T
+            do {
+                converted = try convert(value)
+            } catch {
+                completion(.failure(error as? PigeonError ?? PigeonError(
+                    code: "error",
+                    message: "\(error)",
+                    details: nil
+                )))
+                return
+            }
+            completion(.success(converted))
         }
     }
 }
