@@ -12,10 +12,10 @@ protocol MapLibreMapOptionsSink {
     func setTrackCameraPosition(trackCameraPosition: Bool)
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool)
     func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool)
-    func setPanInertia(panInertia: Int)
+    func setPanInertia(panInertia: PgPanInertia)
     func setMyLocationEnabled(myLocationEnabled: Bool)
     func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode)
-    func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode)
+    func setMyLocationRenderMode(myLocationRenderMode: PgMyLocationRenderMode)
     func setMyLocationStyle(style: LocationPuckStyle)
     func setLogoEnabled(logoEnabled: Bool)
     func setLogoViewPosition(position: MLNOrnamentPosition)
@@ -34,5 +34,5 @@ protocol MapLibreMapOptionsSink {
         intervalMs: Int,
         pulseWindowMs: Int
     )
-    func setLocationSource(token: String)
+    func setLocationSource(source: PgLocationSource)
 }

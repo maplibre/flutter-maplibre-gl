@@ -39,7 +39,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// `initialCameraPosition` from the creation params, kept until the view has
     /// a size. A camera set on a 0x0 view gets altitude 0 for every zoom, which
     /// MLNMapView takes for "no change" and drops, so the map stays at zoom 0.
-    private var pendingInitialCamera: [String: Any]?
+    private var pendingInitialCamera: PgCameraPosition?
     private var trackCameraPosition = false
     private let cameraAnimations = CameraAnimationTracker()
     private var myLocationEnabled = false
@@ -127,13 +127,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private static func createMapView(
-        args: Any?,
+        styleString: String?,
         frame: CGRect,
         registrar: FlutterPluginRegistrar
     ) -> MLNMapView {
-        if let args = args as? [String: Any],
-            let styleString = args["styleString"] as? String
-        {
+        if let styleString = styleString {
             if Self.styleStringIsJSON(styleString) {
                 return LocationPuckMapView(frame: frame, styleJSON: styleString)
             }
@@ -163,14 +161,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         arguments args: Any?,
         registrar: FlutterPluginRegistrar
     ) {
+        // Dart encodes them with the codec of the messages, see
+        // MapLibreMapFactory.createArgsCodec.
+        let params = args as? PgCreationParams
         mapView = Self.createMapView(
-            args: args,
+            styleString: params?.styleString,
             frame: frame,
             registrar: registrar
         )
 
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        if let styleString = (args as? [String: Any])?["styleString"] as? String {
+        if let styleString = params?.styleString {
             styleIsJSON = Self.styleStringIsJSON(styleString)
         }
         self.registrar = registrar
@@ -217,35 +218,31 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // + relaunch). Defer the options-apply block to the next runloop turn;
         // Flutter calls `setFrame` with the real size by then. (issue #819)
         let applyArgs: () -> Void = { [weak self] in
-            guard let self = self, let args = args as? [String: Any] else { return }
+            guard let self = self, let params = params else { return }
 
-            Convert.interpretMapLibreMapOptions(options: args["options"], delegate: self)
+            Convert.interpretMapLibreMapOptions(options: params.options, delegate: self)
             self.applyInitialCameraIfNeeded()
         }
         // Set before anything can run, so no Dart call or delegate callback can
         // see the map without it and no later apply can undo an app move.
-        if let args = args as? [String: Any] {
-            pendingInitialCamera = args["initialCameraPosition"] as? [String: Any]
-        }
+        pendingInitialCamera = params?.initialCameraPosition
         if mapView.frame.size.equalTo(.zero) {
             DispatchQueue.main.async(execute: applyArgs)
         } else {
             applyArgs()
         }
 
-        if let args = args as? [String: Any] {
+        if let params = params {
             // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
             //     if onAttributionClickOverride {
             //         setupAttribution(mapView)
             //     }
             // }
 
-            if let enabled = args["dragEnabled"] as? Bool {
-                dragEnabled = enabled
-            }
+            dragEnabled = params.dragEnabled
 
-            if let iosLongClickDurationMilliseconds = args["iosLongClickDurationMilliseconds"] as? Int {
-                longPress.minimumPressDuration = TimeInterval(iosLongClickDurationMilliseconds) / 1000
+            if let iosLongClickDurationMs = params.iosLongClickDurationMs {
+                longPress.minimumPressDuration = TimeInterval(iosLongClickDurationMs) / 1000
                 mapView.addGestureRecognizer(longPress)
                 longPressRecognizerAdded = true
             }
@@ -383,13 +380,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func mapUpdate(options: [String: Any], result: @escaping FlutterResult) {
+    func mapUpdate(options: PgMapOptions, result: @escaping FlutterResult) {
         Convert.interpretMapLibreMapOptions(options: options, delegate: self)
-        if let camera = getCamera() {
-            result(camera.toDict(mapView: mapView))
-        } else {
-            result(nil)
-        }
+        // Nil when the map does not track the camera position.
+        result(getCamera()?.toPigeon(mapView: mapView))
     }
 
     func mapInvalidateAmbientCache(result: @escaping FlutterResult) {
@@ -1990,9 +1984,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard let initialCameraPosition = pendingInitialCamera,
               !mapView.frame.size.equalTo(.zero) else { return }
         pendingInitialCamera = nil
-        if let camera = MLNMapCamera.fromDict(initialCameraPosition, mapView: mapView) {
-            mapView.setCamera(camera, animated: false)
-        }
+        mapView.setCamera(
+            MLNMapCamera.fromPigeon(initialCameraPosition, mapView: mapView),
+            animated: false
+        )
     }
 
     private func getCamera() -> MLNMapCamera? {
@@ -3245,21 +3240,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         scrollingEnabled = scrollGesturesEnabled
     }
 
-    /// Maps the Dart `PanInertia` index onto `decelerationRate`. The SDK glides
+    /// Maps the Dart `PanInertia` onto `decelerationRate`. The SDK glides
     /// for `rate` seconds over `velocity * rate / 4` points, and skips gestures
     /// slower than 100 pt/s:
-    /// - none (0): `.immediate` (0), no glide.
-    /// - short (1): half of `.normal`, so about half the time and distance.
+    /// - none: `.immediate` (0), no glide.
+    /// - short: half of `.normal`, so about half the time and distance.
     ///   `.fast` (0.99) is not used: it glides almost exactly like `.normal`.
-    /// - normal (2): `.normal` (0.998), the SDK default.
+    /// - normal: `.normal` (0.998), the SDK default.
     /// The same rate also drives the glide after a pinch or a rotation.
-    func setPanInertia(panInertia: Int) {
+    func setPanInertia(panInertia: PgPanInertia) {
         switch panInertia {
-        case 0:
+        case PgPanInertia.none:
             mapView.decelerationRate = MLNMapViewDecelerationRate.immediate.rawValue
-        case 1:
+        case .short:
             mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue / 2
-        default:
+        case .normal:
             mapView.decelerationRate = MLNMapViewDecelerationRate.normal.rawValue
         }
     }
@@ -3396,12 +3391,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func setLocationSource(token: String) {
-        // The token -> behavior mapping lives here, native-side. Any value other
-        // than "manual" (e.g. "platform"/unknown) falls back to the default
-        // manager. Applied before `showsUserLocation` is first enabled; runtime
-        // changes do not re-activate the component.
-        manualLocationSource = (token == "manual")
+    func setLocationSource(source: PgLocationSource) {
+        // Applied before `showsUserLocation` is first enabled; runtime changes
+        // do not re-activate the component.
+        manualLocationSource = (source == .manual)
     }
 
     func setMyLocationStyle(style: LocationPuckStyle) {
@@ -3410,13 +3403,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         applyLocationPuckTint()
     }
 
-    func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode) {
+    func setMyLocationRenderMode(myLocationRenderMode: PgMyLocationRenderMode) {
         switch myLocationRenderMode {
-        case .Normal:
+        case .normal:
             mapView.showsUserHeadingIndicator = false
-        case .Compass:
+        case .compass:
             mapView.showsUserHeadingIndicator = true
-        case .Gps:
+        case .gps:
             NSLog("RenderMode.GPS currently not supported")
         }
     }

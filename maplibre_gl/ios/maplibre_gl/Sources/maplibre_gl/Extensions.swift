@@ -36,18 +36,22 @@ extension MLNMapCamera {
         return computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
     }
 
-    static func fromDict(_ dict: [String: Any], mapView: MLNMapView) -> MLNMapCamera? {
-        guard let target = dict["target"] as? [Double],
-              let zoom = dict["zoom"] as? Double,
-              let tilt = dict["tilt"] as? CGFloat,
-              let bearing = dict["bearing"] as? Double else { return nil }
-        let location = CLLocationCoordinate2D.fromArray(target)
-        let altitude = MLNAltitudeForZoomLevel(zoom, tilt, location.latitude, mapView.frame.size)
+    /// The camera at `position`, its altitude worked out for the current size
+    /// of the map view.
+    static func fromPigeon(_ position: PgCameraPosition, mapView: MLNMapView) -> MLNMapCamera {
+        let location = position.target.coordinate
+        let tilt = CGFloat(position.tilt)
+        let altitude = MLNAltitudeForZoomLevel(
+            position.zoom,
+            tilt,
+            location.latitude,
+            mapView.frame.size
+        )
         return MLNMapCamera(
             lookingAtCenter: location,
             altitude: altitude,
             pitch: tilt,
-            heading: bearing
+            heading: position.bearing
         )
     }
 }
@@ -120,6 +124,18 @@ extension MLNCoordinateBounds {
         let southwest = CLLocationCoordinate2D.fromArray(array[0])
         let northeast = CLLocationCoordinate2D.fromArray(array[1])
         return MLNCoordinateBounds(sw: southwest, ne: northeast)
+    }
+}
+
+extension PgLatLng {
+    var coordinate: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+}
+
+extension PgLatLngBounds {
+    var coordinateBounds: MLNCoordinateBounds {
+        return MLNCoordinateBounds(sw: southwest.coordinate, ne: northeast.coordinate)
     }
 }
 

@@ -73,10 +73,12 @@ final class MapHostApi: MapLibreMapHostApi {
     }
 
     func mapUpdate(
-        options: [String: Any?],
-        completion: @escaping (Result<Any?, Error>) -> Void
+        options: PgMapOptions,
+        completion: @escaping (Result<PgCameraPosition?, Error>) -> Void
     ) {
-        run(anyResult(completion)) { $0.mapUpdate(options: plainMap(options), result: $1) }
+        run(pigeonResult(completion) { $0 as? PgCameraPosition }) {
+            $0.mapUpdate(options: options, result: $1)
+        }
     }
 
     func mapUpdateMyLocationTrackingMode(

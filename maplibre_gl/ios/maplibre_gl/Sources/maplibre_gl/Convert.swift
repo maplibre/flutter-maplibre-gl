@@ -1,142 +1,128 @@
 import MapLibre
 
 class Convert {
-    class func interpretMapLibreMapOptions(options: Any?, delegate: MapLibreMapOptionsSink) {
-        guard let options = options as? [String: Any] else { return }
-        if let cameraTargetBounds = options["cameraTargetBounds"] as? [Any?] {
-            // Handle both [[[Double]]] and [nil] (for unbounded)
-            if let boundsArray = cameraTargetBounds[0] as? [[Double]] {
-                let bounds = MLNCoordinateBounds.fromArray(boundsArray)
-                delegate.setCameraTargetBounds(bounds: bounds)
-            } else {
-                // Unbounded - clear the bounds restriction
-                delegate.setCameraTargetBounds(bounds: nil)
-            }
+    /// Applies the options that are set. A nil option is left as it is: at
+    /// creation Dart leaves out what keeps the platform default, and in
+    /// `mapUpdate` it sends only what changed.
+    class func interpretMapLibreMapOptions(
+        options: PgMapOptions,
+        delegate: MapLibreMapOptionsSink
+    ) {
+        if let cameraTargetBounds = options.cameraTargetBounds {
+            // Nil bounds lift the restriction.
+            delegate.setCameraTargetBounds(bounds: cameraTargetBounds.bounds?.coordinateBounds)
         }
-        if let compassEnabled = options["compassEnabled"] as? Bool {
+        if let compassEnabled = options.compassEnabled {
             delegate.setCompassEnabled(compassEnabled: compassEnabled)
         }
-        if let minMaxZoomPreference = options["minMaxZoomPreference"] as? [Any] {
-            // Handle both [Double] and [NSNull] (for unbounded zoom)
-            let minZoom: Double? = (minMaxZoomPreference[0] is NSNull) ? nil : minMaxZoomPreference[0] as? Double
-            let maxZoom: Double? = (minMaxZoomPreference[1] is NSNull) ? nil : minMaxZoomPreference[1] as? Double
-
+        if let minMaxZoomPreference = options.minMaxZoomPreference {
+            // A nil end leaves that side unbounded.
             delegate.setMinMaxZoomPreference(
-                min: minZoom,
-                max: maxZoom
+                min: minMaxZoomPreference.minZoom,
+                max: minMaxZoomPreference.maxZoom
             )
         }
-        if let styleString = options["styleString"] as? String {
+        if let styleString = options.styleString {
             delegate.setStyleString(styleString: styleString)
         }
-        // Parse before myLocationEnabled so the manual location manager is wired
+        // Set before myLocationEnabled so the manual location manager is wired
         // in before `showsUserLocation` is first enabled (SDK ordering rule).
-        if let locationSource = options["locationSource"] as? String {
-            delegate.setLocationSource(token: locationSource)
+        if let locationSource = options.locationSource {
+            delegate.setLocationSource(source: locationSource)
         }
-        if let rotateGesturesEnabled = options["rotateGesturesEnabled"] as? Bool {
+        if let rotateGesturesEnabled = options.rotateGesturesEnabled {
             delegate.setRotateGesturesEnabled(rotateGesturesEnabled: rotateGesturesEnabled)
         }
-        if let scrollGesturesEnabled = options["scrollGesturesEnabled"] as? Bool {
+        if let scrollGesturesEnabled = options.scrollGesturesEnabled {
             delegate.setScrollGesturesEnabled(scrollGesturesEnabled: scrollGesturesEnabled)
         }
-        if let tiltGesturesEnabled = options["tiltGesturesEnabled"] as? Bool {
+        if let tiltGesturesEnabled = options.tiltGesturesEnabled {
             delegate.setTiltGesturesEnabled(tiltGesturesEnabled: tiltGesturesEnabled)
         }
-        if let hapticFeedbackEnabled = options["hapticFeedbackEnabled"] as? Bool {
+        if let hapticFeedbackEnabled = options.hapticFeedbackEnabled {
             delegate.setHapticFeedbackEnabled(hapticFeedbackEnabled: hapticFeedbackEnabled)
         }
-        if let trackCameraPosition = options["trackCameraPosition"] as? Bool {
+        if let trackCameraPosition = options.trackCameraPosition {
             delegate.setTrackCameraPosition(trackCameraPosition: trackCameraPosition)
         }
-        if let zoomGesturesEnabled = options["zoomGesturesEnabled"] as? Bool {
+        if let zoomGesturesEnabled = options.zoomGesturesEnabled {
             delegate.setZoomGesturesEnabled(zoomGesturesEnabled: zoomGesturesEnabled)
         }
-        if let doubleClickZoomEnabled = options["doubleClickZoomEnabled"] as? Bool {
+        if let doubleClickZoomEnabled = options.doubleClickZoomEnabled {
             delegate.setDoubleClickZoomEnabled(doubleClickZoomEnabled: doubleClickZoomEnabled)
         }
-        if let panInertia = options["panInertia"] as? Int {
+        if let panInertia = options.panInertia {
             delegate.setPanInertia(panInertia: panInertia)
         }
-        if let myLocationEnabled = options["myLocationEnabled"] as? Bool {
+        if let myLocationEnabled = options.myLocationEnabled {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
         }
-        if let myLocationTrackingMode = options["myLocationTrackingMode"] as? UInt,
-           let trackingMode = MLNUserTrackingMode(rawValue: myLocationTrackingMode)
+        // The raw values are those of MLNUserTrackingMode.
+        if let myLocationTrackingMode = options.myLocationTrackingMode,
+           let trackingMode = MLNUserTrackingMode(rawValue: UInt(myLocationTrackingMode.rawValue))
         {
             delegate.setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
         }
-        if let myLocationRenderMode = options["myLocationRenderMode"] as? Int,
-           let renderMode = MyLocationRenderMode(rawValue: myLocationRenderMode)
-        {
-            delegate.setMyLocationRenderMode(myLocationRenderMode: renderMode)
+        if let myLocationRenderMode = options.myLocationRenderMode {
+            delegate.setMyLocationRenderMode(myLocationRenderMode: myLocationRenderMode)
         }
-        if let myLocationStyle = options["myLocationStyle"] as? [String: Any] {
-            delegate.setMyLocationStyle(style: LocationPuckStyle(json: myLocationStyle))
+        if let myLocationStyle = options.myLocationStyle {
+            delegate.setMyLocationStyle(style: LocationPuckStyle(myLocationStyle))
         }
-        if let logoEnabled = options["logoEnabled"] as? Bool {
+        if let logoEnabled = options.logoEnabled {
             delegate.setLogoEnabled(logoEnabled: logoEnabled)
         }
-        if let logoViewPosition = options["logoViewPosition"] as? UInt,
-           let position = MLNOrnamentPosition(rawValue: logoViewPosition)
-        {
+        if let position = ornamentPosition(options.logoViewPosition) {
             delegate.setLogoViewPosition(position: position)
         }
-        if let logoViewMargins = options["logoViewMargins"] as? [Double] {
-            delegate.setLogoViewMargins(x: logoViewMargins[0], y: logoViewMargins[1])
+        if let logoViewMargins = options.logoViewMargins {
+            delegate.setLogoViewMargins(x: logoViewMargins.x, y: logoViewMargins.y)
         }
-        if let compassViewPosition = options["compassViewPosition"] as? UInt,
-           let position = MLNOrnamentPosition(rawValue: compassViewPosition)
-        {
+        if let position = ornamentPosition(options.compassViewPosition) {
             delegate.setCompassViewPosition(position: position)
         }
-        if let compassViewMargins = options["compassViewMargins"] as? [Double] {
-            delegate.setCompassViewMargins(x: compassViewMargins[0], y: compassViewMargins[1])
+        if let compassViewMargins = options.compassViewMargins {
+            delegate.setCompassViewMargins(x: compassViewMargins.x, y: compassViewMargins.y)
         }
-        if let attributionEnabled = options["attributionEnabled"] as? Bool {
+        if let attributionEnabled = options.attributionEnabled {
             delegate.setAttributionEnabled(attributionEnabled: attributionEnabled)
         }
-        if let attributionButtonMargins = options["attributionButtonMargins"] as? [Double] {
+        if let attributionButtonMargins = options.attributionButtonMargins {
             delegate.setAttributionButtonMargins(
-                x: attributionButtonMargins[0],
-                y: attributionButtonMargins[1]
+                x: attributionButtonMargins.x,
+                y: attributionButtonMargins.y
             )
         }
-        if let attributionButtonPosition = options["attributionButtonPosition"] as? UInt,
-           let position = MLNOrnamentPosition(rawValue: attributionButtonPosition)
-        {
+        if let position = ornamentPosition(options.attributionButtonPosition) {
             delegate.setAttributionButtonPosition(position: position)
         }
-        if let attributionButtonColor = options["attributionButtonColor"] as? Int {
-            delegate.setAttributionButtonColor(color: attributionButtonColor)
+        if let attributionButtonColor = options.attributionButtonColor {
+            delegate.setAttributionButtonColor(color: Int(attributionButtonColor))
         }
-        if let featureTapsTriggersMapClick = options["featureTapsTriggersMapClick"] as? Bool {
+        if let featureTapsTriggersMapClick = options.featureTapsTriggersMapClick {
             delegate.setFeatureTapsTriggersMapClick(triggers: featureTapsTriggersMapClick)
         }
-        if let enabled = options["symbolPlacementTransitionsEnabled"] as? Bool {
+        if let enabled = options.symbolPlacementTransitionsEnabled {
             delegate.setSymbolPlacementTransitionsEnabled(enabled: enabled)
         }
-        // iOS serializes as [enableHighAccuracy (0/1), distanceFilter, intervalMs, pulseWindowMs]
-        if let locationEngineProperties = options["locationEngineProperties"] as? [Int],
-           locationEngineProperties.count >= 2
-        {
-            let enableHighAccuracy = locationEngineProperties[0] == 1
-            let distanceFilter = Double(locationEngineProperties[1])
-            let intervalMs = locationEngineProperties.count >= 3
-                ? locationEngineProperties[2]
-                : 0
-            let pulseWindowMs = locationEngineProperties.count >= 4
-                ? locationEngineProperties[3]
-                : MapLibreMapController.defaultPulseWindowMs
+        // Dart fills the iOS fields only.
+        if let locationEngineProperties = options.locationEngineProperties {
             delegate.setLocationEngineProperties(
-                enableHighAccuracy: enableHighAccuracy,
-                distanceFilter: distanceFilter,
-                intervalMs: intervalMs,
-                pulseWindowMs: pulseWindowMs
+                enableHighAccuracy: locationEngineProperties.enableHighAccuracy ?? false,
+                distanceFilter: Double(locationEngineProperties.displacement ?? 0),
+                intervalMs: Int(locationEngineProperties.intervalMs ?? 0),
+                pulseWindowMs: locationEngineProperties.pulseWindowMs.map { Int($0) }
+                    ?? MapLibreMapController.defaultPulseWindowMs
             )
         }
     }
-    
+
+    /// The SDK position of an ornament. The raw values are those of
+    /// MLNOrnamentPosition.
+    private class func ornamentPosition(_ position: PgOrnamentPosition?) -> MLNOrnamentPosition? {
+        return position.flatMap { MLNOrnamentPosition(rawValue: UInt($0.rawValue)) }
+    }
+
     class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {
         guard let methodName = cameraUpdate[0] as? String else { return nil }
         
