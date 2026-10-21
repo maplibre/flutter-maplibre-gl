@@ -2747,7 +2747,14 @@ final class MapLibreMapController
           null);
       return;
     }
-    ImageSource imageSource = style.getSourceAs(imageSourceId);
+    // getSourceAs would cast whatever source has the id, and a missing one
+    // came back null: both failed the call with a bare "error".
+    final Source source = style.getSource(imageSourceId);
+    if (!(source instanceof ImageSource)) {
+      result.error("SOURCE_NOT_FOUND", "Image source " + imageSourceId + " not found.", null);
+      return;
+    }
+    final ImageSource imageSource = (ImageSource) source;
     if (coordinates != null) {
       imageSource.setCoordinates(PigeonConvert.toLatLngQuad(coordinates));
     }
