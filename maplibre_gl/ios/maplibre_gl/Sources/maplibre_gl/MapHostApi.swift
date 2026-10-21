@@ -500,11 +500,9 @@ final class MapHostApi: MapLibreMapHostApi {
         sdf: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#addImage",
-            ["name": name, "bytes": bytes, "length": length, "sdf": sdf],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleAddImage(name: name, bytes: bytes, sdf: sdf, result: $1)
+        }
     }
 
     func styleAddImageSource(
@@ -514,16 +512,14 @@ final class MapHostApi: MapLibreMapHostApi {
         coordinates: [Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#addImageSource",
-            [
-                "imageSourceId": imageSourceId,
-                "bytes": bytes,
-                "length": length,
-                "coordinates": coordinates,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleAddImageSource(
+                imageSourceId: imageSourceId,
+                bytes: bytes,
+                coordinates: plainList(coordinates),
+                result: $1
+            )
+        }
     }
 
     func styleUpdateImageSource(
@@ -533,23 +529,21 @@ final class MapHostApi: MapLibreMapHostApi {
         coordinates: [Any?]?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#updateImageSource",
-            [
-                "imageSourceId": imageSourceId,
-                "bytes": bytes,
-                "length": length,
-                "coordinates": coordinates,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleUpdateImageSource(
+                imageSourceId: imageSourceId,
+                bytes: bytes,
+                coordinates: coordinates.map(plainList),
+                result: $1
+            )
+        }
     }
 
     func styleRemoveSource(
         sourceId: String,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("style#removeSource", ["sourceId": sourceId], result: voidResult(completion))
+        run(voidResult(completion)) { $0.styleRemoveSource(sourceId: sourceId, result: $1) }
     }
 
     func styleAddLayer(
@@ -559,16 +553,15 @@ final class MapHostApi: MapLibreMapHostApi {
         maxzoom: Double?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#addLayer",
-            [
-                "imageLayerId": imageLayerId,
-                "imageSourceId": imageSourceId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleAddLayer(
+                imageLayerId: imageLayerId,
+                imageSourceId: imageSourceId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                result: $1
+            )
+        }
     }
 
     func styleAddLayerBelow(
@@ -579,24 +572,23 @@ final class MapHostApi: MapLibreMapHostApi {
         maxzoom: Double?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#addLayerBelow",
-            [
-                "imageLayerId": imageLayerId,
-                "imageSourceId": imageSourceId,
-                "belowLayerId": belowLayerId,
-                "minzoom": minzoom,
-                "maxzoom": maxzoom,
-            ],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleAddLayerBelow(
+                imageLayerId: imageLayerId,
+                imageSourceId: imageSourceId,
+                belowLayerId: belowLayerId,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                result: $1
+            )
+        }
     }
 
     func styleRemoveLayer(
         layerId: String,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("style#removeLayer", ["layerId": layerId], result: voidResult(completion))
+        run(voidResult(completion)) { $0.styleRemoveLayer(layerId: layerId, result: $1) }
     }
 
     func styleMoveLayer(
@@ -604,12 +596,9 @@ final class MapHostApi: MapLibreMapHostApi {
         belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        var arguments: [String: Any?] = ["layerId": layerId]
-        // Left out of the legacy map when null.
-        if let belowLayerId = belowLayerId {
-            arguments["belowLayerId"] = belowLayerId
+        run(voidResult(completion)) {
+            $0.styleMoveLayer(layerId: layerId, belowLayerId: belowLayerId, result: $1)
         }
-        send("style#moveLayer", arguments, result: voidResult(completion))
     }
 
     func styleSetFilter(
@@ -617,18 +606,14 @@ final class MapHostApi: MapLibreMapHostApi {
         filter: String,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#setFilter",
-            ["layerId": layerId, "filter": filter],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) { $0.styleSetFilter(layerId: layerId, filter: filter, result: $1) }
     }
 
     func styleGetFilter(
         layerId: String,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send("style#getFilter", ["layerId": layerId], result: anyResult(completion))
+        run(anyResult(completion)) { $0.styleGetFilter(layerId: layerId, result: $1) }
     }
 
     func styleAddSource(
@@ -636,44 +621,42 @@ final class MapHostApi: MapLibreMapHostApi {
         properties: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "style#addSource",
-            ["sourceId": sourceId, "properties": properties],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.styleAddSource(sourceId: sourceId, properties: plainMap(properties), result: $1)
+        }
     }
 
     func styleSetLight(
         light: [String: Any?],
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("style#setLight", ["light": light], result: voidResult(completion))
+        run(voidResult(completion)) { $0.styleSetLight(light: plainMap(light), result: $1) }
     }
 
     func styleGetLayerIds(completion: @escaping (Result<Any?, Error>) -> Void) {
-        send("style#getLayerIds", result: anyResult(completion))
+        run(anyResult(completion)) { $0.styleGetLayerIds(result: $1) }
     }
 
     func styleGetSourceIds(completion: @escaping (Result<Any?, Error>) -> Void) {
-        send("style#getSourceIds", result: anyResult(completion))
+        run(anyResult(completion)) { $0.styleGetSourceIds(result: $1) }
     }
 
     func styleGetLayerProperties(
         layerId: String,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send("style#getLayerProperties", ["layerId": layerId], result: anyResult(completion))
+        run(anyResult(completion)) { $0.styleGetLayerProperties(layerId: layerId, result: $1) }
     }
 
     func styleGetSourceProperties(
         sourceId: String,
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send("style#getSourceProperties", ["sourceId": sourceId], result: anyResult(completion))
+        run(anyResult(completion)) { $0.styleGetSourceProperties(sourceId: sourceId, result: $1) }
     }
 
     func styleSetStyle(style: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        send("style#setStyle", ["style": style], result: voidResult(completion))
+        run(voidResult(completion)) { $0.styleSetStyle(style: style, result: $1) }
     }
 
     // MARK: Layers

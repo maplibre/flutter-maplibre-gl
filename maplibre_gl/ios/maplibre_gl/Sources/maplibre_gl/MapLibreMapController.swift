@@ -792,96 +792,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             case let .failure(error): result(error.flutterError)
             }
 
-        case "style#setLight":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let lightProperties = arguments["light"] as? [String: Any] else { return }
-            guard let style = mapView.style else {
-                result(MethodCallError.styleNotFound.flutterError)
-                return
-            }
-
-            // Every LightProperties field is dynamic, so anything can arrive here.
-            // MapLibre Native takes constants only: a value that is not one is
-            // rejected, as on Android, rather than skipped. All fields are
-            // checked before any is applied, so a rejected call changes nothing.
-            func invalidLight(_ field: String, _ expected: String) -> FlutterError {
-                return FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "Invalid '\(field)' in 'light'. Expected \(expected). MapLibre "
-                        + "Native takes constant light values only, not expressions.",
-                    details: nil
-                )
-            }
-            // A Dart bool arrives as an NSNumber too; reject it like Android.
-            func lightNumber(_ value: Any) -> NSNumber? {
-                guard let number = value as? NSNumber,
-                      CFGetTypeID(number) != CFBooleanGetTypeID()
-                else { return nil }
-                return number
-            }
-            let anchorValue = lightProperties["anchor"]
-            let anchor = anchorValue as? String
-            if anchorValue != nil, anchor == nil {
-                result(invalidLight("anchor", "a String"))
-                return
-            }
-            let positionValue = lightProperties["position"]
-            var position: [Double]?
-            if let positionValue = positionValue {
-                let elements = positionValue as? [Any] ?? []
-                let numbers = elements.compactMap(lightNumber)
-                guard elements.count == 3, numbers.count == 3 else {
-                    result(invalidLight("position", "three numbers, [radial, azimuthal, polar]"))
-                    return
-                }
-                position = numbers.map { $0.doubleValue }
-            }
-            let colorValue = lightProperties["color"]
-            let color = colorValue as? String
-            if colorValue != nil, color == nil {
-                result(invalidLight("color", "a String"))
-                return
-            }
-            let intensityValue = lightProperties["intensity"]
-            let intensity = intensityValue.flatMap(lightNumber)?.doubleValue
-            if intensityValue != nil, intensity == nil {
-                result(invalidLight("intensity", "a number"))
-                return
-            }
-
-            let light = style.light
-            if let anchor = anchor {
-                light.anchor = NSExpression(forConstantValue: anchor)
-            }
-            if let position = position {
-                light.position = NSExpression(forConstantValue: NSValue(
-                    mlnSphericalPosition: MLNSphericalPositionMake(
-                        CGFloat(position[0]),
-                        position[1],
-                        position[2]
-                    )
-                ))
-            }
-            if let color = color {
-                if let parsed = UIColor(hexString: color) {
-                    light.color = NSExpression(forConstantValue: parsed)
-                } else {
-                    // UIColor(hexString:) only reads #rrggbb and #aarrggbb, so
-                    // "#fff", "red" or "rgba(...)" are handed to the renderer as
-                    // LayerPropertyConverter does for layer colors, rather than
-                    // dropped. Without the fallback argument MLN raises an
-                    // uncaught NSInternalInconsistencyException at render time
-                    // when the input string can't be cast.
-                    light.color = NSExpression(mglJSONObject: ["to-color", color, "#000000"])
-                }
-            }
-            if let intensity = intensity {
-                light.intensity = NSExpression(forConstantValue: intensity)
-            }
-            style.light = light
-
-            result(nil)
-
         case "heatmapLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
@@ -923,301 +833,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 maximumZoomLevel: maxzoom,
                 properties: properties
             )
-            switch addResult {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "style#addImage":
-            // Every exit replies: a channel call that never answers leaves the
-            // Dart future pending for good, with nothing to catch.
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let name = arguments["name"] as? String,
-                  let bytes = arguments["bytes"] as? FlutterStandardTypedData,
-                  let sdf = arguments["sdf"] as? Bool
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "addImage requires a String 'name', image 'bytes' and a Bool 'sdf'.",
-                    details: nil
-                ))
-                return
-            }
-            guard let style = mapView.style else {
-                result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    details: nil
-                ))
-                return
-            }
-            guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
-                result(FlutterError(
-                    code: "INVALID_IMAGE",
-                    message: "Failed to decode image bytes.",
-                    details: nil
-                ))
-                return
-            }
-            if sdf {
-                style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
-            } else {
-                style.setImage(image, forName: name)
-            }
-            result(nil)
-
-        case "style#addImageSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            if mapView.style?.source(withIdentifier: imageSourceId) != nil {
-                result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
-                return
-            }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data) else { return }
-
-            guard let coordinates = arguments["coordinates"] as? [[Double]] else { return }
-            let quad = MLNCoordinateQuad(
-                topLeft: CLLocationCoordinate2D(
-                    latitude: coordinates[0][0],
-                    longitude: coordinates[0][1]
-                ),
-                bottomLeft: CLLocationCoordinate2D(
-                    latitude: coordinates[3][0],
-                    longitude: coordinates[3][1]
-                ),
-                bottomRight: CLLocationCoordinate2D(
-                    latitude: coordinates[2][0],
-                    longitude: coordinates[2][1]
-                ),
-                topRight: CLLocationCoordinate2D(
-                    latitude: coordinates[1][0],
-                    longitude: coordinates[1][1]
-                )
-            )
-
-            let source = MLNImageSource(
-                identifier: imageSourceId,
-                coordinateQuad: quad,
-                image: image
-            )
-            mapView.style?.addSource(source)
-
-            result(nil)
-        case "style#updateImageSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            guard let imageSource = mapView.style?
-                .source(withIdentifier: imageSourceId) as? MLNImageSource else { return }
-            let bytes = arguments["bytes"] as? FlutterStandardTypedData
-            if bytes != nil {
-                guard let data = bytes!.data as? Data else { return }
-                guard let image = UIImage(data: data) else { return }
-                imageSource.image = image
-            }
-            let coordinates = arguments["coordinates"] as? [[Double]]
-            if coordinates != nil {
-                let quad = MLNCoordinateQuad(
-                    topLeft: CLLocationCoordinate2D(
-                        latitude: coordinates![0][0],
-                        longitude: coordinates![0][1]
-                    ),
-                    bottomLeft: CLLocationCoordinate2D(
-                        latitude: coordinates![3][0],
-                        longitude: coordinates![3][1]
-                    ),
-                    bottomRight: CLLocationCoordinate2D(
-                        latitude: coordinates![2][0],
-                        longitude: coordinates![2][1]
-                    ),
-                    topRight: CLLocationCoordinate2D(
-                        latitude: coordinates![1][0],
-                        longitude: coordinates![1][1]
-                    )
-                )
-                imageSource.coordinates = quad
-            }
-            result(nil)
-        case "style#removeSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let source = mapView.style?.source(withIdentifier: sourceId) else {
-                result(nil)
-                return
-            }
-            mapView.style?.removeSource(source)
-            result(nil)
-        case "style#addLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-
-            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
-                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
-                return
-            }
-            // Check for noSuchSource error
-            guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
-                result(FlutterError(
-                    code: "noSuchSource",
-                    message: "No source found with imageSourceId \(imageSourceId)",
-                    details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
-                ))
-                return
-            }
-
-            let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
-
-            if let minzoom = minzoom {
-                layer.minimumZoomLevel = Float(minzoom)
-            }
-
-            if let maxzoom = maxzoom {
-                layer.maximumZoomLevel = Float(maxzoom)
-            }
-
-            mapView.style?.addLayer(layer)
-            result(nil)
-        case "style#addLayerBelow":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            guard let belowLayerId = arguments["belowLayerId"] as? String else { return }
-            let minzoom = arguments["minzoom"] as? Double
-            let maxzoom = arguments["maxzoom"] as? Double
-
-            if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
-                result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
-                return
-            }
-            // Check for noSuchSource error
-            guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
-                result(FlutterError(
-                    code: "noSuchSource",
-                    message: "No source found with imageSourceId \(imageSourceId)",
-                    details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
-                ))
-                return
-            }
-            // Check for noSuchLayer error
-            guard let belowLayer = mapView.style?.layer(withIdentifier: belowLayerId) else {
-                result(FlutterError(
-                    code: "noSuchLayer",
-                    message: "No layer found with layerId \(belowLayerId)",
-                    details: "Can't insert layer below layer with id \(belowLayerId), as no such layer exists."
-                ))
-                return
-            }
-
-            let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
-
-            if let minzoom = minzoom {
-                layer.minimumZoomLevel = Float(minzoom)
-            }
-
-            if let maxzoom = maxzoom {
-                layer.maximumZoomLevel = Float(maxzoom)
-            }
-            mapView.style?.insertLayer(layer, below: belowLayer)
-            result(nil)
-
-        case "style#removeLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(
-                   layerId: layerId
-                ).flutterError)
-                return
-            }
-            interactiveFeatureLayerIds.remove(layerId)
-            mapView.style?.removeLayer(layer)
-            result(nil)
-
-        case "style#moveLayer":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerId = arguments["layerId"] as? String
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "moveLayer requires a String 'layerId'.",
-                    details: nil
-                ))
-                return
-            }
-            let belowLayerId = arguments["belowLayerId"] as? String
-            guard styleIsReady, let style = mapView.style else {
-                result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    details: nil
-                ))
-                return
-            }
-            // Both layers are looked up before anything moves: a missing anchor
-            // found after the removal would lose the layer.
-            guard let layer = style.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
-                return
-            }
-            var belowLayer: MLNStyleLayer?
-            if let belowLayerId = belowLayerId {
-                guard let found = style.layer(withIdentifier: belowLayerId) else {
-                    result(MethodCallError.layerNotFound(layerId: belowLayerId).flutterError)
-                    return
-                }
-                belowLayer = found
-            }
-            if belowLayerId == layerId {
-                result(nil)
-                return
-            }
-            style.removeLayer(layer)
-            if let belowLayer = belowLayer {
-                style.insertLayer(layer, below: belowLayer)
-            } else {
-                style.addLayer(layer)
-            }
-            result(nil)
-
-        case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerId = arguments["layerId"] as? String,
-                  let filter = arguments["filter"] as? String
-            else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGUMENT",
-                        message: "Missing or invalid 'layerId' or 'filter'.",
-                        details: nil
-                    )
-                )
-                return
-            }
-            guard let style = mapView.style else {
-                result(MethodCallError.styleNotFound.flutterError)
-                return
-            }
-            guard let layer = style.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(
-                   layerId: layerId
-                ).flutterError)
-                return
-            }
-            switch setFilter(layer, filter) {
-            case .success: result(nil)
-            case let .failure(error): result(error.flutterError)
-            }
-
-        case "style#addSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
-            let addResult = addSource(sourceId: sourceId, properties: properties)
-
             switch addResult {
             case .success: result(nil)
             case let .failure(error): result(error.flutterError)
@@ -1330,139 +945,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(layer.isVisible)
 
-        case "style#getLayerIds":
-            var layerIds = [String]()
-
-            guard let style = mapView.style else { return }
-
-            style.layers.forEach { layer in layerIds.append(layer.identifier) }
-
-            var reply = [String: NSObject]()
-            reply["layers"] = layerIds as NSObject
-            result(reply)
-
-        case "style#getSourceIds":
-            var sourceIds = [String]()
-
-            guard let style = mapView.style else { return }
-
-            style.sources.forEach { source in sourceIds.append(source.identifier) }
-
-            var reply = [String: NSObject]()
-            reply["sources"] = sourceIds as NSObject
-            result(reply)
-
-        case "style#getLayerProperties":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            // Read the serialized style and pluck the layer entry, rather than
-            // enumerating every NSExpression property. This guarantees the
-            // result matches the MapLibre style spec, like Android and web.
-            let styleObject = currentStyleObject()
-            var reply = [String: NSObject]()
-            if let layers = styleObject?["layers"] as? [[String: Any]],
-               var layer = layers.first(where: { ($0["id"] as? String) == layerId })
-            {
-                // The serialized style is the style as loaded, so the zoom
-                // range is read from the live layer: setLayerZoomRange may
-                // have changed it since. Like Android, the spec defaults (0
-                // and 24) are left out. Going through the shortest Float text
-                // keeps 0.1 from reading back as 0.10000000149011612.
-                if let live = mapView.style?.layer(withIdentifier: layerId) {
-                    let minzoom = live.minimumZoomLevel
-                    let maxzoom = live.maximumZoomLevel
-                    layer["minzoom"] = minzoom > 0 ? Double(String(minzoom)) : nil
-                    layer["maxzoom"] = maxzoom < 24 ? Double(String(maxzoom)) : nil
-                }
-                if let json = jsonString(from: layer) {
-                    reply["properties"] = json as NSObject
-                }
-            }
-            result(reply)
-
-        case "style#getSourceProperties":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            let styleObject = currentStyleObject()
-            var reply = [String: NSObject]()
-            if let sources = styleObject?["sources"] as? [String: Any],
-               let source = sources[sourceId] as? [String: Any],
-               let json = jsonString(from: source)
-            {
-                reply["properties"] = json as NSObject
-            }
-            result(reply)
-
-        case "style#getFilter":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let layerId = arguments["layerId"] as? String
-            else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGUMENT",
-                        message: "Missing or invalid 'layerId'.",
-                        details: nil
-                    )
-                )
-                return
-            }
-
-            guard let style = mapView.style else {
-                result(MethodCallError.styleNotFound.flutterError)
-                return
-            }
-            guard let layer = style.layer(withIdentifier: layerId) else {
-                result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
-                return
-            }
-
-            // A layer without a filter answers null, not an empty string.
-            var currentLayerFilter: NSObject = NSNull()
-            if let vectorLayer = layer as? MLNVectorStyleLayer {
-                if let layerFilter = vectorLayer.predicate {
-
-                    let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                    if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
-                       let json = String(data: data, encoding: String.Encoding.utf8) {
-                        currentLayerFilter = json as NSObject
-                    }
-                }
-            } else {
-                result(MethodCallError.invalidLayerType(
-                    details: "Layer '\(layer.identifier)' does not support filtering."
-                ).flutterError)
-                return;
-            }
-
-            var reply = [String: NSObject]()
-            reply["filter"] = currentLayerFilter
-            result(reply)
-
-        case "style#setStyle":
-            if let arguments = methodCall.arguments as? [String: Any] {
-              if let style = arguments["style"] as? String {
-                setStyleString(styleString: style)
-                result(nil)
-              } else {
-                // Error for missing style key in argument
-                result(
-                    FlutterError(
-                        code: "invalidStyleString",
-                        message: "Missing style key in arguments",
-                        details: nil
-                    )
-                )
-              }
-            } else {
-              // Error for invalid arguments type
-              result(
-                  FlutterError(
-                      code: "invalidArgumentsType",
-                      message: "Arguments not of type [String: Any]",
-                      details: nil
-                  )
-              )
-            }
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -2085,6 +1567,463 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         reply["result"] = ret
         result(reply)
+    }
+
+    // MARK: Dart calls: style
+
+    func styleAddImage(
+        name: String,
+        bytes: FlutterStandardTypedData,
+        sdf: Bool,
+        result: @escaping FlutterResult
+    ) {
+        // Every exit replies: a call that never answers leaves the Dart
+        // future pending for good, with nothing to catch.
+        guard let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
+        guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+            result(FlutterError(
+                code: "INVALID_IMAGE",
+                message: "Failed to decode image bytes.",
+                details: nil
+            ))
+            return
+        }
+        if sdf {
+            style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
+        } else {
+            style.setImage(image, forName: name)
+        }
+        result(nil)
+    }
+
+    func styleAddImageSource(
+        imageSourceId: String,
+        bytes: FlutterStandardTypedData,
+        coordinates: [Any],
+        result: @escaping FlutterResult
+    ) {
+        if mapView.style?.source(withIdentifier: imageSourceId) != nil {
+            result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
+            return
+        }
+        guard let image = UIImage(data: bytes.data) else { return }
+
+        guard let coordinates = coordinates as? [[Double]] else { return }
+        let quad = MLNCoordinateQuad(
+            topLeft: CLLocationCoordinate2D(
+                latitude: coordinates[0][0],
+                longitude: coordinates[0][1]
+            ),
+            bottomLeft: CLLocationCoordinate2D(
+                latitude: coordinates[3][0],
+                longitude: coordinates[3][1]
+            ),
+            bottomRight: CLLocationCoordinate2D(
+                latitude: coordinates[2][0],
+                longitude: coordinates[2][1]
+            ),
+            topRight: CLLocationCoordinate2D(
+                latitude: coordinates[1][0],
+                longitude: coordinates[1][1]
+            )
+        )
+
+        let source = MLNImageSource(
+            identifier: imageSourceId,
+            coordinateQuad: quad,
+            image: image
+        )
+        mapView.style?.addSource(source)
+
+        result(nil)
+    }
+
+    func styleUpdateImageSource(
+        imageSourceId: String,
+        bytes: FlutterStandardTypedData?,
+        coordinates: [Any]?,
+        result: @escaping FlutterResult
+    ) {
+        guard let imageSource = mapView.style?
+            .source(withIdentifier: imageSourceId) as? MLNImageSource else { return }
+        if let bytes = bytes {
+            guard let image = UIImage(data: bytes.data) else { return }
+            imageSource.image = image
+        }
+        let coordinates = coordinates.flatMap { $0 as? [[Double]] }
+        if coordinates != nil {
+            let quad = MLNCoordinateQuad(
+                topLeft: CLLocationCoordinate2D(
+                    latitude: coordinates![0][0],
+                    longitude: coordinates![0][1]
+                ),
+                bottomLeft: CLLocationCoordinate2D(
+                    latitude: coordinates![3][0],
+                    longitude: coordinates![3][1]
+                ),
+                bottomRight: CLLocationCoordinate2D(
+                    latitude: coordinates![2][0],
+                    longitude: coordinates![2][1]
+                ),
+                topRight: CLLocationCoordinate2D(
+                    latitude: coordinates![1][0],
+                    longitude: coordinates![1][1]
+                )
+            )
+            imageSource.coordinates = quad
+        }
+        result(nil)
+    }
+
+    func styleRemoveSource(sourceId: String, result: @escaping FlutterResult) {
+        guard let source = mapView.style?.source(withIdentifier: sourceId) else {
+            result(nil)
+            return
+        }
+        mapView.style?.removeSource(source)
+        result(nil)
+    }
+
+    func styleAddLayer(
+        imageLayerId: String,
+        imageSourceId: String,
+        minzoom: Double?,
+        maxzoom: Double?,
+        result: @escaping FlutterResult
+    ) {
+        if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+            result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
+            return
+        }
+        // Check for noSuchSource error
+        guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
+            result(FlutterError(
+                code: "noSuchSource",
+                message: "No source found with imageSourceId \(imageSourceId)",
+                details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
+            ))
+            return
+        }
+
+        let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
+
+        if let minzoom = minzoom {
+            layer.minimumZoomLevel = Float(minzoom)
+        }
+
+        if let maxzoom = maxzoom {
+            layer.maximumZoomLevel = Float(maxzoom)
+        }
+
+        mapView.style?.addLayer(layer)
+        result(nil)
+    }
+
+    func styleAddLayerBelow(
+        imageLayerId: String,
+        imageSourceId: String,
+        belowLayerId: String,
+        minzoom: Double?,
+        maxzoom: Double?,
+        result: @escaping FlutterResult
+    ) {
+        if mapView.style?.layer(withIdentifier: imageLayerId) != nil {
+            result(MethodCallError.layerAlreadyExists(layerId: imageLayerId).flutterError)
+            return
+        }
+        // Check for noSuchSource error
+        guard let source = mapView.style?.source(withIdentifier: imageSourceId) else {
+            result(FlutterError(
+                code: "noSuchSource",
+                message: "No source found with imageSourceId \(imageSourceId)",
+                details: "Can't add add layer for imageSourceId \(imageLayerId), as the source does not exist."
+            ))
+            return
+        }
+        // Check for noSuchLayer error
+        guard let belowLayer = mapView.style?.layer(withIdentifier: belowLayerId) else {
+            result(FlutterError(
+                code: "noSuchLayer",
+                message: "No layer found with layerId \(belowLayerId)",
+                details: "Can't insert layer below layer with id \(belowLayerId), as no such layer exists."
+            ))
+            return
+        }
+
+        let layer = MLNRasterStyleLayer(identifier: imageLayerId, source: source)
+
+        if let minzoom = minzoom {
+            layer.minimumZoomLevel = Float(minzoom)
+        }
+
+        if let maxzoom = maxzoom {
+            layer.maximumZoomLevel = Float(maxzoom)
+        }
+        mapView.style?.insertLayer(layer, below: belowLayer)
+        result(nil)
+    }
+
+    func styleRemoveLayer(layerId: String, result: @escaping FlutterResult) {
+        guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(
+               layerId: layerId
+            ).flutterError)
+            return
+        }
+        interactiveFeatureLayerIds.remove(layerId)
+        mapView.style?.removeLayer(layer)
+        result(nil)
+    }
+
+    func styleMoveLayer(layerId: String, belowLayerId: String?, result: @escaping FlutterResult) {
+        guard styleIsReady, let style = mapView.style else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+                details: nil
+            ))
+            return
+        }
+        // Both layers are looked up before anything moves: a missing anchor
+        // found after the removal would lose the layer.
+        guard let layer = style.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+            return
+        }
+        var belowLayer: MLNStyleLayer?
+        if let belowLayerId = belowLayerId {
+            guard let found = style.layer(withIdentifier: belowLayerId) else {
+                result(MethodCallError.layerNotFound(layerId: belowLayerId).flutterError)
+                return
+            }
+            belowLayer = found
+        }
+        if belowLayerId == layerId {
+            result(nil)
+            return
+        }
+        style.removeLayer(layer)
+        if let belowLayer = belowLayer {
+            style.insertLayer(layer, below: belowLayer)
+        } else {
+            style.addLayer(layer)
+        }
+        result(nil)
+    }
+
+    func styleSetFilter(layerId: String, filter: String, result: @escaping FlutterResult) {
+        guard let style = mapView.style else {
+            result(MethodCallError.styleNotFound.flutterError)
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(
+               layerId: layerId
+            ).flutterError)
+            return
+        }
+        answer(setFilter(layer, filter), result)
+    }
+
+    func styleGetFilter(layerId: String, result: @escaping FlutterResult) {
+        guard let style = mapView.style else {
+            result(MethodCallError.styleNotFound.flutterError)
+            return
+        }
+        guard let layer = style.layer(withIdentifier: layerId) else {
+            result(MethodCallError.layerNotFound(layerId: layerId).flutterError)
+            return
+        }
+
+        // A layer without a filter answers null, not an empty string.
+        var currentLayerFilter: NSObject = NSNull()
+        if let vectorLayer = layer as? MLNVectorStyleLayer {
+            if let layerFilter = vectorLayer.predicate {
+
+                let jsonExpression = layerFilter.mgl_jsonExpressionObject
+                if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
+                   let json = String(data: data, encoding: String.Encoding.utf8) {
+                    currentLayerFilter = json as NSObject
+                }
+            }
+        } else {
+            result(MethodCallError.invalidLayerType(
+                details: "Layer '\(layer.identifier)' does not support filtering."
+            ).flutterError)
+            return;
+        }
+
+        var reply = [String: NSObject]()
+        reply["filter"] = currentLayerFilter
+        result(reply)
+    }
+
+    func styleAddSource(sourceId: String, properties: [String: Any], result: @escaping FlutterResult) {
+        answer(addSource(sourceId: sourceId, properties: properties), result)
+    }
+
+    func styleSetLight(light lightProperties: [String: Any], result: @escaping FlutterResult) {
+        guard let style = mapView.style else {
+            result(MethodCallError.styleNotFound.flutterError)
+            return
+        }
+
+        // Every LightProperties field is dynamic, so anything can arrive here.
+        // MapLibre Native takes constants only: a value that is not one is
+        // rejected, as on Android, rather than skipped. All fields are
+        // checked before any is applied, so a rejected call changes nothing.
+        func invalidLight(_ field: String, _ expected: String) -> FlutterError {
+            return FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "Invalid '\(field)' in 'light'. Expected \(expected). MapLibre "
+                    + "Native takes constant light values only, not expressions.",
+                details: nil
+            )
+        }
+        // A Dart bool arrives as an NSNumber too; reject it like Android.
+        func lightNumber(_ value: Any) -> NSNumber? {
+            guard let number = value as? NSNumber,
+                  CFGetTypeID(number) != CFBooleanGetTypeID()
+            else { return nil }
+            return number
+        }
+        let anchorValue = lightProperties["anchor"]
+        let anchor = anchorValue as? String
+        if anchorValue != nil, anchor == nil {
+            result(invalidLight("anchor", "a String"))
+            return
+        }
+        let positionValue = lightProperties["position"]
+        var position: [Double]?
+        if let positionValue = positionValue {
+            let elements = positionValue as? [Any] ?? []
+            let numbers = elements.compactMap(lightNumber)
+            guard elements.count == 3, numbers.count == 3 else {
+                result(invalidLight("position", "three numbers, [radial, azimuthal, polar]"))
+                return
+            }
+            position = numbers.map { $0.doubleValue }
+        }
+        let colorValue = lightProperties["color"]
+        let color = colorValue as? String
+        if colorValue != nil, color == nil {
+            result(invalidLight("color", "a String"))
+            return
+        }
+        let intensityValue = lightProperties["intensity"]
+        let intensity = intensityValue.flatMap(lightNumber)?.doubleValue
+        if intensityValue != nil, intensity == nil {
+            result(invalidLight("intensity", "a number"))
+            return
+        }
+
+        let light = style.light
+        if let anchor = anchor {
+            light.anchor = NSExpression(forConstantValue: anchor)
+        }
+        if let position = position {
+            light.position = NSExpression(forConstantValue: NSValue(
+                mlnSphericalPosition: MLNSphericalPositionMake(
+                    CGFloat(position[0]),
+                    position[1],
+                    position[2]
+                )
+            ))
+        }
+        if let color = color {
+            if let parsed = UIColor(hexString: color) {
+                light.color = NSExpression(forConstantValue: parsed)
+            } else {
+                // UIColor(hexString:) only reads #rrggbb and #aarrggbb, so
+                // "#fff", "red" or "rgba(...)" are handed to the renderer as
+                // LayerPropertyConverter does for layer colors, rather than
+                // dropped. Without the fallback argument MLN raises an
+                // uncaught NSInternalInconsistencyException at render time
+                // when the input string can't be cast.
+                light.color = NSExpression(mglJSONObject: ["to-color", color, "#000000"])
+            }
+        }
+        if let intensity = intensity {
+            light.intensity = NSExpression(forConstantValue: intensity)
+        }
+        style.light = light
+
+        result(nil)
+    }
+
+    func styleGetLayerIds(result: @escaping FlutterResult) {
+        var layerIds = [String]()
+
+        guard let style = mapView.style else { return }
+
+        style.layers.forEach { layer in layerIds.append(layer.identifier) }
+
+        var reply = [String: NSObject]()
+        reply["layers"] = layerIds as NSObject
+        result(reply)
+    }
+
+    func styleGetSourceIds(result: @escaping FlutterResult) {
+        var sourceIds = [String]()
+
+        guard let style = mapView.style else { return }
+
+        style.sources.forEach { source in sourceIds.append(source.identifier) }
+
+        var reply = [String: NSObject]()
+        reply["sources"] = sourceIds as NSObject
+        result(reply)
+    }
+
+    func styleGetLayerProperties(layerId: String, result: @escaping FlutterResult) {
+        // Read the serialized style and pluck the layer entry, rather than
+        // enumerating every NSExpression property. This guarantees the
+        // result matches the MapLibre style spec, like Android and web.
+        let styleObject = currentStyleObject()
+        var reply = [String: NSObject]()
+        if let layers = styleObject?["layers"] as? [[String: Any]],
+           var layer = layers.first(where: { ($0["id"] as? String) == layerId })
+        {
+            // The serialized style is the style as loaded, so the zoom
+            // range is read from the live layer: setLayerZoomRange may
+            // have changed it since. Like Android, the spec defaults (0
+            // and 24) are left out. Going through the shortest Float text
+            // keeps 0.1 from reading back as 0.10000000149011612.
+            if let live = mapView.style?.layer(withIdentifier: layerId) {
+                let minzoom = live.minimumZoomLevel
+                let maxzoom = live.maximumZoomLevel
+                layer["minzoom"] = minzoom > 0 ? Double(String(minzoom)) : nil
+                layer["maxzoom"] = maxzoom < 24 ? Double(String(maxzoom)) : nil
+            }
+            if let json = jsonString(from: layer) {
+                reply["properties"] = json as NSObject
+            }
+        }
+        result(reply)
+    }
+
+    func styleGetSourceProperties(sourceId: String, result: @escaping FlutterResult) {
+        let styleObject = currentStyleObject()
+        var reply = [String: NSObject]()
+        if let sources = styleObject?["sources"] as? [String: Any],
+           let source = sources[sourceId] as? [String: Any],
+           let json = jsonString(from: source)
+        {
+            reply["properties"] = json as NSObject
+        }
+        result(reply)
+    }
+
+    func styleSetStyle(style: String, result: @escaping FlutterResult) {
+        setStyleString(styleString: style)
+        result(nil)
     }
 
     private func loadIconImage(name: String) -> UIImage? {
