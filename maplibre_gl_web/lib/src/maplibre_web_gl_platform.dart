@@ -4,6 +4,11 @@ part of '../maplibre_gl_web.dart';
 /// its id.
 typedef _SourceFeature = ({String? id, JSAny? feature});
 
+/// The [MapLibrePlatform] of web, on maplibre-gl-js.
+///
+/// Its errors carry the codes and messages of Android and iOS. What
+/// maplibre-gl-js reports only through an error event, or accepts silently,
+/// is checked before the call and thrown.
 class MapLibreMapController extends MapLibrePlatform
     implements MapLibreMapOptionsSink {
   late web.HTMLDivElement _mapElement;
@@ -888,8 +893,8 @@ class MapLibreMapController extends MapLibrePlatform
       // This call takes the filter as a JSON string, where
       // queryRenderedFeatures takes the expression itself. maplibre-gl-js only
       // accepts the expression, so the string has to be decoded here or the
-      // filter never reaches the query. As on Android and iOS, only an
-      // expression array filters, and text that is not JSON is an error.
+      // filter never reaches the query. Only an expression array filters, and
+      // text that is not JSON is an error.
       final Object? decoded;
       try {
         decoded = jsonDecode(filter);
@@ -930,11 +935,9 @@ class MapLibreMapController extends MapLibrePlatform
     String? sourceLayerId,
     List<Object>? filter,
   ) async {
-    // A source is resolved by id out of the style, so without a style there is
-    // no source to query. Answering with an empty list would look like a
-    // source that holds no features, which the caller cannot tell apart, so
-    // report it as Android and iOS do, with their message. Not
-    // isStyleLoaded(): it is also false while tiles or a source update load.
+    // Without a style, an empty list would read as a source without features.
+    // Not isStyleLoaded(): it is also false while tiles or a source update
+    // load.
     _ensureStyleReady();
 
     final parameters = <String, dynamic>{};
@@ -970,9 +973,9 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   /// Runs [query], the maplibre-gl-js feature query [method], and throws
-  /// `INVALID_EXPRESSION`, as Android and iOS do, for a filter maplibre-gl-js
-  /// rejects. It reports that through an error event, then throws an error of
-  /// its own or queries all the same.
+  /// `INVALID_EXPRESSION` for a filter maplibre-gl-js rejects. It reports such
+  /// a filter through an error event, then throws its own error or queries
+  /// anyway.
   T _filteredQuery<T>(String method, bool filtered, T Function() query) {
     if (!filtered) return query();
     late T features;
@@ -1031,12 +1034,10 @@ class MapLibreMapController extends MapLibrePlatform
     return errors;
   }
 
-  /// Why a filter cannot be read, when its text is not JSON. Android and iOS
-  /// say the same.
+  /// Why a filter whose text is not JSON cannot be read.
   static const _filterNotJson = 'Not valid JSON.';
 
-  /// A filter maplibre-gl-js rejected, or that cannot be read, answered as on
-  /// Android and iOS.
+  /// The error for a filter maplibre-gl-js rejects or cannot read.
   static PlatformException _invalidFilter(String reason) => PlatformException(
     code: 'INVALID_EXPRESSION',
     message: 'Invalid filter: $reason',
@@ -1876,9 +1877,8 @@ class MapLibreMapController extends MapLibrePlatform
     _map.removeLayer(imageLayerId);
   }
 
-  /// Throws `STYLE_NOT_READY`, with the message of Android and iOS, until
-  /// the style has loaded. maplibre-gl-js throws an error of its own for most
-  /// calls then.
+  /// Throws `STYLE_NOT_READY` until the style has loaded, in place of the
+  /// errors maplibre-gl-js throws then.
   void _ensureStyleReady() {
     if (!_styleReady) {
       throw PlatformException(
@@ -1890,9 +1890,8 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
-  /// Throws `SOURCE_NOT_FOUND`, as Android and iOS do, for a source the style
-  /// does not hold. maplibre-gl-js does not add a layer of such a source, and
-  /// only says so through an error event.
+  /// Throws `SOURCE_NOT_FOUND` for a source the style does not hold.
+  /// maplibre-gl-js would skip a layer of it and only fire an error event.
   void _ensureSourceExists(String sourceId) {
     if (_map.getSource(sourceId) == null) throw _sourceNotFound(sourceId);
   }
@@ -1914,8 +1913,8 @@ class MapLibreMapController extends MapLibrePlatform
       .callMethod<JSObject?>('getSource'.toJS, sourceId.toJS);
 
   /// [belowLayerId] when the style holds that layer, and null otherwise, so a
-  /// layer added below a missing one goes on top, as on Android and iOS.
-  /// maplibre-gl-js would not add it at all.
+  /// layer added below a missing one goes on top. maplibre-gl-js would not add
+  /// it at all.
   String? _existingLayerId(String? belowLayerId) =>
       belowLayerId != null && _map.getLayer(belowLayerId) != null
           ? belowLayerId
@@ -2069,8 +2068,7 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
-  /// and `SOURCE_NOT_FOUND` without such a source, as Android and iOS do,
-  /// where this ignored the call.
+  /// and `SOURCE_NOT_FOUND` without such a source.
   GeoJsonSource _geoJsonSource(String sourceId) {
     _ensureStyleReady();
     final source = _map.getSource(sourceId);
@@ -2463,10 +2461,9 @@ class MapLibreMapController extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    // Before anything else: a second add used to pass silently and attach the
-    // hover listeners to the existing layer once more. Then, as on Android
-    // and iOS, the source, which maplibre-gl-js would only report through an
-    // error event, without adding the layer.
+    // Checked first: a second add would attach the hover listeners to the
+    // existing layer again, and maplibre-gl-js reports a missing source only
+    // through an error event.
     _ensureStyleReady();
     _ensureNewLayerId(layerId);
     _ensureSourceExists(sourceId);
@@ -2789,7 +2786,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     if (url != null) {
       source.callMethod<JSAny?>('updateImage'.toJS, jsify({'url': url}));
-      // Its url is now a data URL, which getSourceProperties leaves out.
+      // Its url becomes a data URL, which getSourceProperties leaves out.
       _imageSourceIds.add(imageSourceId);
     }
   }
@@ -2799,8 +2796,7 @@ class MapLibreMapController extends MapLibrePlatform
   final _imageSourceIds = <String>{};
 
   /// The image source [imageSourceId] as maplibre-gl-js holds it. Throws
-  /// `SOURCE_NOT_FOUND` with the message of Android and iOS when the style
-  /// has no image source with that id.
+  /// `SOURCE_NOT_FOUND` when the style has no image source with that id.
   JSObject _imageSource(String imageSourceId) {
     final source = _jsSource(imageSourceId);
     if (source == null || _sourceType(imageSourceId) != 'image') {
@@ -2824,10 +2820,9 @@ class MapLibreMapController extends MapLibrePlatform
       [corner.longitude, corner.latitude],
   ];
 
-  /// [bytes] as a data URL an image source can load. Throws `INVALID_IMAGE`,
-  /// as Android and iOS do, for bytes the browser cannot decode as an image:
-  /// maplibre-gl-js would only report them through an error event, after the
-  /// call.
+  /// [bytes] as a data URL an image source can load. Throws `INVALID_IMAGE`
+  /// for bytes the browser cannot decode, which maplibre-gl-js would report
+  /// only later, through an error event.
   static Future<String> _imageDataUrl(Uint8List bytes) async {
     try {
       final bitmap =
