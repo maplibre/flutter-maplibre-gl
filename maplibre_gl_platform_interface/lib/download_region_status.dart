@@ -1,4 +1,12 @@
-part of '../maplibre_gl.dart';
+/// The events of an offline region download.
+///
+/// A library of its own rather than part of the platform interface: one of
+/// the classes is called [Error], and every library importing the platform
+/// interface would otherwise see it in place of `dart:core`'s `Error`.
+/// `maplibre_gl` exports it for apps.
+library;
+
+import 'package:flutter/services.dart';
 
 abstract class DownloadRegionStatus {}
 
