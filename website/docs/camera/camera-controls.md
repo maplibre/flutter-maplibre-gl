@@ -28,7 +28,7 @@ await controller.animateCamera(
 );
 ```
 
-The future completes when the animation ends: `true` once the camera has arrived, `false` if another camera call or a gesture cut it short. `easeCamera` completes the same way.
+The future completes when the animation ends: `true` once the camera has arrived, `false` if another camera call, a gesture or disposing the map cut it short. `easeCamera` completes the same way.
 
 ## `moveCamera`: instant jump
 

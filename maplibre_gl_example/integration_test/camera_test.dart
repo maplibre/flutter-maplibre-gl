@@ -2,9 +2,10 @@
 //
 // Covered: moveCamera with every CameraUpdate kind, the values moveCamera,
 // animateCamera and easeCamera complete with, including false when another
-// camera call or new padding cuts an animation short, animated moves landing
-// on their target, getVisibleRegion, toScreenLocation / toScreenLocationBatch /
-// toLatLng, getMetersPerPixelAtLatitude, setCameraBounds, the
+// camera call, new padding or disposing the map cuts an animation short,
+// animated moves landing on their target, getVisibleRegion, toScreenLocation /
+// toScreenLocationBatch / toLatLng, getMetersPerPixelAtLatitude,
+// setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
 // controller's cached cameraPosition, the onCameraMove / onCameraIdle
 // callbacks and the INVALID_ARGUMENT answer to calls Android and iOS cannot
@@ -25,7 +26,7 @@ import 'dart:math';
 import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:flutter/widgets.dart'
-    show AndroidViewSurface, EdgeInsets, Size, ValueNotifier;
+    show AndroidViewSurface, EdgeInsets, Size, SizedBox, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -226,7 +227,7 @@ void main() {
       expect(camera.zoom, closeTo(3, 0.05));
 
       // A scroll that moved the camera is a success like any other update.
-      _expectMoveResult(result, 'scrollBy');
+      expect(result, isTrue, reason: 'scrollBy');
     });
 
     testWidgets('bearingTo and tiltTo rotate and pitch in place', (
@@ -552,7 +553,7 @@ void main() {
           controller.moveCamera(entry.value),
           'moveCamera ${entry.key}',
         );
-        _expectMoveResult(result, entry.key);
+        expect(result, isTrue, reason: entry.key);
       }
     });
   });
@@ -711,6 +712,46 @@ void main() {
         expect(await pumpUntil(tester, second, 'second easeCamera'), isTrue);
         final camera = await _queryCamera(tester, controller);
         expect(_isNear(camera, target), isTrue, reason: '$camera');
+      },
+    );
+
+    // The map goes away with the animation still running: the waiting call
+    // completes with false instead of never.
+    testWidgets(
+      'an animateCamera cut short by disposing the map completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 30),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await tester.pumpWidget(const SizedBox());
+
+        expect(
+          await pumpUntil(tester, animation, 'animateCamera on a disposed map'),
+          isFalse,
+        );
+      },
+    );
+
+    testWidgets(
+      'an easeCamera cut short by disposing the map completes with false',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final animation = controller.easeCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+          duration: const Duration(seconds: 30),
+        );
+        await pumpFor(tester, const Duration(milliseconds: 300));
+        await tester.pumpWidget(const SizedBox());
+
+        expect(
+          await pumpUntil(tester, animation, 'easeCamera on a disposed map'),
+          isFalse,
+        );
       },
     );
 
@@ -1315,16 +1356,6 @@ Future<CameraPosition> _queryCamera(
 /// than something these tests define.
 double _screenScale(WidgetTester tester) =>
     testPlatform == TestPlatform.android ? tester.view.devicePixelRatio : 1.0;
-
-/// moveCamera completes with true on success; on iOS it is documented to
-/// always complete with null.
-void _expectMoveResult(bool? result, String label) {
-  if (testPlatform == TestPlatform.ios) {
-    expect(result, isNull, reason: label);
-  } else {
-    expect(result, isTrue, reason: label);
-  }
-}
 
 bool _isNear(CameraPosition camera, CameraPosition target) =>
     (camera.target.latitude - target.target.latitude).abs() < 0.05 &&
