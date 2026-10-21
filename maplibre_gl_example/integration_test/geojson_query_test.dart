@@ -476,7 +476,6 @@ void main() {
       final controller = await _pumpMapWithCluster(tester);
       await _waitForCluster(tester, controller);
 
-      // iOS said sourceNotFound.
       await expectPlatformError(
         tester,
         controller.getClusterExpansionZoom('missing', 1),

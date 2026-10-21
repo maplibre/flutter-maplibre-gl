@@ -324,8 +324,7 @@ void main() {
       );
       downloaded.add(restored.id);
 
-      // Android failed this resume with ResumeRegionError: no download of
-      // this session followed the region.
+      // No download of this session follows the region.
       await pumpUntil(
         tester,
         resumeOfflineRegionDownload(restored.id),

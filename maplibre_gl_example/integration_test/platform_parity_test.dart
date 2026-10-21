@@ -258,7 +258,6 @@ void main() {
       await _waitForRendered(tester, controller, p1);
       final rect = await _leftColumnRect(tester, controller);
 
-      // iOS raised an Objective-C exception for these, which ended the app.
       await _expectInvalidFilter(
         tester,
         controller.queryRenderedFeatures(p1, [_layerId], _unknownOperator),
@@ -322,7 +321,6 @@ void main() {
       );
 
       // Like the point and source queries: any other JSON value is no filter.
-      // iOS filtered with it, so `false` found nothing and an object crashed.
       for (final filter in ['false', 'true', '3', '{"n": 3}', 'null']) {
         final features = await pumpUntil(
           tester,
@@ -347,8 +345,7 @@ void main() {
       );
       expect(_ids(filtered), {3});
 
-      // Text that is not JSON cannot be a filter. iOS ignored it and Android
-      // failed with a bare "error"; both now answer the same error.
+      // Text that is not JSON cannot be a filter.
       final error = await expectPlatformError(
         tester,
         controller.queryRenderedFeaturesInRect(rect, [_layerId], 'n == 3'),
@@ -440,7 +437,7 @@ void main() {
         ['get', 'n'],
         2,
       ];
-      // Android took only line, fill and symbol layers.
+      // Every layer type that has a filter takes one.
       for (final layerId in [_layerId, 'points-heatmap', 'points-extrusion']) {
         expect(
           await _setLayerFilter(tester, platform, layerId, jsonEncode(filter)),
@@ -458,8 +455,8 @@ void main() {
         );
       }
 
-      // A filter MapLibre rejects crashed iOS, and Android reported it as set.
-      // Now it is false and the layer keeps its filter.
+      // A filter MapLibre rejects answers false, and the layer keeps its
+      // filter.
       for (final rejected in [
         jsonEncode(_unknownOperator),
         jsonEncode([
@@ -576,9 +573,8 @@ void main() {
         'addImageLayer',
       );
 
-      // Android moved the corners before it read the bytes, so a failed call
-      // still moved the image. No call reads the corners back, so this pins
-      // the error and that the source is still there and still updates.
+      // A failed call must not move the corners. No call reads them back, so
+      // this checks the error and that the source still updates.
       await expectPlatformError(
         tester,
         controller.updateImageSource('image', _notAnImage, _movedQuad),
@@ -606,8 +602,6 @@ void main() {
         'getLayerIds',
       );
 
-      // Android added these layers, which then drew nothing, and iOS said
-      // sourceNotFound or noSuchSource. Web added nothing and said nothing.
       final calls = <String, Future<Object?> Function()>{
         'addCircleLayer':
             () => controller.addCircleLayer(
@@ -842,8 +836,6 @@ void main() {
         'addImageSource',
       );
 
-      // iOS failed the image layer with noSuchLayer and the background layer
-      // with LAYER_NOT_FOUND_ERROR. Web added none of them.
       final calls = <String, Future<Object?> Function()>{
         'circles':
             () => controller.addCircleLayer(
@@ -882,9 +874,6 @@ void main() {
       final controller = await pumpMap(tester);
       await _addPoints(tester, controller);
 
-      // Android added the layer without the filter, or failed with a bare
-      // "error" for one that is not an expression. Web added nothing and
-      // said nothing.
       for (final filter in <Object>[
         _unknownOperator,
         [
@@ -953,8 +942,8 @@ void main() {
         'addImageSource',
       );
 
-      // Android and web ignored these, iOS said sourceNotFound. A source
-      // that is not GeoJSON counts as missing, as for updateImageSource.
+      // A source that is not GeoJSON counts as missing, as for
+      // updateImageSource.
       for (final sourceId in ['no-such-source', 'image']) {
         await expectPlatformError(
           tester,
@@ -990,8 +979,6 @@ void main() {
         'addCircleLayer',
       );
 
-      // iOS failed a geometry with genericError and ignored a collection,
-      // Android ignored both, and web failed with a TypeError.
       for (final notAFeature in <Map<String, dynamic>>[
         {
           'type': 'Point',
@@ -1007,7 +994,7 @@ void main() {
         );
       }
 
-      // iOS failed this with genericError: its data was not a collection.
+      // The data is a lone Feature, which counts as a collection of one.
       await pumpUntil(
         tester,
         controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
@@ -1037,7 +1024,6 @@ void main() {
         'addSource',
       );
 
-      // iOS failed with genericError, Android and web did nothing.
       await pumpUntil(
         tester,
         controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
@@ -1716,13 +1702,6 @@ void main() {
         'setStyle with a broken style',
       );
 
-      // What iOS answered before, where Android said STYLE_NOT_READY:
-      // nothing for the properties, a success for addImageSource and
-      // removeSource, SOURCE_NOT_FOUND for updateImageSource,
-      // LAYER_NOT_FOUND_ERROR for the layer calls, noSuchSource for the
-      // image layers, every id as unknown for setLayersVisibility, and
-      // styleNotFound for the rest. Android answered a success for the
-      // GeoJSON source calls and a bare "error" for addSource.
       // One at a time: a call that fails before it is awaited would be an
       // unhandled error.
       final calls = <String, Future<Object?> Function()>{
