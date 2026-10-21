@@ -137,7 +137,7 @@ final class FeatureCollectionText {
    */
   private static final class Scanner {
     private final String json;
-    // Indexed directly: on ART this is several times faster than charAt.
+    // Indexed directly, which costs less per character than charAt.
     private final char[] chars;
     private int pos;
 
