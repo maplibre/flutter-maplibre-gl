@@ -108,7 +108,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * The built-in annotation setup no longer throws an unhandled error when the style is not ready or is replaced while it runs (#1088).
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
 * **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background (#1105).
-* Updating or dragging a circle or symbol annotation sends only that annotation to the map instead of every annotation of its manager, so a drag no longer slows down as annotations are added (#NNNN).
+* Updating or dragging a circle or symbol annotation sends only that annotation to the map instead of every annotation of its manager, which made drags slow with many annotations (#NNNN).
 * **Android**: `setGeoJsonFeature` no longer serializes every feature of the source again on the platform thread, so updating or dragging one feature of a large source, line and fill annotations included, is faster (#NNNN).
 
 ### Docs
