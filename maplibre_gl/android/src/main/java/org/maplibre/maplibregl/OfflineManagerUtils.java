@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
@@ -27,7 +28,6 @@ abstract class OfflineManagerUtils {
   // The error codes of the offline calls and download events. iOS answers the
   // same codes, with the same messages where the case is the same.
   private static final String REGION_NOT_FOUND = "REGION_NOT_FOUND";
-  private static final String REGION_NOT_RESUMABLE = "REGION_NOT_RESUMABLE";
   private static final String OFFLINE_DATABASE_ERROR = "OFFLINE_DATABASE_ERROR";
   private static final String AMBIENT_CACHE_ERROR = "AMBIENT_CACHE_ERROR";
   private static final String INVALID_REGION_DEFINITION = "INVALID_REGION_DEFINITION";
@@ -46,15 +46,22 @@ abstract class OfflineManagerUtils {
    */
   private static final long PROGRESS_EMIT_MIN_INTERVAL_MS = 100L;
 
-  /** Holds the state needed to observe and control an in-progress download. */
+  /**
+   * Holds the state needed to observe and control an in-progress download.
+   * {@code channelHandler} is null for a region resumed without a download of
+   * this session behind it: nothing listens to it on the Dart side.
+   */
   static class ActiveDownload {
     final OfflineRegion region;
-    final OfflineDownloadEvents channelHandler;
+    @Nullable final OfflineDownloadEvents channelHandler;
     final AtomicBoolean isComplete;
     long lastProgressEmitMs;
     long lastEmittedCompletedCount;
 
-    ActiveDownload(OfflineRegion region, OfflineDownloadEvents channelHandler, AtomicBoolean isComplete) {
+    ActiveDownload(
+        OfflineRegion region,
+        @Nullable OfflineDownloadEvents channelHandler,
+        AtomicBoolean isComplete) {
       this.region = region;
       this.channelHandler = channelHandler;
       this.isComplete = isComplete;
@@ -137,10 +144,12 @@ abstract class OfflineManagerUtils {
       }
       // Terminate the in-flight download on the Dart side so its stream
       // subscription is cleaned up and the awaiting Future resolves.
-      ad.channelHandler.onError(
-          DATABASE_RESET,
-          "Offline database was reset before the download completed",
-          null);
+      if (ad.channelHandler != null) {
+        ad.channelHandler.onError(
+            DATABASE_RESET,
+            "Offline database was reset before the download completed",
+            null);
+      }
     }
     activeDownloads.clear();
 
@@ -161,10 +170,11 @@ abstract class OfflineManagerUtils {
 
   /**
    * Creates and sets an {@link OfflineRegion.OfflineRegionObserver} on the given region.
-   * The observer forwards progress, completion, and error events to the channel handler.
+   * The observer forwards progress, completion, and error events to the channel handler,
+   * when there is one, and stops the download once it completes either way.
    */
   private static void setObserverOnRegion(
-      OfflineRegion region, OfflineDownloadEvents channelHandler,
+      OfflineRegion region, @Nullable OfflineDownloadEvents channelHandler,
       AtomicBoolean isComplete, Context context) {
     OfflineRegion.OfflineRegionObserver observer =
         new OfflineRegion.OfflineRegionObserver() {
@@ -179,7 +189,14 @@ abstract class OfflineManagerUtils {
               isComplete.set(true);
               region.setDownloadState(OfflineRegion.STATE_INACTIVE);
               activeDownloads.remove(region.getId());
-              channelHandler.onSuccess();
+              if (channelHandler != null) {
+                channelHandler.onSuccess();
+              }
+              return;
+            }
+            // Nothing listens to the progress of a region resumed without a
+            // download of this session behind it.
+            if (channelHandler == null) {
               return;
             }
             // Throttle: when tiles come from cache, the SDK fires hundreds of
@@ -232,6 +249,11 @@ abstract class OfflineManagerUtils {
             region.setDownloadState(OfflineRegion.STATE_INACTIVE);
             activeDownloads.remove(region.getId());
             isComplete.set(true);
+            // A region nobody listens to stops and stays, as iOS leaves a pack
+            // no download of the session follows.
+            if (channelHandler == null) {
+              return;
+            }
             channelHandler.onError(
                 TILE_COUNT_LIMIT_EXCEEDED,
                 "MapLibre tile count limit exceeded: " + limit,
@@ -351,10 +373,12 @@ abstract class OfflineManagerUtils {
     if (active != null) {
       active.isComplete.set(true);
       active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
-      active.channelHandler.onError(
-          REGION_REPLACED,
-          "Region was replaced by a new download of the same area",
-          null);
+      if (active.channelHandler != null) {
+        active.channelHandler.onError(
+            REGION_REPLACED,
+            "Region was replaced by a new download of the same area",
+            null);
+      }
     }
   }
 
@@ -474,10 +498,12 @@ abstract class OfflineManagerUtils {
       active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
       // Terminate the in-flight download on the Dart side so its stream
       // subscription is cleaned up and the awaiting Future resolves.
-      active.channelHandler.onError(
-          REGION_DELETED,
-          "Region was deleted before the download completed",
-          null);
+      if (active.channelHandler != null) {
+        active.channelHandler.onError(
+            REGION_DELETED,
+            "Region was deleted before the download completed",
+            null);
+      }
     }
     OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
@@ -542,18 +568,45 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_ACTIVE);
       result.success(null);
     } else {
-      findRegionById(context, id, result, foundRegion -> {
-        // Region was not tracked (e.g. app restarted, or its download
-        // finished): there is no channel handler to send progress events to,
-        // so return an error.
-        result.error(
-            REGION_NOT_RESUMABLE,
-            "There is no download of offline region "
-                + id
-                + " to resume. Start it again with downloadOfflineRegion.",
-            null);
-      });
+      // No download of this session behind the region: it was paused before
+      // the app restarted, merged in, or its download ended. Resume it as iOS
+      // does.
+      findRegionById(
+          context, id, result, foundRegion -> resumeUntracked(result, context, foundRegion));
     }
+  }
+
+  /**
+   * Resumes a region no download of this session follows. Nothing listens to
+   * it on the Dart side, so it sends no download events, as on iOS;
+   * getOfflineRegionStatus follows it. It is tracked so that pause, status
+   * and delete reach the region object whose download runs, and its observer
+   * stops the download once it completes. A complete region is left as it is.
+   */
+  private static void resumeUntracked(
+      MethodChannel.Result result, Context context, OfflineRegion region) {
+    region.getStatus(
+        new OfflineRegion.OfflineRegionStatusCallback() {
+          @Override
+          public void onStatus(OfflineRegionStatus status) {
+            // Nothing left to download. Another resume of the same region may
+            // also have started it while this one read the status.
+            if (status.isComplete() || activeDownloads.containsKey(region.getId())) {
+              result.success(null);
+              return;
+            }
+            AtomicBoolean isComplete = new AtomicBoolean(false);
+            activeDownloads.put(region.getId(), new ActiveDownload(region, null, isComplete));
+            setObserverOnRegion(region, null, isComplete, context);
+            region.setDownloadState(OfflineRegion.STATE_ACTIVE);
+            result.success(null);
+          }
+
+          @Override
+          public void onError(String error) {
+            result.error(OFFLINE_DATABASE_ERROR, error, null);
+          }
+        });
   }
 
   private interface RegionCallback {
