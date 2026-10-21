@@ -117,11 +117,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 details: nil
             ))
         }
-        MapLibreMapHostApiSetup.setUp(
-            binaryMessenger: binaryMessenger,
-            api: nil,
-            messageChannelSuffix: channelSuffix
-        )
+        // Leaves the handlers alone if a newer map with the same view id
+        // already took the channels over, as after a hot restart.
+        hostApi.unregister(binaryMessenger: binaryMessenger, messageChannelSuffix: channelSuffix)
         mapView.delegate = nil
         if let recognizers = mapView.gestureRecognizers {
             for recognizer in recognizers {
@@ -195,11 +193,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         super.init()
 
         hostApi.controller = self
-        MapLibreMapHostApiSetup.setUp(
-            binaryMessenger: binaryMessenger,
-            api: hostApi,
-            messageChannelSuffix: channelSuffix
-        )
+        hostApi.register(binaryMessenger: binaryMessenger, messageChannelSuffix: channelSuffix)
 
         mapView.delegate = self
         (mapView as? LocationPuckMapView)?.onTintColorDidChange = { [weak self] in

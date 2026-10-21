@@ -14,6 +14,56 @@ import Foundation
 final class MapHostApi: MapLibreMapHostApi {
     weak var controller: MapLibreMapController?
 
+    // MARK: Registration
+
+    /// A map's channels: its view id as suffix, on one engine's messenger.
+    private struct Channels: Hashable {
+        let messenger: ObjectIdentifier
+        let suffix: String
+    }
+
+    /// The API whose handlers each map's channels currently hold. Read and
+    /// written on the main thread only, where the engine requires handlers
+    /// to be set.
+    private static var owners: [Channels: ObjectIdentifier] = [:]
+
+    /// Sets up this API's handlers on the channels of the map with the given
+    /// suffix, taking them over from any API that held them.
+    func register(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String) {
+        MapLibreMapHostApiSetup.setUp(
+            binaryMessenger: binaryMessenger,
+            api: self,
+            messageChannelSuffix: messageChannelSuffix
+        )
+        let channels = Channels(
+            messenger: ObjectIdentifier(binaryMessenger),
+            suffix: messageChannelSuffix
+        )
+        Self.owners[channels] = ObjectIdentifier(self)
+    }
+
+    /// Removes the handlers `register` set up, unless another API took the
+    /// channels over since.
+    ///
+    /// After a hot restart the new Dart code numbers its platform views from
+    /// 0 again, so a new map can get the view id of an old one whose
+    /// controller is still alive, and register first. Removing the handlers
+    /// by channel name in the old controller's late `deinit` would leave the
+    /// new map without them: frozen, every call failing.
+    func unregister(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String) {
+        let channels = Channels(
+            messenger: ObjectIdentifier(binaryMessenger),
+            suffix: messageChannelSuffix
+        )
+        guard Self.owners[channels] == ObjectIdentifier(self) else { return }
+        Self.owners[channels] = nil
+        MapLibreMapHostApiSetup.setUp(
+            binaryMessenger: binaryMessenger,
+            api: nil,
+            messageChannelSuffix: messageChannelSuffix
+        )
+    }
+
     // MARK: Map
 
     func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void) {
