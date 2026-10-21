@@ -227,7 +227,7 @@ void main() {
       expect(camera.zoom, closeTo(3, 0.05));
 
       // A scroll that moved the camera is a success like any other update.
-      _expectMoveResult(result, 'scrollBy');
+      expect(result, isTrue, reason: 'scrollBy');
     });
 
     testWidgets('bearingTo and tiltTo rotate and pitch in place', (
@@ -553,7 +553,7 @@ void main() {
           controller.moveCamera(entry.value),
           'moveCamera ${entry.key}',
         );
-        _expectMoveResult(result, entry.key);
+        expect(result, isTrue, reason: entry.key);
       }
     });
   });
@@ -1356,16 +1356,6 @@ Future<CameraPosition> _queryCamera(
 /// than something these tests define.
 double _screenScale(WidgetTester tester) =>
     testPlatform == TestPlatform.android ? tester.view.devicePixelRatio : 1.0;
-
-/// moveCamera completes with true on success; on iOS it is documented to
-/// always complete with null.
-void _expectMoveResult(bool? result, String label) {
-  if (testPlatform == TestPlatform.ios) {
-    expect(result, isNull, reason: label);
-  } else {
-    expect(result, isTrue, reason: label);
-  }
-}
 
 bool _isNear(CameraPosition camera, CameraPosition target) =>
     (camera.target.latitude - target.target.latitude).abs() < 0.05 &&
