@@ -5,21 +5,26 @@ part of '../maplibre_gl.dart';
 /// Flutter calls [registerWith] before `main()` runs, through the
 /// `dartPluginClass` of this package; apps never need to. Where the generated
 /// registrant does not run, such as an isolate the app spawns, the global
-/// functions install it on first use.
+/// functions and [MapLibreMap] install it on first use.
 ///
 /// @nodoc
 class MapLibreNativePlugin {
   MapLibreNativePlugin._();
 
-  /// Installs the Pigeon-based implementation of the plugin-wide calls.
+  /// Installs the Pigeon-based implementation of the plugin-wide calls and
+  /// of the calls of each map.
   ///
-  /// [globalHostApi] replaces the generated client, for tests.
+  /// [globalHostApi] replaces the generated client of the plugin-wide calls,
+  /// and [mapHostApi] builds the client of the map with the given platform
+  /// view id in place of the generated one, for tests.
   static void registerWith({
     @visibleForTesting MapLibreGlobalHostApi? globalHostApi,
+    @visibleForTesting MapLibreMapHostApi Function(int id)? mapHostApi,
   }) {
     MapLibreGlobalPlatform.instance = _MapLibreNativeGlobalPlatform(
       globalHostApi ?? MapLibreGlobalHostApi(),
     );
+    MapLibrePlatform.createInstance = () => _MapLibreNativePlatform(mapHostApi);
   }
 }
 

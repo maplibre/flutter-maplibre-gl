@@ -206,6 +206,501 @@ class PgOfflineDownloadEvent {
   }
 }
 
+/// A geographical location, in degrees.
+class PgLatLng {
+  PgLatLng({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  double latitude;
+
+  double longitude;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      latitude,
+      longitude,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgLatLng decode(Object result) {
+    result as List<Object?>;
+    return PgLatLng(
+      latitude: result[0]! as double,
+      longitude: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgLatLng || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(latitude, other.latitude) &&
+        _deepEquals(longitude, other.longitude);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgLatLng(latitude: $latitude, longitude: $longitude)';
+  }
+}
+
+/// A point of the map view, in logical pixels from its top left corner.
+class PgScreenPoint {
+  PgScreenPoint({
+    required this.x,
+    required this.y,
+  });
+
+  double x;
+
+  double y;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      x,
+      y,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgScreenPoint decode(Object result) {
+    result as List<Object?>;
+    return PgScreenPoint(
+      x: result[0]! as double,
+      y: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgScreenPoint || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(x, other.x) && _deepEquals(y, other.y);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgScreenPoint(x: $x, y: $y)';
+  }
+}
+
+/// The camera of a map: the `position` map of `camera#onMove` and
+/// `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+class PgCameraPosition {
+  PgCameraPosition({
+    required this.bearing,
+    required this.target,
+    required this.tilt,
+    required this.zoom,
+  });
+
+  double bearing;
+
+  PgLatLng target;
+
+  double tilt;
+
+  double zoom;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      bearing,
+      target,
+      tilt,
+      zoom,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraPosition decode(Object result) {
+    result as List<Object?>;
+    return PgCameraPosition(
+      bearing: result[0]! as double,
+      target: result[1]! as PgLatLng,
+      tilt: result[2]! as double,
+      zoom: result[3]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraPosition || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(bearing, other.bearing) &&
+        _deepEquals(target, other.target) &&
+        _deepEquals(tilt, other.tilt) &&
+        _deepEquals(zoom, other.zoom);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraPosition(bearing: $bearing, target: $target, tilt: $tilt, zoom: $zoom)';
+  }
+}
+
+/// The compass heading of a user location update: the `heading` map of
+/// `map#onUserLocationUpdated`. Only iOS sends one.
+class PgUserHeading {
+  PgUserHeading({
+    this.magneticHeading,
+    this.trueHeading,
+    this.headingAccuracy,
+    this.x,
+    this.y,
+    this.z,
+    required this.timestamp,
+  });
+
+  double? magneticHeading;
+
+  double? trueHeading;
+
+  double? headingAccuracy;
+
+  double? x;
+
+  double? y;
+
+  double? z;
+
+  /// Milliseconds since the epoch.
+  int timestamp;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      magneticHeading,
+      trueHeading,
+      headingAccuracy,
+      x,
+      y,
+      z,
+      timestamp,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgUserHeading decode(Object result) {
+    result as List<Object?>;
+    return PgUserHeading(
+      magneticHeading: result[0] as double?,
+      trueHeading: result[1] as double?,
+      headingAccuracy: result[2] as double?,
+      x: result[3] as double?,
+      y: result[4] as double?,
+      z: result[5] as double?,
+      timestamp: result[6]! as int,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgUserHeading || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(magneticHeading, other.magneticHeading) &&
+        _deepEquals(trueHeading, other.trueHeading) &&
+        _deepEquals(headingAccuracy, other.headingAccuracy) &&
+        _deepEquals(x, other.x) &&
+        _deepEquals(y, other.y) &&
+        _deepEquals(z, other.z) &&
+        _deepEquals(timestamp, other.timestamp);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgUserHeading(magneticHeading: $magneticHeading, trueHeading: $trueHeading, headingAccuracy: $headingAccuracy, x: $x, y: $y, z: $z, timestamp: $timestamp)';
+  }
+}
+
+/// A user location update: the `userLocation` map of
+/// `map#onUserLocationUpdated`.
+class PgUserLocation {
+  PgUserLocation({
+    required this.position,
+    this.altitude,
+    this.bearing,
+    this.speed,
+    this.horizontalAccuracy,
+    this.verticalAccuracy,
+    required this.timestamp,
+  });
+
+  /// The legacy `position` list, `[latitude, longitude]`.
+  PgLatLng position;
+
+  double? altitude;
+
+  double? bearing;
+
+  double? speed;
+
+  double? horizontalAccuracy;
+
+  /// Absent on Android before API 26.
+  double? verticalAccuracy;
+
+  /// Milliseconds since the epoch.
+  int timestamp;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      position,
+      altitude,
+      bearing,
+      speed,
+      horizontalAccuracy,
+      verticalAccuracy,
+      timestamp,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgUserLocation decode(Object result) {
+    result as List<Object?>;
+    return PgUserLocation(
+      position: result[0]! as PgLatLng,
+      altitude: result[1] as double?,
+      bearing: result[2] as double?,
+      speed: result[3] as double?,
+      horizontalAccuracy: result[4] as double?,
+      verticalAccuracy: result[5] as double?,
+      timestamp: result[6]! as int,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgUserLocation || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(position, other.position) &&
+        _deepEquals(altitude, other.altitude) &&
+        _deepEquals(bearing, other.bearing) &&
+        _deepEquals(speed, other.speed) &&
+        _deepEquals(horizontalAccuracy, other.horizontalAccuracy) &&
+        _deepEquals(verticalAccuracy, other.verticalAccuracy) &&
+        _deepEquals(timestamp, other.timestamp);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgUserLocation(position: $position, altitude: $altitude, bearing: $bearing, speed: $speed, horizontalAccuracy: $horizontalAccuracy, verticalAccuracy: $verticalAccuracy, timestamp: $timestamp)';
+  }
+}
+
+/// A tap on a feature of an interactive layer: the arguments of
+/// `feature#onTap`.
+class PgFeatureTap {
+  PgFeatureTap({
+    this.id,
+    required this.point,
+    required this.latLng,
+    this.layerId,
+  });
+
+  /// The feature id, as the SDK reports it.
+  Object? id;
+
+  /// The legacy `x` and `y`.
+  PgScreenPoint point;
+
+  /// The legacy `lat` and `lng`.
+  PgLatLng latLng;
+
+  String? layerId;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      point,
+      latLng,
+      layerId,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgFeatureTap decode(Object result) {
+    result as List<Object?>;
+    return PgFeatureTap(
+      id: result[0],
+      point: result[1]! as PgScreenPoint,
+      latLng: result[2]! as PgLatLng,
+      layerId: result[3] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgFeatureTap || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) &&
+        _deepEquals(point, other.point) &&
+        _deepEquals(latLng, other.latLng) &&
+        _deepEquals(layerId, other.layerId);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgFeatureTap(id: $id, point: $point, latLng: $latLng, layerId: $layerId)';
+  }
+}
+
+/// One step of a feature drag: the arguments of `feature#onDrag`.
+class PgFeatureDrag {
+  PgFeatureDrag({
+    this.id,
+    required this.point,
+    required this.origin,
+    required this.current,
+    required this.delta,
+    required this.eventType,
+  });
+
+  /// The feature id, as the SDK reports it.
+  Object? id;
+
+  /// The legacy `x` and `y`.
+  PgScreenPoint point;
+
+  /// The legacy `originLat` and `originLng`.
+  PgLatLng origin;
+
+  /// The legacy `currentLat` and `currentLng`.
+  PgLatLng current;
+
+  /// The legacy `deltaLat` and `deltaLng`.
+  PgLatLng delta;
+
+  /// `start`, `drag` or `end`.
+  String eventType;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      point,
+      origin,
+      current,
+      delta,
+      eventType,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgFeatureDrag decode(Object result) {
+    result as List<Object?>;
+    return PgFeatureDrag(
+      id: result[0],
+      point: result[1]! as PgScreenPoint,
+      origin: result[2]! as PgLatLng,
+      current: result[3]! as PgLatLng,
+      delta: result[4]! as PgLatLng,
+      eventType: result[5]! as String,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgFeatureDrag || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) &&
+        _deepEquals(point, other.point) &&
+        _deepEquals(origin, other.origin) &&
+        _deepEquals(current, other.current) &&
+        _deepEquals(delta, other.delta) &&
+        _deepEquals(eventType, other.eventType);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgFeatureDrag(id: $id, point: $point, origin: $origin, current: $current, delta: $delta, eventType: $eventType)';
+  }
+}
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -218,6 +713,27 @@ class _PigeonCodec extends StandardMessageCodec {
       writeValue(buffer, value.index);
     } else if (value is PgOfflineDownloadEvent) {
       buffer.putUint8(130);
+      writeValue(buffer, value.encode());
+    } else if (value is PgLatLng) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    } else if (value is PgScreenPoint) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraPosition) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.encode());
+    } else if (value is PgUserHeading) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.encode());
+    } else if (value is PgUserLocation) {
+      buffer.putUint8(135);
+      writeValue(buffer, value.encode());
+    } else if (value is PgFeatureTap) {
+      buffer.putUint8(136);
+      writeValue(buffer, value.encode());
+    } else if (value is PgFeatureDrag) {
+      buffer.putUint8(137);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -232,6 +748,20 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : PgOfflineDownloadStatus.values[value];
       case 130:
         return PgOfflineDownloadEvent.decode(readValue(buffer)!);
+      case 131:
+        return PgLatLng.decode(readValue(buffer)!);
+      case 132:
+        return PgScreenPoint.decode(readValue(buffer)!);
+      case 133:
+        return PgCameraPosition.decode(readValue(buffer)!);
+      case 134:
+        return PgUserHeading.decode(readValue(buffer)!);
+      case 135:
+        return PgUserLocation.decode(readValue(buffer)!);
+      case 136:
+        return PgFeatureTap.decode(readValue(buffer)!);
+      case 137:
+        return PgFeatureDrag.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -659,6 +1189,2432 @@ abstract class MapLibreOfflineDownloadFlutterApi {
               args[1]! as PgOfflineDownloadEvent;
           try {
             await api.onDownloadEvent(arg_downloadId, arg_event);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+  }
+}
+
+/// The calls of one map, from Dart to native. Each map has its own channels,
+/// told apart by a message channel suffix: the platform view id of the map.
+///
+/// Every method stands for one call of the method channel these messages
+/// replace, named in the first line of its documentation. Its parameters are
+/// named after the keys of that call's argument map, so native can rebuild
+/// the call and run it through the handler it already has. The documentation
+/// notes where a key was left out of the map when null, and where the
+/// arguments were not a map. Answers that Dart parses further, such as maps
+/// of features or camera positions, come back as [Object] in the shape the
+/// handler already answers with.
+class MapLibreMapHostApi {
+  /// Constructor for [MapLibreMapHostApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  MapLibreMapHostApi({
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) : pigeonVar_binaryMessenger = binaryMessenger,
+       pigeonVar_messageChannelSuffix =
+           messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+  /// map#waitForMap
+  ///
+  /// The legacy call had no arguments. Answers once the map is ready.
+  Future<void> mapWaitForMap() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapWaitForMap$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#update
+  ///
+  /// Answers with the camera position map.
+  Future<Object?> mapUpdate(Map<String, Object?> options) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdate$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[options],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// camera#animate
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  Future<bool?> cameraAnimate(List<Object?> cameraUpdate, int? duration) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraAnimate$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[cameraUpdate, duration],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue as bool?;
+  }
+
+  /// camera#move
+  Future<bool?> cameraMove(List<Object?> cameraUpdate) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraMove$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[cameraUpdate],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue as bool?;
+  }
+
+  /// map#updateMyLocationTrackingMode
+  ///
+  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  Future<void> mapUpdateMyLocationTrackingMode(int mode) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateMyLocationTrackingMode$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[mode],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// locationComponent#setTrackingCameraOptions
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  Future<bool?> locationComponentSetTrackingCameraOptions(
+    double tilt,
+    int? duration,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetTrackingCameraOptions$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[tilt, duration],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue as bool?;
+  }
+
+  /// locationComponent#setManualLocation
+  ///
+  /// The legacy arguments were [update] itself, not a map holding it under a
+  /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
+  /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
+  /// `bearing` and `speed` only when set.
+  Future<void> locationComponentSetManualLocation(
+    Map<String, Object?> update,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetManualLocation$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[update],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#matchMapLanguageWithDeviceDefault
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapMatchMapLanguageWithDeviceDefault() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapMatchMapLanguageWithDeviceDefault$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#updateContentInsets
+  ///
+  /// [bounds] holds `top`, `left`, `bottom` and `right`.
+  Future<void> mapUpdateContentInsets(
+    Map<String, double> bounds,
+    bool animated,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateContentInsets$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[bounds, animated],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#setMapLanguage
+  Future<void> mapSetMapLanguage(String language) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMapLanguage$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[language],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#setTelemetryEnabled
+  Future<void> mapSetTelemetryEnabled(bool enabled) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetTelemetryEnabled$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[enabled],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#getTelemetryEnabled
+  ///
+  /// The legacy call had no arguments.
+  Future<bool> mapGetTelemetryEnabled() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetTelemetryEnabled$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as bool;
+  }
+
+  /// map#setMaximumFps
+  Future<void> mapSetMaximumFps(int fps) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMaximumFps$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[fps],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#forceOnlineMode
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapForceOnlineMode() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapForceOnlineMode$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#pause
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapPause() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapPause$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#resume
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapResume() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapResume$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// camera#ease
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
+  /// value, and was omitted from the legacy map when null.
+  Future<bool> cameraEase(
+    List<Object?> cameraUpdate,
+    int? duration,
+    String? interpolation,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraEase$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[cameraUpdate, duration, interpolation],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as bool;
+  }
+
+  /// map#queryCameraPosition
+  ///
+  /// The legacy call had no arguments. Answers with the camera position map.
+  Future<Object?> mapQueryCameraPosition() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#editGeoJsonSource
+  ///
+  /// Answers with `{result: bool}`.
+  Future<Object?> mapEditGeoJsonSource(String id, String data) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonSource$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[id, data],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#editGeoJsonUrl
+  ///
+  /// Answers with `{result: bool}`.
+  Future<Object?> mapEditGeoJsonUrl(String id, String url) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonUrl$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[id, url],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#setLayerFilter
+  ///
+  /// [filter] is the JSON string the caller passed. Answers with
+  /// `{result: bool}`.
+  Future<Object?> mapSetLayerFilter(String id, String filter) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetLayerFilter$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[id, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#getStyle
+  ///
+  /// The legacy call had no arguments. Answers with `{result: bool, json:
+  /// String?}`.
+  Future<Object?> mapGetStyle() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#setCustomHeaders
+  ///
+  /// [filter] holds URL patterns, not a style filter.
+  Future<void> mapSetCustomHeaders(
+    Map<String, String> headers,
+    List<String> filter,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCustomHeaders$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[headers, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#getCustomHeaders
+  ///
+  /// The legacy arguments were an empty map. Answers with the headers map.
+  Future<Object?> mapGetCustomHeaders() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#queryRenderedFeatures
+  ///
+  /// The point form of the call. [filter] is the expression as a list, not
+  /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
+  Future<Object?> mapQueryRenderedFeaturesAtPoint(
+    double x,
+    double y,
+    List<String> layerIds,
+    List<Object?>? filter,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesAtPoint$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[x, y, layerIds, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#queryRenderedFeatures
+  ///
+  /// The rectangle form of the call. [filter] is the JSON string the caller
+  /// passed. Answers with `{features: [String]}`, each feature a JSON string.
+  Future<Object?> mapQueryRenderedFeaturesInRect(
+    double left,
+    double top,
+    double right,
+    double bottom,
+    List<String> layerIds,
+    String? filter,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesInRect$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[left, top, right, bottom, layerIds, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#querySourceFeatures
+  ///
+  /// [filter] is the expression as a list, not encoded. Answers with
+  /// `{features: [String]}`, each feature a JSON string.
+  Future<Object?> mapQuerySourceFeatures(
+    String sourceId,
+    String? sourceLayerId,
+    List<Object?>? filter,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQuerySourceFeatures$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, sourceLayerId, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// source#getClusterExpansionZoom
+  Future<int> sourceGetClusterExpansionZoom(
+    String sourceId,
+    int clusterId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterExpansionZoom$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, clusterId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as int;
+  }
+
+  /// source#getClusterChildren
+  ///
+  /// Answers with `{features: [String]}`, each feature a JSON string.
+  Future<Object?> sourceGetClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterChildren$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, clusterId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// source#getClusterLeaves
+  ///
+  /// Answers with `{features: [String]}`, each feature a JSON string.
+  Future<Object?> sourceGetClusterLeaves(
+    String sourceId,
+    int clusterId,
+    int limit,
+    int offset,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterLeaves$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, clusterId, limit, offset],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#invalidateAmbientCache
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapInvalidateAmbientCache() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapInvalidateAmbientCache$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#clearAmbientCache
+  ///
+  /// The legacy call had no arguments.
+  Future<void> mapClearAmbientCache() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapClearAmbientCache$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// locationComponent#getLastLocation
+  ///
+  /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
+  /// or null when there is no location.
+  Future<Object?> locationComponentGetLastLocation() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#getVisibleRegion
+  ///
+  /// The legacy call had no arguments. Answers with `{sw: [latitude,
+  /// longitude], ne: [latitude, longitude]}`.
+  Future<Object?> mapGetVisibleRegion() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#addImage
+  ///
+  /// [length] is the length of [bytes].
+  Future<void> styleAddImage(
+    String name,
+    Uint8List bytes,
+    int length,
+    bool sdf,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[name, bytes, length, sdf],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#addImageSource
+  ///
+  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+  /// each a `[latitude, longitude]` list.
+  Future<void> styleAddImageSource(
+    String imageSourceId,
+    Uint8List bytes,
+    int length,
+    List<Object?> coordinates,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImageSource$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[imageSourceId, bytes, length, coordinates],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#updateImageSource
+  ///
+  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+  /// each a `[latitude, longitude]` list. The null ones were sent as null.
+  Future<void> styleUpdateImageSource(
+    String imageSourceId,
+    Uint8List? bytes,
+    int? length,
+    List<Object?>? coordinates,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleUpdateImageSource$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[imageSourceId, bytes, length, coordinates],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#toScreenLocation
+  ///
+  /// Answers with `{x, y}`.
+  Future<Object?> mapToScreenLocation(double latitude, double longitude) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocation$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[latitude, longitude],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#toScreenLocationBatch
+  ///
+  /// [coordinates] holds latitude and longitude pairs, one after the other.
+  /// Answers with x and y pairs in the same order.
+  Future<Float64List> mapToScreenLocationBatch(Float64List coordinates) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocationBatch$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[coordinates],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as Float64List;
+  }
+
+  /// style#removeSource
+  Future<void> styleRemoveSource(String sourceId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveSource$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#addLayer
+  Future<void> styleAddLayer(
+    String imageLayerId,
+    String imageSourceId,
+    double? minzoom,
+    double? maxzoom,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[imageLayerId, imageSourceId, minzoom, maxzoom],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#addLayerBelow
+  Future<void> styleAddLayerBelow(
+    String imageLayerId,
+    String imageSourceId,
+    String belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayerBelow$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[imageLayerId, imageSourceId, belowLayerId, minzoom, maxzoom],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#removeLayer
+  Future<void> styleRemoveLayer(String layerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveLayer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#moveLayer
+  ///
+  /// [belowLayerId] was omitted from the legacy map when null.
+  Future<void> styleMoveLayer(String layerId, String? belowLayerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleMoveLayer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, belowLayerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#setFilter
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> styleSetFilter(String layerId, String filter) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetFilter$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#getFilter
+  ///
+  /// Answers with `{filter: String?}`, the expression as a JSON string.
+  Future<Object?> styleGetFilter(String layerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetFilter$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#toLatLng
+  ///
+  /// Answers with `{latitude, longitude}`.
+  Future<Object?> mapToLatLng(double x, double y) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToLatLng$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[x, y],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// map#getMetersPerPixelAtLatitude
+  ///
+  /// Answers with `{metersperpixel: double}`.
+  Future<Object?> mapGetMetersPerPixelAtLatitude(double latitude) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetMetersPerPixelAtLatitude$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[latitude],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// source#addGeoJson
+  ///
+  /// [geojson] is the data encoded by Dart.
+  Future<void> sourceAddGeoJson(String sourceId, String geojson) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceAddGeoJson$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, geojson],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// source#setGeoJson
+  ///
+  /// [geojson] is the data encoded by Dart.
+  Future<void> sourceSetGeoJson(String sourceId, String geojson) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetGeoJson$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, geojson],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// map#setCameraBounds
+  Future<void> mapSetCameraBounds(
+    double west,
+    double north,
+    double south,
+    double east,
+    int padding,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCameraBounds$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[west, north, south, east, padding],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// symbolLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> symbolLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.symbolLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        enableInteraction,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// lineLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> lineLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.lineLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        enableInteraction,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// layer#setProperties
+  Future<void> layerSetProperties(
+    String layerId,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetProperties$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// circleLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> circleLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.circleLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        enableInteraction,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// fillLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> fillLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        enableInteraction,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// fillExtrusionLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> fillExtrusionLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    bool enableInteraction,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillExtrusionLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        enableInteraction,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// style#addSource
+  ///
+  /// [properties] is the source in style-spec form.
+  Future<void> styleAddSource(
+    String sourceId,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddSource$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// rasterLayer#add
+  Future<void> rasterLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.rasterLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, layerId, belowLayerId, minzoom, maxzoom, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// hillshadeLayer#add
+  Future<void> hillshadeLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.hillshadeLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, layerId, belowLayerId, minzoom, maxzoom, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// colorReliefLayer#add
+  Future<void> colorReliefLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.colorReliefLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, layerId, belowLayerId, minzoom, maxzoom, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// backgroundLayer#add
+  Future<void> backgroundLayerAdd(
+    String layerId,
+    String? belowLayerId,
+    double? minzoom,
+    double? maxzoom,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.backgroundLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, belowLayerId, minzoom, maxzoom, properties],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// heatmapLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  Future<void> heatmapLayerAdd(
+    String sourceId,
+    String layerId,
+    String? belowLayerId,
+    String? sourceLayer,
+    double? minzoom,
+    double? maxzoom,
+    String filter,
+    Map<String, Object?> properties,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.heatmapLayerAdd$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        filter,
+        properties,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// source#setFeature
+  ///
+  /// [geojsonFeature] is the feature encoded by Dart.
+  Future<void> sourceSetFeature(String sourceId, String geojsonFeature) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, geojsonFeature],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// source#setFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it.
+  Future<void> sourceSetFeatureState(
+    String sourceId,
+    String featureId,
+    Map<String, Object?> state,
+    String? sourceLayer,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeatureState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, featureId, state, sourceLayer],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// source#removeFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it.
+  Future<void> sourceRemoveFeatureState(
+    String sourceId,
+    String? featureId,
+    String? stateKey,
+    String? sourceLayer,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceRemoveFeatureState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, featureId, stateKey, sourceLayer],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// source#getFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it. Answers
+  /// with `{state: String?}`, the state as a JSON string.
+  Future<Object?> sourceGetFeatureState(
+    String sourceId,
+    String featureId,
+    String? sourceLayer,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetFeatureState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId, featureId, sourceLayer],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#setLight
+  ///
+  /// [light] is the light in style-spec form.
+  Future<void> styleSetLight(Map<String, Object?> light) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetLight$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[light],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// layer#setVisibility
+  Future<void> layerSetVisibility(String layerId, bool visible) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, visible],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// layer#setVisibilityBatch
+  ///
+  /// Answers with the ids that matched no layer.
+  Future<List<String>?> layerSetVisibilityBatch(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibilityBatch$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerIds, visible],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return (pigeonVar_replyValue as List<Object?>?)?.cast<String>();
+  }
+
+  /// layer#setZoomRange
+  Future<void> layerSetZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetZoomRange$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId, minzoom, maxzoom],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// layer#getVisibility
+  ///
+  /// Answers with null when there is no such layer.
+  Future<bool?> layerGetVisibility(String layerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerGetVisibility$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue as bool?;
+  }
+
+  /// map#takeSnapshot
+  ///
+  /// [width] and [height] are in logical pixels, and each was omitted from
+  /// the legacy map when null. Answers with PNG bytes.
+  Future<Uint8List?> mapTakeSnapshot(int? width, int? height) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[width, height],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue as Uint8List?;
+  }
+
+  /// style#getLayerIds
+  ///
+  /// The legacy call had no arguments. Answers with `{layers: [String]}`.
+  Future<Object?> styleGetLayerIds() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#getSourceIds
+  ///
+  /// The legacy call had no arguments. Answers with `{sources: [String]}`.
+  Future<Object?> styleGetSourceIds() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#getLayerProperties
+  ///
+  /// Answers with `{properties: String}`, the layer as a JSON string, or
+  /// without `properties` when there is no such layer.
+  Future<Object?> styleGetLayerProperties(String layerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerProperties$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[layerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#getSourceProperties
+  ///
+  /// Answers with `{properties: String}`, the source as a JSON string, or
+  /// without `properties` when there is no such source.
+  Future<Object?> styleGetSourceProperties(String sourceId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceProperties$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[sourceId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+    return pigeonVar_replyValue;
+  }
+
+  /// style#setStyle
+  Future<void> styleSetStyle(String style) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetStyle$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[style],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+}
+
+/// The events of one map, from native to Dart, on channels told apart by the
+/// same suffix as [MapLibreMapHostApi].
+///
+/// Every method stands for one call native made on the method channel these
+/// messages replace, named in the first line of its documentation.
+abstract class MapLibreMapFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// feature#onTap
+  Future<void> featureOnTap(PgFeatureTap tap);
+
+  /// feature#onDrag
+  Future<void> featureOnDrag(PgFeatureDrag drag);
+
+  /// camera#onMoveStarted
+  ///
+  /// [isGesture] is whether the SDK reports a gesture of the user as the
+  /// cause of the move. The legacy call carried it on Android only.
+  Future<void> cameraOnMoveStarted(bool isGesture);
+
+  /// camera#onMove
+  Future<void> cameraOnMove(PgCameraPosition position);
+
+  /// camera#onIdle
+  ///
+  /// [position] is null when the map does not track the camera position.
+  Future<void> cameraOnIdle(PgCameraPosition? position);
+
+  /// map#onStyleLoaded
+  Future<void> mapOnStyleLoaded();
+
+  /// map#onMapClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  Future<void> mapOnMapClick(PgScreenPoint point, PgLatLng latLng);
+
+  /// map#onMapLongClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  Future<void> mapOnMapLongClick(PgScreenPoint point, PgLatLng latLng);
+
+  /// map#onCameraTrackingChanged
+  ///
+  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  Future<void> mapOnCameraTrackingChanged(int mode);
+
+  /// map#onCameraTrackingDismissed
+  Future<void> mapOnCameraTrackingDismissed();
+
+  /// map#onIdle
+  Future<void> mapOnIdle();
+
+  /// map#onUserLocationUpdated
+  Future<void> mapOnUserLocationUpdated(
+    PgUserLocation userLocation,
+    PgUserHeading? heading,
+  );
+
+  static void setUp(
+    MapLibreMapFlutterApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) {
+    messageChannelSuffix =
+        messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnTap$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgFeatureTap arg_tap = args[0]! as PgFeatureTap;
+          try {
+            await api.featureOnTap(arg_tap);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnDrag$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgFeatureDrag arg_drag = args[0]! as PgFeatureDrag;
+          try {
+            await api.featureOnDrag(arg_drag);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final bool arg_isGesture = args[0]! as bool;
+          try {
+            await api.cameraOnMoveStarted(arg_isGesture);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMove$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgCameraPosition arg_position = args[0]! as PgCameraPosition;
+          try {
+            await api.cameraOnMove(arg_position);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnIdle$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgCameraPosition? arg_position = args[0] as PgCameraPosition?;
+          try {
+            await api.cameraOnIdle(arg_position);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnStyleLoaded$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          try {
+            await api.mapOnStyleLoaded();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapClick$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgScreenPoint arg_point = args[0]! as PgScreenPoint;
+          final PgLatLng arg_latLng = args[1]! as PgLatLng;
+          try {
+            await api.mapOnMapClick(arg_point, arg_latLng);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapLongClick$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgScreenPoint arg_point = args[0]! as PgScreenPoint;
+          final PgLatLng arg_latLng = args[1]! as PgLatLng;
+          try {
+            await api.mapOnMapLongClick(arg_point, arg_latLng);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingChanged$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final int arg_mode = args[0]! as int;
+          try {
+            await api.mapOnCameraTrackingChanged(arg_mode);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingDismissed$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          try {
+            await api.mapOnCameraTrackingDismissed();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnIdle$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          try {
+            await api.mapOnIdle();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnUserLocationUpdated$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PgUserLocation arg_userLocation = args[0]! as PgUserLocation;
+          final PgUserHeading? arg_heading = args[1] as PgUserHeading?;
+          try {
+            await api.mapOnUserLocationUpdated(arg_userLocation, arg_heading);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

@@ -139,8 +139,8 @@ class _EditAnnotationAnimatedBodyState
   ///
   /// The animation listener starts this without awaiting it, so a call is
   /// usually in flight when the page is closed. Resuming after that reaches a
-  /// controller whose map is gone and fails with a `MissingPluginException`,
-  /// so every await below is followed by this check as well.
+  /// controller whose map is gone and fails with `MAP_DISPOSED`, so every
+  /// await below is followed by this check as well.
   bool get _canDrawAnnotations =>
       mounted &&
       _controller != null &&

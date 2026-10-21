@@ -12,6 +12,7 @@
 
 ### Deprecated
 * `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
+* `MapLibreMethodChannel` is deprecated. Android and iOS now register a Pigeon-based `MapLibrePlatform` from `maplibre_gl`, so this class no longer reaches native code; it stays exported for compatibility (#1115).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

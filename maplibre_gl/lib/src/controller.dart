@@ -262,18 +262,15 @@ class MapLibreMapController extends ChangeNotifier {
               await symbolManager!.initialize();
           }
         }
-      } on MissingPluginException {
-        // Disposing the map unregisters its channel on the native side, so a
-        // call still on its way fails like this. Nothing is left to set up.
-        if (isDisposed) return;
-        rethrow;
       } on PlatformException catch (error) {
         // Nobody awaits this listener, so whatever it throws is an unhandled
         // error. When the style this run was set up for is gone, because it
-        // was replaced or the native map does not hold it (yet), or the map
-        // itself is gone, that error says nothing the app can act on: the
-        // next style load disposes the half-built managers and sets them up
-        // again. Anything else is real.
+        // was replaced or the native map does not hold it (yet), that error
+        // says nothing the app can act on: the next style load disposes the
+        // half-built managers and sets them up again. Nor when the map itself
+        // is gone: disposing it removes its native handlers, so a call still
+        // on its way fails with MAP_DISPOSED, and nothing is left to set up.
+        // Anything else is real.
         final superseded = styleLoad != _styleLoadCount;
         if (superseded || isDisposed) return;
         if (!_isStyleNotReady(error)) rethrow;

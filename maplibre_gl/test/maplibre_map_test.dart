@@ -141,8 +141,8 @@ void main() {
         'widget goes away', (tester) async {
       // The controller listens to the platform before the map is created, so
       // a style can load while initPlatform is still running. If the widget
-      // goes away then, the annotation setup that load started fails against
-      // the closed channel and must not surface as an unhandled error.
+      // goes away then, the annotation setup that load started fails because
+      // the map is gone and must not surface as an unhandled error.
       final initDone = Completer<void>();
       platform.onInitPlatform = (_) => initDone.future;
       final sourceAdded = Completer<void>();
@@ -158,7 +158,7 @@ void main() {
       await tester.pump();
 
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
-      sourceAdded.completeError(MissingPluginException('map disposed'));
+      sourceAdded.completeError(PlatformException(code: 'MAP_DISPOSED'));
       initDone.complete();
       await tester.pump();
 

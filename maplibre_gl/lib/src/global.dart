@@ -22,6 +22,27 @@ MapLibreGlobalPlatform get _global {
   return MapLibreGlobalPlatform.instance;
 }
 
+// The same fallback for the platform of each map, which MapLibreMap creates
+// through this function. Where the registrant did not run, the factory still
+// returns the default method channel platform, which native no longer
+// answers, so the Android and iOS implementation replaces it. Only the map
+// factory is replaced: a global platform installed on its own stays.
+MapLibrePlatform _createMapLibrePlatform() {
+  final platform = MapLibrePlatform.createInstance();
+  if (!kIsWeb &&
+      // The deprecated default is what tells that nothing registered. Only
+      // the default itself: a subclass is a platform a package installed on
+      // purpose.
+      // ignore: deprecated_member_use
+      platform.runtimeType == MapLibreMethodChannel &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    MapLibrePlatform.createInstance = _MapLibreNativePlatform.new;
+    return MapLibrePlatform.createInstance();
+  }
+  return platform;
+}
+
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
 Future<void> installOfflineMapTiles(String tilesDb) =>

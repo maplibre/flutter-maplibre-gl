@@ -1,5 +1,8 @@
 ## Unreleased
 
+### Highlights
+0.28.0 makes Android, iOS and web work alike: the same call now gives the same result, the same error code and the same gesture on every platform. On Android and iOS the plugin now talks to native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, so a call that one platform lacks is caught before a release instead of failing in your app. Most apps upgrade without code changes: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
+
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
 * **iOS**: error codes are renamed to match Android and web. Update any `catch` on the old codes (#1055, #1068):
@@ -41,6 +44,8 @@
 * **Android**: the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`, and iOS reports the same code. Update any `catch` on the old code (#1111).
 * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException` that read like a broken plugin registration. MapLibre GL JS has no offline storage; catch `UnsupportedError` where you call them on web (#1114, #937).
 * `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it (#1114).
+* **Android, iOS**: a call that reaches a map after it was disposed fails with a `PlatformException` with code `MAP_DISPOSED` instead of a `MissingPluginException`. Update any `catch` on the old exception (#1115).
+* **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -62,7 +67,8 @@
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)). It fixes crashes when queries or feature state calls race with the map being disposed, and loads raster-dem tiles at the rounded zoom like web. The declared `minSdkVersion` is now 23, which MapLibre Android already required (#1080).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
-* **Android, iOS**: the plugin-wide calls (offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`) reach native through messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of a hand-written method channel, the first step of #465. Apps need no change (#1114).
+* **Android, iOS**: the plugin reaches native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, starting with the plugin-wide calls: offline regions, the offline database, the ambient cache, HTTP headers and `preWarm` (#1114).
+* **Android, iOS**: the calls and events of each map (taps, drags, camera moves, style loads, location updates) move to Pigeon too, which completes the switch (#465). `MapLibreMethodChannel` is deprecated and no longer reaches native code (#1115).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).

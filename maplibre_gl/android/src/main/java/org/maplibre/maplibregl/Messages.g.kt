@@ -280,6 +280,410 @@ data class PgOfflineDownloadEvent (
     return "PgOfflineDownloadEvent(status=$status, progress=$progress, completedResourceCount=$completedResourceCount, requiredResourceCount=$requiredResourceCount, completedResourceSize=$completedResourceSize, errorCode=$errorCode, errorMessage=$errorMessage, errorDetails=$errorDetails)"
   }
 }
+
+/**
+ * A geographical location, in degrees.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgLatLng (
+  val latitude: Double,
+  val longitude: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgLatLng {
+      val latitude = pigeonVar_list[0] as Double
+      val longitude = pigeonVar_list[1] as Double
+      return PgLatLng(latitude, longitude)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      latitude,
+      longitude,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgLatLng
+    return MessagesPigeonUtils.deepEquals(this.latitude, other.latitude) && MessagesPigeonUtils.deepEquals(this.longitude, other.longitude)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.latitude)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.longitude)
+    return result
+  }
+  override fun toString(): String {
+    return "PgLatLng(latitude=$latitude, longitude=$longitude)"
+  }
+}
+
+/**
+ * A point of the map view, in logical pixels from its top left corner.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgScreenPoint (
+  val x: Double,
+  val y: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgScreenPoint {
+      val x = pigeonVar_list[0] as Double
+      val y = pigeonVar_list[1] as Double
+      return PgScreenPoint(x, y)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      x,
+      y,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgScreenPoint
+    return MessagesPigeonUtils.deepEquals(this.x, other.x) && MessagesPigeonUtils.deepEquals(this.y, other.y)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.x)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.y)
+    return result
+  }
+  override fun toString(): String {
+    return "PgScreenPoint(x=$x, y=$y)"
+  }
+}
+
+/**
+ * The camera of a map: the `position` map of `camera#onMove` and
+ * `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraPosition (
+  val bearing: Double,
+  val target: PgLatLng,
+  val tilt: Double,
+  val zoom: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraPosition {
+      val bearing = pigeonVar_list[0] as Double
+      val target = pigeonVar_list[1] as PgLatLng
+      val tilt = pigeonVar_list[2] as Double
+      val zoom = pigeonVar_list[3] as Double
+      return PgCameraPosition(bearing, target, tilt, zoom)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      bearing,
+      target,
+      tilt,
+      zoom,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraPosition
+    return MessagesPigeonUtils.deepEquals(this.bearing, other.bearing) && MessagesPigeonUtils.deepEquals(this.target, other.target) && MessagesPigeonUtils.deepEquals(this.tilt, other.tilt) && MessagesPigeonUtils.deepEquals(this.zoom, other.zoom)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bearing)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.target)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.tilt)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zoom)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraPosition(bearing=$bearing, target=$target, tilt=$tilt, zoom=$zoom)"
+  }
+}
+
+/**
+ * The compass heading of a user location update: the `heading` map of
+ * `map#onUserLocationUpdated`. Only iOS sends one.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgUserHeading (
+  val magneticHeading: Double? = null,
+  val trueHeading: Double? = null,
+  val headingAccuracy: Double? = null,
+  val x: Double? = null,
+  val y: Double? = null,
+  val z: Double? = null,
+  /** Milliseconds since the epoch. */
+  val timestamp: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgUserHeading {
+      val magneticHeading = pigeonVar_list[0] as Double?
+      val trueHeading = pigeonVar_list[1] as Double?
+      val headingAccuracy = pigeonVar_list[2] as Double?
+      val x = pigeonVar_list[3] as Double?
+      val y = pigeonVar_list[4] as Double?
+      val z = pigeonVar_list[5] as Double?
+      val timestamp = pigeonVar_list[6] as Long
+      return PgUserHeading(magneticHeading, trueHeading, headingAccuracy, x, y, z, timestamp)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      magneticHeading,
+      trueHeading,
+      headingAccuracy,
+      x,
+      y,
+      z,
+      timestamp,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgUserHeading
+    return MessagesPigeonUtils.deepEquals(this.magneticHeading, other.magneticHeading) && MessagesPigeonUtils.deepEquals(this.trueHeading, other.trueHeading) && MessagesPigeonUtils.deepEquals(this.headingAccuracy, other.headingAccuracy) && MessagesPigeonUtils.deepEquals(this.x, other.x) && MessagesPigeonUtils.deepEquals(this.y, other.y) && MessagesPigeonUtils.deepEquals(this.z, other.z) && MessagesPigeonUtils.deepEquals(this.timestamp, other.timestamp)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.magneticHeading)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.trueHeading)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.headingAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.x)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.y)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.z)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.timestamp)
+    return result
+  }
+  override fun toString(): String {
+    return "PgUserHeading(magneticHeading=$magneticHeading, trueHeading=$trueHeading, headingAccuracy=$headingAccuracy, x=$x, y=$y, z=$z, timestamp=$timestamp)"
+  }
+}
+
+/**
+ * A user location update: the `userLocation` map of
+ * `map#onUserLocationUpdated`.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgUserLocation (
+  /** The legacy `position` list, `[latitude, longitude]`. */
+  val position: PgLatLng,
+  val altitude: Double? = null,
+  val bearing: Double? = null,
+  val speed: Double? = null,
+  val horizontalAccuracy: Double? = null,
+  /** Absent on Android before API 26. */
+  val verticalAccuracy: Double? = null,
+  /** Milliseconds since the epoch. */
+  val timestamp: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgUserLocation {
+      val position = pigeonVar_list[0] as PgLatLng
+      val altitude = pigeonVar_list[1] as Double?
+      val bearing = pigeonVar_list[2] as Double?
+      val speed = pigeonVar_list[3] as Double?
+      val horizontalAccuracy = pigeonVar_list[4] as Double?
+      val verticalAccuracy = pigeonVar_list[5] as Double?
+      val timestamp = pigeonVar_list[6] as Long
+      return PgUserLocation(position, altitude, bearing, speed, horizontalAccuracy, verticalAccuracy, timestamp)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      position,
+      altitude,
+      bearing,
+      speed,
+      horizontalAccuracy,
+      verticalAccuracy,
+      timestamp,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgUserLocation
+    return MessagesPigeonUtils.deepEquals(this.position, other.position) && MessagesPigeonUtils.deepEquals(this.altitude, other.altitude) && MessagesPigeonUtils.deepEquals(this.bearing, other.bearing) && MessagesPigeonUtils.deepEquals(this.speed, other.speed) && MessagesPigeonUtils.deepEquals(this.horizontalAccuracy, other.horizontalAccuracy) && MessagesPigeonUtils.deepEquals(this.verticalAccuracy, other.verticalAccuracy) && MessagesPigeonUtils.deepEquals(this.timestamp, other.timestamp)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.position)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.altitude)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bearing)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.speed)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.horizontalAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.verticalAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.timestamp)
+    return result
+  }
+  override fun toString(): String {
+    return "PgUserLocation(position=$position, altitude=$altitude, bearing=$bearing, speed=$speed, horizontalAccuracy=$horizontalAccuracy, verticalAccuracy=$verticalAccuracy, timestamp=$timestamp)"
+  }
+}
+
+/**
+ * A tap on a feature of an interactive layer: the arguments of
+ * `feature#onTap`.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgFeatureTap (
+  /** The feature id, as the SDK reports it. */
+  val id: Any? = null,
+  /** The legacy `x` and `y`. */
+  val point: PgScreenPoint,
+  /** The legacy `lat` and `lng`. */
+  val latLng: PgLatLng,
+  val layerId: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgFeatureTap {
+      val id = pigeonVar_list[0]
+      val point = pigeonVar_list[1] as PgScreenPoint
+      val latLng = pigeonVar_list[2] as PgLatLng
+      val layerId = pigeonVar_list[3] as String?
+      return PgFeatureTap(id, point, latLng, layerId)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      point,
+      latLng,
+      layerId,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgFeatureTap
+    return MessagesPigeonUtils.deepEquals(this.id, other.id) && MessagesPigeonUtils.deepEquals(this.point, other.point) && MessagesPigeonUtils.deepEquals(this.latLng, other.latLng) && MessagesPigeonUtils.deepEquals(this.layerId, other.layerId)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.id)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.point)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.latLng)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.layerId)
+    return result
+  }
+  override fun toString(): String {
+    return "PgFeatureTap(id=$id, point=$point, latLng=$latLng, layerId=$layerId)"
+  }
+}
+
+/**
+ * One step of a feature drag: the arguments of `feature#onDrag`.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgFeatureDrag (
+  /** The feature id, as the SDK reports it. */
+  val id: Any? = null,
+  /** The legacy `x` and `y`. */
+  val point: PgScreenPoint,
+  /** The legacy `originLat` and `originLng`. */
+  val origin: PgLatLng,
+  /** The legacy `currentLat` and `currentLng`. */
+  val current: PgLatLng,
+  /** The legacy `deltaLat` and `deltaLng`. */
+  val delta: PgLatLng,
+  /** `start`, `drag` or `end`. */
+  val eventType: String
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgFeatureDrag {
+      val id = pigeonVar_list[0]
+      val point = pigeonVar_list[1] as PgScreenPoint
+      val origin = pigeonVar_list[2] as PgLatLng
+      val current = pigeonVar_list[3] as PgLatLng
+      val delta = pigeonVar_list[4] as PgLatLng
+      val eventType = pigeonVar_list[5] as String
+      return PgFeatureDrag(id, point, origin, current, delta, eventType)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      point,
+      origin,
+      current,
+      delta,
+      eventType,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgFeatureDrag
+    return MessagesPigeonUtils.deepEquals(this.id, other.id) && MessagesPigeonUtils.deepEquals(this.point, other.point) && MessagesPigeonUtils.deepEquals(this.origin, other.origin) && MessagesPigeonUtils.deepEquals(this.current, other.current) && MessagesPigeonUtils.deepEquals(this.delta, other.delta) && MessagesPigeonUtils.deepEquals(this.eventType, other.eventType)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.id)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.point)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.origin)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.current)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.delta)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.eventType)
+    return result
+  }
+  override fun toString(): String {
+    return "PgFeatureDrag(id=$id, point=$point, origin=$origin, current=$current, delta=$delta, eventType=$eventType)"
+  }
+}
 private open class MessagesPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -293,6 +697,41 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
           PgOfflineDownloadEvent.fromList(it)
         }
       }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgLatLng.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgScreenPoint.fromList(it)
+        }
+      }
+      133.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraPosition.fromList(it)
+        }
+      }
+      134.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgUserHeading.fromList(it)
+        }
+      }
+      135.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgUserLocation.fromList(it)
+        }
+      }
+      136.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgFeatureTap.fromList(it)
+        }
+      }
+      137.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgFeatureDrag.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -304,6 +743,34 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
       }
       is PgOfflineDownloadEvent -> {
         stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is PgLatLng -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is PgScreenPoint -> {
+        stream.write(132)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraPosition -> {
+        stream.write(133)
+        writeValue(stream, value.toList())
+      }
+      is PgUserHeading -> {
+        stream.write(134)
+        writeValue(stream, value.toList())
+      }
+      is PgUserLocation -> {
+        stream.write(135)
+        writeValue(stream, value.toList())
+      }
+      is PgFeatureTap -> {
+        stream.write(136)
+        writeValue(stream, value.toList())
+      }
+      is PgFeatureDrag -> {
+        stream.write(137)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -713,6 +1180,2328 @@ class MapLibreOfflineDownloadFlutterApi(private val binaryMessenger: BinaryMesse
     val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreOfflineDownloadFlutterApi.onDownloadEvent$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(downloadIdArg, eventArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+}
+/**
+ * The calls of one map, from Dart to native. Each map has its own channels,
+ * told apart by a message channel suffix: the platform view id of the map.
+ *
+ * Every method stands for one call of the method channel these messages
+ * replace, named in the first line of its documentation. Its parameters are
+ * named after the keys of that call's argument map, so native can rebuild
+ * the call and run it through the handler it already has. The documentation
+ * notes where a key was left out of the map when null, and where the
+ * arguments were not a map. Answers that Dart parses further, such as maps
+ * of features or camera positions, come back as [Object] in the shape the
+ * handler already answers with.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface MapLibreMapHostApi {
+  /**
+   * map#waitForMap
+   *
+   * The legacy call had no arguments. Answers once the map is ready.
+   */
+  fun mapWaitForMap(callback: (Result<Unit>) -> Unit)
+  /**
+   * map#update
+   *
+   * Answers with the camera position map.
+   */
+  fun mapUpdate(options: Map<String, Any?>, callback: (Result<Any?>) -> Unit)
+  /**
+   * camera#animate
+   *
+   * [duration] is in milliseconds and was sent as null when unset.
+   */
+  fun cameraAnimate(cameraUpdate: List<Any?>, duration: Long?, callback: (Result<Boolean?>) -> Unit)
+  /** camera#move */
+  fun cameraMove(cameraUpdate: List<Any?>, callback: (Result<Boolean?>) -> Unit)
+  /**
+   * map#updateMyLocationTrackingMode
+   *
+   * [mode] is the index of the Dart `MyLocationTrackingMode`.
+   */
+  fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit)
+  /**
+   * locationComponent#setTrackingCameraOptions
+   *
+   * [duration] is in milliseconds and was sent as null when unset.
+   */
+  fun locationComponentSetTrackingCameraOptions(tilt: Double, duration: Long?, callback: (Result<Boolean?>) -> Unit)
+  /**
+   * locationComponent#setManualLocation
+   *
+   * The legacy arguments were [update] itself, not a map holding it under a
+   * key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
+   * always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
+   * `bearing` and `speed` only when set.
+   */
+  fun locationComponentSetManualLocation(update: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * map#matchMapLanguageWithDeviceDefault
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapMatchMapLanguageWithDeviceDefault(callback: (Result<Unit>) -> Unit)
+  /**
+   * map#updateContentInsets
+   *
+   * [bounds] holds `top`, `left`, `bottom` and `right`.
+   */
+  fun mapUpdateContentInsets(bounds: Map<String, Double>, animated: Boolean, callback: (Result<Unit>) -> Unit)
+  /** map#setMapLanguage */
+  fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit)
+  /** map#setTelemetryEnabled */
+  fun mapSetTelemetryEnabled(enabled: Boolean, callback: (Result<Unit>) -> Unit)
+  /**
+   * map#getTelemetryEnabled
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit)
+  /** map#setMaximumFps */
+  fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit)
+  /**
+   * map#forceOnlineMode
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit)
+  /**
+   * map#pause
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapPause(callback: (Result<Unit>) -> Unit)
+  /**
+   * map#resume
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapResume(callback: (Result<Unit>) -> Unit)
+  /**
+   * camera#ease
+   *
+   * [duration] is in milliseconds and was sent as null when unset.
+   * [interpolation] is the name of a Dart `CameraAnimationInterpolation`
+   * value, and was omitted from the legacy map when null.
+   */
+  fun cameraEase(cameraUpdate: List<Any?>, duration: Long?, interpolation: String?, callback: (Result<Boolean>) -> Unit)
+  /**
+   * map#queryCameraPosition
+   *
+   * The legacy call had no arguments. Answers with the camera position map.
+   */
+  fun mapQueryCameraPosition(callback: (Result<Any?>) -> Unit)
+  /**
+   * map#editGeoJsonSource
+   *
+   * Answers with `{result: bool}`.
+   */
+  fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#editGeoJsonUrl
+   *
+   * Answers with `{result: bool}`.
+   */
+  fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#setLayerFilter
+   *
+   * [filter] is the JSON string the caller passed. Answers with
+   * `{result: bool}`.
+   */
+  fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#getStyle
+   *
+   * The legacy call had no arguments. Answers with `{result: bool, json:
+   * String?}`.
+   */
+  fun mapGetStyle(callback: (Result<Any?>) -> Unit)
+  /**
+   * map#setCustomHeaders
+   *
+   * [filter] holds URL patterns, not a style filter.
+   */
+  fun mapSetCustomHeaders(headers: Map<String, String>, filter: List<String>, callback: (Result<Unit>) -> Unit)
+  /**
+   * map#getCustomHeaders
+   *
+   * The legacy arguments were an empty map. Answers with the headers map.
+   */
+  fun mapGetCustomHeaders(callback: (Result<Any?>) -> Unit)
+  /**
+   * map#queryRenderedFeatures
+   *
+   * The point form of the call. [filter] is the expression as a list, not
+   * encoded. Answers with `{features: [String]}`, each feature a JSON string.
+   */
+  fun mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: List<String>, filter: List<Any?>?, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#queryRenderedFeatures
+   *
+   * The rectangle form of the call. [filter] is the JSON string the caller
+   * passed. Answers with `{features: [String]}`, each feature a JSON string.
+   */
+  fun mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: List<String>, filter: String?, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#querySourceFeatures
+   *
+   * [filter] is the expression as a list, not encoded. Answers with
+   * `{features: [String]}`, each feature a JSON string.
+   */
+  fun mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: List<Any?>?, callback: (Result<Any?>) -> Unit)
+  /** source#getClusterExpansionZoom */
+  fun sourceGetClusterExpansionZoom(sourceId: String, clusterId: Long, callback: (Result<Long>) -> Unit)
+  /**
+   * source#getClusterChildren
+   *
+   * Answers with `{features: [String]}`, each feature a JSON string.
+   */
+  fun sourceGetClusterChildren(sourceId: String, clusterId: Long, callback: (Result<Any?>) -> Unit)
+  /**
+   * source#getClusterLeaves
+   *
+   * Answers with `{features: [String]}`, each feature a JSON string.
+   */
+  fun sourceGetClusterLeaves(sourceId: String, clusterId: Long, limit: Long, offset: Long, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#invalidateAmbientCache
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit)
+  /**
+   * map#clearAmbientCache
+   *
+   * The legacy call had no arguments.
+   */
+  fun mapClearAmbientCache(callback: (Result<Unit>) -> Unit)
+  /**
+   * locationComponent#getLastLocation
+   *
+   * The legacy call had no arguments. Answers with `{latitude, longitude}`,
+   * or null when there is no location.
+   */
+  fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit)
+  /**
+   * map#getVisibleRegion
+   *
+   * The legacy call had no arguments. Answers with `{sw: [latitude,
+   * longitude], ne: [latitude, longitude]}`.
+   */
+  fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit)
+  /**
+   * style#addImage
+   *
+   * [length] is the length of [bytes].
+   */
+  fun styleAddImage(name: String, bytes: ByteArray, length: Long, sdf: Boolean, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#addImageSource
+   *
+   * [length] is the length of [bytes]. [coordinates] holds the four corners,
+   * each a `[latitude, longitude]` list.
+   */
+  fun styleAddImageSource(imageSourceId: String, bytes: ByteArray, length: Long, coordinates: List<Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#updateImageSource
+   *
+   * [length] is the length of [bytes]. [coordinates] holds the four corners,
+   * each a `[latitude, longitude]` list. The null ones were sent as null.
+   */
+  fun styleUpdateImageSource(imageSourceId: String, bytes: ByteArray?, length: Long?, coordinates: List<Any?>?, callback: (Result<Unit>) -> Unit)
+  /**
+   * map#toScreenLocation
+   *
+   * Answers with `{x, y}`.
+   */
+  fun mapToScreenLocation(latitude: Double, longitude: Double, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#toScreenLocationBatch
+   *
+   * [coordinates] holds latitude and longitude pairs, one after the other.
+   * Answers with x and y pairs in the same order.
+   */
+  fun mapToScreenLocationBatch(coordinates: DoubleArray, callback: (Result<DoubleArray>) -> Unit)
+  /** style#removeSource */
+  fun styleRemoveSource(sourceId: String, callback: (Result<Unit>) -> Unit)
+  /** style#addLayer */
+  fun styleAddLayer(imageLayerId: String, imageSourceId: String, minzoom: Double?, maxzoom: Double?, callback: (Result<Unit>) -> Unit)
+  /** style#addLayerBelow */
+  fun styleAddLayerBelow(imageLayerId: String, imageSourceId: String, belowLayerId: String, minzoom: Double?, maxzoom: Double?, callback: (Result<Unit>) -> Unit)
+  /** style#removeLayer */
+  fun styleRemoveLayer(layerId: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#moveLayer
+   *
+   * [belowLayerId] was omitted from the legacy map when null.
+   */
+  fun styleMoveLayer(layerId: String, belowLayerId: String?, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#setFilter
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun styleSetFilter(layerId: String, filter: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#getFilter
+   *
+   * Answers with `{filter: String?}`, the expression as a JSON string.
+   */
+  fun styleGetFilter(layerId: String, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#toLatLng
+   *
+   * Answers with `{latitude, longitude}`.
+   */
+  fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit)
+  /**
+   * map#getMetersPerPixelAtLatitude
+   *
+   * Answers with `{metersperpixel: double}`.
+   */
+  fun mapGetMetersPerPixelAtLatitude(latitude: Double, callback: (Result<Any?>) -> Unit)
+  /**
+   * source#addGeoJson
+   *
+   * [geojson] is the data encoded by Dart.
+   */
+  fun sourceAddGeoJson(sourceId: String, geojson: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * source#setGeoJson
+   *
+   * [geojson] is the data encoded by Dart.
+   */
+  fun sourceSetGeoJson(sourceId: String, geojson: String, callback: (Result<Unit>) -> Unit)
+  /** map#setCameraBounds */
+  fun mapSetCameraBounds(west: Double, north: Double, south: Double, east: Double, padding: Long, callback: (Result<Unit>) -> Unit)
+  /**
+   * symbolLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * lineLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** layer#setProperties */
+  fun layerSetProperties(layerId: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * circleLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * fillLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * fillExtrusionLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * style#addSource
+   *
+   * [properties] is the source in style-spec form.
+   */
+  fun styleAddSource(sourceId: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** rasterLayer#add */
+  fun rasterLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** hillshadeLayer#add */
+  fun hillshadeLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** colorReliefLayer#add */
+  fun colorReliefLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** backgroundLayer#add */
+  fun backgroundLayerAdd(layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * heatmapLayer#add
+   *
+   * [filter] is the expression encoded by Dart, the string `null` when there
+   * is none.
+   */
+  fun heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * source#setFeature
+   *
+   * [geojsonFeature] is the feature encoded by Dart.
+   */
+  fun sourceSetFeature(sourceId: String, geojsonFeature: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * source#setFeatureState
+   *
+   * Android only: Dart rejects the call on iOS before sending it.
+   */
+  fun sourceSetFeatureState(sourceId: String, featureId: String, state: Map<String, Any?>, sourceLayer: String?, callback: (Result<Unit>) -> Unit)
+  /**
+   * source#removeFeatureState
+   *
+   * Android only: Dart rejects the call on iOS before sending it.
+   */
+  fun sourceRemoveFeatureState(sourceId: String, featureId: String?, stateKey: String?, sourceLayer: String?, callback: (Result<Unit>) -> Unit)
+  /**
+   * source#getFeatureState
+   *
+   * Android only: Dart rejects the call on iOS before sending it. Answers
+   * with `{state: String?}`, the state as a JSON string.
+   */
+  fun sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, callback: (Result<Any?>) -> Unit)
+  /**
+   * style#setLight
+   *
+   * [light] is the light in style-spec form.
+   */
+  fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** layer#setVisibility */
+  fun layerSetVisibility(layerId: String, visible: Boolean, callback: (Result<Unit>) -> Unit)
+  /**
+   * layer#setVisibilityBatch
+   *
+   * Answers with the ids that matched no layer.
+   */
+  fun layerSetVisibilityBatch(layerIds: List<String>, visible: Boolean, callback: (Result<List<String>?>) -> Unit)
+  /** layer#setZoomRange */
+  fun layerSetZoomRange(layerId: String, minzoom: Double, maxzoom: Double, callback: (Result<Unit>) -> Unit)
+  /**
+   * layer#getVisibility
+   *
+   * Answers with null when there is no such layer.
+   */
+  fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit)
+  /**
+   * map#takeSnapshot
+   *
+   * [width] and [height] are in logical pixels, and each was omitted from
+   * the legacy map when null. Answers with PNG bytes.
+   */
+  fun mapTakeSnapshot(width: Long?, height: Long?, callback: (Result<ByteArray?>) -> Unit)
+  /**
+   * style#getLayerIds
+   *
+   * The legacy call had no arguments. Answers with `{layers: [String]}`.
+   */
+  fun styleGetLayerIds(callback: (Result<Any?>) -> Unit)
+  /**
+   * style#getSourceIds
+   *
+   * The legacy call had no arguments. Answers with `{sources: [String]}`.
+   */
+  fun styleGetSourceIds(callback: (Result<Any?>) -> Unit)
+  /**
+   * style#getLayerProperties
+   *
+   * Answers with `{properties: String}`, the layer as a JSON string, or
+   * without `properties` when there is no such layer.
+   */
+  fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit)
+  /**
+   * style#getSourceProperties
+   *
+   * Answers with `{properties: String}`, the source as a JSON string, or
+   * without `properties` when there is no such source.
+   */
+  fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit)
+  /** style#setStyle */
+  fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit)
+
+  companion object {
+    /** The codec used by MapLibreMapHostApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      MessagesPigeonCodec()
+    }
+    /** Sets up an instance of `MapLibreMapHostApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: MapLibreMapHostApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapWaitForMap$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapWaitForMap{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdate$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val optionsArg = args[0] as Map<String, Any?>
+            api.mapUpdate(optionsArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraAnimate$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val cameraUpdateArg = args[0] as List<Any?>
+            val durationArg = args[1] as Long?
+            api.cameraAnimate(cameraUpdateArg, durationArg) { result: Result<Boolean?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraMove$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val cameraUpdateArg = args[0] as List<Any?>
+            api.cameraMove(cameraUpdateArg) { result: Result<Boolean?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateMyLocationTrackingMode$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val modeArg = args[0] as Long
+            api.mapUpdateMyLocationTrackingMode(modeArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetTrackingCameraOptions$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val tiltArg = args[0] as Double
+            val durationArg = args[1] as Long?
+            api.locationComponentSetTrackingCameraOptions(tiltArg, durationArg) { result: Result<Boolean?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetManualLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val updateArg = args[0] as Map<String, Any?>
+            api.locationComponentSetManualLocation(updateArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapMatchMapLanguageWithDeviceDefault$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapMatchMapLanguageWithDeviceDefault{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateContentInsets$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val boundsArg = args[0] as Map<String, Double>
+            val animatedArg = args[1] as Boolean
+            api.mapUpdateContentInsets(boundsArg, animatedArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMapLanguage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val languageArg = args[0] as String
+            api.mapSetMapLanguage(languageArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetTelemetryEnabled$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val enabledArg = args[0] as Boolean
+            api.mapSetTelemetryEnabled(enabledArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetTelemetryEnabled$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapGetTelemetryEnabled{ result: Result<Boolean> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMaximumFps$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val fpsArg = args[0] as Long
+            api.mapSetMaximumFps(fpsArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapForceOnlineMode$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapForceOnlineMode{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapPause$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapPause{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapResume$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapResume{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraEase$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val cameraUpdateArg = args[0] as List<Any?>
+            val durationArg = args[1] as Long?
+            val interpolationArg = args[2] as String?
+            api.cameraEase(cameraUpdateArg, durationArg, interpolationArg) { result: Result<Boolean> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapQueryCameraPosition{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val dataArg = args[1] as String
+            api.mapEditGeoJsonSource(idArg, dataArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonUrl$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val urlArg = args[1] as String
+            api.mapEditGeoJsonUrl(idArg, urlArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetLayerFilter$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val filterArg = args[1] as String
+            api.mapSetLayerFilter(idArg, filterArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapGetStyle{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCustomHeaders$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val headersArg = args[0] as Map<String, String>
+            val filterArg = args[1] as List<String>
+            api.mapSetCustomHeaders(headersArg, filterArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapGetCustomHeaders{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesAtPoint$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val xArg = args[0] as Double
+            val yArg = args[1] as Double
+            val layerIdsArg = args[2] as List<String>
+            val filterArg = args[3] as List<Any?>?
+            api.mapQueryRenderedFeaturesAtPoint(xArg, yArg, layerIdsArg, filterArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesInRect$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val leftArg = args[0] as Double
+            val topArg = args[1] as Double
+            val rightArg = args[2] as Double
+            val bottomArg = args[3] as Double
+            val layerIdsArg = args[4] as List<String>
+            val filterArg = args[5] as String?
+            api.mapQueryRenderedFeaturesInRect(leftArg, topArg, rightArg, bottomArg, layerIdsArg, filterArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQuerySourceFeatures$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val sourceLayerIdArg = args[1] as String?
+            val filterArg = args[2] as List<Any?>?
+            api.mapQuerySourceFeatures(sourceIdArg, sourceLayerIdArg, filterArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterExpansionZoom$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val clusterIdArg = args[1] as Long
+            api.sourceGetClusterExpansionZoom(sourceIdArg, clusterIdArg) { result: Result<Long> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterChildren$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val clusterIdArg = args[1] as Long
+            api.sourceGetClusterChildren(sourceIdArg, clusterIdArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterLeaves$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val clusterIdArg = args[1] as Long
+            val limitArg = args[2] as Long
+            val offsetArg = args[3] as Long
+            api.sourceGetClusterLeaves(sourceIdArg, clusterIdArg, limitArg, offsetArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapInvalidateAmbientCache$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapInvalidateAmbientCache{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapClearAmbientCache$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapClearAmbientCache{ result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.locationComponentGetLastLocation{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.mapGetVisibleRegion{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val nameArg = args[0] as String
+            val bytesArg = args[1] as ByteArray
+            val lengthArg = args[2] as Long
+            val sdfArg = args[3] as Boolean
+            api.styleAddImage(nameArg, bytesArg, lengthArg, sdfArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImageSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val imageSourceIdArg = args[0] as String
+            val bytesArg = args[1] as ByteArray
+            val lengthArg = args[2] as Long
+            val coordinatesArg = args[3] as List<Any?>
+            api.styleAddImageSource(imageSourceIdArg, bytesArg, lengthArg, coordinatesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleUpdateImageSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val imageSourceIdArg = args[0] as String
+            val bytesArg = args[1] as ByteArray?
+            val lengthArg = args[2] as Long?
+            val coordinatesArg = args[3] as List<Any?>?
+            api.styleUpdateImageSource(imageSourceIdArg, bytesArg, lengthArg, coordinatesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val latitudeArg = args[0] as Double
+            val longitudeArg = args[1] as Double
+            api.mapToScreenLocation(latitudeArg, longitudeArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocationBatch$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val coordinatesArg = args[0] as DoubleArray
+            api.mapToScreenLocationBatch(coordinatesArg) { result: Result<DoubleArray> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            api.styleRemoveSource(sourceIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayer$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val imageLayerIdArg = args[0] as String
+            val imageSourceIdArg = args[1] as String
+            val minzoomArg = args[2] as Double?
+            val maxzoomArg = args[3] as Double?
+            api.styleAddLayer(imageLayerIdArg, imageSourceIdArg, minzoomArg, maxzoomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayerBelow$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val imageLayerIdArg = args[0] as String
+            val imageSourceIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String
+            val minzoomArg = args[3] as Double?
+            val maxzoomArg = args[4] as Double?
+            api.styleAddLayerBelow(imageLayerIdArg, imageSourceIdArg, belowLayerIdArg, minzoomArg, maxzoomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveLayer$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            api.styleRemoveLayer(layerIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleMoveLayer$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val belowLayerIdArg = args[1] as String?
+            api.styleMoveLayer(layerIdArg, belowLayerIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetFilter$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val filterArg = args[1] as String
+            api.styleSetFilter(layerIdArg, filterArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetFilter$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            api.styleGetFilter(layerIdArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToLatLng$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val xArg = args[0] as Double
+            val yArg = args[1] as Double
+            api.mapToLatLng(xArg, yArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetMetersPerPixelAtLatitude$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val latitudeArg = args[0] as Double
+            api.mapGetMetersPerPixelAtLatitude(latitudeArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceAddGeoJson$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val geojsonArg = args[1] as String
+            api.sourceAddGeoJson(sourceIdArg, geojsonArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetGeoJson$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val geojsonArg = args[1] as String
+            api.sourceSetGeoJson(sourceIdArg, geojsonArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCameraBounds$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val westArg = args[0] as Double
+            val northArg = args[1] as Double
+            val southArg = args[2] as Double
+            val eastArg = args[3] as Double
+            val paddingArg = args[4] as Long
+            api.mapSetCameraBounds(westArg, northArg, southArg, eastArg, paddingArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.symbolLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val enableInteractionArg = args[7] as Boolean
+            val propertiesArg = args[8] as Map<String, Any?>
+            api.symbolLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.lineLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val enableInteractionArg = args[7] as Boolean
+            val propertiesArg = args[8] as Map<String, Any?>
+            api.lineLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetProperties$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val propertiesArg = args[1] as Map<String, Any?>
+            api.layerSetProperties(layerIdArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.circleLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val enableInteractionArg = args[7] as Boolean
+            val propertiesArg = args[8] as Map<String, Any?>
+            api.circleLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val enableInteractionArg = args[7] as Boolean
+            val propertiesArg = args[8] as Map<String, Any?>
+            api.fillLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillExtrusionLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val enableInteractionArg = args[7] as Boolean
+            val propertiesArg = args[8] as Map<String, Any?>
+            api.fillExtrusionLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val propertiesArg = args[1] as Map<String, Any?>
+            api.styleAddSource(sourceIdArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.rasterLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val minzoomArg = args[3] as Double?
+            val maxzoomArg = args[4] as Double?
+            val propertiesArg = args[5] as Map<String, Any?>
+            api.rasterLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, minzoomArg, maxzoomArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.hillshadeLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val minzoomArg = args[3] as Double?
+            val maxzoomArg = args[4] as Double?
+            val propertiesArg = args[5] as Map<String, Any?>
+            api.hillshadeLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, minzoomArg, maxzoomArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.colorReliefLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val minzoomArg = args[3] as Double?
+            val maxzoomArg = args[4] as Double?
+            val propertiesArg = args[5] as Map<String, Any?>
+            api.colorReliefLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, minzoomArg, maxzoomArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.backgroundLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val belowLayerIdArg = args[1] as String?
+            val minzoomArg = args[2] as Double?
+            val maxzoomArg = args[3] as Double?
+            val propertiesArg = args[4] as Map<String, Any?>
+            api.backgroundLayerAdd(layerIdArg, belowLayerIdArg, minzoomArg, maxzoomArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.heatmapLayerAdd$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val layerIdArg = args[1] as String
+            val belowLayerIdArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            val minzoomArg = args[4] as Double?
+            val maxzoomArg = args[5] as Double?
+            val filterArg = args[6] as String
+            val propertiesArg = args[7] as Map<String, Any?>
+            api.heatmapLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, propertiesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val geojsonFeatureArg = args[1] as String
+            api.sourceSetFeature(sourceIdArg, geojsonFeatureArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeatureState$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val featureIdArg = args[1] as String
+            val stateArg = args[2] as Map<String, Any?>
+            val sourceLayerArg = args[3] as String?
+            api.sourceSetFeatureState(sourceIdArg, featureIdArg, stateArg, sourceLayerArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceRemoveFeatureState$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val featureIdArg = args[1] as String?
+            val stateKeyArg = args[2] as String?
+            val sourceLayerArg = args[3] as String?
+            api.sourceRemoveFeatureState(sourceIdArg, featureIdArg, stateKeyArg, sourceLayerArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetFeatureState$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            val featureIdArg = args[1] as String
+            val sourceLayerArg = args[2] as String?
+            api.sourceGetFeatureState(sourceIdArg, featureIdArg, sourceLayerArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetLight$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val lightArg = args[0] as Map<String, Any?>
+            api.styleSetLight(lightArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val visibleArg = args[1] as Boolean
+            api.layerSetVisibility(layerIdArg, visibleArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibilityBatch$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdsArg = args[0] as List<String>
+            val visibleArg = args[1] as Boolean
+            api.layerSetVisibilityBatch(layerIdsArg, visibleArg) { result: Result<List<String>?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetZoomRange$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val minzoomArg = args[1] as Double
+            val maxzoomArg = args[2] as Double
+            api.layerSetZoomRange(layerIdArg, minzoomArg, maxzoomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerGetVisibility$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            api.layerGetVisibility(layerIdArg) { result: Result<Boolean?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val widthArg = args[0] as Long?
+            val heightArg = args[1] as Long?
+            api.mapTakeSnapshot(widthArg, heightArg) { result: Result<ByteArray?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.styleGetLayerIds{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.styleGetSourceIds{ result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerProperties$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            api.styleGetLayerProperties(layerIdArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceProperties$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sourceIdArg = args[0] as String
+            api.styleGetSourceProperties(sourceIdArg) { result: Result<Any?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetStyle$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val styleArg = args[0] as String
+            api.styleSetStyle(styleArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
+ * The events of one map, from native to Dart, on channels told apart by the
+ * same suffix as [MapLibreMapHostApi].
+ *
+ * Every method stands for one call native made on the method channel these
+ * messages replace, named in the first line of its documentation.
+ *
+ * Generated class from Pigeon that represents Flutter messages that can be called from Kotlin.
+ */
+class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by MapLibreMapFlutterApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      MessagesPigeonCodec()
+    }
+  }
+  /** feature#onTap */
+  fun featureOnTap(tapArg: PgFeatureTap, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnTap$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(tapArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** feature#onDrag */
+  fun featureOnDrag(dragArg: PgFeatureDrag, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnDrag$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(dragArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /**
+   * camera#onMoveStarted
+   *
+   * [isGesture] is whether the SDK reports a gesture of the user as the
+   * cause of the move. The legacy call carried it on Android only.
+   */
+  fun cameraOnMoveStarted(isGestureArg: Boolean, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(isGestureArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** camera#onMove */
+  fun cameraOnMove(positionArg: PgCameraPosition, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMove$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(positionArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /**
+   * camera#onIdle
+   *
+   * [position] is null when the map does not track the camera position.
+   */
+  fun cameraOnIdle(positionArg: PgCameraPosition?, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnIdle$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(positionArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** map#onStyleLoaded */
+  fun mapOnStyleLoaded(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnStyleLoaded$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /**
+   * map#onMapClick
+   *
+   * [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+   */
+  fun mapOnMapClick(pointArg: PgScreenPoint, latLngArg: PgLatLng, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapClick$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(pointArg, latLngArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /**
+   * map#onMapLongClick
+   *
+   * [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+   */
+  fun mapOnMapLongClick(pointArg: PgScreenPoint, latLngArg: PgLatLng, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapLongClick$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(pointArg, latLngArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /**
+   * map#onCameraTrackingChanged
+   *
+   * [mode] is the index of the Dart `MyLocationTrackingMode`.
+   */
+  fun mapOnCameraTrackingChanged(modeArg: Long, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingChanged$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(modeArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** map#onCameraTrackingDismissed */
+  fun mapOnCameraTrackingDismissed(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingDismissed$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** map#onIdle */
+  fun mapOnIdle(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnIdle$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(MessagesPigeonUtils.createConnectionError(channelName)))
+      } 
+    }
+  }
+  /** map#onUserLocationUpdated */
+  fun mapOnUserLocationUpdated(userLocationArg: PgUserLocation, headingArg: PgUserHeading?, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnUserLocationUpdated$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(userLocationArg, headingArg)) {
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(PigeonError(it[0] as String, it[1] as String, it[2] as String?)))

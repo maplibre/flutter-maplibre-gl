@@ -421,9 +421,14 @@ class MapLibreMap extends StatefulWidget {
   /// Assign it before the first [MapLibreMap] is built, ideally before
   /// `runApp()`; maps already on screen keep the mode they were created with.
   static bool get useHybridComposition =>
+      // Stored where it always was, which is where the Android and iOS
+      // platform reads it.
+      // ignore: deprecated_member_use
       MapLibreMethodChannel.useHybridComposition;
 
   static set useHybridComposition(bool useHybridComposition) =>
+      // Stored where the getter above reads it.
+      // ignore: deprecated_member_use
       MapLibreMethodChannel.useHybridComposition = useHybridComposition;
 
   /// Where the web implementation loads MapLibre GL JS from.
@@ -514,7 +519,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
   MapLibreMapController? _mapController;
 
   late MapLibreMapOptions _maplibreMapOptions;
-  final MapLibrePlatform _maplibrePlatform = MapLibrePlatform.createInstance();
+  final MapLibrePlatform _maplibrePlatform = _createMapLibrePlatform();
 
   /// Set in [dispose], which also tears the platform down. Creating a map is
   /// asynchronous and can outlive the widget that asked for it, so everything

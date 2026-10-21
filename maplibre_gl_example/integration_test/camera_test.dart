@@ -24,12 +24,16 @@
 import 'dart:math';
 
 import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
-import 'package:flutter/services.dart' show MethodChannel, PlatformException;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter/widgets.dart'
     show AndroidViewSurface, EdgeInsets, Size, SizedBox, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+// The generated messages are internal to maplibre_gl; the test drives them
+// directly to send a call the public API cannot.
+// ignore: implementation_imports
+import 'package:maplibre_gl/src/native/messages.g.dart';
 
 import 'support/map_harness.dart';
 
@@ -1262,18 +1266,16 @@ void main() {
     });
   });
 
-  // Calls the controller cannot produce, sent straight over the map's
-  // channel. They must fail with INVALID_ARGUMENT rather than never complete.
+  // A call the controller cannot produce, sent straight through the map's
+  // generated host API. It must fail with INVALID_ARGUMENT rather than never
+  // complete. Arguments of the wrong type, such as a non-numeric toLatLng,
+  // can no longer be sent: the generated API types them.
   group('invalid arguments', () {
     testWidgets('camera#move with an unknown update', (tester) async {
       await pumpMap(tester);
       final error = await pumpUntil(
         tester,
-        _errorOf(
-          _mapChannel(tester).invokeMethod('camera#move', <String, dynamic>{
-            'cameraUpdate': <dynamic>['bogus'],
-          }),
-        ),
+        _errorOf(_mapHostApi(tester).cameraMove(<Object?>['bogus'])),
         'camera#move bogus',
         timeout: const Duration(seconds: 10),
       );
@@ -1286,29 +1288,12 @@ void main() {
         ),
       );
     }, skip: testPlatform == TestPlatform.web);
-
-    testWidgets('map#toLatLng without numbers', (tester) async {
-      await pumpMap(tester);
-      final error = await pumpUntil(
-        tester,
-        _errorOf(
-          _mapChannel(tester).invokeMethod('map#toLatLng', <String, dynamic>{
-            'x': 'left',
-            'y': null,
-          }),
-        ),
-        'map#toLatLng malformed',
-        timeout: const Duration(seconds: 10),
-      );
-      expect(error, isA<PlatformException>());
-      expect((error! as PlatformException).code, 'INVALID_ARGUMENT');
-    }, skip: testPlatform == TestPlatform.web);
   });
 }
 
-/// The method channel of the map pumped by [pumpMap], for calls the
+/// The generated host API of the map pumped by [pumpMap], for calls the
 /// controller cannot send.
-MethodChannel _mapChannel(WidgetTester tester) {
+MapLibreMapHostApi _mapHostApi(WidgetTester tester) {
   final int id;
   if (testPlatform == TestPlatform.ios) {
     id =
@@ -1328,7 +1313,7 @@ MethodChannel _mapChannel(WidgetTester tester) {
                 .controller
                 .viewId;
   }
-  return MethodChannel('plugins.flutter.io/maplibre_gl_$id');
+  return MapLibreMapHostApi(messageChannelSuffix: '$id');
 }
 
 /// Completes with the error [call] fails with, or null if it succeeds.

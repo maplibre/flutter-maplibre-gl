@@ -1,3 +1,5 @@
+// MapLibreMethodChannel is deprecated but still works, so its tests stay.
+// ignore_for_file: deprecated_member_use_from_same_package
 import 'dart:convert';
 
 import 'package:flutter/services.dart';

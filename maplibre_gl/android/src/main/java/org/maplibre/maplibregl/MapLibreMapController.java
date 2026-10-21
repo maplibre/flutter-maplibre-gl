@@ -127,8 +127,10 @@ import io.flutter.plugin.platform.PlatformView;
 
 /**
  * Controller of a single MapLibre {@link MapView} instance exposed as a Flutter
- * {@link PlatformView}. Mediates between the Flutter method channel, the host
- * activity {@link Lifecycle}, and the native {@link MapView}.
+ * {@link PlatformView}. Mediates between the Pigeon channels of the map, the host
+ * activity {@link Lifecycle}, and the native {@link MapView}. Dart calls arrive through
+ * {@link MapHostApi}, which hands each one to {@link #onMethodCall} as the method call the
+ * former method channel delivered; events go back through {@link MapLibreMapFlutterApi}.
  *
  * <h2>Surviving activity recreation</h2>
  * Android can destroy and recreate the host activity at any time (rotation, "Don't keep
@@ -178,7 +180,9 @@ final class MapLibreMapController
   private static final long DEFAULT_TRACKING_TILT_DURATION_MS = 1250;
 
   private final int id;
-  private final MethodChannel methodChannel;
+  private final BinaryMessenger messenger;
+  /** Sends the events of this map to Dart. */
+  private final MapLibreMapFlutterApi flutterApi;
   private final MapLibreMapsPlugin.LifecycleProvider lifecycleProvider;
   private final MapLibreMapOptions mapLibreMapOptions;
   /**
@@ -306,7 +310,7 @@ final class MapLibreMapController
           mapLibreMap.addOnMapClickListener(MapLibreMapController.this);
           mapLibreMap.addOnMapLongClickListener(MapLibreMapController.this);
 
-          methodChannel.invokeMethod("map#onStyleLoaded", null);
+          flutterApi.mapOnStyleLoaded(PigeonReplies.IGNORE);
         }
       };
 
@@ -340,8 +344,10 @@ final class MapLibreMapController
     }
 
     mapViewContainer.addView(mapView);
-    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/maplibre_gl_" + id);
-    methodChannel.setMethodCallHandler(this);
+    // The channels of this map are told apart by the view id, on both sides.
+    this.messenger = messenger;
+    this.flutterApi = new MapLibreMapFlutterApi(messenger, String.valueOf(id));
+    MapLibreMapHostApi.Companion.setUp(messenger, new MapHostApi(this), String.valueOf(id));
   }
 
   @Override
@@ -496,7 +502,7 @@ final class MapLibreMapController
    * <p>State lost across recreation (must be re-applied from Dart on
    * {@code onStyleLoadedCallback}):
    * <ul>
-   *   <li>Sources / layers / images added at runtime via the method channel.</li>
+   *   <li>Sources / layers / images added at runtime from Dart.</li>
    *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
    *       initial style).</li>
    *   <li>Runtime tweaks applied via {@code map#update} after construction that
@@ -744,25 +750,22 @@ final class MapLibreMapController
       return;
     }
 
-    final Map<String, Object> userLocation = new HashMap<>(6);
-    userLocation.put("position", new double[] {location.getLatitude(), location.getLongitude()});
-    userLocation.put("speed", location.getSpeed());
-    userLocation.put("altitude", location.getAltitude());
-    userLocation.put("bearing", location.getBearing());
-    userLocation.put("speed", location.getSpeed());
-    userLocation.put("horizontalAccuracy", location.getAccuracy());
+    // Absent before API 26, which has no vertical accuracy.
+    Double verticalAccuracy = null;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      userLocation.put(
-          "verticalAccuracy",
-          (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-              ? location.getVerticalAccuracyMeters()
-              : null);
+      verticalAccuracy = (double) location.getVerticalAccuracyMeters();
     }
-    userLocation.put("timestamp", location.getTime());
-
-    final Map<String, Object> arguments = new HashMap<>(1);
-    arguments.put("userLocation", userLocation);
-    methodChannel.invokeMethod("map#onUserLocationUpdated", arguments);
+    final PgUserLocation userLocation =
+        new PgUserLocation(
+            new PgLatLng(location.getLatitude(), location.getLongitude()),
+            location.getAltitude(),
+            (double) location.getBearing(),
+            (double) location.getSpeed(),
+            (double) location.getAccuracy(),
+            verticalAccuracy,
+            location.getTime());
+    // Android reports no compass heading with the location.
+    flutterApi.mapOnUserLocationUpdated(userLocation, null, PigeonReplies.IGNORE);
   }
 
   // Returns a reply map carrying the layer's MapLibre style-spec JSON under
@@ -3863,10 +3866,8 @@ final class MapLibreMapController
 
   @Override
   public void onCameraMoveStarted(int reason) {
-    final Map<String, Object> arguments = new HashMap<>(2);
-    boolean isGesture = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
-    arguments.put("isGesture", isGesture);
-    methodChannel.invokeMethod("camera#onMoveStarted", arguments);
+    final boolean isGesture = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
+    flutterApi.cameraOnMoveStarted(isGesture, PigeonReplies.IGNORE);
   }
 
   @Override
@@ -3874,75 +3875,73 @@ final class MapLibreMapController
     if (!trackCameraPosition) {
       return;
     }
-    final Map<String, Object> arguments = new HashMap<>(2);
-    arguments.put("position", Convert.toJson(mapLibreMap.getCameraPosition()));
-    methodChannel.invokeMethod("camera#onMove", arguments);
+    flutterApi.cameraOnMove(
+        Convert.toPgCameraPosition(mapLibreMap.getCameraPosition()), PigeonReplies.IGNORE);
   }
 
   @Override
   public void onCameraIdle() {
-    final Map<String, Object> arguments = new HashMap<>(2);
-    if (trackCameraPosition) {
-      arguments.put("position", Convert.toJson(mapLibreMap.getCameraPosition()));
-    }
-    methodChannel.invokeMethod("camera#onIdle", arguments);
+    flutterApi.cameraOnIdle(
+        trackCameraPosition
+            ? Convert.toPgCameraPosition(mapLibreMap.getCameraPosition())
+            : null,
+        PigeonReplies.IGNORE);
   }
 
   @Override
   public void onCameraTrackingChanged(int currentMode) {
-    final Map<String, Object> arguments = new HashMap<>(2);
+    // The index of the Dart MyLocationTrackingMode.
+    final long mode;
     switch (currentMode) {
         case CameraMode.NONE:
-            arguments.put("mode", 0);
+            mode = 0;
             break;
         case CameraMode.TRACKING:
-            arguments.put("mode", 1);
+            mode = 1;
             break;
         case CameraMode.TRACKING_COMPASS:
-            arguments.put("mode", 2);
+            mode = 2;
             break;
         case CameraMode.TRACKING_GPS:
-            arguments.put("mode", 3);
+            mode = 3;
             break;
         default:
             Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
             return;
     }
 
-    methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
+    flutterApi.mapOnCameraTrackingChanged(mode, PigeonReplies.IGNORE);
   }
 
   @Override
   public void onCameraTrackingDismissed() {
     this.myLocationTrackingMode = 0;
-    methodChannel.invokeMethod("map#onCameraTrackingDismissed", new HashMap<>());
+    flutterApi.mapOnCameraTrackingDismissed(PigeonReplies.IGNORE);
   }
 
   @Override
   public void onDidBecomeIdle() {
-    methodChannel.invokeMethod("map#onIdle", new HashMap<>());
+    flutterApi.mapOnIdle(PigeonReplies.IGNORE);
   }
 
   @Override
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
     Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf, false);
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put("x", pointf.x);
-    arguments.put("y", pointf.y);
-    arguments.put("lng", point.getLongitude());
-    arguments.put("lat", point.getLatitude());
+    final PgScreenPoint screenPoint = new PgScreenPoint(pointf.x, pointf.y);
+    final PgLatLng latLng = new PgLatLng(point.getLatitude(), point.getLongitude());
     if (featureLayerPair != null && featureLayerPair.first != null) {
-      arguments.put("layerId", featureLayerPair.second);
-      arguments.put("id", featureLayerPair.first.id());
-      methodChannel.invokeMethod("feature#onTap", arguments);
+      flutterApi.featureOnTap(
+          new PgFeatureTap(
+              featureLayerPair.first.id(), screenPoint, latLng, featureLayerPair.second),
+          PigeonReplies.IGNORE);
       // Fire map#onMapClick only if featureTapsTriggersMapClick is true
       if (featureTapsTriggersMapClick) {
-        methodChannel.invokeMethod("map#onMapClick", arguments);
+        flutterApi.mapOnMapClick(screenPoint, latLng, PigeonReplies.IGNORE);
       }
     } else {
       // Always fire map#onMapClick when no feature is tapped
-      methodChannel.invokeMethod("map#onMapClick", arguments);
+      flutterApi.mapOnMapClick(screenPoint, latLng, PigeonReplies.IGNORE);
     }
     return true;
   }
@@ -3950,12 +3949,10 @@ final class MapLibreMapController
   @Override
   public boolean onMapLongClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
-    final Map<String, Object> arguments = new HashMap<>(5);
-    arguments.put("x", pointf.x);
-    arguments.put("y", pointf.y);
-    arguments.put("lng", point.getLongitude());
-    arguments.put("lat", point.getLatitude());
-    methodChannel.invokeMethod("map#onMapLongClick", arguments);
+    flutterApi.mapOnMapLongClick(
+        new PgScreenPoint(pointf.x, pointf.y),
+        new PgLatLng(point.getLatitude(), point.getLongitude()),
+        PigeonReplies.IGNORE);
     return true;
   }
 
@@ -3969,7 +3966,7 @@ final class MapLibreMapController
       activeSnapshotter.cancel();
       activeSnapshotter = null;
     }
-    methodChannel.setMethodCallHandler(null);
+    MapLibreMapHostApi.Companion.setUp(messenger, null, String.valueOf(id));
     // A map#waitForMap parked while the map was still being built is only ever
     // answered by onMapReady, which will not fire now. Answer it here, or the Dart
     // side keeps awaiting initPlatform: onMapCreated never fires and everything
@@ -4818,19 +4815,18 @@ final class MapLibreMapController
   }
 
   private void invokeFeatureDrag(PointF pointf, LatLng current, String eventType) {
-    final Map<String, Object> arguments = new HashMap<>(9);
-    arguments.put("id", draggedFeature.id());
-    arguments.put("x", pointf.x);
-    arguments.put("y", pointf.y);
-    arguments.put("originLng", dragOrigin.getLongitude());
-    arguments.put("originLat", dragOrigin.getLatitude());
-    arguments.put("currentLng", current.getLongitude());
-    arguments.put("currentLat", current.getLatitude());
-    arguments.put("eventType", eventType);
-    arguments.put("deltaLng", current.getLongitude() - dragPrevious.getLongitude());
-    arguments.put("deltaLat", current.getLatitude() - dragPrevious.getLatitude());
+    final PgFeatureDrag drag =
+        new PgFeatureDrag(
+            draggedFeature.id(),
+            new PgScreenPoint(pointf.x, pointf.y),
+            new PgLatLng(dragOrigin.getLatitude(), dragOrigin.getLongitude()),
+            new PgLatLng(current.getLatitude(), current.getLongitude()),
+            new PgLatLng(
+                current.getLatitude() - dragPrevious.getLatitude(),
+                current.getLongitude() - dragPrevious.getLongitude()),
+            eventType);
     dragPrevious = current;
-    methodChannel.invokeMethod("feature#onDrag", arguments);
+    flutterApi.featureOnDrag(drag, PigeonReplies.IGNORE);
   }
 
   boolean onMove(MoveGestureDetector detector) {

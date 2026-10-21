@@ -42,6 +42,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:collection/collection.dart';
 
@@ -85,6 +86,8 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         ManualLocationSource,
         ManualLocationUpdate,
         MapLibreJsSource,
+        // Deprecated, and still exported for the apps that reference it.
+        // ignore: deprecated_member_use
         MapLibreMethodChannel,
         MapLibrePlatform,
         MinMaxZoomPreference,
@@ -118,6 +121,8 @@ part 'src/maplibre_map.dart';
 part 'src/global.dart';
 
 part 'src/native_global_platform.dart';
+
+part 'src/native_map_platform.dart';
 
 part 'src/layer_expressions.dart';
 

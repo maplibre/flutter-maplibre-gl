@@ -2,7 +2,7 @@
 
 ## Upgrading to 0.28.0
 
-0.28.0 makes Android, iOS and web behave the same: the same error codes, the same results for the same calls, the same gestures. Most apps compile unchanged, but `setLayerFilter` changes its return type, and code that catches platform errors or relied on a platform quirk needs a look.
+0.28.0 makes Android, iOS and web behave the same: the same error codes, the same results for the same calls, the same gestures. Most apps compile unchanged, but `setLayerFilter` changes its return type, and code that catches platform errors or relied on a platform quirk needs a look. On Android and iOS the plugin also talks to native code in a new way, which matters mostly to tests that mock it.
 
 Update your `pubspec.yaml`:
 
@@ -54,8 +54,6 @@ On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fa
 
 On web, the other plugin-wide calls that need offline storage or the native network stack throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache`. MapLibre GL JS has no offline storage.
 
-`setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
-
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
@@ -63,6 +61,15 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
 * `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
 * `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
+
+### Android and iOS: Pigeon messages
+
+The plugin now talks to Android and iOS through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon), instead of hand-written method channels. Your map code keeps working as before, with these differences:
+
+* A call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`, where it used to throw a `MissingPluginException`. If you caught `MissingPluginException` to ignore those calls, catch `MAP_DISPOSED` instead.
+* Tests that mock the plugin's method channels, `plugins.flutter.io/maplibre_gl` and `plugins.flutter.io/maplibre_gl_<id>`, no longer intercept anything. Install fakes instead: a subclass of `MapLibrePlatform` through `MapLibrePlatform.createInstance` for the map calls, and a subclass of `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls such as offline regions. Both come from `maplibre_gl_platform_interface`.
+* `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
+* `MapLibreMethodChannel` is deprecated and no longer reaches native code. A package that extends it should extend `MapLibrePlatform` instead.
 
 ### Feature drag and hit testing
 

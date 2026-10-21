@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart' show MissingPluginException;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter/widgets.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -904,11 +904,11 @@ void main() {
       test(
         'a call that fails because the map is gone is not an error',
         () async {
-          // The native side unregisters the channel on dispose, so the pending
-          // call fails with MissingPluginException. An unhandled error here
+          // The native side removes the handlers of the map on dispose, so
+          // the pending call fails with MAP_DISPOSED. An unhandled error here
           // fails the test.
           controller.dispose();
-          release.completeError(MissingPluginException('map disposed'));
+          release.completeError(PlatformException(code: 'MAP_DISPOSED'));
           await pumpEventQueue();
 
           expect(styleLoadedCalls, 0);
