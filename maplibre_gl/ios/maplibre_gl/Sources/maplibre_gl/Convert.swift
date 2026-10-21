@@ -123,113 +123,88 @@ class Convert {
         return position.flatMap { MLNOrnamentPosition(rawValue: UInt($0.rawValue)) }
     }
 
-    class func parseLatLngBoundsPadding(_ cameraUpdate: [Any]) -> UIEdgeInsets? {
-        guard let methodName = cameraUpdate[0] as? String else { return nil }
-        
-        if(methodName != "newLatLngBounds") {
-            return nil
-        }
-        
-        guard let paddingLeft = cameraUpdate[2] as? CGFloat else { return nil }
-        guard let paddingTop = cameraUpdate[3] as? CGFloat else { return nil }
-        guard let paddingRight = cameraUpdate[4] as? CGFloat else { return nil }
-        guard let paddingBottom = cameraUpdate[5] as? CGFloat else { return nil }
-        
-        return UIEdgeInsets(top: paddingTop, left: paddingLeft, bottom: paddingBottom, right: paddingRight)
-    }
-
-    class func parseCameraUpdate(cameraUpdate: [Any], mapView: MLNMapView) -> MLNMapCamera? {
-        guard let type = cameraUpdate[0] as? String else { return nil }
-        switch type {
-        case "newCameraPosition":
-            guard let cameraPosition = cameraUpdate[1] as? [String: Any] else { return nil }
-            return MLNMapCamera.fromDict(cameraPosition, mapView: mapView)
-        case "newLatLng":
-            guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
+    /// The camera `update` moves to, read against the current camera of
+    /// `mapView`. Nil for a kind of update this side does not know.
+    class func camera(for update: PgCameraUpdate, mapView: MLNMapView) -> MLNMapCamera? {
+        switch update {
+        case let update as PgCameraUpdateNewCameraPosition:
+            return MLNMapCamera.fromPigeon(update.cameraPosition, mapView: mapView)
+        case let update as PgCameraUpdateNewLatLng:
             return cameraLooking(
-                at: CLLocationCoordinate2D.fromArray(coordinate),
+                at: update.latLng.coordinate,
                 zoom: getZoom(mapView: mapView),
                 mapView: mapView
             )
-        case "newLatLngBounds":
-            guard let bounds = cameraUpdate[1] as? [[Double]] else { return nil }
-            let padding = parseLatLngBoundsPadding(cameraUpdate) ?? .zero
+        case let update as PgCameraUpdateNewLatLngBounds:
+            let padding = update.padding.edgeInsets
             let fit = mapView.cameraThatFitsCoordinateBounds(
-                MLNCoordinateBounds.fromArray(bounds),
+                update.bounds.coordinateBounds,
                 edgePadding: padding
             )
             return cameraFitting(fit, padding: padding, mapView: mapView)
-        case "newLatLngZoom":
-            guard let coordinate = cameraUpdate[1] as? [Double] else { return nil }
-            guard let zoom = cameraUpdate[2] as? Double else { return nil }
+        case let update as PgCameraUpdateNewLatLngZoom:
             return cameraLooking(
-                at: CLLocationCoordinate2D.fromArray(coordinate),
-                zoom: zoom,
+                at: update.latLng.coordinate,
+                zoom: update.zoom,
                 mapView: mapView
             )
-        case "scrollBy":
-            guard let x = cameraUpdate[1] as? CGFloat else { return nil }
-            guard let y = cameraUpdate[2] as? CGFloat else { return nil }
+        case let update as PgCameraUpdateScrollBy:
             let camera = mapView.camera
             let mapPoint = mapView.convert(camera.centerCoordinate, toPointTo: mapView)
-            let movedPoint = CGPoint(x: mapPoint.x + x, y: mapPoint.y + y)
+            let movedPoint = CGPoint(
+                x: mapPoint.x + CGFloat(update.dx),
+                y: mapPoint.y + CGFloat(update.dy)
+            )
             let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
             return cameraLooking(at: center, zoom: getZoom(mapView: mapView), mapView: mapView)
-        case "zoomBy":
-            guard let zoomBy = cameraUpdate[1] as? Double else { return nil }
-            let zoom = getZoom(mapView: mapView) + zoomBy
-            if cameraUpdate.count == 2 {
+        case let update as PgCameraUpdateZoomBy:
+            let zoom = getZoom(mapView: mapView) + update.amount
+            guard let point = update.focus else {
                 let camera = mapView.camera
                 camera.altitude = getAltitude(zoom: zoom, mapView: mapView)
                 return camera
-            } else {
-                guard let point = cameraUpdate[2] as? [CGFloat],
-                      point.count == 2 else { return nil }
-                // Keeps the point under the focus where it is on screen rather
-                // than recentring on it: the view center moves toward the focus
-                // by the share of the distance the zoom takes away.
-                let focus = CGPoint(x: point[0], y: point[1])
-                let centerPoint = mapView.convert(mapView.camera.centerCoordinate, toPointTo: mapView)
-                let scale = CGFloat(pow(2, -zoomBy))
-                let movedPoint = CGPoint(
-                    x: focus.x + (centerPoint.x - focus.x) * scale,
-                    y: focus.y + (centerPoint.y - focus.y) * scale
-                )
-                let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
-                return cameraLooking(at: center, zoom: zoom, mapView: mapView)
             }
-        case "zoomIn":
+            // Keeps the point under the focus where it is on screen rather
+            // than recentring on it: the view center moves toward the focus
+            // by the share of the distance the zoom takes away.
+            let focus = CGPoint(x: point.x, y: point.y)
+            let centerPoint = mapView.convert(mapView.camera.centerCoordinate, toPointTo: mapView)
+            let scale = CGFloat(pow(2, -update.amount))
+            let movedPoint = CGPoint(
+                x: focus.x + (centerPoint.x - focus.x) * scale,
+                y: focus.y + (centerPoint.y - focus.y) * scale
+            )
+            let center = mapView.convert(movedPoint, toCoordinateFrom: mapView)
+            return cameraLooking(at: center, zoom: zoom, mapView: mapView)
+        case is PgCameraUpdateZoomIn:
             let camera = mapView.camera
             let zoom = getZoom(mapView: mapView)
             let altitude = getAltitude(zoom: zoom + 1, mapView: mapView)
             camera.altitude = altitude
             return camera
-        case "zoomOut":
+        case is PgCameraUpdateZoomOut:
             let camera = mapView.camera
             let zoom = getZoom(mapView: mapView)
             let altitude = getAltitude(zoom: zoom - 1, mapView: mapView)
             camera.altitude = altitude
             return camera
-        case "zoomTo":
-            guard let zoom = cameraUpdate[1] as? Double else { return nil }
+        case let update as PgCameraUpdateZoomTo:
             let camera = mapView.camera
-            let altitude = getAltitude(zoom: zoom, mapView: mapView)
+            let altitude = getAltitude(zoom: update.zoom, mapView: mapView)
             camera.altitude = altitude
             return camera
-        case "bearingTo":
-            guard let bearing = cameraUpdate[1] as? Double else { return nil }
+        case let update as PgCameraUpdateBearingTo:
             let camera = mapView.camera
-            camera.heading = bearing
+            camera.heading = update.bearing
             return camera
-        case "tiltTo":
-            guard let tilt = cameraUpdate[1] as? CGFloat else { return nil }
+        case let update as PgCameraUpdateTiltTo:
             // The zoom comes from the altitude together with the pitch, so the
             // same altitude at another pitch is another zoom level. Read the zoom
             // first and work the altitude out again for the new pitch, so tilting
             // keeps the zoom as on Android and web.
             let zoom = getZoom(mapView: mapView)
             let camera = mapView.camera
-            camera.pitch = tilt
+            camera.pitch = CGFloat(update.tilt)
             camera.altitude = MLNAltitudeForZoomLevel(
                 zoom,
                 camera.pitch,
@@ -238,9 +213,8 @@ class Convert {
             )
             return camera
         default:
-            print("\(type) not implemented!")
+            return nil
         }
-        return nil
     }
 
     class func getZoom(mapView: MLNMapView) -> Double {

@@ -417,11 +417,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func mapUpdateMyLocationTrackingMode(mode: Int64, result: @escaping FlutterResult) {
-        // A mode with no MLNUserTrackingMode raw value changes nothing.
-        if let rawMode = UInt(exactly: mode),
-           let trackingMode = MLNUserTrackingMode(rawValue: rawMode)
-        {
+    func mapUpdateMyLocationTrackingMode(
+        mode: PgMyLocationTrackingMode,
+        result: @escaping FlutterResult
+    ) {
+        // The raw values are those of MLNUserTrackingMode.
+        if let trackingMode = MLNUserTrackingMode(rawValue: UInt(mode.rawValue)) {
             setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
         }
         result(nil)
@@ -436,27 +437,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapUpdateContentInsets(
-        bounds: [String: Double],
+        insets: PgEdgeInsets,
         animated: Bool,
         result: @escaping FlutterResult
     ) {
-        if let top = bounds["top"],
-           let left = bounds["left"],
-           let bottom = bounds["bottom"],
-           let right = bounds["right"]
-        {
-            mapView.setContentInset(
-                UIEdgeInsets(
-                    top: CGFloat(top),
-                    left: CGFloat(left),
-                    bottom: CGFloat(bottom),
-                    right: CGFloat(right)
-                ),
-                animated: animated
-            ) {
-                result(nil)
-            }
-        } else {
+        mapView.setContentInset(insets.edgeInsets, animated: animated) {
             result(nil)
         }
     }
@@ -595,36 +580,30 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     // MARK: Dart calls: camera
 
     func cameraEase(
-        cameraUpdate: [Any],
+        cameraUpdate: PgCameraUpdate,
         duration: Int64?,
-        interpolation: String?,
+        interpolation: PgCameraAnimationInterpolation?,
         result: @escaping FlutterResult
     ) {
-        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#ease", result) else {
+        guard let camera = targetCamera(of: cameraUpdate, result) else {
             return
         }
 
         if let duration = duration.flatMap({ Double(exactly: $0) }), duration > 0 {
             let interval: TimeInterval = duration / 1000.0
 
-            // Create timing function based on interpolation parameter
-            var timingFunction: CAMediaTimingFunction?
-            if let interpolationStr = interpolation {
-                switch interpolationStr {
-                case "linear":
-                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-                case "easeInOut":
-                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-                case "easeOut":
-                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-                case "fastOutLinearIn":
-                    // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
-                    timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
-                default:
-                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-                }
-            } else {
+            // Ease in and out when Dart names no curve.
+            let timingFunction: CAMediaTimingFunction
+            switch interpolation ?? .easeInOut {
+            case .linear:
+                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+            case .easeInOut:
                 timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+            case .easeOut:
+                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+            case .fastOutLinearIn:
+                // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
+                timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
             }
 
             cameraAnimations.track(result: result) { completion in
@@ -642,8 +621,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    func cameraMove(cameraUpdate: [Any], result: @escaping FlutterResult) {
-        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#move", result) else {
+    func cameraMove(cameraUpdate: PgCameraUpdate, result: @escaping FlutterResult) {
+        guard let camera = targetCamera(of: cameraUpdate, result) else {
             return
         }
         cameraAnimations.interruptRunning()
@@ -654,8 +633,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(true)
     }
 
-    func cameraAnimate(cameraUpdate: [Any], duration: Int64?, result: @escaping FlutterResult) {
-        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#animate", result) else {
+    func cameraAnimate(
+        cameraUpdate: PgCameraUpdate,
+        duration: Int64?,
+        result: @escaping FlutterResult
+    ) {
+        guard let camera = targetCamera(of: cameraUpdate, result) else {
             return
         }
 
@@ -698,24 +681,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // On-demand query: read the live camera directly. Unlike the
         // streaming paths, which go through getCamera() and honor
         // trackCameraPosition, a one-off query always returns a value.
-        result(mapView.camera.toDict(mapView: mapView))
+        result(mapView.camera.toPigeon(mapView: mapView))
     }
 
     func mapGetVisibleRegion(result: @escaping FlutterResult) {
-        var reply = [String: NSObject]()
-        let visibleRegion = mapView.visibleCoordinateBounds
-        reply["sw"] = [visibleRegion.sw.latitude, visibleRegion.sw.longitude] as NSObject
-        reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
-        result(reply)
+        result(mapView.visibleCoordinateBounds.toPigeon())
     }
 
     func mapToScreenLocation(latitude: Double, longitude: Double, result: @escaping FlutterResult) {
         let latlng = CLLocationCoordinate2DMake(latitude, longitude)
-        let returnVal = mapView.convert(latlng, toPointTo: mapView)
-        var reply = [String: NSObject]()
-        reply["x"] = returnVal.x as NSObject
-        reply["y"] = returnVal.y as NSObject
-        result(reply)
+        let point = mapView.convert(latlng, toPointTo: mapView)
+        result(PgScreenPoint(x: Double(point.x), y: Double(point.y)))
     }
 
     func mapToScreenLocationBatch(
@@ -743,10 +719,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapGetMetersPerPixelAtLatitude(latitude: Double, result: @escaping FlutterResult) {
-        var reply = [String: NSObject]()
-        let returnVal = mapView.metersPerPoint(atLatitude: latitude)
-        reply["metersperpixel"] = returnVal as NSObject
-        result(reply)
+        result(mapView.metersPerPoint(atLatitude: latitude))
     }
 
     func mapToLatLng(x: Double, y: Double, result: @escaping FlutterResult) {
@@ -755,10 +728,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             screenPoint,
             toCoordinateFrom: mapView
         )
-        var reply = [String: NSObject]()
-        reply["latitude"] = coordinates.latitude as NSObject
-        reply["longitude"] = coordinates.longitude as NSObject
-        result(reply)
+        result(coordinates.toPigeon())
     }
 
     // MARK: Dart calls: queries
@@ -2340,7 +2310,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapView(_: MLNMapView, didChange mode: MLNUserTrackingMode, animated _: Bool) {
         scheduleLocationPuckTint()
-        flutterApi.mapOnCameraTrackingChanged(mode: Int64(mode.rawValue)) { _ in }
+        // The raw values are those of MLNUserTrackingMode.
+        if let trackingMode = PgMyLocationTrackingMode(rawValue: Int(mode.rawValue)) {
+            flutterApi.mapOnCameraTrackingChanged(mode: trackingMode) { _ in }
+        }
         if mode == .none {
             flutterApi.mapOnCameraTrackingDismissed { _ in }
         }
@@ -3019,22 +2992,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    /// Reads the camera update of `cameraMove`, `cameraAnimate` or
-    /// `cameraEase`. When it is empty, or names an update this side cannot
-    /// apply, the call is answered with `INVALID_ARGUMENT` and `nil` comes
+    /// The camera `cameraUpdate` of `cameraMove`, `cameraAnimate` or
+    /// `cameraEase` moves to. For an update of a kind this side does not
+    /// know, the call is answered with `INVALID_ARGUMENT` and `nil` comes
     /// back: returning without a reply would leave the Dart future pending for
-    /// good. `call` names the call in the error message.
-    private func parseCameraUpdate(
-        _ cameraUpdate: [Any],
-        call: String,
-        _ result: FlutterResult
-    ) -> MLNMapCamera? {
-        guard !cameraUpdate.isEmpty else {
-            result(invalidArgumentError("\(call) requires a 'cameraUpdate' list."))
-            return nil
-        }
-        guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView)
-        else {
+    /// good.
+    private func targetCamera(of cameraUpdate: PgCameraUpdate, _ result: FlutterResult) -> MLNMapCamera? {
+        guard let camera = Convert.camera(for: cameraUpdate, mapView: mapView) else {
             result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
             return nil
         }

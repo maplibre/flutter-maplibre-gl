@@ -82,7 +82,7 @@ final class MapHostApi: MapLibreMapHostApi {
     }
 
     func mapUpdateMyLocationTrackingMode(
-        mode: Int64,
+        mode: PgMyLocationTrackingMode,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) { $0.mapUpdateMyLocationTrackingMode(mode: mode, result: $1) }
@@ -95,12 +95,12 @@ final class MapHostApi: MapLibreMapHostApi {
     }
 
     func mapUpdateContentInsets(
-        bounds: [String: Double],
+        insets: PgEdgeInsets,
         animated: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) {
-            $0.mapUpdateContentInsets(bounds: bounds, animated: animated, result: $1)
+            $0.mapUpdateContentInsets(insets: insets, animated: animated, result: $1)
         }
     }
 
@@ -177,33 +177,33 @@ final class MapHostApi: MapLibreMapHostApi {
     // MARK: Camera
 
     func cameraAnimate(
-        cameraUpdate: [Any?],
+        cameraUpdate: PgCameraUpdate,
         duration: Int64?,
         completion: @escaping (Result<Bool?, Error>) -> Void
     ) {
         run(pigeonResult(completion) { $0 as? Bool }, kind: .movesCamera) {
-            $0.cameraAnimate(cameraUpdate: plainList(cameraUpdate), duration: duration, result: $1)
+            $0.cameraAnimate(cameraUpdate: cameraUpdate, duration: duration, result: $1)
         }
     }
 
     func cameraMove(
-        cameraUpdate: [Any?],
+        cameraUpdate: PgCameraUpdate,
         completion: @escaping (Result<Bool?, Error>) -> Void
     ) {
         run(pigeonResult(completion) { $0 as? Bool }, kind: .movesCamera) {
-            $0.cameraMove(cameraUpdate: plainList(cameraUpdate), result: $1)
+            $0.cameraMove(cameraUpdate: cameraUpdate, result: $1)
         }
     }
 
     func cameraEase(
-        cameraUpdate: [Any?],
+        cameraUpdate: PgCameraUpdate,
         duration: Int64?,
-        interpolation: String?,
+        interpolation: PgCameraAnimationInterpolation?,
         completion: @escaping (Result<Bool, Error>) -> Void
     ) {
         run(nonNullResult(completion) { $0 as? Bool }, kind: .movesCamera) {
             $0.cameraEase(
-                cameraUpdate: plainList(cameraUpdate),
+                cameraUpdate: cameraUpdate,
                 duration: duration,
                 interpolation: interpolation,
                 result: $1
@@ -231,20 +231,24 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    func mapQueryCameraPosition(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion), kind: .readsCamera) { $0.mapQueryCameraPosition(result: $1) }
+    func mapQueryCameraPosition(completion: @escaping (Result<PgCameraPosition, Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? PgCameraPosition }, kind: .readsCamera) {
+            $0.mapQueryCameraPosition(result: $1)
+        }
     }
 
-    func mapGetVisibleRegion(completion: @escaping (Result<Any?, Error>) -> Void) {
-        run(anyResult(completion), kind: .readsCamera) { $0.mapGetVisibleRegion(result: $1) }
+    func mapGetVisibleRegion(completion: @escaping (Result<PgLatLngBounds, Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? PgLatLngBounds }, kind: .readsCamera) {
+            $0.mapGetVisibleRegion(result: $1)
+        }
     }
 
     func mapToScreenLocation(
         latitude: Double,
         longitude: Double,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<PgScreenPoint, Error>) -> Void
     ) {
-        run(anyResult(completion), kind: .readsCamera) {
+        run(nonNullResult(completion) { $0 as? PgScreenPoint }, kind: .readsCamera) {
             $0.mapToScreenLocation(latitude: latitude, longitude: longitude, result: $1)
         }
     }
@@ -264,16 +268,18 @@ final class MapHostApi: MapLibreMapHostApi {
     func mapToLatLng(
         x: Double,
         y: Double,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<PgLatLng, Error>) -> Void
     ) {
-        run(anyResult(completion), kind: .readsCamera) { $0.mapToLatLng(x: x, y: y, result: $1) }
+        run(nonNullResult(completion) { $0 as? PgLatLng }, kind: .readsCamera) {
+            $0.mapToLatLng(x: x, y: y, result: $1)
+        }
     }
 
     func mapGetMetersPerPixelAtLatitude(
         latitude: Double,
-        completion: @escaping (Result<Any?, Error>) -> Void
+        completion: @escaping (Result<Double, Error>) -> Void
     ) {
-        run(anyResult(completion), kind: .readsCamera) {
+        run(nonNullResult(completion) { $0 as? Double }, kind: .readsCamera) {
             $0.mapGetMetersPerPixelAtLatitude(latitude: latitude, result: $1)
         }
     }

@@ -1,15 +1,7 @@
 import MapLibre
 
 extension MLNMapCamera {
-    func toDict(mapView: MLNMapView) -> [String: Any] {
-        return ["bearing": heading,
-                "target": centerCoordinate.toArray(),
-                "tilt": pitch,
-                "zoom": finiteZoom(mapView: mapView)]
-    }
-
-    /// The camera as `camera#onMove` and `camera#onIdle` report it, with the
-    /// same values as `toDict(mapView:)`.
+    /// The camera as the camera events and calls report it.
     func toPigeon(mapView: MLNMapView) -> PgCameraPosition {
         return PgCameraPosition(
             bearing: heading,
@@ -102,28 +94,14 @@ extension CLHeading {
 }
 
 extension CLLocationCoordinate2D {
-    func toArray() -> [Double] {
-        return [latitude, longitude]
-    }
-
     func toPigeon() -> PgLatLng {
         return PgLatLng(latitude: latitude, longitude: longitude)
-    }
-
-    static func fromArray(_ array: [Double]) -> CLLocationCoordinate2D {
-        return CLLocationCoordinate2D(latitude: array[0], longitude: array[1])
     }
 }
 
 extension MLNCoordinateBounds {
-    func toArray() -> [[Double]] {
-        return [sw.toArray(), ne.toArray()]
-    }
-
-    static func fromArray(_ array: [[Double]]) -> MLNCoordinateBounds {
-        let southwest = CLLocationCoordinate2D.fromArray(array[0])
-        let northeast = CLLocationCoordinate2D.fromArray(array[1])
-        return MLNCoordinateBounds(sw: southwest, ne: northeast)
+    func toPigeon() -> PgLatLngBounds {
+        return PgLatLngBounds(southwest: sw.toPigeon(), northeast: ne.toPigeon())
     }
 }
 
@@ -136,6 +114,17 @@ extension PgLatLng {
 extension PgLatLngBounds {
     var coordinateBounds: MLNCoordinateBounds {
         return MLNCoordinateBounds(sw: southwest.coordinate, ne: northeast.coordinate)
+    }
+}
+
+extension PgEdgeInsets {
+    var edgeInsets: UIEdgeInsets {
+        return UIEdgeInsets(
+            top: CGFloat(top),
+            left: CGFloat(left),
+            bottom: CGFloat(bottom),
+            right: CGFloat(right)
+        )
     }
 }
 
