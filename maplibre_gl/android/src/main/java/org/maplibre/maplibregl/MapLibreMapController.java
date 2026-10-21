@@ -1170,98 +1170,11 @@ final class MapLibreMapController
     if (!(stored instanceof String)) {
       return null;
     }
-    final JsonElement element = JsonParser.parseString((String) stored);
-    if (!element.isJsonObject()) {
-      return null;
+    final FeatureCollectionText collection = FeatureCollectionText.parse((String) stored);
+    if (collection != null) {
+      addedFeaturesByLayer.put(sourceName, collection);
     }
-    JsonObject data = element.getAsJsonObject();
-    final JsonElement type = data.get("type");
-    final String typeName = type != null && type.isJsonPrimitive() ? type.getAsString() : null;
-    if ("Feature".equals(typeName)) {
-      final JsonArray features = new JsonArray();
-      features.add(data);
-      data = new JsonObject();
-      data.addProperty("type", "FeatureCollection");
-      data.add("features", features);
-    } else if (!"FeatureCollection".equals(typeName) || !data.has("features")
-        || !data.get("features").isJsonArray()) {
-      return null;
-    }
-    final FeatureCollectionText collection = new FeatureCollectionText(data);
-    addedFeaturesByLayer.put(sourceName, collection);
     return collection;
-  }
-
-  // Compares ids by their text, so 2 and "2" match as they did before.
-  private static String featureIdKey(JsonElement feature) {
-    if (feature == null || !feature.isJsonObject()) {
-      return null;
-    }
-    final JsonElement id = feature.getAsJsonObject().get("id");
-    return id != null && id.isJsonPrimitive() ? id.getAsString() : null;
-  }
-
-  // A FeatureCollection kept as the JSON text of each feature. Replacing one
-  // feature then rebuilds the source data by joining strings, instead of
-  // serializing every feature of the source again on the platform thread,
-  // which made each drag event of a large annotation source slow.
-  private static final class FeatureCollectionText {
-    // The collection's other members (type, bbox, ...) up to the opening
-    // bracket of the features array.
-    private final String head;
-    private final List<String> features;
-    // Index of the first feature with each id, the one a merge replaces.
-    private final Map<String, Integer> indexById = new HashMap<>();
-
-    FeatureCollectionText(JsonObject data) {
-      final JsonArray array = data.getAsJsonArray("features");
-      features = new ArrayList<>(array.size());
-      for (int i = 0; i < array.size(); i++) {
-        final JsonElement feature = array.get(i);
-        features.add(feature.toString());
-        final String id = featureIdKey(feature);
-        if (id != null && !indexById.containsKey(id)) {
-          indexById.put(id, i);
-        }
-      }
-      final JsonObject rest = new JsonObject();
-      for (Map.Entry<String, JsonElement> member : data.entrySet()) {
-        if (!"features".equals(member.getKey())) {
-          rest.add(member.getKey(), member.getValue());
-        }
-      }
-      final String restJson = rest.toString();
-      head = restJson.substring(0, restJson.length() - 1)
-          + (rest.entrySet().isEmpty() ? "" : ",")
-          + "\"features\":[";
-    }
-
-    // Replaces the feature with the same id as [feature]. False when the
-    // collection has no feature with that id, or [feature] has no id.
-    boolean replace(JsonElement feature) {
-      final String id = featureIdKey(feature);
-      final Integer index = id != null ? indexById.get(id) : null;
-      if (index == null) {
-        return false;
-      }
-      features.set(index, feature.toString());
-      return true;
-    }
-
-    String toJson() {
-      int length = head.length() + features.size() + 2;
-      for (String feature : features) {
-        length += feature.length();
-      }
-      final StringBuilder json = new StringBuilder(length).append(head);
-      for (int i = 0; i < features.size(); i++) {
-        if (i > 0) {
-          json.append(',');
-        }
-        json.append(features.get(i));
-      }
-      return json.append("]}").toString();
-    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
