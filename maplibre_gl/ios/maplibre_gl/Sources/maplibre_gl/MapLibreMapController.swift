@@ -363,7 +363,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             MLNOfflineStorage.shared.invalidateAmbientCache {
                 error in
                 if let error = error {
-                    result(error)
+                    // An NSError is not encodable by the standard codec.
+                    result(FlutterError(
+                        code: "AMBIENT_CACHE_ERROR",
+                        message: error.localizedDescription,
+                        details: nil
+                    ))
                 } else {
                     result(nil)
                 }
@@ -372,7 +377,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             MLNOfflineStorage.shared.clearAmbientCache {
                 error in
                 if let error = error {
-                    result(error)
+                    result(FlutterError(
+                        code: "AMBIENT_CACHE_ERROR",
+                        message: error.localizedDescription,
+                        details: nil
+                    ))
                 } else {
                     result(nil)
                 }

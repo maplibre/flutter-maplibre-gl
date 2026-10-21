@@ -2436,7 +2436,7 @@ final class MapLibreMapController
 
                 @Override
                 public void onError(@NonNull String message) {
-                  result.error("MAPBOX CACHE ERROR", message, null);
+                  result.error("AMBIENT_CACHE_ERROR", message, null);
                 }
               });
           break;
@@ -2454,7 +2454,7 @@ final class MapLibreMapController
 
                   @Override
                   public void onError(@NonNull String message) {
-                    result.error("MAPBOX CACHE ERROR", message, null);
+                    result.error("AMBIENT_CACHE_ERROR", message, null);
                   }
                 });
         break;

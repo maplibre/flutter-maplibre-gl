@@ -48,6 +48,10 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 | `sourceAlreadyExists`, `duplicateSource` | `SOURCE_ALREADY_EXISTS` |
 | `layerAlreadyExists`, `duplicateLayer` | `LAYER_ALREADY_EXISTS` |
 
+On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
+
+`setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
+
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).

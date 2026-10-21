@@ -26,10 +26,30 @@ enum DragEventType { start, drag, end }
 
 enum HoverEventType { enter, move, leave }
 
-Future<dynamic> setOffline(bool offline) => _globalChannel.invokeMethod(
-  'setOffline',
-  <String, dynamic>{'offline': offline},
-);
+/// Forces MapLibre offline, or gives the network state back to the system.
+///
+/// With `true`, MapLibre stops requesting tiles, styles, sprites and glyphs
+/// from the network and draws from what is already in the cache or in
+/// downloaded offline regions. With `false`, it follows the device's network
+/// state again. The setting applies to every map in the app.
+///
+/// Android only. Throws an [UnsupportedError] on iOS, where the MapLibre iOS
+/// SDK has no offline switch, and on web.
+Future<dynamic> setOffline(bool offline) {
+  // Reject here rather than let the method channel answer: on iOS and web
+  // that call fails with a MissingPluginException, which reads like a broken
+  // plugin registration instead of a platform limit.
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    throw UnsupportedError(
+      'setOffline is not available on '
+      '${kIsWeb ? 'web' : defaultTargetPlatform.name} because the MapLibre '
+      'SDK there has no offline switch. It is supported on Android only.',
+    );
+  }
+  return _globalChannel.invokeMethod('setOffline', <String, dynamic>{
+    'offline': offline,
+  });
+}
 
 /// Sets HTTP headers that are injected into every network request MapLibre
 /// makes (tile fetches, style JSON, sprites, glyphs).

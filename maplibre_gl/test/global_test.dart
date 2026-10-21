@@ -76,6 +76,23 @@ void main() {
       final args = methodCalls[0].arguments as Map;
       expect(args['offline'], true);
     });
+
+    test('throws UnsupportedError on iOS and sends nothing', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      expect(
+        () => setOffline(true),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('not available on iOS'), contains('Android only')),
+          ),
+        ),
+      );
+      expect(methodCalls, isEmpty);
+    });
   });
 
   group('deleteOfflineRegion', () {
