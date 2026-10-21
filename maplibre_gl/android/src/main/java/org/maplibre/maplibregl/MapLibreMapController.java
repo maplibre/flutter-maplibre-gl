@@ -3506,33 +3506,29 @@ final class MapLibreMapController
 
   @Override
   public void mapSetLayerFilter(String id, String filter, MethodChannel.Result result) {
-    boolean ret = false;
-    if (mapLibreMap != null) {
-      Style style = mapLibreMap.getStyle();
-      if (style != null) {
-          try {
-              Layer layer = style.getLayer(id);
-              if (layer != null) {
-                  Expression expression = Expression.raw(filter);
-                  if (expression != null) {
-                    if (layer instanceof LineLayer) {
-                      ((LineLayer)layer).setFilter(expression);
-                      ret = true;
-                    } else if (layer instanceof FillLayer) {
-                      ((FillLayer)layer).setFilter(expression);
-                      ret = true;
-                    } else if (layer instanceof SymbolLayer) {
-                      ((SymbolLayer)layer).setFilter(expression);
-                      ret = true;
-                    }
-                  }
-              }
-          } catch (Exception e) {
-              e.printStackTrace();
+    // styleSetFilter answered as a boolean, as on iOS: false without a style or such a layer, for
+    // a layer that takes no filter, and for a filter the engine rejects. This took line, fill and
+    // symbol layers only, and answered true for a filter the engine had rejected.
+    styleSetFilter(
+        id,
+        filter,
+        new MethodChannel.Result() {
+          @Override
+          public void success(@Nullable Object value) {
+            result.success(true);
           }
-      }
-    }
-    result.success(ret);
+
+          @Override
+          public void error(
+              @NonNull String code, @Nullable String message, @Nullable Object details) {
+            result.success(false);
+          }
+
+          @Override
+          public void notImplemented() {
+            result.success(false);
+          }
+        });
   }
 
   @Override
