@@ -38,6 +38,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
@@ -1103,15 +1104,20 @@ final class MapLibreMapController
     return featuresReply(collection == null ? null : collection.features());
   }
 
-  private void addGeoJsonSource(String sourceName, String source) {
+  /**
+   * Adds a GeoJSON source with {@code source}, its data. Without a style this answers
+   * STYLE_NOT_READY, as iOS does. It used to log a warning and answer a success.
+   */
+  private void addGeoJsonSource(String sourceName, String source, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      Log.w(TAG, "addGeoJsonSource: style not ready, skipping");
+      replyStyleNotReady(result);
       return;
     }
 
     // The channel call already answered SOURCE_ALREADY_EXISTS for this case. The
     // guard stays so a CannotAddSourceException can never reach the SDK.
     if (style.getSource(sourceName) != null) {
+      result.success(null);
       return;
     }
 
@@ -1130,27 +1136,33 @@ final class MapLibreMapController
     } catch (Exception e) {
       Log.e(TAG, "addGeoJsonSource: error adding source '" + sourceName + "'", e);
     }
+    result.success(null);
   }
 
-  private void setGeoJsonSource(String sourceName, String geojson) {
+  /**
+   * Replaces the data of the GeoJSON source {@code sourceName}. Without a style this answers
+   * STYLE_NOT_READY, and SOURCE_NOT_FOUND without such a source, as iOS does. Both used to log a
+   * warning and answer a success.
+   */
+  private void setGeoJsonSource(String sourceName, String geojson, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      Log.w(TAG, "setGeoJsonSource: style not ready, skipping update");
+      replyStyleNotReady(result);
+      return;
+    }
+    final Source source = style.getSource(sourceName);
+    if (!(source instanceof GeoJsonSource)) {
+      replySourceNotFound(result, sourceName);
       return;
     }
 
     try {
-      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-      if (geoJsonSource == null) {
-        Log.w(TAG, "setGeoJsonSource: source '" + sourceName + "' not found, skipping update");
-        return;
-      }
-
       // Raw JSON for the same reason as in addGeoJsonSource.
       addedFeaturesByLayer.put(sourceName, geojson);
-      geoJsonSource.setGeoJson(geojson);
+      ((GeoJsonSource) source).setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
     }
+    result.success(null);
   }
 
   // The source data as a FeatureCollection, parsed on first use and cached, or
@@ -1170,30 +1182,62 @@ final class MapLibreMapController
     return collection;
   }
 
-  private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
+  /**
+   * Replaces the feature of the GeoJSON source {@code sourceName} that has the id of {@code
+   * geojsonFeature}, in the data addGeoJsonSource or setGeoJsonSource gave the source.
+   *
+   * <p>As on iOS: without a style this answers STYLE_NOT_READY, without such a source
+   * SOURCE_NOT_FOUND, both of which used to be a success, and INVALID_GEOJSON for anything but a
+   * GeoJSON Feature, which used to change nothing. A source without such data, added some other
+   * way, and a feature whose id the data does not hold still change nothing.
+   */
+  private void setGeoJsonFeature(
+      String sourceName, String geojsonFeature, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      Log.w(TAG, "setGeoJsonFeature: style not ready, skipping update");
+      replyStyleNotReady(result);
+      return;
+    }
+    final Source source = style.getSource(sourceName);
+    if (!(source instanceof GeoJsonSource)) {
+      replySourceNotFound(result, sourceName);
+      return;
+    }
+    JsonElement feature;
+    try {
+      feature = JsonParser.parseString(geojsonFeature);
+    } catch (JsonParseException e) {
+      feature = null;
+    }
+    if (!isGeoJsonFeature(feature)) {
+      result.error(
+          "INVALID_GEOJSON",
+          "The feature for source '" + sourceName + "' is not a GeoJSON Feature.",
+          null);
       return;
     }
 
     try {
-      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-      if (geoJsonSource == null) {
-        return;
-      }
       final FeatureCollectionText data = parsedSourceData(sourceName);
-      if (data == null) {
-        return;
-      }
-
       // Merged as JSON rather than through the Java Feature, which would turn
       // the ids of the whole source into Strings.
-      if (data.replace(JsonParser.parseString(geojsonFeature))) {
-        geoJsonSource.setGeoJson(data.toJson());
+      if (data != null && data.replace(feature)) {
+        ((GeoJsonSource) source).setGeoJson(data.toJson());
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
     }
+    result.success(null);
+  }
+
+  private static boolean isGeoJsonFeature(@Nullable JsonElement json) {
+    if (json == null || !json.isJsonObject()) {
+      return false;
+    }
+    final JsonElement type = json.getAsJsonObject().get("type");
+    return type != null
+        && type.isJsonPrimitive()
+        && type.getAsJsonPrimitive().isString()
+        && "Feature".equals(type.getAsString());
   }
 
   private boolean addSymbolLayer(
@@ -1875,6 +1919,60 @@ final class MapLibreMapController
 
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
     result.error("LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
+  }
+
+  private static void replyStyleNotReady(MethodChannel.Result result) {
+    result.error(
+        "STYLE_NOT_READY",
+        "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+        null);
+  }
+
+  private static void replySourceNotFound(MethodChannel.Result result, String sourceId) {
+    result.error(
+        "SOURCE_NOT_FOUND", "Source '" + sourceId + "' does not exist in the current style.", null);
+  }
+
+  /**
+   * Answers STYLE_NOT_READY without a style, and SOURCE_NOT_FOUND when the style has no source with
+   * {@code sourceId}, as iOS and web do for a layer that draws a source. The engine would add the
+   * layer all the same, drawing nothing.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectMissingLayerSource(String sourceId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return true;
+    }
+    if (style.getSource(sourceId) == null) {
+      replySourceNotFound(result, sourceId);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Answers INVALID_EXPRESSION, as iOS does, for the filter of a layer add that is not JSON, not a
+   * filter, or one the engine rejects. The engine would add the layer without it, and the other
+   * two used to fail the call with a bare "error".
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private boolean rejectInvalidLayerFilter(@Nullable String filter, MethodChannel.Result result) {
+    final Expression expression;
+    try {
+      expression = parseFilter(filter);
+    } catch (IllegalArgumentException e) {
+      replyInvalidFilter(result, e.getMessage());
+      return true;
+    }
+    final String error = expression == null ? null : queryFilterError(expression);
+    if (error != null) {
+      replyInvalidFilter(result, error);
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -2587,21 +2685,18 @@ final class MapLibreMapController
 
   @Override
   public void sourceAddGeoJson(String sourceId, String geojson, MethodChannel.Result result) {
-    addGeoJsonSource(sourceId, geojson);
-    result.success(null);
+    addGeoJsonSource(sourceId, geojson, result);
   }
 
   @Override
   public void sourceSetGeoJson(String sourceId, String geojson, MethodChannel.Result result) {
-    setGeoJsonSource(sourceId, geojson);
-    result.success(null);
+    setGeoJsonSource(sourceId, geojson, result);
   }
 
   @Override
   public void sourceSetFeature(
       String sourceId, String geojsonFeature, MethodChannel.Result result) {
-    setGeoJsonFeature(sourceId, geojsonFeature);
-    result.success(null);
+    setGeoJsonFeature(sourceId, geojsonFeature, result);
   }
 
   @Override
@@ -2761,7 +2856,35 @@ final class MapLibreMapController
   @Override
   public void styleAddSource(
       String sourceId, Map<String, Object> properties, MethodChannel.Result result) {
-    SourcePropertyConverter.addSource(sourceId, properties, style);
+    // Answered as on iOS. Without a style this failed with a NullPointerException, a bare
+    // "error", and a source it could not build was skipped with a success.
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return;
+    }
+    final Object type = properties.get("type");
+    if (!(type instanceof String)) {
+      result.error("UNSUPPORTED_SOURCE_TYPE", "Source '" + sourceId + "' has no type.", null);
+      return;
+    }
+    if (!SourcePropertyConverter.isSupportedType((String) type)) {
+      result.error(
+          "UNSUPPORTED_SOURCE_TYPE",
+          "Source '" + sourceId + "' has the type '" + type + "', which this platform does not"
+              + " support.",
+          null);
+      return;
+    }
+    final Source source = SourcePropertyConverter.buildSource(sourceId, (String) type, properties);
+    if (source == null) {
+      result.error(
+          "INVALID_ARGUMENT",
+          "Source '" + sourceId + "' cannot be built from its properties as a '" + type
+              + "' source.",
+          null);
+      return;
+    }
+    style.addSource(source);
     result.success(null);
   }
 
@@ -2887,6 +3010,12 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretSymbolLayerProperties(properties);
 
@@ -2922,6 +3051,12 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretLineLayerProperties(properties);
 
@@ -2957,6 +3092,12 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretFillLayerProperties(properties);
 
@@ -2992,6 +3133,12 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
 
@@ -3027,6 +3174,12 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretCircleLayerProperties(properties);
 
@@ -3059,6 +3212,9 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretRasterLayerProperties(properties);
     if (!addRasterLayer(
@@ -3086,6 +3242,9 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
     if (!addHillshadeLayer(
@@ -3113,6 +3272,9 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
     if (!addColorReliefLayer(
@@ -3166,6 +3328,12 @@ final class MapLibreMapController
       @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(sourceId, result)) {
+      return;
+    }
+    if (rejectInvalidLayerFilter(filter, result)) {
+      return;
+    }
     final PropertyValue[] propertyValues =
         LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
 
@@ -3339,6 +3507,9 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(imageSourceId, result)) {
+      return;
+    }
     if (!addRasterLayer(
         imageLayerId,
         imageSourceId,
@@ -3361,6 +3532,9 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
+    if (rejectMissingLayerSource(imageSourceId, result)) {
+      return;
+    }
     if (!addRasterLayer(
         imageLayerId,
         imageSourceId,
@@ -3406,15 +3580,14 @@ final class MapLibreMapController
     }
     Layer layer = style.getLayer(layerId);
     // Both layers are checked before anything moves: a missing anchor found
-    // after the removal would lose the layer.
+    // after the removal would lose the layer. Answered with the message the
+    // other layer calls, iOS and web give.
     if (layer == null) {
-      result.error(
-          "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
+      replyLayerNotFound(result, layerId);
       return;
     }
     if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
-      result.error(
-          "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
+      replyLayerNotFound(result, belowLayerId);
       return;
     }
     if (layerId.equals(belowLayerId)) {

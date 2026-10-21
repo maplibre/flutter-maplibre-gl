@@ -2,13 +2,13 @@ package org.maplibre.maplibregl;
 
 import android.net.Uri;
 import android.util.Log;
+import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
-import org.maplibre.android.maps.Style;
 import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
@@ -246,19 +246,29 @@ class SourcePropertyConverter {
     return null;
   }
 
-  static void addSource(String id, Map<String, Object> properties, Style style) {
-    // The controller answers SOURCE_ALREADY_EXISTS before calling this. The
-    // guard stays so a CannotAddSourceException can never reach the SDK.
-    if (style.getSource(id) != null) {
-      Log.w(TAG, "addSource: source with id '" + id + "' already exists, skipping");
-      return;
+  /** Whether {@link #buildSource} knows the source type {@code type}. */
+  static boolean isSupportedType(String type) {
+    switch (type) {
+      case "vector":
+      case "raster":
+      case "raster-dem":
+      case "image":
+      case "geojson":
+        return true;
+      default:
+        return false;
     }
+  }
 
-    final Object type = properties.get("type");
-    Source source = null;
-
-    if (type != null) {
-      switch (Convert.toString(type)) {
+  /**
+   * The source of type {@code type} that {@code properties} describe, or null when they do not
+   * describe one, such as a tiled source with neither a url nor tiles.
+   */
+  @Nullable
+  static Source buildSource(String id, String type, Map<String, Object> properties) {
+    Source source;
+    try {
+      switch (type) {
         case "vector":
           source = buildVectorSource(id, properties);
           break;
@@ -275,8 +285,12 @@ class SourcePropertyConverter {
           source = buildGeojsonSource(id, properties);
           break;
         default:
-          // unsupported source type
+          source = null;
       }
+    } catch (RuntimeException e) {
+      // A property of the wrong kind, such as missing image coordinates.
+      Log.w(TAG, "buildSource: cannot build source '" + id + "'", e);
+      return null;
     }
 
     if (source != null) {
@@ -287,7 +301,7 @@ class SourcePropertyConverter {
       if (volatileTiles != null) {
         source.setVolatile(Convert.toBoolean(volatileTiles));
       }
-      style.addSource(source);
     }
+    return source;
   }
 }
