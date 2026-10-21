@@ -2826,16 +2826,20 @@ final class MapLibreMapController
       return;
     }
     final ImageSource imageSource = (ImageSource) source;
-    if (coordinates != null) {
-      imageSource.setCoordinates(PigeonConvert.toLatLngQuad(coordinates));
-    }
+    // Decoded before anything changes, as on iOS, so a call that fails changes nothing. The
+    // corners used to move first, and stayed moved when the bytes did not decode.
+    Bitmap updateBitmap = null;
     if (bytes != null) {
-      Bitmap updateBitmap =
-          BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
+      updateBitmap = BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length));
       if (updateBitmap == null) {
         result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
         return;
       }
+    }
+    if (coordinates != null) {
+      imageSource.setCoordinates(PigeonConvert.toLatLngQuad(coordinates));
+    }
+    if (updateBitmap != null) {
       imageSource.setImage(updateBitmap);
     }
     result.success(null);
