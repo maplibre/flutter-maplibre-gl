@@ -19,7 +19,15 @@ internal class PigeonMethodResult<T>(
 
     override fun success(result: Any?) {
         if (answered.compareAndSet(false, true)) {
-            callback(Result.success(convert(result)))
+            // A value convert cannot read would otherwise leave the call
+            // unanswered and Dart waiting forever.
+            val value = try {
+                convert(result)
+            } catch (e: RuntimeException) {
+                callback(Result.failure(PigeonError("error", e.message, null)))
+                return
+            }
+            callback(Result.success(value))
         }
     }
 
