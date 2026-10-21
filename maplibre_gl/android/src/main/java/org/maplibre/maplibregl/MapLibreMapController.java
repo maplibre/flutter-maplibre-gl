@@ -117,6 +117,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Pattern;
 
 import io.flutter.plugin.common.BinaryMessenger;
@@ -277,10 +282,15 @@ final class MapLibreMapController
 
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
-  // setGeoJsonFeature. Holds the raw String until the first setFeature parses
-  // it into a FeatureCollectionText, so plain data updates never pay a parse
-  // on the platform thread.
+  // setGeoJsonFeature: the raw String, a read of it still running on
+  // sourceTextExecutor, or the FeatureCollectionText read from it. Only the
+  // platform thread touches it.
   private Map<String, Object> addedFeaturesByLayer;
+  // Sources that took a setGeoJsonFeature. Their next data is read ahead on
+  // sourceTextExecutor, so the feature update after a full one does not read
+  // the whole source on the platform thread. Other sources never pay a read.
+  private final Set<String> featureUpdatedSources = new HashSet<>();
+  private ExecutorService sourceTextExecutor;
 
   private LatLngBounds bounds = null;
   Style.OnStyleLoaded onStyleLoadedCallback =
@@ -519,7 +529,13 @@ final class MapLibreMapController
     mapViewStarted = false;
     mapViewResumed = false;
     interactiveFeatureLayerIds.clear();
+    for (Object stored : addedFeaturesByLayer.values()) {
+      if (stored instanceof Future) {
+        ((Future<?>) stored).cancel(false);
+      }
+    }
     addedFeaturesByLayer.clear();
+    featureUpdatedSources.clear();
 
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
@@ -1131,7 +1147,7 @@ final class MapLibreMapController
       // thread and keeps numeric ids numeric. A Java FeatureCollection would
       // turn every id into a String, so ["id"] filters on numbers would miss.
       GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, source, options);
-      addedFeaturesByLayer.put(sourceName, source);
+      storeSourceData(sourceName, source);
 
       style.addSource(geoJsonSource);
     } catch (Exception e) {
@@ -1153,28 +1169,58 @@ final class MapLibreMapController
       }
 
       // Raw JSON for the same reason as in addGeoJsonSource.
-      addedFeaturesByLayer.put(sourceName, geojson);
+      storeSourceData(sourceName, geojson);
       geoJsonSource.setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
     }
   }
 
-  // The source data as a FeatureCollection, parsed on first use and cached, or
-  // null when it is neither a FeatureCollection nor a Feature.
-  private FeatureCollectionText parsedSourceData(String sourceName) {
-    final Object stored = addedFeaturesByLayer.get(sourceName);
-    if (stored instanceof FeatureCollectionText) {
-      return (FeatureCollectionText) stored;
+  // Keeps the data fed to a source for setGeoJsonFeature. A source that took a
+  // feature update will likely take another, so its data is read ahead on a
+  // background thread instead of at that update on this one.
+  private void storeSourceData(String sourceName, String geojson) {
+    final Object previous = addedFeaturesByLayer.put(sourceName, geojson);
+    if (previous instanceof Future) {
+      ((Future<?>) previous).cancel(false);
     }
-    if (!(stored instanceof String)) {
+    if (geojson == null || !featureUpdatedSources.contains(sourceName)) {
+      return;
+    }
+    try {
+      addedFeaturesByLayer.put(
+          sourceName, sourceTextExecutor().submit(() -> FeatureCollectionText.parse(geojson)));
+    } catch (RejectedExecutionException e) {
+      // Disposed: the raw String stays and is read when it is needed.
+    }
+  }
+
+  private ExecutorService sourceTextExecutor() {
+    if (sourceTextExecutor == null) {
+      sourceTextExecutor =
+          Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "MapLibreSourceText"));
+    }
+    return sourceTextExecutor;
+  }
+
+  // The source data as a FeatureCollection, read once and cached, or null when
+  // it is neither a FeatureCollection nor a Feature.
+  private FeatureCollectionText parsedSourceData(String sourceName)
+      throws ExecutionException, InterruptedException {
+    featureUpdatedSources.add(sourceName);
+    Object stored = addedFeaturesByLayer.get(sourceName);
+    if (stored instanceof Future) {
+      // Read ahead since the last full update: wait for it rather than read
+      // the same data twice.
+      stored = ((Future<?>) stored).get();
+    } else if (stored instanceof String) {
+      stored = FeatureCollectionText.parse((String) stored);
+    }
+    if (!(stored instanceof FeatureCollectionText)) {
       return null;
     }
-    final FeatureCollectionText collection = FeatureCollectionText.parse((String) stored);
-    if (collection != null) {
-      addedFeaturesByLayer.put(sourceName, collection);
-    }
-    return collection;
+    addedFeaturesByLayer.put(sourceName, stored);
+    return (FeatureCollectionText) stored;
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -3985,6 +4031,9 @@ final class MapLibreMapController
     // once. No manual onPause/onStop dance needed here.
     destroyMapViewIfNecessary();
     unregisterFromLifecycle();
+    if (sourceTextExecutor != null) {
+      sourceTextExecutor.shutdownNow();
+    }
 
     try {
       applicationContext.unregisterComponentCallbacks(this);
