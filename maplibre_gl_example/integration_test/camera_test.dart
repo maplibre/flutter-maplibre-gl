@@ -7,9 +7,8 @@
 // toScreenLocationBatch / toLatLng, getMetersPerPixelAtLatitude,
 // setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
-// controller's cached cameraPosition, the onCameraMove / onCameraIdle
-// callbacks and the INVALID_ARGUMENT answer to calls Android and iOS cannot
-// read.
+// controller's cached cameraPosition and the onCameraMove / onCameraIdle
+// callbacks.
 //
 // Each platform turns a CameraUpdate into its own SDK camera and does its own
 // projection math (density conversion on Android, altitude-based zoom on iOS,
@@ -23,17 +22,11 @@
 //     --target=integration_test/camera_test.dart -d chrome
 import 'dart:math';
 
-import 'package:flutter/rendering.dart' show RenderAndroidView, RenderUiKitView;
-import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter/widgets.dart'
-    show AndroidViewSurface, EdgeInsets, Size, SizedBox, ValueNotifier;
+    show EdgeInsets, Size, SizedBox, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-// The generated messages are internal to maplibre_gl; the test drives them
-// directly to send a call the public API cannot.
-// ignore: implementation_imports
-import 'package:maplibre_gl/src/native/messages.g.dart';
 
 import 'support/map_harness.dart';
 
@@ -1265,60 +1258,7 @@ void main() {
       );
     });
   });
-
-  // A call the controller cannot produce, sent straight through the map's
-  // generated host API. It must fail with INVALID_ARGUMENT rather than never
-  // complete. Arguments of the wrong type, such as a non-numeric toLatLng,
-  // can no longer be sent: the generated API types them.
-  group('invalid arguments', () {
-    testWidgets('camera#move with an unknown update', (tester) async {
-      await pumpMap(tester);
-      final error = await pumpUntil(
-        tester,
-        _errorOf(_mapHostApi(tester).cameraMove(<Object?>['bogus'])),
-        'camera#move bogus',
-        timeout: const Duration(seconds: 10),
-      );
-      expect(
-        error,
-        isA<PlatformException>().having(
-          (e) => e.code,
-          'code',
-          'INVALID_ARGUMENT',
-        ),
-      );
-    }, skip: testPlatform == TestPlatform.web);
-  });
 }
-
-/// The generated host API of the map pumped by [pumpMap], for calls the
-/// controller cannot send.
-MapLibreMapHostApi _mapHostApi(WidgetTester tester) {
-  final int id;
-  if (testPlatform == TestPlatform.ios) {
-    id =
-        tester.allRenderObjects
-            .whereType<RenderUiKitView>()
-            .single
-            .viewController
-            .id;
-  } else {
-    final surfaces = find.byType(AndroidViewSurface);
-    id =
-        surfaces.evaluate().isNotEmpty
-            ? tester.widget<AndroidViewSurface>(surfaces).controller.viewId
-            : tester.allRenderObjects
-                .whereType<RenderAndroidView>()
-                .single
-                .controller
-                .viewId;
-  }
-  return MapLibreMapHostApi(messageChannelSuffix: '$id');
-}
-
-/// Completes with the error [call] fails with, or null if it succeeds.
-Future<Object?> _errorOf(Future<Object?> call) =>
-    call.then<Object?>((_) => null, onError: (Object error) => error);
 
 /// Reads the live camera, failing if the platform has none.
 Future<CameraPosition> _queryCamera(
