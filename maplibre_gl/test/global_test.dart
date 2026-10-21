@@ -449,6 +449,30 @@ void main() {
     expect(statuses, isEmpty);
   });
 
+  test('resetOfflineDatabase keeps a download started meanwhile', () async {
+    final earlier = <DownloadRegionStatus>[];
+    await downloadOfflineRegion(definition, onEvent: earlier.add);
+    final earlierId = api.lastDownloadId!;
+
+    final reset = resetOfflineDatabase();
+    final later = <DownloadRegionStatus>[];
+    await downloadOfflineRegion(definition, onEvent: later.add);
+    final laterId = api.lastDownloadId!;
+    await reset;
+
+    final events =
+        MapLibreGlobalPlatform.instance as MapLibreOfflineDownloadFlutterApi;
+    for (final id in [earlierId, laterId]) {
+      await events.onDownloadEvent(
+        id,
+        PgOfflineDownloadEvent(status: PgOfflineDownloadStatus.start),
+      );
+    }
+
+    expect(earlier, isEmpty);
+    expect(later, [isA<InProgress>()]);
+  });
+
   test('ensureWebLibraryLoaded completes without reaching native', () async {
     await expectLater(MapLibreMap.ensureWebLibraryLoaded(), completes);
 

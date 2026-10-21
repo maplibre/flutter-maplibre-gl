@@ -143,15 +143,18 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
 
   @override
   Future<void> resetOfflineDatabase() async {
+    // The downloads the reset can end. One started while it runs is not
+    // among them and keeps its listener.
+    final resetDownloadIds = _downloadListeners.keys.toList();
     try {
       await _api.resetOfflineDatabase();
     } finally {
       // Native ends every download in flight with a DatabaseReset error, which
       // removes its listener. The short delay lets those events arrive first;
-      // anything still registered afterwards would never hear from native
-      // again, so it is dropped.
+      // any of those downloads still registered afterwards would never hear
+      // from native again, so its listener is dropped.
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      _downloadListeners.clear();
+      resetDownloadIds.forEach(_downloadListeners.remove);
     }
   }
 
