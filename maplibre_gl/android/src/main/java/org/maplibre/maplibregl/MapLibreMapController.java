@@ -129,8 +129,8 @@ import io.flutter.plugin.platform.PlatformView;
  * Controller of a single MapLibre {@link MapView} instance exposed as a Flutter
  * {@link PlatformView}. Mediates between the Pigeon channels of the map, the host
  * activity {@link Lifecycle}, and the native {@link MapView}. Dart calls arrive through
- * {@link MapHostApi}, which hands each one to {@link #onMethodCall} as the method call the
- * former method channel delivered; events go back through {@link MapLibreMapFlutterApi}.
+ * {@link MapHostApi}, which hands each one to the {@link MapCalls} method of the same name;
+ * events go back through {@link MapLibreMapFlutterApi}.
  *
  * <h2>Surviving activity recreation</h2>
  * Android can destroy and recreate the host activity at any time (rotation, "Don't keep
@@ -148,10 +148,10 @@ import io.flutter.plugin.platform.PlatformView;
  * {@link #onActivityDetached()}, {@link #onActivityRebound()}); with the
  * {@code mapViewCreated/Started/Resumed} flags they keep each MapView's lifecycle calls
  * balanced however Jetpack replays events. While the MapView is being rebuilt,
- * {@code map#waitForMap} parks its result until {@link #onMapReady} fires again, and every
+ * {@link #mapWaitForMap} parks its result until {@link #onMapReady} fires again, and every
  * other map-touching call answers {@code MAP_NOT_READY}.
  *
- * <p>{@code map#pause} / {@code map#resume} drive rendering explicitly through
+ * <p>{@link #mapPause} / {@link #mapResume} drive rendering explicitly through
  * {@link #userPaused}: a map paused from Dart stays paused even when the activity returns to
  * the foreground.
  */
@@ -165,8 +165,8 @@ final class MapLibreMapController
         MapView.OnDidBecomeIdleListener,
         MapLibreMap.OnMapClickListener,
         MapLibreMap.OnMapLongClickListener,
+        MapCalls,
         MapLibreMapOptionsSink,
-        MethodChannel.MethodCallHandler,
         OnMapReadyCallback,
         OnCameraTrackingChangedListener,
         PlatformView {
@@ -490,7 +490,7 @@ final class MapLibreMapController
    *   <li>{@link #lastCameraPosition} (re-applied in {@link #onMapReady}).</li>
    *   <li>{@link #savedMapViewState} (handed to {@code mapView.onCreate}). MapLibre keeps
    *       the camera and its {@code UiSettings} there, so UI flags changed via
-   *       {@code map#update} after construction come back with it: compass, logo and
+   *       {@link #mapUpdate} after construction come back with it: compass, logo and
    *       attribution visibility, gravity and margins, and the gesture toggles. The
    *       attribution tint is not in it and the pan inertia only partly, so
    *       {@link #onMapReady} re-applies both.</li>
@@ -505,7 +505,7 @@ final class MapLibreMapController
    *   <li>Sources / layers / images added at runtime from Dart.</li>
    *   <li>Style switched at runtime via {@code setStyleString} (reverts to the
    *       initial style).</li>
-   *   <li>Runtime tweaks applied via {@code map#update} after construction that
+   *   <li>Runtime tweaks applied via {@link #mapUpdate} after construction that
    *       MapLibre does not keep in its state bundle, such as the min/max zoom
    *       preference.</li>
    *   <li>In-flight gestures handled by {@link AndroidGesturesManager}.</li>
@@ -1886,71 +1886,224 @@ final class MapLibreMapController
   }
 
   @Override
-  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
-    switch (call.method) {
-      case "map#waitForMap":
-        if (mapLibreMap != null) {
-          result.success(null);
-          return;
-        }
-        mapReadyResult = result;
-        break;
-      case "map#update":
-        {
-          // Almost every option setter below goes through mapLibreMap, which is
-          // null while the MapView is being rebuilt after activity recreation.
-          // Answer like the map-touching cases do rather than reading it blind.
-          if (mapLibreMap == null) {
-            result.error(
-                "MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
-            break;
-          }
-          Convert.interpretMapLibreMapOptions(call.argument("options"), this, context);
-          result.success(Convert.toJson(getCameraPosition()));
-          break;
-        }
-      // Dart-driven pause/resume. Only flips MapView state when it's actually out
-      // of sync with the request, so we never double-call onPause/onResume against
-      // the natural Activity lifecycle (which the lifecycle observer handles).
-      case "map#pause":
-        userPaused = true;
-        if (!disposed && mapView != null && mapViewResumed) {
-          mapView.onPause();
-          mapViewResumed = false;
-          stopListeningForLocationUpdates();
-        }
-        stopLocationComponentWhileUserPaused();
-        result.success(null);
-        break;
-      case "map#resume":
-        userPaused = false;
-        if (!disposed
-            && mapView != null
-            && !mapViewResumed
-            && boundLifecycle != null
-            && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
-          mapView.onResume();
-          mapViewResumed = true;
-          if (locationComponent != null && mapViewStarted) {
-            locationComponent.onStart();
-          }
-          if (myLocationEnabled) {
-            startListeningForLocationUpdates();
-          }
-        }
-        result.success(null);
-        break;
-      // All cases below require a live mapLibreMap. If the map is being recreated
-      // (e.g. after "Don't keep activities") we stash the result so the Flutter
-      // side gets its answer once onMapReady fires again.
-      default:
-        if (mapLibreMap == null) {
-          result.error("MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
-          return;
-        }
-        onMethodCallWithMap(call, result);
-        return;
+  public boolean isMapReady() {
+    return mapLibreMap != null;
+  }
+
+  // -- Map --------------------------------------------------------------------
+
+  @Override
+  public void mapWaitForMap(MethodChannel.Result result) {
+    if (mapLibreMap != null) {
+      result.success(null);
+      return;
     }
+    mapReadyResult = result;
+  }
+
+  @Override
+  public void mapUpdate(Map<String, Object> options, MethodChannel.Result result) {
+    Convert.interpretMapLibreMapOptions(options, this, context);
+    result.success(Convert.toJson(getCameraPosition()));
+  }
+
+  // Dart-driven pause/resume. Only flips MapView state when it's actually out
+  // of sync with the request, so we never double-call onPause/onResume against
+  // the natural Activity lifecycle (which the lifecycle observer handles).
+  @Override
+  public void mapPause(MethodChannel.Result result) {
+    userPaused = true;
+    if (!disposed && mapView != null && mapViewResumed) {
+      mapView.onPause();
+      mapViewResumed = false;
+      stopListeningForLocationUpdates();
+    }
+    stopLocationComponentWhileUserPaused();
+    result.success(null);
+  }
+
+  @Override
+  public void mapResume(MethodChannel.Result result) {
+    userPaused = false;
+    if (!disposed
+        && mapView != null
+        && !mapViewResumed
+        && boundLifecycle != null
+        && boundLifecycle.getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+      mapView.onResume();
+      mapViewResumed = true;
+      if (locationComponent != null && mapViewStarted) {
+        locationComponent.onStart();
+      }
+      if (myLocationEnabled) {
+        startListeningForLocationUpdates();
+      }
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void mapMatchMapLanguageWithDeviceDefault(MethodChannel.Result result) {
+    try {
+      final Locale deviceLocale = Locale.getDefault();
+      MapLibreMapUtils.setMapLanguage(mapLibreMap, deviceLocale.getLanguage());
+
+      result.success(null);
+    } catch (RuntimeException exception) {
+      Log.d(TAG, exception.toString());
+      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+    }
+  }
+
+  @Override
+  public void mapSetMapLanguage(String language, MethodChannel.Result result) {
+    try {
+      MapLibreMapUtils.setMapLanguage(mapLibreMap, language);
+
+      result.success(null);
+    } catch (RuntimeException exception) {
+      Log.d(TAG, exception.toString());
+      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+    }
+  }
+
+  @Override
+  public void mapSetTelemetryEnabled(boolean enabled, MethodChannel.Result result) {
+    result.success(null);
+  }
+
+  @Override
+  public void mapGetTelemetryEnabled(MethodChannel.Result result) {
+    result.success(false);
+  }
+
+  @Override
+  public void mapSetMaximumFps(long fps, MethodChannel.Result result) {
+    final int maximumFps = Convert.toIntExact(fps);
+    if (mapView != null) {
+      mapView.setMaximumFps(maximumFps);
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void mapForceOnlineMode(MethodChannel.Result result) {
+    // Force online mode by setting connectivity to true
+    if (mapView != null) {
+      ConnectivityReceiver.instance(mapView.getContext()).setConnected(true);
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void mapSetCustomHeaders(
+      Map<String, String> headers, List<String> filter, MethodChannel.Result result) {
+    if (mapLibreMap != null) {
+      MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
+    } else {
+      result.success(null);
+    }
+  }
+
+  @Override
+  public void mapGetCustomHeaders(MethodChannel.Result result) {
+    if (mapLibreMap != null) {
+      result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
+    } else {
+      result.success(null);
+    }
+  }
+
+  @Override
+  public void mapInvalidateAmbientCache(MethodChannel.Result result) {
+    OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
+
+    fileSource.invalidateAmbientCache(
+        new OfflineManager.FileSourceCallback() {
+          @Override
+          public void onSuccess() {
+            result.success(null);
+          }
+
+          @Override
+          public void onError(@NonNull String message) {
+            result.error("AMBIENT_CACHE_ERROR", message, null);
+          }
+        });
+  }
+
+  @Override
+  public void mapClearAmbientCache(MethodChannel.Result result) {
+    OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
+
+    fileSource.clearAmbientCache(
+        new OfflineManager.FileSourceCallback() {
+          @Override
+          public void onSuccess() {
+            result.success(null);
+          }
+
+          @Override
+          public void onError(@NonNull String message) {
+            result.error("AMBIENT_CACHE_ERROR", message, null);
+          }
+        });
+  }
+
+  @Override
+  public void mapTakeSnapshot(
+      @Nullable Long width, @Nullable Long height, MethodChannel.Result result) {
+    if (mapLibreMap == null) {
+      result.error("MAP_NOT_READY", "Map is not ready", null);
+      return;
+    }
+    Style currentStyle = mapLibreMap.getStyle();
+    if (currentStyle == null) {
+      result.error("STYLE_NOT_READY", "Map style is not loaded", null);
+      return;
+    }
+    // A style set as JSON has no URI, and a snapshotter given an empty one
+    // never calls back, so hand it the JSON instead.
+    String styleUrl = currentStyle.getUri();
+    Style.Builder snapshotStyle =
+        styleUrl == null || styleUrl.isEmpty()
+            ? new Style.Builder().fromJson(currentStyle.getJson())
+            : new Style.Builder().fromUri(styleUrl);
+    int snapshotWidth = width != null ? Convert.toIntExact(width) : mapView.getWidth();
+    int snapshotHeight = height != null ? Convert.toIntExact(height) : mapView.getHeight();
+
+    MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
+            .withStyleBuilder(snapshotStyle)
+            .withCameraPosition(mapLibreMap.getCameraPosition());
+    if (activeSnapshotter != null) {
+      activeSnapshotter.cancel();
+    }
+    activeSnapshotter = new MapSnapshotter(context, options);
+    activeSnapshotter.start(new MapSnapshotter.SnapshotReadyCallback() {
+      @Override
+      public void onSnapshotReady(MapSnapshot snapshot) {
+        activeSnapshotter = null;
+        Bitmap bitmap = snapshot.getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        result.success(stream.toByteArray());
+      }
+    }, new MapSnapshotter.ErrorHandler() {
+      @Override
+      public void onError(String error) {
+        activeSnapshotter = null;
+        result.error("SNAPSHOT_ERROR", error, null);
+      }
+    });
+  }
+
+  @Override
+  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+    if (mapLibreMap == null) {
+      result.error("MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
+      return;
+    }
+    onMethodCallWithMap(call, result);
   }
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
@@ -1963,19 +2116,6 @@ final class MapLibreMapController
           int myLocationTrackingMode = call.argument("mode");
           setMyLocationTrackingMode(myLocationTrackingMode);
           result.success(null);
-          break;
-        }
-      case "map#matchMapLanguageWithDeviceDefault":
-        {
-          try {
-            final Locale deviceLocale = Locale.getDefault();
-            MapLibreMapUtils.setMapLanguage(mapLibreMap, deviceLocale.getLanguage());
-
-            result.success(null);
-          } catch (RuntimeException exception) {
-            Log.d(TAG, exception.toString());
-            result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
-          }
           break;
         }
       case "map#updateContentInsets":
@@ -1992,19 +2132,6 @@ final class MapLibreMapController
             animateCamera(cameraUpdate, null, result);
           } else {
             moveCamera(cameraUpdate, result);
-          }
-          break;
-        }
-      case "map#setMapLanguage":
-        {
-          final String language = call.argument("language");
-          try {
-            MapLibreMapUtils.setMapLanguage(mapLibreMap, language);
-
-            result.success(null);
-          } catch (RuntimeException exception) {
-            Log.d(TAG, exception.toString());
-            result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
           }
           break;
         }
@@ -2203,34 +2330,6 @@ final class MapLibreMapController
           result.success(featuresReply(features));
           break;
         }
-      case "map#setTelemetryEnabled":
-        {
-          result.success(null);
-          break;
-        }
-      case "map#getTelemetryEnabled":
-        {
-          result.success(false);
-          break;
-        }
-      case "map#setMaximumFps":
-        {
-          final int fps = call.argument("fps");
-          if (mapView != null) {
-            mapView.setMaximumFps(fps);
-          }
-          result.success(null);
-          break;
-        }
-      case "map#forceOnlineMode":
-        {
-          // Force online mode by setting connectivity to true
-          if (mapView != null) {
-            ConnectivityReceiver.instance(mapView.getContext()).setConnected(true);
-          }
-          result.success(null);
-          break;
-        }
       case "camera#ease":
         {
           final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
@@ -2373,62 +2472,6 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-      case "map#setCustomHeaders":
-        {
-          if (mapLibreMap != null) {
-            HashMap<String, String> headers = (HashMap<String, String>)call.argument("headers");
-            List<String> filter = (List<String>)call.argument("filter");
-            MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
-          } else {
-            result.success(null);
-          }
-          break;
-        }
-      case "map#getCustomHeaders":
-        {
-          if (mapLibreMap != null) {
-            result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
-          } else {
-            result.success(null);
-          }
-          break;
-        }
-      case "map#invalidateAmbientCache":
-        {
-          OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
-
-          fileSource.invalidateAmbientCache(
-              new OfflineManager.FileSourceCallback() {
-                @Override
-                public void onSuccess() {
-                  result.success(null);
-                }
-
-                @Override
-                public void onError(@NonNull String message) {
-                  result.error("AMBIENT_CACHE_ERROR", message, null);
-                }
-              });
-          break;
-        }
-      case "map#clearAmbientCache":
-      {
-        OfflineManager fileSource = OfflineManager.Companion.getInstance(context);
-
-        fileSource.clearAmbientCache(
-                new OfflineManager.FileSourceCallback() {
-                  @Override
-                  public void onSuccess() {
-                    result.success(null);
-                  }
-
-                  @Override
-                  public void onError(@NonNull String message) {
-                    result.error("AMBIENT_CACHE_ERROR", message, null);
-                  }
-                });
-        break;
-      }
       case "source#addGeoJson":
         {
           final String sourceId = call.argument("sourceId");
@@ -3809,56 +3852,6 @@ final class MapLibreMapController
         }
         break;
       }
-      case "map#takeSnapshot":
-      {
-        if (mapLibreMap == null) {
-          result.error("MAP_NOT_READY", "Map is not ready", null);
-          break;
-        }
-        Style currentStyle = mapLibreMap.getStyle();
-        if (currentStyle == null) {
-          result.error("STYLE_NOT_READY", "Map style is not loaded", null);
-          break;
-        }
-        // A style set as JSON has no URI, and a snapshotter given an empty one
-        // never calls back, so hand it the JSON instead.
-        String styleUrl = currentStyle.getUri();
-        Style.Builder snapshotStyle =
-            styleUrl == null || styleUrl.isEmpty()
-                ? new Style.Builder().fromJson(currentStyle.getJson())
-                : new Style.Builder().fromUri(styleUrl);
-        Map<String, Object> snapshotArgs = (Map<String, Object>) call.arguments;
-        Integer width = snapshotArgs != null ? (Integer) snapshotArgs.get("width") : null;
-        Integer height = snapshotArgs != null ? (Integer) snapshotArgs.get("height") : null;
-
-        int snapshotWidth = width != null ? width : mapView.getWidth();
-        int snapshotHeight = height != null ? height : mapView.getHeight();
-
-        MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
-                .withStyleBuilder(snapshotStyle)
-                .withCameraPosition(mapLibreMap.getCameraPosition());
-        if (activeSnapshotter != null) {
-          activeSnapshotter.cancel();
-        }
-        activeSnapshotter = new MapSnapshotter(context, options);
-        activeSnapshotter.start(new MapSnapshotter.SnapshotReadyCallback() {
-          @Override
-          public void onSnapshotReady(MapSnapshot snapshot) {
-            activeSnapshotter = null;
-            Bitmap bitmap = snapshot.getBitmap();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            result.success(stream.toByteArray());
-          }
-        }, new MapSnapshotter.ErrorHandler() {
-          @Override
-          public void onError(String error) {
-            activeSnapshotter = null;
-            result.error("SNAPSHOT_ERROR", error, null);
-          }
-        });
-        break;
-      }
       default:
         result.notImplemented();
     }
@@ -3967,7 +3960,7 @@ final class MapLibreMapController
       activeSnapshotter = null;
     }
     MapLibreMapHostApi.Companion.setUp(messenger, null, String.valueOf(id));
-    // A map#waitForMap parked while the map was still being built is only ever
+    // A mapWaitForMap call parked while the map was still being built is only ever
     // answered by onMapReady, which will not fire now. Answer it here, or the Dart
     // side keeps awaiting initPlatform: onMapCreated never fires and everything
     // waiting on the controller waits forever. Only dispose() does this; a MapView
@@ -4559,7 +4552,7 @@ final class MapLibreMapController
     }
 
     // Only while the MapView is resumed: paused from Dart or by the activity, onResume and
-    // map#resume start the listener when the map comes back (#1094).
+    // mapResume start the listener when the map comes back (#1094).
     if (myLocationEnabled && mapViewResumed) {
       startListeningForLocationUpdates();
     } else {
@@ -4575,7 +4568,7 @@ final class MapLibreMapController
   /**
    * The location component runs its own location engine from MapView.onStart to onStop, so
    * pausing the MapView alone leaves the GPS on. While Dart has paused the map, stop the
-   * component as the activity's onStop would; map#resume starts it again (#1094).
+   * component as the activity's onStop would; mapResume starts it again (#1094).
    */
   private void stopLocationComponentWhileUserPaused() {
     if (userPaused && locationComponent != null) {

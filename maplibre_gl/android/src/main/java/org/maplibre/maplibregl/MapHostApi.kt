@@ -5,24 +5,22 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * The calls of one map, from Dart. Each one is rebuilt as the method call the
- * per-map method channel used to deliver, with the same name and argument
- * keys, and handed to the handler that channel fed: [MapLibreMapController.onMethodCall].
- * That keeps every check and error code of the handler as it was.
+ * The calls of one map, from Dart. Each one goes to the [MapCalls] method of
+ * the same name, with the same arguments, which answers through a
+ * [MethodChannel.Result]: [PigeonMethodResult] hands that answer to Pigeon.
  *
- * The handler is typed as a [MethodChannel.MethodCallHandler], which the
- * controller implements, because the controller is a package-private Java
- * class: Kotlin does not let an internal constructor expose it.
+ * Every call but [mapWaitForMap], [mapPause] and [mapResume] needs the native
+ * map, which is null while the MapView is being rebuilt after the activity was
+ * recreated. Such a call is answered MAP_NOT_READY then, without reaching [map].
  */
-internal class MapHostApi(
-    private val handler: MethodChannel.MethodCallHandler,
-) : MapLibreMapHostApi {
+internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
 
+    // Answered once the map is ready.
     override fun mapWaitForMap(callback: (Result<Unit>) -> Unit) =
-        unit("map#waitForMap", null, callback)
+        answer(PigeonMethodResult.unit(callback)) { map.mapWaitForMap(it) }
 
     override fun mapUpdate(options: Map<String, Any?>, callback: (Result<Any?>) -> Unit) =
-        any("map#update", hashMapOf("options" to options), callback)
+        any(callback) { map.mapUpdate(options, it) }
 
     override fun cameraAnimate(
         cameraUpdate: List<Any?>,
@@ -57,7 +55,7 @@ internal class MapHostApi(
     ) = unit("locationComponent#setManualLocation", update, callback)
 
     override fun mapMatchMapLanguageWithDeviceDefault(callback: (Result<Unit>) -> Unit) =
-        unit("map#matchMapLanguageWithDeviceDefault", null, callback)
+        unit(callback) { map.mapMatchMapLanguageWithDeviceDefault(it) }
 
     override fun mapUpdateContentInsets(
         bounds: Map<String, Double>,
@@ -70,23 +68,25 @@ internal class MapHostApi(
     )
 
     override fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit) =
-        unit("map#setMapLanguage", hashMapOf("language" to language), callback)
+        unit(callback) { map.mapSetMapLanguage(language, it) }
 
     override fun mapSetTelemetryEnabled(enabled: Boolean, callback: (Result<Unit>) -> Unit) =
-        unit("map#setTelemetryEnabled", hashMapOf("enabled" to enabled), callback)
+        unit(callback) { map.mapSetTelemetryEnabled(enabled, it) }
 
     override fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit) =
-        call("map#getTelemetryEnabled", null, callback) { it as Boolean }
+        call(callback, { it as Boolean }) { map.mapGetTelemetryEnabled(it) }
 
     override fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit) =
-        unit("map#setMaximumFps", hashMapOf("fps" to fps), callback)
+        unit(callback) { map.mapSetMaximumFps(fps, it) }
 
     override fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit) =
-        unit("map#forceOnlineMode", null, callback)
+        unit(callback) { map.mapForceOnlineMode(it) }
 
-    override fun mapPause(callback: (Result<Unit>) -> Unit) = unit("map#pause", null, callback)
+    override fun mapPause(callback: (Result<Unit>) -> Unit) =
+        answer(PigeonMethodResult.unit(callback)) { map.mapPause(it) }
 
-    override fun mapResume(callback: (Result<Unit>) -> Unit) = unit("map#resume", null, callback)
+    override fun mapResume(callback: (Result<Unit>) -> Unit) =
+        answer(PigeonMethodResult.unit(callback)) { map.mapResume(it) }
 
     override fun cameraEase(
         cameraUpdate: List<Any?>,
@@ -121,11 +121,10 @@ internal class MapHostApi(
         headers: Map<String, String>,
         filter: List<String>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("map#setCustomHeaders", hashMapOf("headers" to headers, "filter" to filter), callback)
+    ) = unit(callback) { map.mapSetCustomHeaders(headers, filter, it) }
 
-    // The legacy arguments were an empty map.
     override fun mapGetCustomHeaders(callback: (Result<Any?>) -> Unit) =
-        any("map#getCustomHeaders", hashMapOf<String, Any?>(), callback)
+        any(callback) { map.mapGetCustomHeaders(it) }
 
     override fun mapQueryRenderedFeaturesAtPoint(
         x: Double,
@@ -210,10 +209,10 @@ internal class MapHostApi(
     )
 
     override fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit) =
-        unit("map#invalidateAmbientCache", null, callback)
+        unit(callback) { map.mapInvalidateAmbientCache(it) }
 
     override fun mapClearAmbientCache(callback: (Result<Unit>) -> Unit) =
-        unit("map#clearAmbientCache", null, callback)
+        unit(callback) { map.mapClearAmbientCache(it) }
 
     override fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit) =
         any("locationComponent#getLastLocation", null, callback)
@@ -674,22 +673,12 @@ internal class MapHostApi(
     override fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit) =
         call("layer#getVisibility", hashMapOf("layerId" to layerId), callback) { it as Boolean? }
 
-    // The legacy call always sent a map, without the sizes left unset. The
-    // handler answers a byte[].
+    // Answered with the PNG bytes.
     override fun mapTakeSnapshot(
         width: Long?,
         height: Long?,
         callback: (Result<ByteArray?>) -> Unit,
-    ) {
-        val arguments = hashMapOf<String, Any?>()
-        if (width != null) {
-            arguments["width"] = width
-        }
-        if (height != null) {
-            arguments["height"] = height
-        }
-        call("map#takeSnapshot", arguments, callback) { it as ByteArray? }
-    }
+    ) = call(callback, { it as ByteArray? }) { map.mapTakeSnapshot(width, height, it) }
 
     override fun styleGetLayerIds(callback: (Result<Any?>) -> Unit) =
         any("style#getLayerIds", null, callback)
@@ -744,11 +733,53 @@ internal class MapHostApi(
         "properties" to properties,
     )
 
-    /** Runs a call whose answer Dart does not read. */
+    /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
+    private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =
+        withMap(PigeonMethodResult.unit(callback), body)
+
+    /** Runs [body], which needs the map, for a call whose answer goes to Dart as it is. */
+    private fun any(callback: (Result<Any?>) -> Unit, body: (MethodChannel.Result) -> Unit) =
+        withMap(PigeonMethodResult(callback) { it }, body)
+
+    /**
+     * Runs [body], which needs the map, for a call whose answer [convert] turns
+     * into the type the Pigeon method returns.
+     */
+    private fun <T> call(
+        callback: (Result<T>) -> Unit,
+        convert: (Any?) -> T,
+        body: (MethodChannel.Result) -> Unit,
+    ) = withMap(PigeonMethodResult(callback, convert), body)
+
+    /** Runs [body] if the map is ready, and answers MAP_NOT_READY otherwise. */
+    private fun withMap(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) =
+        answer(result) {
+            if (map.isMapReady) {
+                body(it)
+            } else {
+                it.error(MAP_NOT_READY, MAP_NOT_READY_MESSAGE, null)
+            }
+        }
+
+    /**
+     * Runs [body] with [result]. What it throws is answered with code "error":
+     * Pigeon does not catch what an asynchronous handler throws, which would
+     * reach Dart as a channel-error.
+     */
+    private fun answer(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) {
+        try {
+            body(result)
+        } catch (e: RuntimeException) {
+            Log.e(TAG, "A map call failed", e)
+            result.error("error", e.message, Log.getStackTraceString(e))
+        }
+    }
+
+    /** Runs a call not yet typed, whose answer Dart does not read. */
     private fun unit(method: String, arguments: Any?, callback: (Result<Unit>) -> Unit) =
         call(method, arguments, callback) { }
 
-    /** Runs a call whose answer goes to Dart as the handler gave it. */
+    /** Runs a call not yet typed, whose answer goes to Dart as the handler gave it. */
     private fun any(method: String, arguments: Any?, callback: (Result<Any?>) -> Unit) =
         call(method, arguments, callback) { it }
 
@@ -761,21 +792,15 @@ internal class MapHostApi(
         arguments: Any?,
         callback: (Result<T>) -> Unit,
         convert: (Any?) -> T,
-    ) {
-        val result = PigeonMethodResult(callback, convert)
-        try {
-            handler.onMethodCall(MethodCall(method, legacyInts(arguments)), result)
-        } catch (e: RuntimeException) {
-            // Pigeon does not catch what an asynchronous handler throws: it
-            // would reach Dart as a channel-error. Report it with code "error",
-            // as the method channel did.
-            Log.e(TAG, "Failed to handle $method", e)
-            result.error("error", e.message, Log.getStackTraceString(e))
-        }
+    ) = answer(PigeonMethodResult(callback, convert)) {
+        map.onMethodCall(MethodCall(method, legacyInts(arguments)), it)
     }
 
     companion object {
         private const val TAG = "MapHostApi"
+        private const val MAP_NOT_READY = "MAP_NOT_READY"
+        private const val MAP_NOT_READY_MESSAGE =
+            "Map is not ready (activity may have been recreated)"
 
         /**
          * [value] with every Long that fits in 32 bits turned into an Int, in
