@@ -34,6 +34,9 @@
 * When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style, instead of once per load (#1088).
 * **Android**: location updates stop while the app is in the background, as they already did on iOS, so `onUserLocationUpdated` no longer fires there; use a background location plugin if you need positions then (#1105).
 * **Android, iOS**: `pauseMap()` also stops location updates, so `onUserLocationUpdated` does not fire until `resumeMap()` (#1105).
+* **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them, like on Android and web. `animateCamera` used to complete with `null`, right away when no duration was given, so code awaiting it now runs after the animation; `easeCamera` used to complete with `true` even when interrupted (#1106).
+* **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null` (#1107).
+* **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, before the camera arrives, like on web, instead of never completing. Code after an awaited call now runs in that case: check `mounted` or `controller.isDisposed` before using the controller or calling `setState` (#1108).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -57,7 +60,7 @@
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 
 ### Fixed
-* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup (#1103).
+* Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
 * Layer filters now behave the same on Android, iOS and web (#1055):
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
   * `null` removes a filter. Before, it was ignored or threw.

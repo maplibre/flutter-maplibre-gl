@@ -47,9 +47,14 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   /// Whether a method was called at least once.
   bool wasCalled(String method) => calls.any((c) => c.method == method);
 
+  /// Runs at the end of [initPlatform], so a test can hold the map's creation
+  /// back.
+  Future<void> Function(int id)? onInitPlatform;
+
   @override
   Future<void> initPlatform(int id) async {
     calls.add(PlatformCall('initPlatform', [id]));
+    await onInitPlatform?.call(id);
   }
 
   /// The last creationParams passed to [buildView].

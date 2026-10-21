@@ -494,9 +494,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
-  /// another camera call or a gesture.
-  /// Note: on iOS it always completes with null: when the animation ends if a
-  /// [duration] is given, right away otherwise.
+  /// another camera call, a gesture or the map being disposed.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -507,10 +505,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// Instantaneously re-position the camera.
   /// Note: moveCamera() quickly moves the camera, which can be visually jarring for a user. Strongly consider using the animateCamera() methods instead because it's less abrupt.
   ///
-  /// The returned [Future] completes after the change has been made on the
-  /// platform side.
-  /// It returns true if the camera was successfully moved and false if the movement was canceled.
-  /// Note: this currently always returns immediately with a value of null on iOS
+  /// The returned [Future] completes with true once the camera has moved, on
+  /// every platform. A move is instant, so unlike [animateCamera] nothing can
+  /// cut it short. On Android and iOS an update that cannot be read fails
+  /// with a [PlatformException] with code `INVALID_ARGUMENT`.
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     return _maplibrePlatform.moveCamera(cameraUpdate);
   }
@@ -1313,8 +1311,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking
   /// without velocity discontinuities. This is ideal for following moving objects.
   ///
-  /// The returned [Future] completes with true if the animation finished successfully,
-  /// or false if it was cancelled.
+  /// The returned [Future] completes when the animation ends, with true if the
+  /// camera arrived and false if the movement was canceled, for example by
+  /// another camera call, a gesture or the map being disposed.
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
