@@ -576,52 +576,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             result(featuresReply(features, methodName: queryName))
-        case "camera#ease":
-            guard let parsed = parseCameraCall(methodCall, result) else { return }
-            let arguments = parsed.arguments
-            let camera = parsed.camera
-
-            if let duration = arguments["duration"] as? Double, duration > 0 {
-                let interval: TimeInterval = duration / 1000.0
-
-                // Create timing function based on interpolation parameter
-                var timingFunction: CAMediaTimingFunction?
-                if let interpolationStr = arguments["interpolation"] as? String {
-                    switch interpolationStr {
-                    case "linear":
-                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-                    case "easeInOut":
-                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-                    case "easeOut":
-                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-                    case "fastOutLinearIn":
-                        // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
-                        timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
-                    default:
-                        timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-                    }
-                } else {
-                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-                }
-
-                cameraAnimations.track(result: result) { completion in
-                    mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
-                }
-            } else {
-                cameraAnimations.track(result: result) { completion in
-                    mapView.setCamera(
-                        camera,
-                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                        animationTimingFunction: nil,
-                        completionHandler: completion
-                    )
-                }
-            }
-        case "map#queryCameraPosition":
-            // On-demand query: read the live camera directly. Unlike the
-            // streaming paths, which go through getCamera() and honor
-            // trackCameraPosition, a one-off query always returns a value.
-            result(mapView.camera.toDict(mapView: mapView))
         case "map#editGeoJsonSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let srcId = arguments["id"] as? String else { return }
@@ -690,113 +644,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             reply["result"] = ret
             result(reply)
-        case "map#getVisibleRegion":
-            var reply = [String: NSObject]()
-            let visibleRegion = mapView.visibleCoordinateBounds
-            reply["sw"] = [visibleRegion.sw.latitude, visibleRegion.sw.longitude] as NSObject
-            reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
-            result(reply)
-        case "map#toScreenLocation":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let latitude = arguments["latitude"] as? Double,
-                  let longitude = arguments["longitude"] as? Double
-            else {
-                result(invalidArgumentError(
-                    "toScreenLocation requires 'latitude' and 'longitude' as numbers."
-                ))
-                return
-            }
-            let latlng = CLLocationCoordinate2DMake(latitude, longitude)
-            let returnVal = mapView.convert(latlng, toPointTo: mapView)
-            var reply = [String: NSObject]()
-            reply["x"] = returnVal.x as NSObject
-            reply["y"] = returnVal.y as NSObject
-            result(reply)
-        case "map#toScreenLocationBatch":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let data = arguments["coordinates"] as? FlutterStandardTypedData
-            else {
-                result(invalidArgumentError(
-                    "toScreenLocationBatch requires 'coordinates' as a Float64List."
-                ))
-                return
-            }
-            let latLngs = data.data.withUnsafeBytes {
-                Array(
-                    UnsafeBufferPointer(
-                        start: $0.baseAddress!.assumingMemoryBound(to: Double.self),
-                        count: Int(data.elementCount)
-                    )
-                )
-            }
-            var reply: [Double] = Array(repeating: 0.0, count: latLngs.count)
-            for i in stride(from: 0, to: latLngs.count, by: 2) {
-                let coordinate = CLLocationCoordinate2DMake(latLngs[i], latLngs[i + 1])
-                let returnVal = mapView.convert(coordinate, toPointTo: mapView)
-                reply[i] = Double(returnVal.x)
-                reply[i + 1] = Double(returnVal.y)
-            }
-            result(FlutterStandardTypedData(
-                float64: Data(bytes: &reply, count: reply.count * 8)
-            ))
-        case "map#getMetersPerPixelAtLatitude":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let latitude = arguments["latitude"] as? Double
-            else {
-                result(invalidArgumentError(
-                    "getMetersPerPixelAtLatitude requires 'latitude' as a number."
-                ))
-                return
-            }
-            var reply = [String: NSObject]()
-            let returnVal = mapView.metersPerPoint(atLatitude: latitude)
-            reply["metersperpixel"] = returnVal as NSObject
-            result(reply)
-        case "map#toLatLng":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let x = arguments["x"] as? Double,
-                  let y = arguments["y"] as? Double
-            else {
-                result(invalidArgumentError("toLatLng requires 'x' and 'y' as numbers."))
-                return
-            }
-            let screenPoint = CGPoint(x: x, y: y)
-            let coordinates: CLLocationCoordinate2D = mapView.convert(
-                screenPoint,
-                toCoordinateFrom: mapView
-            )
-            var reply = [String: NSObject]()
-            reply["latitude"] = coordinates.latitude as NSObject
-            reply["longitude"] = coordinates.longitude as NSObject
-            result(reply)
-        case "camera#move":
-            guard let parsed = parseCameraCall(methodCall, result) else { return }
-            cameraAnimations.interruptRunning()
-            mapView.setCamera(parsed.camera, animated: false)
-            // Always true, as on Android and web: a jump moves the camera before setCamera
-            // returns, so nothing can cut it short. The Android SDK's moveCamera likewise only
-            // ever calls onFinish, never onCancel.
-            result(true)
-        case "camera#animate":
-            guard let parsed = parseCameraCall(methodCall, result) else { return }
-            let arguments = parsed.arguments
-            let camera = parsed.camera
-
-            // No edge padding here: a newLatLngBounds camera already has its
-            // center shifted for the bounds padding, and padding passed to the
-            // map view would stay on as camera insets after the move.
-            cameraAnimations.track(result: result) { completion in
-                if let duration = arguments["duration"] as? TimeInterval {
-                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
-                } else {
-                    mapView.setCamera(
-                        camera,
-                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                        animationTimingFunction: nil,
-                        completionHandler: completion
-                    )
-                }
-            }
         case "symbolLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }
@@ -1436,21 +1283,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             } else {
                 style.addLayer(layer)
             }
-            result(nil)
-
-        case "map#setCameraBounds":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let west = arguments["west"] as? Double else { return }
-            guard let north = arguments["north"] as? Double else { return }
-            guard let south = arguments["south"] as? Double else { return }
-            guard let east = arguments["east"] as? Double else { return }
-            guard let padding = arguments["padding"] as? CGFloat else { return }
-
-            let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
-            let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
-            let bounds = MLNCoordinateBounds(sw: southwest, ne: northeast)
-            mapView.setVisibleCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: padding,
-                left: padding, bottom: padding, right: padding) , animated: true)
             result(nil)
 
         case "style#setFilter":
@@ -2112,6 +1944,175 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(FlutterStandardTypedData(bytes: pngData))
         }
+    }
+
+    // MARK: Dart calls: camera
+
+    func cameraEase(
+        cameraUpdate: [Any],
+        duration: Int64?,
+        interpolation: String?,
+        result: @escaping FlutterResult
+    ) {
+        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#ease", result) else {
+            return
+        }
+
+        if let duration = duration.flatMap({ Double(exactly: $0) }), duration > 0 {
+            let interval: TimeInterval = duration / 1000.0
+
+            // Create timing function based on interpolation parameter
+            var timingFunction: CAMediaTimingFunction?
+            if let interpolationStr = interpolation {
+                switch interpolationStr {
+                case "linear":
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                case "easeInOut":
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                case "easeOut":
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+                case "fastOutLinearIn":
+                    // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
+                    timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
+                default:
+                    timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                }
+            } else {
+                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+            }
+
+            cameraAnimations.track(result: result) { completion in
+                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
+            }
+        } else {
+            cameraAnimations.track(result: result) { completion in
+                mapView.setCamera(
+                    camera,
+                    withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                    animationTimingFunction: nil,
+                    completionHandler: completion
+                )
+            }
+        }
+    }
+
+    func cameraMove(cameraUpdate: [Any], result: @escaping FlutterResult) {
+        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#move", result) else {
+            return
+        }
+        cameraAnimations.interruptRunning()
+        mapView.setCamera(camera, animated: false)
+        // Always true, as on Android and web: a jump moves the camera before setCamera
+        // returns, so nothing can cut it short. The Android SDK's moveCamera likewise only
+        // ever calls onFinish, never onCancel.
+        result(true)
+    }
+
+    func cameraAnimate(cameraUpdate: [Any], duration: Int64?, result: @escaping FlutterResult) {
+        guard let camera = parseCameraUpdate(cameraUpdate, call: "camera#animate", result) else {
+            return
+        }
+
+        // No edge padding here: a newLatLngBounds camera already has its
+        // center shifted for the bounds padding, and padding passed to the
+        // map view would stay on as camera insets after the move.
+        cameraAnimations.track(result: result) { completion in
+            if let duration = duration.flatMap({ TimeInterval(exactly: $0) }) {
+                mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
+            } else {
+                mapView.setCamera(
+                    camera,
+                    withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                    animationTimingFunction: nil,
+                    completionHandler: completion
+                )
+            }
+        }
+    }
+
+    func mapSetCameraBounds(
+        west: Double,
+        north: Double,
+        south: Double,
+        east: Double,
+        padding: Int64,
+        result: @escaping FlutterResult
+    ) {
+        guard let padding = CGFloat(exactly: padding) else { return }
+
+        let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
+        let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
+        let bounds = MLNCoordinateBounds(sw: southwest, ne: northeast)
+        mapView.setVisibleCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: padding,
+            left: padding, bottom: padding, right: padding) , animated: true)
+        result(nil)
+    }
+
+    func mapQueryCameraPosition(result: @escaping FlutterResult) {
+        // On-demand query: read the live camera directly. Unlike the
+        // streaming paths, which go through getCamera() and honor
+        // trackCameraPosition, a one-off query always returns a value.
+        result(mapView.camera.toDict(mapView: mapView))
+    }
+
+    func mapGetVisibleRegion(result: @escaping FlutterResult) {
+        var reply = [String: NSObject]()
+        let visibleRegion = mapView.visibleCoordinateBounds
+        reply["sw"] = [visibleRegion.sw.latitude, visibleRegion.sw.longitude] as NSObject
+        reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
+        result(reply)
+    }
+
+    func mapToScreenLocation(latitude: Double, longitude: Double, result: @escaping FlutterResult) {
+        let latlng = CLLocationCoordinate2DMake(latitude, longitude)
+        let returnVal = mapView.convert(latlng, toPointTo: mapView)
+        var reply = [String: NSObject]()
+        reply["x"] = returnVal.x as NSObject
+        reply["y"] = returnVal.y as NSObject
+        result(reply)
+    }
+
+    func mapToScreenLocationBatch(
+        coordinates data: FlutterStandardTypedData,
+        result: @escaping FlutterResult
+    ) {
+        let latLngs = data.data.withUnsafeBytes {
+            Array(
+                UnsafeBufferPointer(
+                    start: $0.baseAddress!.assumingMemoryBound(to: Double.self),
+                    count: Int(data.elementCount)
+                )
+            )
+        }
+        var reply: [Double] = Array(repeating: 0.0, count: latLngs.count)
+        for i in stride(from: 0, to: latLngs.count, by: 2) {
+            let coordinate = CLLocationCoordinate2DMake(latLngs[i], latLngs[i + 1])
+            let returnVal = mapView.convert(coordinate, toPointTo: mapView)
+            reply[i] = Double(returnVal.x)
+            reply[i + 1] = Double(returnVal.y)
+        }
+        result(FlutterStandardTypedData(
+            float64: Data(bytes: &reply, count: reply.count * 8)
+        ))
+    }
+
+    func mapGetMetersPerPixelAtLatitude(latitude: Double, result: @escaping FlutterResult) {
+        var reply = [String: NSObject]()
+        let returnVal = mapView.metersPerPoint(atLatitude: latitude)
+        reply["metersperpixel"] = returnVal as NSObject
+        result(reply)
+    }
+
+    func mapToLatLng(x: Double, y: Double, result: @escaping FlutterResult) {
+        let screenPoint = CGPoint(x: x, y: y)
+        let coordinates: CLLocationCoordinate2D = mapView.convert(
+            screenPoint,
+            toCoordinateFrom: mapView
+        )
+        var reply = [String: NSObject]()
+        reply["latitude"] = coordinates.latitude as NSObject
+        reply["longitude"] = coordinates.longitude as NSObject
+        result(reply)
     }
 
     private func loadIconImage(name: String) -> UIImage? {
@@ -3213,20 +3214,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
     }
 
-    /// Reads the camera update of a `camera#move`, `camera#animate` or
-    /// `camera#ease` call. When it does not decode, or names an update this
-    /// side cannot apply, the call is answered with `INVALID_ARGUMENT` and
-    /// `nil` comes back: returning without a reply would leave the Dart future
-    /// pending for good.
-    private func parseCameraCall(
-        _ methodCall: FlutterMethodCall,
+    /// Reads the camera update of `cameraMove`, `cameraAnimate` or
+    /// `cameraEase`. When it is empty, or names an update this side cannot
+    /// apply, the call is answered with `INVALID_ARGUMENT` and `nil` comes
+    /// back: returning without a reply would leave the Dart future pending for
+    /// good. `call` names the call in the error message.
+    private func parseCameraUpdate(
+        _ cameraUpdate: [Any],
+        call: String,
         _ result: FlutterResult
-    ) -> (arguments: [String: Any], camera: MLNMapCamera)? {
-        guard let arguments = methodCall.arguments as? [String: Any],
-              let cameraUpdate = arguments["cameraUpdate"] as? [Any],
-              !cameraUpdate.isEmpty
-        else {
-            result(invalidArgumentError("\(methodCall.method) requires a 'cameraUpdate' list."))
+    ) -> MLNMapCamera? {
+        guard !cameraUpdate.isEmpty else {
+            result(invalidArgumentError("\(call) requires a 'cameraUpdate' list."))
             return nil
         }
         guard let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView)
@@ -3234,7 +3233,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
             return nil
         }
-        return (arguments, camera)
+        return camera
     }
 
     /// Serializes features for the channel as JSON strings, so nested
