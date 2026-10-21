@@ -115,6 +115,12 @@ await controller.addSource(
 );
 ```
 
+Draw it with an image layer:
+
+```dart
+await controller.addImageLayer('weather-radar-layer', 'weather-radar');
+```
+
 The `url` and the four corners are required: without them `addSource` throws
 a `PlatformException` with code `INVALID_ARGUMENT`. To show image bytes
 instead, use `addImageSource()`, and `updateImageSource()` to change the bytes

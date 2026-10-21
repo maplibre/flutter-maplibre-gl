@@ -135,6 +135,18 @@ print('Downloaded: ${status.completedResourceCount} tiles');
 print('Complete: ${status.isComplete}');
 ```
 
+## Pause and resume a download
+
+```dart
+await pauseOfflineRegionDownload(region.id);
+// Later, also after the app restarted:
+await resumeOfflineRegionDownload(region.id);
+```
+
+A region paused before the app restarted resumes too. No `onEvent` reports
+its progress then: read it with `getOfflineRegionStatus`. A complete region is
+left as it is.
+
 ## Delete a region
 
 ```dart
@@ -278,6 +290,7 @@ try {
 | `downloadOfflineRegion(definition, onEvent)` | Start a download, get status callbacks |
 | `getListOfRegions()` | List all downloaded regions |
 | `getOfflineRegionStatus(id)` | Check status of a specific region |
+| `pauseOfflineRegionDownload(id)` / `resumeOfflineRegionDownload(id)` | Pause or resume a download |
 | `deleteOfflineRegion(id)` | Delete a downloaded region |
 | `mergeOfflineRegions(path)` | Import regions from an external database file |
 | `exportOfflineDatabase(destPath)` | Copy the whole offline database to a shareable file |

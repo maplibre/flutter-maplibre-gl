@@ -26,7 +26,7 @@ every platform, and a failed call changes nothing:
 | `STYLE_NOT_READY` | The style has not loaded yet. |
 | `SOURCE_NOT_FOUND`, `LAYER_NOT_FOUND_ERROR` | The id is not in the style. |
 | `SOURCE_ALREADY_EXISTS`, `LAYER_ALREADY_EXISTS` | The id is already in use. |
-| `UNSUPPORTED_SOURCE_TYPE` | The layer cannot draw the source's type, or the platform has no such source. |
+| `UNSUPPORTED_SOURCE_TYPE` | The layer cannot draw the source's type (see [which layer draws which source](various-sources.md#which-layer-draws-which-source)), or the platform has no such source. |
 | `INVALID_EXPRESSION` | MapLibre rejects a filter or a property expression. |
 | `INVALID_ARGUMENT` | A property value has the wrong kind, or no source can be built from the source properties. |
 | `INVALID_GEOJSON` | The data is not valid GeoJSON. |
