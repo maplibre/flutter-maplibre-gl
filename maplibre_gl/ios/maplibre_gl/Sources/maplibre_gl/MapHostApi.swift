@@ -194,56 +194,6 @@ final class MapHostApi: MapLibreMapHostApi {
         send("map#setLayerFilter", ["id": id, "filter": filter], result: anyResult(completion))
     }
 
-    func mapQueryRenderedFeaturesAtPoint(
-        x: Double,
-        y: Double,
-        layerIds: [String],
-        filter: [Any?]?,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send(
-            "map#queryRenderedFeatures",
-            ["x": x, "y": y, "layerIds": layerIds, "filter": filter],
-            result: anyResult(completion)
-        )
-    }
-
-    func mapQueryRenderedFeaturesInRect(
-        left: Double,
-        top: Double,
-        right: Double,
-        bottom: Double,
-        layerIds: [String],
-        filter: String?,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send(
-            "map#queryRenderedFeatures",
-            [
-                "left": left,
-                "top": top,
-                "right": right,
-                "bottom": bottom,
-                "layerIds": layerIds,
-                "filter": filter,
-            ],
-            result: anyResult(completion)
-        )
-    }
-
-    func mapQuerySourceFeatures(
-        sourceId: String,
-        sourceLayerId: String?,
-        filter: [Any?]?,
-        completion: @escaping (Result<Any?, Error>) -> Void
-    ) {
-        send(
-            "map#querySourceFeatures",
-            ["sourceId": sourceId, "sourceLayerId": sourceLayerId, "filter": filter],
-            result: anyResult(completion)
-        )
-    }
-
     // MARK: Camera
 
     func cameraAnimate(
@@ -345,6 +295,64 @@ final class MapHostApi: MapLibreMapHostApi {
     ) {
         run(anyResult(completion), kind: .readsCamera) {
             $0.mapGetMetersPerPixelAtLatitude(latitude: latitude, result: $1)
+        }
+    }
+
+    // MARK: Queries
+
+    func mapQueryRenderedFeaturesAtPoint(
+        x: Double,
+        y: Double,
+        layerIds: [String],
+        filter: [Any?]?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        run(anyResult(completion)) {
+            $0.mapQueryRenderedFeaturesAtPoint(
+                x: x,
+                y: y,
+                layerIds: layerIds,
+                filter: filter.map(plainList),
+                result: $1
+            )
+        }
+    }
+
+    func mapQueryRenderedFeaturesInRect(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        layerIds: [String],
+        filter: String?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        run(anyResult(completion)) {
+            $0.mapQueryRenderedFeaturesInRect(
+                left: left,
+                top: top,
+                right: right,
+                bottom: bottom,
+                layerIds: layerIds,
+                filter: filter,
+                result: $1
+            )
+        }
+    }
+
+    func mapQuerySourceFeatures(
+        sourceId: String,
+        sourceLayerId: String?,
+        filter: [Any?]?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        run(anyResult(completion)) {
+            $0.mapQuerySourceFeatures(
+                sourceId: sourceId,
+                sourceLayerId: sourceLayerId,
+                filter: filter.map(plainList),
+                result: $1
+            )
         }
     }
 

@@ -516,66 +516,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // The map view's delegate auto-fires map#onUserLocationUpdated.
             manualLocationManager.push(location)
             result(nil)
-        case "map#queryRenderedFeatures":
-            guard let arguments = methodCall.arguments as? [String: Any] else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "queryRenderedFeatures needs a map of arguments.",
-                    details: nil
-                ))
-                return
-            }
-            var styleLayerIdentifiers: Set<String>?
-            if let layerIds = arguments["layerIds"] as? [String], !layerIds.isEmpty {
-                styleLayerIdentifiers = Set<String>(layerIds)
-            }
-            // queryRenderedFeatures sends the filter as a JSON array,
-            // queryRenderedFeaturesInRect as the same expression already
-            // encoded as a JSON string. Reading only one of the two shapes
-            // would drop the filter without telling the caller.
-            var filterExpression: NSPredicate?
-            if let filter = arguments["filter"] as? [Any] {
-                filterExpression = NSPredicate(mglJSONObject: filter)
-            } else if let filter = arguments["filter"] as? String,
-                      let data = filter.data(using: .utf8),
-                      let jsonFilter = try? JSONSerialization.jsonObject(
-                          with: data,
-                          options: .fragmentsAllowed
-                      ),
-                      !(jsonFilter is NSNull)
-            {
-                filterExpression = NSPredicate(mglJSONObject: jsonFilter)
-            }
-            var features: [MLNFeature] = []
-            // The Dart-side name of the call, for anything reported back.
-            var queryName = "queryRenderedFeatures"
-            if let x = arguments["x"] as? Double, let y = arguments["y"] as? Double {
-                features = mapView.visibleFeatures(
-                    at: CGPoint(x: x, y: y),
-                    styleLayerIdentifiers: styleLayerIdentifiers,
-                    predicate: filterExpression
-                )
-            } else if let top = arguments["top"] as? Double,
-                      let bottom = arguments["bottom"] as? Double,
-                      let left = arguments["left"] as? Double,
-                      let right = arguments["right"] as? Double
-            {
-                queryName = "queryRenderedFeaturesInRect"
-                let width = right - left
-                let height = bottom - top
-                features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
-            } else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "queryRenderedFeatures needs either 'x' and 'y', or "
-                        + "'left', 'top', 'right' and 'bottom', as numbers. "
-                        + "Answering with an empty list would look like a query "
-                        + "that found nothing.",
-                    details: nil
-                ))
-                return
-            }
-            result(featuresReply(features, methodName: queryName))
         case "map#editGeoJsonSource":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let srcId = arguments["id"] as? String else { return }
@@ -1536,43 +1476,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
             result(layer.isVisible)
 
-        case "map#querySourceFeatures":
-            guard let arguments = methodCall.arguments as? [String: Any],
-                  let sourceId = arguments["sourceId"] as? String
-            else {
-                result(FlutterError(
-                    code: "INVALID_ARGUMENT",
-                    message: "querySourceFeatures needs a 'sourceId' string.",
-                    details: nil
-                ))
-                return
-            }
-
-            var sourceLayerId = Set<String>()
-            if let layerId = arguments["sourceLayerId"] as? String {
-                sourceLayerId.insert(layerId)
-            }
-            var filterExpression: NSPredicate?
-            if let filter = arguments["filter"] as? [Any] {
-                filterExpression = NSPredicate(mglJSONObject: filter)
-            }
-
-            var features: [MLNFeature] = []
-
-            guard let style = mapView.style else {
-                result(MethodCallError.styleNotFound.flutterError)
-                return
-            }
-            if let source = style.source(withIdentifier: sourceId) {
-                if let vectorSource = source as? MLNVectorTileSource {
-                    features = vectorSource.features(sourceLayerIdentifiers: sourceLayerId, predicate: filterExpression)
-                } else if let shapeSource = source as? MLNShapeSource {
-                    features = shapeSource.features(matching: filterExpression)
-                }
-            }
-
-            result(featuresReply(features, methodName: "querySourceFeatures"))
-
         case "style#getLayerIds":
             var layerIds = [String]()
 
@@ -2113,6 +2016,96 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         reply["latitude"] = coordinates.latitude as NSObject
         reply["longitude"] = coordinates.longitude as NSObject
         result(reply)
+    }
+
+    // MARK: Dart calls: queries
+
+    func mapQueryRenderedFeaturesAtPoint(
+        x: Double,
+        y: Double,
+        layerIds: [String],
+        filter: [Any]?,
+        result: @escaping FlutterResult
+    ) {
+        let styleLayerIdentifiers = queriedLayerIds(layerIds)
+        // The filter comes as a JSON array.
+        var filterExpression: NSPredicate?
+        if let filter = filter {
+            filterExpression = NSPredicate(mglJSONObject: filter)
+        }
+        let features = mapView.visibleFeatures(
+            at: CGPoint(x: x, y: y),
+            styleLayerIdentifiers: styleLayerIdentifiers,
+            predicate: filterExpression
+        )
+        result(featuresReply(features, methodName: "queryRenderedFeatures"))
+    }
+
+    func mapQueryRenderedFeaturesInRect(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        layerIds: [String],
+        filter: String?,
+        result: @escaping FlutterResult
+    ) {
+        let styleLayerIdentifiers = queriedLayerIds(layerIds)
+        // The filter comes as the same expression already encoded as a JSON
+        // string, where a JSON null means no filter.
+        var filterExpression: NSPredicate?
+        if let filter = filter,
+           let data = filter.data(using: .utf8),
+           let jsonFilter = try? JSONSerialization.jsonObject(
+               with: data,
+               options: .fragmentsAllowed
+           ),
+           !(jsonFilter is NSNull)
+        {
+            filterExpression = NSPredicate(mglJSONObject: jsonFilter)
+        }
+        let width = right - left
+        let height = bottom - top
+        let features = mapView.visibleFeatures(in: CGRect(x: left, y: top, width: width, height: height), styleLayerIdentifiers: styleLayerIdentifiers, predicate: filterExpression)
+        result(featuresReply(features, methodName: "queryRenderedFeaturesInRect"))
+    }
+
+    /// The layers a rendered features query looks in: all of them, `nil`,
+    /// for an empty list.
+    private func queriedLayerIds(_ layerIds: [String]) -> Set<String>? {
+        return layerIds.isEmpty ? nil : Set<String>(layerIds)
+    }
+
+    func mapQuerySourceFeatures(
+        sourceId: String,
+        sourceLayerId: String?,
+        filter: [Any]?,
+        result: @escaping FlutterResult
+    ) {
+        var sourceLayerIds = Set<String>()
+        if let layerId = sourceLayerId {
+            sourceLayerIds.insert(layerId)
+        }
+        var filterExpression: NSPredicate?
+        if let filter = filter {
+            filterExpression = NSPredicate(mglJSONObject: filter)
+        }
+
+        var features: [MLNFeature] = []
+
+        guard let style = mapView.style else {
+            result(MethodCallError.styleNotFound.flutterError)
+            return
+        }
+        if let source = style.source(withIdentifier: sourceId) {
+            if let vectorSource = source as? MLNVectorTileSource {
+                features = vectorSource.features(sourceLayerIdentifiers: sourceLayerIds, predicate: filterExpression)
+            } else if let shapeSource = source as? MLNShapeSource {
+                features = shapeSource.features(matching: filterExpression)
+            }
+        }
+
+        result(featuresReply(features, methodName: "querySourceFeatures"))
     }
 
     private func loadIconImage(name: String) -> UIImage? {
