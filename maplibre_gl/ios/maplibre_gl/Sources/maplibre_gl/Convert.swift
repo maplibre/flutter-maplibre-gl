@@ -318,17 +318,4 @@ class Convert {
             longitude: (longitude < 0 ? longitude + 360 : longitude) - 180
         )
     }
-
-    class func getCoordinates(options: Any?) -> [CLLocationCoordinate2D] {
-        var coordinates: [CLLocationCoordinate2D] = []
-
-        if let options = options as? [String: Any],
-           let geometry = options["geometry"] as? [[Double]], geometry.count > 0
-        {
-            for coordinate in geometry {
-                coordinates.append(CLLocationCoordinate2DMake(coordinate[0], coordinate[1]))
-            }
-        }
-        return coordinates
-    }
 }
