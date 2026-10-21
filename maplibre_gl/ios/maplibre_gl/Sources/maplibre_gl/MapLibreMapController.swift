@@ -106,7 +106,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Drive the view out of its window and drop the remaining references so
         // the engine is reclaimed promptly when the platform view is removed.
         NotificationCenter.default.removeObserver(self)
-        // A map#waitForMap still waiting for the style would never be
+        // A mapWaitForMap still waiting for the style would never be
         // answered, leaving the Dart future pending for good. Android fails
         // it the same way.
         if let waitingResult = mapReadyResult {
@@ -335,6 +335,44 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return true
     }
 
+    /// What a Dart call does with the camera, which decides whether it waits
+    /// for the view to have a size.
+    enum CallKind {
+        /// Runs at once.
+        case plain
+        /// Moves the camera, which touches the C++ map's projection. On a
+        /// zero-sized platform view frame (a moveCamera fired from Dart
+        /// onMapCreated before layout, say) the unproject runs on a 0x0
+        /// viewport: NaN, mbgl::LatLng throws std::domain_error, SIGABRT.
+        /// Waits until the frame is real (issue #819, the call path, not
+        /// covered by the init-only fix).
+        case movesCamera
+        /// Reads the camera or the projection. While the initial camera waits
+        /// for a size these calls wait too, or they would report zoom 0.
+        case readsCamera
+    }
+
+    /// Runs a Dart call on this map.
+    ///
+    /// A call that has to wait for the view's size goes to the next turn of
+    /// the main queue, as many times as it takes. The controller is handed to
+    /// `call` rather than captured, so a call still waiting does not keep a
+    /// disposed map alive: it is dropped with it. Every call applies the
+    /// initial camera first, so a camera move from Dart lands on top of the
+    /// initial camera, never under it.
+    func runCall(_ kind: CallKind, _ call: @escaping (MapLibreMapController) -> Void) {
+        if mapView.frame.size.equalTo(.zero),
+           kind == .movesCamera || (kind == .readsCamera && pendingInitialCamera != nil)
+        {
+            DispatchQueue.main.async { [weak self] in
+                self?.runCall(kind, call)
+            }
+            return
+        }
+        applyInitialCameraIfNeeded()
+        call(self)
+    }
+
     func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
         // Camera ops touch the C++ map's projection; on a zero-sized PlatformView
         // frame (e.g. moveCamera fired from Dart onMapCreated before layout) the
@@ -355,90 +393,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // initial camera, never under it.
         applyInitialCameraIfNeeded()
         switch methodCall.method {
-        case "map#waitForMap":
-            if isMapReady {
-                result(nil)
-                // only call map#onStyleLoaded here if isMapReady has happend and isFirstStyleLoad is true
-                if isFirstStyleLoad {
-                    isFirstStyleLoad = false
-                    onStyleLoadedCalled = true
-                    // Defer the callback to the next run loop iteration to avoid race conditions
-                    let api = flutterApi
-                    DispatchQueue.main.async {
-                        api.mapOnStyleLoaded { _ in }
-                    }
-                }
-            } else {
-                mapReadyResult = result
-            }
-        case "map#update":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            Convert.interpretMapLibreMapOptions(options: arguments["options"], delegate: self)
-            if let camera = getCamera() {
-                result(camera.toDict(mapView: mapView))
-            } else {
-                result(nil)
-            }
-        case "map#invalidateAmbientCache":
-            MLNOfflineStorage.shared.invalidateAmbientCache {
-                error in
-                if let error = error {
-                    // An NSError is not encodable by the standard codec.
-                    result(FlutterError(
-                        code: "AMBIENT_CACHE_ERROR",
-                        message: error.localizedDescription,
-                        details: nil
-                    ))
-                } else {
-                    result(nil)
-                }
-            }
-        case "map#clearAmbientCache":
-            MLNOfflineStorage.shared.clearAmbientCache {
-                error in
-                if let error = error {
-                    result(FlutterError(
-                        code: "AMBIENT_CACHE_ERROR",
-                        message: error.localizedDescription,
-                        details: nil
-                    ))
-                } else {
-                    result(nil)
-                }
-            }
-        case "map#updateMyLocationTrackingMode":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            if let myLocationTrackingMode = arguments["mode"] as? UInt,
-               let trackingMode = MLNUserTrackingMode(rawValue: myLocationTrackingMode)
-            {
-                setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
-            }
-            result(nil)
-        case "map#matchMapLanguageWithDeviceDefault":
-            if let langStr = Locale.current.languageCode {
-                setMapLanguage(language: langStr)
-            }
-
-            result(nil)
-        case "map#updateContentInsets":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-
-            if let bounds = arguments["bounds"] as? [String: Any],
-               let top = bounds["top"] as? CGFloat,
-               let left = bounds["left"] as? CGFloat,
-               let bottom = bounds["bottom"] as? CGFloat,
-               let right = bounds["right"] as? CGFloat,
-               let animated = arguments["animated"] as? Bool
-            {
-                mapView.setContentInset(
-                    UIEdgeInsets(top: top, left: left, bottom: bottom, right: right),
-                    animated: animated
-                ) {
-                    result(nil)
-                }
-            } else {
-                result(nil)
-            }
         case "locationComponent#getLastLocation":
             var reply = [String: NSObject]()
             if let loc = mapView.userLocation?.location?.coordinate {
@@ -562,12 +516,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // The map view's delegate auto-fires map#onUserLocationUpdated.
             manualLocationManager.push(location)
             result(nil)
-        case "map#setMapLanguage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            if let localIdentifier = arguments["language"] as? String {
-                setMapLanguage(language: localIdentifier)
-            }
-            result(nil)
         case "map#queryRenderedFeatures":
             guard let arguments = methodCall.arguments as? [String: Any] else {
                 result(FlutterError(
@@ -628,44 +576,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 return
             }
             result(featuresReply(features, methodName: queryName))
-        case "map#setTelemetryEnabled":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            let telemetryEnabled = arguments["enabled"] as? Bool
-            UserDefaults.standard.set(telemetryEnabled, forKey: "MLNMapboxMetricsEnabled")
-            result(nil)
-        case "map#getTelemetryEnabled":
-            let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
-            result(telemetryEnabled)
-        case "map#setMaximumFps":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            if let fps = arguments["fps"] as? Int {
-                userFps = MLNMapViewPreferredFramesPerSecond(rawValue: fps)
-                if !pausedByDart && !isBackgroundPaused {
-                    mapView.preferredFramesPerSecond = userFps
-                }
-            }
-            result(nil)
-        case "map#forceOnlineMode":
-            // Force online mode by ensuring network requests are enabled
-            // In MapLibre GL iOS, this is typically handled by the style and data sources
-            result(nil)
-        case "map#pause":
-            pausedByDart = true
-            mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
-            // As on Android, a paused map stops location updates too.
-            if myLocationEnabled && !manualLocationSource {
-                stopLocationUpdates()
-            }
-            result(nil)
-        case "map#resume":
-            pausedByDart = false
-            if !isBackgroundPaused {
-                mapView.preferredFramesPerSecond = userFps
-                if myLocationEnabled && !manualLocationSource {
-                    restartLocationPulseIfNeeded()
-                }
-            }
-            result(nil)
         case "camera#ease":
             guard let parsed = parseCameraCall(methodCall, result) else { return }
             let arguments = parsed.arguments
@@ -780,23 +690,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
             reply["result"] = ret
             result(reply)
-        case "map#getStyle":
-            // Same reply shape as Android: the Dart side reads "json" only when
-            // "result" is true.
-            let json = mapView.styleJSON
-            if json.isEmpty {
-                result(["result": false])
-            } else {
-                result(["result": true, "json": json] as [String: Any])
-            }
-        case "map#setCustomHeaders":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let headers = arguments["headers"] as? [String:String] else { return }
-            guard let filter = arguments["filter"] as? [String] else { return }
-            MapLibreCustomHeaders.setCustomHeaders(headers, filter: filter)
-            result(nil)
-        case "map#getCustomHeaders":
-            result(MapLibreCustomHeaders.getCustomHeaders())
         case "map#getVisibleRegion":
             var reply = [String: NSObject]()
             let visibleRegion = mapView.visibleCoordinateBounds
@@ -1981,67 +1874,243 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                   )
               )
             }
-        case "map#takeSnapshot":
-            guard let styleURL = snapshotStyleURL() else {
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+
+    // MARK: Dart calls: map
+
+    func mapWaitForMap(result: @escaping FlutterResult) {
+        if isMapReady {
+            result(nil)
+            // Only fire onStyleLoaded here once the map is ready, on the first style load.
+            if isFirstStyleLoad {
+                isFirstStyleLoad = false
+                onStyleLoadedCalled = true
+                // Defer the callback to the next run loop iteration to avoid race conditions
+                let api = flutterApi
+                DispatchQueue.main.async {
+                    api.mapOnStyleLoaded { _ in }
+                }
+            }
+        } else {
+            mapReadyResult = result
+        }
+    }
+
+    func mapUpdate(options: [String: Any], result: @escaping FlutterResult) {
+        Convert.interpretMapLibreMapOptions(options: options, delegate: self)
+        if let camera = getCamera() {
+            result(camera.toDict(mapView: mapView))
+        } else {
+            result(nil)
+        }
+    }
+
+    func mapInvalidateAmbientCache(result: @escaping FlutterResult) {
+        MLNOfflineStorage.shared.invalidateAmbientCache {
+            error in
+            if let error = error {
+                // An NSError is not encodable by the standard codec.
                 result(FlutterError(
-                    code: "STYLE_NOT_READY",
-                    message: "Map style is not loaded",
+                    code: "AMBIENT_CACHE_ERROR",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+            } else {
+                result(nil)
+            }
+        }
+    }
+
+    func mapClearAmbientCache(result: @escaping FlutterResult) {
+        MLNOfflineStorage.shared.clearAmbientCache {
+            error in
+            if let error = error {
+                result(FlutterError(
+                    code: "AMBIENT_CACHE_ERROR",
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+            } else {
+                result(nil)
+            }
+        }
+    }
+
+    func mapUpdateMyLocationTrackingMode(mode: Int64, result: @escaping FlutterResult) {
+        // A mode with no MLNUserTrackingMode raw value changes nothing.
+        if let rawMode = UInt(exactly: mode),
+           let trackingMode = MLNUserTrackingMode(rawValue: rawMode)
+        {
+            setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
+        }
+        result(nil)
+    }
+
+    func mapMatchMapLanguageWithDeviceDefault(result: @escaping FlutterResult) {
+        if let langStr = Locale.current.languageCode {
+            setMapLanguage(language: langStr)
+        }
+
+        result(nil)
+    }
+
+    func mapUpdateContentInsets(
+        bounds: [String: Double],
+        animated: Bool,
+        result: @escaping FlutterResult
+    ) {
+        if let top = bounds["top"],
+           let left = bounds["left"],
+           let bottom = bounds["bottom"],
+           let right = bounds["right"]
+        {
+            mapView.setContentInset(
+                UIEdgeInsets(
+                    top: CGFloat(top),
+                    left: CGFloat(left),
+                    bottom: CGFloat(bottom),
+                    right: CGFloat(right)
+                ),
+                animated: animated
+            ) {
+                result(nil)
+            }
+        } else {
+            result(nil)
+        }
+    }
+
+    func mapSetMapLanguage(language: String, result: @escaping FlutterResult) {
+        setMapLanguage(language: language)
+        result(nil)
+    }
+
+    func mapSetTelemetryEnabled(enabled: Bool, result: @escaping FlutterResult) {
+        UserDefaults.standard.set(enabled, forKey: "MLNMapboxMetricsEnabled")
+        result(nil)
+    }
+
+    func mapGetTelemetryEnabled(result: @escaping FlutterResult) {
+        let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
+        result(telemetryEnabled)
+    }
+
+    func mapSetMaximumFps(fps: Int64, result: @escaping FlutterResult) {
+        userFps = MLNMapViewPreferredFramesPerSecond(rawValue: Int(fps))
+        if !pausedByDart && !isBackgroundPaused {
+            mapView.preferredFramesPerSecond = userFps
+        }
+        result(nil)
+    }
+
+    func mapForceOnlineMode(result: @escaping FlutterResult) {
+        // Force online mode by ensuring network requests are enabled
+        // In MapLibre GL iOS, this is typically handled by the style and data sources
+        result(nil)
+    }
+
+    func mapPause(result: @escaping FlutterResult) {
+        pausedByDart = true
+        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+        // As on Android, a paused map stops location updates too.
+        if myLocationEnabled && !manualLocationSource {
+            stopLocationUpdates()
+        }
+        result(nil)
+    }
+
+    func mapResume(result: @escaping FlutterResult) {
+        pausedByDart = false
+        if !isBackgroundPaused {
+            mapView.preferredFramesPerSecond = userFps
+            if myLocationEnabled && !manualLocationSource {
+                restartLocationPulseIfNeeded()
+            }
+        }
+        result(nil)
+    }
+
+    func mapGetStyle(result: @escaping FlutterResult) {
+        // Same reply shape as Android: the Dart side reads "json" only when
+        // "result" is true.
+        let json = mapView.styleJSON
+        if json.isEmpty {
+            result(["result": false])
+        } else {
+            result(["result": true, "json": json] as [String: Any])
+        }
+    }
+
+    func mapSetCustomHeaders(
+        headers: [String: String],
+        filter: [String],
+        result: @escaping FlutterResult
+    ) {
+        MapLibreCustomHeaders.setCustomHeaders(headers, filter: filter)
+        result(nil)
+    }
+
+    func mapGetCustomHeaders(result: @escaping FlutterResult) {
+        result(MapLibreCustomHeaders.getCustomHeaders())
+    }
+
+    func mapTakeSnapshot(width: Int64?, height: Int64?, result: @escaping FlutterResult) {
+        guard let styleURL = snapshotStyleURL() else {
+            result(FlutterError(
+                code: "STYLE_NOT_READY",
+                message: "Map style is not loaded",
+                details: nil
+            ))
+            return
+        }
+
+        let snapshotWidth = width.map { Int($0) } ?? Int(mapView.bounds.width)
+        let snapshotHeight = height.map { Int($0) } ?? Int(mapView.bounds.height)
+
+        // Cancel any in-progress snapshot before starting a new one
+        activeSnapshotter?.cancel()
+
+        let size = CGSize(width: snapshotWidth, height: snapshotHeight)
+        let options = MLNMapSnapshotOptions(
+            styleURL: styleURL,
+            camera: mapView.camera,
+            size: size
+        )
+        options.zoomLevel = mapView.zoomLevel
+
+        let snapshotter = MLNMapSnapshotter(options: options)
+        // Store strong reference before starting to avoid deallocation
+        self.activeSnapshotter = snapshotter
+        // A JSON style was written to a temporary file just for this snapshot.
+        let temporaryStyleFile = styleIsJSON ? styleURL : nil
+
+        snapshotter.start { [weak self] snapshot, error in
+            self?.activeSnapshotter = nil
+            if let temporaryStyleFile = temporaryStyleFile {
+                try? FileManager.default.removeItem(at: temporaryStyleFile)
+            }
+
+            if let error = error {
+                result(FlutterError(
+                    code: "SNAPSHOT_ERROR",
+                    message: error.localizedDescription,
                     details: nil
                 ))
                 return
             }
-
-            let args = methodCall.arguments as? [String: Any]
-            let width = args?["width"] as? Int
-            let height = args?["height"] as? Int
-
-            let snapshotWidth = width ?? Int(mapView.bounds.width)
-            let snapshotHeight = height ?? Int(mapView.bounds.height)
-
-            // Cancel any in-progress snapshot before starting a new one
-            activeSnapshotter?.cancel()
-
-            let size = CGSize(width: snapshotWidth, height: snapshotHeight)
-            let options = MLNMapSnapshotOptions(
-                styleURL: styleURL,
-                camera: mapView.camera,
-                size: size
-            )
-            options.zoomLevel = mapView.zoomLevel
-
-            let snapshotter = MLNMapSnapshotter(options: options)
-            // Store strong reference before starting to avoid deallocation
-            self.activeSnapshotter = snapshotter
-            // A JSON style was written to a temporary file just for this snapshot.
-            let temporaryStyleFile = styleIsJSON ? styleURL : nil
-
-            snapshotter.start { [weak self] snapshot, error in
-                self?.activeSnapshotter = nil
-                if let temporaryStyleFile = temporaryStyleFile {
-                    try? FileManager.default.removeItem(at: temporaryStyleFile)
-                }
-
-                if let error = error {
-                    result(FlutterError(
-                        code: "SNAPSHOT_ERROR",
-                        message: error.localizedDescription,
-                        details: nil
-                    ))
-                    return
-                }
-                guard let snapshot = snapshot,
-                      let pngData = snapshot.image.pngData() else {
-                    result(FlutterError(
-                        code: "SNAPSHOT_ERROR",
-                        message: "Failed to generate snapshot",
-                        details: nil
-                    ))
-                    return
-                }
-                result(FlutterStandardTypedData(bytes: pngData))
+            guard let snapshot = snapshot,
+                  let pngData = snapshot.image.pngData() else {
+                result(FlutterError(
+                    code: "SNAPSHOT_ERROR",
+                    message: "Failed to generate snapshot",
+                    details: nil
+                ))
+                return
             }
-        default:
-            result(FlutterMethodNotImplemented)
+            result(FlutterStandardTypedData(bytes: pngData))
         }
     }
 
@@ -2385,20 +2454,20 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         style.performsPlacementTransitions = symbolPlacementTransitionsEnabled
         updateMyLocationEnabled()
 
-        // Before map#waitForMap replies and map#onStyleLoaded fires, so Dart
+        // Before mapWaitForMap replies and onStyleLoaded fires, so Dart
         // sees initialCameraPosition there.
         applyInitialCameraIfNeeded()
 
         addedShapesByLayer.removeAll()
         interactiveFeatureLayerIds.removeAll()
 
-        // A parked map#waitForMap is answered once: a later style load, after
+        // A parked mapWaitForMap is answered once: a later style load, after
         // a setStyle, must not reply to the same message again.
         let waitingResult = mapReadyResult
         mapReadyResult = nil
         waitingResult?(nil)
 
-        // On first launch we only call map#onStyleLoaded if map#waitForMap has already been called
+        // On first launch we only fire onStyleLoaded if mapWaitForMap has already been called
         if !isFirstStyleLoad || waitingResult != nil {
             isFirstStyleLoad = false
 

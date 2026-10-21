@@ -67,27 +67,27 @@ final class MapHostApi: MapLibreMapHostApi {
     // MARK: Map
 
     func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#waitForMap", result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapWaitForMap(result: $1) }
     }
 
     func mapUpdate(
         options: [String: Any?],
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
-        send("map#update", ["options": options], result: anyResult(completion))
+        run(anyResult(completion)) { $0.mapUpdate(options: plainMap(options), result: $1) }
     }
 
     func mapUpdateMyLocationTrackingMode(
         mode: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("map#updateMyLocationTrackingMode", ["mode": mode], result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapUpdateMyLocationTrackingMode(mode: mode, result: $1) }
     }
 
     func mapMatchMapLanguageWithDeviceDefault(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("map#matchMapLanguageWithDeviceDefault", result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapMatchMapLanguageWithDeviceDefault(result: $1) }
     }
 
     func mapUpdateContentInsets(
@@ -95,45 +95,79 @@ final class MapHostApi: MapLibreMapHostApi {
         animated: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send(
-            "map#updateContentInsets",
-            ["bounds": bounds, "animated": animated],
-            result: voidResult(completion)
-        )
+        run(voidResult(completion)) {
+            $0.mapUpdateContentInsets(bounds: bounds, animated: animated, result: $1)
+        }
     }
 
     func mapSetMapLanguage(
         language: String,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("map#setMapLanguage", ["language": language], result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapSetMapLanguage(language: language, result: $1) }
     }
 
     func mapSetTelemetryEnabled(
         enabled: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        send("map#setTelemetryEnabled", ["enabled": enabled], result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapSetTelemetryEnabled(enabled: enabled, result: $1) }
     }
 
     func mapGetTelemetryEnabled(completion: @escaping (Result<Bool, Error>) -> Void) {
-        send("map#getTelemetryEnabled", result: nonNullResult(completion) { $0 as? Bool })
+        run(nonNullResult(completion) { $0 as? Bool }) { $0.mapGetTelemetryEnabled(result: $1) }
     }
 
     func mapSetMaximumFps(fps: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#setMaximumFps", ["fps": fps], result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapSetMaximumFps(fps: fps, result: $1) }
     }
 
     func mapForceOnlineMode(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#forceOnlineMode", result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapForceOnlineMode(result: $1) }
     }
 
     func mapPause(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#pause", result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapPause(result: $1) }
     }
 
     func mapResume(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#resume", result: voidResult(completion))
+        run(voidResult(completion)) { $0.mapResume(result: $1) }
+    }
+
+    func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void) {
+        run(anyResult(completion)) { $0.mapGetStyle(result: $1) }
+    }
+
+    func mapSetCustomHeaders(
+        headers: [String: String],
+        filter: [String],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.mapSetCustomHeaders(headers: headers, filter: filter, result: $1)
+        }
+    }
+
+    func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void) {
+        run(anyResult(completion)) { $0.mapGetCustomHeaders(result: $1) }
+    }
+
+    func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
+        run(voidResult(completion)) { $0.mapInvalidateAmbientCache(result: $1) }
+    }
+
+    func mapClearAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
+        run(voidResult(completion)) { $0.mapClearAmbientCache(result: $1) }
+    }
+
+    func mapTakeSnapshot(
+        width: Int64?,
+        height: Int64?,
+        completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void
+    ) {
+        run(pigeonResult(completion) { $0 as? FlutterStandardTypedData }) {
+            $0.mapTakeSnapshot(width: width, height: height, result: $1)
+        }
     }
 
     func mapQueryCameraPosition(completion: @escaping (Result<Any?, Error>) -> Void) {
@@ -162,27 +196,6 @@ final class MapHostApi: MapLibreMapHostApi {
         completion: @escaping (Result<Any?, Error>) -> Void
     ) {
         send("map#setLayerFilter", ["id": id, "filter": filter], result: anyResult(completion))
-    }
-
-    func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void) {
-        send("map#getStyle", result: anyResult(completion))
-    }
-
-    func mapSetCustomHeaders(
-        headers: [String: String],
-        filter: [String],
-        completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        send(
-            "map#setCustomHeaders",
-            ["headers": headers, "filter": filter],
-            result: voidResult(completion)
-        )
-    }
-
-    func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void) {
-        // The legacy arguments were an empty map, not nil.
-        send("map#getCustomHeaders", [:], result: anyResult(completion))
     }
 
     func mapQueryRenderedFeaturesAtPoint(
@@ -233,14 +246,6 @@ final class MapHostApi: MapLibreMapHostApi {
             ["sourceId": sourceId, "sourceLayerId": sourceLayerId, "filter": filter],
             result: anyResult(completion)
         )
-    }
-
-    func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#invalidateAmbientCache", result: voidResult(completion))
-    }
-
-    func mapClearAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
-        send("map#clearAmbientCache", result: voidResult(completion))
     }
 
     func mapGetVisibleRegion(completion: @escaping (Result<Any?, Error>) -> Void) {
@@ -304,27 +309,6 @@ final class MapHostApi: MapLibreMapHostApi {
         )
     }
 
-    func mapTakeSnapshot(
-        width: Int64?,
-        height: Int64?,
-        completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void
-    ) {
-        // The legacy map left out a null width or height, and was empty when
-        // both were null.
-        var arguments: [String: Any?] = [:]
-        if let width = width {
-            arguments["width"] = width
-        }
-        if let height = height {
-            arguments["height"] = height
-        }
-        send(
-            "map#takeSnapshot",
-            arguments,
-            result: pigeonResult(completion) { $0 as? FlutterStandardTypedData }
-        )
-    }
-
     // MARK: Camera
 
     func cameraAnimate(
@@ -385,7 +369,7 @@ final class MapHostApi: MapLibreMapHostApi {
         // The legacy arguments were the update itself, not a map holding it.
         dispatch(
             "locationComponent#setManualLocation",
-            arguments: legacyMap(update),
+            arguments: plainMap(update),
             result: voidResult(completion)
         )
     }
@@ -1038,6 +1022,24 @@ final class MapHostApi: MapLibreMapHostApi {
 
     // MARK: Dispatch
 
+    /// Hands a call to the controller, which runs it through `runCall`, or
+    /// fails it with MAP_DISPOSED once the controller is gone.
+    private func run(
+        _ result: @escaping FlutterResult,
+        kind: MapLibreMapController.CallKind = .plain,
+        _ call: @escaping (MapLibreMapController, @escaping FlutterResult) -> Void
+    ) {
+        guard let controller = controller else {
+            result(FlutterError(
+                code: "MAP_DISPOSED",
+                message: "The map was disposed before the call reached it.",
+                details: nil
+            ))
+            return
+        }
+        controller.runCall(kind) { call($0, result) }
+    }
+
     /// A call whose legacy arguments were nil.
     private func send(_ method: String, result: @escaping FlutterResult) {
         dispatch(method, arguments: nil, result: result)
@@ -1049,7 +1051,7 @@ final class MapHostApi: MapLibreMapHostApi {
         _ arguments: [String: Any?],
         result: @escaping FlutterResult
     ) {
-        dispatch(method, arguments: legacyMap(arguments), result: result)
+        dispatch(method, arguments: plainMap(arguments), result: result)
     }
 
     private func dispatch(_ method: String, arguments: Any?, result: @escaping FlutterResult) {
@@ -1098,28 +1100,34 @@ private func nonNullResult<T>(
     }, convert: convert)
 }
 
-// MARK: Legacy arguments
+// MARK: Nested payloads
 
-/// A map as the method channel's codec delivered it. See `legacyValue`.
-private func legacyMap(_ map: [String: Any?]) -> [String: Any] {
-    map.mapValues(legacyValue)
+/// A map as the standard codec decoded it. See `plainValue`.
+private func plainMap(_ map: [String: Any?]) -> [String: Any] {
+    map.mapValues(plainValue)
 }
 
-/// A value as the method channel's codec delivered it: nil as NSNull, numbers
-/// and booleans as NSNumber, and maps and lists, at any depth, as
-/// `[String: Any]` and `[Any]` without optionals. The controller's casts
-/// (`as? [String: Any]`, `as? [[Double]]`, `as? CGFloat`, `is NSNull`) then
-/// read every value as before. Strings and typed data pass through, as does
-/// a map with keys other than strings, which the codec handed over as is.
-private func legacyValue(_ value: Any?) -> Any {
+/// A list as the standard codec decoded it. See `plainValue`.
+private func plainList(_ list: [Any?]) -> [Any] {
+    list.map(plainValue)
+}
+
+/// A value as the standard codec decoded it: nil as NSNull, numbers and
+/// booleans as NSNumber, and maps and lists, at any depth, as `[String: Any]`
+/// and `[Any]` without optionals. The readers of nested payloads (options,
+/// camera updates, style and layer properties, filters) cast from these
+/// (`as? [String: Any]`, `as? [[Double]]`, `as? CGFloat`, `is NSNull`).
+/// Strings and typed data pass through, as does a map with keys other than
+/// strings, which the codec handed over as is.
+private func plainValue(_ value: Any?) -> Any {
     guard let value = value else { return NSNull() }
     switch value {
     case is NSNull:
         return value
     case let map as [String: Any?]:
-        return legacyMap(map)
+        return plainMap(map)
     case let list as [Any?]:
-        return list.map(legacyValue)
+        return plainList(list)
     case let number as NSNumber:
         // A Swift Int64, Double or Bool becomes the NSNumber the codec made;
         // one that already is an NSNumber is returned unchanged.
